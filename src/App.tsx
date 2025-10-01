@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Leaderboard from "./pages/Leaderboard";
 import Discover from "./pages/Discover";
 import BrandDashboard from "./pages/BrandDashboard";
+import BrandManagement from "./pages/BrandManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => (
           <Route path="/profile" element={<DashboardLayout><Profile /></DashboardLayout>} />
           <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
           <Route path="/brand/:slug" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
+          <Route path="/brand/:slug/management" element={<BrandLayout><BrandManagement /></BrandLayout>} />
           <Route path="/brand/:slug/:section" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
