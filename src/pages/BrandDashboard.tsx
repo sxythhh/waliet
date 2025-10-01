@@ -1,11 +1,11 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -41,6 +41,7 @@ interface Campaign {
 
 export default function BrandDashboard() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,70 +198,107 @@ export default function BrandDashboard() {
           <div className="space-y-4 mt-8">
             <h2 className="text-2xl font-bold text-white">Campaigns</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {campaigns.map((campaign) => (
-                <Card key={campaign.id} className="bg-[#202020] border-white/10 overflow-hidden">
-                  {campaign.banner_url && (
-                    <div className="w-full h-32 overflow-hidden">
-                      <img
-                        src={campaign.banner_url}
-                        alt={campaign.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-xl font-semibold text-white mb-1">
-                          {campaign.title}
-                        </h3>
-                        {campaign.description && (
-                          <p className="text-sm text-white/60 line-clamp-2">
-                            {campaign.description}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-1">
-                        <CreateCampaignDialog
-                          brandId={brand.id}
-                          brandName={brand.name}
-                          onSuccess={fetchBrandData}
-                          campaign={campaign}
-                          trigger={
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="text-white/60 hover:text-white hover:bg-white/10"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          }
+              {campaigns.map((campaign) => {
+                const usedBudget = Number(campaign.budget) * 0.35; // Simulated used budget (35%)
+                const budgetPercentage = (usedBudget / Number(campaign.budget)) * 100;
+                
+                return (
+                  <Card 
+                    key={campaign.id} 
+                    className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]"
+                    onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}
+                  >
+                    {campaign.banner_url && (
+                      <div className="w-full h-32 overflow-hidden">
+                        <img
+                          src={campaign.banner_url}
+                          alt={campaign.title}
+                          className="w-full h-full object-cover"
                         />
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteClick(campaign)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/60">Budget:</span>
-                      <span className="text-white font-semibold">
-                        ${Number(campaign.budget).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm mt-2">
-                      <span className="text-white/60">RPM:</span>
-                      <span className="text-white font-semibold">
-                        ${Number(campaign.rpm_rate).toFixed(2)}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    )}
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-semibold text-white mb-1">
+                            {campaign.title}
+                          </h3>
+                          {campaign.description && (
+                            <p className="text-sm text-white/60 line-clamp-2">
+                              {campaign.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <CreateCampaignDialog
+                            brandId={brand.id}
+                            brandName={brand.name}
+                            onSuccess={fetchBrandData}
+                            campaign={campaign}
+                            trigger={
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="text-white/60 hover:text-white hover:bg-white/10"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(campaign);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Budget Progress Bar */}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-white/60">Budget Usage</span>
+                          <span className="text-white font-medium">
+                            ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
+                          <div 
+                            className="absolute inset-0 bg-gradient-to-r from-[#5865F2] to-[#7289DA] rounded-full transition-all duration-500"
+                            style={{ width: `${budgetPercentage}%` }}
+                          >
+                            <div 
+                              className="absolute inset-0 opacity-30"
+                              style={{
+                                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px)',
+                                animation: 'slide 2s linear infinite'
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RPM Display */}
+                      <div className="flex items-center gap-2 p-3 bg-[#191919] rounded-lg">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#5865F2]/20">
+                          <TrendingUp className="h-4 w-4 text-[#5865F2]" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs text-white/60">Revenue Per Mille</div>
+                          <div className="text-lg font-bold text-white">
+                            ${Number(campaign.rpm_rate).toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}
