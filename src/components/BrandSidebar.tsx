@@ -123,7 +123,7 @@ export function BrandSidebar() {
                       to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`}
                       end
                       style={({ isActive }) => ({
-                        backgroundColor: isActive ? '#5865F2' : 'transparent',
+                        backgroundColor: isActive ? '#5865f2' : 'transparent',
                         color: 'white',
                       })}
                       className="hover:bg-[#2C2C2C] transition-colors"
