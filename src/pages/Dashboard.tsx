@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, TrendingUp, DollarSign } from "lucide-react";
+import { Sparkles, TrendingUp, DollarSign, Calendar, Users, Video, Share2, Infinity } from "lucide-react";
+import { SiTiktok, SiInstagram, SiYoutube } from "react-icons/si";
 
 interface Campaign {
   id: string;
@@ -16,6 +17,7 @@ interface Campaign {
   budget: number;
   rpm_rate: number;
   status: string;
+  start_date: string | null;
 }
 
 export default function Dashboard() {
@@ -138,43 +140,84 @@ export default function Dashboard() {
           {campaigns.map((campaign) => (
             <Card 
               key={campaign.id}
-              className="bg-gradient-card border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow cursor-pointer"
+              className="bg-gradient-card border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow cursor-pointer overflow-hidden"
               onClick={() => navigate(`/campaign/${campaign.id}`)}
             >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={campaign.brand_logo_url}
-                      alt={campaign.brand_name}
-                      className="w-12 h-12 rounded-lg object-cover"
-                    />
-                    <div>
-                      <CardTitle className="text-lg">{campaign.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
+              <div className="relative h-48 bg-gradient-to-br from-background to-muted overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <img
+                    src={campaign.brand_logo_url}
+                    alt={campaign.brand_name}
+                    className="w-24 h-24 rounded-2xl object-cover border-2 border-border/50"
+                  />
+                </div>
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-primary text-primary-foreground font-bold text-base px-3 py-1">
+                    ${campaign.rpm_rate.toFixed(1)}/1K
+                  </Badge>
+                </div>
+              </div>
+
+              <CardHeader className="space-y-3 pb-3">
+                <div>
+                  <CardTitle className="text-xl mb-2">{campaign.title}</CardTitle>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary" className="text-xs">
+                      RPM Campaign
+                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <SiInstagram className="w-3.5 h-3.5 text-muted-foreground" />
+                      <SiTiktok className="w-3.5 h-3.5 text-muted-foreground" />
+                      <SiYoutube className="w-3.5 h-3.5 text-muted-foreground" />
                     </div>
                   </div>
                 </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <CardDescription className="line-clamp-2">
+                <CardDescription className="line-clamp-2 text-sm">
                   {campaign.description}
                 </CardDescription>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">RPM Rate</p>
-                    <p className="text-lg font-bold text-primary">${campaign.rpm_rate.toFixed(2)}</p>
+              </CardHeader>
+              
+              <CardContent className="space-y-3 pt-0">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-xs">Start Date</span>
                   </div>
-                  <Badge className="bg-success/20 text-success hover:bg-success/30">
-                    Active
-                  </Badge>
+                  <div className="text-right text-foreground font-medium text-xs">
+                    {campaign.start_date ? new Date(campaign.start_date).toLocaleDateString() : 'TBA'}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Share2 className="w-4 h-4" />
+                    <span className="text-xs">Networks</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <SiInstagram className="w-4 h-4" />
+                    <SiTiktok className="w-4 h-4" />
+                    <SiYoutube className="w-4 h-4" />
+                  </div>
+
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <DollarSign className="w-4 h-4" />
+                    <span className="text-xs">Reward</span>
+                  </div>
+                  <div className="text-right text-foreground font-medium text-xs">
+                    ${campaign.rpm_rate.toFixed(2)} per 100K views
+                  </div>
                 </div>
-                
-                <Button className="w-full" size="sm">
-                  View Details
-                </Button>
+
+                <div className="pt-3 border-t border-border/50">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground font-medium">Campaign Budget</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-success font-bold text-lg">
+                        ${(campaign.budget / 1000).toFixed(1)}K
+                      </span>
+                      <span className="text-muted-foreground">/</span>
+                      <Infinity className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}
