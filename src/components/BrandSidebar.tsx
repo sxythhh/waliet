@@ -60,7 +60,7 @@ export function BrandSidebar() {
   // Wait for brands to load before rendering
   if (loading || brands.length === 0) {
     return (
-      <Sidebar className="border-r-0 bg-[#202020]">
+      <Sidebar className="border-r-0" style={{ backgroundColor: '#202020' }}>
         <SidebarHeader className="border-b border-white/10 p-6">
           <div className="flex items-center gap-2 mb-6">
             <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
@@ -78,7 +78,7 @@ export function BrandSidebar() {
   const currentSlug = slug || brands[0].slug;
 
   return (
-    <Sidebar className="border-r-0 bg-[#202020]">
+    <Sidebar className="border-r-0" style={{ backgroundColor: '#202020' }}>
       <SidebarHeader className="border-b border-white/10 p-6">
         <div className="flex items-center gap-2 mb-6">
           <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
@@ -122,11 +122,11 @@ export function BrandSidebar() {
                     <NavLink 
                       to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`}
                       end
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-primary text-white"
-                          : "text-white/70 hover:bg-white/5 hover:text-white"
-                      }
+                      style={({ isActive }) => ({
+                        backgroundColor: isActive ? '#5865F2' : 'transparent',
+                        color: 'white',
+                      })}
+                      className="hover:bg-[#2C2C2C] transition-colors"
                     >
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
