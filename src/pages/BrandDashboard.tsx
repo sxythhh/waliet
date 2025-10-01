@@ -140,9 +140,17 @@ export default function BrandDashboard() {
         {/* Header with Create Button */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="h-20 w-20 rounded-xl bg-white/5 flex items-center justify-center">
-              <div className="h-16 w-16 rounded-lg bg-white/10" />
-            </div>
+            {brand.logo_url ? (
+              <img 
+                src={brand.logo_url} 
+                alt={`${brand.name} logo`}
+                className="h-20 w-20 rounded-xl object-cover"
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-xl bg-white/5 flex items-center justify-center">
+                <div className="h-16 w-16 rounded-lg bg-white/10" />
+              </div>
+            )}
             <h1 className="text-4xl font-bold text-white">{brand.name}</h1>
           </div>
           <CreateCampaignDialog
