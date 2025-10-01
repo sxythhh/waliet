@@ -116,7 +116,7 @@ export default function BrandDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-8 bg-[#202020] flex items-center justify-center">
+      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">Loading...</div>
       </div>
     );
@@ -124,7 +124,7 @@ export default function BrandDashboard() {
 
   if (!brand) {
     return (
-      <div className="min-h-screen p-8 bg-[#202020] flex items-center justify-center">
+      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">Brand not found</div>
       </div>
     );
@@ -135,7 +135,7 @@ export default function BrandDashboard() {
 
 
   return (
-    <div className="min-h-screen p-8 bg-[#202020]">
+    <div className="min-h-screen p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto">
         {/* Header with Create Button */}
         <div className="flex items-center justify-between mb-8">
