@@ -270,19 +270,19 @@ export default function BrandManagement() {
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="w-full">
           <TabsList className="bg-[#202020] border-white/10">
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-primary">
+            <TabsTrigger value="analytics" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Analytics
             </TabsTrigger>
-            <TabsTrigger value="creators" className="data-[state=active]:bg-primary">
+            <TabsTrigger value="creators" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Creators
             </TabsTrigger>
-            <TabsTrigger value="applications" className="data-[state=active]:bg-primary">
+            <TabsTrigger value="applications" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Applications
               {pendingSubmissions.length > 0 && (
                 <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-primary">
+            <TabsTrigger value="settings" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Settings
             </TabsTrigger>
           </TabsList>
