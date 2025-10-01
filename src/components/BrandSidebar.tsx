@@ -57,8 +57,25 @@ export function BrandSidebar() {
     fetchBrands();
   }, []);
 
+  // Wait for brands to load before rendering
+  if (loading || brands.length === 0) {
+    return (
+      <Sidebar className="border-r-0 bg-[#202020]">
+        <SidebarHeader className="border-b border-white/10 p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
+              V
+            </div>
+            <span className="text-xl font-bold text-white">VIRALITY</span>
+          </div>
+          <div className="text-white/60 text-sm">Loading brands...</div>
+        </SidebarHeader>
+      </Sidebar>
+    );
+  }
+
   const currentBrand = brands.find((b) => b.slug === slug) || brands[0];
-  const currentSlug = slug || brands[0]?.slug;
+  const currentSlug = slug || brands[0].slug;
 
   return (
     <Sidebar className="border-r-0 bg-[#202020]">
@@ -75,11 +92,10 @@ export function BrandSidebar() {
         <Select
           value={currentSlug}
           onValueChange={(value) => navigate(`/brand/${value}`)}
-          disabled={loading}
         >
           <SelectTrigger className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
             <SelectValue>
-              {loading ? "Loading..." : currentBrand?.name || "Select Brand"}
+              {currentBrand?.name || "Select Brand"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-[#2a2a2a] border-white/10">
