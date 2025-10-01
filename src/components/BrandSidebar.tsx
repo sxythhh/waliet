@@ -75,10 +75,10 @@ export function BrandSidebar() {
     : baseMenuItems;
 
   return (
-    <Sidebar className="border-r border-[#272727] bg-[#202020]">
+    <Sidebar className="border-r border-[#272727] bg-[#202020] font-instrument">
       <SidebarHeader className="p-4 bg-[#202020]">
         <Select value={currentSlug} onValueChange={(value) => navigate(`/brand/${value}`)}>
-          <SelectTrigger className="w-full bg-white/5 border-none text-white hover:bg-white/10">
+          <SelectTrigger className="w-full bg-white/5 border-none text-white hover:bg-white/10 font-instrument">
             <SelectValue>
               <div className="flex items-center gap-2">
                 {currentBrand?.logo_url ? (
@@ -148,8 +148,9 @@ export function BrandSidebar() {
           href="https://partners.virality.cc/book"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-gradient-to-br from-[#5865F2] to-[#4752C4] text-white font-semibold rounded-lg transition-all active:scale-95"
+          className="flex items-center justify-center gap-2 w-full px-4 py-2 text-white font-semibold rounded-lg transition-all active:scale-95"
           style={{
+            backgroundColor: '#5865F2',
             boxShadow: '0 4px 0 0 #3b45a0',
             transform: 'translateY(-2px)'
           }}
