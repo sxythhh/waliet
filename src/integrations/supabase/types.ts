@@ -100,6 +100,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          banner_url: string | null
           brand_id: string | null
           brand_logo_url: string | null
           brand_name: string
@@ -116,6 +117,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          banner_url?: string | null
           brand_id?: string | null
           brand_logo_url?: string | null
           brand_name: string
@@ -132,6 +134,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          banner_url?: string | null
           brand_id?: string | null
           brand_logo_url?: string | null
           brand_name?: string

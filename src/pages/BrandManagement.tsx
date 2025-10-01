@@ -29,6 +29,7 @@ interface Campaign {
   budget: number;
   rpm_rate: number;
   status: string;
+  banner_url: string | null;
 }
 
 interface Submission {
@@ -76,7 +77,7 @@ export default function BrandManagement() {
 
       const { data, error } = await supabase
         .from("campaigns")
-        .select("id, title, budget, rpm_rate, status")
+        .select("id, title, budget, rpm_rate, status, banner_url")
         .eq("brand_id", brandData.id)
         .order("created_at", { ascending: false });
 

@@ -4,6 +4,9 @@ import { Progress } from "@/components/ui/progress";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Brand {
   id: string;
@@ -16,8 +19,12 @@ interface Brand {
 interface Campaign {
   id: string;
   title: string;
+  description: string | null;
   budget: number;
+  rpm_rate: number;
   status: string;
+  banner_url: string | null;
+  guidelines: string | null;
 }
 
 export default function BrandDashboard() {
@@ -49,8 +56,9 @@ export default function BrandDashboard() {
       // Fetch campaigns for this brand
       const { data: campaignsData, error: campaignsError } = await supabase
         .from("campaigns")
-        .select("id, title, budget, status")
-        .eq("brand_id", brandData.id);
+        .select("*")
+        .eq("brand_id", brandData.id)
+        .order("created_at", { ascending: false });
 
       if (campaignsError) throw campaignsError;
 
@@ -157,6 +165,69 @@ export default function BrandDashboard() {
             <Progress value={0} className="h-2" />
           </div>
         </div>
+
+        {/* Campaigns List */}
+        {campaigns.length > 0 && (
+          <div className="space-y-4 mt-8">
+            <h2 className="text-2xl font-bold text-white">Campaigns</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {campaigns.map((campaign) => (
+                <Card key={campaign.id} className="bg-[#202020] border-white/10 overflow-hidden">
+                  {campaign.banner_url && (
+                    <div className="w-full h-32 overflow-hidden">
+                      <img
+                        src={campaign.banner_url}
+                        alt={campaign.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="text-xl font-semibold text-white mb-1">
+                          {campaign.title}
+                        </h3>
+                        {campaign.description && (
+                          <p className="text-sm text-white/60 line-clamp-2">
+                            {campaign.description}
+                          </p>
+                        )}
+                      </div>
+                      <CreateCampaignDialog
+                        brandId={brand.id}
+                        brandName={brand.name}
+                        onSuccess={fetchBrandData}
+                        campaign={campaign}
+                        trigger={
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-white/60 hover:text-white hover:bg-white/10"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-white/60">Budget:</span>
+                      <span className="text-white font-semibold">
+                        ${Number(campaign.budget).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm mt-2">
+                      <span className="text-white/60">RPM:</span>
+                      <span className="text-white font-semibold">
+                        ${Number(campaign.rpm_rate).toFixed(2)}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

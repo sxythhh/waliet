@@ -17,6 +17,7 @@ interface Campaign {
   rpm_rate: number;
   status: string;
   start_date: string | null;
+  banner_url: string | null;
 }
 
 export default function Dashboard() {
@@ -143,13 +144,21 @@ export default function Dashboard() {
               onClick={() => navigate(`/campaign/${campaign.id}`)}
             >
               <div className="relative h-48 bg-gradient-to-br from-background to-muted overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
+                {campaign.banner_url ? (
                   <img
-                    src={campaign.brand_logo_url}
-                    alt={campaign.brand_name}
-                    className="w-24 h-24 rounded-2xl object-cover border-2 border-border/50"
+                    src={campaign.banner_url}
+                    alt={campaign.title}
+                    className="w-full h-full object-cover"
                   />
-                </div>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img
+                      src={campaign.brand_logo_url}
+                      alt={campaign.brand_name}
+                      className="w-24 h-24 rounded-2xl object-cover border-2 border-border/50"
+                    />
+                  </div>
+                )}
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-primary text-primary-foreground font-bold text-base px-3 py-1">
                     ${campaign.rpm_rate.toFixed(1)}/1K
