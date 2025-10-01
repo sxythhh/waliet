@@ -170,41 +170,6 @@ export default function BrandDashboard() {
           </div>
         </div>
 
-        {/* Brand Card */}
-        <div className="bg-[#202020] rounded-2xl p-6 max-w-md">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-16 w-16 rounded-xl bg-white/5 flex items-center justify-center relative">
-              <div className="h-12 w-12 rounded-lg bg-white/10" />
-              <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-white/20 flex items-center justify-center">
-                <svg
-                  className="h-4 w-4 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h2 className="text-2xl font-semibold text-white">{brand.name}</h2>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-white">
-                ${totalBudget.toLocaleString()}
-              </span>
-              <span className="text-sm text-white/50">0%</span>
-            </div>
-            <Progress value={0} className="h-2" />
-          </div>
-        </div>
-
         {/* Campaigns List */}
         {campaigns.length > 0 && (
           <div className="space-y-4 mt-8">
