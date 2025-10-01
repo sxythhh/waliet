@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { BrandSidebar } from "@/components/BrandSidebar";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -20,7 +21,9 @@ import BrandAssets from "./pages/BrandAssets";
 import BrandLibrary from "./pages/BrandLibrary";
 import BrandAccount from "./pages/BrandAccount";
 import Training from "./pages/Training";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminOverview from "./pages/admin/Overview";
+import AdminBrands from "./pages/admin/Brands";
+import AdminCourses from "./pages/admin/Courses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +56,23 @@ function BrandLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col">
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+            <SidebarTrigger />
+            <div className="flex-1" />
+          </header>
+          <main className="flex-1">{children}</main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -68,7 +88,9 @@ const App = () => (
           <Route path="/wallet" element={<DashboardLayout><Wallet /></DashboardLayout>} />
           <Route path="/profile" element={<DashboardLayout><Profile /></DashboardLayout>} />
           <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
+          <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
+          <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
           <Route path="/brand/:slug" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
           <Route path="/brand/:slug/management" element={<BrandLayout><BrandManagement /></BrandLayout>} />
           <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
