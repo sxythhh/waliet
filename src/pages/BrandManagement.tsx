@@ -34,6 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2 } from "lucide-react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 interface Campaign {
   id: string;
@@ -59,6 +60,7 @@ interface Submission {
 
 export default function BrandManagement() {
   const { slug } = useParams();
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -215,7 +217,7 @@ export default function BrandManagement() {
   const effectiveCPM =
     totalViews > 0 ? (totalSpent / totalViews) * 1000 : 0;
 
-  if (loading) {
+  if (loading || adminLoading) {
     return (
       <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">Loading...</div>
@@ -558,6 +560,14 @@ export default function BrandManagement() {
                 <CardTitle className="text-white">Brand Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {!isAdmin && (
+                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <p className="text-yellow-500 text-sm">
+                      Only administrators can edit brand URLs
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="assets-url" className="text-white">
                     Assets Page URL
@@ -569,6 +579,7 @@ export default function BrandManagement() {
                     value={assetsUrl}
                     onChange={(e) => setAssetsUrl(e.target.value)}
                     className="bg-[#191919] border-white/10 text-white"
+                    disabled={!isAdmin}
                   />
                   <p className="text-sm text-white/60">
                     This URL will be embedded when users visit the Assets page
@@ -586,6 +597,7 @@ export default function BrandManagement() {
                     value={homeUrl}
                     onChange={(e) => setHomeUrl(e.target.value)}
                     className="bg-[#191919] border-white/10 text-white"
+                    disabled={!isAdmin}
                   />
                   <p className="text-sm text-white/60">
                     For DWY brands, this URL will be embedded on the Home page instead of the default dashboard
@@ -594,7 +606,7 @@ export default function BrandManagement() {
 
                 <Button
                   onClick={handleSaveUrls}
-                  disabled={savingUrls}
+                  disabled={savingUrls || !isAdmin}
                   className="bg-primary hover:bg-primary/90"
                 >
                   {savingUrls ? "Saving..." : "Save URLs"}

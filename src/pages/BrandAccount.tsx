@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export default function BrandAccount() {
   const { slug } = useParams();
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [brandId, setBrandId] = useState("");
   const [accountUrl, setAccountUrl] = useState("");
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ export default function BrandAccount() {
     }
   };
 
-  if (loading) {
+  if (loading || adminLoading) {
     return (
       <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">Loading...</div>
@@ -80,6 +82,14 @@ export default function BrandAccount() {
             <CardTitle className="text-white">Account Page Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {!isAdmin && (
+              <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <p className="text-yellow-500 text-sm">
+                  Only administrators can edit brand URLs
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="account-url" className="text-white">
                 Account Page URL
@@ -91,6 +101,7 @@ export default function BrandAccount() {
                 value={accountUrl}
                 onChange={(e) => setAccountUrl(e.target.value)}
                 className="bg-[#191919] border-white/10 text-white"
+                disabled={!isAdmin}
               />
               <p className="text-sm text-white/60">
                 This URL will be embedded when users visit the Account page
@@ -99,7 +110,7 @@ export default function BrandAccount() {
 
             <Button
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || !isAdmin}
               className="bg-primary hover:bg-primary/90"
             >
               {saving ? "Saving..." : "Save URL"}
