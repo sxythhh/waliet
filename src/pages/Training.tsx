@@ -2,11 +2,11 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { TrainingSidebar } from "@/components/TrainingSidebar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Course {
   id: string;
@@ -126,97 +126,125 @@ export default function Training() {
   }
 
   return (
-    <SidebarProvider defaultOpen>
-      <div className="min-h-screen flex w-full bg-background">
-        <TrainingSidebar
-          courses={courses}
-          modules={modules}
-          selectedModuleId={selectedModuleId}
-          onModuleSelect={handleModuleSelect}
-        />
-        
-        <main className="flex-1 overflow-auto">
-          <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="h-6" />
-            {selectedCourse && selectedModule && (
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink className="text-muted-foreground">Training</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator>
-                    <ChevronRight className="h-4 w-4" />
-                  </BreadcrumbSeparator>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink className="text-muted-foreground">
-                      {selectedCourse.title}
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator>
-                    <ChevronRight className="h-4 w-4" />
-                  </BreadcrumbSeparator>
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Module {moduleIndex}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-            )}
-          </header>
+    <div className="min-h-screen p-8 bg-[#191919]">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-white mb-8">Training Portal</h1>
 
-          <div className="flex-1 p-8">
-            {selectedModule ? (
-              <article className="max-w-4xl mx-auto">
-                <header className="mb-8 pb-6 border-b">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                    <span className="font-medium">Module {moduleIndex}</span>
-                    <span>•</span>
-                    <span>{selectedCourse?.title}</span>
+        <div className="grid grid-cols-12 gap-6">
+          {/* Sidebar Navigation */}
+          <div className="col-span-3">
+            <Card className="bg-[#202020] border-white/10 sticky top-8">
+              <CardContent className="p-4">
+                <ScrollArea className="h-[calc(100vh-12rem)]">
+                  <div className="space-y-2">
+                    {courses.map((course, courseIndex) => (
+                      <div key={course.id} className="space-y-1">
+                        <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white/80">
+                          <BookOpen className="h-4 w-4" />
+                          <span className="truncate">{course.title}</span>
+                        </div>
+                        {modules[course.id]?.map((module, moduleIndex) => (
+                          <Button
+                            key={module.id}
+                            variant="ghost"
+                            className={`w-full justify-start text-left font-normal pl-9 ${
+                              selectedModuleId === module.id
+                                ? 'bg-[#5865F2] text-white hover:bg-[#5865F2] hover:text-white'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                            }`}
+                            onClick={() => handleModuleSelect(module.id, course.id)}
+                          >
+                            <span className="text-xs mr-2">{moduleIndex + 1}</span>
+                            <span className="truncate">{module.title}</span>
+                          </Button>
+                        ))}
+                      </div>
+                    ))}
                   </div>
-                  <h1 className="text-4xl font-bold tracking-tight mb-2">
-                    {selectedModule.title}
-                  </h1>
-                </header>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
 
-                {selectedModule.video_url && (
-                  <div className="mb-8 rounded-lg overflow-hidden border">
-                    <div className="aspect-video bg-black">
-                      <iframe
-                        src={selectedModule.video_url}
-                        className="w-full h-full"
-                        title={selectedModule.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
+          {/* Main Content Area */}
+          <div className="col-span-9">
+            {selectedModule && selectedCourse ? (
+              <div className="space-y-6">
+                {/* Breadcrumb */}
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink className="text-white/60 hover:text-white">
+                        {selectedCourse.title}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator className="text-white/40">
+                      <ChevronRight className="h-4 w-4" />
+                    </BreadcrumbSeparator>
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="text-white">
+                        Module {moduleIndex}
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+
+                {/* Module Content Card */}
+                <Card className="bg-[#202020] border-white/10">
+                  <CardContent className="p-8">
+                    <header className="mb-8 pb-6 border-b border-white/10">
+                      <div className="flex items-center gap-2 text-sm text-white/60 mb-3">
+                        <span className="font-medium">Module {moduleIndex}</span>
+                      </div>
+                      <h1 className="text-4xl font-bold text-white mb-2">
+                        {selectedModule.title}
+                      </h1>
+                    </header>
+
+                    {selectedModule.video_url && (
+                      <div className="mb-8 rounded-lg overflow-hidden border border-white/10">
+                        <div className="aspect-video bg-black">
+                          <iframe
+                            src={selectedModule.video_url}
+                            className="w-full h-full"
+                            title={selectedModule.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedModule.content && (
+                      <div 
+                        className="prose prose-lg prose-neutral dark:prose-invert max-w-none
+                          prose-headings:text-white prose-headings:font-bold prose-headings:tracking-tight
+                          prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4
+                          prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3
+                          prose-p:text-white/80 prose-p:leading-7 prose-p:mb-4
+                          prose-a:text-[#5865F2] prose-a:no-underline hover:prose-a:underline
+                          prose-strong:font-semibold prose-strong:text-white
+                          prose-ul:my-4 prose-li:my-2 prose-li:text-white/80
+                          prose-img:rounded-lg prose-img:border prose-img:border-white/10"
+                        dangerouslySetInnerHTML={{ __html: selectedModule.content }}
                       />
-                    </div>
-                  </div>
-                )}
-
-                {selectedModule.content && (
-                  <div 
-                    className="prose prose-lg prose-neutral dark:prose-invert max-w-none
-                      prose-headings:font-bold prose-headings:tracking-tight
-                      prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4
-                      prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3
-                      prose-p:leading-7 prose-p:mb-4
-                      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                      prose-strong:font-semibold prose-strong:text-foreground
-                      prose-ul:my-4 prose-li:my-2
-                      prose-img:rounded-lg prose-img:border"
-                    dangerouslySetInnerHTML={{ __html: selectedModule.content }}
-                  />
-                )}
-              </article>
-            ) : (
-              <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
-                <div className="text-center text-muted-foreground">
-                  <p className="text-lg">Select a module from the sidebar to begin</p>
-                </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
+            ) : (
+              <Card className="bg-[#202020] border-white/10">
+                <CardContent className="flex items-center justify-center h-[calc(100vh-16rem)] p-8">
+                  <div className="text-center text-white/60">
+                    <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-40" />
+                    <p className="text-lg">Select a module from the sidebar to begin</p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
-        </main>
+        </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
