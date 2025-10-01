@@ -267,15 +267,15 @@ export default function BrandDashboard() {
                             ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
                           </span>
                         </div>
-                        <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
+                        <div className="relative h-3 bg-[#0a0a0a] rounded-full overflow-hidden">
                           <div 
-                            className="absolute inset-0 bg-gradient-to-r from-[#5865F2] to-[#7289DA] rounded-full transition-all duration-500"
+                            className="absolute inset-0 bg-gradient-to-r from-[#3b4ad9] to-[#5865F2] rounded-full transition-all duration-500"
                             style={{ width: `${budgetPercentage}%` }}
                           >
                             <div 
-                              className="absolute inset-0 opacity-30"
+                              className="absolute inset-0 opacity-40"
                               style={{
-                                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px)',
+                                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.2) 10px, rgba(255,255,255,.2) 20px)',
                                 animation: 'slide 2s linear infinite'
                               }}
                             />
@@ -284,16 +284,11 @@ export default function BrandDashboard() {
                       </div>
 
                       {/* RPM Display */}
-                      <div className="flex items-center gap-2 p-3 bg-[#191919] rounded-lg">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#5865F2]/20">
-                          <TrendingUp className="h-4 w-4 text-[#5865F2]" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-xs text-white/60">Revenue Per Mille</div>
-                          <div className="text-lg font-bold text-white">
-                            ${Number(campaign.rpm_rate).toFixed(2)}
-                          </div>
-                        </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-white/60">RPM:</span>
+                        <span className="text-white font-semibold">
+                          ${Number(campaign.rpm_rate).toFixed(2)}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
