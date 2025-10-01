@@ -16,6 +16,9 @@ import Leaderboard from "./pages/Leaderboard";
 import Discover from "./pages/Discover";
 import BrandDashboard from "./pages/BrandDashboard";
 import BrandManagement from "./pages/BrandManagement";
+import BrandAssets from "./pages/BrandAssets";
+import BrandLibrary from "./pages/BrandLibrary";
+import BrandAccount from "./pages/BrandAccount";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -67,7 +70,9 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/brand/:slug" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
           <Route path="/brand/:slug/management" element={<BrandLayout><BrandManagement /></BrandLayout>} />
-          <Route path="/brand/:slug/:section" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
+          <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
+          <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
+          <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -62,6 +64,10 @@ export default function BrandManagement() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [brandId, setBrandId] = useState<string>("");
+  const [assetsUrl, setAssetsUrl] = useState("");
+  const [homeUrl, setHomeUrl] = useState("");
+  const [savingUrls, setSavingUrls] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
@@ -79,12 +85,16 @@ export default function BrandManagement() {
     try {
       const { data: brandData, error: brandError } = await supabase
         .from("brands")
-        .select("id")
+        .select("id, assets_url, home_url")
         .eq("slug", slug)
         .maybeSingle();
 
       if (brandError) throw brandError;
       if (!brandData) return;
+
+      setBrandId(brandData.id);
+      setAssetsUrl(brandData.assets_url || "");
+      setHomeUrl(brandData.home_url || "");
 
       const { data, error } = await supabase
         .from("campaigns")
@@ -172,6 +182,30 @@ export default function BrandManagement() {
     }
   };
 
+  const handleSaveUrls = async () => {
+    if (!brandId) return;
+
+    setSavingUrls(true);
+    try {
+      const { error } = await supabase
+        .from("brands")
+        .update({
+          assets_url: assetsUrl || null,
+          home_url: homeUrl || null,
+        })
+        .eq("id", brandId);
+
+      if (error) throw error;
+
+      toast.success("URLs updated successfully");
+    } catch (error) {
+      console.error("Error updating URLs:", error);
+      toast.error("Failed to update URLs");
+    } finally {
+      setSavingUrls(false);
+    }
+  };
+
   const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
@@ -247,6 +281,9 @@ export default function BrandManagement() {
               {pendingSubmissions.length > 0 && (
                 <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-primary">
+              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -510,6 +547,58 @@ export default function BrandManagement() {
                     )}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <Card className="bg-[#202020] border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white">Brand Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="assets-url" className="text-white">
+                    Assets Page URL
+                  </Label>
+                  <Input
+                    id="assets-url"
+                    type="url"
+                    placeholder="https://example.com/assets"
+                    value={assetsUrl}
+                    onChange={(e) => setAssetsUrl(e.target.value)}
+                    className="bg-[#191919] border-white/10 text-white"
+                  />
+                  <p className="text-sm text-white/60">
+                    This URL will be embedded when users visit the Assets page
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="home-url" className="text-white">
+                    Home Page URL (DWY Brands Only)
+                  </Label>
+                  <Input
+                    id="home-url"
+                    type="url"
+                    placeholder="https://example.com/home"
+                    value={homeUrl}
+                    onChange={(e) => setHomeUrl(e.target.value)}
+                    className="bg-[#191919] border-white/10 text-white"
+                  />
+                  <p className="text-sm text-white/60">
+                    For DWY brands, this URL will be embedded on the Home page instead of the default dashboard
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleSaveUrls}
+                  disabled={savingUrls}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {savingUrls ? "Saving..." : "Save URLs"}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

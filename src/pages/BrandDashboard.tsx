@@ -24,6 +24,8 @@ interface Brand {
   slug: string;
   logo_url: string | null;
   description: string | null;
+  brand_type: string | null;
+  home_url: string | null;
 }
 
 interface Campaign {
@@ -126,6 +128,20 @@ export default function BrandDashboard() {
     return (
       <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">Brand not found</div>
+      </div>
+    );
+  }
+
+  // If brand type is "DWY" and home_url is configured, embed it
+  if (brand.brand_type === "DWY" && brand.home_url) {
+    return (
+      <div className="h-screen w-full bg-[#191919]">
+        <iframe
+          src={brand.home_url}
+          className="w-full h-full border-0"
+          title="Brand Home"
+          allow="clipboard-read; clipboard-write"
+        />
       </div>
     );
   }
