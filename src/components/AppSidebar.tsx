@@ -1,4 +1,4 @@
-import { Home, DollarSign, User, TrendingUp } from "lucide-react";
+import { Home, DollarSign, User, TrendingUp, Compass } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -14,6 +14,7 @@ import {
 
 const menuItems = [
   { title: "Campaigns", url: "/dashboard", icon: Home },
+  { title: "Discover", url: "/discover", icon: Compass },
   { title: "Wallet", url: "/wallet", icon: DollarSign },
   { title: "Leaderboard", url: "/leaderboard", icon: TrendingUp },
   { title: "Profile", url: "/profile", icon: User },

@@ -12,6 +12,7 @@ import CampaignDetail from "./pages/CampaignDetail";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import Leaderboard from "./pages/Leaderboard";
+import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+          <Route path="/discover" element={<DashboardLayout><Discover /></DashboardLayout>} />
           <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
           <Route path="/wallet" element={<DashboardLayout><Wallet /></DashboardLayout>} />
           <Route path="/profile" element={<DashboardLayout><Profile /></DashboardLayout>} />
