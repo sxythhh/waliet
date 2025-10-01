@@ -80,21 +80,12 @@ export function BrandSidebar() {
 
   return (
     <Sidebar className="border-r border-[#272727] bg-[#202020]">
-      <SidebarHeader className="border-b border-transparent p-6 bg-[#202020]">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
-            V
-          </div>
-          <span className="text-xl font-bold text-white">
-            VIRALITY
-          </span>
-        </div>
-        
+      <SidebarHeader className="p-4 bg-[#202020]">
         <Select
           value={currentSlug}
           onValueChange={(value) => navigate(`/brand/${value}`)}
         >
-          <SelectTrigger className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <SelectTrigger className="w-full bg-white/5 border-none text-white hover:bg-white/10">
             <SelectValue>
               <div className="flex items-center gap-2">
                 {currentBrand?.logo_url ? (
