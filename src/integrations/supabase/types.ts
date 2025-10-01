@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       brands: {
         Row: {
+          account_url: string | null
           assets_url: string | null
           brand_type: string | null
           created_at: string
@@ -28,6 +29,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_url?: string | null
           assets_url?: string | null
           brand_type?: string | null
           created_at?: string
@@ -40,6 +42,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_url?: string | null
           assets_url?: string | null
           brand_type?: string | null
           created_at?: string

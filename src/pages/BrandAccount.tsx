@@ -23,7 +23,7 @@ export default function BrandAccount() {
           .from("brands")
           .select("id, account_url")
           .eq("slug", slug)
-          .maybeSingle();
+          .maybeSingle() as any;
 
         if (error) throw error;
         if (data) {
@@ -48,7 +48,7 @@ export default function BrandAccount() {
     try {
       const { error } = await supabase
         .from("brands")
-        .update({ account_url: accountUrl || null })
+        .update({ account_url: accountUrl || null } as any)
         .eq("id", brandId);
 
       if (error) throw error;
