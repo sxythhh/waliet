@@ -1,4 +1,4 @@
-import { Home, FolderOpen, FileImage, BookOpen, Receipt, GraduationCap } from "lucide-react";
+import { Home, FolderOpen, FileImage, BookOpen, Receipt, GraduationCap, Map } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarHeader } from "@/components/ui/sidebar";
@@ -57,7 +57,9 @@ export function BrandSidebar() {
   const baseMenuItems = [
     { title: "Home", icon: Home, path: "" },
     { title: "Management", icon: FolderOpen, path: "management" },
-    { title: "Assets", icon: FileImage, path: "assets" },
+    currentBrand?.brand_type === "DWY" 
+      ? { title: "Roadmap", icon: Map, path: "assets" }
+      : { title: "Assets", icon: FileImage, path: "assets" },
     { title: "Library", icon: BookOpen, path: "library" },
     { title: "Account", icon: Receipt, path: "account" }
   ];
