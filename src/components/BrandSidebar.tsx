@@ -148,9 +148,9 @@ export function BrandSidebar() {
           href="https://partners.virality.cc/book"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-br from-[#5865F2] to-[#4752C4] text-white font-semibold rounded-lg transition-all hover:from-[#4752C4] hover:to-[#3b45a0] active:scale-95"
+          className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-gradient-to-br from-[#5865F2] to-[#4752C4] text-white font-semibold rounded-lg transition-all active:scale-95"
           style={{
-            boxShadow: '0 4px 0 0 #3b45a0, 0 8px 16px rgba(88, 101, 242, 0.4)',
+            boxShadow: '0 4px 0 0 #3b45a0',
             transform: 'translateY(-2px)'
           }}
         >
