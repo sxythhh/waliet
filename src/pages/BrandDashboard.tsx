@@ -5,8 +5,9 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, TrendingUp } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,7 @@ interface Campaign {
 export default function BrandDashboard() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { toggleSidebar } = useSidebar();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,6 +157,14 @@ export default function BrandDashboard() {
         {/* Header with Create Button */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="text-white/60 hover:text-white hover:bg-white/10"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
             {brand.logo_url ? (
               <img 
                 src={brand.logo_url} 

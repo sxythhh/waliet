@@ -180,26 +180,26 @@ export function CreateCampaignDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#202020] border-white/10">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-white text-2xl">
             {campaign ? "Edit Campaign" : "Create New Campaign"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-white/60">
             {campaign
-              ? `Edit campaign for ${brandName}`
+              ? `Edit campaign details for ${brandName}`
               : `Create a new campaign for ${brandName}`}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Banner Upload */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Campaign Banner</label>
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-white">Campaign Banner</label>
               <div className="flex flex-col gap-3">
                 {bannerPreview ? (
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
+                  <div className="relative w-full h-56 rounded-xl overflow-hidden bg-[#191919] border border-white/10">
                     <img
                       src={bannerPreview}
                       alt="Campaign banner"
@@ -207,26 +207,27 @@ export function CreateCampaignDialog({
                     />
                     <Button
                       type="button"
-                      variant="destructive"
                       size="icon"
-                      className="absolute top-2 right-2"
+                      className="absolute top-3 right-3 bg-[#191919]/80 hover:bg-destructive border border-white/10"
                       onClick={removeBanner}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-4 w-4 text-white" />
                     </Button>
                   </div>
                 ) : (
                   <div
-                    className="w-full h-48 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="w-full h-56 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors bg-[#191919]"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <div className="text-center">
-                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        Click to upload banner
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
+                        <Upload className="h-8 w-8 text-white/60" />
+                      </div>
+                      <p className="text-sm text-white/80 font-medium mb-1">
+                        Click to upload campaign banner
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Recommended: 1200x400px
+                      <p className="text-xs text-white/40">
+                        Recommended: 1200x400px • PNG, JPG up to 10MB
                       </p>
                     </div>
                   </div>
@@ -246,11 +247,15 @@ export function CreateCampaignDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Campaign Title</FormLabel>
+                  <FormLabel className="text-white">Campaign Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter campaign title" {...field} />
+                    <Input 
+                      placeholder="Enter campaign title" 
+                      className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                      {...field} 
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-destructive/80" />
                 </FormItem>
               )}
             />
@@ -260,16 +265,16 @@ export function CreateCampaignDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel className="text-white">Description</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Describe your campaign"
-                      className="resize-none"
+                      className="resize-none bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
                       rows={3}
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-destructive/80" />
                 </FormItem>
               )}
             />
@@ -280,16 +285,17 @@ export function CreateCampaignDialog({
                 name="budget"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Budget ($)</FormLabel>
+                    <FormLabel className="text-white">Budget ($)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="0"
+                        placeholder="0.00"
                         step="0.01"
+                        className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-destructive/80" />
                   </FormItem>
                 )}
               />
@@ -299,16 +305,17 @@ export function CreateCampaignDialog({
                 name="rpm_rate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RPM Rate ($)</FormLabel>
+                    <FormLabel className="text-white">RPM Rate ($)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="0"
+                        placeholder="0.00"
                         step="0.01"
+                        className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-destructive/80" />
                   </FormItem>
                 )}
               />
@@ -319,24 +326,24 @@ export function CreateCampaignDialog({
               name="guidelines"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Campaign Guidelines</FormLabel>
+                  <FormLabel className="text-white">Campaign Guidelines</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Enter campaign guidelines and requirements"
-                      className="resize-none"
+                      className="resize-none bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
                       rows={4}
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-destructive/80" />
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => {
                   setOpen(false);
                   form.reset();
@@ -344,10 +351,15 @@ export function CreateCampaignDialog({
                   setBannerPreview(null);
                 }}
                 disabled={isSubmitting}
+                className="text-white/60 hover:text-white hover:bg-white/10"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-primary hover:bg-primary/90 text-white min-w-[140px]"
+              >
                 {isSubmitting
                   ? campaign
                     ? "Updating..."
