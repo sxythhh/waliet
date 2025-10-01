@@ -101,10 +101,10 @@ All colors MUST be HSL.
 
   @keyframes slide {
     0% {
-      transform: translateX(-20px);
+      background-position: 0 0;
     }
     100% {
-      transform: translateX(0);
+      background-position: 40px 0;
     }
   }
 }

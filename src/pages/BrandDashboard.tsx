@@ -267,7 +267,7 @@ export default function BrandDashboard() {
                             ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
                           </span>
                         </div>
-                        <div className="relative h-3 bg-[#0a0a0a] rounded-full overflow-hidden">
+                        <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
                           <div 
                             className="absolute inset-0 bg-gradient-to-r from-[#3b4ad9] to-[#5865F2] rounded-full transition-all duration-500"
                             style={{ width: `${budgetPercentage}%` }}
@@ -276,7 +276,8 @@ export default function BrandDashboard() {
                               className="absolute inset-0 opacity-40"
                               style={{
                                 backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.2) 10px, rgba(255,255,255,.2) 20px)',
-                                animation: 'slide 2s linear infinite'
+                                animation: 'slide 1.5s linear infinite',
+                                backgroundSize: '40px 40px'
                               }}
                             />
                           </div>
