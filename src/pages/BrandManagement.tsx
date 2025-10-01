@@ -595,12 +595,6 @@ export default function BrandManagement() {
                   </p>
                 </div>
 
-                {brandType === "DWY" && isAdmin && (
-                  <div className="pt-4 border-t border-white/10">
-                    <ManageTrainingDialog brandId={brandId} onSuccess={fetchCampaigns} />
-                  </div>
-                )}
-
                 <div className="space-y-2">
                   <Label htmlFor="assets-url" className="text-white">
                     Assets Page URL

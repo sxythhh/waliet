@@ -36,21 +36,10 @@ export default function Training() {
     if (!slug) return;
 
     try {
-      // Get brand ID
-      const { data: brandData, error: brandError } = await supabase
-        .from("brands")
-        .select("id")
-        .eq("slug", slug)
-        .maybeSingle();
-
-      if (brandError) throw brandError;
-      if (!brandData) return;
-
-      // Fetch courses
+      // Fetch all courses (they're now global)
       const { data: coursesData, error: coursesError } = await supabase
         .from("courses")
         .select("*")
-        .eq("brand_id", brandData.id)
         .order("order_index", { ascending: true });
 
       if (coursesError) throw coursesError;

@@ -26,11 +26,10 @@ interface Module {
 }
 
 interface ManageTrainingDialogProps {
-  brandId: string;
   onSuccess?: () => void;
 }
 
-export function ManageTrainingDialog({ brandId, onSuccess }: ManageTrainingDialogProps) {
+export function ManageTrainingDialog({ onSuccess }: ManageTrainingDialogProps) {
   const [open, setOpen] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [modules, setModules] = useState<Record<string, Module[]>>({});
@@ -41,14 +40,13 @@ export function ManageTrainingDialog({ brandId, onSuccess }: ManageTrainingDialo
     if (open) {
       fetchData();
     }
-  }, [open, brandId]);
+  }, [open]);
 
   const fetchData = async () => {
     try {
       const { data: coursesData, error: coursesError } = await supabase
         .from("courses")
         .select("*")
-        .eq("brand_id", brandId)
         .order("order_index", { ascending: true });
 
       if (coursesError) throw coursesError;
@@ -84,7 +82,6 @@ export function ManageTrainingDialog({ brandId, onSuccess }: ManageTrainingDialo
     setLoading(true);
     try {
       const { error } = await supabase.from("courses").insert({
-        brand_id: brandId,
         title: "New Course",
         description: "",
         order_index: courses.length,
