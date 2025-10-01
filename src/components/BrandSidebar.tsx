@@ -41,9 +41,10 @@ export function BrandSidebar() {
   const navigate = useNavigate();
 
   const currentBrand = brands.find(b => b.slug === slug) || brands[0];
+  const currentSlug = slug || brands[0].slug;
 
   return (
-    <Sidebar className="border-r-0" style={{ backgroundColor: '#202020' }}>
+    <Sidebar className="border-r-0 bg-[#202020]">
       <SidebarHeader className="border-b border-white/10 p-6">
         <div className="flex items-center gap-2 mb-6">
           <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
@@ -83,7 +84,7 @@ export function BrandSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink 
-                      to={`/brand/${slug}${item.path ? `/${item.path}` : ''}`}
+                      to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`}
                       end
                       className={({ isActive }) =>
                         isActive

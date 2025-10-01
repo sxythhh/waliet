@@ -33,7 +33,7 @@ export default function BrandDashboard() {
   const percentSpent = (brand.spent / brand.budget) * 100;
 
   return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#191919' }}>
+    <div className="min-h-screen p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto">
         {/* Brand Header */}
         <div className="flex items-center gap-4 mb-8">
