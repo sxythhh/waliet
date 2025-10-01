@@ -28,20 +28,29 @@ interface Module {
 
 interface ManageTrainingDialogProps {
   onSuccess?: () => void;
+  initialExpandedCourseId?: string | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ManageTrainingDialog({ onSuccess }: ManageTrainingDialogProps) {
-  const [open, setOpen] = useState(false);
+export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open: controlledOpen, onOpenChange }: ManageTrainingDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
+  
   const [courses, setCourses] = useState<Course[]>([]);
   const [modules, setModules] = useState<Record<string, Module[]>>({});
-  const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
+  const [expandedCourse, setExpandedCourse] = useState<string | null>(initialExpandedCourseId || null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
       fetchData();
+      if (initialExpandedCourseId) {
+        setExpandedCourse(initialExpandedCourseId);
+      }
     }
-  }, [open]);
+  }, [open, initialExpandedCourseId]);
 
   const fetchData = async () => {
     try {

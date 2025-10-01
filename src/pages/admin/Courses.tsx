@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { GraduationCap, Pencil } from "lucide-react";
 
 interface Course {
   id: string;
@@ -25,6 +26,8 @@ export default function AdminCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [modules, setModules] = useState<Record<string, Module[]>>({});
   const [loading, setLoading] = useState(true);
+  const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -98,7 +101,19 @@ export default function AdminCourses() {
               Manage global training content for all DWY brands
             </p>
           </div>
-          <ManageTrainingDialog onSuccess={fetchCourses} />
+          <ManageTrainingDialog 
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) {
+                setEditingCourseId(null);
+              }
+            }}
+            onSuccess={() => {
+              fetchCourses();
+            }} 
+            initialExpandedCourseId={editingCourseId}
+          />
         </div>
 
         <Card>
@@ -121,7 +136,7 @@ export default function AdminCourses() {
                 {courses.map((course, index) => (
                   <div key={course.id} className="border rounded-lg p-4">
                     <div className="flex items-start justify-between mb-2">
-                      <div>
+                      <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">Course {index + 1}</Badge>
                           <h3 className="font-semibold text-lg">{course.title}</h3>
@@ -132,6 +147,17 @@ export default function AdminCourses() {
                           </p>
                         )}
                       </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingCourseId(course.id);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
                     </div>
                     {modules[course.id] && modules[course.id].length > 0 && (
                       <div className="mt-3 pl-4 border-l-2 border-muted">
