@@ -1,67 +1,60 @@
 import { Home, FolderOpen, Image, Library, User, ExternalLink } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-
-const menuItems = [
-  { title: "Home", icon: Home, path: "" },
-  { title: "Management", icon: FolderOpen, path: "management" },
-  { title: "Assets", icon: Image, path: "assets" },
-  { title: "Library", icon: Library, path: "library" },
-  { title: "Account", icon: User, path: "account" },
-];
-
+const menuItems = [{
+  title: "Home",
+  icon: Home,
+  path: ""
+}, {
+  title: "Management",
+  icon: FolderOpen,
+  path: "management"
+}, {
+  title: "Assets",
+  icon: Image,
+  path: "assets"
+}, {
+  title: "Library",
+  icon: Library,
+  path: "library"
+}, {
+  title: "Account",
+  icon: User,
+  path: "account"
+}];
 interface Brand {
   name: string;
   slug: string;
   logo_url: string | null;
 }
-
 export function BrandSidebar() {
-  const { slug } = useParams();
+  const {
+    slug
+  } = useParams();
   const navigate = useNavigate();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchBrands = async () => {
-      const { data, error } = await supabase
-        .from("brands")
-        .select("name, slug, logo_url")
-        .order("name");
-
+      const {
+        data,
+        error
+      } = await supabase.from("brands").select("name, slug, logo_url").order("name");
       if (!error && data) {
         setBrands(data);
       }
       setLoading(false);
     };
-
     fetchBrands();
   }, []);
 
   // Wait for brands to load before rendering
   if (loading || brands.length === 0) {
-    return (
-      <Sidebar className="border-r border-[#272727] bg-[#202020]">
+    return <Sidebar className="border-r border-[#272727] bg-[#202020]">
         <SidebarHeader className="border-b border-transparent p-6 bg-[#202020]">
           <div className="flex items-center gap-2 mb-6">
             <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
@@ -71,57 +64,28 @@ export function BrandSidebar() {
           </div>
           <div className="text-white/60 text-sm">Loading brands...</div>
         </SidebarHeader>
-      </Sidebar>
-    );
+      </Sidebar>;
   }
-
-  const currentBrand = brands.find((b) => b.slug === slug) || brands[0];
+  const currentBrand = brands.find(b => b.slug === slug) || brands[0];
   const currentSlug = slug || brands[0].slug;
-
-  return (
-    <Sidebar className="border-r border-[#272727] bg-[#202020]">
+  return <Sidebar className="border-r border-[#272727] bg-[#202020]">
       <SidebarHeader className="p-4 bg-[#202020]">
-        <Select
-          value={currentSlug}
-          onValueChange={(value) => navigate(`/brand/${value}`)}
-        >
+        <Select value={currentSlug} onValueChange={value => navigate(`/brand/${value}`)}>
           <SelectTrigger className="w-full bg-white/5 border-none text-white hover:bg-white/10">
             <SelectValue>
               <div className="flex items-center gap-2">
-                {currentBrand?.logo_url ? (
-                  <img 
-                    src={currentBrand.logo_url} 
-                    alt={currentBrand.name}
-                    className="h-5 w-5 rounded object-cover"
-                  />
-                ) : (
-                  <div className="h-5 w-5 rounded bg-white/10" />
-                )}
+                {currentBrand?.logo_url ? <img src={currentBrand.logo_url} alt={currentBrand.name} className="h-5 w-5 rounded object-cover" /> : <div className="h-5 w-5 rounded bg-white/10" />}
                 <span>{currentBrand?.name || "Select Brand"}</span>
               </div>
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-[#2a2a2a] border-white/10">
-            {brands.map((brand) => (
-              <SelectItem 
-                key={brand.slug} 
-                value={brand.slug}
-                className="text-white hover:bg-white/10 focus:bg-white/10"
-              >
+            {brands.map(brand => <SelectItem key={brand.slug} value={brand.slug} className="text-white hover:bg-white/10 focus:bg-white/10">
                 <div className="flex items-center gap-2">
-                  {brand.logo_url ? (
-                    <img 
-                      src={brand.logo_url} 
-                      alt={brand.name}
-                      className="h-5 w-5 rounded object-cover"
-                    />
-                  ) : (
-                    <div className="h-5 w-5 rounded bg-white/10" />
-                  )}
+                  {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 rounded object-cover" /> : <div className="h-5 w-5 rounded bg-white/10" />}
                   <span>{brand.name}</span>
                 </div>
-              </SelectItem>
-            ))}
+              </SelectItem>)}
           </SelectContent>
         </Select>
       </SidebarHeader>
@@ -130,35 +94,19 @@ export function BrandSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <NavLink 
-                    to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`}
-                    end
-                    className={({ isActive }) => 
-                      `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                        isActive 
-                          ? 'bg-[#5865F2] text-white hover:bg-[#5865F2]' 
-                          : 'text-white hover:bg-[#2C2C2C]'
-                      }`
-                    }
-                  >
+              {menuItems.map(item => <SidebarMenuItem key={item.title}>
+                  <NavLink to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`} end className={({
+                isActive
+              }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? 'bg-[#5865F2] text-white hover:bg-[#5865F2]' : 'text-white hover:bg-[#2C2C2C]'}`}>
                     <item.icon className="h-5 w-5" />
                     <span>{item.title}</span>
                   </NavLink>
-                </SidebarMenuItem>
-              ))}
+                </SidebarMenuItem>)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <Button className="w-full bg-primary hover:bg-primary/90 text-white">
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Book a Call
-        </Button>
-      </SidebarFooter>
-    </Sidebar>
-  );
+      
+    </Sidebar>;
 }
