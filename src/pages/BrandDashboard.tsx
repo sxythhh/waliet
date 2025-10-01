@@ -5,7 +5,7 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, TrendingUp, Menu } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
@@ -163,7 +163,7 @@ export default function BrandDashboard() {
               onClick={toggleSidebar}
               className="text-white/60 hover:text-white hover:bg-white/10"
             >
-              <Menu className="h-5 w-5" />
+              <PanelLeft className="h-5 w-5" />
             </Button>
             {brand.logo_url ? (
               <img 
