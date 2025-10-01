@@ -253,7 +253,7 @@ export default function BrandManagement() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-[#202020] border-white/10">
+              <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
@@ -267,7 +267,7 @@ export default function BrandManagement() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-[#202020] border-white/10">
+              <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
                     <DollarSign className="h-4 w-4" />
@@ -284,7 +284,7 @@ export default function BrandManagement() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-[#202020] border-white/10">
+              <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
                     <Eye className="h-4 w-4" />
@@ -298,7 +298,7 @@ export default function BrandManagement() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-[#202020] border-white/10">
+              <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
                     <Users className="h-4 w-4" />
@@ -308,6 +308,95 @@ export default function BrandManagement() {
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
                     {approvedSubmissions.length}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+              <Card className="bg-[#202020] border-transparent">
+                <CardHeader>
+                  <CardTitle className="text-white">Views Over Time</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px] flex items-center justify-center">
+                    <div className="text-white/40 text-sm">
+                      {approvedSubmissions.length > 0 
+                        ? `${approvedSubmissions.length} submissions tracked`
+                        : 'No data available'}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#202020] border-transparent">
+                <CardHeader>
+                  <CardTitle className="text-white">Earnings by Creator</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {approvedSubmissions.length === 0 ? (
+                      <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
+                        No creator data available
+                      </div>
+                    ) : (
+                      approvedSubmissions
+                        .sort((a, b) => Number(b.earnings) - Number(a.earnings))
+                        .slice(0, 5)
+                        .map((submission) => (
+                          <div key={submission.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm">
+                                {submission.profiles?.username?.[0]?.toUpperCase() || 'U'}
+                              </div>
+                              <span className="text-white text-sm">
+                                {submission.profiles?.username || 'Unknown'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="text-white/60 text-sm">
+                                {submission.views.toLocaleString()} views
+                              </span>
+                              <span className="text-white font-semibold">
+                                ${Number(submission.earnings).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#202020] border-transparent lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-white">Campaign Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">
+                        {((totalSpent / (selectedCampaign?.budget || 1)) * 100).toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-white/60 mt-1">Budget Used</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">
+                        {approvedSubmissions.length > 0 
+                          ? (totalViews / approvedSubmissions.length).toFixed(0)
+                          : '0'}
+                      </div>
+                      <div className="text-sm text-white/60 mt-1">Avg Views per Creator</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">
+                        {approvedSubmissions.length > 0
+                          ? (totalSpent / approvedSubmissions.length).toFixed(2)
+                          : '0.00'}
+                      </div>
+                      <div className="text-sm text-white/60 mt-1">Avg Earnings per Creator</div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
