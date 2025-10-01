@@ -42,6 +42,8 @@ export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open:
   const [modules, setModules] = useState<Record<string, Module[]>>({});
   const [expandedCourse, setExpandedCourse] = useState<string | null>(initialExpandedCourseId || null);
   const [loading, setLoading] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Partial<Course> | null>(null);
+  const [editingModule, setEditingModule] = useState<Partial<Module> | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -108,7 +110,8 @@ export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open:
     }
   };
 
-  const updateCourse = async (courseId: string, updates: Partial<Course>) => {
+  const saveCourse = async (courseId: string, updates: Partial<Course>) => {
+    setLoading(true);
     try {
       const { error } = await supabase
         .from("courses")
@@ -116,11 +119,14 @@ export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open:
         .eq("id", courseId);
 
       if (error) throw error;
-      toast.success("Course updated");
+      toast.success("Course saved");
+      setEditingCourse(null);
       fetchData();
     } catch (error) {
       console.error("Error updating course:", error);
-      toast.error("Failed to update course");
+      toast.error("Failed to save course");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,7 +169,8 @@ export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open:
     }
   };
 
-  const updateModule = async (moduleId: string, updates: Partial<Module>) => {
+  const saveModule = async (moduleId: string, updates: Partial<Module>) => {
+    setLoading(true);
     try {
       const { error } = await supabase
         .from("course_modules")
@@ -171,11 +178,14 @@ export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open:
         .eq("id", moduleId);
 
       if (error) throw error;
-      toast.success("Module updated");
+      toast.success("Module saved");
+      setEditingModule(null);
       fetchData();
     } catch (error) {
-      console.error("Error updating module:", error);
-      toast.error("Failed to update module");
+      console.error("Error saving module:", error);
+      toast.error("Failed to save module");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -213,99 +223,152 @@ export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open:
             Add Course
           </Button>
 
-          {courses.map((course) => (
-            <Card key={course.id} className="bg-[#191919] border-white/10">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="cursor-move text-white/60"
-                  >
-                    <GripVertical className="h-4 w-4" />
-                  </Button>
-                  <div className="flex-1 space-y-2">
-                    <Input
-                      value={course.title}
-                      onChange={(e) => updateCourse(course.id, { title: e.target.value })}
-                      className="bg-[#202020] border-white/10 text-white font-semibold"
-                      placeholder="Course Title"
-                    />
-                    <Textarea
-                      value={course.description || ""}
-                      onChange={(e) => updateCourse(course.id, { description: e.target.value })}
-                      className="bg-[#202020] border-white/10 text-white"
-                      placeholder="Course Description"
-                    />
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setExpandedCourse(expandedCourse === course.id ? null : course.id)}
-                    className="text-white/60"
-                  >
-                    {expandedCourse === course.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => deleteCourse(course.id)}
-                    className="text-destructive/60 hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-
-              {expandedCourse === course.id && (
-                <CardContent className="space-y-4">
-                  <Button onClick={() => addModule(course.id)} disabled={loading} className="w-full" size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Module
-                  </Button>
-
-                  {modules[course.id]?.map((module, index) => (
-                    <div key={module.id} className="bg-[#202020] p-4 rounded-lg space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/60 text-sm">Module {index + 1}</span>
-                        <Input
-                          value={module.title}
-                          onChange={(e) => updateModule(module.id, { title: e.target.value })}
-                          className="flex-1 bg-[#191919] border-white/10 text-white"
-                          placeholder="Module Title"
-                        />
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => deleteModule(module.id)}
-                          className="text-destructive/60 hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-white text-sm">Video URL (YouTube, Vimeo, etc.)</Label>
-                        <Input
-                          value={module.video_url || ""}
-                          onChange={(e) => updateModule(module.id, { video_url: e.target.value })}
-                          className="bg-[#191919] border-white/10 text-white"
-                          placeholder="https://www.youtube.com/embed/..."
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-white text-sm">Content</Label>
-                        <RichTextEditor
-                          content={module.content || ""}
-                          onChange={(content) => updateModule(module.id, { content })}
-                          placeholder="Write your course content here..."
-                        />
-                      </div>
+          {courses.map((course) => {
+            const isEditing = editingCourse?.id === course.id;
+            const displayCourse = isEditing ? editingCourse : course;
+            
+            return (
+              <Card key={course.id} className="bg-[#191919] border-white/10">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="cursor-move text-white/60"
+                    >
+                      <GripVertical className="h-4 w-4" />
+                    </Button>
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        value={displayCourse?.title || ""}
+                        onChange={(e) => setEditingCourse({ ...course, title: e.target.value })}
+                        className="bg-[#202020] border-white/10 text-white font-semibold"
+                        placeholder="Course Title"
+                      />
+                      <Textarea
+                        value={displayCourse?.description || ""}
+                        onChange={(e) => setEditingCourse({ ...course, description: e.target.value })}
+                        className="bg-[#202020] border-white/10 text-white"
+                        placeholder="Course Description"
+                      />
+                      {isEditing && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => saveCourse(course.id, { 
+                              title: displayCourse?.title, 
+                              description: displayCourse?.description 
+                            })}
+                            disabled={loading}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingCourse(null)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </CardContent>
-              )}
-            </Card>
-          ))}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setExpandedCourse(expandedCourse === course.id ? null : course.id)}
+                      className="text-white/60"
+                    >
+                      {expandedCourse === course.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteCourse(course.id)}
+                      className="text-destructive/60 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+
+                {expandedCourse === course.id && (
+                  <CardContent className="space-y-4">
+                    <Button onClick={() => addModule(course.id)} disabled={loading} className="w-full" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Module
+                    </Button>
+
+                    {modules[course.id]?.map((module, index) => {
+                      const isEditingModule = editingModule?.id === module.id;
+                      const displayModule = isEditingModule ? editingModule : module;
+                      
+                      return (
+                        <div key={module.id} className="bg-[#202020] p-4 rounded-lg space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/60 text-sm">Module {index + 1}</span>
+                            <Input
+                              value={displayModule?.title || ""}
+                              onChange={(e) => setEditingModule({ ...module, title: e.target.value })}
+                              className="flex-1 bg-[#191919] border-white/10 text-white"
+                              placeholder="Module Title"
+                            />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => deleteModule(module.id)}
+                              className="text-destructive/60 hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-white text-sm">Video URL (YouTube, Vimeo, etc.)</Label>
+                            <Input
+                              value={displayModule?.video_url || ""}
+                              onChange={(e) => setEditingModule({ ...module, video_url: e.target.value })}
+                              className="bg-[#191919] border-white/10 text-white"
+                              placeholder="https://www.youtube.com/embed/..."
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-white text-sm">Content</Label>
+                            <RichTextEditor
+                              content={displayModule?.content || ""}
+                              onChange={(content) => setEditingModule({ ...module, content })}
+                              placeholder="Write your course content here..."
+                            />
+                          </div>
+                          {isEditingModule && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => saveModule(module.id, {
+                                  title: displayModule?.title,
+                                  video_url: displayModule?.video_url,
+                                  content: displayModule?.content
+                                })}
+                                disabled={loading}
+                              >
+                                Save Module
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingModule(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
         </div>
       </DialogContent>
     </Dialog>
