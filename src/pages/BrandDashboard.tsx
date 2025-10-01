@@ -38,6 +38,8 @@ interface Campaign {
   status: string;
   banner_url: string | null;
   guidelines: string | null;
+  allowed_platforms: string[];
+  application_questions: any[];
 }
 
 export default function BrandDashboard() {
@@ -79,7 +81,15 @@ export default function BrandDashboard() {
 
       if (campaignsError) throw campaignsError;
 
-      setCampaigns(campaignsData || []);
+      // Parse application_questions from JSON to array
+      const parsedCampaigns = (campaignsData || []).map(campaign => ({
+        ...campaign,
+        application_questions: Array.isArray(campaign.application_questions) 
+          ? campaign.application_questions 
+          : []
+      }));
+
+      setCampaigns(parsedCampaigns as Campaign[]);
     } catch (error) {
       console.error("Error fetching brand data:", error);
       toast.error("Failed to load brand data");

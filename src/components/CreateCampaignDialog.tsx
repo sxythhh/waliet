@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Upload, X } from "lucide-react";
@@ -35,6 +36,8 @@ const campaignSchema = z.object({
     message: "RPM rate must be a positive number",
   }),
   guidelines: z.string().trim().max(2000).optional(),
+  allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
+  application_questions: z.array(z.string().trim().min(1)).max(3, "Maximum 3 questions allowed"),
 });
 
 type CampaignFormValues = z.infer<typeof campaignSchema>;
@@ -47,6 +50,8 @@ interface Campaign {
   rpm_rate: number;
   guidelines: string | null;
   banner_url: string | null;
+  allowed_platforms: string[];
+  application_questions: any[];
 }
 
 interface CreateCampaignDialogProps {
@@ -80,6 +85,8 @@ export function CreateCampaignDialog({
       budget: campaign?.budget?.toString() || "",
       rpm_rate: campaign?.rpm_rate?.toString() || "",
       guidelines: campaign?.guidelines || "",
+      allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
+      application_questions: campaign?.application_questions || [],
     },
   });
 
@@ -138,6 +145,8 @@ export function CreateCampaignDialog({
         brand_name: brandName,
         banner_url: bannerUrl,
         status: "active",
+        allowed_platforms: values.allowed_platforms,
+        application_questions: values.application_questions,
       };
 
       if (campaign) {
@@ -339,6 +348,94 @@ export function CreateCampaignDialog({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="allowed_platforms"
+              render={() => (
+                <FormItem>
+                  <FormLabel className="text-white">Allowed Platforms</FormLabel>
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="allowed_platforms"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes("tiktok")}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked
+                                  ? [...(field.value || []), "tiktok"]
+                                  : field.value?.filter((val) => val !== "tiktok") || [];
+                                field.onChange(newValue);
+                              }}
+                              className="border-white/20 data-[state=checked]:bg-primary"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-white font-normal cursor-pointer">
+                            TikTok
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="allowed_platforms"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes("instagram")}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked
+                                  ? [...(field.value || []), "instagram"]
+                                  : field.value?.filter((val) => val !== "instagram") || [];
+                                field.onChange(newValue);
+                              }}
+                              className="border-white/20 data-[state=checked]:bg-primary"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-white font-normal cursor-pointer">
+                            Instagram
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormMessage className="text-destructive/80" />
+                </FormItem>
+              )}
+            />
+
+            <div className="space-y-3">
+              <FormLabel className="text-white">Application Questions (Max 3)</FormLabel>
+              {[0, 1, 2].map((index) => (
+                <FormField
+                  key={index}
+                  control={form.control}
+                  name={`application_questions.${index}` as any}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          placeholder={`Question ${index + 1} (optional)`}
+                          className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const questions = form.getValues("application_questions") || [];
+                            questions[index] = e.target.value;
+                            form.setValue("application_questions", questions.filter(q => q && q.trim()));
+                          }}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              ))}
+              <FormMessage className="text-destructive/80" />
+            </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
               <Button

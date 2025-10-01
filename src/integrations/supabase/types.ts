@@ -115,6 +115,8 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          allowed_platforms: string[] | null
+          application_questions: Json | null
           banner_url: string | null
           brand_id: string | null
           brand_logo_url: string | null
@@ -132,6 +134,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          allowed_platforms?: string[] | null
+          application_questions?: Json | null
           banner_url?: string | null
           brand_id?: string | null
           brand_logo_url?: string | null
@@ -149,6 +153,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          allowed_platforms?: string[] | null
+          application_questions?: Json | null
           banner_url?: string | null
           brand_id?: string | null
           brand_logo_url?: string | null

@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CampaignDetail from "./pages/CampaignDetail";
+import CampaignJoin from "./pages/CampaignJoin";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import Leaderboard from "./pages/Leaderboard";
@@ -82,6 +83,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/join/:slug" element={<CampaignJoin />} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
           <Route path="/discover" element={<DashboardLayout><Discover /></DashboardLayout>} />
           <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
