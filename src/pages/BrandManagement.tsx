@@ -19,9 +19,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X, TrendingUp, Users, Eye, DollarSign } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2 } from "lucide-react";
 
 interface Campaign {
   id: string;
@@ -51,6 +61,7 @@ export default function BrandManagement() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
@@ -141,6 +152,26 @@ export default function BrandManagement() {
     }
   };
 
+  const handleDeleteCampaign = async () => {
+    if (!selectedCampaignId) return;
+
+    try {
+      const { error } = await supabase
+        .from("campaigns")
+        .delete()
+        .eq("id", selectedCampaignId);
+
+      if (error) throw error;
+
+      toast.success("Campaign deleted successfully");
+      fetchCampaigns();
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      toast.error("Failed to delete campaign");
+    }
+  };
+
   const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
@@ -172,22 +203,34 @@ export default function BrandManagement() {
         {/* Campaign Selector */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">Campaign Management</h1>
-          <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-            <SelectTrigger className="w-[300px] bg-[#202020] border-white/10 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#2a2a2a] border-white/10">
-              {campaigns.map((campaign) => (
-                <SelectItem
-                  key={campaign.id}
-                  value={campaign.id}
-                  className="text-white hover:bg-white/10 focus:bg-white/10"
-                >
-                  {campaign.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+              <SelectTrigger className="w-[300px] bg-[#202020] border-white/10 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#2a2a2a] border-white/10">
+                {campaigns.map((campaign) => (
+                  <SelectItem
+                    key={campaign.id}
+                    value={campaign.id}
+                    className="text-white hover:bg-white/10 focus:bg-white/10"
+                  >
+                    {campaign.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedCampaignId && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
@@ -382,6 +425,30 @@ export default function BrandManagement() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="bg-[#202020] border-white/10">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white">Delete Campaign?</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/60">
+                This will permanently delete <strong className="text-white">{selectedCampaign?.title}</strong> and
+                all associated submissions. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteCampaign}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

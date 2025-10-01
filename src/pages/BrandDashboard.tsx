@@ -5,8 +5,18 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Brand {
   id: string;
@@ -32,6 +42,8 @@ export default function BrandDashboard() {
   const [brand, setBrand] = useState<Brand | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
 
   const fetchBrandData = async () => {
     if (!slug) return;
@@ -74,6 +86,33 @@ export default function BrandDashboard() {
   useEffect(() => {
     fetchBrandData();
   }, [slug]);
+
+  const handleDeleteClick = (campaign: Campaign) => {
+    setCampaignToDelete(campaign);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!campaignToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("campaigns")
+        .delete()
+        .eq("id", campaignToDelete.id);
+
+      if (error) throw error;
+
+      toast.success("Campaign deleted successfully");
+      fetchBrandData();
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      toast.error("Failed to delete campaign");
+    } finally {
+      setDeleteDialogOpen(false);
+      setCampaignToDelete(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -194,21 +233,31 @@ export default function BrandDashboard() {
                           </p>
                         )}
                       </div>
-                      <CreateCampaignDialog
-                        brandId={brand.id}
-                        brandName={brand.name}
-                        onSuccess={fetchBrandData}
-                        campaign={campaign}
-                        trigger={
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-white/60 hover:text-white hover:bg-white/10"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        }
-                      />
+                      <div className="flex gap-1">
+                        <CreateCampaignDialog
+                          brandId={brand.id}
+                          brandName={brand.name}
+                          onSuccess={fetchBrandData}
+                          campaign={campaign}
+                          trigger={
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-white/60 hover:text-white hover:bg-white/10"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          }
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteClick(campaign)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-white/60">Budget:</span>
@@ -228,6 +277,30 @@ export default function BrandDashboard() {
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="bg-[#202020] border-white/10">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white">Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/60">
+                This will permanently delete <strong className="text-white">{campaignToDelete?.title}</strong>.
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
