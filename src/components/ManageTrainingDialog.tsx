@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 interface Course {
   id: string;
@@ -283,12 +284,11 @@ export function ManageTrainingDialog({ onSuccess }: ManageTrainingDialogProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-white text-sm">Content (HTML supported)</Label>
-                        <Textarea
-                          value={module.content || ""}
-                          onChange={(e) => updateModule(module.id, { content: e.target.value })}
-                          className="bg-[#191919] border-white/10 text-white font-mono min-h-[120px]"
-                          placeholder="<h3>Section Title</h3><p>Your content here...</p>"
+                        <Label className="text-white text-sm">Content</Label>
+                        <RichTextEditor
+                          content={module.content || ""}
+                          onChange={(content) => updateModule(module.id, { content })}
+                          placeholder="Write your course content here..."
                         />
                       </div>
                     </div>
