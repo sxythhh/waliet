@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export default function BrandAccount() {
@@ -13,6 +14,7 @@ export default function BrandAccount() {
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [brandId, setBrandId] = useState("");
   const [accountUrl, setAccountUrl] = useState("");
+  const [showAccountTab, setShowAccountTab] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -23,7 +25,7 @@ export default function BrandAccount() {
       try {
         const { data, error } = await supabase
           .from("brands")
-          .select("id, account_url")
+          .select("id, account_url, show_account_tab")
           .eq("slug", slug)
           .maybeSingle() as any;
 
@@ -31,6 +33,7 @@ export default function BrandAccount() {
         if (data) {
           setBrandId(data.id);
           setAccountUrl(data.account_url || "");
+          setShowAccountTab(data.show_account_tab ?? true);
         }
       } catch (error) {
         console.error("Error fetching brand:", error);
@@ -50,15 +53,18 @@ export default function BrandAccount() {
     try {
       const { error } = await supabase
         .from("brands")
-        .update({ account_url: accountUrl || null } as any)
+        .update({ 
+          account_url: accountUrl || null,
+          show_account_tab: showAccountTab
+        } as any)
         .eq("id", brandId);
 
       if (error) throw error;
 
-      toast.success("Account URL updated successfully");
+      toast.success("Settings updated successfully");
     } catch (error) {
-      console.error("Error updating URL:", error);
-      toast.error("Failed to update URL");
+      console.error("Error updating settings:", error);
+      toast.error("Failed to update settings");
     } finally {
       setSaving(false);
     }
@@ -85,10 +91,27 @@ export default function BrandAccount() {
             {!isAdmin && (
               <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                 <p className="text-yellow-500 text-sm">
-                  Only administrators can edit brand URLs
+                  Only administrators can edit these settings
                 </p>
               </div>
             )}
+
+            <div className="flex items-center justify-between p-4 bg-[#191919] rounded-lg">
+              <div className="space-y-1">
+                <Label htmlFor="show-account-tab" className="text-white font-medium">
+                  Show Account Tab
+                </Label>
+                <p className="text-sm text-white/60">
+                  Display the Account tab in the sidebar navigation
+                </p>
+              </div>
+              <Switch
+                id="show-account-tab"
+                checked={showAccountTab}
+                onCheckedChange={setShowAccountTab}
+                disabled={!isAdmin}
+              />
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="account-url" className="text-white">
@@ -113,7 +136,7 @@ export default function BrandAccount() {
               disabled={saving || !isAdmin}
               className="bg-primary hover:bg-primary/90"
             >
-              {saving ? "Saving..." : "Save URL"}
+              {saving ? "Saving..." : "Save Settings"}
             </Button>
           </CardContent>
         </Card>

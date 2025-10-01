@@ -10,6 +10,7 @@ interface Brand {
   slug: string;
   logo_url: string | null;
   brand_type: string | null;
+  show_account_tab: boolean | null;
 }
 
 export function BrandSidebar() {
@@ -22,7 +23,7 @@ export function BrandSidebar() {
     const fetchBrands = async () => {
       const { data, error } = await supabase
         .from("brands")
-        .select("name, slug, logo_url, brand_type")
+        .select("name, slug, logo_url, brand_type, show_account_tab")
         .order("name");
       
       if (!error && data) {
@@ -61,8 +62,12 @@ export function BrandSidebar() {
       ? { title: "Roadmap", icon: Map, path: "assets" }
       : { title: "Assets", icon: FileImage, path: "assets" },
     { title: "Library", icon: BookOpen, path: "library" },
-    { title: "Account", icon: Receipt, path: "account" }
   ];
+
+  // Conditionally add Account tab based on show_account_tab setting
+  if (currentBrand?.show_account_tab !== false) {
+    baseMenuItems.push({ title: "Account", icon: Receipt, path: "account" });
+  }
 
   // Add Training for DWY brands
   const dynamicMenuItems = currentBrand?.brand_type === "DWY" 

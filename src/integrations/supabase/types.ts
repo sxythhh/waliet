@@ -25,6 +25,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          show_account_tab: boolean
           slug: string
           updated_at: string
         }
@@ -38,6 +39,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          show_account_tab?: boolean
           slug: string
           updated_at?: string
         }
@@ -51,6 +53,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          show_account_tab?: boolean
           slug?: string
           updated_at?: string
         }
