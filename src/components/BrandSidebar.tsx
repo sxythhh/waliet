@@ -61,7 +61,7 @@ export function BrandSidebar() {
   if (loading || brands.length === 0) {
     return (
       <Sidebar className="border-r-0 bg-[#202020]">
-        <SidebarHeader className="border-b border-white/10 p-6">
+        <SidebarHeader className="border-b border-transparent p-6 bg-[#202020]">
           <div className="flex items-center gap-2 mb-6">
             <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
               V
@@ -79,7 +79,7 @@ export function BrandSidebar() {
 
   return (
     <Sidebar className="border-r-0 bg-[#202020]">
-      <SidebarHeader className="border-b border-white/10 p-6">
+      <SidebarHeader className="border-b border-transparent p-6 bg-[#202020]">
         <div className="flex items-center gap-2 mb-6">
           <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
             V
