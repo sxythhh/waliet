@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 
 interface WalletData {
@@ -31,26 +30,6 @@ export default function Wallet() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Mock earnings data for graphs
-  const earningsData = [
-    { month: "Jan", earnings: 120 },
-    { month: "Feb", earnings: 250 },
-    { month: "Mar", earnings: 380 },
-    { month: "Apr", earnings: 420 },
-    { month: "May", earnings: 550 },
-    { month: "Jun", earnings: 680 },
-  ];
-
-  const weeklyData = [
-    { day: "Mon", earnings: 45 },
-    { day: "Tue", earnings: 78 },
-    { day: "Wed", earnings: 52 },
-    { day: "Thu", earnings: 95 },
-    { day: "Fri", earnings: 110 },
-    { day: "Sat", earnings: 88 },
-    { day: "Sun", earnings: 62 },
-  ];
 
   useEffect(() => {
     checkAuth();
@@ -243,14 +222,14 @@ export default function Wallet() {
         
         <Card className="bg-gradient-card border-border/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
-            <TrendingUp className="h-4 w-4 text-success" />
+            <CardTitle className="text-sm font-medium text-foreground">Total Earned</CardTitle>
+            <TrendingUp className="h-4 w-4 text-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
+            <div className="text-3xl font-bold text-foreground">
               ${wallet?.total_earned?.toFixed(2) || "0.00"}
             </div>
-            <p className="text-xs text-success mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               All-time earnings
             </p>
           </CardContent>
@@ -268,79 +247,6 @@ export default function Wallet() {
             <p className="text-xs text-muted-foreground mt-2">
               Successfully paid out
             </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Earnings Graphs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-gradient-card border-border/50">
-          <CardHeader>
-            <CardTitle>Monthly Earnings Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={earningsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="month" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="earnings" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-card border-border/50">
-          <CardHeader>
-            <CardTitle>Weekly Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="day" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Bar 
-                  dataKey="earnings" 
-                  fill="hsl(var(--primary))" 
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
