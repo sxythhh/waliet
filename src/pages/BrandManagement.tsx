@@ -12,6 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -588,19 +589,18 @@ export default function BrandManagement() {
 
                 <div className="space-y-2">
                   <Label htmlFor="home-url" className="text-white">
-                    Home Page URL (DWY Brands Only)
+                    Home Page HTML (DWY Brands Only)
                   </Label>
-                  <Input
+                  <Textarea
                     id="home-url"
-                    type="url"
-                    placeholder="https://example.com/home"
+                    placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />'
                     value={homeUrl}
                     onChange={(e) => setHomeUrl(e.target.value)}
-                    className="bg-[#191919] border-white/10 text-white"
+                    className="bg-[#191919] border-white/10 text-white font-mono min-h-[120px]"
                     disabled={!isAdmin}
                   />
                   <p className="text-sm text-white/60">
-                    For DWY brands, this URL will be embedded on the Home page instead of the default dashboard
+                    For DWY brands, paste HTML code (like iframe) to embed on the Home page instead of the default dashboard
                   </p>
                 </div>
 
