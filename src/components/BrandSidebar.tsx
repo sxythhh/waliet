@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Image, Library, User, GraduationCap } from "lucide-react";
+import { Home, FolderOpen, FileImage, BookOpen, Receipt, GraduationCap } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarHeader } from "@/components/ui/sidebar";
@@ -57,9 +57,9 @@ export function BrandSidebar() {
   const baseMenuItems = [
     { title: "Home", icon: Home, path: "" },
     { title: "Management", icon: FolderOpen, path: "management" },
-    { title: "Assets", icon: Image, path: "assets" },
-    { title: "Library", icon: Library, path: "library" },
-    { title: "Account", icon: User, path: "account" }
+    { title: "Assets", icon: FileImage, path: "assets" },
+    { title: "Library", icon: BookOpen, path: "library" },
+    { title: "Account", icon: Receipt, path: "account" }
   ];
 
   // Add Training for DWY brands
@@ -121,8 +121,12 @@ export function BrandSidebar() {
                       }`
                     }
                   >
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.title}</span>
+                    {({ isActive }) => (
+                      <>
+                        <item.icon className="h-5 w-5" style={{ color: isActive ? '#FFFFFF' : '#A0A1A7' }} />
+                        <span>{item.title}</span>
+                      </>
+                    )}
                   </NavLink>
                 </SidebarMenuItem>
               ))}
