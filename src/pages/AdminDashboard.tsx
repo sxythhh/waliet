@@ -17,9 +17,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
-import { ExternalLink, Package } from "lucide-react";
+import { ExternalLink, Package, Trash2 } from "lucide-react";
 
 interface Brand {
   id: string;
@@ -27,12 +38,15 @@ interface Brand {
   slug: string;
   description: string | null;
   logo_url: string | null;
+  brand_type: string | null;
   created_at: string;
 }
 
 export default function AdminDashboard() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -70,6 +84,46 @@ export default function AdminDashboard() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
+  };
+
+  const handleDeleteClick = (brand: Brand) => {
+    setBrandToDelete(brand);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!brandToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("brands")
+        .delete()
+        .eq("id", brandToDelete.id);
+
+      if (error) throw error;
+
+      toast.success("Brand deleted successfully");
+      fetchBrands();
+    } catch (error) {
+      console.error("Error deleting brand:", error);
+      toast.error("Failed to delete brand");
+    } finally {
+      setDeleteDialogOpen(false);
+      setBrandToDelete(null);
+    }
+  };
+
+  const getBrandTypeBadgeColor = (type: string | null) => {
+    switch (type) {
+      case "Lead":
+        return "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30";
+      case "DWY":
+        return "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30";
+      case "Client":
+        return "bg-green-500/20 text-green-400 hover:bg-green-500/30";
+      default:
+        return "";
+    }
   };
 
   if (loading) {
@@ -130,6 +184,7 @@ export default function AdminDashboard() {
                 <TableRow>
                   <TableHead>Logo</TableHead>
                   <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Created</TableHead>
@@ -139,7 +194,7 @@ export default function AdminDashboard() {
               <TableBody>
                 {brands.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No brands yet. Create your first brand to get started.
                     </TableCell>
                   </TableRow>
@@ -161,6 +216,13 @@ export default function AdminDashboard() {
                       </TableCell>
                       <TableCell className="font-medium">{brand.name}</TableCell>
                       <TableCell>
+                        {brand.brand_type && (
+                          <Badge className={getBrandTypeBadgeColor(brand.brand_type)}>
+                            {brand.brand_type}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <code className="text-xs bg-muted px-2 py-1 rounded">
                           {brand.slug}
                         </code>
@@ -172,13 +234,23 @@ export default function AdminDashboard() {
                         {new Date(brand.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => navigate(`/brand/${brand.slug}`)}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => navigate(`/brand/${brand.slug}`)}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteClick(brand)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -187,6 +259,28 @@ export default function AdminDashboard() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete <strong>{brandToDelete?.name}</strong> and all
+                associated campaigns. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

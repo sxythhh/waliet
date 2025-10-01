@@ -11,6 +11,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Form,
   FormControl,
   FormField,
@@ -35,6 +42,9 @@ const brandSchema = z.object({
     .max(100)
     .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
   description: z.string().trim().max(500).optional(),
+  brand_type: z.enum(["Lead", "DWY", "Client"], {
+    required_error: "Please select a brand type",
+  }),
 });
 
 type BrandFormValues = z.infer<typeof brandSchema>;
@@ -56,6 +66,7 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
       name: "",
       slug: "",
       description: "",
+      brand_type: "Client",
     },
   });
 
@@ -109,6 +120,7 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
         slug: values.slug,
         description: values.description || null,
         logo_url: logoUrl,
+        brand_type: values.brand_type,
       });
 
       if (error) throw error;
@@ -223,7 +235,30 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
                           .replace(/^-|-$/g, "");
                         field.onChange(slug);
                       }}
-                    />
+            />
+
+            <FormField
+              control={form.control}
+              name="brand_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Brand Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select brand type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Lead">Lead</SelectItem>
+                      <SelectItem value="DWY">DWY</SelectItem>
+                      <SelectItem value="Client">Client</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
