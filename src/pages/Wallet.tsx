@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 
 interface WalletData {
@@ -26,6 +27,8 @@ interface PayoutMethod {
 export default function Wallet() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -34,6 +37,7 @@ export default function Wallet() {
   useEffect(() => {
     checkAuth();
     fetchWallet();
+    fetchEarningsData();
   }, []);
 
   const checkAuth = async () => {
@@ -78,6 +82,76 @@ export default function Wallet() {
       }
     }
     setLoading(false);
+  };
+
+  const fetchEarningsData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Fetch submissions for earnings data
+    const { data: submissions } = await supabase
+      .from("campaign_submissions")
+      .select("earnings, submitted_at")
+      .eq("creator_id", session.user.id)
+      .order("submitted_at", { ascending: true });
+
+    if (submissions && submissions.length > 0) {
+      // Process monthly data (last 6 months)
+      const monthlyMap = new Map();
+      const now = new Date();
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+        monthlyMap.set(monthKey, 0);
+      }
+
+      submissions.forEach((sub) => {
+        const date = new Date(sub.submitted_at);
+        const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+        if (monthlyMap.has(monthKey)) {
+          monthlyMap.set(monthKey, monthlyMap.get(monthKey) + (Number(sub.earnings) || 0));
+        }
+      });
+
+      const monthly = Array.from(monthlyMap.entries()).map(([month, earnings]) => ({
+        month,
+        earnings: Number(earnings.toFixed(2)),
+      }));
+
+      setMonthlyData(monthly);
+
+      // Process weekly data (last 7 days)
+      const weeklyMap = new Map();
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        const dayKey = days[date.getDay()];
+        weeklyMap.set(dayKey, 0);
+      }
+
+      submissions.forEach((sub) => {
+        const date = new Date(sub.submitted_at);
+        const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysDiff < 7) {
+          const dayKey = days[date.getDay()];
+          weeklyMap.set(dayKey, weeklyMap.get(dayKey) + (Number(sub.earnings) || 0));
+        }
+      });
+
+      const weekly = Array.from(weeklyMap.entries()).map(([day, earnings]) => ({
+        day,
+        earnings: Number(earnings.toFixed(2)),
+      }));
+
+      setWeeklyData(weekly);
+    } else {
+      // Empty state
+      setMonthlyData([]);
+      setWeeklyData([]);
+    }
   };
 
   const handleAddPayoutMethod = async (method: string, details: any) => {
@@ -247,6 +321,93 @@ export default function Wallet() {
             <p className="text-xs text-muted-foreground mt-2">
               Successfully paid out
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Earnings Graphs */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-gradient-card border-border/50">
+          <CardHeader>
+            <CardTitle className="text-foreground">Monthly Earnings Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monthlyData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="month" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <Tooltip 
+                    cursor={false}
+                    contentStyle={{
+                      backgroundColor: "transparent",
+                      border: "none",
+                      color: "hsl(var(--foreground))",
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="earnings" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={{ fill: "hsl(var(--primary))" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                No earnings data yet
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-card border-border/50">
+          <CardHeader>
+            <CardTitle className="text-foreground">Weekly Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {weeklyData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={weeklyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="day" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <Tooltip 
+                    cursor={false}
+                    contentStyle={{
+                      backgroundColor: "transparent",
+                      border: "none",
+                      color: "hsl(var(--foreground))",
+                    }}
+                  />
+                  <Bar 
+                    dataKey="earnings" 
+                    fill="hsl(var(--primary))" 
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                No earnings data yet
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
