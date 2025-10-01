@@ -196,20 +196,20 @@ export default function Training() {
                   {course.description && (
                     <p className="text-white/60 mb-4">{course.description}</p>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                     {modules[course.id]?.map((module, moduleIndex) => (
                       <Button
                         key={module.id}
                         variant="outline"
-                        className="h-auto p-4 justify-start text-left border-white/10 bg-[#191919] hover:bg-white/5"
+                        className="h-auto min-h-[80px] p-4 justify-start text-left border-white/10 bg-[#191919] hover:bg-white/5"
                         onClick={() => handleModuleSelect(module.id, course.id)}
                       >
                         <div className="flex items-start gap-3 w-full">
                           <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white text-sm font-medium">
                             {moduleIndex + 1}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-medium truncate">{module.title}</div>
+                          <div className="flex-1 min-w-0 pt-1">
+                            <div className="text-white font-medium leading-tight break-words">{module.title}</div>
                           </div>
                         </div>
                       </Button>
@@ -221,9 +221,9 @@ export default function Training() {
           </div>
         ) : (
           /* Module Content */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
             {/* Desktop Sidebar */}
-            <div className="hidden lg:block lg:col-span-3">
+            <div className="hidden xl:block xl:col-span-3">
               <Card className="bg-[#202020] border-none sticky top-8">
                 <CardContent className="p-4">
                   <ScrollArea className="h-[calc(100vh-12rem)]">
@@ -234,7 +234,7 @@ export default function Training() {
             </div>
 
             {/* Module Content */}
-            <div className="lg:col-span-9">
+            <div className="xl:col-span-9">
               <div className="space-y-4 md:space-y-6">
                 {/* Breadcrumb */}
                 <Breadcrumb>
