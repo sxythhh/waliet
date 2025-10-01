@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, DollarSign, Calendar, TrendingUp } from "lucide-react";
+import { ArrowLeft, DollarSign, Calendar, TrendingUp, Lock } from "lucide-react";
 
 interface Campaign {
   id: string;
@@ -20,38 +20,75 @@ interface Campaign {
   guidelines: string;
   start_date: string;
   end_date: string;
+  banner_url: string | null;
+  allowed_platforms: string[];
+}
+
+interface Submission {
+  id: string;
+  status: string;
 }
 
 export default function CampaignDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [submission, setSubmission] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchCampaign();
+    fetchCampaignAndSubmission();
   }, [id]);
 
-  const fetchCampaign = async () => {
+  const fetchCampaignAndSubmission = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("campaigns")
-      .select("*")
-      .eq("id", id)
-      .single();
+    
+    try {
+      // Fetch campaign
+      const { data: campaignData, error: campaignError } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
 
-    if (error) {
+      if (campaignError) throw campaignError;
+      
+      if (!campaignData) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Campaign not found",
+        });
+        navigate("/dashboard");
+        return;
+      }
+
+      setCampaign(campaignData as Campaign);
+
+      // Check if user has already applied
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: submissionData } = await supabase
+          .from("campaign_submissions")
+          .select("id, status")
+          .eq("campaign_id", id)
+          .eq("creator_id", user.id)
+          .maybeSingle();
+
+        setSubmission(submissionData);
+      }
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to fetch campaign details",
       });
       navigate("/dashboard");
-    } else {
-      setCampaign(data);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (loading || !campaign) {
@@ -61,6 +98,8 @@ export default function CampaignDetail() {
       </div>
     );
   }
+
+  const hasApplied = !!submission;
 
   return (
     <div className="p-8 space-y-6 max-w-4xl mx-auto">
@@ -77,16 +116,23 @@ export default function CampaignDetail() {
       <Card className="bg-gradient-card border-border/50">
         <CardHeader>
           <div className="flex items-start gap-4">
-            <img
-              src={campaign.brand_logo_url}
-              alt={campaign.brand_name}
-              className="w-20 h-20 rounded-xl object-cover"
-            />
+            {campaign.brand_logo_url && (
+              <img
+                src={campaign.brand_logo_url}
+                alt={campaign.brand_name}
+                className="w-20 h-20 rounded-xl object-cover"
+              />
+            )}
             <div className="flex-1">
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-3xl mb-2">{campaign.title}</CardTitle>
                   <p className="text-muted-foreground">{campaign.brand_name}</p>
+                  {hasApplied && (
+                    <Badge className="mt-2 bg-blue-500/20 text-blue-400 border-blue-500/30">
+                      Application Status: {submission.status}
+                    </Badge>
+                  )}
                 </div>
                 <Badge className="bg-success/20 text-success">
                   {campaign.status}
@@ -132,27 +178,55 @@ export default function CampaignDetail() {
         </CardContent>
       </Card>
 
-      {/* Guidelines */}
-      <Card className="bg-gradient-card border-border/50">
-        <CardHeader>
-          <CardTitle>Campaign Guidelines</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="whitespace-pre-line text-muted-foreground">
-            {campaign.guidelines}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Guidelines - Only show if applied */}
+      {hasApplied ? (
+        <Card className="bg-gradient-card border-border/50">
+          <CardHeader>
+            <CardTitle>Campaign Guidelines</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="whitespace-pre-line text-muted-foreground">
+              {campaign.guidelines || "No specific guidelines provided."}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-gradient-card border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Campaign Guidelines
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <Lock className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <p className="text-muted-foreground mb-6">
+                Join this campaign to view full guidelines and submit content
+              </p>
+              <Button 
+                size="lg"
+                onClick={() => navigate(`/join/${campaign.id}`)}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Join Campaign
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Action Button */}
-      <div className="flex gap-4">
-        <Button className="flex-1" size="lg">
-          Submit Content
-        </Button>
-        <Button variant="outline" size="lg">
-          Download Assets
-        </Button>
-      </div>
+      {/* Action Buttons - Only show if applied */}
+      {hasApplied && (
+        <div className="flex gap-4">
+          <Button className="flex-1" size="lg">
+            Submit Content
+          </Button>
+          <Button variant="outline" size="lg">
+            Download Assets
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
