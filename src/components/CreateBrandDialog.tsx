@@ -234,6 +234,11 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
                           .replace(/^-|-$/g, "");
                         field.onChange(slug);
                       }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             <FormField
@@ -254,11 +259,6 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
                       <SelectItem value="Client">Client</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
