@@ -19,6 +19,7 @@ import BrandManagement from "./pages/BrandManagement";
 import BrandAssets from "./pages/BrandAssets";
 import BrandLibrary from "./pages/BrandLibrary";
 import BrandAccount from "./pages/BrandAccount";
+import Training from "./pages/Training";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -73,6 +74,7 @@ const App = () => (
           <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
           <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
           <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
+          <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

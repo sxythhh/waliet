@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2 } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 
 interface Campaign {
   id: string;
@@ -68,6 +69,7 @@ export default function BrandManagement() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [brandId, setBrandId] = useState<string>("");
+  const [brandType, setBrandType] = useState<string>("");
   const [assetsUrl, setAssetsUrl] = useState("");
   const [homeUrl, setHomeUrl] = useState("");
   const [savingUrls, setSavingUrls] = useState(false);
@@ -88,7 +90,7 @@ export default function BrandManagement() {
     try {
       const { data: brandData, error: brandError } = await supabase
         .from("brands")
-        .select("id, assets_url, home_url")
+        .select("id, assets_url, home_url, brand_type")
         .eq("slug", slug)
         .maybeSingle();
 
@@ -98,6 +100,7 @@ export default function BrandManagement() {
       setBrandId(brandData.id);
       setAssetsUrl(brandData.assets_url || "");
       setHomeUrl(brandData.home_url || "");
+      setBrandType(brandData.brand_type || "");
 
       const { data, error } = await supabase
         .from("campaigns")
@@ -195,15 +198,16 @@ export default function BrandManagement() {
         .update({
           assets_url: assetsUrl || null,
           home_url: homeUrl || null,
+          brand_type: brandType || null,
         })
         .eq("id", brandId);
 
       if (error) throw error;
 
-      toast.success("URLs updated successfully");
+      toast.success("Settings updated successfully");
     } catch (error) {
-      console.error("Error updating URLs:", error);
-      toast.error("Failed to update URLs");
+      console.error("Error updating settings:", error);
+      toast.error("Failed to update settings");
     } finally {
       setSavingUrls(false);
     }
@@ -564,8 +568,36 @@ export default function BrandManagement() {
                 {!isAdmin && (
                   <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                     <p className="text-yellow-500 text-sm">
-                      Only administrators can edit brand URLs
+                      Only administrators can edit brand settings
                     </p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="brand-type" className="text-white">
+                    Brand Type
+                  </Label>
+                  <Select value={brandType} onValueChange={setBrandType} disabled={!isAdmin}>
+                    <SelectTrigger className="bg-[#191919] border-white/10 text-white">
+                      <SelectValue placeholder="Select brand type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#2a2a2a] border-white/10">
+                      <SelectItem value="Standard" className="text-white hover:bg-white/10">
+                        Standard
+                      </SelectItem>
+                      <SelectItem value="DWY" className="text-white hover:bg-white/10">
+                        DWY (Do With You)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-white/60">
+                    DWY brands have access to the Training portal
+                  </p>
+                </div>
+
+                {brandType === "DWY" && isAdmin && (
+                  <div className="pt-4 border-t border-white/10">
+                    <ManageTrainingDialog brandId={brandId} onSuccess={fetchCampaigns} />
                   </div>
                 )}
 
@@ -609,7 +641,7 @@ export default function BrandManagement() {
                   disabled={savingUrls || !isAdmin}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  {savingUrls ? "Saving..." : "Save URLs"}
+                  {savingUrls ? "Saving..." : "Save Settings"}
                 </Button>
               </CardContent>
             </Card>
