@@ -122,11 +122,13 @@ export function BrandSidebar() {
                     <NavLink 
                       to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`}
                       end
-                      style={({ isActive }) => ({
-                        backgroundColor: isActive ? '#5865f2' : 'transparent',
-                        color: 'white',
-                      })}
-                      className="hover:bg-[#2C2C2C] transition-colors"
+                      className={({ isActive }) => 
+                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                          isActive 
+                            ? 'bg-[#5865F2] text-white' 
+                            : 'text-white hover:bg-[#2C2C2C]'
+                        }`
+                      }
                     >
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
