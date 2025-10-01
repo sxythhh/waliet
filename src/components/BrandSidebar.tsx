@@ -112,7 +112,7 @@ export function BrandSidebar() {
         </Select>
       </SidebarHeader>
       
-      <SidebarContent>
+      <SidebarContent className="bg-[#202020]">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
