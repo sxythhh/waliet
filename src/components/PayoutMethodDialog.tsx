@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wallet, CreditCard } from "lucide-react";
-import { SiPaypal } from "react-icons/si";
 
 interface PayoutMethodDialogProps {
   open: boolean;
@@ -73,7 +72,7 @@ export default function PayoutMethodDialog({
                 className="flex-1 h-14"
                 onClick={() => setSelectedMethod("paypal")}
               >
-                <SiPaypal className="mr-2 h-5 w-5" />
+                <CreditCard className="mr-2 h-5 w-5" />
                 PayPal
               </Button>
             </div>
@@ -114,7 +113,7 @@ export default function PayoutMethodDialog({
             <div>
               <Label className="text-base mb-2 block">PayPal Email</Label>
               <div className="relative">
-                <SiPaypal className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="email"
                   placeholder="your.email@example.com"

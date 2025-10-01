@@ -4,11 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2 } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
-import { SiPaypal } from "react-icons/si";
 
 interface WalletData {
   id: string;
@@ -380,7 +379,7 @@ export default function Wallet() {
                   <div className="flex items-center gap-4">
                     {method.method === "paypal" ? (
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <SiPaypal className="h-5 w-5 text-primary" />
+                        <CreditCard className="h-5 w-5 text-primary" />
                       </div>
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">

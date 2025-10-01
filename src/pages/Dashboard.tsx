@@ -5,8 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, TrendingUp, DollarSign, Calendar, Users, Video, Share2, Infinity } from "lucide-react";
-import { SiTiktok, SiInstagram, SiYoutube } from "react-icons/si";
+import { Sparkles, TrendingUp, DollarSign, Calendar, Users, Video, Share2, Infinity, Instagram, Youtube } from "lucide-react";
 
 interface Campaign {
   id: string;
@@ -166,9 +165,9 @@ export default function Dashboard() {
                       RPM Campaign
                     </Badge>
                     <div className="flex items-center gap-1.5">
-                      <SiInstagram className="w-3.5 h-3.5 text-muted-foreground" />
-                      <SiTiktok className="w-3.5 h-3.5 text-muted-foreground" />
-                      <SiYoutube className="w-3.5 h-3.5 text-muted-foreground" />
+                      <Instagram className="w-3.5 h-3.5 text-muted-foreground" />
+                      <Video className="w-3.5 h-3.5 text-muted-foreground" />
+                      <Youtube className="w-3.5 h-3.5 text-muted-foreground" />
                     </div>
                   </div>
                 </div>
@@ -192,9 +191,9 @@ export default function Dashboard() {
                     <span className="text-xs">Networks</span>
                   </div>
                   <div className="flex items-center justify-end gap-1.5">
-                    <SiInstagram className="w-4 h-4" />
-                    <SiTiktok className="w-4 h-4" />
-                    <SiYoutube className="w-4 h-4" />
+                    <Instagram className="w-4 h-4" />
+                    <Video className="w-4 h-4" />
+                    <Youtube className="w-4 h-4" />
                   </div>
 
                   <div className="flex items-center gap-2 text-muted-foreground">
