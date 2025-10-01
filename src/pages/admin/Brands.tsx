@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
+import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { ExternalLink, Package, Trash2 } from "lucide-react";
 
 interface Brand {
@@ -17,6 +18,10 @@ interface Brand {
   description: string | null;
   logo_url: string | null;
   brand_type: string | null;
+  home_url: string | null;
+  account_url: string | null;
+  assets_url: string | null;
+  show_account_tab: boolean;
   created_at: string;
 }
 
@@ -174,6 +179,7 @@ export default function AdminBrands() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
                           <Button
                             size="sm"
                             variant="ghost"
