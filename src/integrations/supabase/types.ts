@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      brands: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       campaign_submissions: {
         Row: {
           campaign_id: string
@@ -70,6 +100,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          brand_id: string | null
           brand_logo_url: string | null
           brand_name: string
           budget: number
@@ -85,6 +116,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          brand_id?: string | null
           brand_logo_url?: string | null
           brand_name: string
           budget: number
@@ -100,6 +132,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          brand_id?: string | null
           brand_logo_url?: string | null
           brand_name?: string
           budget?: number
@@ -114,7 +147,15 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

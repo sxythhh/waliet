@@ -1,5 +1,6 @@
 import { Home, FolderOpen, Image, Library, User, ExternalLink } from "lucide-react";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink, useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
   { title: "Home", icon: Home, path: "" },
@@ -29,19 +30,35 @@ const menuItems = [
   { title: "Account", icon: User, path: "account" },
 ];
 
-// Mock brands - in real app, this would come from API
-const brands = [
-  { name: "Parallel Labs", slug: "parallel-labs" },
-  { name: "TechCorp", slug: "techcorp" },
-  { name: "DesignStudio", slug: "designstudio" },
-];
+interface Brand {
+  name: string;
+  slug: string;
+}
 
 export function BrandSidebar() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const currentBrand = brands.find(b => b.slug === slug) || brands[0];
-  const currentSlug = slug || brands[0].slug;
+  useEffect(() => {
+    const fetchBrands = async () => {
+      const { data, error } = await supabase
+        .from("brands")
+        .select("name, slug")
+        .order("name");
+
+      if (!error && data) {
+        setBrands(data);
+      }
+      setLoading(false);
+    };
+
+    fetchBrands();
+  }, []);
+
+  const currentBrand = brands.find((b) => b.slug === slug) || brands[0];
+  const currentSlug = slug || brands[0]?.slug;
 
   return (
     <Sidebar className="border-r-0 bg-[#202020]">
@@ -55,12 +72,15 @@ export function BrandSidebar() {
           </span>
         </div>
         
-        <Select 
-          value={currentBrand.slug} 
+        <Select
+          value={currentSlug}
           onValueChange={(value) => navigate(`/brand/${value}`)}
+          disabled={loading}
         >
           <SelectTrigger className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
-            <SelectValue />
+            <SelectValue>
+              {loading ? "Loading..." : currentBrand?.name || "Select Brand"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-[#2a2a2a] border-white/10">
             {brands.map((brand) => (
