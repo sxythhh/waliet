@@ -135,13 +135,15 @@ export default function BrandDashboard() {
     );
   }
 
-  // If brand type is "DWY" and home_url is configured, render the HTML
+  // If brand type is "DWY" and home_url is configured, render as iframe
   if (brand.brand_type === "DWY" && brand.home_url) {
     return (
       <div className="h-screen w-full bg-[#191919]">
-        <div 
-          className="w-full h-full"
-          dangerouslySetInnerHTML={{ __html: brand.home_url }}
+        <iframe
+          src={brand.home_url}
+          className="w-full h-full border-0"
+          title={`${brand.name} Dashboard`}
+          sandbox="allow-scripts allow-same-origin allow-forms"
         />
       </div>
     );

@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { ChevronRight, BookOpen, ArrowLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import DOMPurify from "dompurify";
 
 interface Course {
   id: string;
@@ -104,6 +105,16 @@ export default function Training() {
   const moduleIndex = selectedModule && selectedCourseId
     ? modules[selectedCourseId]?.findIndex(m => m.id === selectedModuleId) + 1
     : 0;
+
+  // Sanitize module content to prevent XSS attacks
+  const sanitizedContent = useMemo(() => {
+    if (!selectedModule?.content) return '';
+    return DOMPurify.sanitize(selectedModule.content, {
+      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'ul', 'ol', 'li', 'strong', 'em', 'img', 'br', 'code', 'pre', 'blockquote'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel'],
+      ALLOW_DATA_ATTR: false,
+    });
+  }, [selectedModule?.content]);
 
   if (loading) {
     return (
@@ -295,7 +306,7 @@ export default function Training() {
                           prose-strong:font-semibold prose-strong:text-white
                           prose-ul:my-4 prose-li:my-2 prose-li:text-white/80
                           prose-img:rounded-lg"
-                        dangerouslySetInnerHTML={{ __html: selectedModule.content }}
+                        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                       />
                     )}
                   </CardContent>
