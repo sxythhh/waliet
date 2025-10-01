@@ -1,4 +1,4 @@
-import { Home, FolderOpen, FileImage, BookOpen, Receipt, GraduationCap, Map } from "lucide-react";
+import { Home, FolderOpen, FileImage, BookOpen, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarHeader } from "@/components/ui/sidebar";
@@ -141,6 +141,23 @@ export function BrandSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      {/* Book a Call Button */}
+      <div className="p-4 bg-[#202020] border-t border-[#272727]">
+        <a
+          href="https://partners.virality.cc/book"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-br from-[#5865F2] to-[#4752C4] text-white font-semibold rounded-lg transition-all hover:from-[#4752C4] hover:to-[#3b45a0] active:scale-95"
+          style={{
+            boxShadow: '0 4px 0 0 #3b45a0, 0 8px 16px rgba(88, 101, 242, 0.4)',
+            transform: 'translateY(-2px)'
+          }}
+        >
+          <span>Book a Call</span>
+          <ArrowUpRight className="h-5 w-5" />
+        </a>
+      </div>
     </Sidebar>
   );
 }
