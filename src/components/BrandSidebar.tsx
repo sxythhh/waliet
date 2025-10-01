@@ -118,22 +118,20 @@ export function BrandSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={false}>
-                    <NavLink 
-                      to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`}
-                      end
-                      className={({ isActive }) => 
-                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                          isActive 
-                            ? 'bg-[#5865F2] text-white hover:bg-[#5865F2]' 
-                            : 'text-white hover:bg-[#2C2C2C]'
-                        }`
-                      }
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
+                  <NavLink 
+                    to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`}
+                    end
+                    className={({ isActive }) => 
+                      `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                        isActive 
+                          ? 'bg-[#5865F2] text-white hover:bg-[#5865F2]' 
+                          : 'text-white hover:bg-[#2C2C2C]'
+                      }`
+                    }
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.title}</span>
+                  </NavLink>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
