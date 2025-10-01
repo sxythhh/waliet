@@ -33,6 +33,7 @@ const menuItems = [
 interface Brand {
   name: string;
   slug: string;
+  logo_url: string | null;
 }
 
 export function BrandSidebar() {
@@ -45,7 +46,7 @@ export function BrandSidebar() {
     const fetchBrands = async () => {
       const { data, error } = await supabase
         .from("brands")
-        .select("name, slug")
+        .select("name, slug, logo_url")
         .order("name");
 
       if (!error && data) {
@@ -95,7 +96,18 @@ export function BrandSidebar() {
         >
           <SelectTrigger className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
             <SelectValue>
-              {currentBrand?.name || "Select Brand"}
+              <div className="flex items-center gap-2">
+                {currentBrand?.logo_url ? (
+                  <img 
+                    src={currentBrand.logo_url} 
+                    alt={currentBrand.name}
+                    className="h-5 w-5 rounded object-cover"
+                  />
+                ) : (
+                  <div className="h-5 w-5 rounded bg-white/10" />
+                )}
+                <span>{currentBrand?.name || "Select Brand"}</span>
+              </div>
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-[#2a2a2a] border-white/10">
@@ -105,7 +117,18 @@ export function BrandSidebar() {
                 value={brand.slug}
                 className="text-white hover:bg-white/10 focus:bg-white/10"
               >
-                {brand.name}
+                <div className="flex items-center gap-2">
+                  {brand.logo_url ? (
+                    <img 
+                      src={brand.logo_url} 
+                      alt={brand.name}
+                      className="h-5 w-5 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="h-5 w-5 rounded bg-white/10" />
+                  )}
+                  <span>{brand.name}</span>
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
