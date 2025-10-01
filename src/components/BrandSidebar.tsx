@@ -1,4 +1,4 @@
-import { Home, FolderOpen, FileImage, BookOpen, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
+import { Home, FolderOpen, Layers, BookOpen, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarHeader } from "@/components/ui/sidebar";
@@ -60,7 +60,7 @@ export function BrandSidebar() {
     { title: "Management", icon: FolderOpen, path: "management" },
     currentBrand?.brand_type === "DWY" 
       ? { title: "Roadmap", icon: Map, path: "assets" }
-      : { title: "Assets", icon: FileImage, path: "assets" },
+      : { title: "Assets", icon: Layers, path: "assets" },
     { title: "Library", icon: BookOpen, path: "library" },
   ];
 
@@ -121,7 +121,7 @@ export function BrandSidebar() {
                     to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`}
                     end
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                      `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-semibold ${
                         isActive 
                           ? 'bg-[#5865F2] text-white hover:bg-[#5865F2]' 
                           : 'text-white hover:bg-[#2C2C2C]'
@@ -148,7 +148,7 @@ export function BrandSidebar() {
           href="https://partners.virality.cc/book"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full px-4 py-2 text-white font-semibold rounded-lg transition-all active:scale-95"
+          className="flex items-center justify-center gap-2 w-full px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all active:scale-95"
           style={{
             backgroundColor: '#5865F2',
             boxShadow: '0 4px 0 0 #3b45a0',
