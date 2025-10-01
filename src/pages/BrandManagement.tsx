@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2 } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
+import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
 
 interface Campaign {
   id: string;
@@ -296,6 +297,12 @@ export default function BrandManagement() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
+            <div className="flex justify-end mb-4">
+              <ImportCampaignStatsDialog 
+                campaignId={selectedCampaignId}
+                onImportComplete={fetchSubmissions}
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">
