@@ -47,9 +47,6 @@ interface Campaign {
   title: string;
   brand_name: string;
   brand_logo_url: string | null;
-  brands?: {
-    logo_url: string | null;
-  } | null;
 }
 export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -130,14 +127,13 @@ export function ProfileTab() {
     if (!session) return;
     const {
       data
-    } = await supabase.from("campaign_submissions").select("campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))").eq("creator_id", session.user.id);
+    } = await supabase.from("campaign_submissions").select("campaign_id, campaigns(id, title, brand_name, brand_logo_url)").eq("creator_id", session.user.id);
     if (data) {
       const campaigns = data.filter(item => item.campaigns).map(item => ({
         id: item.campaigns.id,
         title: item.campaigns.title,
         brand_name: item.campaigns.brand_name,
-        brand_logo_url: item.campaigns.brand_logo_url || (item.campaigns as any).brands?.logo_url,
-        brands: (item.campaigns as any).brands
+        brand_logo_url: item.campaigns.brand_logo_url
       }));
       setJoinedCampaigns(campaigns);
     }
@@ -540,13 +536,7 @@ export function ProfileTab() {
           
           <div className="space-y-2 mt-4">
             {joinedCampaigns.map(campaign => <button key={campaign.id} onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)} className="w-full p-4 text-left border rounded-lg hover:bg-muted/50 transition-colors flex items-center gap-3">
-                <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {campaign.brand_logo_url ? (
-                    <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-xs font-medium text-muted-foreground">{campaign.brand_name[0]}</span>
-                  )}
-                </div>
+                {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="h-10 w-10 rounded object-cover" />}
                 <div>
                   <div className="font-medium">{campaign.title}</div>
                   <div className="text-sm text-muted-foreground">{campaign.brand_name}</div>
