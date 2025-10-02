@@ -190,7 +190,7 @@ export function CampaignsTab() {
 
                 {/* Brand Logo - Overlapping */}
                 {campaign.brand_logo_url && (
-                  <div className="absolute bottom-0 left-6 transform translate-y-1/2">
+                  <div className="absolute bottom-0 left-6 transform translate-y-1/2 z-10">
                     <div className="w-16 h-16 rounded-xl overflow-hidden ring-4 ring-card shadow-lg">
                       <img 
                         src={campaign.brand_logo_url} 
