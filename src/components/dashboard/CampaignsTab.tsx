@@ -77,30 +77,26 @@ export function CampaignsTab() {
     const {
       data,
       error
-    } = await supabase
-      .from("campaigns")
-      .select(`
+    } = await supabase.from("campaigns").select(`
         *,
         brands (
           logo_url
         )
-      `)
-      .in("id", campaignIds)
-      .order("created_at", {
-        ascending: false
-      });
-    
+      `).in("id", campaignIds).order("created_at", {
+      ascending: false
+    });
+
     // Fetch user's social accounts connected to these campaigns
     const {
       data: socialAccounts
-    } = await supabase
-      .from("social_accounts")
-      .select("id, platform, username, campaign_id")
-      .eq("user_id", user.id)
-      .in("campaign_id", campaignIds);
-    
+    } = await supabase.from("social_accounts").select("id, platform, username, campaign_id").eq("user_id", user.id).in("campaign_id", campaignIds);
+
     // Group social accounts by campaign_id
-    const accountsByCampaign = new Map<string, Array<{id: string, platform: string, username: string}>>();
+    const accountsByCampaign = new Map<string, Array<{
+      id: string;
+      platform: string;
+      username: string;
+    }>>();
     socialAccounts?.forEach(account => {
       if (account.campaign_id) {
         if (!accountsByCampaign.has(account.campaign_id)) {
@@ -113,7 +109,6 @@ export function CampaignsTab() {
         });
       }
     });
-    
     if (error) {
       toast({
         variant: "destructive",
@@ -144,72 +139,33 @@ export function CampaignsTab() {
   }
   return <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl">
       {campaigns.map(campaign => {
-        const budgetUsed = campaign.budget_used || 0;
-        const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
-        
-        return (
-          <Card 
-            key={campaign.id} 
-            className="group bg-card transition-all duration-300 animate-fade-in flex flex-col cursor-pointer overflow-hidden"
-            onClick={() => navigate(`/campaign/${campaign.id}`)}
-          >
+      const budgetUsed = campaign.budget_used || 0;
+      const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+      return <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col cursor-pointer overflow-hidden" onClick={() => navigate(`/campaign/${campaign.id}`)}>
             {/* Banner Image - Top Section */}
-            {campaign.banner_url && (
-              <div className="relative w-full h-48 flex-shrink-0 overflow-hidden bg-muted rounded-t-lg">
-                <img
-                  src={campaign.banner_url}
-                  alt={campaign.title}
-                  className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                />
+            {campaign.banner_url && <div className="relative w-full h-48 flex-shrink-0 overflow-hidden bg-muted rounded-t-lg">
+                <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 
                 {/* Status Badge */}
-                {campaign.submission_status && (
-                  <div className="absolute top-4 right-4">
-                    <Badge 
-                      className={`backdrop-blur-sm font-medium text-xs ${
-                        campaign.submission_status === 'pending' 
-                          ? 'bg-yellow-500/90 text-white border-0' 
-                          : campaign.submission_status === 'approved' 
-                          ? 'bg-green-500/90 text-white border-0' 
-                          : 'bg-red-500/90 text-white border-0'
-                      }`}
-                    >
+                {campaign.submission_status && <div className="absolute top-4 right-4">
+                    <Badge className={`backdrop-blur-sm font-medium text-xs ${campaign.submission_status === 'pending' ? 'bg-yellow-500/90 text-white border-0' : campaign.submission_status === 'approved' ? 'bg-green-500/90 text-white border-0' : 'bg-red-500/90 text-white border-0'}`}>
                       {campaign.submission_status.charAt(0).toUpperCase() + campaign.submission_status.slice(1)}
                     </Badge>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Brand Logo - Overlapping */}
-                {campaign.brand_logo_url && (
-                  <div className="absolute bottom-0 left-6 transform translate-y-1/2 z-10">
+                {campaign.brand_logo_url && <div className="absolute bottom-0 left-6 transform translate-y-1/2 z-10">
                     <div className="w-16 h-16 rounded-xl overflow-hidden ring-4 ring-card shadow-lg">
-                      <img 
-                        src={campaign.brand_logo_url} 
-                        alt={campaign.brand_name} 
-                        className="w-full h-full object-cover" 
-                      />
+                      <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
 
             {/* Content Section */}
             <CardContent className="p-6 pt-10 flex-1 flex flex-col gap-5">
               {/* Header: Brand Name + RPM */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                  {campaign.brand_name}
-                </span>
-                
-                {/* RPM Rate Badge */}
-                <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full">
-                  <DollarSign className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-sm font-bold text-primary">{campaign.rpm_rate.toFixed(2)}</span>
-                  <span className="text-xs text-primary/70">RPM</span>
-                </div>
-              </div>
+              
               
               {/* Title & Description */}
               <div className="space-y-2">
@@ -217,11 +173,7 @@ export function CampaignsTab() {
                   {campaign.title}
                 </h3>
                 
-                {campaign.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                    {campaign.description}
-                  </p>
-                )}
+                {campaign.description}
               </div>
 
               {/* Budget Section */}
@@ -239,52 +191,39 @@ export function CampaignsTab() {
                   </div>
                 </div>
                 <div className="relative h-2 bg-neutral-950 rounded-full overflow-hidden">
-                  <div 
-                    className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700"
-                    style={{ width: `${budgetPercentage}%` }}
-                  />
+                  <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                width: `${budgetPercentage}%`
+              }} />
                 </div>
               </div>
 
               {/* Connected Accounts & Footer */}
               <div className="mt-auto space-y-3">
-                {campaign.connected_accounts && campaign.connected_accounts.length > 0 && (
-                  <div>
+                {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div>
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Connected Accounts</span>
                     <div className="flex flex-wrap gap-2">
-                      {campaign.connected_accounts.map(account => (
-                        <div 
-                          key={account.id} 
-                          className="flex items-center gap-2 bg-neutral-900/50 rounded-lg px-3 py-2"
-                        >
+                      {campaign.connected_accounts.map(account => <div key={account.id} className="flex items-center gap-2 bg-neutral-900/50 rounded-lg px-3 py-2">
                           <div className="w-4 h-4">
-                            {account.platform.toLowerCase() === 'tiktok' && (
-                              <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />
-                            )}
-                            {account.platform.toLowerCase() === 'instagram' && (
-                              <img src={instagramLogo} alt="Instagram" className="w-full h-full" />
-                            )}
-                            {account.platform.toLowerCase() === 'youtube' && (
-                              <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />
-                            )}
+                            {account.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
+                            {account.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
+                            {account.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
                           </div>
                           <span className="text-sm font-semibold">@{account.username}</span>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
                 
-                {campaign.start_date && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
+                {campaign.start_date && <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span className="font-medium">Started {new Date(campaign.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                  </div>
-                )}
+                    <span className="font-medium">Started {new Date(campaign.start_date).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}</span>
+                  </div>}
               </div>
             </CardContent>
-          </Card>
-        );
-      })}
+          </Card>;
+    })}
     </div>;
 }
