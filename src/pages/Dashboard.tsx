@@ -56,12 +56,12 @@ export default function Dashboard() {
   return <div className={currentTab === "discover" ? "" : "p-8 space-y-8"}>
       {/* Header - Only show on campaigns tab */}
       {currentTab === "campaigns" && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Joined Campaigns</h1>
           <Button
             onClick={() => setPrivateDialogOpen(true)}
             variant="secondary"
-            className="gap-2"
+            className="gap-2 whitespace-nowrap"
           >
             <Lock className="h-4 w-4" />
             Join Private Campaign
