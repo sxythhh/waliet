@@ -192,26 +192,24 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-    
+
     // Calculate date range for 7 days with offset
     const now = new Date();
     const end = subDays(now, earningsChartOffset * 7);
     const start = subDays(end, 7);
-    
+
     // Fetch all wallet transactions
     const {
       data: walletTransactions
     } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).gte("created_at", start.toISOString()).lte("created_at", end.toISOString()).order("created_at", {
       ascending: true
     });
-    
     const dataPoints: WithdrawalDataPoint[] = [];
     for (let i = 0; i <= 7; i++) {
       const currentDate = subDays(end, 7 - i);
       const dateStr = format(currentDate, 'MMM dd');
       let earningsAmount = 0;
       let withdrawalsAmount = 0;
-      
       if (walletTransactions) {
         walletTransactions.forEach(txn => {
           const txnDate = new Date(txn.created_at);
@@ -224,7 +222,6 @@ export function WalletTab() {
           }
         });
       }
-      
       dataPoints.push({
         date: dateStr,
         earnings: Number(earningsAmount.toFixed(2)),
@@ -240,19 +237,18 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-    
+
     // Fetch wallet transactions
     const {
       data: walletTransactions
     } = await supabase.from("wallet_transactions").select("*").eq("user_id", session.user.id).order("created_at", {
       ascending: false
     }).limit(10);
-    
+
     // Fetch payout requests to get full payout details
     const {
       data: payoutRequests
     } = await supabase.from("payout_requests").select("*").eq("user_id", session.user.id);
-    
     const allTransactions: Transaction[] = [];
     if (walletTransactions) {
       walletTransactions.forEach(txn => {
@@ -260,18 +256,14 @@ export function WalletTab() {
         let source = '';
         let destination = '';
         let payoutDetails = null;
-        
+
         // Try to match with payout request to get full details
         if (txn.type === 'withdrawal' && payoutRequests) {
-          const matchingPayout = payoutRequests.find(pr => 
-            Math.abs(new Date(pr.requested_at).getTime() - new Date(txn.created_at).getTime()) < 5000 &&
-            Number(pr.amount) === Number(txn.amount)
-          );
+          const matchingPayout = payoutRequests.find(pr => Math.abs(new Date(pr.requested_at).getTime() - new Date(txn.created_at).getTime()) < 5000 && Number(pr.amount) === Number(txn.amount));
           if (matchingPayout) {
             payoutDetails = matchingPayout.payout_details;
           }
         }
-        
         switch (txn.type) {
           case 'admin_adjustment':
             source = 'Admin Payment';
@@ -316,7 +308,9 @@ export function WalletTab() {
           destination,
           source: source || txn.description || '',
           status: txn.status,
-          metadata: Object.assign({}, txn.metadata as any, { payoutDetails })
+          metadata: Object.assign({}, txn.metadata as any, {
+            payoutDetails
+          })
         });
       });
     }
@@ -360,7 +354,6 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session || !wallet) return;
-    
     if (payoutMethods.length >= 3) {
       toast({
         variant: "destructive",
@@ -369,7 +362,6 @@ export function WalletTab() {
       });
       return;
     }
-    
     const updatedMethods = [...payoutMethods, {
       id: `method-${Date.now()}`,
       method,
@@ -596,38 +588,38 @@ export function WalletTab() {
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{
-                opacity: 0.6
-              }} />
+                  opacity: 0.6
+                }} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} style={{
-                opacity: 0.6
-              }} />
+                  opacity: 0.6
+                }} />
                   <Tooltip contentStyle={{
-                backgroundColor: "#0C0C0C",
-                border: "none",
-                borderRadius: "12px",
-                padding: "12px 16px",
-                fontFamily: "Chakra Petch, sans-serif",
-                letterSpacing: "-0.5px"
-              }} labelStyle={{
-                color: "#ffffff",
-                fontWeight: 600,
-                marginBottom: "4px",
-                fontFamily: "Chakra Petch, sans-serif",
-                letterSpacing: "-0.5px"
-              }} formatter={(value: number) => [`$${value.toFixed(2)}`, 'Balance']} itemStyle={{
-                color: "#60a5fa",
-                fontFamily: "Chakra Petch, sans-serif",
-                letterSpacing: "-0.5px"
-              }} cursor={{
-                stroke: "#333333",
-                strokeWidth: 2
-              }} />
+                  backgroundColor: "#0C0C0C",
+                  border: "none",
+                  borderRadius: "12px",
+                  padding: "12px 16px",
+                  fontFamily: "Chakra Petch, sans-serif",
+                  letterSpacing: "-0.5px"
+                }} labelStyle={{
+                  color: "#ffffff",
+                  fontWeight: 600,
+                  marginBottom: "4px",
+                  fontFamily: "Chakra Petch, sans-serif",
+                  letterSpacing: "-0.5px"
+                }} formatter={(value: number) => [`$${value.toFixed(2)}`, 'Balance']} itemStyle={{
+                  color: "#60a5fa",
+                  fontFamily: "Chakra Petch, sans-serif",
+                  letterSpacing: "-0.5px"
+                }} cursor={{
+                  stroke: "#333333",
+                  strokeWidth: 2
+                }} />
                   <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={3} fill="url(#balanceGradient)" dot={false} activeDot={{
-                r: 6,
-                fill: "#3b82f6",
-                stroke: "#1a1a1a",
-                strokeWidth: 2
-              }} />
+                  r: 6,
+                  fill: "#3b82f6",
+                  stroke: "#1a1a1a",
+                  strokeWidth: 2
+                }} />
                 </AreaChart>
               </ResponsiveContainer> : <div className="h-full flex items-center justify-center">
                 <div className="text-center space-y-2">
@@ -655,14 +647,10 @@ export function WalletTab() {
           {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <div className="space-y-3">
-              {transactions.map(transaction => <div 
-                  key={transaction.id} 
-                  className="flex items-center justify-between p-4 rounded-lg bg-[#101011] cursor-pointer hover:bg-[#151516] transition-colors"
-                  onClick={() => {
-                    setSelectedTransaction(transaction);
-                    setTransactionSheetOpen(true);
-                  }}
-                >
+              {transactions.map(transaction => <div key={transaction.id} onClick={() => {
+              setSelectedTransaction(transaction);
+              setTransactionSheetOpen(true);
+            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#1e1e1e]">
                   <div className="flex items-center gap-4 flex-1">
                     <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${transaction.type === 'earning' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                       {transaction.type === 'earning' ? <TrendingUp className="h-5 w-5 text-green-500" /> : <ArrowDownLeft className="h-5 w-5 text-red-500" />}
@@ -670,19 +658,12 @@ export function WalletTab() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-bold" style={{
-                    fontFamily: 'Chakra Petch, sans-serif',
-                    letterSpacing: '-0.5px'
-                  }}>
+                      fontFamily: 'Chakra Petch, sans-serif',
+                      letterSpacing: '-0.5px'
+                    }}>
                           {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
                         </p>
-                        {transaction.status && <Badge 
-                            variant="outline" 
-                            className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border-0 ${
-                              transaction.status === 'completed' 
-                                ? 'text-green-500 bg-green-500/5' 
-                                : 'text-yellow-500 bg-yellow-500/5'
-                            }`}
-                          >
+                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border-0 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 'text-yellow-500 bg-yellow-500/5'}`}>
                             {transaction.status}
                           </Badge>}
                       </div>
@@ -703,9 +684,9 @@ export function WalletTab() {
                     </div>
                   </div>
                   <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
-              fontFamily: 'Chakra Petch, sans-serif',
-              letterSpacing: '-0.5px'
-            }}>
+                fontFamily: 'Chakra Petch, sans-serif',
+                letterSpacing: '-0.5px'
+              }}>
                     {transaction.type === 'earning' ? '+' : '-'}${transaction.amount.toFixed(2)}
                   </div>
                 </div>)}
@@ -754,12 +735,7 @@ export function WalletTab() {
       <Card className="bg-card border-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-lg font-semibold">Payout Methods</CardTitle>
-          <Button 
-            onClick={() => setDialogOpen(true)} 
-            size="sm"
-            disabled={payoutMethods.length >= 3}
-            className="bg-primary hover:bg-primary/90 text-white border-0"
-          >
+          <Button onClick={() => setDialogOpen(true)} size="sm" disabled={payoutMethods.length >= 3} className="bg-primary hover:bg-primary/90 text-white border-0">
             <Plus className="mr-2 h-4 w-4" />
             Add Method {payoutMethods.length >= 3 ? "(Max 3)" : ""}
           </Button>
@@ -773,54 +749,67 @@ export function WalletTab() {
                 Add Method
               </Button>
             </div> : payoutMethods.map(method => {
-              const getMethodLabel = () => {
-                switch (method.method) {
-                  case "paypal": return "PayPal";
-                  case "crypto": return "Crypto";
-                  case "bank": return "Bank Transfer";
-                  case "wise": return "Wise";
-                  case "revolut": return "Revolut";
-                  case "tips": return "TIPS";
-                  default: return method.method;
-                }
-              };
-              
-              const getMethodDetails = () => {
-                switch (method.method) {
-                  case "paypal": return method.details.email;
-                  case "crypto": return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
-                  case "bank": return `${method.details.bankName} - ${method.details.accountNumber?.slice(-4)}`;
-                  case "wise": return method.details.email;
-                  case "revolut": return method.details.email;
-                  case "tips": return method.details.username;
-                  default: return "N/A";
-                }
-              };
-              
-              const getBadgeText = () => {
-                switch (method.method) {
-                  case "crypto": return method.details.network?.toUpperCase();
-                  case "bank": return "Bank";
-                  case "paypal": return "Email";
-                  case "wise": return "Email";
-                  case "revolut": return "Email";
-                  case "tips": return "Username";
-                  default: return "";
-                }
-              };
-              
-              return (
-                <div key={method.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+          const getMethodLabel = () => {
+            switch (method.method) {
+              case "paypal":
+                return "PayPal";
+              case "crypto":
+                return "Crypto";
+              case "bank":
+                return "Bank Transfer";
+              case "wise":
+                return "Wise";
+              case "revolut":
+                return "Revolut";
+              case "tips":
+                return "TIPS";
+              default:
+                return method.method;
+            }
+          };
+          const getMethodDetails = () => {
+            switch (method.method) {
+              case "paypal":
+                return method.details.email;
+              case "crypto":
+                return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
+              case "bank":
+                return `${method.details.bankName} - ${method.details.accountNumber?.slice(-4)}`;
+              case "wise":
+                return method.details.email;
+              case "revolut":
+                return method.details.email;
+              case "tips":
+                return method.details.username;
+              default:
+                return "N/A";
+            }
+          };
+          const getBadgeText = () => {
+            switch (method.method) {
+              case "crypto":
+                return method.details.network?.toUpperCase();
+              case "bank":
+                return "Bank";
+              case "paypal":
+                return "Email";
+              case "wise":
+                return "Email";
+              case "revolut":
+                return "Email";
+              case "tips":
+                return "Username";
+              default:
+                return "";
+            }
+          };
+          return <div key={method.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div className="flex items-center gap-3">
-                    {method.method === "crypto" ? (
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    {method.method === "crypto" ? <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <WalletIcon className="h-5 w-5 text-primary" />
-                      </div>
-                    ) : (
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      </div> : <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <CreditCard className="h-5 w-5 text-primary" />
-                      </div>
-                    )}
+                      </div>}
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium">
@@ -838,9 +827,8 @@ export function WalletTab() {
                   <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)}>
                     <Trash2 className="h-4 w-4 text-muted-foreground" />
                   </Button>
-                </div>
-              );
-            })}
+                </div>;
+        })}
         </CardContent>
       </Card>
 
@@ -849,24 +837,13 @@ export function WalletTab() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-lg font-semibold">Transaction History</CardTitle>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setEarningsChartOffset(earningsChartOffset + 1)}
-              className="h-8 w-8"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setEarningsChartOffset(earningsChartOffset + 1)} className="h-8 w-8">
               <ChevronDown className="h-4 w-4 rotate-90" />
             </Button>
             <span className="text-xs text-muted-foreground min-w-[80px] text-center">
               {earningsChartOffset === 0 ? 'Last 7 days' : `${earningsChartOffset * 7} days ago`}
             </span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setEarningsChartOffset(Math.max(0, earningsChartOffset - 1))}
-              disabled={earningsChartOffset === 0}
-              className="h-8 w-8"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setEarningsChartOffset(Math.max(0, earningsChartOffset - 1))} disabled={earningsChartOffset === 0} className="h-8 w-8">
               <ChevronDown className="h-4 w-4 -rotate-90" />
             </Button>
           </div>
@@ -907,12 +884,7 @@ export function WalletTab() {
          </CardContent>
        </Card>
 
-      <PayoutMethodDialog
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen} 
-        onSave={handleAddPayoutMethod}
-        currentMethodCount={payoutMethods.length}
-      />
+      <PayoutMethodDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleAddPayoutMethod} currentMethodCount={payoutMethods.length} />
 
       {/* Payout Request Dialog */}
       <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
@@ -941,36 +913,46 @@ export function WalletTab() {
                 </SelectTrigger>
                 <SelectContent>
                   {payoutMethods.map(method => {
-                    const getMethodLabel = () => {
-                      switch (method.method) {
-                        case "paypal": return "PayPal";
-                        case "crypto": return "Crypto";
-                        case "bank": return "Bank";
-                        case "wise": return "Wise";
-                        case "revolut": return "Revolut";
-                        case "tips": return "TIPS";
-                        default: return method.method;
-                      }
-                    };
-                    
-                    const getMethodDetails = () => {
-                      switch (method.method) {
-                        case "paypal": return method.details.email;
-                        case "crypto": return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
-                        case "bank": return `${method.details.bankName}`;
-                        case "wise": return method.details.email;
-                        case "revolut": return method.details.email;
-                        case "tips": return method.details.username;
-                        default: return "N/A";
-                      }
-                    };
-                    
-                    return (
-                      <SelectItem key={method.id} value={method.id}>
+                  const getMethodLabel = () => {
+                    switch (method.method) {
+                      case "paypal":
+                        return "PayPal";
+                      case "crypto":
+                        return "Crypto";
+                      case "bank":
+                        return "Bank";
+                      case "wise":
+                        return "Wise";
+                      case "revolut":
+                        return "Revolut";
+                      case "tips":
+                        return "TIPS";
+                      default:
+                        return method.method;
+                    }
+                  };
+                  const getMethodDetails = () => {
+                    switch (method.method) {
+                      case "paypal":
+                        return method.details.email;
+                      case "crypto":
+                        return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
+                      case "bank":
+                        return `${method.details.bankName}`;
+                      case "wise":
+                        return method.details.email;
+                      case "revolut":
+                        return method.details.email;
+                      case "tips":
+                        return method.details.username;
+                      default:
+                        return "N/A";
+                    }
+                  };
+                  return <SelectItem key={method.id} value={method.id}>
                         {getMethodLabel()} - {getMethodDetails()}
-                      </SelectItem>
-                    );
-                  })}
+                      </SelectItem>;
+                })}
                 </SelectContent>
               </Select>
             </div>
@@ -995,18 +977,12 @@ export function WalletTab() {
       {/* Transaction Receipt Sheet */}
       <Sheet open={transactionSheetOpen} onOpenChange={setTransactionSheetOpen}>
         <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto">
-          {selectedTransaction && (
-            <div className="flex flex-col h-full">
+          {selectedTransaction && <div className="flex flex-col h-full">
               {/* Header */}
               <div className="p-6 pb-8 bg-gradient-to-b from-card to-background border-b sticky top-0 z-10">
                 {/* Close button and Logo on same line */}
                 <div className="flex items-center justify-between mb-6">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="-ml-2"
-                    onClick={() => setTransactionSheetOpen(false)}
-                  >
+                  <Button variant="ghost" size="icon" className="-ml-2" onClick={() => setTransactionSheetOpen(false)}>
                     <X className="h-4 w-4" />
                   </Button>
                   <img src={wordmarkLogo} alt="Virality" className="h-12" />
@@ -1015,15 +991,8 @@ export function WalletTab() {
 
                 {/* Icon */}
                 <div className="flex justify-center mb-6">
-                  <div className={`h-20 w-20 rounded-full flex items-center justify-center ${
-                    selectedTransaction.type === 'earning' 
-                      ? 'bg-gradient-to-br from-green-500/20 to-green-600/10 border-2 border-green-500/30' 
-                      : 'bg-gradient-to-br from-red-500/20 to-red-600/10 border-2 border-red-500/30'
-                  }`}>
-                    {selectedTransaction.type === 'earning' 
-                      ? <TrendingUp className="h-10 w-10 text-green-500" /> 
-                      : <ArrowDownLeft className="h-10 w-10 text-red-500" />
-                    }
+                  <div className={`h-20 w-20 rounded-full flex items-center justify-center ${selectedTransaction.type === 'earning' ? 'bg-gradient-to-br from-green-500/20 to-green-600/10 border-2 border-green-500/30' : 'bg-gradient-to-br from-red-500/20 to-red-600/10 border-2 border-red-500/30'}`}>
+                    {selectedTransaction.type === 'earning' ? <TrendingUp className="h-10 w-10 text-green-500" /> : <ArrowDownLeft className="h-10 w-10 text-red-500" />}
                   </div>
                 </div>
 
@@ -1036,12 +1005,10 @@ export function WalletTab() {
 
                 {/* Amount */}
                 <div className="text-center mb-2">
-                  <div className={`text-5xl font-bold ${
-                    selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
-                  }`} style={{
-                    fontFamily: 'Chakra Petch, sans-serif',
-                    letterSpacing: '-1px'
-                  }}>
+                  <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
+                fontFamily: 'Chakra Petch, sans-serif',
+                letterSpacing: '-1px'
+              }}>
                     {selectedTransaction.type === 'earning' ? '+' : '-'}${selectedTransaction.amount.toFixed(2)}
                   </div>
                 </div>
@@ -1054,14 +1021,9 @@ export function WalletTab() {
                   <span className="text-sm text-muted-foreground">
                     {format(selectedTransaction.date, 'MMMM dd yyyy, hh:mm a')}
                   </span>
-                  {selectedTransaction.status && (
-                    <Badge 
-                      variant={selectedTransaction.status === 'completed' ? 'default' : 'secondary'}
-                      className="capitalize"
-                    >
+                  {selectedTransaction.status && <Badge variant={selectedTransaction.status === 'completed' ? 'default' : 'secondary'} className="capitalize">
                       {selectedTransaction.status}
-                    </Badge>
-                  )}
+                    </Badge>}
                 </div>
 
                 <Separator />
@@ -1077,19 +1039,14 @@ export function WalletTab() {
                         <span className="text-sm font-mono">
                           {selectedTransaction.id.slice(0, 8)}...{selectedTransaction.id.slice(-8)}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => {
-                            navigator.clipboard.writeText(selectedTransaction.id);
-                            setCopiedId(true);
-                            setTimeout(() => setCopiedId(false), 2000);
-                            toast({
-                              description: "Transaction ID copied to clipboard",
-                            });
-                          }}
-                        >
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                      navigator.clipboard.writeText(selectedTransaction.id);
+                      setCopiedId(true);
+                      setTimeout(() => setCopiedId(false), 2000);
+                      toast({
+                        description: "Transaction ID copied to clipboard"
+                      });
+                    }}>
                           {copiedId ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
                         </Button>
                       </div>
@@ -1104,106 +1061,83 @@ export function WalletTab() {
 
                     <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                       <span className="text-sm text-muted-foreground">Amount</span>
-                      <span className={`text-sm font-bold ${
-                        selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
-                      }`}>
+                      <span className={`text-sm font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`}>
                         {selectedTransaction.type === 'earning' ? '+' : '-'}${selectedTransaction.amount.toFixed(2)}
                       </span>
                     </div>
 
-                    {selectedTransaction.source && (
-                      <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                    {selectedTransaction.source && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                         <span className="text-sm text-muted-foreground">From</span>
                         <span className="text-sm font-medium text-right max-w-[200px] truncate">
                           {selectedTransaction.source}
                         </span>
-                      </div>
-                    )}
+                      </div>}
 
-                    {selectedTransaction.destination && (
-                      <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                    {selectedTransaction.destination && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                         <span className="text-sm text-muted-foreground">To</span>
                         <span className="text-sm font-medium text-right max-w-[200px] truncate">
                           {selectedTransaction.destination}
                         </span>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                 </div>
 
                 {/* Payout Method Details */}
-                {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (
-                  <>
+                {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && <>
                     <Separator />
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold mb-4">Payout Method</h3>
                       <div className="space-y-3">
-                        {selectedTransaction.metadata.payout_method && (
-                          <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payout_method && <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Method</span>
                             <span className="text-sm font-medium capitalize">
                               {selectedTransaction.metadata.payout_method}
                             </span>
-                          </div>
-                        )}
+                          </div>}
                         
-                        {selectedTransaction.metadata.network && (
-                          <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.network && <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Network</span>
                             <span className="text-sm font-medium uppercase">
                               {selectedTransaction.metadata.network}
                             </span>
-                          </div>
-                        )}
+                          </div>}
                         
                         {/* Display crypto address if available */}
-                        {selectedTransaction.metadata.payoutDetails?.address && (
-                          <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails?.address && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Address</span>
                             <div className="flex items-center gap-2 flex-1 justify-end">
                               <span className="text-sm font-mono text-right break-all max-w-[200px]">
                                 {selectedTransaction.metadata.payoutDetails.address}
                               </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 flex-shrink-0"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
-                                  toast({
-                                    description: "Address copied to clipboard",
-                                  });
-                                }}
-                              >
+                              <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => {
+                        navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
+                        toast({
+                          description: "Address copied to clipboard"
+                        });
+                      }}>
                                 <Copy className="h-3.5 w-3.5" />
                               </Button>
                             </div>
-                          </div>
-                        )}
+                          </div>}
                         
                         {/* Display PayPal email if available */}
-                        {selectedTransaction.metadata.payoutDetails?.email && (
-                          <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails?.email && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Email</span>
                             <span className="text-sm font-medium text-right max-w-[200px] truncate">
                               {selectedTransaction.metadata.payoutDetails.email}
                             </span>
-                          </div>
-                        )}
+                          </div>}
                         
                         {/* Display bank details if available */}
-                        {selectedTransaction.metadata.payoutDetails?.account_number && (
-                          <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails?.account_number && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Account</span>
                             <span className="text-sm font-medium text-right">
                               •••• {selectedTransaction.metadata.payoutDetails.account_number.slice(-4)}
                             </span>
-                          </div>
-                        )}
+                          </div>}
                       </div>
                     </div>
-                  </>
-                )}
+                  </>}
 
                 <Separator />
 
@@ -1220,8 +1154,7 @@ export function WalletTab() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </SheetContent>
       </Sheet>
     </div>;
