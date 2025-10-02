@@ -650,9 +650,9 @@ export function WalletTab() {
               {transactions.map(transaction => <div key={transaction.id} onClick={() => {
               setSelectedTransaction(transaction);
               setTransactionSheetOpen(true);
-            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors" style={{
+            }} style={{
               backgroundColor: '#292929'
-            }}>
+            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-neutral-950">
                   <div className="flex items-center gap-4 flex-1">
                     
                     <div className="flex-1 min-w-0">
