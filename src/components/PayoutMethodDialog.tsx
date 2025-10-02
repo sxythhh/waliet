@@ -4,9 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wallet, CreditCard } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import wiseLogo from "@/assets/wise-logo.svg";
 import wiseLogoBlue from "@/assets/wise-logo-blue.svg";
+import ethereumLogo from "@/assets/ethereum-logo.png";
+import optimismLogo from "@/assets/optimism-logo.png";
+import solanaLogo from "@/assets/solana-logo.png";
+import polygonLogo from "@/assets/polygon-logo.png";
 
 interface PayoutMethodDialogProps {
   open: boolean;
@@ -21,10 +25,10 @@ const cryptoCurrencies = [
 ];
 
 const cryptoNetworks = [
-  { id: "ethereum", name: "Ethereum" },
-  { id: "optimism", name: "Optimism" },
-  { id: "solana", name: "Solana" },
-  { id: "polygon", name: "Polygon" },
+  { id: "ethereum", name: "Ethereum", logo: ethereumLogo },
+  { id: "optimism", name: "Optimism", logo: optimismLogo },
+  { id: "solana", name: "Solana", logo: solanaLogo },
+  { id: "polygon", name: "Polygon", logo: polygonLogo },
 ];
 
 export default function PayoutMethodDialog({
@@ -200,25 +204,35 @@ export default function PayoutMethodDialog({
                   </div>
 
                   <div>
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">
                       Select Network
                     </Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {cryptoNetworks.map((network) => (
-                        <button
-                          key={network.id}
-                          type="button"
-                          onClick={() => setSelectedNetwork(network.id)}
-                          className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border ${
-                            selectedNetwork === network.id
-                              ? "bg-primary/10 text-primary border-primary/30"
-                              : "bg-[#1a1a1a] text-muted-foreground border-[#2a2a2a] hover:border-[#3a3a3a]"
-                          }`}
-                        >
-                          {network.name}
-                        </button>
-                      ))}
-                    </div>
+                    <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
+                      <SelectTrigger className="h-12 bg-[#1a1a1a] border-[#2a2a2a]">
+                        <SelectValue>
+                          {selectedNetwork && (
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={cryptoNetworks.find(n => n.id === selectedNetwork)?.logo} 
+                                alt={cryptoNetworks.find(n => n.id === selectedNetwork)?.name}
+                                className="h-5 w-5"
+                              />
+                              <span>{cryptoNetworks.find(n => n.id === selectedNetwork)?.name}</span>
+                            </div>
+                          )}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                        {cryptoNetworks.map((network) => (
+                          <SelectItem key={network.id} value={network.id} className="focus:bg-[#2a2a2a]">
+                            <div className="flex items-center gap-3">
+                              <img src={network.logo} alt={network.name} className="h-5 w-5" />
+                              <span>{network.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-3">
