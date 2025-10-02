@@ -44,7 +44,7 @@ interface SocialAccount {
 }
 
 export default function CampaignJoin() {
-  const { slug } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export default function CampaignJoin() {
   useEffect(() => {
     fetchCampaign();
     fetchSocialAccounts();
-  }, [slug]);
+  }, [id]);
 
   const fetchSocialAccounts = async () => {
     try {
@@ -79,13 +79,13 @@ export default function CampaignJoin() {
   };
 
   const fetchCampaign = async () => {
-    if (!slug) return;
+    if (!id) return;
 
     try {
       const { data, error } = await supabase
         .from("campaigns")
         .select("*")
-        .eq("slug", slug)
+        .eq("id", id)
         .eq("status", "active")
         .maybeSingle();
 
