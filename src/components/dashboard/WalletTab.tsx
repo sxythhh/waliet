@@ -842,7 +842,7 @@ export function WalletTab() {
           const getBadgeText = () => {
             switch (method.method) {
               case "crypto":
-                return method.details.network?.toUpperCase();
+                return method.details.network;
               case "bank":
                 return "Bank";
               case "paypal":
@@ -856,6 +856,16 @@ export function WalletTab() {
               default:
                 return "";
             }
+          };
+          const getNetworkLogo = () => {
+            if (method.method !== "crypto") return null;
+            const network = method.details?.network?.toLowerCase();
+            
+            if (network === 'ethereum') return ethereumLogo;
+            if (network === 'optimism') return optimismLogo;
+            if (network === 'solana') return solanaLogo;
+            if (network === 'polygon') return polygonLogo;
+            return null;
           };
           const getCryptoLogo = () => {
             const currency = method.details?.currency?.toLowerCase();
@@ -871,6 +881,7 @@ export function WalletTab() {
           };
           
           const cryptoLogo = getCryptoLogo();
+          const networkLogo = getNetworkLogo();
           
           return <div key={method.id} className="relative overflow-hidden rounded-xl bg-neutral-900/50">
                   
@@ -884,7 +895,10 @@ export function WalletTab() {
                           <p className="text-base font-semibold text-foreground">
                             {getMethodLabel()}
                           </p>
-                          <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5 bg-primary/10 text-primary border-0">
+                          <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-primary/10 text-white border-0 flex items-center gap-1.5 normal-case">
+                            {networkLogo && (
+                              <img src={networkLogo} alt="Network logo" className="h-3 w-3" />
+                            )}
                             {getBadgeText()}
                           </Badge>
                         </div>
