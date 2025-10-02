@@ -10,6 +10,7 @@ import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, You
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +68,8 @@ export function ProfileTab() {
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const [showLinkCampaignDialog, setShowLinkCampaignDialog] = useState(false);
   const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<string | null>(null);
+  const [showDemographicsDialog, setShowDemographicsDialog] = useState(false);
+  const [selectedAccountForDemographics, setSelectedAccountForDemographics] = useState<SocialAccount | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -384,6 +387,18 @@ export function ProfileTab() {
                     </div>
                     
                     <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedAccountForDemographics(account);
+                          setShowDemographicsDialog(true);
+                        }}
+                        className="h-8 gap-1"
+                      >
+                        📊 Submit Demographics
+                      </Button>
+                      
                       {linkedCampaign ? (
                         <Button
                           variant="ghost"
@@ -604,6 +619,24 @@ export function ProfileTab() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Demographics Submission Dialog */}
+      {selectedAccountForDemographics && (
+        <SubmitDemographicsDialog
+          open={showDemographicsDialog}
+          onOpenChange={setShowDemographicsDialog}
+          onSuccess={() => {
+            fetchSocialAccounts();
+            toast({
+              title: "Success",
+              description: "Demographics submitted successfully",
+            });
+          }}
+          socialAccountId={selectedAccountForDemographics.id}
+          platform={selectedAccountForDemographics.platform}
+          username={selectedAccountForDemographics.username}
+        />
+      )}
     </div>
   );
 }

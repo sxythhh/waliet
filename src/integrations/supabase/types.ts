@@ -266,6 +266,59 @@ export type Database = {
           },
         ]
       }
+      demographic_submissions: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          score: number | null
+          screenshot_url: string | null
+          social_account_id: string
+          status: string
+          submitted_at: string
+          tier1_percentage: number
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score?: number | null
+          screenshot_url?: string | null
+          social_account_id: string
+          status?: string
+          submitted_at?: string
+          tier1_percentage: number
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score?: number | null
+          screenshot_url?: string | null
+          social_account_id?: string
+          status?: string
+          submitted_at?: string
+          tier1_percentage?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demographic_submissions_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_requests: {
         Row: {
           amount: number
