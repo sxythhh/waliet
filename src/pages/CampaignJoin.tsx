@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, ChevronRight, Instagram, Youtube, CheckCircle2, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 
 interface Campaign {
@@ -153,13 +155,14 @@ export default function CampaignJoin() {
   };
 
   const getPlatformIcon = (platform: string) => {
+    const iconClass = "h-5 w-5";
     switch (platform) {
       case 'tiktok':
-        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
+        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
       case 'instagram':
-        return <Instagram className="h-5 w-5 text-pink-500" />;
+        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
       case 'youtube':
-        return <Youtube className="h-5 w-5 text-red-500" />;
+        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
       default:
         return null;
     }

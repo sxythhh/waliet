@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload } from "lucide-react";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 import { z } from "zod";
 
 const socialAccountSchema = z.object({
@@ -168,6 +171,18 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
     }
   };
 
+  const getPlatformIcon = (platform: Platform) => {
+    const iconClass = "h-5 w-5";
+    switch (platform) {
+      case "tiktok":
+        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
+      case "instagram":
+        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
+      case "youtube":
+        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] bg-card">
@@ -189,8 +204,9 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
                   type="button"
                   variant={selectedPlatform === platform ? "default" : "outline"}
                   onClick={() => setSelectedPlatform(platform)}
-                  className="flex-1"
+                  className="flex-1 gap-2"
                 >
+                  {getPlatformIcon(platform)}
                   {getPlatformLabel(platform)}
                 </Button>
               ))}

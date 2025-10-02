@@ -18,6 +18,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 
 interface Profile {
   id: string;
@@ -192,11 +194,11 @@ export function ProfileTab() {
     const iconClass = "h-5 w-5";
     switch (platform.toLowerCase()) {
       case "tiktok":
-        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
+        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
       case "instagram":
-        return <Instagram className={iconClass} />;
+        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
       case "youtube":
-        return <Youtube className={iconClass} />;
+        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
       default:
         return null;
     }

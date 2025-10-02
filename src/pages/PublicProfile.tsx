@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Instagram, Youtube, Music, DollarSign, TrendingUp, Users, Eye } from "lucide-react";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Profile {
@@ -60,13 +63,14 @@ export default function PublicProfile() {
   };
 
   const getPlatformIcon = (platform: string) => {
+    const iconClass = "h-5 w-5";
     switch (platform) {
       case "instagram":
-        return <Instagram className="h-5 w-5" />;
+        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
       case "youtube":
-        return <Youtube className="h-5 w-5" />;
+        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
       case "tiktok":
-        return <Music className="h-5 w-5" />;
+        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
       default:
         return null;
     }
