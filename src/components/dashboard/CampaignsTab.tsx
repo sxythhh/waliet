@@ -195,7 +195,7 @@ export function CampaignsTab() {
               {/* Connected Accounts & Footer */}
               <div className="mt-auto space-y-3">
                 {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Connected Accounts</span>
+                    <span className="font-bold text-muted-foreground block mb-2" style={{ fontSize: '9px', letterSpacing: '-0.5px' }}>Connected Accounts</span>
                     <div className="flex flex-wrap gap-2">
                       {campaign.connected_accounts.map(account => <div key={account.id} className="flex items-center gap-2 bg-neutral-900/50 rounded-lg px-3 py-2">
                           <div className="w-4 h-4">
