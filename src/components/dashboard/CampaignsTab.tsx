@@ -21,6 +21,11 @@ interface Campaign {
   start_date: string | null;
   banner_url: string | null;
   submission_status?: string;
+  connected_accounts?: Array<{
+    id: string;
+    platform: string;
+    username: string;
+  }>;
 }
 export function CampaignsTab() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -84,6 +89,31 @@ export function CampaignsTab() {
       .order("created_at", {
         ascending: false
       });
+    
+    // Fetch user's social accounts connected to these campaigns
+    const {
+      data: socialAccounts
+    } = await supabase
+      .from("social_accounts")
+      .select("id, platform, username, campaign_id")
+      .eq("user_id", user.id)
+      .in("campaign_id", campaignIds);
+    
+    // Group social accounts by campaign_id
+    const accountsByCampaign = new Map<string, Array<{id: string, platform: string, username: string}>>();
+    socialAccounts?.forEach(account => {
+      if (account.campaign_id) {
+        if (!accountsByCampaign.has(account.campaign_id)) {
+          accountsByCampaign.set(account.campaign_id, []);
+        }
+        accountsByCampaign.get(account.campaign_id)?.push({
+          id: account.id,
+          platform: account.platform,
+          username: account.username
+        });
+      }
+    });
+    
     if (error) {
       toast({
         variant: "destructive",
@@ -95,7 +125,8 @@ export function CampaignsTab() {
       const campaignsWithStatus = (data || []).map(campaign => ({
         ...campaign,
         brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
-        submission_status: submissionStatusMap.get(campaign.id)
+        submission_status: submissionStatusMap.get(campaign.id),
+        connected_accounts: accountsByCampaign.get(campaign.id) || []
       }));
       setCampaigns(campaignsWithStatus);
     }
@@ -190,6 +221,36 @@ export function CampaignsTab() {
 
               {/* Stats Grid */}
               <div className="space-y-4 mb-5">
+                {/* Connected Accounts */}
+                {campaign.connected_accounts && campaign.connected_accounts.length > 0 && (
+                  <div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-2">
+                      Connected Accounts
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {campaign.connected_accounts.map(account => (
+                        <div 
+                          key={account.id} 
+                          className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1"
+                        >
+                          <div className="w-4 h-4">
+                            {account.platform.toLowerCase() === 'tiktok' && (
+                              <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />
+                            )}
+                            {account.platform.toLowerCase() === 'instagram' && (
+                              <img src={instagramLogo} alt="Instagram" className="w-full h-full" />
+                            )}
+                            {account.platform.toLowerCase() === 'youtube' && (
+                              <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />
+                            )}
+                          </div>
+                          <span className="text-xs font-medium">@{account.username}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Budget Progress */}
                 <div>
                   <div className="flex items-baseline justify-between mb-2">
