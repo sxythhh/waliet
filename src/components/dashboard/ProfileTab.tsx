@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
 
 interface Profile {
   id: string;
@@ -33,9 +35,16 @@ interface SocialAccount {
   connected_at: string;
 }
 
+interface Campaign {
+  id: string;
+  title: string;
+  brand_name: string;
+}
+
 export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [joinedCampaigns, setJoinedCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -46,6 +55,7 @@ export function ProfileTab() {
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
+    fetchJoinedCampaigns();
   }, []);
 
   const fetchProfile = async () => {
@@ -75,6 +85,8 @@ export function ProfileTab() {
       .from("social_accounts")
       .select("*")
       .eq("user_id", session.user.id)
+      .gt("follower_count", 0)
+      .eq("is_verified", true)
       .order("connected_at", { ascending: false });
 
     if (data) {
@@ -82,16 +94,38 @@ export function ProfileTab() {
     }
   };
 
+  const fetchJoinedCampaigns = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data } = await supabase
+      .from("campaign_submissions")
+      .select("campaign_id, campaigns(id, title, brand_name)")
+      .eq("creator_id", session.user.id);
+
+    if (data) {
+      const campaigns = data
+        .filter(item => item.campaigns)
+        .map(item => ({
+          id: item.campaigns.id,
+          title: item.campaigns.title,
+          brand_name: item.campaigns.brand_name,
+        }));
+      setJoinedCampaigns(campaigns);
+    }
+  };
+
   const getPlatformIcon = (platform: string) => {
+    const iconClass = "h-5 w-5";
     switch (platform.toLowerCase()) {
       case "tiktok":
-        return "🎵";
+        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
       case "instagram":
-        return "📸";
+        return <Instagram className={iconClass} />;
       case "youtube":
-        return "▶️";
+        return <Youtube className={iconClass} />;
       default:
-        return "🔗";
+        return null;
     }
   };
 
@@ -373,7 +407,7 @@ export function ProfileTab() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">Connected Accounts</CardTitle>
-              <CardDescription>Manage your social media accounts</CardDescription>
+              <CardDescription>Link your verified accounts to campaigns</CardDescription>
             </div>
             <Button
               onClick={() => setShowAddAccountDialog(true)}
@@ -386,32 +420,53 @@ export function ProfileTab() {
         </CardHeader>
         <CardContent>
           {socialAccounts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No social accounts connected yet</p>
-              <p className="text-sm mt-2">Connect your accounts to start earning with brands</p>
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="text-base font-medium">No verified accounts yet</p>
+              <p className="text-sm mt-2">Add and verify your social media accounts to start earning</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {socialAccounts.map((account) => (
                 <div
                   key={account.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
+                  className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-card to-muted/20 p-5 transition-all hover:shadow-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{getPlatformIcon(account.platform)}</span>
-                    <div>
-                      <p className="font-medium capitalize">{account.platform}</p>
-                      <p className="text-sm text-muted-foreground">@{account.username}</p>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                        {getPlatformIcon(account.platform)}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold capitalize text-lg">{account.platform}</p>
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">@{account.username}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="secondary" className="font-medium">
+                            {account.follower_count.toLocaleString()} followers
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{account.follower_count.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">followers</p>
-                    </div>
-                    <Badge variant={account.is_verified ? "default" : "secondary"}>
-                      {account.is_verified ? "Verified" : "Pending"}
-                    </Badge>
+                    
+                    {joinedCampaigns.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs text-muted-foreground">Link to Campaign</Label>
+                        <Select>
+                          <SelectTrigger className="w-[200px] h-9">
+                            <SelectValue placeholder="Select campaign" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {joinedCampaigns.map((campaign) => (
+                              <SelectItem key={campaign.id} value={campaign.id}>
+                                {campaign.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
