@@ -178,7 +178,7 @@ export default function PayoutMethodDialog({
               {selectedMethod === "crypto" && (
                 <div className="space-y-6">
                   <div>
-                    <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
                       Select Currency
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
@@ -200,7 +200,7 @@ export default function PayoutMethodDialog({
                   </div>
 
                   <div>
-                    <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
                       Select Network
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
@@ -222,7 +222,7 @@ export default function PayoutMethodDialog({
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="wallet-address" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    <Label htmlFor="wallet-address" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       Wallet Address
                     </Label>
                     <Input
