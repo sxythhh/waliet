@@ -52,7 +52,7 @@ export default function Dashboard() {
       tab: value
     });
   };
-  return <div className="p-8 space-y-8">
+  return <div className={currentTab === "discover" ? "" : "p-8 space-y-8"}>
       {/* Header - Only show on campaigns tab */}
       {currentTab === "campaigns" && (
         <>
@@ -105,8 +105,8 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Sign Out button for other tabs */}
-      {currentTab !== "campaigns" && (
+      {/* Sign Out button for other tabs (except discover) */}
+      {currentTab !== "campaigns" && currentTab !== "discover" && (
         <div className="flex justify-end">
           <Button onClick={handleSignOut} variant="outline" className="border-none">
             Sign Out
