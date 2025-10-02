@@ -101,7 +101,7 @@ export function CampaignsTab() {
         <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
       </div>;
   }
-  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {campaigns.map(campaign => {
         const budgetUsed = campaign.budget_used || 0;
         const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
@@ -109,9 +109,9 @@ export function CampaignsTab() {
         return (
           <Card 
             key={campaign.id} 
-            className={`bg-gradient-card border-0 transition-all duration-300 overflow-hidden animate-fade-in ${
+            className={`group bg-card border-2 transition-all duration-300 overflow-hidden animate-fade-in hover:border-primary/40 ${
               campaign.submission_status === 'approved' 
-                ? 'cursor-pointer hover:scale-[1.02]' 
+                ? 'cursor-pointer hover:shadow-lg' 
                 : 'cursor-not-allowed opacity-50 grayscale'
             }`} 
             onClick={() => {
@@ -120,87 +120,94 @@ export function CampaignsTab() {
               }
             }}
           >
-            {/* Banner with Logo */}
+            {/* Banner with Logo - Clean Overlay */}
             {campaign.banner_url && (
-              <div className="w-full h-32 overflow-hidden relative">
+              <div className="relative w-full h-40 overflow-hidden bg-muted">
                 <img
                   src={campaign.banner_url}
                   alt={campaign.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
+                <div className="absolute inset-0 bg-black/20" />
+                
+                {/* Brand Logo Floating */}
                 {campaign.brand_logo_url && (
-                  <div className="absolute bottom-3 left-3">
+                  <div className="absolute -bottom-6 left-6 w-14 h-14 bg-card border-2 border-background rounded-xl overflow-hidden shadow-lg">
                     <img 
                       src={campaign.brand_logo_url} 
                       alt={campaign.brand_name} 
-                      className="w-12 h-12 rounded-lg object-cover border-2 border-background" 
+                      className="w-full h-full object-cover" 
                     />
+                  </div>
+                )}
+
+                {/* Status Badge */}
+                {campaign.submission_status && (
+                  <div className="absolute top-4 right-4">
+                    <Badge 
+                      className={`backdrop-blur-sm font-medium ${
+                        campaign.submission_status === 'pending' 
+                          ? 'bg-yellow-500/90 text-white border-0' 
+                          : campaign.submission_status === 'approved' 
+                          ? 'bg-green-500/90 text-white border-0' 
+                          : 'bg-red-500/90 text-white border-0'
+                      }`}
+                    >
+                      {campaign.submission_status.charAt(0).toUpperCase() + campaign.submission_status.slice(1)}
+                    </Badge>
                   </div>
                 )}
               </div>
             )}
 
-            <CardContent className="p-6">
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-1">
-                    {campaign.title}
-                  </h3>
-                  {campaign.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {campaign.description}
-                    </p>
-                  )}
-                </div>
-                {campaign.submission_status && (
-                  <Badge 
-                    className={`ml-2 ${
-                      campaign.submission_status === 'pending' 
-                        ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' 
-                        : campaign.submission_status === 'approved' 
-                        ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                        : 'bg-red-500/20 text-red-400 border-red-500/30'
-                    }`}
-                    variant="outline"
-                  >
-                    {campaign.submission_status.charAt(0).toUpperCase() + campaign.submission_status.slice(1)}
-                  </Badge>
+            <CardContent className="p-6 pt-10">
+              {/* Title & Description */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-2 line-clamp-1">
+                  {campaign.title}
+                </h3>
+                {campaign.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                    {campaign.description}
+                  </p>
                 )}
               </div>
 
-              {/* Animated Progress Bar */}
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Budget Usage</span>
-                  <span className="font-medium">
-                    ${budgetUsed.toLocaleString()} / ${campaign.budget.toLocaleString()}
-                  </span>
-                </div>
-                <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-500"
-                    style={{ width: `${budgetPercentage}%` }}
-                  >
+              {/* Stats Grid */}
+              <div className="space-y-4 mb-5">
+                {/* Budget Progress */}
+                <div>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Budget</span>
+                    <div className="text-right">
+                      <span className="text-sm font-bold">${budgetUsed.toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground"> / ${campaign.budget.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="relative h-2 bg-muted rounded-full overflow-hidden">
                     <div 
-                      className="absolute inset-0 opacity-40"
-                      style={{
-                        backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.2) 10px, rgba(255,255,255,.2) 20px)',
-                        animation: 'slide 1.5s linear infinite',
-                        backgroundSize: '40px 40px'
-                      }}
+                      className="absolute inset-y-0 left-0 bg-foreground rounded-full transition-all duration-700 ease-out"
+                      style={{ width: `${budgetPercentage}%` }}
                     />
                   </div>
                 </div>
+
+                {/* RPM Rate */}
+                <div className="flex items-center justify-between py-3 px-4 bg-muted/50 rounded-lg">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">RPM Rate</span>
+                  <span className="text-base font-bold">
+                    ${campaign.rpm_rate.toFixed(2)}
+                  </span>
+                </div>
               </div>
 
-              {/* RPM Display */}
-              <div className="flex items-center justify-between text-sm pt-4 border-t border-border/50">
-                <span className="text-muted-foreground">RPM Rate</span>
-                <span className="font-semibold text-success">
-                  ${campaign.rpm_rate.toFixed(2)}
-                </span>
-              </div>
+              {/* Start Date Footer */}
+              {campaign.start_date && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground pt-4 border-t">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Started {new Date(campaign.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
