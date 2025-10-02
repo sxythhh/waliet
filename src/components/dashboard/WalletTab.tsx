@@ -1219,12 +1219,30 @@ export function WalletTab() {
                             </span>
                           </div>}
                         
-                        {selectedTransaction.metadata.network && <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
-                            <span className="text-sm text-muted-foreground">Network</span>
-                            <span className="text-sm font-medium uppercase">
-                              {selectedTransaction.metadata.network}
-                            </span>
-                          </div>}
+                        {selectedTransaction.metadata.network && (() => {
+                          const network = selectedTransaction.metadata.network.toLowerCase();
+                          const getNetworkLogo = () => {
+                            if (network === 'ethereum') return ethereumLogo;
+                            if (network === 'optimism') return optimismLogo;
+                            if (network === 'solana') return solanaLogo;
+                            if (network === 'polygon') return polygonLogo;
+                            return null;
+                          };
+                          const networkLogo = getNetworkLogo();
+                          const networkName = selectedTransaction.metadata.network.charAt(0).toUpperCase() + selectedTransaction.metadata.network.slice(1).toLowerCase();
+                          
+                          return <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                              <span className="text-sm text-muted-foreground">Network</span>
+                              <div className="flex items-center gap-2">
+                                {networkLogo && (
+                                  <img src={networkLogo} alt="Network logo" className="h-4 w-4" />
+                                )}
+                                <span className="text-sm font-medium font-instrument">
+                                  {networkName}
+                                </span>
+                              </div>
+                            </div>;
+                        })()}
                         
                         {/* Display crypto address if available */}
                         {selectedTransaction.metadata.payoutDetails?.address && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
