@@ -87,6 +87,28 @@ export default function BrandManagement() {
   useEffect(() => {
     if (selectedCampaignId) {
       fetchSubmissions();
+
+      // Set up real-time subscription for campaign submissions
+      const channel = supabase
+        .channel('campaign-submissions-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'campaign_submissions',
+            filter: `campaign_id=eq.${selectedCampaignId}`
+          },
+          (payload) => {
+            console.log('Submission changed:', payload);
+            fetchSubmissions();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [selectedCampaignId]);
 
