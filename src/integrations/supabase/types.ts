@@ -111,6 +111,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "campaign_submissions_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       campaigns: {
@@ -512,6 +519,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "social_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -616,11 +630,53 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "wallets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          demographics_score: number | null
+          full_name: string | null
+          id: string | null
+          total_earnings: number | null
+          trust_score: number | null
+          username: string | null
+          views_score: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          demographics_score?: number | null
+          full_name?: string | null
+          id?: string | null
+          total_earnings?: number | null
+          trust_score?: number | null
+          username?: string | null
+          views_score?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          demographics_score?: number | null
+          full_name?: string | null
+          id?: string | null
+          total_earnings?: number | null
+          trust_score?: number | null
+          username?: string | null
+          views_score?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
