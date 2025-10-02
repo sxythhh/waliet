@@ -837,11 +837,13 @@ export function WalletTab() {
               {transactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                  className="flex items-center justify-between p-4 rounded-lg border border-border/50"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                      transaction.type === 'earning' ? 'bg-green-500/10' : 'bg-red-500/10'
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className={`h-11 w-11 rounded-lg flex items-center justify-center border ${
+                      transaction.type === 'earning' 
+                        ? 'bg-green-500/5 border-green-500/20' 
+                        : 'bg-red-500/5 border-red-500/20'
                     }`}>
                       {transaction.type === 'earning' ? (
                         <TrendingUp className="h-5 w-5 text-green-500" />
@@ -849,31 +851,42 @@ export function WalletTab() {
                         <ArrowDownLeft className="h-5 w-5 text-red-500" />
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-bold" style={{ fontFamily: 'Chakra Petch, sans-serif', letterSpacing: '-0.5px' }}>
                           {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
                         </p>
                         {transaction.status && (
-                          <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                            {transaction.status}
+                          <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'} className="text-xs capitalize">
+                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {transaction.type === 'earning' 
-                          ? `From: ${transaction.source} → To: ${transaction.destination}`
-                          : `To: ${transaction.destination}`
-                        }
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(transaction.date, 'MMM dd, yyyy HH:mm')}
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5">
+                        {transaction.type === 'earning' ? (
+                          <>
+                            <span className="truncate">{transaction.source}</span>
+                            <span>→</span>
+                            <span>{transaction.destination}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>To</span>
+                            <span className="truncate">{transaction.destination}</span>
+                          </>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground/60">
+                        {format(transaction.date, 'MMM dd, yyyy • HH:mm')}
                       </p>
                     </div>
                   </div>
-                  <div className={`text-lg font-semibold ${
-                    transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
-                  }`}>
+                  <div 
+                    className={`text-lg font-bold whitespace-nowrap ml-4 ${
+                      transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
+                    }`}
+                    style={{ fontFamily: 'Chakra Petch, sans-serif', letterSpacing: '-0.5px' }}
+                  >
                     {transaction.type === 'earning' ? '+' : '-'}${transaction.amount.toFixed(2)}
                   </div>
                 </div>
