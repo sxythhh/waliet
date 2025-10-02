@@ -111,7 +111,7 @@ export function CampaignsTab() {
             key={campaign.id} 
             className={`group bg-card border-2 transition-all duration-300 overflow-hidden animate-fade-in hover:border-primary/40 ${
               campaign.submission_status === 'approved' 
-                ? 'cursor-pointer hover:shadow-lg' 
+                ? 'cursor-pointer' 
                 : 'cursor-not-allowed opacity-50 grayscale'
             }`} 
             onClick={() => {
@@ -132,7 +132,7 @@ export function CampaignsTab() {
                 
                 {/* Brand Logo Floating */}
                 {campaign.brand_logo_url && (
-                  <div className="absolute -bottom-6 left-6 w-14 h-14 bg-card border-2 border-background rounded-xl overflow-hidden shadow-lg">
+                  <div className="absolute -bottom-6 left-6 w-14 h-14 bg-card border-2 border-background rounded-xl overflow-hidden">
                     <img 
                       src={campaign.brand_logo_url} 
                       alt={campaign.brand_name} 
@@ -161,6 +161,22 @@ export function CampaignsTab() {
             )}
 
             <CardContent className="p-6 pt-10">
+              {/* Brand Name with Logo */}
+              <div className="flex items-center gap-2 mb-3">
+                {campaign.brand_logo_url && (
+                  <div className="w-6 h-6 rounded-md overflow-hidden flex-shrink-0">
+                    <img 
+                      src={campaign.brand_logo_url} 
+                      alt={campaign.brand_name} 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                )}
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {campaign.brand_name}
+                </span>
+              </div>
+
               {/* Title & Description */}
               <div className="mb-6">
                 <h3 className="text-lg font-bold mb-2 line-clamp-1">
