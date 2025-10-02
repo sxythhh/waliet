@@ -540,7 +540,8 @@ export function WalletTab() {
   };
   return <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header with Main Balance */}
-      <div className="flex items-center justify-end py-0">
+      <div className="flex items-center justify-between py-0">
+        <h2 className="text-2xl font-semibold font-sans">Virality Wallet</h2>
         <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0">
           <ArrowUpRight className="h-4 w-4" />
           Request Payout
