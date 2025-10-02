@@ -726,8 +726,8 @@ export function WalletTab() {
                     }}>
                           {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
                         </p>
-                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border-0 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 'text-yellow-500 bg-yellow-500/5'}`}>
-                            {transaction.status}
+                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{ letterSpacing: '-0.5px' }}>
+                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
                           </Badge>}
                       </div>
                       
