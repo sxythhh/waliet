@@ -986,18 +986,10 @@ export function WalletTab() {
                 </div>
 
                 {/* Icon */}
-                <div className="flex justify-center mb-6">
-                  <div className={`h-20 w-20 rounded-full flex items-center justify-center ${selectedTransaction.type === 'earning' ? 'bg-gradient-to-br from-green-500/20 to-green-600/10 border-2 border-green-500/30' : 'bg-gradient-to-br from-red-500/20 to-red-600/10 border-2 border-red-500/30'}`}>
-                    {selectedTransaction.type === 'earning' ? <TrendingUp className="h-10 w-10 text-green-500" /> : <ArrowDownLeft className="h-10 w-10 text-red-500" />}
-                  </div>
-                </div>
+                
 
                 {/* Type Badge */}
-                <div className="flex justify-center mb-4">
-                  <Badge variant="outline" className="text-xs px-3 py-1">
-                    {selectedTransaction.type === 'earning' ? 'Payment Received' : 'Withdrawal'}
-                  </Badge>
-                </div>
+                
 
                 {/* Amount */}
                 <div className="text-center mb-2">
