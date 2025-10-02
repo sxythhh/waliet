@@ -44,6 +44,7 @@ interface Transaction {
   destination?: string;
   source?: string;
   status?: string;
+  metadata?: any;
 }
 type TimePeriod = '1W' | '1M' | '3M' | '1Y' | 'TW';
 export function WalletTab() {
@@ -220,17 +221,38 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
+    
+    // Fetch wallet transactions
     const {
       data: walletTransactions
     } = await supabase.from("wallet_transactions").select("*").eq("user_id", session.user.id).order("created_at", {
       ascending: false
     }).limit(10);
+    
+    // Fetch payout requests to get full payout details
+    const {
+      data: payoutRequests
+    } = await supabase.from("payout_requests").select("*").eq("user_id", session.user.id);
+    
     const allTransactions: Transaction[] = [];
     if (walletTransactions) {
       walletTransactions.forEach(txn => {
         const metadata = txn.metadata as any;
         let source = '';
         let destination = '';
+        let payoutDetails = null;
+        
+        // Try to match with payout request to get full details
+        if (txn.type === 'withdrawal' && payoutRequests) {
+          const matchingPayout = payoutRequests.find(pr => 
+            Math.abs(new Date(pr.requested_at).getTime() - new Date(txn.created_at).getTime()) < 5000 &&
+            Number(pr.amount) === Number(txn.amount)
+          );
+          if (matchingPayout) {
+            payoutDetails = matchingPayout.payout_details;
+          }
+        }
+        
         switch (txn.type) {
           case 'admin_adjustment':
             source = 'Admin Payment';
@@ -274,7 +296,8 @@ export function WalletTab() {
           date: new Date(txn.created_at),
           destination,
           source: source || txn.description || '',
-          status: txn.status
+          status: txn.status,
+          metadata: Object.assign({}, txn.metadata as any, { payoutDetails })
         });
       });
     }
@@ -1054,6 +1077,80 @@ export function WalletTab() {
                     )}
                   </div>
                 </div>
+
+                {/* Payout Method Details */}
+                {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold mb-4">Payout Method</h3>
+                      <div className="space-y-3">
+                        {selectedTransaction.metadata.payout_method && (
+                          <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm text-muted-foreground">Method</span>
+                            <span className="text-sm font-medium capitalize">
+                              {selectedTransaction.metadata.payout_method}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {selectedTransaction.metadata.network && (
+                          <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm text-muted-foreground">Network</span>
+                            <span className="text-sm font-medium uppercase">
+                              {selectedTransaction.metadata.network}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Display crypto address if available */}
+                        {selectedTransaction.metadata.payoutDetails?.address && (
+                          <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm text-muted-foreground">Address</span>
+                            <div className="flex items-center gap-2 flex-1 justify-end">
+                              <span className="text-sm font-mono text-right break-all max-w-[200px]">
+                                {selectedTransaction.metadata.payoutDetails.address}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 flex-shrink-0"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
+                                  toast({
+                                    description: "Address copied to clipboard",
+                                  });
+                                }}
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Display PayPal email if available */}
+                        {selectedTransaction.metadata.payoutDetails?.email && (
+                          <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm text-muted-foreground">Email</span>
+                            <span className="text-sm font-medium text-right max-w-[200px] truncate">
+                              {selectedTransaction.metadata.payoutDetails.email}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Display bank details if available */}
+                        {selectedTransaction.metadata.payoutDetails?.account_number && (
+                          <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm text-muted-foreground">Account</span>
+                            <span className="text-sm font-medium text-right">
+                              •••• {selectedTransaction.metadata.payoutDetails.account_number.slice(-4)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <Separator />
 
