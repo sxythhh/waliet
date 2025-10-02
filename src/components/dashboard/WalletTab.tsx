@@ -625,7 +625,7 @@ export function WalletTab() {
                 <Plus className="mr-2 h-4 w-4" />
                 Add Method
               </Button>
-            </div> : payoutMethods.map(method => <div key={method.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+            </div> : payoutMethods.map(method => <div key={method.id} className="flex items-center justify-between p-3 rounded-lg bg-stone-900">
                 <div className="flex items-center gap-3">
                   {method.method === "paypal" ? <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                       <CreditCard className="h-5 w-5 text-primary" />
