@@ -504,8 +504,8 @@ export function WalletTab() {
                   />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: "rgba(0, 0, 0, 0.85)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      backgroundColor: "#0C0C0C",
+                      border: "none",
                       borderRadius: "12px",
                       padding: "12px 16px",
                       fontFamily: "Chakra Petch, sans-serif",
@@ -524,6 +524,7 @@ export function WalletTab() {
                       fontFamily: "Chakra Petch, sans-serif",
                       letterSpacing: "-0.5px",
                     }}
+                    cursor={{ stroke: "#333333", strokeWidth: 2 }}
                   />
                   <Area 
                     type="monotone" 
@@ -535,7 +536,7 @@ export function WalletTab() {
                     activeDot={{ 
                       r: 6, 
                       fill: "#3b82f6",
-                      stroke: "#fff",
+                      stroke: "#1a1a1a",
                       strokeWidth: 2,
                     }}
                   />
@@ -690,8 +691,8 @@ export function WalletTab() {
                   />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: "rgba(0, 0, 0, 0.85)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      backgroundColor: "#0C0C0C",
+                      border: "none",
                       borderRadius: "12px",
                       padding: "12px 16px",
                       fontFamily: "Chakra Petch, sans-serif",
@@ -710,6 +711,7 @@ export function WalletTab() {
                       fontFamily: "Chakra Petch, sans-serif",
                       letterSpacing: "-0.5px",
                     }}
+                    cursor={{ fill: "rgba(255, 255, 255, 0.05)" }}
                   />
                   <Bar 
                     dataKey="amount" 
