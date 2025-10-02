@@ -40,6 +40,17 @@ const campaignSchema = z.object({
   preview_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
   application_questions: z.array(z.string().trim().min(1)).max(3, "Maximum 3 questions allowed"),
+  is_private: z.boolean().default(false),
+  access_code: z.string().trim().optional(),
+}).refine((data) => {
+  // If campaign is private, access code is required
+  if (data.is_private) {
+    return data.access_code && data.access_code.length >= 6;
+  }
+  return true;
+}, {
+  message: "Access code must be at least 6 characters for private campaigns",
+  path: ["access_code"],
 });
 
 type CampaignFormValues = z.infer<typeof campaignSchema>;
@@ -57,6 +68,8 @@ interface Campaign {
   slug?: string;
   embed_url?: string | null;
   preview_url?: string | null;
+  is_private?: boolean;
+  access_code?: string | null;
 }
 
 interface CreateCampaignDialogProps {
@@ -94,6 +107,8 @@ export function CreateCampaignDialog({
       preview_url: campaign?.preview_url || "",
       allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
       application_questions: campaign?.application_questions || [],
+      is_private: campaign?.is_private || false,
+      access_code: campaign?.access_code || "",
     },
   });
 
@@ -179,6 +194,8 @@ export function CreateCampaignDialog({
         allowed_platforms: values.allowed_platforms,
         application_questions: values.application_questions,
         slug: generateSlug(values.title, campaign?.id),
+        is_private: values.is_private,
+        access_code: values.is_private ? values.access_code?.toUpperCase() : null,
       };
 
       if (campaign) {
@@ -481,6 +498,56 @@ export function CreateCampaignDialog({
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4 p-4 bg-[#191919]/50 rounded-lg border border-white/10">
+              <FormField
+                control={form.control}
+                name="is_private"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="border-white/20 data-[state=checked]:bg-primary"
+                      />
+                    </FormControl>
+                    <div className="space-y-1">
+                      <FormLabel className="text-white font-normal cursor-pointer">
+                        Make this campaign private (invite-only)
+                      </FormLabel>
+                      <p className="text-xs text-white/40">
+                        Private campaigns require an access code to join and won't appear in public listings
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("is_private") && (
+                <FormField
+                  control={form.control}
+                  name="access_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Access Code *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter access code (min 6 characters)"
+                          className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary uppercase font-mono tracking-wider"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-white/40">
+                        This code will be required for creators to join your campaign
+                      </p>
+                      <FormMessage className="text-destructive/80" />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
 
             <div className="space-y-3">
               <FormLabel className="text-white">Application Questions (Max 3)</FormLabel>

@@ -115,6 +115,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          access_code: string | null
           allowed_platforms: string[] | null
           application_questions: Json | null
           banner_url: string | null
@@ -129,6 +130,7 @@ export type Database = {
           end_date: string | null
           guidelines: string | null
           id: string
+          is_private: boolean | null
           preview_url: string | null
           rpm_rate: number
           slug: string
@@ -138,6 +140,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          access_code?: string | null
           allowed_platforms?: string[] | null
           application_questions?: Json | null
           banner_url?: string | null
@@ -152,6 +155,7 @@ export type Database = {
           end_date?: string | null
           guidelines?: string | null
           id?: string
+          is_private?: boolean | null
           preview_url?: string | null
           rpm_rate: number
           slug: string
@@ -161,6 +165,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          access_code?: string | null
           allowed_platforms?: string[] | null
           application_questions?: Json | null
           banner_url?: string | null
@@ -175,6 +180,7 @@ export type Database = {
           end_date?: string | null
           guidelines?: string | null
           id?: string
+          is_private?: boolean | null
           preview_url?: string | null
           rpm_rate?: number
           slug?: string

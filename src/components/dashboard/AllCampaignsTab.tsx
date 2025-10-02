@@ -73,6 +73,7 @@ export function AllCampaignsTab() {
         }
       }
 
+      // Only show public campaigns (not private)
       const { data, error } = await supabase
         .from("campaigns")
         .select(`
@@ -82,6 +83,7 @@ export function AllCampaignsTab() {
           )
         `)
         .eq("status", "active")
+        .eq("is_private", false)
         .order("created_at", { ascending: false });
 
       if (error) {

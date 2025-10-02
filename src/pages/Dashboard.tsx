@@ -4,17 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, TrendingUp, DollarSign } from "lucide-react";
+import { Sparkles, TrendingUp, DollarSign, Lock } from "lucide-react";
 import { CampaignsTab } from "@/components/dashboard/CampaignsTab";
 import { AllCampaignsTab } from "@/components/dashboard/AllCampaignsTab";
 import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
 import { WalletTab } from "@/components/dashboard/WalletTab";
 import { LeaderboardTab } from "@/components/dashboard/LeaderboardTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
+import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const navigate = useNavigate();
   const currentTab = searchParams.get("tab") || "campaigns";
   useEffect(() => {
@@ -55,9 +57,19 @@ export default function Dashboard() {
   };
   return <div className={currentTab === "discover" ? "" : "p-8 space-y-8"}>
       {/* Header - Only show on campaigns tab */}
-      {currentTab === "campaigns" && <>
+      {currentTab === "campaigns" && (
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Joined Campaigns</h1>
-    </>}
+          <Button
+            onClick={() => setPrivateDialogOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <Lock className="h-4 w-4" />
+            Join Private Campaign
+          </Button>
+        </div>
+      )}
 
       {/* Sign Out button for other tabs (except discover and wallet) */}
       {currentTab !== "campaigns" && currentTab !== "discover" && currentTab !== "wallet" && <div className="flex justify-end">
@@ -95,5 +107,10 @@ export default function Dashboard() {
           <ProfileTab />
         </TabsContent>
       </Tabs>
+
+      <JoinPrivateCampaignDialog 
+        open={privateDialogOpen} 
+        onOpenChange={setPrivateDialogOpen}
+      />
     </div>;
 }
