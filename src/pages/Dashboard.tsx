@@ -10,56 +10,49 @@ import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
 import { WalletTab } from "@/components/dashboard/WalletTab";
 import { LeaderboardTab } from "@/components/dashboard/LeaderboardTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
-
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const currentTab = searchParams.get("tab") || "campaigns";
-
   useEffect(() => {
     checkAuth();
     fetchCampaigns();
   }, []);
-
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
       return;
     }
-
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-    
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
     setProfile(profileData);
   };
-
   const fetchCampaigns = async () => {
-    const { data } = await supabase
-      .from("campaigns")
-      .select("*")
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
-
+    const {
+      data
+    } = await supabase.from("campaigns").select("*").eq("status", "active").order("created_at", {
+      ascending: false
+    });
     setCampaigns(data || []);
   };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
   };
-
   const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
+    setSearchParams({
+      tab: value
+    });
   };
-
-  return (
-    <div className="p-8 space-y-8">
+  return <div className="p-8 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -76,8 +69,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      {profile && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {profile && <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-gradient-card border-border/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
@@ -107,18 +99,11 @@ export default function Dashboard() {
               <div className="text-2xl font-bold">Rising Star</div>
             </CardContent>
           </Card>
-        </div>
-      )}
+        </div>}
 
       {/* Main Tabs */}
       <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-6">
-          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="discover">Discover</TabsTrigger>
-          <TabsTrigger value="wallet">Wallet</TabsTrigger>
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-        </TabsList>
+        
         
         <TabsContent value="campaigns" className="mt-0">
           <CampaignsTab />
@@ -140,6 +125,5 @@ export default function Dashboard() {
           <ProfileTab />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }
