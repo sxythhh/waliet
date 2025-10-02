@@ -1,4 +1,4 @@
-import { Home, DollarSign, User, TrendingUp, Compass, Rocket } from "lucide-react";
+import { Home, DollarSign, User, TrendingUp, Compass, ArrowUpRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Sidebar,
@@ -67,11 +67,11 @@ export function AppSidebar() {
             target="_blank" 
             rel="noopener noreferrer"
           >
-            <Rocket className="h-4 w-4" />
+            <ArrowUpRight className="h-4 w-4" />
             Launch Campaign
           </a>
         </Button>
-        <p className="text-xs text-muted-foreground text-center mt-2">
+        <p className="text-xs text-muted-foreground/60 text-center mt-1">
           Are you a brand? Work with us
         </p>
       </SidebarFooter>
