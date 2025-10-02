@@ -139,17 +139,6 @@ export function CampaignsTab() {
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-black/20" />
-                
-                {/* Brand Logo Floating */}
-                {campaign.brand_logo_url && (
-                  <div className="absolute -bottom-6 left-6 w-14 h-14 bg-card border-2 border-background rounded-xl overflow-hidden">
-                    <img 
-                      src={campaign.brand_logo_url} 
-                      alt={campaign.brand_name} 
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                )}
 
                 {/* Status Badge */}
                 {campaign.submission_status && (
