@@ -32,6 +32,9 @@ const campaignSchema = z.object({
   budget: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Budget must be a positive number",
   }),
+  budget_used: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    message: "Budget used must be a non-negative number",
+  }),
   rpm_rate: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "RPM rate must be a positive number",
   }),
@@ -48,6 +51,7 @@ interface Campaign {
   title: string;
   description: string | null;
   budget: number;
+  budget_used: number;
   rpm_rate: number;
   guidelines: string | null;
   banner_url: string | null;
@@ -86,6 +90,7 @@ export function CreateCampaignDialog({
       title: campaign?.title || "",
       description: campaign?.description || "",
       budget: campaign?.budget?.toString() || "",
+      budget_used: campaign?.budget_used?.toString() || "0",
       rpm_rate: campaign?.rpm_rate?.toString() || "",
       guidelines: campaign?.guidelines || "",
       embed_url: campaign?.embed_url || "",
@@ -165,6 +170,7 @@ export function CreateCampaignDialog({
         title: values.title,
         description: values.description || null,
         budget: Number(values.budget),
+        budget_used: Number(values.budget_used),
         rpm_rate: Number(values.rpm_rate),
         guidelines: values.guidelines || null,
         embed_url: values.embed_url || null,
@@ -337,6 +343,28 @@ export function CreateCampaignDialog({
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="budget_used"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Budget Used ($)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        step="0.01"
+                        className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-destructive/80" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
                 name="rpm_rate"

@@ -171,7 +171,7 @@ export function CampaignsTab() {
                 <span className="text-muted-foreground font-medium">Campaign Budget</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-success font-bold text-lg">
-                    ${(campaign.budget / 1000).toFixed(1)}K
+                    ${campaign.budget >= 1000 ? `${(campaign.budget / 1000).toFixed(1)}K` : campaign.budget.toFixed(2)}
                   </span>
                   <span className="text-muted-foreground">/</span>
                   <Infinity className="w-5 h-5 text-muted-foreground" />
