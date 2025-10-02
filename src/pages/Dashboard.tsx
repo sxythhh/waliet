@@ -53,53 +53,66 @@ export default function Dashboard() {
     });
   };
   return <div className="p-8 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            Creator Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your campaigns, earnings, and profile
-          </p>
-        </div>
-        <Button onClick={handleSignOut} variant="outline" className="border-none">
-          Sign Out
-        </Button>
-      </div>
+      {/* Header - Only show on campaigns tab */}
+      {currentTab === "campaigns" && (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                Creator Dashboard
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Manage your campaigns, earnings, and profile
+              </p>
+            </div>
+            <Button onClick={handleSignOut} variant="outline" className="border-none">
+              Sign Out
+            </Button>
+          </div>
 
-      {/* Stats Cards */}
-      {profile && <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-gradient-card border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-              <DollarSign className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${profile.total_earnings?.toFixed(2) || "0.00"}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-card border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
-              <TrendingUp className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{campaigns.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-card border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Creator Level</CardTitle>
-              <Sparkles className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Rising Star</div>
-            </CardContent>
-          </Card>
-        </div>}
+          {/* Stats Cards */}
+          {profile && <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="bg-gradient-card border-border/50">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+                  <DollarSign className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">${profile.total_earnings?.toFixed(2) || "0.00"}</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-card border-border/50">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-success" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{campaigns.length}</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-card border-border/50">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Creator Level</CardTitle>
+                  <Sparkles className="h-4 w-4 text-warning" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">Rising Star</div>
+                </CardContent>
+              </Card>
+            </div>}
+        </>
+      )}
+
+      {/* Sign Out button for other tabs */}
+      {currentTab !== "campaigns" && (
+        <div className="flex justify-end">
+          <Button onClick={handleSignOut} variant="outline" className="border-none">
+            Sign Out
+          </Button>
+        </div>
+      )}
 
       {/* Main Tabs */}
       <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
