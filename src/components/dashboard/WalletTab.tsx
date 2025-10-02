@@ -3,11 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, BarChart } from "recharts";
 import { format, subDays, subMonths, subYears, startOfWeek } from "date-fns";
 import {
   DropdownMenu,
@@ -36,12 +36,29 @@ interface EarningsDataPoint {
   amount: number;
 }
 
+interface WithdrawalDataPoint {
+  date: string;
+  amount: number;
+}
+
+interface Transaction {
+  id: string;
+  type: 'earning' | 'withdrawal';
+  amount: number;
+  date: Date;
+  destination?: string;
+  source?: string;
+  status?: string;
+}
+
 type TimePeriod = '1W' | '1M' | '3M' | '1Y' | 'TW';
 
 export function WalletTab() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
   const [earningsData, setEarningsData] = useState<EarningsDataPoint[]>([]);
+  const [withdrawalData, setWithdrawalData] = useState<WithdrawalDataPoint[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1M');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,6 +71,8 @@ export function WalletTab() {
   useEffect(() => {
     if (wallet) {
       fetchEarningsData();
+      fetchWithdrawalData();
+      fetchTransactions();
     }
   }, [timePeriod, wallet]);
 
@@ -142,6 +161,101 @@ export function WalletTab() {
     }
 
     setEarningsData(dataPoints);
+  };
+
+  const fetchWithdrawalData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { start, end } = getDateRange();
+
+    const { data: payouts } = await supabase
+      .from("payout_requests")
+      .select("amount, requested_at, status")
+      .eq("user_id", session.user.id)
+      .gte("requested_at", start.toISOString())
+      .lte("requested_at", end.toISOString())
+      .order("requested_at", { ascending: true });
+
+    const days = timePeriod === '1W' || timePeriod === 'TW' ? 7 : 
+                 timePeriod === '1M' ? 30 : 
+                 timePeriod === '3M' ? 90 : 365;
+    
+    const dataPoints: WithdrawalDataPoint[] = [];
+
+    for (let i = 0; i <= days; i++) {
+      const currentDate = subDays(end, days - i);
+      const dateStr = format(currentDate, 'MMM dd');
+      
+      let withdrawalAmount = 0;
+      
+      if (payouts) {
+        payouts.forEach((payout) => {
+          const payoutDate = new Date(payout.requested_at);
+          if (format(payoutDate, 'MMM dd') === dateStr) {
+            withdrawalAmount += Number(payout.amount) || 0;
+          }
+        });
+      }
+
+      dataPoints.push({
+        date: dateStr,
+        amount: Number(withdrawalAmount.toFixed(2))
+      });
+    }
+
+    setWithdrawalData(dataPoints);
+  };
+
+  const fetchTransactions = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: submissions } = await supabase
+      .from("campaign_submissions")
+      .select("id, earnings, submitted_at, campaign_id")
+      .eq("creator_id", session.user.id)
+      .order("submitted_at", { ascending: false })
+      .limit(10);
+
+    const { data: payouts } = await supabase
+      .from("payout_requests")
+      .select("id, amount, requested_at, status, payout_method, payout_details")
+      .eq("user_id", session.user.id)
+      .order("requested_at", { ascending: false })
+      .limit(10);
+
+    const allTransactions: Transaction[] = [];
+
+    if (submissions) {
+      submissions.forEach((sub) => {
+        allTransactions.push({
+          id: sub.id,
+          type: 'earning',
+          amount: Number(sub.earnings) || 0,
+          date: new Date(sub.submitted_at),
+          destination: 'Wallet',
+          source: 'Campaign Submission'
+        });
+      });
+    }
+
+    if (payouts) {
+      payouts.forEach((payout) => {
+        const details = payout.payout_details as any;
+        allTransactions.push({
+          id: payout.id,
+          type: 'withdrawal',
+          amount: Number(payout.amount) || 0,
+          date: new Date(payout.requested_at),
+          destination: payout.payout_method === 'paypal' ? 'PayPal' : `Crypto (${details?.network || 'ETH'})`,
+          status: payout.status
+        });
+      });
+    }
+
+    allTransactions.sort((a, b) => b.date.getTime() - a.date.getTime());
+    setTransactions(allTransactions.slice(0, 10));
   };
 
   const fetchWallet = async () => {
@@ -537,6 +651,132 @@ export function WalletTab() {
                 </Button>
               </div>
             ))
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Withdrawal Requests Chart */}
+      <Card className="bg-card border-0">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Withdrawal Requests</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64">
+            {withdrawalData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={withdrawalData}>
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    style={{ opacity: 0.6 }}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `$${value}`}
+                    style={{ opacity: 0.6 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: "rgba(0, 0, 0, 0.85)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      borderRadius: "12px",
+                      padding: "12px 16px",
+                      fontFamily: "Chakra Petch, sans-serif",
+                      letterSpacing: "-0.5px",
+                    }}
+                    labelStyle={{
+                      color: "#ffffff",
+                      fontWeight: 600,
+                      marginBottom: "4px",
+                      fontFamily: "Chakra Petch, sans-serif",
+                      letterSpacing: "-0.5px",
+                    }}
+                    formatter={(value: number) => [`$${value.toFixed(2)}`, 'Withdrawn']}
+                    itemStyle={{
+                      color: "#ef4444",
+                      fontFamily: "Chakra Petch, sans-serif",
+                      letterSpacing: "-0.5px",
+                    }}
+                  />
+                  <Bar 
+                    dataKey="amount" 
+                    fill="#ef4444"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">No withdrawal requests in this period</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Transactions */}
+      <Card className="bg-card border-0">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {transactions.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">No transactions yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {transactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
+                      transaction.type === 'earning' ? 'bg-green-500/10' : 'bg-red-500/10'
+                    }`}>
+                      {transaction.type === 'earning' ? (
+                        <TrendingUp className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <ArrowDownLeft className="h-5 w-5 text-red-500" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">
+                          {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
+                        </p>
+                        {transaction.status && (
+                          <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                            {transaction.status}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {transaction.type === 'earning' 
+                          ? `From: ${transaction.source} → To: ${transaction.destination}`
+                          : `To: ${transaction.destination}`
+                        }
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(transaction.date, 'MMM dd, yyyy HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`text-lg font-semibold ${
+                    transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
+                  }`}>
+                    {transaction.type === 'earning' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
