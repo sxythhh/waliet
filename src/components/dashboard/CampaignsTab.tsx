@@ -150,7 +150,7 @@ export function CampaignsTab() {
         return (
           <Card 
             key={campaign.id} 
-            className={`group bg-card border-2 transition-all duration-300 overflow-hidden animate-fade-in ${
+            className={`group bg-card transition-all duration-300 overflow-hidden animate-fade-in ${
               campaign.submission_status === 'approved' 
                 ? 'cursor-pointer' 
                 : 'cursor-not-allowed opacity-50 grayscale'
@@ -164,7 +164,7 @@ export function CampaignsTab() {
             <div className="flex flex-col sm:flex-row">
               {/* Banner Image - Side Panel */}
               {campaign.banner_url && (
-                <div className="relative w-full sm:w-48 h-32 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
+                <div className="relative w-full sm:w-64 h-32 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
                   <img
                     src={campaign.banner_url}
                     alt={campaign.title}
@@ -231,7 +231,7 @@ export function CampaignsTab() {
                 </div>
 
                 {/* Budget Section */}
-                <div className="relative bg-neutral-900/50 rounded-xl p-4 border-l-4 border-primary">
+                <div className="relative bg-neutral-900/50 rounded-xl p-4">
                   <div className="flex items-end justify-between mb-2">
                     <div>
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Campaign Budget</span>
@@ -262,7 +262,7 @@ export function CampaignsTab() {
                         {campaign.connected_accounts.map(account => (
                           <div 
                             key={account.id} 
-                            className="flex items-center gap-2 bg-neutral-900/50 rounded-lg px-3 py-2 border border-border/50"
+                            className="flex items-center gap-2 bg-neutral-900/50 rounded-lg px-3 py-2"
                           >
                             <div className="w-4 h-4">
                               {account.platform.toLowerCase() === 'tiktok' && (
@@ -283,7 +283,7 @@ export function CampaignsTab() {
                   )}
                   
                   {campaign.start_date && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
                       <Calendar className="w-3.5 h-3.5" />
                       <span className="font-medium">Started {new Date(campaign.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                     </div>
