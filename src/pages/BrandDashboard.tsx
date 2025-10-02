@@ -258,7 +258,7 @@ export default function BrandDashboard() {
                             className="text-white/60 hover:text-white hover:bg-white/10"
                             onClick={(e) => {
                               e.stopPropagation();
-                              const joinUrl = `${window.location.origin}/campaign/${campaign.id}`;
+                              const joinUrl = `${window.location.origin}/join/${campaign.id}`;
                               navigator.clipboard.writeText(joinUrl);
                               toast.success("Campaign join URL copied to clipboard");
                             }}
