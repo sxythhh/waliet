@@ -35,7 +35,8 @@ interface EarningsDataPoint {
 }
 interface WithdrawalDataPoint {
   date: string;
-  amount: number;
+  earnings: number;
+  withdrawals: number;
 }
 interface Transaction {
   id: string;
@@ -197,10 +198,10 @@ export function WalletTab() {
     const end = subDays(now, earningsChartOffset * 7);
     const start = subDays(end, 7);
     
-    // Fetch earnings from wallet transactions
+    // Fetch all wallet transactions
     const {
       data: walletTransactions
-    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).in("type", ["earning", "admin_adjustment", "bonus", "refund"]).gte("created_at", start.toISOString()).lte("created_at", end.toISOString()).order("created_at", {
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).gte("created_at", start.toISOString()).lte("created_at", end.toISOString()).order("created_at", {
       ascending: true
     });
     
@@ -209,19 +210,25 @@ export function WalletTab() {
       const currentDate = subDays(end, 7 - i);
       const dateStr = format(currentDate, 'MMM dd');
       let earningsAmount = 0;
+      let withdrawalsAmount = 0;
       
       if (walletTransactions) {
         walletTransactions.forEach(txn => {
           const txnDate = new Date(txn.created_at);
           if (format(txnDate, 'MMM dd') === dateStr) {
-            earningsAmount += Number(txn.amount) || 0;
+            if (['earning', 'admin_adjustment', 'bonus', 'refund'].includes(txn.type)) {
+              earningsAmount += Number(txn.amount) || 0;
+            } else if (txn.type === 'withdrawal') {
+              withdrawalsAmount += Number(txn.amount) || 0;
+            }
           }
         });
       }
       
       dataPoints.push({
         date: dateStr,
-        amount: Number(earningsAmount.toFixed(2))
+        earnings: Number(earningsAmount.toFixed(2)),
+        withdrawals: Number(withdrawalsAmount.toFixed(2))
       });
     }
     setWithdrawalData(dataPoints);
@@ -840,7 +847,7 @@ export function WalletTab() {
       {/* Earnings History Chart */}
       <Card className="bg-card border-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-lg font-semibold">Earnings History</CardTitle>
+          <CardTitle className="text-lg font-semibold">Transaction History</CardTitle>
           <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
@@ -887,17 +894,14 @@ export function WalletTab() {
                 marginBottom: "4px",
                 fontFamily: "Chakra Petch, sans-serif",
                 letterSpacing: "-0.5px"
-              }} formatter={(value: number) => [`$${value.toFixed(2)}`, 'Earned']} itemStyle={{
-                color: "#22c55e",
-                fontFamily: "Chakra Petch, sans-serif",
-                letterSpacing: "-0.5px"
               }} cursor={{
                 fill: "rgba(255, 255, 255, 0.05)"
               }} />
-                  <Bar dataKey="amount" fill="#22c55e" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="earnings" fill="#22c55e" radius={[8, 8, 0, 0]} name="Earnings" />
+                  <Bar dataKey="withdrawals" fill="#ef4444" radius={[8, 8, 0, 0]} name="Withdrawals" />
                 </BarChart>
               </ResponsiveContainer> : <div className="h-full flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">No earnings in this period</p>
+                <p className="text-sm text-muted-foreground">No transactions in this period</p>
               </div>}
           </div>
          </CardContent>
