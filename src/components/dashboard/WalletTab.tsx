@@ -536,8 +536,10 @@ export function WalletTab() {
         </Button>
       </div>
 
-      {/* Earnings Graph */}
-      <Card className="bg-card border-0">
+      {/* Earnings Graph and Recent Transactions Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Earnings Graph */}
+        <Card className="bg-card border-0">
         <CardContent className="pt-6">
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -795,11 +797,11 @@ export function WalletTab() {
                 <p className="text-sm text-muted-foreground">No withdrawal requests in this period</p>
               </div>}
           </div>
-        </CardContent>
+         </CardContent>
       </Card>
 
-      {/* Recent Transactions */}
-      <Card className="bg-card border-0">
+        {/* Recent Transactions */}
+        <Card className="bg-card border-0">
         <CardHeader className="px-[24px] py-0">
           <CardTitle className="text-lg font-semibold py-[10px]">Recent Transactions</CardTitle>
         </CardHeader>
@@ -857,8 +859,9 @@ export function WalletTab() {
             </div>}
         </CardContent>
       </Card>
+      </div>
 
-      <PayoutMethodDialog 
+      <PayoutMethodDialog
         open={dialogOpen} 
         onOpenChange={setDialogOpen} 
         onSave={handleAddPayoutMethod}
