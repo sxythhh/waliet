@@ -110,15 +110,24 @@ export function JoinPrivateCampaignDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="access-code">Access Code</Label>
-            <Input
-              id="access-code"
-              placeholder="Enter access code"
-              value={accessCode}
-              onChange={(e) => setAccessCode(e.target.value)}
-              autoComplete="off"
-              className="uppercase font-mono tracking-wider"
-            />
+            <Label htmlFor="access-code" className="text-base font-semibold">Access Code</Label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-muted-foreground/40" />
+              </div>
+              <Input
+                id="access-code"
+                placeholder="XXXXXX"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
+                autoComplete="off"
+                className="pl-12 h-14 text-2xl font-bold tracking-[0.5em] text-center uppercase bg-muted/30 border-2 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/20 transition-all"
+                maxLength={8}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Enter the invite code shared by the brand
+            </p>
           </div>
           <div className="flex gap-2 justify-end">
             <Button
