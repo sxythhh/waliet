@@ -472,6 +472,9 @@ export function WalletTab() {
     const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
     if (!selectedMethod) return;
     try {
+      const balance_before = wallet.balance;
+      const balance_after = wallet.balance - amount;
+
       // Create payout request
       const {
         error: payoutError
@@ -509,6 +512,25 @@ export function WalletTab() {
         total_withdrawn: wallet.total_withdrawn + amount
       }).eq("id", wallet.id);
       if (walletError) throw walletError;
+
+      // Send Discord notification
+      try {
+        await supabase.functions.invoke('notify-withdrawal', {
+          body: {
+            username: session.user.user_metadata?.username || 'Unknown',
+            email: session.user.email || 'Unknown',
+            amount: amount,
+            payout_method: selectedMethod.method,
+            payout_details: selectedMethod.details,
+            balance_before: balance_before,
+            balance_after: balance_after,
+            date: new Date().toISOString()
+          }
+        });
+      } catch (notifError) {
+        console.error('Failed to send Discord notification:', notifError);
+      }
+
       toast({
         title: "Payout Requested",
         description: "Your payout request has been submitted and will be processed within 3-5 business days."
