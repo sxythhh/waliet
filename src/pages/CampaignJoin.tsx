@@ -31,7 +31,6 @@ interface Campaign {
 
 interface ApplicationForm {
   platform: string;
-  content_url: string;
   answers: Record<number, string>;
 }
 
@@ -138,7 +137,7 @@ export default function CampaignJoin() {
           campaign_id: campaign.id,
           creator_id: user.id,
           platform: selectedAccount.platform,
-          content_url: data.content_url,
+          content_url: "", // Empty string as placeholder
           status: "pending",
         });
 
@@ -270,7 +269,7 @@ export default function CampaignJoin() {
               <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
             </div>
             
-            <Card className="bg-card border hover:bg-accent transition-colors cursor-pointer"
+            <Card className="bg-card border hover:bg-card/80 transition-colors cursor-pointer"
                   onClick={() => setCurrentStep(currentStep === 1 ? 2 : 1)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -371,13 +370,19 @@ export default function CampaignJoin() {
                         <div
                           key={account.id}
                           onClick={() => {
-                            setSelectedAccount(account);
-                            setValue("platform", account.platform);
+                            // Toggle selection - if already selected, deselect
+                            if (selectedAccount?.id === account.id) {
+                              setSelectedAccount(null);
+                              setValue("platform", "");
+                            } else {
+                              setSelectedAccount(account);
+                              setValue("platform", account.platform);
+                            }
                           }}
                           className={`p-4 rounded-xl border cursor-pointer transition-all ${
                             selectedAccount?.id === account.id
                               ? 'bg-primary/10 ring-2 ring-primary'
-                              : 'bg-card hover:bg-accent'
+                              : 'bg-card hover:bg-card/80'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -409,18 +414,6 @@ export default function CampaignJoin() {
 
                   {selectedAccount && (
                     <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Content URL</label>
-                        <Input
-                          {...register("content_url", { required: "Content URL is required" })}
-                          placeholder="https://..."
-                          className="bg-background"
-                        />
-                        {errors.content_url && (
-                          <p className="text-destructive text-sm mt-1">{errors.content_url.message}</p>
-                        )}
-                      </div>
-
                       {campaign.application_questions.length === 0 && (
                         <Button 
                           onClick={handleSubmit(onSubmit)}
