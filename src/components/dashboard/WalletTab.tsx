@@ -733,7 +733,7 @@ export function WalletTab() {
                       
                       <div className="flex items-center gap-1.5 text-xs text-foreground/50">
                         <Clock className="h-3 w-3" />
-                        <span className="">{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
+                        <span style={{ letterSpacing: '-0.5px' }}>{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
                       </div>
                     </div>
                   </div>
