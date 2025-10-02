@@ -76,21 +76,18 @@ export function WalletTab() {
 
     const { start, end } = getDateRange();
 
-    // Get all submissions up to the end date to calculate cumulative balance
+    // Get all transactions (earnings and payouts) from the beginning of time
     const { data: submissions } = await supabase
       .from("campaign_submissions")
       .select("earnings, submitted_at")
       .eq("creator_id", session.user.id)
-      .lte("submitted_at", end.toISOString())
       .order("submitted_at", { ascending: true });
 
-    // Get all payout requests up to the end date
     const { data: payouts } = await supabase
       .from("payout_requests")
       .select("amount, requested_at, status")
       .eq("user_id", session.user.id)
       .in("status", ["completed"])
-      .lte("requested_at", end.toISOString())
       .order("requested_at", { ascending: true });
 
     // Generate date points for the selected period
@@ -99,19 +96,24 @@ export function WalletTab() {
                  timePeriod === '3M' ? 90 : 365;
     
     const dataPoints: EarningsDataPoint[] = [];
-    let runningBalance = 0;
+    
+    // Sample the data points to avoid overcrowding (max 15 points)
+    const sampleRate = Math.max(1, Math.floor(days / 15));
 
     // Create array of dates in the period
-    for (let i = 0; i < days; i++) {
-      const currentDate = subDays(end, days - i - 1);
+    for (let i = 0; i <= days; i += sampleRate) {
+      const currentDate = subDays(end, days - i);
       const dateStr = format(currentDate, 'MMM dd');
+      
+      // Calculate cumulative balance up to this date
+      let balanceAtDate = 0;
       
       // Add all earnings up to this date
       if (submissions) {
         submissions.forEach((sub) => {
           const subDate = new Date(sub.submitted_at);
-          if (subDate <= currentDate && subDate > subDays(currentDate, 1)) {
-            runningBalance += Number(sub.earnings) || 0;
+          if (subDate <= currentDate) {
+            balanceAtDate += Number(sub.earnings) || 0;
           }
         });
       }
@@ -120,26 +122,27 @@ export function WalletTab() {
       if (payouts) {
         payouts.forEach((payout) => {
           const payoutDate = new Date(payout.requested_at);
-          if (payoutDate <= currentDate && payoutDate > subDays(currentDate, 1)) {
-            runningBalance -= Number(payout.amount) || 0;
+          if (payoutDate <= currentDate) {
+            balanceAtDate -= Number(payout.amount) || 0;
           }
         });
       }
 
-      // Sample the data points to avoid overcrowding
-      const sampleRate = Math.max(1, Math.floor(days / 15));
-      if (i % sampleRate === 0 || i === days - 1) {
-        dataPoints.push({
-          date: dateStr,
-          amount: Number(runningBalance.toFixed(2))
-        });
-      }
+      dataPoints.push({
+        date: dateStr,
+        amount: Number(Math.max(0, balanceAtDate).toFixed(2))
+      });
     }
 
-    setEarningsData(dataPoints.length > 0 ? dataPoints : [{
-      date: format(new Date(), 'MMM dd'),
-      amount: wallet?.balance || 0
-    }]);
+    // If no data points or all zeros, show current balance
+    if (dataPoints.length === 0 || dataPoints.every(p => p.amount === 0)) {
+      setEarningsData([{
+        date: format(new Date(), 'MMM dd'),
+        amount: wallet?.balance || 0
+      }]);
+    } else {
+      setEarningsData(dataPoints);
+    }
   };
 
   const fetchWallet = async () => {
@@ -384,7 +387,6 @@ export function WalletTab() {
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "12px",
-                      boxShadow: "0 8px 24px rgba(59, 130, 246, 0.15)",
                       padding: "12px 16px",
                     }}
                     labelStyle={{
