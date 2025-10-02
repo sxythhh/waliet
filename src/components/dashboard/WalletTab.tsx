@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +17,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface WalletData {
   id: string;
@@ -62,6 +79,9 @@ export function WalletTab() {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1M');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -382,30 +402,103 @@ export function WalletTab() {
       return;
     }
 
+    setSelectedPayoutMethod(payoutMethods[0].id);
+    setPayoutAmount(wallet.balance.toString());
+    setPayoutDialogOpen(true);
+  };
+
+  const handleConfirmPayout = async () => {
+    if (!wallet || !payoutAmount || Number(payoutAmount) <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Amount",
+        description: "Please enter a valid amount",
+      });
+      return;
+    }
+
+    const amount = Number(payoutAmount);
+
+    if (amount < 50) {
+      toast({
+        variant: "destructive",
+        title: "Minimum Amount",
+        description: "Minimum payout amount is $50",
+      });
+      return;
+    }
+
+    if (amount > wallet.balance) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: "Amount exceeds available balance",
+      });
+      return;
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Create payout request
-    const { error } = await supabase
-      .from("payout_requests")
-      .insert({
-        user_id: session.user.id,
-        amount: wallet.balance,
-        payout_method: payoutMethods[0].method,
-        payout_details: payoutMethods[0].details,
-        status: 'pending'
-      });
+    const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+    if (!selectedMethod) return;
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to submit payout request",
-      });
-    } else {
+    try {
+      // Create payout request
+      const { error: payoutError } = await supabase
+        .from("payout_requests")
+        .insert({
+          user_id: session.user.id,
+          amount: amount,
+          payout_method: selectedMethod.method,
+          payout_details: selectedMethod.details,
+          status: 'pending'
+        });
+
+      if (payoutError) throw payoutError;
+
+      // Create wallet transaction
+      const { error: txnError } = await supabase
+        .from("wallet_transactions")
+        .insert({
+          user_id: session.user.id,
+          amount: amount,
+          type: 'withdrawal',
+          status: 'pending',
+          description: `Withdrawal to ${selectedMethod.method === 'paypal' ? 'PayPal' : 'Crypto'}`,
+          metadata: {
+            payout_method: selectedMethod.method,
+            network: selectedMethod.details.network || null
+          },
+          created_by: session.user.id,
+        });
+
+      if (txnError) throw txnError;
+
+      // Update wallet balance
+      const { error: walletError } = await supabase
+        .from("wallets")
+        .update({
+          balance: wallet.balance - amount,
+          total_withdrawn: wallet.total_withdrawn + amount
+        })
+        .eq("id", wallet.id);
+
+      if (walletError) throw walletError;
+
       toast({
         title: "Payout Requested",
         description: "Your payout request has been submitted and will be processed within 3-5 business days.",
+      });
+
+      setPayoutDialogOpen(false);
+      fetchWallet();
+      fetchTransactions();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to submit payout request",
       });
     }
   };
@@ -795,6 +888,70 @@ export function WalletTab() {
         onOpenChange={setDialogOpen}
         onSave={handleAddPayoutMethod}
       />
+
+      {/* Payout Request Dialog */}
+      <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request Payout</DialogTitle>
+            <DialogDescription>
+              Choose the amount and payment method for your withdrawal
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="payout-amount">Amount ($)</Label>
+              <Input
+                id="payout-amount"
+                type="number"
+                min="50"
+                step="0.01"
+                max={wallet?.balance || 0}
+                placeholder="50.00"
+                value={payoutAmount}
+                onChange={(e) => setPayoutAmount(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Minimum: $50.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payout-method">Payment Method</Label>
+              <Select value={selectedPayoutMethod} onValueChange={setSelectedPayoutMethod}>
+                <SelectTrigger id="payout-method">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  {payoutMethods.map((method) => (
+                    <SelectItem key={method.id} value={method.id}>
+                      {method.method === "paypal" ? "PayPal" : "Crypto"} - {" "}
+                      {method.method === "paypal"
+                        ? method.details.email
+                        : `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="p-3 bg-muted rounded-lg text-sm">
+              <p className="text-muted-foreground">Processing Time</p>
+              <p className="font-medium">3-5 business days</p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayoutDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmPayout}>
+              Confirm Payout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
