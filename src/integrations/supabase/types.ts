@@ -397,6 +397,7 @@ export type Database = {
       }
       social_accounts: {
         Row: {
+          account_link: string | null
           connected_at: string | null
           follower_count: number | null
           id: string
@@ -404,8 +405,10 @@ export type Database = {
           platform: string
           user_id: string
           username: string
+          verification_screenshot_url: string | null
         }
         Insert: {
+          account_link?: string | null
           connected_at?: string | null
           follower_count?: number | null
           id?: string
@@ -413,8 +416,10 @@ export type Database = {
           platform: string
           user_id: string
           username: string
+          verification_screenshot_url?: string | null
         }
         Update: {
+          account_link?: string | null
           connected_at?: string | null
           follower_count?: number | null
           id?: string
@@ -422,6 +427,7 @@ export type Database = {
           platform?: string
           user_id?: string
           username?: string
+          verification_screenshot_url?: string | null
         }
         Relationships: [
           {

@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 
 interface Profile {
   id: string;
@@ -21,16 +23,29 @@ interface Profile {
   views_score: number;
 }
 
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  account_link: string | null;
+  follower_count: number;
+  is_verified: boolean;
+  connected_at: string;
+}
+
 export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchProfile();
+    fetchSocialAccounts();
   }, []);
 
   const fetchProfile = async () => {
@@ -50,6 +65,34 @@ export function ProfileTab() {
     }
 
     setLoading(false);
+  };
+
+  const fetchSocialAccounts = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data } = await supabase
+      .from("social_accounts")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("connected_at", { ascending: false });
+
+    if (data) {
+      setSocialAccounts(data);
+    }
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return "🎵";
+      case "instagram":
+        return "📸";
+      case "youtube":
+        return "▶️";
+      default:
+        return "🔗";
+    }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,6 +366,65 @@ export function ProfileTab() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Connected Accounts */}
+      <Card className="bg-card border-0">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Connected Accounts</CardTitle>
+              <CardDescription>Manage your social media accounts</CardDescription>
+            </div>
+            <Button
+              onClick={() => setShowAddAccountDialog(true)}
+              size="sm"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Account
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {socialAccounts.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No social accounts connected yet</p>
+              <p className="text-sm mt-2">Connect your accounts to start earning with brands</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {socialAccounts.map((account) => (
+                <div
+                  key={account.id}
+                  className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{getPlatformIcon(account.platform)}</span>
+                    <div>
+                      <p className="font-medium capitalize">{account.platform}</p>
+                      <p className="text-sm text-muted-foreground">@{account.username}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{account.follower_count.toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">followers</p>
+                    </div>
+                    <Badge variant={account.is_verified ? "default" : "secondary"}>
+                      {account.is_verified ? "Verified" : "Pending"}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AddSocialAccountDialog
+        open={showAddAccountDialog}
+        onOpenChange={setShowAddAccountDialog}
+        onSuccess={fetchSocialAccounts}
+      />
     </div>
   );
 }
