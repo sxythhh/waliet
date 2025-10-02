@@ -142,7 +142,7 @@ export function CampaignsTab() {
               {/* Brand Logo Overlay */}
               <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4">
                 {campaign.brand_logo_url && (
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-background/90 backdrop-blur-sm border-2 border-white/20">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-background/95 backdrop-blur-sm shadow-lg">
                     <img 
                       src={campaign.brand_logo_url}
                       alt={campaign.brand_name}
