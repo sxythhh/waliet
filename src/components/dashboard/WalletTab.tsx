@@ -650,11 +650,11 @@ export function WalletTab() {
               {transactions.map(transaction => <div key={transaction.id} onClick={() => {
               setSelectedTransaction(transaction);
               setTransactionSheetOpen(true);
-            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors" style={{ backgroundColor: '#292929' }}>
+            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors" style={{
+              backgroundColor: '#292929'
+            }}>
                   <div className="flex items-center gap-4 flex-1">
-                    <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${transaction.type === 'earning' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                      {transaction.type === 'earning' ? <TrendingUp className="h-5 w-5 text-green-500" /> : <ArrowDownLeft className="h-5 w-5 text-red-500" />}
-                    </div>
+                    
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-bold" style={{
@@ -667,16 +667,7 @@ export function WalletTab() {
                             {transaction.status}
                           </Badge>}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-foreground/70 mb-0.5">
-                        {transaction.type === 'earning' ? <>
-                            <span className="truncate">{transaction.source}</span>
-                            <span>→</span>
-                            <span>{transaction.destination}</span>
-                          </> : <>
-                            <span>To</span>
-                            <span className="truncate">{transaction.destination}</span>
-                          </>}
-                      </div>
+                      
                       <div className="flex items-center gap-1.5 text-xs text-foreground/50">
                         <Clock className="h-3 w-3" />
                         <span className="">{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
@@ -828,12 +819,7 @@ export function WalletTab() {
                         </p>
                       </div>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleDeleteMethod(method.id)}
-                      className="h-9 w-9 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-9 w-9 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors duration-200">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
