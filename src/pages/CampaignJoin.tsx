@@ -154,6 +154,16 @@ export default function CampaignJoin() {
     }
   };
 
+  const handleAddAccount = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to connect an account");
+      navigate("/auth");
+      return;
+    }
+    setShowAddAccountDialog(true);
+  };
+
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
     switch (platform) {
@@ -344,7 +354,7 @@ export default function CampaignJoin() {
                 <div className="text-center py-8">
                   <p className="text-white/50 mb-4">You don't have any connected accounts yet</p>
                   <Button
-                    onClick={() => setShowAddAccountDialog(true)}
+                    onClick={handleAddAccount}
                     variant="outline"
                     className="gap-2"
                   >
@@ -389,7 +399,7 @@ export default function CampaignJoin() {
                   </div>
 
                   <Button
-                    onClick={() => setShowAddAccountDialog(true)}
+                    onClick={handleAddAccount}
                     variant="outline"
                     className="w-full gap-2 mb-4"
                   >
