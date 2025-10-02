@@ -1060,7 +1060,7 @@ export function WalletTab() {
               </Select>
             </div>
 
-            <div className="p-3 bg-muted rounded-lg text-sm">
+            <div className="p-3 bg-neutral-900 rounded-lg text-sm">
               <p className="text-muted-foreground">Processing Time</p>
               <p className="font-medium">3-5 business days</p>
             </div>
