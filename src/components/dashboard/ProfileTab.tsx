@@ -10,18 +10,10 @@ import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, You
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
-
 interface Profile {
   id: string;
   username: string;
@@ -33,7 +25,6 @@ interface Profile {
   demographics_score: number;
   views_score: number;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -50,14 +41,12 @@ interface SocialAccount {
     brand_logo_url: string | null;
   } | null;
 }
-
 interface Campaign {
   id: string;
   title: string;
   brand_name: string;
   brand_logo_url: string | null;
 }
-
 export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
@@ -68,88 +57,79 @@ export function ProfileTab() {
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const [showLinkCampaignDialog, setShowLinkCampaignDialog] = useState(false);
   const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<string | null>(null);
-  const [showDemographicsDialog, setShowDemographicsDialog] = useState(false);
-  const [selectedAccountForDemographics, setSelectedAccountForDemographics] = useState<SocialAccount | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
     fetchJoinedCampaigns();
   }, []);
-
   const fetchProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-
     setLoading(true);
-    
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-    
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
     if (profileData) {
       setProfile(profileData);
     }
-
     setLoading(false);
   };
-
   const fetchSocialAccounts = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-
-    const { data } = await supabase
-      .from("social_accounts")
-      .select("*, campaigns(id, title, brand_name, brand_logo_url)")
-      .eq("user_id", session.user.id)
-      .eq("is_verified", true)
-      .order("connected_at", { ascending: false });
-
+    const {
+      data
+    } = await supabase.from("social_accounts").select("*, campaigns(id, title, brand_name, brand_logo_url)").eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
+      ascending: false
+    });
     if (data) {
       setSocialAccounts(data);
     }
   };
-
   const fetchJoinedCampaigns = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-
-    const { data } = await supabase
-      .from("campaign_submissions")
-      .select("campaign_id, campaigns(id, title, brand_name, brand_logo_url)")
-      .eq("creator_id", session.user.id);
-
+    const {
+      data
+    } = await supabase.from("campaign_submissions").select("campaign_id, campaigns(id, title, brand_name, brand_logo_url)").eq("creator_id", session.user.id);
     if (data) {
-      const campaigns = data
-        .filter(item => item.campaigns)
-        .map(item => ({
-          id: item.campaigns.id,
-          title: item.campaigns.title,
-          brand_name: item.campaigns.brand_name,
-          brand_logo_url: item.campaigns.brand_logo_url,
-        }));
+      const campaigns = data.filter(item => item.campaigns).map(item => ({
+        id: item.campaigns.id,
+        title: item.campaigns.title,
+        brand_name: item.campaigns.brand_name,
+        brand_logo_url: item.campaigns.brand_logo_url
+      }));
       setJoinedCampaigns(campaigns);
     }
   };
-
   const handleLinkCampaign = async (accountId: string, campaignId: string) => {
     try {
-      const { error } = await supabase
-        .from('social_accounts')
-        .update({ campaign_id: campaignId })
-        .eq('id', accountId);
-
+      const {
+        error
+      } = await supabase.from('social_accounts').update({
+        campaign_id: campaignId
+      }).eq('id', accountId);
       if (error) throw error;
-
       toast({
         title: "Success",
-        description: "Account linked to campaign",
+        description: "Account linked to campaign"
       });
-
       fetchSocialAccounts();
       setShowLinkCampaignDialog(false);
       setSelectedAccountForLinking(null);
@@ -158,41 +138,36 @@ export function ProfileTab() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to link campaign",
+        description: "Failed to link campaign"
       });
     }
   };
-
   const handleUnlinkCampaign = async (accountId: string) => {
     try {
-      const { error } = await supabase
-        .from('social_accounts')
-        .update({ campaign_id: null })
-        .eq('id', accountId);
-
+      const {
+        error
+      } = await supabase.from('social_accounts').update({
+        campaign_id: null
+      }).eq('id', accountId);
       if (error) throw error;
-
       toast({
         title: "Success",
-        description: "Account unlinked from campaign",
+        description: "Account unlinked from campaign"
       });
-
       fetchSocialAccounts();
     } catch (error) {
       console.error('Error unlinking campaign:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to unlink campaign",
+        description: "Failed to unlink campaign"
       });
     }
   };
-
   const getLinkedCampaign = (campaignId: string | null) => {
     if (!campaignId) return null;
     return joinedCampaigns.find(c => c.id === campaignId);
   };
-
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
     switch (platform.toLowerCase()) {
@@ -206,7 +181,6 @@ export function ProfileTab() {
         return null;
     }
   };
-
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !profile) return;
@@ -216,7 +190,7 @@ export function ProfileTab() {
       toast({
         variant: "destructive",
         title: "Invalid file",
-        description: "Please upload an image file",
+        description: "Please upload an image file"
       });
       return;
     }
@@ -226,15 +200,17 @@ export function ProfileTab() {
       toast({
         variant: "destructive",
         title: "File too large",
-        description: "Image must be less than 5MB",
+        description: "Image must be less than 5MB"
       });
       return;
     }
-
     setUploading(true);
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-
     const fileExt = file.name.split('.').pop();
     const fileName = `${session.user.id}/avatar.${fileExt}`;
 
@@ -247,189 +223,139 @@ export function ProfileTab() {
     }
 
     // Upload new avatar
-    const { error: uploadError, data } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file, { upsert: true });
-
+    const {
+      error: uploadError,
+      data
+    } = await supabase.storage.from('avatars').upload(fileName, file, {
+      upsert: true
+    });
     if (uploadError) {
       toast({
         variant: "destructive",
         title: "Upload failed",
-        description: uploadError.message,
+        description: uploadError.message
       });
       setUploading(false);
       return;
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
+    const {
+      data: {
+        publicUrl
+      }
+    } = supabase.storage.from('avatars').getPublicUrl(fileName);
 
     // Update profile with new avatar URL
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ avatar_url: publicUrl })
-      .eq('id', session.user.id);
-
+    const {
+      error: updateError
+    } = await supabase.from('profiles').update({
+      avatar_url: publicUrl
+    }).eq('id', session.user.id);
     setUploading(false);
-
     if (updateError) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update profile picture",
+        description: "Failed to update profile picture"
       });
     } else {
-      setProfile({ ...profile, avatar_url: publicUrl });
+      setProfile({
+        ...profile,
+        avatar_url: publicUrl
+      });
       toast({
         title: "Success",
-        description: "Profile picture updated successfully",
+        description: "Profile picture updated successfully"
       });
     }
   };
-
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
-
     setSaving(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: profile.full_name,
-        bio: profile.bio,
-      })
-      .eq("id", session?.user.id);
-
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    const {
+      error
+    } = await supabase.from("profiles").update({
+      full_name: profile.full_name,
+      bio: profile.bio
+    }).eq("id", session?.user.id);
     setSaving(false);
-
     if (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update profile",
+        description: "Failed to update profile"
       });
     } else {
       toast({
         title: "Success",
-        description: "Profile updated successfully",
+        description: "Profile updated successfully"
       });
     }
   };
-
   const profileUrl = `${window.location.origin}/${profile?.username}`;
-
   if (loading || !profile) {
-    return (
-      <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading profile...</p>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+  return <div className="space-y-6 max-w-4xl mx-auto">
       {/* Connected Accounts */}
       <Card className="bg-card border-0">
-        <CardHeader>
+        <CardHeader className="py-0 my-0 px-0">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">Connected Accounts</CardTitle>
               <CardDescription>Link your verified accounts to campaigns</CardDescription>
             </div>
-            <Button
-              onClick={() => setShowAddAccountDialog(true)}
-              size="sm"
-            >
+            <Button onClick={() => setShowAddAccountDialog(true)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
               Add Account
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {socialAccounts.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+          {socialAccounts.length === 0 ? <div className="text-center py-12 text-muted-foreground">
               <p className="text-base font-medium">No verified accounts yet</p>
               <p className="text-sm mt-2">Add and verify your social media accounts to start earning</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {socialAccounts.map((account) => {
-                const linkedCampaign = account.campaigns;
-                
-                return (
-                  <div
-                    key={account.id}
-                    className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border"
-                  >
+            </div> : <div className="space-y-3">
+              {socialAccounts.map(account => {
+            const linkedCampaign = account.campaigns;
+            return <div key={account.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
                         {getPlatformIcon(account.platform)}
                       </div>
                       <div>
                         <div className="text-sm font-medium">@{account.username}</div>
-                        {linkedCampaign && (
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            {linkedCampaign.brand_logo_url && (
-                              <img 
-                                src={linkedCampaign.brand_logo_url} 
-                                alt={linkedCampaign.brand_name}
-                                className="h-4 w-4 rounded object-cover"
-                              />
-                            )}
+                        {linkedCampaign && <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
                             <span>Linked to {linkedCampaign.title}</span>
-                          </div>
-                        )}
+                          </div>}
                       </div>
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedAccountForDemographics(account);
-                          setShowDemographicsDialog(true);
-                        }}
-                        className="h-8 gap-1"
-                      >
-                        📊 Submit Demographics
-                      </Button>
-                      
-                      {linkedCampaign ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleUnlinkCampaign(account.id)}
-                          className="h-8 gap-1"
-                        >
+                      {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1">
                           <X className="h-3 w-3" />
                           Unlink
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedAccountForLinking(account.id);
-                            setShowLinkCampaignDialog(true);
-                          }}
-                          disabled={joinedCampaigns.length === 0}
-                          className="h-8 gap-1"
-                        >
+                        </Button> : <Button variant="outline" size="sm" onClick={() => {
+                  setSelectedAccountForLinking(account.id);
+                  setShowLinkCampaignDialog(true);
+                }} disabled={joinedCampaigns.length === 0} className="h-8 gap-1">
                           <Link2 className="h-3 w-3" />
                           Link Campaign
-                        </Button>
-                      )}
+                        </Button>}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  </div>;
+          })}
+            </div>}
         </CardContent>
       </Card>
 
@@ -441,19 +367,14 @@ export function ProfileTab() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <Input
-              value={profileUrl}
-              readOnly
-              className="bg-muted/50"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                navigator.clipboard.writeText(profileUrl);
-                toast({ title: "Copied!", description: "Profile URL copied to clipboard" });
-              }}
-            >
+            <Input value={profileUrl} readOnly className="bg-muted/50" />
+            <Button variant="outline" size="icon" onClick={() => {
+            navigator.clipboard.writeText(profileUrl);
+            toast({
+              title: "Copied!",
+              description: "Profile URL copied to clipboard"
+            });
+          }}>
               <Copy className="h-4 w-4" />
             </Button>
           </div>
@@ -476,7 +397,7 @@ export function ProfileTab() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">Trust Score</span>
-              <TrendingUp className="h-4 w-4 text-primary" />
+              
             </div>
             <p className="text-2xl font-bold">{profile.trust_score}/100</p>
           </CardContent>
@@ -512,13 +433,7 @@ export function ProfileTab() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                     <Upload className="mr-2 h-4 w-4" />
                     {uploading ? "Uploading..." : "Upload New"}
                   </Button>
@@ -526,24 +441,13 @@ export function ProfileTab() {
                     JPG, PNG or GIF. Max 5MB.
                   </p>
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  className="hidden"
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={profile.username}
-                disabled
-                className="bg-muted/50"
-              />
+              <Input id="username" value={profile.username} disabled className="bg-muted/50" />
               <p className="text-xs text-muted-foreground">
                 Username cannot be changed
               </p>
@@ -551,23 +455,18 @@ export function ProfileTab() {
 
             <div className="space-y-2">
               <Label htmlFor="fullName">Display Name</Label>
-              <Input
-                id="fullName"
-                value={profile.full_name || ""}
-                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                placeholder="Your display name"
-              />
+              <Input id="fullName" value={profile.full_name || ""} onChange={e => setProfile({
+              ...profile,
+              full_name: e.target.value
+            })} placeholder="Your display name" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={profile.bio || ""}
-                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                placeholder="Tell brands about yourself..."
-                rows={4}
-              />
+              <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
+              ...profile,
+              bio: e.target.value
+            })} placeholder="Tell brands about yourself..." rows={4} />
               <p className="text-xs text-muted-foreground">
                 This will appear on your public profile
               </p>
@@ -580,11 +479,7 @@ export function ProfileTab() {
         </CardContent>
       </Card>
 
-      <AddSocialAccountDialog
-        open={showAddAccountDialog}
-        onOpenChange={setShowAddAccountDialog}
-        onSuccess={fetchSocialAccounts}
-      />
+      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
 
       {/* Link Campaign Dialog */}
       <Dialog open={showLinkCampaignDialog} onOpenChange={setShowLinkCampaignDialog}>
@@ -597,46 +492,15 @@ export function ProfileTab() {
           </DialogHeader>
           
           <div className="space-y-2 mt-4">
-            {joinedCampaigns.map((campaign) => (
-              <button
-                key={campaign.id}
-                onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)}
-                className="w-full p-4 text-left border rounded-lg hover:bg-muted/50 transition-colors flex items-center gap-3"
-              >
-                {campaign.brand_logo_url && (
-                  <img 
-                    src={campaign.brand_logo_url} 
-                    alt={campaign.brand_name}
-                    className="h-10 w-10 rounded object-cover"
-                  />
-                )}
+            {joinedCampaigns.map(campaign => <button key={campaign.id} onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)} className="w-full p-4 text-left border rounded-lg hover:bg-muted/50 transition-colors flex items-center gap-3">
+                {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="h-10 w-10 rounded object-cover" />}
                 <div>
                   <div className="font-medium">{campaign.title}</div>
                   <div className="text-sm text-muted-foreground">{campaign.brand_name}</div>
                 </div>
-              </button>
-            ))}
+              </button>)}
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Demographics Submission Dialog */}
-      {selectedAccountForDemographics && (
-        <SubmitDemographicsDialog
-          open={showDemographicsDialog}
-          onOpenChange={setShowDemographicsDialog}
-          onSuccess={() => {
-            fetchSocialAccounts();
-            toast({
-              title: "Success",
-              description: "Demographics submitted successfully",
-            });
-          }}
-          socialAccountId={selectedAccountForDemographics.id}
-          platform={selectedAccountForDemographics.platform}
-          username={selectedAccountForDemographics.username}
-        />
-      )}
-    </div>
-  );
+    </div>;
 }
