@@ -154,22 +154,16 @@ export function CampaignsTab() {
                     </Badge>
                   </div>}
 
-                {/* Brand Logo - Overlapping */}
-                {campaign.brand_logo_url && <div className="absolute bottom-0 left-6 transform translate-y-1/2 z-10">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden ring-4 ring-card shadow-lg">
-                      <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
-                    </div>
-                  </div>}
               </div>}
 
             {/* Content Section */}
-            <CardContent className="p-4 pt-8 flex-1 flex flex-col gap-3">
-              {/* Header: Brand Name + RPM */}
-              
-              
-              {/* Title */}
-              <div>
-                <h3 className="text-xl font-bold line-clamp-2 leading-tight">
+            <CardContent className="p-4 pt-4 flex-1 flex flex-col gap-3">
+              {/* Brand Logo + Title */}
+              <div className="flex items-center gap-3">
+                {campaign.brand_logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ring-2 ring-border shadow-md">
+                    <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+                  </div>}
+                <h3 className="text-xl font-bold line-clamp-2 leading-tight flex-1">
                   {campaign.title}
                 </h3>
               </div>
