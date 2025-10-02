@@ -6,8 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp } from "lucide-react";
+import { ArrowLeft, ChevronRight, Instagram } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 interface Campaign {
@@ -38,6 +37,8 @@ export default function CampaignJoin() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>("");
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<ApplicationForm>();
 
   useEffect(() => {
@@ -142,163 +143,256 @@ export default function CampaignJoin() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/discover")}
-            className="text-white/60 hover:text-white mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Discover
-          </Button>
-        </div>
+    <div className="min-h-screen bg-[#080808] text-white">
+      {/* Header */}
+      <div className="p-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dashboard?tab=discover")}
+          className="text-white hover:bg-white/10 gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Return
+        </Button>
+      </div>
 
-        {/* Campaign Banner */}
-        {campaign.banner_url && (
-          <div className="mb-6 rounded-2xl overflow-hidden">
+      {/* Campaign Banner with Logo */}
+      <div className="max-w-3xl mx-auto px-6 mb-8">
+        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary to-primary/80 h-48">
+          {campaign.banner_url ? (
             <img
               src={campaign.banner_url}
               alt={campaign.title}
-              className="w-full h-64 object-cover"
+              className="w-full h-full object-cover"
             />
-          </div>
-        )}
-
-        {/* Campaign Details */}
-        <Card className="bg-[#202020] border-none mb-6">
-          <CardContent className="p-6 md:p-8">
-            <div className="flex items-start gap-4 mb-6">
-              {campaign.brand_logo_url && (
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-4xl font-bold text-white">{campaign.brand_name}</div>
+            </div>
+          )}
+          
+          {/* Logo Badge */}
+          <div className="absolute -bottom-8 left-8">
+            <div className="w-24 h-24 rounded-2xl bg-primary flex items-center justify-center border-4 border-[#080808] overflow-hidden">
+              {campaign.brand_logo_url ? (
                 <img
                   src={campaign.brand_logo_url}
                   alt={campaign.brand_name}
-                  className="w-16 h-16 rounded-lg object-cover"
+                  className="w-full h-full object-cover"
                 />
-              )}
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-white mb-2">{campaign.title}</h1>
-                <p className="text-white/60 text-lg">{campaign.brand_name}</p>
-              </div>
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                Active
-              </Badge>
-            </div>
-
-            {campaign.description && (
-              <p className="text-white/80 mb-6">{campaign.description}</p>
-            )}
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-[#191919] rounded-lg">
-              <div>
-                <div className="text-white/60 text-sm mb-1">Budget</div>
+              ) : (
                 <div className="text-2xl font-bold text-white">
-                  ${campaign.budget.toLocaleString()}
+                  {campaign.brand_name.charAt(0)}
                 </div>
-              </div>
-              <div>
-                <div className="text-white/60 text-sm mb-1">RPM Rate</div>
-                <div className="text-2xl font-bold text-white flex items-center gap-2">
-                  ${campaign.rpm_rate}
-                  <TrendingUp className="h-5 w-5 text-green-400" />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Step Process */}
+      <div className="max-w-3xl mx-auto px-6 mt-16">
+        {/* Step 1: Campaign Requirements */}
+        <div className="relative flex gap-6 mb-8">
+          {/* Step Indicator */}
+          <div className="flex flex-col items-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+              currentStep === 1 ? 'bg-primary text-white' : 'bg-white/10 text-white/40'
+            }`}>
+              1
+            </div>
+            {currentStep === 1 && <div className="w-0.5 h-full bg-primary/30 mt-2" />}
+          </div>
+
+          {/* Step Content */}
+          <div className="flex-1 pb-8">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
+            </div>
+            
+            <Card className="bg-[#1a1a1a] border-white/10 hover:border-white/20 transition-colors cursor-pointer"
+                  onClick={() => setCurrentStep(currentStep === 1 ? 2 : 1)}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-semibold mb-1">Campaign Requirements</div>
+                    <div className="text-sm text-white/50">
+                      Please ensure you have gone through all campaign details
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-white/50" />
                 </div>
+                
+                {currentStep === 1 && (
+                  <div className="mt-4 pt-4 border-t border-white/10 space-y-4">
+                    {campaign.description && (
+                      <div>
+                        <div className="text-sm font-medium mb-2">Description</div>
+                        <p className="text-sm text-white/70">{campaign.description}</p>
+                      </div>
+                    )}
+                    
+                    {campaign.guidelines && (
+                      <div>
+                        <div className="text-sm font-medium mb-2">Guidelines</div>
+                        <p className="text-sm text-white/70 whitespace-pre-wrap">{campaign.guidelines}</p>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <div className="text-sm font-medium mb-2">Platforms</div>
+                      <div className="flex gap-2">
+                        {campaign.allowed_platforms.map((platform) => (
+                          <div key={platform} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs">
+                            {platform === "tiktok" ? "TikTok" : "Instagram"}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-medium mb-2">RPM Rate</div>
+                      <div className="text-2xl font-bold text-primary">${campaign.rpm_rate}</div>
+                    </div>
+
+                    <Button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentStep(2);
+                      }}
+                      className="w-full bg-primary hover:bg-primary/90"
+                    >
+                      Continue to Account Selection
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Step 2: Select Account */}
+        {currentStep >= 2 && (
+          <div className="relative flex gap-6 mb-8">
+            {/* Step Indicator */}
+            <div className="flex flex-col items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                currentStep === 2 ? 'bg-primary text-white' : 'bg-white/10 text-white/40'
+              }`}>
+                2
               </div>
+              {currentStep === 2 && campaign.application_questions.length > 0 && (
+                <div className="w-0.5 h-full bg-primary/30 mt-2" />
+              )}
             </div>
 
-            {/* Platforms */}
-            <div className="mb-6">
-              <h3 className="text-white font-semibold mb-3">Allowed Platforms</h3>
-              <div className="flex gap-2">
+            {/* Step Content */}
+            <div className="flex-1 pb-8">
+              <h2 className="text-xl font-bold mb-4">Select An Account For This Campaign</h2>
+              
+              <div className="space-y-3 mb-4">
                 {campaign.allowed_platforms.map((platform) => (
-                  <Badge key={platform} variant="outline" className="border-white/20 text-white">
-                    {platform === "tiktok" ? "TikTok" : "Instagram"}
-                  </Badge>
+                  <div
+                    key={platform}
+                    onClick={() => {
+                      setSelectedPlatform(platform);
+                      setValue("platform", platform);
+                    }}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                      selectedPlatform === platform
+                        ? 'bg-primary/10 border-primary'
+                        : 'bg-[#1a1a1a] border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Instagram className="h-5 w-5" />
+                      <span className="text-white/70">
+                        {platform === "tiktok" ? "TikTok Account" : "Instagram Account"}
+                      </span>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
 
-            {/* Guidelines */}
-            {campaign.guidelines && (
-              <div className="mb-6">
-                <h3 className="text-white font-semibold mb-3">Campaign Guidelines</h3>
-                <p className="text-white/70 whitespace-pre-wrap">{campaign.guidelines}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Application Form */}
-        <Card className="bg-[#202020] border-none">
-          <CardContent className="p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Apply to Campaign</h2>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Platform Selection */}
-              <div className="space-y-2">
-                <label className="text-white font-medium">Select Platform</label>
-                <select
-                  {...register("platform", { required: "Platform is required" })}
-                  className="w-full bg-[#191919] border border-white/10 text-white rounded-lg p-3 focus:border-primary focus:outline-none"
-                >
-                  <option value="">Choose a platform</option>
-                  {campaign.allowed_platforms.map((platform) => (
-                    <option key={platform} value={platform}>
-                      {platform === "tiktok" ? "TikTok" : "Instagram"}
-                    </option>
-                  ))}
-                </select>
-                {errors.platform && (
-                  <p className="text-destructive text-sm">{errors.platform.message}</p>
-                )}
-              </div>
-
-              {/* Content URL */}
-              <div className="space-y-2">
-                <label className="text-white font-medium">Your Content URL</label>
-                <Input
-                  {...register("content_url", { required: "Content URL is required" })}
-                  placeholder="https://..."
-                  className="bg-[#191919] border-white/10 text-white placeholder:text-white/40"
-                />
-                {errors.content_url && (
-                  <p className="text-destructive text-sm">{errors.content_url.message}</p>
-                )}
-              </div>
-
-              {/* Application Questions */}
-              {campaign.application_questions.length > 0 && (
+              {selectedPlatform && (
                 <div className="space-y-4">
-                  <h3 className="text-white font-semibold">Application Questions</h3>
-                  {campaign.application_questions.map((question, index) => (
-                    <div key={index} className="space-y-2">
-                      <label className="text-white/80">{question}</label>
-                      <Textarea
-                        {...register(`answers.${index}` as any, { required: "This answer is required" })}
-                        placeholder="Your answer..."
-                        rows={3}
-                        className="bg-[#191919] border-white/10 text-white placeholder:text-white/40"
-                      />
-                      {errors.answers?.[index] && (
-                        <p className="text-destructive text-sm">{errors.answers[index].message}</p>
-                      )}
-                    </div>
-                  ))}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Content URL</label>
+                    <Input
+                      {...register("content_url", { required: "Content URL is required" })}
+                      placeholder="https://..."
+                      className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-white/40"
+                    />
+                    {errors.content_url && (
+                      <p className="text-destructive text-sm mt-1">{errors.content_url.message}</p>
+                    )}
+                  </div>
+
+                  {campaign.application_questions.length === 0 && (
+                    <Button 
+                      onClick={handleSubmit(onSubmit)}
+                      disabled={submitting}
+                      className="w-full bg-primary hover:bg-primary/90"
+                    >
+                      {submitting ? "Submitting..." : "Submit Account"}
+                    </Button>
+                  )}
+                  
+                  {campaign.application_questions.length > 0 && (
+                    <Button 
+                      onClick={() => setCurrentStep(3)}
+                      className="w-full bg-primary hover:bg-primary/90"
+                    >
+                      Continue to Application Questions
+                    </Button>
+                  )}
                 </div>
               )}
+            </div>
+          </div>
+        )}
 
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-lg"
-              >
-                {submitting ? "Submitting..." : "Submit Application"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        {/* Step 3: Application Questions */}
+        {currentStep >= 3 && campaign.application_questions.length > 0 && (
+          <div className="relative flex gap-6 mb-8">
+            {/* Step Indicator */}
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
+                3
+              </div>
+            </div>
+
+            {/* Step Content */}
+            <div className="flex-1 pb-8">
+              <h2 className="text-xl font-bold mb-4">Application Questions</h2>
+              
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {campaign.application_questions.map((question, index) => (
+                  <div key={index}>
+                    <label className="text-sm font-medium mb-2 block">{question}</label>
+                    <Textarea
+                      {...register(`answers.${index}` as any, { required: "This answer is required" })}
+                      placeholder="Your answer..."
+                      rows={3}
+                      className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-white/40 resize-none"
+                    />
+                    {errors.answers?.[index] && (
+                      <p className="text-destructive text-sm mt-1">{errors.answers[index].message}</p>
+                    )}
+                  </div>
+                ))}
+
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-primary hover:bg-primary/90 py-6 text-lg"
+                >
+                  {submitting ? "Submitting..." : "Submit Application"}
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
