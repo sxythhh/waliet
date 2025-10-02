@@ -156,7 +156,7 @@ export function AllCampaignsTab() {
             placeholder="Search campaigns..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-background border border-border focus-visible:shadow-none focus-visible:bg-background focus-visible:border-border"
+            className="pl-9 bg-background border border-border focus-visible:shadow-none focus-visible:bg-background focus-visible:border-border transition-none"
           />
         </div>
 
