@@ -158,6 +158,24 @@ export default function CampaignJoin() {
 
       {/* Campaign Banner with Logo */}
       <div className="max-w-3xl mx-auto px-6 mb-8">
+        {/* Logo Badge - Above Banner */}
+        <div className="flex justify-center mb-4">
+          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center overflow-hidden">
+            {campaign.brand_logo_url ? (
+              <img
+                src={campaign.brand_logo_url}
+                alt={campaign.brand_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-2xl font-bold text-white">
+                {campaign.brand_name.charAt(0)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Banner */}
         <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary to-primary/80 h-48">
           {campaign.banner_url ? (
             <img
@@ -170,28 +188,11 @@ export default function CampaignJoin() {
               <div className="text-4xl font-bold text-white">{campaign.brand_name}</div>
             </div>
           )}
-          
-          {/* Logo Badge */}
-          <div className="absolute -bottom-8 left-8">
-            <div className="w-24 h-24 rounded-2xl bg-primary flex items-center justify-center border-4 border-[#080808] overflow-hidden">
-              {campaign.brand_logo_url ? (
-                <img
-                  src={campaign.brand_logo_url}
-                  alt={campaign.brand_name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="text-2xl font-bold text-white">
-                  {campaign.brand_name.charAt(0)}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Step Process */}
-      <div className="max-w-3xl mx-auto px-6 mt-16">
+      <div className="max-w-3xl mx-auto px-6">
         {/* Step 1: Campaign Requirements */}
         <div className="relative flex gap-6 mb-8">
           {/* Step Indicator */}
@@ -210,7 +211,7 @@ export default function CampaignJoin() {
               <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
             </div>
             
-            <Card className="bg-[#1a1a1a] border-white/10 hover:border-white/20 transition-colors cursor-pointer"
+            <Card className="bg-[#1a1a1a] border-0 hover:bg-[#1f1f1f] transition-colors cursor-pointer"
                   onClick={() => setCurrentStep(currentStep === 1 ? 2 : 1)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -243,7 +244,7 @@ export default function CampaignJoin() {
                       <div className="text-sm font-medium mb-2">Platforms</div>
                       <div className="flex gap-2">
                         {campaign.allowed_platforms.map((platform) => (
-                          <div key={platform} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs">
+                          <div key={platform} className="px-3 py-1 bg-white/5 border-0 rounded-full text-xs">
                             {platform === "tiktok" ? "TikTok" : "Instagram"}
                           </div>
                         ))}
@@ -298,10 +299,10 @@ export default function CampaignJoin() {
                       setSelectedPlatform(platform);
                       setValue("platform", platform);
                     }}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    className={`p-4 rounded-xl border-0 cursor-pointer transition-all ${
                       selectedPlatform === platform
-                        ? 'bg-primary/10 border-primary'
-                        : 'bg-[#1a1a1a] border-white/10 hover:border-white/20'
+                        ? 'bg-primary/10'
+                        : 'bg-[#1a1a1a] hover:bg-[#1f1f1f]'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -321,7 +322,7 @@ export default function CampaignJoin() {
                     <Input
                       {...register("content_url", { required: "Content URL is required" })}
                       placeholder="https://..."
-                      className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-white/40"
+                      className="bg-[#1a1a1a] border-0 text-white placeholder:text-white/40"
                     />
                     {errors.content_url && (
                       <p className="text-destructive text-sm mt-1">{errors.content_url.message}</p>
@@ -374,7 +375,7 @@ export default function CampaignJoin() {
                       {...register(`answers.${index}` as any, { required: "This answer is required" })}
                       placeholder="Your answer..."
                       rows={3}
-                      className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-white/40 resize-none"
+                      className="bg-[#1a1a1a] border-0 text-white placeholder:text-white/40 resize-none"
                     />
                     {errors.answers?.[index] && (
                       <p className="text-destructive text-sm mt-1">{errors.answers[index].message}</p>
