@@ -563,7 +563,7 @@ export function WalletTab() {
   return <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header with Main Balance */}
       <div className="flex items-center justify-between py-0">
-        <h2 className="text-3xl font-semibold font-sans tracking-tight" style={{
+        <h2 className="hidden sm:block text-3xl font-semibold font-sans tracking-tight" style={{
         letterSpacing: '-0.5px',
         fontWeight: 600
       }}>Virality Wallet</h2>
