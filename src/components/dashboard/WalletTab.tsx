@@ -650,7 +650,7 @@ export function WalletTab() {
               {transactions.map(transaction => <div key={transaction.id} onClick={() => {
               setSelectedTransaction(transaction);
               setTransactionSheetOpen(true);
-            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#1e1e1e]">
+            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-neutral-900">
                   <div className="flex items-center gap-4 flex-1">
                     <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${transaction.type === 'earning' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                       {transaction.type === 'earning' ? <TrendingUp className="h-5 w-5 text-green-500" /> : <ArrowDownLeft className="h-5 w-5 text-red-500" />}
