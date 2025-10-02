@@ -572,7 +572,7 @@ export function WalletTab() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2 bg-muted hover:bg-muted/80">
+                <Button variant="secondary" className="gap-2">
                   {timePeriodLabels[timePeriod]}
                   <ChevronDown className="h-4 w-4" />
                 </Button>
