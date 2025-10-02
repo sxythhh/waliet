@@ -49,8 +49,13 @@ export function WalletTab() {
 
   useEffect(() => {
     fetchWallet();
-    fetchEarningsData();
-  }, [timePeriod]);
+  }, []);
+
+  useEffect(() => {
+    if (wallet) {
+      fetchEarningsData();
+    }
+  }, [timePeriod, wallet]);
 
   const getDateRange = () => {
     const now = new Date();
@@ -76,7 +81,7 @@ export function WalletTab() {
 
     const { start, end } = getDateRange();
 
-    // Get all transactions (earnings and payouts) from the beginning of time
+    // Get all transactions from the beginning
     const { data: submissions } = await supabase
       .from("campaign_submissions")
       .select("earnings, submitted_at")
@@ -90,25 +95,22 @@ export function WalletTab() {
       .in("status", ["completed"])
       .order("requested_at", { ascending: true });
 
-    // Generate date points for the selected period
+    // Generate date points for every day in the selected period
     const days = timePeriod === '1W' || timePeriod === 'TW' ? 7 : 
                  timePeriod === '1M' ? 30 : 
                  timePeriod === '3M' ? 90 : 365;
     
     const dataPoints: EarningsDataPoint[] = [];
-    
-    // Sample the data points to avoid overcrowding (max 15 points)
-    const sampleRate = Math.max(1, Math.floor(days / 15));
 
-    // Create array of dates in the period
-    for (let i = 0; i <= days; i += sampleRate) {
+    // Create data point for each day
+    for (let i = 0; i <= days; i++) {
       const currentDate = subDays(end, days - i);
       const dateStr = format(currentDate, 'MMM dd');
       
       // Calculate cumulative balance up to this date
       let balanceAtDate = 0;
       
-      // Add all earnings up to this date
+      // Add all earnings up to and including this date
       if (submissions) {
         submissions.forEach((sub) => {
           const subDate = new Date(sub.submitted_at);
@@ -118,7 +120,7 @@ export function WalletTab() {
         });
       }
 
-      // Subtract all completed payouts up to this date
+      // Subtract all completed payouts up to and including this date
       if (payouts) {
         payouts.forEach((payout) => {
           const payoutDate = new Date(payout.requested_at);
@@ -134,15 +136,12 @@ export function WalletTab() {
       });
     }
 
-    // If no data points or all zeros, show current balance
-    if (dataPoints.length === 0 || dataPoints.every(p => p.amount === 0)) {
-      setEarningsData([{
-        date: format(new Date(), 'MMM dd'),
-        amount: wallet?.balance || 0
-      }]);
-    } else {
-      setEarningsData(dataPoints);
+    // Ensure the last point shows current wallet balance
+    if (dataPoints.length > 0 && wallet) {
+      dataPoints[dataPoints.length - 1].amount = Number(wallet.balance.toFixed(2));
     }
+
+    setEarningsData(dataPoints);
   };
 
   const fetchWallet = async () => {
