@@ -192,7 +192,7 @@ export default function PayoutMethodDialog({
                       placeholder="Enter your wallet address"
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
-                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                     />
                   </div>
                 </div>
@@ -209,7 +209,7 @@ export default function PayoutMethodDialog({
                     placeholder="your.email@example.com"
                     value={paypalEmail}
                     onChange={(e) => setPaypalEmail(e.target.value)}
-                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                   />
                 </div>
               )}
@@ -225,7 +225,7 @@ export default function PayoutMethodDialog({
                       placeholder="Enter bank name"
                       value={bankName}
                       onChange={(e) => setBankName(e.target.value)}
-                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                     />
                   </div>
                   <div className="space-y-3">
@@ -237,7 +237,7 @@ export default function PayoutMethodDialog({
                       placeholder="Full name on account"
                       value={accountHolderName}
                       onChange={(e) => setAccountHolderName(e.target.value)}
-                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -250,7 +250,7 @@ export default function PayoutMethodDialog({
                         placeholder="Account #"
                         value={accountNumber}
                         onChange={(e) => setAccountNumber(e.target.value)}
-                        className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                        className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                       />
                     </div>
                     <div className="space-y-3">
@@ -262,7 +262,7 @@ export default function PayoutMethodDialog({
                         placeholder="Routing #"
                         value={routingNumber}
                         onChange={(e) => setRoutingNumber(e.target.value)}
-                        className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                        className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                       />
                     </div>
                   </div>
@@ -280,7 +280,7 @@ export default function PayoutMethodDialog({
                     placeholder="your.email@example.com"
                     value={wiseEmail}
                     onChange={(e) => setWiseEmail(e.target.value)}
-                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                   />
                 </div>
               )}
@@ -296,7 +296,7 @@ export default function PayoutMethodDialog({
                     placeholder="your.email@example.com"
                     value={revolutEmail}
                     onChange={(e) => setRevolutEmail(e.target.value)}
-                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                   />
                 </div>
               )}
@@ -311,7 +311,7 @@ export default function PayoutMethodDialog({
                     placeholder="Enter your TIPS username"
                     value={tipsUsername}
                     onChange={(e) => setTipsUsername(e.target.value)}
-                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                   />
                 </div>
               )}
