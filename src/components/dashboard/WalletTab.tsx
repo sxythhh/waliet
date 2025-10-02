@@ -541,7 +541,10 @@ export function WalletTab() {
   return <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header with Main Balance */}
       <div className="flex items-center justify-between py-0">
-        <h2 className="text-3xl font-semibold font-sans tracking-tight" style={{ letterSpacing: '-0.5px', fontWeight: 600 }}>Virality Wallet</h2>
+        <h2 className="text-3xl font-semibold font-sans tracking-tight" style={{
+        letterSpacing: '-0.5px',
+        fontWeight: 600
+      }}>Virality Wallet</h2>
         <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0">
           <ArrowUpRight className="h-4 w-4" />
           Request Payout
@@ -733,7 +736,7 @@ export function WalletTab() {
         </CardHeader>
         <CardContent className="space-y-3">
           {payoutMethods.length === 0 ? <div className="text-center py-8">
-              <WalletIcon className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+              
               <p className="text-sm text-muted-foreground mb-3">No payout methods</p>
               <Button onClick={() => setDialogOpen(true)} size="sm" className="bg-primary hover:bg-primary/90 text-white border-0">
                 <Plus className="mr-2 h-4 w-4" />
