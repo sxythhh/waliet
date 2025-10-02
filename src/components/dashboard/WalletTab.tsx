@@ -842,7 +842,8 @@ export function WalletTab() {
           const getBadgeText = () => {
             switch (method.method) {
               case "crypto":
-                return method.details.network;
+                const network = method.details.network;
+                return network ? network.charAt(0).toUpperCase() + network.slice(1).toLowerCase() : "";
               case "bank":
                 return "Bank";
               case "paypal":
