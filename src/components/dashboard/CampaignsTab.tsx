@@ -31,10 +31,43 @@ export function CampaignsTab() {
 
   const fetchCampaigns = async () => {
     setLoading(true);
+    
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    // Get campaign IDs where user has submissions
+    const { data: submissions, error: submissionsError } = await supabase
+      .from("campaign_submissions")
+      .select("campaign_id")
+      .eq("creator_id", user.id);
+
+    if (submissionsError) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch your campaigns",
+      });
+      setLoading(false);
+      return;
+    }
+
+    const campaignIds = submissions?.map(s => s.campaign_id) || [];
+    
+    if (campaignIds.length === 0) {
+      setCampaigns([]);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch campaigns user has joined
     const { data, error } = await supabase
       .from("campaigns")
       .select("*")
-      .eq("status", "active")
+      .in("id", campaignIds)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -60,7 +93,7 @@ export function CampaignsTab() {
   if (campaigns.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">No active campaigns at the moment</p>
+        <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
       </div>
     );
   }
