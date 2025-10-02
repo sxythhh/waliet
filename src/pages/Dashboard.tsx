@@ -8,7 +8,6 @@ import { Sparkles, TrendingUp, DollarSign, Lock } from "lucide-react";
 import { CampaignsTab } from "@/components/dashboard/CampaignsTab";
 import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
 import { WalletTab } from "@/components/dashboard/WalletTab";
-import { LeaderboardTab } from "@/components/dashboard/LeaderboardTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 export default function Dashboard() {
@@ -91,10 +90,6 @@ export default function Dashboard() {
         
         <TabsContent value="wallet" className="mt-0">
           <WalletTab />
-        </TabsContent>
-        
-        <TabsContent value="leaderboard" className="mt-0">
-          <LeaderboardTab />
         </TabsContent>
         
         <TabsContent value="profile" className="mt-0">

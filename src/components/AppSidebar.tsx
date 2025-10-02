@@ -1,4 +1,4 @@
-import { Home, DollarSign, User, TrendingUp, Compass, ArrowUpRight } from "lucide-react";
+import { Home, DollarSign, User, Compass, ArrowUpRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Sidebar,
@@ -18,7 +18,6 @@ const menuItems = [
   { title: "Campaigns", tab: "campaigns", icon: Home },
   { title: "Discover", tab: "discover", icon: Compass },
   { title: "Wallet", tab: "wallet", icon: DollarSign },
-  { title: "Leaderboard", tab: "leaderboard", icon: TrendingUp },
   { title: "Profile", tab: "profile", icon: User },
 ];
 
@@ -44,7 +43,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       onClick={() => handleTabClick(item.tab)}
                       isActive={isActive}
-                      className="py-1 text-[14.4px] font-medium font-instrument data-[active=true]:bg-primary data-[active=true]:text-white hover:bg-sidebar-accent text-[#C0C0C0]"
+                      className="h-12 py-3 text-[14.4px] font-medium font-instrument data-[active=true]:bg-primary data-[active=true]:text-white hover:bg-sidebar-accent text-[#C0C0C0]"
                     >
                       <item.icon className={`h-[22px] w-[22px] ${isActive ? 'text-white' : 'text-[#6A6A6A]'}`} />
                       <span>{item.title}</span>
