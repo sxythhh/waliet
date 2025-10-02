@@ -40,7 +40,10 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 flex flex-col">
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
             <SidebarTrigger />
-            <div className="flex-1" />
+            <div className="flex-1 flex justify-center">
+              <img src="/src/assets/wordmark-logo.png" alt="Wordmark Logo" className="h-8" />
+            </div>
+            <div className="w-10" />
           </header>
           <main className="flex-1">{children}</main>
         </div>
