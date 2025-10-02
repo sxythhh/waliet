@@ -803,8 +803,7 @@ export function WalletTab() {
                 return "";
             }
           };
-          return <div key={method.id} className="group relative overflow-hidden rounded-xl bg-muted/50 transition-all duration-300">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          return <div key={method.id} className="group relative overflow-hidden rounded-xl bg-neutral-900/50 transition-all duration-300">
                   
                   <div className="relative flex items-center justify-between p-4">
                     <div className="flex items-center gap-4 flex-1">
