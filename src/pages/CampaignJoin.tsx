@@ -159,22 +159,24 @@ export default function CampaignJoin() {
       {/* Campaign Banner with Logo */}
       <div className="max-w-3xl mx-auto px-6 mb-12">
         {/* Banner */}
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary to-primary/80 h-48">
-          {campaign.banner_url ? (
-            <img
-              src={campaign.banner_url}
-              alt={campaign.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-4xl font-bold text-white">{campaign.brand_name}</div>
-            </div>
-          )}
+        <div className="relative rounded-2xl bg-gradient-to-br from-primary to-primary/80 h-48">
+          <div className="absolute inset-0 rounded-2xl overflow-hidden">
+            {campaign.banner_url ? (
+              <img
+                src={campaign.banner_url}
+                alt={campaign.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-4xl font-bold text-white">{campaign.brand_name}</div>
+              </div>
+            )}
+          </div>
           
           {/* Logo Badge - Overlapping bottom left */}
           <div className="absolute -bottom-10 left-8 z-10">
-            <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-[#080808] overflow-hidden">
+            <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-[#080808] overflow-hidden shadow-xl">
               {campaign.brand_logo_url ? (
                 <img
                   src={campaign.brand_logo_url}
