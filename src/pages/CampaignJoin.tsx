@@ -69,7 +69,7 @@ export default function CampaignJoin() {
         .from('social_accounts')
         .select('*')
         .eq('user_id', user.id)
-        .eq('is_verified', true);
+        .is('campaign_id', null); // Only show accounts not yet linked to a campaign
 
       if (error) throw error;
       setSocialAccounts(data || []);
