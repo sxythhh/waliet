@@ -53,7 +53,7 @@ export default function Dashboard() {
       tab: value
     });
   };
-  return <div className={currentTab === "discover" ? "" : "p-8 space-y-8"}>
+  return <div className={currentTab === "discover" ? "" : "p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 md:space-y-8"}>
       {/* Header - Only show on campaigns tab */}
       {currentTab === "campaigns" && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
