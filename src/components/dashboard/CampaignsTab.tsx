@@ -111,7 +111,7 @@ export function CampaignsTab() {
         <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
       </div>;
   }
-  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl">
       {campaigns.map(campaign => {
         const budgetUsed = campaign.budget_used || 0;
         const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
