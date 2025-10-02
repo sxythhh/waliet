@@ -11,6 +11,8 @@ import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
+import usdtLogo from "@/assets/usdt-logo.png";
+import usdcLogo from "@/assets/usdc-logo.png";
 
 interface PayoutMethodDialogProps {
   open: boolean;
@@ -20,8 +22,8 @@ interface PayoutMethodDialogProps {
 }
 
 const cryptoCurrencies = [
-  { id: "usdt", name: "USDT" },
-  { id: "usdc", name: "USDC" },
+  { id: "usdt", name: "USDT", logo: usdtLogo },
+  { id: "usdc", name: "USDC", logo: usdcLogo },
 ];
 
 const cryptoNetworks = [
@@ -191,12 +193,13 @@ export default function PayoutMethodDialog({
                           key={currency.id}
                           type="button"
                           onClick={() => setSelectedCurrency(currency.id)}
-                          className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border ${
+                          className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 justify-center ${
                             selectedCurrency === currency.id
                               ? "bg-primary/10 text-primary border-primary/30"
                               : "bg-[#1a1a1a] text-muted-foreground border-[#2a2a2a] hover:border-[#3a3a3a]"
                           }`}
                         >
+                          <img src={currency.logo} alt={currency.name} className="h-5 w-5" />
                           {currency.name}
                         </button>
                       ))}
