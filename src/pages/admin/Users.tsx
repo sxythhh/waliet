@@ -55,6 +55,20 @@ interface Campaign {
   title: string;
 }
 
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  follower_count: number;
+  is_verified: boolean;
+  campaign_id: string | null;
+  campaigns?: {
+    id: string;
+    title: string;
+    brand_name: string;
+  };
+}
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -67,6 +81,9 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
+  const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
+  const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
+  const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -150,6 +167,39 @@ export default function AdminUsers() {
     setPaymentAmount("");
     setPaymentNotes("");
     setPayDialogOpen(true);
+  };
+
+  const fetchUserSocialAccounts = async (userId: string) => {
+    setLoadingSocialAccounts(true);
+    const { data, error } = await supabase
+      .from("social_accounts")
+      .select(`
+        *,
+        campaigns:campaign_id (
+          id,
+          title,
+          brand_name
+        )
+      `)
+      .eq("user_id", userId);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch social accounts",
+      });
+      setUserSocialAccounts([]);
+    } else {
+      setUserSocialAccounts(data || []);
+    }
+    setLoadingSocialAccounts(false);
+  };
+
+  const openUserDetailsDialog = (user: User) => {
+    setSelectedUser(user);
+    setUserDetailsDialogOpen(true);
+    fetchUserSocialAccounts(user.id);
   };
 
   const handlePayUser = async () => {
@@ -380,7 +430,11 @@ export default function AdminUsers() {
                 </TableRow>
               ) : (
                 filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow 
+                    key={user.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => openUserDetailsDialog(user)}
+                  >
                     <TableCell className="font-medium">{user.username}</TableCell>
                     <TableCell>{user.full_name || "-"}</TableCell>
                     <TableCell className="text-right font-medium text-success">
@@ -453,6 +507,73 @@ export default function AdminUsers() {
                 Send Payment
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Details Dialog */}
+      <Dialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>User Details - {selectedUser?.username}</DialogTitle>
+            <DialogDescription>
+              View connected social accounts and linked campaigns
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {loadingSocialAccounts ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Loading social accounts...
+              </div>
+            ) : userSocialAccounts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No social accounts connected
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Connected Accounts ({userSocialAccounts.length})
+                </h3>
+                {userSocialAccounts.map((account) => (
+                  <div
+                    key={account.id}
+                    className="flex items-center justify-between p-4 rounded-lg border"
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold capitalize">{account.platform}</span>
+                          {account.is_verified && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                              Verified
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          @{account.username}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {account.follower_count.toLocaleString()} followers
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      {account.campaigns ? (
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs text-muted-foreground mb-1">Linked to:</span>
+                          <span className="font-medium text-sm">{account.campaigns.title}</span>
+                          <span className="text-xs text-muted-foreground">{account.campaigns.brand_name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Not linked</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
