@@ -3,12 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { format, subDays, subMonths, subYears, startOfWeek } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface WalletData {
   id: string;
@@ -242,6 +248,14 @@ export function WalletTab() {
 
   const totalEarnings = earningsData.reduce((sum, point) => sum + point.amount, 0);
 
+  const timePeriodLabels: Record<TimePeriod, string> = {
+    '1W': '1 Week',
+    '1M': '1 Month',
+    '3M': '3 Months',
+    '1Y': '1 Year',
+    'TW': 'This Week'
+  };
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header with Main Balance */}
@@ -268,27 +282,25 @@ export function WalletTab() {
                 ${wallet?.balance?.toFixed(2) || "0.00"}
               </p>
             </div>
-            <div className="flex flex-col gap-1 bg-muted/30 rounded-lg p-1">
-              {[
-                { label: '1 Week', value: '1W' },
-                { label: '1 Month', value: '1M' },
-                { label: '3 Months', value: '3M' },
-                { label: '1 Year', value: '1Y' },
-                { label: 'This Week', value: 'TW' },
-              ].map((period) => (
-                <button
-                  key={period.value}
-                  onClick={() => setTimePeriod(period.value as TimePeriod)}
-                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                    timePeriod === period.value
-                      ? 'bg-primary text-primary-foreground font-medium'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {period.label}
-                </button>
-              ))}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  {timePeriodLabels[timePeriod]}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-card z-50">
+                {Object.entries(timePeriodLabels).map(([value, label]) => (
+                  <DropdownMenuItem
+                    key={value}
+                    onClick={() => setTimePeriod(value as TimePeriod)}
+                    className={timePeriod === value ? "bg-muted" : ""}
+                  >
+                    {label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="h-64">

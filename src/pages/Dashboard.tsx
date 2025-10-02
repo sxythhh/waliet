@@ -105,8 +105,8 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Sign Out button for other tabs (except discover) */}
-      {currentTab !== "campaigns" && currentTab !== "discover" && (
+      {/* Sign Out button for other tabs (except discover and wallet) */}
+      {currentTab !== "campaigns" && currentTab !== "discover" && currentTab !== "wallet" && (
         <div className="flex justify-end">
           <Button onClick={handleSignOut} variant="outline" className="border-none">
             Sign Out
