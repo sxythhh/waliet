@@ -37,6 +37,7 @@ const campaignSchema = z.object({
   }),
   guidelines: z.string().trim().max(2000).optional(),
   embed_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
+  preview_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
   application_questions: z.array(z.string().trim().min(1)).max(3, "Maximum 3 questions allowed"),
 });
@@ -55,6 +56,7 @@ interface Campaign {
   application_questions: any[];
   slug?: string;
   embed_url?: string | null;
+  preview_url?: string | null;
 }
 
 interface CreateCampaignDialogProps {
@@ -89,6 +91,7 @@ export function CreateCampaignDialog({
       rpm_rate: campaign?.rpm_rate?.toString() || "",
       guidelines: campaign?.guidelines || "",
       embed_url: campaign?.embed_url || "",
+      preview_url: campaign?.preview_url || "",
       allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
       application_questions: campaign?.application_questions || [],
     },
@@ -168,6 +171,7 @@ export function CreateCampaignDialog({
         rpm_rate: Number(values.rpm_rate),
         guidelines: values.guidelines || null,
         embed_url: values.embed_url || null,
+        preview_url: values.preview_url || null,
         brand_id: brandId,
         brand_name: brandName,
         banner_url: bannerUrl,
@@ -392,6 +396,27 @@ export function CreateCampaignDialog({
                   </FormControl>
                   <p className="text-xs text-white/40 mt-1">
                     Enter a URL to display as an embedded page for campaign participants
+                  </p>
+                  <FormMessage className="text-destructive/80" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="preview_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Campaign Preview URL (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://example.com/campaign-preview"
+                      className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-white/40 mt-1">
+                    Enter a URL to display as preview for non-members viewing this campaign
                   </p>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>
