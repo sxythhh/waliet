@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -14,6 +14,7 @@ import { format, subDays, subMonths, subYears, startOfWeek } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 interface WalletData {
   id: string;
   balance: number;
@@ -57,6 +58,9 @@ export function WalletTab() {
   const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState("");
   const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<string>("");
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [transactionSheetOpen, setTransactionSheetOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
   const {
     toast
   } = useToast();
@@ -780,7 +784,14 @@ export function WalletTab() {
           {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <div className="space-y-3">
-              {transactions.map(transaction => <div key={transaction.id} className="flex items-center justify-between p-4 rounded-lg bg-[#101011]">
+              {transactions.map(transaction => <div 
+                  key={transaction.id} 
+                  className="flex items-center justify-between p-4 rounded-lg bg-[#101011] cursor-pointer hover:bg-[#151516] transition-colors"
+                  onClick={() => {
+                    setSelectedTransaction(transaction);
+                    setTransactionSheetOpen(true);
+                  }}
+                >
                   <div className="flex items-center gap-4 flex-1">
                     <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${transaction.type === 'earning' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                       {transaction.type === 'earning' ? <TrendingUp className="h-5 w-5 text-green-500" /> : <ArrowDownLeft className="h-5 w-5 text-red-500" />}
@@ -908,5 +919,160 @@ export function WalletTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Transaction Receipt Sheet */}
+      <Sheet open={transactionSheetOpen} onOpenChange={setTransactionSheetOpen}>
+        <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto">
+          {selectedTransaction && (
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="p-6 pb-8 bg-gradient-to-b from-card to-background border-b sticky top-0 z-10">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mb-6 -ml-2"
+                  onClick={() => setTransactionSheetOpen(false)}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Close
+                </Button>
+
+                {/* Icon */}
+                <div className="flex justify-center mb-6">
+                  <div className={`h-20 w-20 rounded-full flex items-center justify-center ${
+                    selectedTransaction.type === 'earning' 
+                      ? 'bg-gradient-to-br from-green-500/20 to-green-600/10 border-2 border-green-500/30' 
+                      : 'bg-gradient-to-br from-red-500/20 to-red-600/10 border-2 border-red-500/30'
+                  }`}>
+                    {selectedTransaction.type === 'earning' 
+                      ? <TrendingUp className="h-10 w-10 text-green-500" /> 
+                      : <ArrowDownLeft className="h-10 w-10 text-red-500" />
+                    }
+                  </div>
+                </div>
+
+                {/* Type Badge */}
+                <div className="flex justify-center mb-4">
+                  <Badge variant="outline" className="text-xs px-3 py-1">
+                    {selectedTransaction.type === 'earning' ? 'Payment Received' : 'Withdrawal'}
+                  </Badge>
+                </div>
+
+                {/* Amount */}
+                <div className="text-center mb-2">
+                  <div className={`text-5xl font-bold ${
+                    selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
+                  }`} style={{
+                    fontFamily: 'Chakra Petch, sans-serif',
+                    letterSpacing: '-1px'
+                  }}>
+                    {selectedTransaction.type === 'earning' ? '+' : '-'}${selectedTransaction.amount.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="flex-1 p-6 space-y-6">
+                {/* Date and Status */}
+                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                  <span className="text-sm text-muted-foreground">
+                    {format(selectedTransaction.date, 'MMMM dd yyyy, hh:mm a')}
+                  </span>
+                  {selectedTransaction.status && (
+                    <Badge 
+                      variant={selectedTransaction.status === 'completed' ? 'default' : 'secondary'}
+                      className="capitalize"
+                    >
+                      {selectedTransaction.status}
+                    </Badge>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Transaction Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold mb-4">Transaction Details</h3>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                      <span className="text-sm text-muted-foreground">Transaction ID</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-mono">
+                          {selectedTransaction.id.slice(0, 8)}...{selectedTransaction.id.slice(-8)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedTransaction.id);
+                            setCopiedId(true);
+                            setTimeout(() => setCopiedId(false), 2000);
+                            toast({
+                              description: "Transaction ID copied to clipboard",
+                            });
+                          }}
+                        >
+                          {copiedId ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                      <span className="text-sm text-muted-foreground">Type</span>
+                      <span className="text-sm font-medium capitalize">
+                        {selectedTransaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                      <span className="text-sm text-muted-foreground">Amount</span>
+                      <span className={`text-sm font-bold ${
+                        selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {selectedTransaction.type === 'earning' ? '+' : '-'}${selectedTransaction.amount.toFixed(2)}
+                      </span>
+                    </div>
+
+                    {selectedTransaction.source && (
+                      <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        <span className="text-sm text-muted-foreground">From</span>
+                        <span className="text-sm font-medium text-right max-w-[200px] truncate">
+                          {selectedTransaction.source}
+                        </span>
+                      </div>
+                    )}
+
+                    {selectedTransaction.destination && (
+                      <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        <span className="text-sm text-muted-foreground">To</span>
+                        <span className="text-sm font-medium text-right max-w-[200px] truncate">
+                          {selectedTransaction.destination}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Additional Info */}
+                <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                  <div className="flex items-start gap-3">
+                    <DollarSign className="h-5 w-5 text-primary mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold mb-1">Need Help?</h4>
+                      <p className="text-xs text-muted-foreground">
+                        If you have questions about this transaction, contact our support team with the transaction ID above.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>;
 }
