@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wallet, CreditCard } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import wiseLogo from "@/assets/wise-logo.svg";
 
 interface PayoutMethodDialogProps {
   open: boolean;
@@ -129,12 +130,12 @@ export default function PayoutMethodDialog({
                 Select Method
               </p>
               {[
-                { id: "crypto", icon: Wallet, label: "Crypto Wallet" },
-                { id: "paypal", icon: CreditCard, label: "PayPal" },
-                { id: "bank", icon: CreditCard, label: "Bank Transfer" },
-                { id: "wise", icon: CreditCard, label: "Wise" },
-                { id: "revolut", icon: CreditCard, label: "Revolut" },
-                { id: "tips", icon: CreditCard, label: "TIPS" },
+                { id: "crypto", icon: Wallet, label: "Crypto Wallet", isLogo: false },
+                { id: "paypal", icon: CreditCard, label: "PayPal", isLogo: false },
+                { id: "bank", icon: CreditCard, label: "Bank Transfer", isLogo: false },
+                { id: "wise", icon: wiseLogo, label: "Wise", isLogo: true },
+                { id: "revolut", icon: CreditCard, label: "Revolut", isLogo: false },
+                { id: "tips", icon: CreditCard, label: "TIPS", isLogo: false },
               ].map((method) => {
                 const Icon = method.icon;
                 const isActive = selectedMethod === method.id;
@@ -148,7 +149,11 @@ export default function PayoutMethodDialog({
                         : "bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#2a2a2a]"
                     }`}
                   >
-                    <Icon className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                    {method.isLogo ? (
+                      <img src={Icon as string} alt={method.label} className="h-4 w-4" />
+                    ) : (
+                      <Icon className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                    )}
                     <span className={`text-sm font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
                       {method.label}
                     </span>
