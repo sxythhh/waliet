@@ -345,7 +345,7 @@ export default function AdminUsers() {
   };
 
   const downloadCsvTemplate = () => {
-    const template = 'account_username;payout amount;date\nexample_user;100.50;2025-10-02\nanother_user;250.00;2025-10-01';
+    const template = 'account_username;payout amount;date\ntiktok_user123;100.50;2025-10-02\ninsta_creator;250.00;2025-10-01';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -356,6 +356,7 @@ export default function AdminUsers() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
 
   const stats = {
     totalUsers: users.length,
@@ -648,12 +649,12 @@ export default function AdminUsers() {
               <p className="text-sm font-medium">CSV Format:</p>
               <code className="text-xs block bg-background p-2 rounded">
                 account_username;payout amount;date<br />
-                john_doe;150.00;2025-10-02<br />
-                jane_smith;200.50;2025-10-01
+                tiktok_user123;150.00;2025-10-02<br />
+                insta_creator;200.50;2025-10-01
               </code>
               <p className="text-xs text-muted-foreground">
                 • Use semicolons (;) as separators<br />
-                • Username must match the user's Virality account username<br />
+                • <strong>Username must match their connected social account username</strong> (TikTok, Instagram, YouTube)<br />
                 • Amount should be in USD (e.g., 150.00)<br />
                 • Date is optional, defaults to today
               </p>

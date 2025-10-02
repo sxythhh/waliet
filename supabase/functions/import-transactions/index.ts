@@ -126,28 +126,35 @@ Deno.serve(async (req) => {
       const transaction = transactions[i];
       
       try {
-        // Find user by username
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, username')
+        // Find user by social account username
+        const { data: socialAccount, error: socialError } = await supabase
+          .from('social_accounts')
+          .select('id, username, user_id, platform')
           .eq('username', transaction.username)
           .maybeSingle();
 
-        if (profileError) {
-          throw new Error(`Database error: ${profileError.message}`);
+        if (socialError) {
+          throw new Error(`Database error: ${socialError.message}`);
         }
 
-        if (!profile) {
-          throw new Error(`Username not found: ${transaction.username}`);
+        if (!socialAccount) {
+          throw new Error(`Social account username not found: ${transaction.username}`);
         }
 
-        console.log(`Processing transaction for user ${profile.username} (${profile.id})`);
+        // Get the user's profile info for logging
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', socialAccount.user_id)
+          .maybeSingle();
+
+        console.log(`Processing transaction for social account ${socialAccount.username} (@${socialAccount.platform}) - User: ${profile?.username || socialAccount.user_id}`);
 
         // Get current wallet
         const { data: wallet, error: walletError } = await supabase
           .from('wallets')
           .select('balance, total_earned')
-          .eq('user_id', profile.id)
+          .eq('user_id', socialAccount.user_id)
           .maybeSingle();
 
         if (walletError) {
@@ -165,7 +172,7 @@ Deno.serve(async (req) => {
             total_earned: currentEarned + transaction.amount,
             updated_at: new Date().toISOString(),
           })
-          .eq('user_id', profile.id);
+          .eq('user_id', socialAccount.user_id);
 
         if (updateError) {
           throw new Error(`Failed to update wallet: ${updateError.message}`);
@@ -175,7 +182,7 @@ Deno.serve(async (req) => {
         const { error: transactionError } = await supabase
           .from('wallet_transactions')
           .insert({
-            user_id: profile.id,
+            user_id: socialAccount.user_id,
             amount: transaction.amount,
             type: 'earning',
             status: 'completed',
@@ -185,7 +192,9 @@ Deno.serve(async (req) => {
               import_date: new Date().toISOString(),
               original_date: transaction.date,
               imported_by: user.id,
-              source: 'csv_import'
+              source: 'csv_import',
+              social_account_username: socialAccount.username,
+              social_account_platform: socialAccount.platform
             }
           });
 
@@ -198,22 +207,25 @@ Deno.serve(async (req) => {
           user_id: user.id,
           action: 'CSV_IMPORT_TRANSACTION',
           table_name: 'wallet_transactions',
-          record_id: profile.id,
+          record_id: socialAccount.user_id,
           new_data: {
-            recipient_username: transaction.username,
+            social_account_username: transaction.username,
+            platform: socialAccount.platform,
+            virality_username: profile?.username,
             amount: transaction.amount,
             date: transaction.date,
           },
         });
 
+
         result.successful++;
         result.details.push({
-          username: transaction.username,
+          username: `${transaction.username} (@${socialAccount.platform})`,
           amount: transaction.amount,
           status: 'success',
         });
 
-        console.log(`✓ Successfully processed transaction for ${transaction.username}`);
+        console.log(`✓ Successfully processed transaction for ${socialAccount.username} (@${socialAccount.platform})`);
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
