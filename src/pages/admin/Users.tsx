@@ -48,6 +48,12 @@ interface User {
     total_earned: number;
     total_withdrawn: number;
   };
+  social_accounts?: Array<{
+    id: string;
+    platform: string;
+    username: string;
+    follower_count: number;
+  }>;
 }
 
 interface Campaign {
@@ -103,7 +109,7 @@ export default function AdminUsers() {
   const fetchData = async () => {
     setLoading(true);
     
-    // Fetch users with wallets
+    // Fetch users with wallets and social accounts
     const { data: usersData, error: usersError } = await supabase
       .from("profiles")
       .select(`
@@ -112,6 +118,12 @@ export default function AdminUsers() {
           balance,
           total_earned,
           total_withdrawn
+        ),
+        social_accounts (
+          id,
+          platform,
+          username,
+          follower_count
         )
       `)
       .order("created_at", { ascending: false });
@@ -510,7 +522,7 @@ export default function AdminUsers() {
             <TableHeader>
               <TableRow>
                 <TableHead>Username</TableHead>
-                <TableHead>Full Name</TableHead>
+                <TableHead>Connected Accounts</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
                 <TableHead className="text-right">Total Earned</TableHead>
                 <TableHead className="text-right">Total Withdrawn</TableHead>
@@ -532,7 +544,24 @@ export default function AdminUsers() {
                     onClick={() => openUserDetailsDialog(user)}
                   >
                     <TableCell className="font-medium">{user.username}</TableCell>
-                    <TableCell>{user.full_name || "-"}</TableCell>
+                    <TableCell>
+                      {user.social_accounts && user.social_accounts.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {user.social_accounts.map((account) => (
+                            <div
+                              key={account.id}
+                              className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded text-xs"
+                              title={`${account.username} - ${account.follower_count.toLocaleString()} followers`}
+                            >
+                              {getPlatformIcon(account.platform)}
+                              <span className="font-medium">{account.username}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">No accounts</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right font-medium text-success">
                       ${(user.wallets?.balance || 0).toFixed(2)}
                     </TableCell>
