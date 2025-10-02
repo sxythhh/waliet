@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users } from "lucide-react";
+import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -24,6 +24,11 @@ const menuItems = [
     title: "Brands",
     icon: Package,
     path: "/admin/brands",
+  },
+  {
+    title: "Campaigns",
+    icon: TrendingUp,
+    path: "/admin/campaigns",
   },
   {
     title: "Users",

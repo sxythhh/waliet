@@ -22,12 +22,20 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 
 interface User {
@@ -54,6 +62,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
+  const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -282,19 +291,64 @@ export default function AdminUsers() {
             </div>
             <div className="w-64">
               <Label htmlFor="campaign">Filter by Campaign</Label>
-              <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="All campaigns" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Campaigns</SelectItem>
-                  {campaigns.map((campaign) => (
-                    <SelectItem key={campaign.id} value={campaign.id}>
-                      {campaign.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={campaignPopoverOpen}
+                    className="w-full justify-between mt-2"
+                  >
+                    {selectedCampaign === "all"
+                      ? "All Campaigns"
+                      : campaigns.find((c) => c.id === selectedCampaign)?.title}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-0 bg-popover z-50" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search campaigns..." />
+                    <CommandList>
+                      <CommandEmpty>No campaign found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="all"
+                          onSelect={() => {
+                            setSelectedCampaign("all");
+                            setCampaignPopoverOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedCampaign === "all" ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          All Campaigns
+                        </CommandItem>
+                        {campaigns.map((campaign) => (
+                          <CommandItem
+                            key={campaign.id}
+                            value={campaign.title}
+                            onSelect={() => {
+                              setSelectedCampaign(campaign.id);
+                              setCampaignPopoverOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCampaign === campaign.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {campaign.title}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardContent>
