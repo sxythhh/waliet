@@ -41,6 +41,7 @@ interface Campaign {
   brand_name: string;
   description: string;
   budget: number;
+  budget_used: number;
   rpm_rate: number;
   status: string;
   start_date: string;
@@ -62,6 +63,7 @@ export default function AdminCampaigns() {
     brand_name: "",
     description: "",
     budget: "",
+    budget_used: "",
     rpm_rate: "",
     status: "active",
     preview_url: "",
@@ -118,6 +120,7 @@ export default function AdminCampaigns() {
       brand_name: campaign.brand_name,
       description: campaign.description || "",
       budget: campaign.budget.toString(),
+      budget_used: (campaign.budget_used || 0).toString(),
       rpm_rate: campaign.rpm_rate.toString(),
       status: campaign.status,
       preview_url: campaign.preview_url || "",
@@ -135,6 +138,7 @@ export default function AdminCampaigns() {
         brand_name: editForm.brand_name,
         description: editForm.description,
         budget: parseFloat(editForm.budget),
+        budget_used: parseFloat(editForm.budget_used),
         rpm_rate: parseFloat(editForm.rpm_rate),
         status: editForm.status,
         preview_url: editForm.preview_url || null,
@@ -364,7 +368,7 @@ export default function AdminCampaigns() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="budget">Budget (USD) *</Label>
+                <Label htmlFor="budget">Total Budget (USD) *</Label>
                 <Input
                   id="budget"
                   type="number"
@@ -374,6 +378,19 @@ export default function AdminCampaigns() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="budget_used">Used Budget (USD) *</Label>
+                <Input
+                  id="budget_used"
+                  type="number"
+                  step="0.01"
+                  value={editForm.budget_used}
+                  onChange={(e) => setEditForm({ ...editForm, budget_used: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rpm">RPM Rate (USD) *</Label>
                 <Input
