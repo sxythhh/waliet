@@ -5,36 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { User, Instagram, Youtube, Music } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye } from "lucide-react";
 
 interface Profile {
   username: string;
   full_name: string | null;
   bio: string | null;
   avatar_url: string | null;
-}
-
-interface SocialAccount {
-  platform: string;
-  username: string;
-  follower_count: number;
-  is_verified: boolean;
+  total_earnings: number;
 }
 
 export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchData();
+    fetchProfile();
   }, []);
 
-  const fetchData = async () => {
+  const fetchProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
@@ -48,15 +40,6 @@ export function ProfileTab() {
     
     if (profileData) {
       setProfile(profileData);
-    }
-
-    const { data: socialData } = await supabase
-      .from("social_accounts")
-      .select("*")
-      .eq("user_id", session.user.id);
-    
-    if (socialData) {
-      setSocialAccounts(socialData);
     }
 
     setLoading(false);
@@ -93,18 +76,7 @@ export function ProfileTab() {
     }
   };
 
-  const getPlatformIcon = (platform: string) => {
-    switch (platform) {
-      case "instagram":
-        return <Instagram className="h-5 w-5" />;
-      case "youtube":
-        return <Youtube className="h-5 w-5" />;
-      case "tiktok":
-        return <Music className="h-5 w-5" />;
-      default:
-        return <User className="h-5 w-5" />;
-    }
-  };
+  const profileUrl = `${window.location.origin}/${profile?.username}`;
 
   if (loading || !profile) {
     return (
@@ -115,12 +87,72 @@ export function ProfileTab() {
   }
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      {/* Profile Settings */}
-      <Card className="bg-gradient-card border-0">
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Public Profile Link */}
+      <Card className="bg-card border-0">
         <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
-          <CardDescription>Update your personal details</CardDescription>
+          <CardTitle className="text-lg">Your Public Profile</CardTitle>
+          <CardDescription>Share your Virality profile with brands and followers</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <Input
+              value={profileUrl}
+              readOnly
+              className="bg-muted/50"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                navigator.clipboard.writeText(profileUrl);
+                toast({ title: "Copied!", description: "Profile URL copied to clipboard" });
+              }}
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-card border-0">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Total Earnings</span>
+              <DollarSign className="h-4 w-4 text-success" />
+            </div>
+            <p className="text-2xl font-bold">${profile.total_earnings?.toFixed(2) || "0.00"}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-0">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Trust Score</span>
+              <TrendingUp className="h-4 w-4 text-primary" />
+            </div>
+            <p className="text-2xl font-bold">4.8/5.0</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-0">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Avg Views</span>
+              <Eye className="h-4 w-4 text-primary" />
+            </div>
+            <p className="text-2xl font-bold">12.5K</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Edit Profile */}
+      <Card className="bg-card border-0">
+        <CardHeader>
+          <CardTitle className="text-lg">Edit Profile</CardTitle>
+          <CardDescription>Update your public profile information</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSaveProfile} className="space-y-4">
@@ -130,7 +162,7 @@ export function ProfileTab() {
                 id="username"
                 value={profile.username}
                 disabled
-                className="bg-muted"
+                className="bg-muted/50"
               />
               <p className="text-xs text-muted-foreground">
                 Username cannot be changed
@@ -138,12 +170,12 @@ export function ProfileTab() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label htmlFor="fullName">Display Name</Label>
               <Input
                 id="fullName"
                 value={profile.full_name || ""}
                 onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                placeholder="Your full name"
+                placeholder="Your display name"
               />
             </div>
 
@@ -153,55 +185,18 @@ export function ProfileTab() {
                 id="bio"
                 value={profile.bio || ""}
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                placeholder="Tell us about yourself..."
+                placeholder="Tell brands about yourself..."
                 rows={4}
               />
+              <p className="text-xs text-muted-foreground">
+                This will appear on your public profile
+              </p>
             </div>
 
             <Button type="submit" disabled={saving}>
               {saving ? "Saving..." : "Save Changes"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      {/* Connected Accounts */}
-      <Card className="bg-gradient-card border-0">
-        <CardHeader>
-          <CardTitle>Connected Accounts</CardTitle>
-          <CardDescription>Link your social media accounts to participate in campaigns</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {socialAccounts.length > 0 ? (
-            socialAccounts.map((account) => (
-              <div
-                key={account.platform}
-                className="flex items-center justify-between p-4 border-0 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  {getPlatformIcon(account.platform)}
-                  <div>
-                    <p className="font-medium capitalize">{account.platform}</p>
-                    <p className="text-sm text-muted-foreground">@{account.username}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{account.follower_count.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">followers</p>
-                  </div>
-                  {account.is_verified && (
-                    <Badge className="bg-success/20 text-success">Verified</Badge>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">No accounts connected</p>
-              <Button>Connect Account</Button>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

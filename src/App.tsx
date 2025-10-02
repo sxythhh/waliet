@@ -21,6 +21,7 @@ import Training from "./pages/Training";
 import AdminOverview from "./pages/admin/Overview";
 import AdminBrands from "./pages/admin/Brands";
 import AdminCourses from "./pages/admin/Courses";
+import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ const App = () => (
           <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
           <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/:slug" element={<PublicProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
