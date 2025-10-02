@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2 } from "lucide-react";
+import { DollarSign, Calendar, Share2 } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -110,120 +110,156 @@ export function CampaignsTab() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-      {campaigns.map((campaign) => (
-        <Card 
-          key={campaign.id}
-          className={`bg-gradient-card border-0 transition-all duration-300 overflow-hidden ${
-            campaign.submission_status === 'approved' 
-              ? 'cursor-pointer hover:scale-[1.02]' 
-              : 'cursor-not-allowed opacity-50 grayscale'
-          }`}
-          onClick={() => {
-            if (campaign.submission_status === 'approved') {
-              navigate(`/campaign/${campaign.id}`);
-            }
-          }}
-        >
-          <div className="relative h-48 bg-gradient-to-br from-background to-muted overflow-hidden">
-            {campaign.banner_url ? (
-              <img
-                src={campaign.banner_url}
-                alt={campaign.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <img 
-                  src={campaign.brand_logo_url}
-                  alt={campaign.brand_name}
-                  className="w-24 h-24 rounded-2xl object-cover border-0"
+      {campaigns.map((campaign) => {
+        // Calculate budget progress (mock for now - would come from backend)
+        const usedBudget = campaign.budget * 0.35; // Example: 35% used
+        const budgetPercentage = (usedBudget / campaign.budget) * 100;
+
+        return (
+          <Card 
+            key={campaign.id}
+            className={`relative border-0 transition-all duration-300 overflow-hidden group ${
+              campaign.submission_status === 'approved' 
+                ? 'cursor-pointer hover:scale-[1.02]' 
+                : 'cursor-not-allowed opacity-50'
+            }`}
+            onClick={() => {
+              if (campaign.submission_status === 'approved') {
+                navigate(`/campaign/${campaign.id}`);
+              }
+            }}
+          >
+            {/* Background with gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-purple-800/30 to-background">
+              {campaign.banner_url && (
+                <img
+                  src={campaign.banner_url}
+                  alt={campaign.title}
+                  className="w-full h-full object-cover opacity-20"
                 />
-              </div>
-            )}
-            <div className="absolute top-4 right-4 flex gap-2">
-              {campaign.submission_status && (
-                <Badge 
-                  className={`font-bold text-base px-3 py-1 ${
-                    campaign.submission_status === 'pending' 
-                      ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' 
-                      : campaign.submission_status === 'approved'
-                      ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                      : 'bg-red-500/20 text-red-400 border-red-500/30'
-                  }`}
-                  variant="outline"
-                >
-                  {campaign.submission_status.charAt(0).toUpperCase() + campaign.submission_status.slice(1)}
-                </Badge>
               )}
-              <Badge className="bg-primary text-primary-foreground font-bold text-base px-3 py-1">
-                ${campaign.rpm_rate.toFixed(1)}/1K
-              </Badge>
             </div>
-          </div>
 
-          <CardHeader className="space-y-3 pb-3">
-            <div>
-              <CardTitle className="text-xl mb-2">{campaign.title}</CardTitle>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="secondary" className="text-xs">
-                  RPM Campaign
-                </Badge>
-                <div className="flex items-center gap-1.5">
-                  <Instagram className="w-3.5 h-3.5 text-muted-foreground" />
-                  <Video className="w-3.5 h-3.5 text-muted-foreground" />
-                  <Youtube className="w-3.5 h-3.5 text-muted-foreground" />
+            {/* Content */}
+            <div className="relative z-10 p-6 space-y-4">
+              {/* Header with View Campaign button */}
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  {campaign.brand_logo_url && (
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-background/80 backdrop-blur-sm flex-shrink-0 border border-white/10">
+                      <img 
+                        src={campaign.brand_logo_url}
+                        alt={campaign.brand_name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">{campaign.brand_name}</h3>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <CardDescription className="line-clamp-2 text-sm">
-              {campaign.description}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-3 pt-0">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span className="text-xs">Start Date</span>
-              </div>
-              <div className="text-right text-foreground font-medium text-xs">
-                {campaign.start_date ? new Date(campaign.start_date).toLocaleDateString() : 'TBA'}
+                
+                {campaign.submission_status === 'approved' && (
+                  <button className="px-3 py-1.5 text-sm font-medium text-white/90 hover:text-white transition-colors flex items-center gap-1.5">
+                    <Share2 className="w-4 h-4" />
+                    View Campaign
+                  </button>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Share2 className="w-4 h-4" />
-                <span className="text-xs">Networks</span>
-              </div>
-              <div className="flex items-center justify-end gap-1.5">
-                <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />
-                <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
-                <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />
+              {/* Campaign Title */}
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">{campaign.title}</h2>
+                {campaign.submission_status && (
+                  <Badge 
+                    className={`font-medium text-xs px-2 py-0.5 ${
+                      campaign.submission_status === 'pending' 
+                        ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' 
+                        : campaign.submission_status === 'approved'
+                        ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                        : 'bg-red-500/20 text-red-400 border-red-500/30'
+                    }`}
+                    variant="outline"
+                  >
+                    {campaign.submission_status.charAt(0).toUpperCase() + campaign.submission_status.slice(1)}
+                  </Badge>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <DollarSign className="w-4 h-4" />
-                <span className="text-xs">Reward</span>
+              {/* RPM Rate - Large Display */}
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-white">
+                  ${campaign.rpm_rate.toFixed(0)}
+                </span>
+                <span className="text-lg text-white/60">/1m views</span>
               </div>
-              <div className="text-right text-foreground font-medium text-xs">
-                ${campaign.rpm_rate.toFixed(2)} per 100K views
-              </div>
-            </div>
 
-            <div className="pt-3 border-t border-transparent">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground font-medium">Campaign Budget</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-success font-bold text-lg">
-                    ${(campaign.budget / 1000).toFixed(1)}K
+              {/* Budget Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-white/60">Budget Usage</span>
+                  <span className="text-white font-medium">
+                    ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
                   </span>
-                  <span className="text-muted-foreground">/</span>
-                  <Infinity className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="relative h-2.5 bg-black/40 rounded-full overflow-hidden">
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600 rounded-full transition-all duration-500"
+                    style={{ width: `${budgetPercentage}%` }}
+                  >
+                    <div 
+                      className="absolute inset-0 opacity-40"
+                      style={{
+                        backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.2) 10px, rgba(255,255,255,.2) 20px)',
+                        animation: 'slide 1.5s linear infinite',
+                        backgroundSize: '40px 40px'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-3 gap-4 pt-2">
+                {/* Start Date */}
+                <div>
+                  <div className="flex items-center gap-1.5 text-white/60 text-xs mb-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Start Date</span>
+                  </div>
+                  <div className="text-white font-medium text-sm">
+                    {campaign.start_date ? new Date(campaign.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBA'}
+                  </div>
+                </div>
+
+                {/* Platforms */}
+                <div>
+                  <div className="flex items-center gap-1.5 text-white/60 text-xs mb-1">
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Platforms</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <img src={instagramLogo} alt="Instagram" className="w-4 h-4 opacity-80" />
+                    <img src={tiktokLogo} alt="TikTok" className="w-4 h-4 opacity-80" />
+                    <img src={youtubeLogo} alt="YouTube" className="w-4 h-4 opacity-80" />
+                  </div>
+                </div>
+
+                {/* RPM */}
+                <div>
+                  <div className="flex items-center gap-1.5 text-white/60 text-xs mb-1">
+                    <DollarSign className="w-3.5 h-3.5" />
+                    <span>RPM</span>
+                  </div>
+                  <div className="text-white font-medium text-sm">
+                    ${campaign.rpm_rate.toFixed(1)}/1K
+                  </div>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }
