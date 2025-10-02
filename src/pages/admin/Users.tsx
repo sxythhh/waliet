@@ -61,11 +61,13 @@ interface SocialAccount {
   username: string;
   follower_count: number;
   is_verified: boolean;
+  account_link: string;
   campaign_id: string | null;
   campaigns?: {
     id: string;
     title: string;
     brand_name: string;
+    brand_logo_url: string;
   };
 }
 
@@ -178,7 +180,8 @@ export default function AdminUsers() {
         campaigns:campaign_id (
           id,
           title,
-          brand_name
+          brand_name,
+          brand_logo_url
         )
       `)
       .eq("user_id", userId);
@@ -200,6 +203,19 @@ export default function AdminUsers() {
     setSelectedUser(user);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(user.id);
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'tiktok':
+        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="h-5 w-5" />;
+      case 'instagram':
+        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="h-5 w-5" />;
+      case 'youtube':
+        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="h-5 w-5" />;
+      default:
+        return <UsersIcon className="h-5 w-5" />;
+    }
   };
 
   const handlePayUser = async () => {
@@ -541,18 +557,17 @@ export default function AdminUsers() {
                     className="flex items-center justify-between p-4 rounded-lg border"
                   >
                     <div className="flex items-center gap-3 flex-1">
+                      {getPlatformIcon(account.platform)}
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold capitalize">{account.platform}</span>
-                          {account.is_verified && (
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                              Verified
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-sm text-muted-foreground">
+                        <a 
+                          href={account.account_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           @{account.username}
-                        </span>
+                        </a>
                         <span className="text-xs text-muted-foreground">
                           {account.follower_count.toLocaleString()} followers
                         </span>
@@ -561,10 +576,18 @@ export default function AdminUsers() {
                     
                     <div className="text-right">
                       {account.campaigns ? (
-                        <div className="flex flex-col items-end">
-                          <span className="text-xs text-muted-foreground mb-1">Linked to:</span>
-                          <span className="font-medium text-sm">{account.campaigns.title}</span>
-                          <span className="text-xs text-muted-foreground">{account.campaigns.brand_name}</span>
+                        <div className="flex items-center gap-2">
+                          {account.campaigns.brand_logo_url && (
+                            <img 
+                              src={account.campaigns.brand_logo_url} 
+                              alt={account.campaigns.brand_name}
+                              className="h-6 w-6 rounded object-cover"
+                            />
+                          )}
+                          <div className="flex flex-col items-end">
+                            <span className="font-medium text-sm">{account.campaigns.title}</span>
+                            <span className="text-xs text-muted-foreground">{account.campaigns.brand_name}</span>
+                          </div>
                         </div>
                       ) : (
                         <span className="text-xs text-muted-foreground italic">Not linked</span>
