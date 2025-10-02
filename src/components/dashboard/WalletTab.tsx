@@ -984,7 +984,17 @@ export function WalletTab() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="payout-amount">Amount ($)</Label>
-              <Input id="payout-amount" type="number" min="50" step="0.01" max={wallet?.balance || 0} placeholder="50.00" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} />
+              <Input 
+                id="payout-amount" 
+                type="number" 
+                min="50" 
+                step="0.01" 
+                max={wallet?.balance || 0} 
+                placeholder="50.00" 
+                value={payoutAmount} 
+                onChange={e => setPayoutAmount(e.target.value)}
+                className="bg-[#171717] border-white/10 text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50"
+              />
               <p className="text-xs text-muted-foreground">
                 Minimum: $50.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
               </p>
