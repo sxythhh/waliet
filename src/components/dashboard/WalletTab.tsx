@@ -855,13 +855,6 @@ export function WalletTab() {
                   
                   <div className="relative flex items-center justify-between p-4">
                     <div className="flex items-center gap-4 flex-1">
-                      {method.method === "crypto" ? <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all duration-300 group-hover:scale-110">
-                          <WalletIcon className="h-6 w-6 text-primary" />
-                          <div className="absolute inset-0 rounded-xl bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div> : <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all duration-300 group-hover:scale-110">
-                          <CreditCard className="h-6 w-6 text-primary" />
-                          <div className="absolute inset-0 rounded-xl bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div>}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
                           <p className="text-base font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
