@@ -1,5 +1,5 @@
 import { Home, DollarSign, User, TrendingUp, Compass } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -13,14 +13,22 @@ import {
 } from "@/components/ui/sidebar";
 
 const menuItems = [
-  { title: "Campaigns", url: "/dashboard", icon: Home },
-  { title: "Discover", url: "/discover", icon: Compass },
-  { title: "Wallet", url: "/wallet", icon: DollarSign },
-  { title: "Leaderboard", url: "/leaderboard", icon: TrendingUp },
-  { title: "Profile", url: "/profile", icon: User },
+  { title: "Campaigns", tab: "campaigns", icon: Home },
+  { title: "Discover", tab: "discover", icon: Compass },
+  { title: "Wallet", tab: "wallet", icon: DollarSign },
+  { title: "Leaderboard", tab: "leaderboard", icon: TrendingUp },
+  { title: "Profile", tab: "profile", icon: User },
 ];
 
 export function AppSidebar() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const currentTab = searchParams.get("tab") || "campaigns";
+
+  const handleTabClick = (tab: string) => {
+    navigate(`/dashboard?tab=${tab}`);
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-6">
@@ -41,18 +49,12 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url}
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "hover:bg-sidebar-accent/50"
-                      }
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </NavLink>
+                  <SidebarMenuButton
+                    onClick={() => handleTabClick(item.tab)}
+                    isActive={currentTab === item.tab}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

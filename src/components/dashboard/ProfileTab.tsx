@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,28 +23,23 @@ interface SocialAccount {
   is_verified: boolean;
 }
 
-export default function Profile() {
+export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuthAndFetchData();
+    fetchData();
   }, []);
 
-  const checkAuthAndFetchData = async () => {
+  const fetchData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
+    if (!session) return;
 
     setLoading(true);
     
-    // Fetch profile
     const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
@@ -56,7 +50,6 @@ export default function Profile() {
       setProfile(profileData);
     }
 
-    // Fetch social accounts
     const { data: socialData } = await supabase
       .from("social_accounts")
       .select("*")
@@ -115,23 +108,14 @@ export default function Profile() {
 
   if (loading || !profile) {
     return (
-      <div className="p-8">
+      <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading profile...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8 space-y-8 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-          Your Profile
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your account and connected social platforms
-        </p>
-      </div>
-
+    <div className="space-y-8 max-w-4xl mx-auto">
       {/* Profile Settings */}
       <Card className="bg-gradient-card border-border/50">
         <CardHeader>

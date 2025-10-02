@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,29 +23,19 @@ interface PayoutMethod {
   details: any;
 }
 
-export default function Wallet() {
+export function WalletTab() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuth();
     fetchWallet();
     fetchEarningsData();
   }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
-  };
 
   const fetchWallet = async () => {
     setLoading(true);
@@ -69,7 +58,6 @@ export default function Wallet() {
     } else {
       setWallet(data);
       
-      // Parse payout methods if they exist
       if (data?.payout_details) {
         const methods = Array.isArray(data.payout_details) 
           ? data.payout_details 
@@ -88,7 +76,6 @@ export default function Wallet() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Fetch submissions for earnings data
     const { data: submissions } = await supabase
       .from("campaign_submissions")
       .select("earnings, submitted_at")
@@ -96,7 +83,6 @@ export default function Wallet() {
       .order("submitted_at", { ascending: true });
 
     if (submissions && submissions.length > 0) {
-      // Process monthly data (last 6 months)
       const monthlyMap = new Map();
       const now = new Date();
       
@@ -121,7 +107,6 @@ export default function Wallet() {
 
       setMonthlyData(monthly);
 
-      // Process weekly data (last 7 days)
       const weeklyMap = new Map();
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       
@@ -148,7 +133,6 @@ export default function Wallet() {
 
       setWeeklyData(weekly);
     } else {
-      // Empty state
       setMonthlyData([]);
       setWeeklyData([]);
     }
@@ -157,11 +141,6 @@ export default function Wallet() {
   const handleAddPayoutMethod = async (method: string, details: any) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !wallet) return;
-
-    const newMethod = {
-      method,
-      details,
-    };
 
     const updatedMethods = [...payoutMethods, { 
       id: `method-${Date.now()}`, 
@@ -249,34 +228,14 @@ export default function Wallet() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading wallet...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8 space-y-6">
-      {/* Header with Request Payout */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            Wallet & Earnings
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your earnings and payout methods
-          </p>
-        </div>
-        <Button 
-          size="lg" 
-          onClick={handleRequestPayout}
-          className="h-12 px-6"
-        >
-          <DollarSign className="mr-2 h-5 w-5" />
-          Request Payout
-        </Button>
-      </div>
-
+    <div className="space-y-6">
       {/* Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-gradient-card border-border/50">
@@ -421,10 +380,19 @@ export default function Wallet() {
               Manage how you receive your earnings
             </p>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Method
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Method
+            </Button>
+            <Button 
+              onClick={handleRequestPayout}
+              variant="default"
+            >
+              <DollarSign className="mr-2 h-4 w-4" />
+              Request Payout
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {payoutMethods.length === 0 ? (

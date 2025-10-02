@@ -10,7 +10,7 @@ const mockLeaderboard = [
   { rank: 5, username: "tiktok_pro", earnings: 8600, views: 1.3 },
 ];
 
-export default function Leaderboard() {
+export function LeaderboardTab() {
   const getRankColor = (rank: number) => {
     switch (rank) {
       case 1:
@@ -38,16 +38,7 @@ export default function Leaderboard() {
   };
 
   return (
-    <div className="p-8 space-y-8 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-          Leaderboard
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Top performing creators this month
-        </p>
-      </div>
-
+    <div className="space-y-8 max-w-5xl mx-auto">
       {/* Top 3 Podium */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {/* 2nd Place */}
