@@ -44,7 +44,7 @@ export function AppSidebar() {
                       isActive={isActive}
                       className="py-0.5 text-[14.4px] font-medium font-instrument data-[active=true]:bg-primary data-[active=true]:text-white hover:bg-sidebar-accent text-[#C0C0C0]"
                     >
-                      <item.icon className={`h-[22px] w-[22px] ${isActive ? 'text-white' : 'text-[#C0C0C0]'}`} />
+                      <item.icon className={`h-[22px] w-[22px] ${isActive ? 'text-white' : 'text-[#6A6A6A]'}`} />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
