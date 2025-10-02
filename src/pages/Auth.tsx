@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import viralityLogo from "@/assets/virality-logo.webp";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -112,8 +113,8 @@ export default function Auth() {
       <Card className="w-full max-w-md relative z-10 border-0 bg-card/95 backdrop-blur-sm shadow-glow">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-primary flex items-center justify-center font-bold text-3xl shadow-glow">
-              V
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-glow overflow-hidden">
+              <img src={viralityLogo} alt="Virality Logo" className="w-full h-full object-cover" />
             </div>
           </div>
           <CardTitle className="text-3xl font-bold">Welcome to Virality</CardTitle>
