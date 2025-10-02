@@ -30,23 +30,26 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="border-none">
       <SidebarContent className="pt-6">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    onClick={() => handleTabClick(item.tab)}
-                    isActive={currentTab === item.tab}
-                    className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground hover:bg-sidebar-accent"
-                  >
-                    <item.icon className="h-5 w-5 text-muted-foreground data-[active=true]:text-primary-foreground" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                const isActive = currentTab === item.tab;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      onClick={() => handleTabClick(item.tab)}
+                      isActive={isActive}
+                      className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground hover:bg-sidebar-accent"
+                    >
+                      <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-muted-foreground'}`} />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
