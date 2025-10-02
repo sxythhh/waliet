@@ -101,191 +101,235 @@ export default function PayoutMethodDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-card border-border max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">Your Payout Methods</DialogTitle>
-          <p className="text-muted-foreground">
-            Get ready to receive your payouts! ({currentMethodCount}/3 methods added)
-          </p>
-          {isMaxMethodsReached && (
-            <p className="text-sm text-destructive">
-              Maximum limit reached. Please remove a method to add a new one.
+      <DialogContent className="sm:max-w-[700px] bg-[#0a0a0a] border-[#1a1a1a] max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="border-b border-[#1a1a1a] pb-6">
+          <DialogTitle className="text-3xl font-bold">Payout Methods</DialogTitle>
+          <div className="flex items-center justify-between pt-2">
+            <p className="text-sm text-muted-foreground">
+              Configure how you want to receive payments
             </p>
+            <span className="text-xs font-medium px-3 py-1 rounded-full bg-[#1a1a1a] border border-[#2a2a2a]">
+              {currentMethodCount}/3 Added
+            </span>
+          </div>
+          {isMaxMethodsReached && (
+            <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+              <p className="text-sm text-destructive font-medium">
+                Maximum limit reached. Remove a method to add a new one.
+              </p>
+            </div>
           )}
         </DialogHeader>
 
         {!isMaxMethodsReached && (
-          <Tabs defaultValue="crypto" value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="crypto" className="gap-1 text-xs">
-                <Wallet className="h-3 w-3" />
-                Crypto
-              </TabsTrigger>
-              <TabsTrigger value="paypal" className="gap-1 text-xs">
-                <CreditCard className="h-3 w-3" />
-                PayPal
-              </TabsTrigger>
-              <TabsTrigger value="bank" className="gap-1 text-xs">
-                <CreditCard className="h-3 w-3" />
-                Bank
-              </TabsTrigger>
-            </TabsList>
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="wise" className="gap-1 text-xs">
-                <CreditCard className="h-3 w-3" />
-                Wise
-              </TabsTrigger>
-              <TabsTrigger value="revolut" className="gap-1 text-xs">
-                <CreditCard className="h-3 w-3" />
-                Revolut
-              </TabsTrigger>
-              <TabsTrigger value="tips" className="gap-1 text-xs">
-                <CreditCard className="h-3 w-3" />
-                TIPS
-              </TabsTrigger>
-            </TabsList>
-
-          <TabsContent value="crypto" className="space-y-5 mt-0">
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Network</Label>
-              <div className="flex flex-wrap gap-2">
-                {cryptoNetworks.map((network) => (
+          <div className="flex gap-6 pt-6">
+            {/* Payment Method Sidebar */}
+            <div className="w-48 flex-shrink-0 space-y-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 px-3">
+                Select Method
+              </p>
+              {[
+                { id: "crypto", icon: Wallet, label: "Crypto Wallet" },
+                { id: "paypal", icon: CreditCard, label: "PayPal" },
+                { id: "bank", icon: CreditCard, label: "Bank Transfer" },
+                { id: "wise", icon: CreditCard, label: "Wise" },
+                { id: "revolut", icon: CreditCard, label: "Revolut" },
+                { id: "tips", icon: CreditCard, label: "TIPS" },
+              ].map((method) => {
+                const Icon = method.icon;
+                const isActive = selectedMethod === method.id;
+                return (
                   <button
-                    key={network.id}
-                    type="button"
-                    onClick={() => setSelectedNetwork(network.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedNetwork === network.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted hover:bg-muted/80"
+                    key={method.id}
+                    onClick={() => setSelectedMethod(method.id as any)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                      isActive
+                        ? "bg-[#1a1a1a] border border-primary/30"
+                        : "bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#2a2a2a]"
                     }`}
                   >
-                    {network.name}
+                    <Icon className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-sm font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
+                      {method.label}
+                    </span>
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="wallet-address" className="text-sm font-medium">Wallet Address</Label>
-              <Input
-                id="wallet-address"
-                placeholder="Enter your wallet address"
-                value={walletAddress}
-                onChange={(e) => setWalletAddress(e.target.value)}
-                className="h-11"
-              />
-            </div>
-          </TabsContent>
+            {/* Content Area */}
+            <div className="flex-1 bg-[#0f0f0f] rounded-xl border border-[#1a1a1a] p-6">
+              {selectedMethod === "crypto" && (
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
+                      Select Network
+                    </Label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {cryptoNetworks.map((network) => (
+                        <button
+                          key={network.id}
+                          type="button"
+                          onClick={() => setSelectedNetwork(network.id)}
+                          className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border ${
+                            selectedNetwork === network.id
+                              ? "bg-primary/10 text-primary border-primary/30"
+                              : "bg-[#1a1a1a] text-muted-foreground border-[#2a2a2a] hover:border-[#3a3a3a]"
+                          }`}
+                        >
+                          {network.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-          <TabsContent value="paypal" className="space-y-5 mt-0">
-            <div className="space-y-2">
-              <Label htmlFor="paypal-email" className="text-sm font-medium">PayPal Email</Label>
-              <Input
-                id="paypal-email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={paypalEmail}
-                onChange={(e) => setPaypalEmail(e.target.value)}
-                className="h-11"
-              />
-            </div>
-          </TabsContent>
+                  <div className="space-y-3">
+                    <Label htmlFor="wallet-address" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                      Wallet Address
+                    </Label>
+                    <Input
+                      id="wallet-address"
+                      placeholder="Enter your wallet address"
+                      value={walletAddress}
+                      onChange={(e) => setWalletAddress(e.target.value)}
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                    />
+                  </div>
+                </div>
+              )}
 
-          <TabsContent value="bank" className="space-y-5 mt-0">
-            <div className="space-y-2">
-              <Label htmlFor="bank-name" className="text-sm font-medium">Bank Name</Label>
-              <Input
-                id="bank-name"
-                placeholder="Enter bank name"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="account-holder" className="text-sm font-medium">Account Holder Name</Label>
-              <Input
-                id="account-holder"
-                placeholder="Full name on account"
-                value={accountHolderName}
-                onChange={(e) => setAccountHolderName(e.target.value)}
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="account-number" className="text-sm font-medium">Account Number</Label>
-              <Input
-                id="account-number"
-                placeholder="Enter account number"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="routing-number" className="text-sm font-medium">Routing Number</Label>
-              <Input
-                id="routing-number"
-                placeholder="Enter routing number"
-                value={routingNumber}
-                onChange={(e) => setRoutingNumber(e.target.value)}
-                className="h-11"
-              />
-            </div>
-          </TabsContent>
+              {selectedMethod === "paypal" && (
+                <div className="space-y-3">
+                  <Label htmlFor="paypal-email" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    PayPal Email
+                  </Label>
+                  <Input
+                    id="paypal-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={paypalEmail}
+                    onChange={(e) => setPaypalEmail(e.target.value)}
+                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                  />
+                </div>
+              )}
 
-          <TabsContent value="wise" className="space-y-5 mt-0">
-            <div className="space-y-2">
-              <Label htmlFor="wise-email" className="text-sm font-medium">Wise Email</Label>
-              <Input
-                id="wise-email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={wiseEmail}
-                onChange={(e) => setWiseEmail(e.target.value)}
-                className="h-11"
-              />
-            </div>
-          </TabsContent>
+              {selectedMethod === "bank" && (
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <Label htmlFor="bank-name" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                      Bank Name
+                    </Label>
+                    <Input
+                      id="bank-name"
+                      placeholder="Enter bank name"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="account-holder" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                      Account Holder Name
+                    </Label>
+                    <Input
+                      id="account-holder"
+                      placeholder="Full name on account"
+                      value={accountHolderName}
+                      onChange={(e) => setAccountHolderName(e.target.value)}
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <Label htmlFor="account-number" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                        Account Number
+                      </Label>
+                      <Input
+                        id="account-number"
+                        placeholder="Account #"
+                        value={accountNumber}
+                        onChange={(e) => setAccountNumber(e.target.value)}
+                        className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="routing-number" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                        Routing Number
+                      </Label>
+                      <Input
+                        id="routing-number"
+                        placeholder="Routing #"
+                        value={routingNumber}
+                        onChange={(e) => setRoutingNumber(e.target.value)}
+                        className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          <TabsContent value="revolut" className="space-y-5 mt-0">
-            <div className="space-y-2">
-              <Label htmlFor="revolut-email" className="text-sm font-medium">Revolut Email</Label>
-              <Input
-                id="revolut-email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={revolutEmail}
-                onChange={(e) => setRevolutEmail(e.target.value)}
-                className="h-11"
-              />
-            </div>
-          </TabsContent>
+              {selectedMethod === "wise" && (
+                <div className="space-y-3">
+                  <Label htmlFor="wise-email" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    Wise Email
+                  </Label>
+                  <Input
+                    id="wise-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={wiseEmail}
+                    onChange={(e) => setWiseEmail(e.target.value)}
+                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                  />
+                </div>
+              )}
 
-          <TabsContent value="tips" className="space-y-5 mt-0">
-            <div className="space-y-2">
-              <Label htmlFor="tips-username" className="text-sm font-medium">TIPS Username</Label>
-              <Input
-                id="tips-username"
-                placeholder="Enter your TIPS username"
-                value={tipsUsername}
-                onChange={(e) => setTipsUsername(e.target.value)}
-                className="h-11"
-              />
-            </div>
-          </TabsContent>
+              {selectedMethod === "revolut" && (
+                <div className="space-y-3">
+                  <Label htmlFor="revolut-email" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    Revolut Email
+                  </Label>
+                  <Input
+                    id="revolut-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={revolutEmail}
+                    onChange={(e) => setRevolutEmail(e.target.value)}
+                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                  />
+                </div>
+              )}
 
-          <div className="flex gap-3 pt-6 border-t mt-6">
+              {selectedMethod === "tips" && (
+                <div className="space-y-3">
+                  <Label htmlFor="tips-username" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    TIPS Username
+                  </Label>
+                  <Input
+                    id="tips-username"
+                    placeholder="Enter your TIPS username"
+                    value={tipsUsername}
+                    onChange={(e) => setTipsUsername(e.target.value)}
+                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:border-primary/50"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!isMaxMethodsReached && (
+          <div className="flex gap-3 pt-6 border-t border-[#1a1a1a]">
             <Button
               variant="outline"
-              className="flex-1"
+              className="flex-1 h-12 bg-[#0f0f0f] border-[#2a2a2a] hover:bg-[#1a1a1a]"
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
             <Button
-              className="flex-1"
+              className="flex-1 h-12 bg-primary hover:bg-primary/90"
               onClick={handleSave}
               disabled={
                 (selectedMethod === "crypto" && !walletAddress) ||
@@ -299,12 +343,15 @@ export default function PayoutMethodDialog({
               Add Method
             </Button>
           </div>
-        </Tabs>
         )}
 
         {isMaxMethodsReached && (
-          <div className="flex justify-end pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex justify-end pt-4 border-t border-[#1a1a1a]">
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="bg-[#0f0f0f] border-[#2a2a2a] hover:bg-[#1a1a1a]"
+            >
               Close
             </Button>
           </div>
