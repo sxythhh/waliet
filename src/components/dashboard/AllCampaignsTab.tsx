@@ -43,6 +43,7 @@ export function AllCampaignsTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [joinedCampaignIds, setJoinedCampaignIds] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -52,34 +53,52 @@ export function AllCampaignsTab() {
 
   useEffect(() => {
     filterAndSortCampaigns();
-  }, [campaigns, searchQuery, platformFilter, sortBy]);
+  }, [campaigns, searchQuery, platformFilter, sortBy, joinedCampaignIds]);
 
   const fetchCampaigns = async () => {
     setLoading(true);
     
-    const { data, error } = await supabase
-      .from("campaigns")
-      .select(`
-        *,
-        brands (
-          logo_url
-        )
-      `)
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
+    try {
+      // Get current user's approved submissions
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: submissions } = await supabase
+          .from("campaign_submissions")
+          .select("campaign_id")
+          .eq("creator_id", user.id)
+          .eq("status", "approved");
+        
+        if (submissions) {
+          setJoinedCampaignIds(submissions.map(s => s.campaign_id));
+        }
+      }
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch campaigns"
-      });
-    } else {
-      const campaignsWithLogos = (data || []).map(campaign => ({
-        ...campaign,
-        brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url
-      }));
-      setCampaigns(campaignsWithLogos);
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select(`
+          *,
+          brands (
+            logo_url
+          )
+        `)
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch campaigns"
+        });
+      } else {
+        const campaignsWithLogos = (data || []).map(campaign => ({
+          ...campaign,
+          brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url
+        }));
+        setCampaigns(campaignsWithLogos);
+      }
+    } catch (error) {
+      console.error("Error fetching campaigns:", error);
     }
     
     setLoading(false);
@@ -87,6 +106,9 @@ export function AllCampaignsTab() {
 
   const filterAndSortCampaigns = () => {
     let filtered = [...campaigns];
+
+    // Filter out joined campaigns
+    filtered = filtered.filter(campaign => !joinedCampaignIds.includes(campaign.id));
 
     // Apply search filter
     if (searchQuery) {
@@ -238,7 +260,14 @@ export function AllCampaignsTab() {
               <Card
                 key={campaign.id}
                 className="group bg-card border-2 transition-all duration-300 overflow-hidden animate-fade-in cursor-pointer hover:border-primary/50"
-                onClick={() => navigate(`/campaign/join/${campaign.id}`)}
+                onClick={() => {
+                  // If preview_url exists, go to preview page, otherwise go to join page
+                  if ((campaign as any).preview_url) {
+                    navigate(`/campaign/preview/${campaign.id}`);
+                  } else {
+                    navigate(`/campaign/join/${campaign.id}`);
+                  }
+                }}
               >
                 <div className="flex flex-col sm:flex-row">
                   {/* Banner Image */}

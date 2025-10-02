@@ -46,6 +46,7 @@ interface Campaign {
   start_date: string;
   end_date: string;
   created_at: string;
+  preview_url: string | null;
 }
 
 export default function AdminCampaigns() {
@@ -63,6 +64,7 @@ export default function AdminCampaigns() {
     budget: "",
     rpm_rate: "",
     status: "active",
+    preview_url: "",
   });
   const { toast } = useToast();
 
@@ -118,6 +120,7 @@ export default function AdminCampaigns() {
       budget: campaign.budget.toString(),
       rpm_rate: campaign.rpm_rate.toString(),
       status: campaign.status,
+      preview_url: campaign.preview_url || "",
     });
     setEditDialogOpen(true);
   };
@@ -134,6 +137,7 @@ export default function AdminCampaigns() {
         budget: parseFloat(editForm.budget),
         rpm_rate: parseFloat(editForm.rpm_rate),
         status: editForm.status,
+        preview_url: editForm.preview_url || null,
       })
       .eq("id", selectedCampaign.id);
 
@@ -394,6 +398,18 @@ export default function AdminCampaigns() {
                 <option value="paused">Paused</option>
                 <option value="completed">Completed</option>
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="preview_url">Preview URL</Label>
+              <Input
+                id="preview_url"
+                type="url"
+                placeholder="https://..."
+                value={editForm.preview_url}
+                onChange={(e) => setEditForm({ ...editForm, preview_url: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">URL to embed for non-members viewing this campaign</p>
             </div>
 
             <div className="flex gap-2 justify-end">

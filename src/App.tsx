@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CampaignDetail from "./pages/CampaignDetail";
 import CampaignJoin from "./pages/CampaignJoin";
+import CampaignPreview from "./pages/CampaignPreview";
 import BrandDashboard from "./pages/BrandDashboard";
 import BrandManagement from "./pages/BrandManagement";
 import BrandAssets from "./pages/BrandAssets";
@@ -88,6 +89,8 @@ const App = () => (
           <Route path="/join/:slug" element={<CampaignJoin />} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
           <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
+          <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
+          <Route path="/campaign/join/:id" element={<CampaignJoin />} />
           <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
           <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
           <Route path="/admin/campaigns" element={<AdminLayout><AdminCampaigns /></AdminLayout>} />

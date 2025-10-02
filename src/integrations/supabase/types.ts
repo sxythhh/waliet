@@ -122,12 +122,14 @@ export type Database = {
           brand_logo_url: string | null
           brand_name: string
           budget: number
+          budget_used: number | null
           created_at: string | null
           description: string | null
           embed_url: string | null
           end_date: string | null
           guidelines: string | null
           id: string
+          preview_url: string | null
           rpm_rate: number
           slug: string
           start_date: string | null
@@ -143,12 +145,14 @@ export type Database = {
           brand_logo_url?: string | null
           brand_name: string
           budget: number
+          budget_used?: number | null
           created_at?: string | null
           description?: string | null
           embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
           id?: string
+          preview_url?: string | null
           rpm_rate: number
           slug: string
           start_date?: string | null
@@ -164,12 +168,14 @@ export type Database = {
           brand_logo_url?: string | null
           brand_name?: string
           budget?: number
+          budget_used?: number | null
           created_at?: string | null
           description?: string | null
           embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
           id?: string
+          preview_url?: string | null
           rpm_rate?: number
           slug?: string
           start_date?: string | null
