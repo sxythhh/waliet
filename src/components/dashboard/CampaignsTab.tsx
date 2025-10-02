@@ -163,31 +163,28 @@ export function CampaignsTab() {
               </div>}
 
             {/* Content Section */}
-            <CardContent className="p-6 pt-10 flex-1 flex flex-col gap-5">
+            <CardContent className="p-4 pt-8 flex-1 flex flex-col gap-3">
               {/* Header: Brand Name + RPM */}
               
               
-              {/* Title & Description */}
-              <div className="space-y-2">
+              {/* Title */}
+              <div>
                 <h3 className="text-xl font-bold line-clamp-2 leading-tight">
                   {campaign.title}
                 </h3>
-                
-                {campaign.description}
               </div>
 
               {/* Budget Section */}
-              <div className="relative bg-neutral-900/50 rounded-xl p-4">
+              <div className="relative bg-neutral-900/50 rounded-xl p-3">
                 <div className="flex items-end justify-between mb-2">
                   <div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Campaign Budget</span>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold">${budgetUsed.toLocaleString()}</span>
+                      <span className="text-lg font-bold">${budgetUsed.toLocaleString()}</span>
                       <span className="text-sm text-muted-foreground font-medium">of ${campaign.budget.toLocaleString()}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-bold text-primary">{budgetPercentage.toFixed(0)}%</span>
+                    <span className="text-lg font-bold text-primary">{budgetPercentage.toFixed(0)}%</span>
                   </div>
                 </div>
                 <div className="relative h-2 bg-neutral-950 rounded-full overflow-hidden">
