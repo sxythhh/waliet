@@ -383,17 +383,26 @@ export function WalletTab() {
                   />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "rgba(0, 0, 0, 0.85)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
                       borderRadius: "12px",
                       padding: "12px 16px",
+                      fontFamily: "Chakra Petch, sans-serif",
+                      letterSpacing: "-0.5px",
                     }}
                     labelStyle={{
-                      color: "hsl(var(--foreground))",
+                      color: "#ffffff",
                       fontWeight: 600,
                       marginBottom: "4px",
+                      fontFamily: "Chakra Petch, sans-serif",
+                      letterSpacing: "-0.5px",
                     }}
                     formatter={(value: number) => [`$${value.toFixed(2)}`, 'Balance']}
+                    itemStyle={{
+                      color: "#60a5fa",
+                      fontFamily: "Chakra Petch, sans-serif",
+                      letterSpacing: "-0.5px",
+                    }}
                   />
                   <Area 
                     type="monotone" 

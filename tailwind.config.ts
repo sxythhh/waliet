@@ -15,6 +15,7 @@ export default {
     extend: {
       fontFamily: {
         'instrument': ['Instrument Sans', 'sans-serif'],
+        'chakra': ['Chakra Petch', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
