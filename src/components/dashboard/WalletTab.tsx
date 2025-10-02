@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -837,13 +837,13 @@ export function WalletTab() {
               {transactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border/50"
+                  className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <div className={`h-11 w-11 rounded-lg flex items-center justify-center border ${
+                    <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${
                       transaction.type === 'earning' 
-                        ? 'bg-green-500/5 border-green-500/20' 
-                        : 'bg-red-500/5 border-red-500/20'
+                        ? 'bg-green-500/10' 
+                        : 'bg-red-500/10'
                     }`}>
                       {transaction.type === 'earning' ? (
                         <TrendingUp className="h-5 w-5 text-green-500" />
@@ -862,7 +862,7 @@ export function WalletTab() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5">
+                      <div className="flex items-center gap-2 text-xs text-foreground/70 mb-0.5">
                         {transaction.type === 'earning' ? (
                           <>
                             <span className="truncate">{transaction.source}</span>
@@ -876,9 +876,10 @@ export function WalletTab() {
                           </>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground/60">
-                        {format(transaction.date, 'MMM dd, yyyy • HH:mm')}
-                      </p>
+                      <div className="flex items-center gap-1.5 text-xs text-foreground/50">
+                        <Clock className="h-3 w-3" />
+                        <span>{format(transaction.date, 'MMM dd, yyyy • HH:mm')}</span>
+                      </div>
                     </div>
                   </div>
                   <div 
