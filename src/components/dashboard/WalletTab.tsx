@@ -536,7 +536,7 @@ export function WalletTab() {
         </Button>
       </div>
 
-      {/* Earnings Graph and Recent Transactions Grid */}
+      {/* Earnings Graph and Recent Transactions - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Earnings Graph */}
         <Card className="bg-card border-0">
@@ -625,6 +625,67 @@ export function WalletTab() {
           </div>
         </CardContent>
       </Card>
+
+        {/* Recent Transactions */}
+        <Card className="bg-card border-0">
+        <CardHeader className="px-[24px] py-0">
+          <CardTitle className="text-lg font-semibold py-[10px]">Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {transactions.length === 0 ? <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">No transactions yet</p>
+            </div> : <div className="space-y-3">
+              {transactions.map(transaction => <div 
+                  key={transaction.id} 
+                  className="flex items-center justify-between p-4 rounded-lg bg-[#101011] cursor-pointer hover:bg-[#151516] transition-colors"
+                  onClick={() => {
+                    setSelectedTransaction(transaction);
+                    setTransactionSheetOpen(true);
+                  }}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${transaction.type === 'earning' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      {transaction.type === 'earning' ? <TrendingUp className="h-5 w-5 text-green-500" /> : <ArrowDownLeft className="h-5 w-5 text-red-500" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-bold" style={{
+                    fontFamily: 'Chakra Petch, sans-serif',
+                    letterSpacing: '-0.5px'
+                  }}>
+                          {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
+                        </p>
+                        {transaction.status && <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'} className="text-xs capitalize">
+                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                          </Badge>}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-foreground/70 mb-0.5">
+                        {transaction.type === 'earning' ? <>
+                            <span className="truncate">{transaction.source}</span>
+                            <span>→</span>
+                            <span>{transaction.destination}</span>
+                          </> : <>
+                            <span>To</span>
+                            <span className="truncate">{transaction.destination}</span>
+                          </>}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-foreground/50">
+                        <Clock className="h-3 w-3" />
+                        <span className="">{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
+              fontFamily: 'Chakra Petch, sans-serif',
+              letterSpacing: '-0.5px'
+            }}>
+                    {transaction.type === 'earning' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                  </div>
+                </div>)}
+            </div>}
+        </CardContent>
+      </Card>
+      </div>
 
       {/* Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -798,68 +859,7 @@ export function WalletTab() {
               </div>}
           </div>
          </CardContent>
-      </Card>
-
-        {/* Recent Transactions */}
-        <Card className="bg-card border-0">
-        <CardHeader className="px-[24px] py-0">
-          <CardTitle className="text-lg font-semibold py-[10px]">Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {transactions.length === 0 ? <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">No transactions yet</p>
-            </div> : <div className="space-y-3">
-              {transactions.map(transaction => <div 
-                  key={transaction.id} 
-                  className="flex items-center justify-between p-4 rounded-lg bg-[#101011] cursor-pointer hover:bg-[#151516] transition-colors"
-                  onClick={() => {
-                    setSelectedTransaction(transaction);
-                    setTransactionSheetOpen(true);
-                  }}
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${transaction.type === 'earning' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                      {transaction.type === 'earning' ? <TrendingUp className="h-5 w-5 text-green-500" /> : <ArrowDownLeft className="h-5 w-5 text-red-500" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-bold" style={{
-                    fontFamily: 'Chakra Petch, sans-serif',
-                    letterSpacing: '-0.5px'
-                  }}>
-                          {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
-                        </p>
-                        {transaction.status && <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'} className="text-xs capitalize">
-                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                          </Badge>}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-foreground/70 mb-0.5">
-                        {transaction.type === 'earning' ? <>
-                            <span className="truncate">{transaction.source}</span>
-                            <span>→</span>
-                            <span>{transaction.destination}</span>
-                          </> : <>
-                            <span>To</span>
-                            <span className="truncate">{transaction.destination}</span>
-                          </>}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-foreground/50">
-                        <Clock className="h-3 w-3" />
-                        <span className="">{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
-              fontFamily: 'Chakra Petch, sans-serif',
-              letterSpacing: '-0.5px'
-            }}>
-                    {transaction.type === 'earning' ? '+' : '-'}${transaction.amount.toFixed(2)}
-                  </div>
-                </div>)}
-            </div>}
-        </CardContent>
-      </Card>
-      </div>
+       </Card>
 
       <PayoutMethodDialog
         open={dialogOpen} 
