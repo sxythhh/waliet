@@ -149,9 +149,7 @@ export function CampaignsTab() {
                 
                 {/* Status Badge */}
                 {campaign.submission_status && <div className="absolute top-4 right-4">
-                    <Badge className={`backdrop-blur-sm font-medium text-xs ${campaign.submission_status === 'pending' ? 'bg-yellow-500/90 text-white border-0' : campaign.submission_status === 'approved' ? 'bg-green-500/90 text-white border-0' : 'bg-red-500/90 text-white border-0'}`}>
-                      {campaign.submission_status.charAt(0).toUpperCase() + campaign.submission_status.slice(1)}
-                    </Badge>
+                    
                   </div>}
 
               </div>}
