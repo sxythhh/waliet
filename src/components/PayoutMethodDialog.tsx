@@ -15,12 +15,16 @@ interface PayoutMethodDialogProps {
   currentMethodCount: number;
 }
 
+const cryptoCurrencies = [
+  { id: "usdt", name: "USDT" },
+  { id: "usdc", name: "USDC" },
+];
+
 const cryptoNetworks = [
-  { id: "usdt-eth", name: "USDT (Eth)" },
-  { id: "sol", name: "SOL" },
-  { id: "ltc", name: "LTC" },
-  { id: "eth", name: "ETH" },
-  { id: "btc", name: "BTC" },
+  { id: "ethereum", name: "Ethereum" },
+  { id: "optimism", name: "Optimism" },
+  { id: "solana", name: "Solana" },
+  { id: "polygon", name: "Polygon" },
 ];
 
 export default function PayoutMethodDialog({
@@ -30,6 +34,7 @@ export default function PayoutMethodDialog({
   currentMethodCount,
 }: PayoutMethodDialogProps) {
   const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "bank" | "wise" | "revolut" | "tips">("crypto");
+  const [selectedCurrency, setSelectedCurrency] = useState(cryptoCurrencies[0].id);
   const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("");
@@ -53,6 +58,7 @@ export default function PayoutMethodDialog({
     if (selectedMethod === "crypto") {
       if (!walletAddress) return;
       onSave("crypto", {
+        currency: selectedCurrency,
         network: selectedNetwork,
         address: walletAddress,
       });
@@ -173,9 +179,31 @@ export default function PayoutMethodDialog({
                 <div className="space-y-6">
                   <div>
                     <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
+                      Select Currency
+                    </Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {cryptoCurrencies.map((currency) => (
+                        <button
+                          key={currency.id}
+                          type="button"
+                          onClick={() => setSelectedCurrency(currency.id)}
+                          className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border ${
+                            selectedCurrency === currency.id
+                              ? "bg-primary/10 text-primary border-primary/30"
+                              : "bg-[#1a1a1a] text-muted-foreground border-[#2a2a2a] hover:border-[#3a3a3a]"
+                          }`}
+                        >
+                          {currency.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
                       Select Network
                     </Label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       {cryptoNetworks.map((network) => (
                         <button
                           key={network.id}
