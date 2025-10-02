@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, Wallet } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -39,6 +39,11 @@ const menuItems = [
     title: "Payouts",
     icon: DollarSign,
     path: "/admin/payouts",
+  },
+  {
+    title: "Wallets",
+    icon: Wallet,
+    path: "/admin/wallets",
   },
   {
     title: "Training Courses",
