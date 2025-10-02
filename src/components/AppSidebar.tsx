@@ -1,4 +1,4 @@
-import { Home, DollarSign, User, TrendingUp, Compass } from "lucide-react";
+import { Home, DollarSign, User, TrendingUp, Compass, Rocket } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Sidebar,
@@ -10,7 +10,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Campaigns", tab: "campaigns", icon: Home },
@@ -54,6 +56,25 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter className="p-4 border-t">
+        <Button
+          asChild
+          className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-medium"
+        >
+          <a 
+            href="https://forms.virality.gg/launch" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <Rocket className="h-4 w-4" />
+            Launch Campaign
+          </a>
+        </Button>
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          Are you a brand? Work with us
+        </p>
+      </SidebarFooter>
     </Sidebar>
   );
 }
