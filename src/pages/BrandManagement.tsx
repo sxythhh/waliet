@@ -55,9 +55,14 @@ interface Submission {
   earnings: number;
   submitted_at: string;
   creator_id: string;
+  platform: string;
+  content_url: string;
   profiles: {
     username: string;
     avatar_url: string | null;
+    trust_score: number;
+    demographics_score: number;
+    views_score: number;
   };
 }
 
@@ -135,7 +140,9 @@ export default function BrandManagement() {
           earnings,
           submitted_at,
           creator_id,
-          profiles (username, avatar_url)
+          platform,
+          content_url,
+          profiles (username, avatar_url, trust_score, demographics_score, views_score)
         `
         )
         .eq("campaign_id", selectedCampaignId)
@@ -505,62 +512,150 @@ export default function BrandManagement() {
 
           {/* Applications Tab */}
           <TabsContent value="applications">
-            <Card className="bg-[#202020] border-white/10">
+            <Card className="bg-gradient-card border-border/50">
               <CardHeader>
-                <CardTitle className="text-white">Pending Applications</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Pending Applications
+                  <Badge variant="secondary" className="ml-2">
+                    {pendingSubmissions.length}
+                  </Badge>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-white/60">Creator</TableHead>
-                      <TableHead className="text-white/60">Applied</TableHead>
-                      <TableHead className="text-white/60">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingSubmissions.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center text-white/40">
-                          No pending applications
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      pendingSubmissions.map((submission) => (
-                        <TableRow key={submission.id} className="border-white/10">
-                          <TableCell className="text-white">
-                            {submission.profiles?.username || "Unknown"}
-                          </TableCell>
-                          <TableCell className="text-white">
-                            {new Date(submission.submitted_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() =>
-                                  handleApplicationAction(submission.id, "approved")
-                                }
-                                className="bg-green-500 hover:bg-green-600"
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() =>
-                                  handleApplicationAction(submission.id, "rejected")
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
+              <CardContent className="space-y-4">
+                {pendingSubmissions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <p className="text-muted-foreground">No pending applications</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingSubmissions.map((submission) => (
+                      <Card key={submission.id} className="bg-background/50 border-border/50 overflow-hidden">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            {/* Creator Avatar & Info */}
+                            <div className="flex-shrink-0">
+                              {submission.profiles?.avatar_url ? (
+                                <img
+                                  src={submission.profiles.avatar_url}
+                                  alt={submission.profiles.username}
+                                  className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                                  <Users className="h-8 w-8 text-primary" />
+                                </div>
+                              )}
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+
+                            {/* Main Content */}
+                            <div className="flex-1 space-y-3">
+                              {/* Creator Name & Platform */}
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h3 className="font-semibold text-lg">
+                                    {submission.profiles?.username || "Unknown"}
+                                  </h3>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-xs">
+                                      {submission.platform || "Unknown Platform"}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      Applied {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric', 
+                                        year: 'numeric' 
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      handleApplicationAction(submission.id, "approved")
+                                    }
+                                    className="bg-success/20 hover:bg-success/30 text-success border border-success/30"
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() =>
+                                      handleApplicationAction(submission.id, "rejected")
+                                    }
+                                    className="bg-destructive/20 hover:bg-destructive/30"
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Creator Stats Grid */}
+                              <div className="grid grid-cols-3 gap-4 pt-3 border-t border-border/50">
+                                <div className="flex items-center gap-2">
+                                  <div className="p-2 rounded-lg bg-primary/10">
+                                    <TrendingUp className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Trust Score</p>
+                                    <p className="font-semibold">
+                                      {submission.profiles?.trust_score || 0}/100
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <div className="p-2 rounded-lg bg-success/10">
+                                    <Eye className="h-4 w-4 text-success" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Views Score</p>
+                                    <p className="font-semibold">
+                                      {submission.profiles?.views_score || 0}/100
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <div className="p-2 rounded-lg bg-warning/10">
+                                    <Users className="h-4 w-4 text-warning" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Demographics</p>
+                                    <p className="font-semibold">
+                                      {submission.profiles?.demographics_score || 0}/100
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Content URL if available */}
+                              {submission.content_url && (
+                                <div className="pt-2">
+                                  <a
+                                    href={submission.content_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                                  >
+                                    View submitted content →
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
