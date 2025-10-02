@@ -46,14 +46,14 @@ interface Transaction {
   status?: string;
   metadata?: any;
 }
-type TimePeriod = '1W' | '1M' | '3M' | '1Y' | 'TW';
+type TimePeriod = '3D' | '1W' | '1M' | '3M' | '1Y' | 'TW';
 export function WalletTab() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
   const [earningsData, setEarningsData] = useState<EarningsDataPoint[]>([]);
   const [withdrawalData, setWithdrawalData] = useState<WithdrawalDataPoint[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1M');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('3D');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
@@ -78,6 +78,11 @@ export function WalletTab() {
   const getDateRange = () => {
     const now = new Date();
     switch (timePeriod) {
+      case '3D':
+        return {
+          start: subDays(now, 3),
+          end: now
+        };
       case '1W':
         return {
           start: subDays(now, 7),
@@ -135,7 +140,7 @@ export function WalletTab() {
     });
 
     // Generate date points for every day in the selected period
-    const days = timePeriod === '1W' || timePeriod === 'TW' ? 7 : timePeriod === '1M' ? 30 : timePeriod === '3M' ? 90 : 365;
+    const days = timePeriod === '3D' ? 3 : timePeriod === '1W' || timePeriod === 'TW' ? 7 : timePeriod === '1M' ? 30 : timePeriod === '3M' ? 90 : 365;
     const dataPoints: EarningsDataPoint[] = [];
 
     // Create data point for each day
@@ -193,7 +198,7 @@ export function WalletTab() {
     } = await supabase.from("payout_requests").select("amount, requested_at, status").eq("user_id", session.user.id).gte("requested_at", start.toISOString()).lte("requested_at", end.toISOString()).order("requested_at", {
       ascending: true
     });
-    const days = timePeriod === '1W' || timePeriod === 'TW' ? 7 : timePeriod === '1M' ? 30 : timePeriod === '3M' ? 90 : 365;
+    const days = timePeriod === '3D' ? 3 : timePeriod === '1W' || timePeriod === 'TW' ? 7 : timePeriod === '1M' ? 30 : timePeriod === '3M' ? 90 : 365;
     const dataPoints: WithdrawalDataPoint[] = [];
     for (let i = 0; i <= days; i++) {
       const currentDate = subDays(end, days - i);
@@ -520,6 +525,7 @@ export function WalletTab() {
   }
   const totalEarnings = earningsData.reduce((sum, point) => sum + point.amount, 0);
   const timePeriodLabels: Record<TimePeriod, string> = {
+    '3D': '3 Days',
     '1W': '1 Week',
     '1M': '1 Month',
     '3M': '3 Months',
