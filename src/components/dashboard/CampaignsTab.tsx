@@ -17,6 +17,7 @@ interface Campaign {
   status: string;
   start_date: string | null;
   banner_url: string | null;
+  submission_status?: string;
 }
 
 export function CampaignsTab() {
@@ -39,10 +40,10 @@ export function CampaignsTab() {
       return;
     }
 
-    // Get campaign IDs where user has submissions
+    // Get campaign IDs and their submission status
     const { data: submissions, error: submissionsError } = await supabase
       .from("campaign_submissions")
-      .select("campaign_id")
+      .select("campaign_id, status")
       .eq("creator_id", user.id);
 
     if (submissionsError) {
@@ -56,6 +57,7 @@ export function CampaignsTab() {
     }
 
     const campaignIds = submissions?.map(s => s.campaign_id) || [];
+    const submissionStatusMap = new Map(submissions?.map(s => [s.campaign_id, s.status]) || []);
     
     if (campaignIds.length === 0) {
       setCampaigns([]);
@@ -77,7 +79,12 @@ export function CampaignsTab() {
         description: "Failed to fetch campaigns",
       });
     } else {
-      setCampaigns(data || []);
+      // Add submission status to each campaign
+      const campaignsWithStatus = (data || []).map(campaign => ({
+        ...campaign,
+        submission_status: submissionStatusMap.get(campaign.id)
+      }));
+      setCampaigns(campaignsWithStatus);
     }
     setLoading(false);
   };
@@ -122,7 +129,21 @@ export function CampaignsTab() {
                 />
               </div>
             )}
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex gap-2">
+              {campaign.submission_status && (
+                <Badge 
+                  className={`font-bold text-base px-3 py-1 ${
+                    campaign.submission_status === 'pending' 
+                      ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' 
+                      : campaign.submission_status === 'approved'
+                      ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                      : 'bg-red-500/20 text-red-400 border-red-500/30'
+                  }`}
+                  variant="outline"
+                >
+                  {campaign.submission_status.charAt(0).toUpperCase() + campaign.submission_status.slice(1)}
+                </Badge>
+              )}
               <Badge className="bg-primary text-primary-foreground font-bold text-base px-3 py-1">
                 ${campaign.rpm_rate.toFixed(1)}/1K
               </Badge>
