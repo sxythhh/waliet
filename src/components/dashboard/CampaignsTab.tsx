@@ -160,10 +160,10 @@ export function CampaignsTab() {
             <CardContent className="p-4 pt-4 flex-1 flex flex-col gap-3">
               {/* Brand Logo + Title */}
               <div className="flex items-center gap-3">
-                {campaign.brand_logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ring-2 ring-border shadow-md">
+                {campaign.brand_logo_url && <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ring-2 ring-border shadow-md">
                     <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                   </div>}
-                <h3 className="text-xl font-bold line-clamp-2 leading-tight flex-1">
+                <h3 className="text-lg font-bold line-clamp-2 leading-tight flex-1">
                   {campaign.title}
                 </h3>
               </div>
