@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles, TrendingUp, DollarSign, Lock } from "lucide-react";
 import { CampaignsTab } from "@/components/dashboard/CampaignsTab";
-import { AllCampaignsTab } from "@/components/dashboard/AllCampaignsTab";
 import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
 import { WalletTab } from "@/components/dashboard/WalletTab";
 import { LeaderboardTab } from "@/components/dashboard/LeaderboardTab";
@@ -84,11 +83,6 @@ export default function Dashboard() {
         
         <TabsContent value="campaigns" className="mt-0 space-y-8">
           <CampaignsTab />
-          
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">All Campaigns</h2>
-            <AllCampaignsTab />
-          </div>
         </TabsContent>
         
         <TabsContent value="discover" className="mt-0">
