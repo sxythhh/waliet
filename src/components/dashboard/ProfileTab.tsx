@@ -76,7 +76,6 @@ export function ProfileTab() {
       .from("social_accounts")
       .select("*")
       .eq("user_id", session.user.id)
-      .gt("follower_count", 0)
       .eq("is_verified", true)
       .order("connected_at", { ascending: false });
 
