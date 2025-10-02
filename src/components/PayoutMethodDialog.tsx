@@ -139,8 +139,8 @@ export default function PayoutMethodDialog({
           <div className="flex gap-6 pt-6">
             {/* Payment Method Sidebar */}
             <div className="w-48 flex-shrink-0 space-y-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 px-3">
-                Select Method
+              <p className="font-medium text-muted-foreground mb-4 px-3" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                SELECT METHOD
               </p>
               {[
                 { id: "crypto", icon: Wallet, label: "Crypto Wallet", isLogo: false },
@@ -158,8 +158,8 @@ export default function PayoutMethodDialog({
                     onClick={() => setSelectedMethod(method.id as any)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                       isActive
-                        ? "bg-[#1a1a1a] border border-primary/30"
-                        : "bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#2a2a2a]"
+                        ? "bg-[#1a1a1a]"
+                        : "bg-[#0f0f0f] hover:bg-[#151515]"
                     }`}
                   >
                     {method.isLogo ? (
@@ -180,12 +180,12 @@ export default function PayoutMethodDialog({
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 bg-[#0f0f0f] rounded-xl border border-[#1a1a1a] p-6">
+            <div className="flex-1 bg-[#0f0f0f] rounded-xl p-6">
               {selectedMethod === "crypto" && (
                 <div className="space-y-6">
                   <div>
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 block">
-                      Select Currency
+                    <Label className="font-medium text-muted-foreground mb-4 block" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                      SELECT CURRENCY
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
                       {cryptoCurrencies.map((currency) => (
@@ -207,8 +207,8 @@ export default function PayoutMethodDialog({
                   </div>
 
                   <div>
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">
-                      Select Network
+                    <Label className="font-medium text-muted-foreground mb-3 block" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                      SELECT NETWORK
                     </Label>
                     <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
                       <SelectTrigger className="h-12 bg-[#1a1a1a] border-[#2a2a2a]">
@@ -239,8 +239,8 @@ export default function PayoutMethodDialog({
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="wallet-address" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                      Wallet Address
+                    <Label htmlFor="wallet-address" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                      WALLET ADDRESS
                     </Label>
                     <Input
                       id="wallet-address"
@@ -255,8 +255,8 @@ export default function PayoutMethodDialog({
 
               {selectedMethod === "paypal" && (
                 <div className="space-y-3">
-                  <Label htmlFor="paypal-email" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                    PayPal Email
+                  <Label htmlFor="paypal-email" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                    PAYPAL EMAIL
                   </Label>
                   <Input
                     id="paypal-email"
@@ -272,8 +272,8 @@ export default function PayoutMethodDialog({
               {selectedMethod === "bank" && (
                 <div className="space-y-4">
                   <div className="space-y-3">
-                    <Label htmlFor="bank-name" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                      Bank Name
+                    <Label htmlFor="bank-name" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                      BANK NAME
                     </Label>
                     <Input
                       id="bank-name"
@@ -284,8 +284,8 @@ export default function PayoutMethodDialog({
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="account-holder" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                      Account Holder Name
+                    <Label htmlFor="account-holder" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                      ACCOUNT HOLDER NAME
                     </Label>
                     <Input
                       id="account-holder"
@@ -297,8 +297,8 @@ export default function PayoutMethodDialog({
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <Label htmlFor="account-number" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                        Account Number
+                      <Label htmlFor="account-number" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                        ACCOUNT NUMBER
                       </Label>
                       <Input
                         id="account-number"
@@ -309,8 +309,8 @@ export default function PayoutMethodDialog({
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="routing-number" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                        Routing Number
+                      <Label htmlFor="routing-number" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                        ROUTING NUMBER
                       </Label>
                       <Input
                         id="routing-number"
@@ -326,8 +326,8 @@ export default function PayoutMethodDialog({
 
               {selectedMethod === "wise" && (
                 <div className="space-y-3">
-                  <Label htmlFor="wise-email" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                    Wise Email
+                  <Label htmlFor="wise-email" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                    WISE EMAIL
                   </Label>
                   <Input
                     id="wise-email"
@@ -342,8 +342,8 @@ export default function PayoutMethodDialog({
 
               {selectedMethod === "revolut" && (
                 <div className="space-y-3">
-                  <Label htmlFor="revolut-email" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                    Revolut Email
+                  <Label htmlFor="revolut-email" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                    REVOLUT EMAIL
                   </Label>
                   <Input
                     id="revolut-email"
@@ -358,8 +358,8 @@ export default function PayoutMethodDialog({
 
               {selectedMethod === "tips" && (
                 <div className="space-y-3">
-                  <Label htmlFor="tips-username" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                    TIPS Username
+                  <Label htmlFor="tips-username" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                    TIPS USERNAME
                   </Label>
                   <Input
                     id="tips-username"
