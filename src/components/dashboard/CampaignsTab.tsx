@@ -182,7 +182,13 @@ export function CampaignsTab() {
                 <div className="relative h-2 bg-neutral-950 rounded-full overflow-hidden">
                   <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                 width: `${budgetPercentage}%`
-              }} />
+              }}>
+                    <div className="absolute inset-0 opacity-40" style={{
+                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.2) 10px, rgba(255,255,255,.2) 20px)',
+                  animation: 'slide 1.5s linear infinite',
+                  backgroundSize: '40px 40px'
+                }} />
+                  </div>
                 </div>
               </div>
 
