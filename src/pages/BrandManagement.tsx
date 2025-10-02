@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2 } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
@@ -43,9 +44,11 @@ interface Campaign {
   id: string;
   title: string;
   budget: number;
+  budget_used: number;
   rpm_rate: number;
   status: string;
   banner_url: string | null;
+  preview_url: string | null;
 }
 
 interface Submission {
@@ -79,6 +82,15 @@ export default function BrandManagement() {
   const [assetsUrl, setAssetsUrl] = useState("");
   const [homeUrl, setHomeUrl] = useState("");
   const [savingUrls, setSavingUrls] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    budget: "",
+    budget_used: "",
+    rpm_rate: "",
+    status: "active",
+    preview_url: "",
+  });
 
   useEffect(() => {
     fetchCampaigns();
@@ -132,7 +144,7 @@ export default function BrandManagement() {
 
       const { data, error } = await supabase
         .from("campaigns")
-        .select("id, title, budget, rpm_rate, status, banner_url")
+        .select("id, title, budget, budget_used, rpm_rate, status, banner_url, preview_url")
         .eq("brand_id", brandData.id)
         .order("created_at", { ascending: false });
 
@@ -243,6 +255,47 @@ export default function BrandManagement() {
     }
   };
 
+  const openEditDialog = () => {
+    if (!selectedCampaign) return;
+    
+    setEditForm({
+      title: selectedCampaign.title,
+      budget: selectedCampaign.budget.toString(),
+      budget_used: (selectedCampaign.budget_used || 0).toString(),
+      rpm_rate: selectedCampaign.rpm_rate.toString(),
+      status: selectedCampaign.status,
+      preview_url: selectedCampaign.preview_url || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateCampaign = async () => {
+    if (!selectedCampaignId) return;
+
+    try {
+      const { error } = await supabase
+        .from("campaigns")
+        .update({
+          title: editForm.title,
+          budget: parseFloat(editForm.budget),
+          budget_used: parseFloat(editForm.budget_used),
+          rpm_rate: parseFloat(editForm.rpm_rate),
+          status: editForm.status,
+          preview_url: editForm.preview_url || null,
+        })
+        .eq("id", selectedCampaignId);
+
+      if (error) throw error;
+
+      toast.success("Campaign updated successfully");
+      setEditDialogOpen(false);
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      toast.error("Failed to update campaign");
+    }
+  };
+
   const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
@@ -292,14 +345,24 @@ export default function BrandManagement() {
               </SelectContent>
             </Select>
             {selectedCampaignId && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Trash2 className="h-5 w-5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-primary/60 hover:text-primary hover:bg-primary/10"
+                  onClick={openEditDialog}
+                >
+                  <Edit className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -858,6 +921,108 @@ export default function BrandManagement() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Campaign Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="bg-[#202020] border-white/10 text-white max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-white">Edit Campaign</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Campaign Title *</Label>
+                <Input
+                  id="edit-title"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="bg-[#191919] border-white/10 text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-budget">Total Budget (USD) *</Label>
+                  <Input
+                    id="edit-budget"
+                    type="number"
+                    step="0.01"
+                    value={editForm.budget}
+                    onChange={(e) => setEditForm({ ...editForm, budget: e.target.value })}
+                    className="bg-[#191919] border-white/10 text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-budget-used">Used Budget (USD) *</Label>
+                  <Input
+                    id="edit-budget-used"
+                    type="number"
+                    step="0.01"
+                    value={editForm.budget_used}
+                    onChange={(e) => setEditForm({ ...editForm, budget_used: e.target.value })}
+                    className="bg-[#191919] border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-rpm">RPM Rate (USD) *</Label>
+                  <Input
+                    id="edit-rpm"
+                    type="number"
+                    step="0.01"
+                    value={editForm.rpm_rate}
+                    onChange={(e) => setEditForm({ ...editForm, rpm_rate: e.target.value })}
+                    className="bg-[#191919] border-white/10 text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status">Status *</Label>
+                  <Select value={editForm.status} onValueChange={(value) => setEditForm({ ...editForm, status: value })}>
+                    <SelectTrigger className="bg-[#191919] border-white/10 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#2a2a2a] border-white/10">
+                      <SelectItem value="active" className="text-white hover:bg-white/10">Active</SelectItem>
+                      <SelectItem value="paused" className="text-white hover:bg-white/10">Paused</SelectItem>
+                      <SelectItem value="completed" className="text-white hover:bg-white/10">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-preview-url">Preview URL</Label>
+                <Input
+                  id="edit-preview-url"
+                  type="url"
+                  placeholder="https://example.com/preview"
+                  value={editForm.preview_url}
+                  onChange={(e) => setEditForm({ ...editForm, preview_url: e.target.value })}
+                  className="bg-[#191919] border-white/10 text-white"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => setEditDialogOpen(false)}
+                  className="text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpdateCampaign}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
