@@ -536,7 +536,13 @@ export function ProfileTab() {
           
           <div className="space-y-2 mt-4">
             {joinedCampaigns.map(campaign => <button key={campaign.id} onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)} className="w-full p-4 text-left border rounded-lg hover:bg-muted/50 transition-colors flex items-center gap-3">
-                {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="h-10 w-10 rounded object-cover" />}
+                <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {campaign.brand_logo_url ? (
+                    <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-medium text-muted-foreground">{campaign.brand_name[0]}</span>
+                  )}
+                </div>
                 <div>
                   <div className="font-medium">{campaign.title}</div>
                   <div className="text-sm text-muted-foreground">{campaign.brand_name}</div>
