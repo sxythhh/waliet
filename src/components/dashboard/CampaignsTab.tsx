@@ -137,7 +137,7 @@ export function CampaignsTab() {
         <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
       </div>;
   }
-  return <div className="grid grid-cols-1 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 max-w-7xl" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 350px))' }}>
+  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl">
       {campaigns.map(campaign => {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
@@ -182,26 +182,20 @@ export function CampaignsTab() {
                 <div className="relative h-2 bg-neutral-950 rounded-full overflow-hidden">
                   <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                 width: `${budgetPercentage}%`
-              }}>
-                    <div className="absolute inset-0 opacity-40" style={{
-                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.2) 10px, rgba(255,255,255,.2) 20px)',
-                  animation: 'slide 1.5s linear infinite',
-                  backgroundSize: '40px 40px'
-                }} />
-                  </div>
+              }} />
                 </div>
               </div>
 
               {/* Connected Accounts & Footer */}
               <div className="mt-auto space-y-3">
                 {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div>
-                    <span className="font-bold text-muted-foreground block mb-2" style={{ fontSize: '9px', letterSpacing: '-0.5px' }}>Connected Accounts</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Connected Accounts</span>
                     <div className="flex flex-wrap gap-2">
                       {campaign.connected_accounts.map(account => <div key={account.id} className="flex items-center gap-2 bg-neutral-900/50 rounded-lg px-3 py-2">
                           <div className="w-4 h-4">
                             {account.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
                             {account.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
-                            {account.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
+                            {account.platform.toLowerCase() === 'youtube'}
                           </div>
                           <span className="text-sm font-semibold">@{account.username}</span>
                         </div>)}
