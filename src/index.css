@@ -87,6 +87,10 @@ All colors MUST be HSL.
     -ms-user-select: none;
   }
 
+  h1, h2, h3 {
+    font-family: 'Instrument Sans', sans-serif;
+  }
+
   /* Hide scrollbars globally */
   * {
     scrollbar-width: none; /* Firefox */
