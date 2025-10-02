@@ -128,6 +128,7 @@ export type Database = {
           guidelines: string | null
           id: string
           rpm_rate: number
+          slug: string
           start_date: string | null
           status: string | null
           title: string
@@ -147,6 +148,7 @@ export type Database = {
           guidelines?: string | null
           id?: string
           rpm_rate: number
+          slug: string
           start_date?: string | null
           status?: string | null
           title: string
@@ -166,6 +168,7 @@ export type Database = {
           guidelines?: string | null
           id?: string
           rpm_rate?: number
+          slug?: string
           start_date?: string | null
           status?: string | null
           title?: string

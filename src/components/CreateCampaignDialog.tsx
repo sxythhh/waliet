@@ -52,6 +52,7 @@ interface Campaign {
   banner_url: string | null;
   allowed_platforms: string[];
   application_questions: any[];
+  slug?: string;
 }
 
 interface CreateCampaignDialogProps {
@@ -135,6 +136,28 @@ export function CreateCampaignDialog({
     try {
       const bannerUrl = await uploadBanner();
 
+      // Generate slug from title
+      const generateSlug = (title: string, id?: string) => {
+        const baseSlug = title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim();
+        
+        // For updates, keep existing slug if title hasn't changed meaningfully
+        if (campaign && campaign.slug) {
+          const existingBase = campaign.slug.substring(0, campaign.slug.lastIndexOf('-'));
+          if (existingBase === baseSlug) {
+            return campaign.slug;
+          }
+        }
+        
+        // For new campaigns or if title changed, add random suffix
+        const randomSuffix = Math.random().toString(36).substring(2, 10);
+        return `${baseSlug}-${randomSuffix}`;
+      };
+
       const campaignData = {
         title: values.title,
         description: values.description || null,
@@ -147,6 +170,7 @@ export function CreateCampaignDialog({
         status: "active",
         allowed_platforms: values.allowed_platforms,
         application_questions: values.application_questions,
+        slug: generateSlug(values.title, campaign?.id),
       };
 
       if (campaign) {

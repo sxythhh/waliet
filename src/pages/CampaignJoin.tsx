@@ -23,6 +23,7 @@ interface Campaign {
   brand_logo_url: string | null;
   allowed_platforms: string[];
   application_questions: string[];
+  slug: string;
 }
 
 interface ApplicationForm {
@@ -50,7 +51,7 @@ export default function CampaignJoin() {
       const { data, error } = await supabase
         .from("campaigns")
         .select("*")
-        .eq("id", slug)
+        .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle();
 

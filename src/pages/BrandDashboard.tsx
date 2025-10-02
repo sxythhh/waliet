@@ -40,6 +40,7 @@ interface Campaign {
   guidelines: string | null;
   allowed_platforms: string[];
   application_questions: any[];
+  slug: string;
 }
 
 export default function BrandDashboard() {
@@ -258,7 +259,7 @@ export default function BrandDashboard() {
                             className="text-white/60 hover:text-white hover:bg-white/10"
                             onClick={(e) => {
                               e.stopPropagation();
-                              const joinUrl = `${window.location.origin}/join/${campaign.id}`;
+                              const joinUrl = `${window.location.origin}/join/${campaign.slug}`;
                               navigator.clipboard.writeText(joinUrl);
                               toast.success("Campaign join URL copied to clipboard");
                             }}
