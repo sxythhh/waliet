@@ -50,6 +50,14 @@ interface Campaign {
   preview_url: string | null;
 }
 
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  follower_count: number;
+  account_link: string | null;
+}
+
 interface Submission {
   id: string;
   status: string;
@@ -65,6 +73,7 @@ interface Submission {
     trust_score: number;
     demographics_score: number;
     views_score: number;
+    social_accounts: SocialAccount[];
   };
 }
 
@@ -166,7 +175,20 @@ export default function BrandManagement() {
           creator_id,
           platform,
           content_url,
-          profiles (username, avatar_url, trust_score, demographics_score, views_score)
+          profiles (
+            username, 
+            avatar_url, 
+            trust_score, 
+            demographics_score, 
+            views_score,
+            social_accounts (
+              id,
+              platform,
+              username,
+              follower_count,
+              account_link
+            )
+          )
         `
         )
         .eq("campaign_id", selectedCampaignId)
@@ -648,129 +670,107 @@ export default function BrandManagement() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {pendingSubmissions.map((submission) => (
-                      <Card key={submission.id} className="bg-background/50 border-0 overflow-hidden">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            {/* Creator Avatar & Info */}
-                            <div className="flex-shrink-0">
-                              {submission.profiles?.avatar_url ? (
-                                <img
-                                  src={submission.profiles.avatar_url}
-                                  alt={submission.profiles.username}
-                                  className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                                  <Users className="h-6 w-6 text-primary" />
-                                </div>
-                              )}
-                            </div>
+                    {pendingSubmissions.map((submission) => {
+                      const getPlatformIcon = (platform: string) => {
+                        switch (platform.toLowerCase()) {
+                          case 'tiktok':
+                            return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
+                          case 'instagram':
+                            return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
+                          case 'youtube':
+                            return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
+                          default:
+                            return null;
+                        }
+                      };
 
-                            {/* Main Content */}
-                            <div className="flex-1 space-y-2">
-                              {/* Creator Name & Platform */}
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <h3 className="font-semibold">
-                                    {submission.profiles?.username || "Unknown"}
-                                  </h3>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <Badge variant="outline" className="text-xs py-0 h-5">
-                                      {submission.platform || "Unknown Platform"}
-                                    </Badge>
-                                    <span className="text-xs text-muted-foreground">
+                      return (
+                        <Card key={submission.id} className="bg-transparent border border-white/10 overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              {/* Creator Avatar & Info */}
+                              <div className="flex items-start gap-3 flex-1">
+                                <div className="flex-shrink-0">
+                                  {submission.profiles?.avatar_url ? (
+                                    <img
+                                      src={submission.profiles.avatar_url}
+                                      alt={submission.profiles.username}
+                                      className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                      <Users className="h-6 w-6 text-primary" />
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex-1 space-y-2">
+                                  <div>
+                                    <h3 className="font-semibold text-white">
+                                      {submission.profiles?.username || "Unknown"}
+                                    </h3>
+                                    <span className="text-xs text-white/60">
                                       {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
                                         month: 'short', 
                                         day: 'numeric'
                                       })}
                                     </span>
                                   </div>
-                                </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex gap-1.5 flex-shrink-0">
-                                  <Button
-                                    size="sm"
-                                    onClick={() =>
-                                      handleApplicationAction(submission.id, "approved")
-                                    }
-                                    className="bg-success/20 hover:bg-success/30 text-success border-0 h-8 px-3"
-                                  >
-                                    <Check className="h-3.5 w-3.5 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() =>
-                                      handleApplicationAction(submission.id, "rejected")
-                                    }
-                                    className="bg-destructive/20 hover:bg-destructive/30 border-0 h-8 px-3"
-                                  >
-                                    <X className="h-3.5 w-3.5 mr-1" />
-                                    Reject
-                                  </Button>
+                                  {/* Connected Accounts */}
+                                  {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
+                                    <div className="space-y-1.5">
+                                      {submission.profiles.social_accounts.map((account) => (
+                                        <a
+                                          key={account.id}
+                                          href={account.account_link || '#'}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors"
+                                        >
+                                          {getPlatformIcon(account.platform)}
+                                          <span>@{account.username}</span>
+                                          <span className="text-xs text-white/50">
+                                            {account.follower_count.toLocaleString()} followers
+                                          </span>
+                                        </a>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-white/40">No accounts connected</p>
+                                  )}
                                 </div>
                               </div>
 
-                              {/* Creator Stats Grid */}
-                              <div className="grid grid-cols-3 gap-3 pt-2">
-                                <div className="flex items-center gap-1.5">
-                                  <div className="p-1.5 rounded bg-primary/10">
-                                    <TrendingUp className="h-3.5 w-3.5 text-primary" />
-                                  </div>
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground leading-none">Trust</p>
-                                    <p className="font-semibold text-sm leading-tight">
-                                      {submission.profiles?.trust_score || 0}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-1.5">
-                                  <div className="p-1.5 rounded bg-success/10">
-                                    <Eye className="h-3.5 w-3.5 text-success" />
-                                  </div>
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground leading-none">Views</p>
-                                    <p className="font-semibold text-sm leading-tight">
-                                      {submission.profiles?.views_score || 0}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-1.5">
-                                  <div className="p-1.5 rounded bg-warning/10">
-                                    <Users className="h-3.5 w-3.5 text-warning" />
-                                  </div>
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground leading-none">Demo</p>
-                                    <p className="font-semibold text-sm leading-tight">
-                                      {submission.profiles?.demographics_score || 0}
-                                    </p>
-                                  </div>
-                                </div>
+                              {/* Action Buttons */}
+                              <div className="flex gap-1.5 flex-shrink-0">
+                                <Button
+                                  size="sm"
+                                  onClick={() =>
+                                    handleApplicationAction(submission.id, "approved")
+                                  }
+                                  className="bg-success/20 hover:bg-success/30 text-success border-0 h-8 px-3"
+                                >
+                                  <Check className="h-3.5 w-3.5 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() =>
+                                    handleApplicationAction(submission.id, "rejected")
+                                  }
+                                  className="bg-destructive/20 hover:bg-destructive/30 border-0 h-8 px-3"
+                                >
+                                  <X className="h-3.5 w-3.5 mr-1" />
+                                  Reject
+                                </Button>
                               </div>
-
-                              {/* Content URL if available */}
-                              {submission.content_url && (
-                                <div className="pt-1">
-                                  <a
-                                    href={submission.content_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                                  >
-                                    View content →
-                                  </a>
-                                </div>
-                              )}
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
