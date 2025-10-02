@@ -105,6 +105,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "campaign_submissions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "campaign_submissions_creator_id_fkey"
             columns: ["creator_id"]
             isOneToOne: false
@@ -338,6 +345,30 @@ export type Database = {
           },
         ]
       }
+      encryption_keys: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          key_name: string
+          key_value: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          key_name: string
+          key_value: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          key_name?: string
+          key_value?: string
+        }
+        Relationships: []
+      }
       payout_requests: {
         Row: {
           amount: number
@@ -528,6 +559,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "social_accounts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "social_accounts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -656,6 +694,77 @@ export type Database = {
       }
     }
     Views: {
+      public_campaigns: {
+        Row: {
+          allowed_platforms: string[] | null
+          application_questions: Json | null
+          banner_url: string | null
+          brand_id: string | null
+          brand_logo_url: string | null
+          brand_name: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          guidelines: string | null
+          id: string | null
+          is_private: boolean | null
+          preview_url: string | null
+          slug: string | null
+          start_date: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_platforms?: string[] | null
+          application_questions?: Json | null
+          banner_url?: string | null
+          brand_id?: string | null
+          brand_logo_url?: string | null
+          brand_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          guidelines?: string | null
+          id?: string | null
+          is_private?: boolean | null
+          preview_url?: string | null
+          slug?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_platforms?: string[] | null
+          application_questions?: Json | null
+          banner_url?: string | null
+          brand_id?: string | null
+          brand_logo_url?: string | null
+          brand_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          guidelines?: string | null
+          id?: string | null
+          is_private?: boolean | null
+          preview_url?: string | null
+          slug?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -694,6 +803,14 @@ export type Database = {
       }
     }
     Functions: {
+      decrypt_payout_details: {
+        Args: { encrypted_details: string; wallet_user_id: string }
+        Returns: Json
+      }
+      encrypt_payout_details: {
+        Args: { details: Json }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
