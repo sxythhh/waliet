@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +53,7 @@ export default function CampaignJoin() {
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<ApplicationForm>();
+  const applicationQuestionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchCampaign();
@@ -319,7 +320,7 @@ export default function CampaignJoin() {
                         e.stopPropagation();
                         setCurrentStep(2);
                       }}
-                      className="w-full"
+                      className="w-auto px-8"
                     >
                       Continue to Account Selection
                     </Button>
@@ -418,7 +419,7 @@ export default function CampaignJoin() {
                         <Button 
                           onClick={handleSubmit(onSubmit)}
                           disabled={submitting}
-                          className="w-full"
+                          className="w-auto px-8"
                         >
                           {submitting ? "Submitting..." : "Submit Application"}
                         </Button>
@@ -426,8 +427,16 @@ export default function CampaignJoin() {
                       
                       {campaign.application_questions.length > 0 && (
                         <Button 
-                          onClick={() => setCurrentStep(3)}
-                          className="w-full"
+                          onClick={() => {
+                            setCurrentStep(3);
+                            setTimeout(() => {
+                              applicationQuestionsRef.current?.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start' 
+                              });
+                            }, 100);
+                          }}
+                          className="w-auto px-8"
                         >
                           Continue to Application Questions
                         </Button>
@@ -442,7 +451,7 @@ export default function CampaignJoin() {
 
         {/* Step 3: Application Questions */}
         {currentStep >= 3 && campaign.application_questions.length > 0 && (
-          <div className="relative flex gap-6 mb-8">
+          <div ref={applicationQuestionsRef} className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center">
               <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
@@ -473,7 +482,7 @@ export default function CampaignJoin() {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-6 text-lg"
+                  className="w-auto px-12 py-6 text-lg"
                 >
                   {submitting ? "Submitting..." : "Submit Application"}
                 </Button>
