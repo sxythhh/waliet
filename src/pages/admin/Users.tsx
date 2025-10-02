@@ -540,7 +540,7 @@ export default function AdminUsers() {
                 filteredUsers.map((user) => (
                   <TableRow 
                     key={user.id}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer"
                     onClick={() => openUserDetailsDialog(user)}
                   >
                     <TableCell className="font-medium">{user.username}</TableCell>
