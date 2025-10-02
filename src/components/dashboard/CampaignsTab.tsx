@@ -150,7 +150,7 @@ export function CampaignsTab() {
         return (
           <Card 
             key={campaign.id} 
-            className="group bg-card transition-all duration-300 animate-fade-in flex flex-col cursor-pointer"
+            className="group bg-card transition-all duration-300 animate-fade-in flex flex-col cursor-pointer overflow-hidden"
             onClick={() => navigate(`/campaign/${campaign.id}`)}
           >
             {/* Banner Image - Top Section */}
