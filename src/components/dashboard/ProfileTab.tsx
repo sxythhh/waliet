@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -57,6 +58,8 @@ export function ProfileTab() {
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const [showLinkCampaignDialog, setShowLinkCampaignDialog] = useState(false);
   const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     toast
@@ -161,6 +164,35 @@ export function ProfileTab() {
         variant: "destructive",
         title: "Error",
         description: "Failed to unlink campaign"
+      });
+    }
+  };
+  
+  const handleDeleteAccount = async () => {
+    if (!accountToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('social_accounts')
+        .delete()
+        .eq('id', accountToDelete);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Account deleted successfully"
+      });
+      
+      fetchSocialAccounts();
+      setShowDeleteDialog(false);
+      setAccountToDelete(null);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete account"
       });
     }
   };
@@ -352,6 +384,18 @@ export function ProfileTab() {
                           <Link2 className="h-3 w-3" />
                           Link Campaign
                         </Button>}
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setAccountToDelete(account.id);
+                          setShowDeleteDialog(true);
+                        }} 
+                        className="h-8 gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>;
           })}
@@ -480,6 +524,32 @@ export function ProfileTab() {
       </Card>
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this account? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowDeleteDialog(false);
+              setAccountToDelete(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteAccount}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Link Campaign Dialog */}
       <Dialog open={showLinkCampaignDialog} onOpenChange={setShowLinkCampaignDialog}>
