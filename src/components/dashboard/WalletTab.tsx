@@ -702,8 +702,8 @@ export function WalletTab() {
 
       {/* Recent Transactions */}
       <Card className="bg-card border-0">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">Recent Transactions</CardTitle>
+        <CardHeader className="px-[24px] py-0">
+          <CardTitle className="text-lg font-semibold py-[10px]">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? <div className="text-center py-8">
@@ -738,7 +738,7 @@ export function WalletTab() {
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-foreground/50">
                         <Clock className="h-3 w-3" />
-                        <span>{format(transaction.date, 'MMM dd, yyyy • HH:mm')}</span>
+                        <span className="">{format(transaction.date, 'MMM dd, yyyy • HH:mm')}</span>
                       </div>
                     </div>
                   </div>
