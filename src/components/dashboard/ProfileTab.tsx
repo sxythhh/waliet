@@ -46,6 +46,7 @@ interface Campaign {
   id: string;
   title: string;
   brand_name: string;
+  brand_logo_url: string | null;
 }
 
 export function ProfileTab() {
@@ -108,7 +109,7 @@ export function ProfileTab() {
 
     const { data } = await supabase
       .from("campaign_submissions")
-      .select("campaign_id, campaigns(id, title, brand_name)")
+      .select("campaign_id, campaigns(id, title, brand_name, brand_logo_url)")
       .eq("creator_id", session.user.id);
 
     if (data) {
@@ -118,6 +119,7 @@ export function ProfileTab() {
           id: item.campaigns.id,
           title: item.campaigns.title,
           brand_name: item.campaigns.brand_name,
+          brand_logo_url: item.campaigns.brand_logo_url,
         }));
       setJoinedCampaigns(campaigns);
     }
@@ -359,8 +361,15 @@ export function ProfileTab() {
                       <div>
                         <div className="text-sm font-medium">@{account.username}</div>
                         {linkedCampaign && (
-                          <div className="text-xs text-muted-foreground">
-                            Linked to {linkedCampaign.title}
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            {linkedCampaign.brand_logo_url && (
+                              <img 
+                                src={linkedCampaign.brand_logo_url} 
+                                alt={linkedCampaign.brand_name}
+                                className="h-4 w-4 rounded object-cover"
+                              />
+                            )}
+                            <span>Linked to {linkedCampaign.title}</span>
                           </div>
                         )}
                       </div>
@@ -569,10 +578,19 @@ export function ProfileTab() {
               <button
                 key={campaign.id}
                 onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)}
-                className="w-full p-4 text-left border rounded-lg hover:bg-muted/50 transition-colors"
+                className="w-full p-4 text-left border rounded-lg hover:bg-muted/50 transition-colors flex items-center gap-3"
               >
-                <div className="font-medium">{campaign.title}</div>
-                <div className="text-sm text-muted-foreground">{campaign.brand_name}</div>
+                {campaign.brand_logo_url && (
+                  <img 
+                    src={campaign.brand_logo_url} 
+                    alt={campaign.brand_name}
+                    className="h-10 w-10 rounded object-cover"
+                  />
+                )}
+                <div>
+                  <div className="font-medium">{campaign.title}</div>
+                  <div className="text-sm text-muted-foreground">{campaign.brand_name}</div>
+                </div>
               </button>
             ))}
           </div>
