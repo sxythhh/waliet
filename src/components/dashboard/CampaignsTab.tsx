@@ -142,7 +142,7 @@ export function CampaignsTab() {
         <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
       </div>;
   }
-  return <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl">
+  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl">
       {campaigns.map(campaign => {
         const budgetUsed = campaign.budget_used || 0;
         const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
@@ -150,16 +150,8 @@ export function CampaignsTab() {
         return (
           <Card 
             key={campaign.id} 
-            className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col ${
-              campaign.submission_status === 'approved' 
-                ? 'cursor-pointer' 
-                : 'cursor-not-allowed opacity-50 grayscale'
-            }`}
-            onClick={() => {
-              if (campaign.submission_status === 'approved') {
-                navigate(`/campaign/${campaign.id}`);
-              }
-            }}
+            className="group bg-card transition-all duration-300 animate-fade-in flex flex-col cursor-pointer"
+            onClick={() => navigate(`/campaign/${campaign.id}`)}
           >
             {/* Banner Image - Top Section */}
             {campaign.banner_url && (
