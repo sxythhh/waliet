@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2 } from "lucide-react";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 
 interface Campaign {
   id: string;
@@ -192,9 +195,9 @@ export function CampaignsTab() {
                 <span className="text-xs">Networks</span>
               </div>
               <div className="flex items-center justify-end gap-1.5">
-                <Instagram className="w-4 h-4" />
-                <Video className="w-4 h-4" />
-                <Youtube className="w-4 h-4" />
+                <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />
+                <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
+                <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />
               </div>
 
               <div className="flex items-center gap-2 text-muted-foreground">
