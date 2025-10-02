@@ -993,7 +993,7 @@ export function WalletTab() {
                 placeholder="50.00" 
                 value={payoutAmount} 
                 onChange={e => setPayoutAmount(e.target.value)}
-                className="bg-[#171717] border-white/10 text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50"
+                className="bg-[#171717] border-transparent text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50"
               />
               <p className="text-xs text-muted-foreground">
                 Minimum: $50.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
@@ -1003,7 +1003,7 @@ export function WalletTab() {
             <div className="space-y-2">
               <Label htmlFor="payout-method">Payment Method</Label>
               <Select value={selectedPayoutMethod} onValueChange={setSelectedPayoutMethod}>
-                <SelectTrigger id="payout-method">
+                <SelectTrigger id="payout-method" className="bg-[#171717] border-transparent text-white h-14 text-lg">
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent>
