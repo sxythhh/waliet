@@ -109,11 +109,11 @@ export function CampaignsTab() {
         return (
           <Card 
             key={campaign.id} 
-            className={`group bg-card border-2 transition-all duration-300 overflow-hidden animate-fade-in hover:border-primary/40 ${
+            className={`group bg-card border-2 transition-all duration-300 overflow-hidden animate-fade-in ${
               campaign.submission_status === 'approved' 
                 ? 'cursor-pointer' 
                 : 'cursor-not-allowed opacity-50 grayscale'
-            }`} 
+            }`}
             onClick={() => {
               if (campaign.submission_status === 'approved') {
                 navigate(`/campaign/${campaign.id}`);
@@ -209,7 +209,7 @@ export function CampaignsTab() {
                 </div>
 
                 {/* RPM Rate */}
-                <div className="flex items-center justify-between py-3 px-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">RPM Rate</span>
                   <span className="text-base font-bold">
                     ${campaign.rpm_rate.toFixed(2)}
