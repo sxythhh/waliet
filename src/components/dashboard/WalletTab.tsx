@@ -1018,12 +1018,17 @@ export function WalletTab() {
 
                 {/* Amount */}
                 <div className="text-center mb-2">
-                  <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
-                fontFamily: 'Chakra Petch, sans-serif',
-                letterSpacing: '-1px'
-              }}>
-                    {selectedTransaction.type === 'earning' ? '+' : '-'}${selectedTransaction.amount.toFixed(2)}
+                  <div className="flex items-center justify-center mb-3">
+                    <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <Check className="w-8 h-8 text-green-500" />
+                    </div>
                   </div>
+                  <p className="text-muted-foreground font-semibold tracking-tight" style={{
+                    fontFamily: 'Instrument Sans, sans-serif',
+                    letterSpacing: '-0.5px'
+                  }}>
+                    Your ${selectedTransaction.amount.toFixed(2)} is on its way!
+                  </p>
                 </div>
               </div>
 
