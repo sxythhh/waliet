@@ -211,51 +211,58 @@ export function WalletTab() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { data: submissions } = await supabase
-      .from("campaign_submissions")
-      .select("id, earnings, submitted_at, campaign_id")
-      .eq("creator_id", session.user.id)
-      .order("submitted_at", { ascending: false })
-      .limit(10);
-
-    const { data: payouts } = await supabase
-      .from("payout_requests")
-      .select("id, amount, requested_at, status, payout_method, payout_details")
+    const { data: walletTransactions } = await supabase
+      .from("wallet_transactions")
+      .select("*")
       .eq("user_id", session.user.id)
-      .order("requested_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(10);
 
     const allTransactions: Transaction[] = [];
 
-    if (submissions) {
-      submissions.forEach((sub) => {
+    if (walletTransactions) {
+      walletTransactions.forEach((txn) => {
+        const metadata = txn.metadata as any;
+        let source = '';
+        let destination = '';
+
+        switch (txn.type) {
+          case 'admin_adjustment':
+            source = 'Admin Payment';
+            destination = 'Wallet';
+            break;
+          case 'earning':
+            source = 'Campaign Submission';
+            destination = 'Wallet';
+            break;
+          case 'withdrawal':
+            destination = metadata?.payout_method === 'paypal' 
+              ? 'PayPal' 
+              : `Crypto (${metadata?.network || 'ETH'})`;
+            break;
+          case 'bonus':
+            source = 'Bonus Payment';
+            destination = 'Wallet';
+            break;
+          case 'refund':
+            source = 'Refund';
+            destination = 'Wallet';
+            break;
+        }
+
         allTransactions.push({
-          id: sub.id,
-          type: 'earning',
-          amount: Number(sub.earnings) || 0,
-          date: new Date(sub.submitted_at),
-          destination: 'Wallet',
-          source: 'Campaign Submission'
+          id: txn.id,
+          type: txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund' ? 'earning' : 'withdrawal',
+          amount: Number(txn.amount) || 0,
+          date: new Date(txn.created_at),
+          destination,
+          source: source || txn.description || '',
+          status: txn.status
         });
       });
     }
 
-    if (payouts) {
-      payouts.forEach((payout) => {
-        const details = payout.payout_details as any;
-        allTransactions.push({
-          id: payout.id,
-          type: 'withdrawal',
-          amount: Number(payout.amount) || 0,
-          date: new Date(payout.requested_at),
-          destination: payout.payout_method === 'paypal' ? 'PayPal' : `Crypto (${details?.network || 'ETH'})`,
-          status: payout.status
-        });
-      });
-    }
-
-    allTransactions.sort((a, b) => b.date.getTime() - a.date.getTime());
-    setTransactions(allTransactions.slice(0, 10));
+    setTransactions(allTransactions);
   };
 
   const fetchWallet = async () => {
