@@ -485,49 +485,143 @@ export default function BrandManagement() {
 
           {/* Creators Tab */}
           <TabsContent value="creators">
-            <Card className="bg-[#202020] border-white/10">
-              <CardHeader>
-                <CardTitle className="text-white">Active Creators</CardTitle>
+            <Card className="bg-gradient-card border-0">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Active Creators
+                  <Badge variant="secondary" className="ml-2">
+                    {approvedSubmissions.length}
+                  </Badge>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-white/60">Creator</TableHead>
-                      <TableHead className="text-white/60">Views</TableHead>
-                      <TableHead className="text-white/60">Earnings</TableHead>
-                      <TableHead className="text-white/60">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {approvedSubmissions.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center text-white/40">
-                          No creators yet
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      approvedSubmissions.map((submission) => (
-                        <TableRow key={submission.id} className="border-white/10">
-                          <TableCell className="text-white">
-                            {submission.profiles?.username || "Unknown"}
-                          </TableCell>
-                          <TableCell className="text-white">
-                            {submission.views.toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-white">
-                            ${Number(submission.earnings).toFixed(2)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className="bg-green-500/20 text-green-400">
-                              Active
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+              <CardContent className="space-y-3">
+                {approvedSubmissions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                    <p className="text-muted-foreground text-sm">No active creators yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {approvedSubmissions.map((submission) => (
+                      <Card key={submission.id} className="bg-background/50 border-0 overflow-hidden">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            {/* Creator Avatar & Info */}
+                            <div className="flex-shrink-0">
+                              {submission.profiles?.avatar_url ? (
+                                <img
+                                  src={submission.profiles.avatar_url}
+                                  alt={submission.profiles.username}
+                                  className="w-12 h-12 rounded-full object-cover border-2 border-success/30"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center">
+                                  <Users className="h-6 w-6 text-success" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Main Content */}
+                            <div className="flex-1 space-y-2">
+                              {/* Creator Name & Status */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h3 className="font-semibold">
+                                    {submission.profiles?.username || "Unknown"}
+                                  </h3>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <Badge variant="outline" className="text-xs py-0 h-5">
+                                      {submission.platform || "Unknown Platform"}
+                                    </Badge>
+                                    <Badge className="bg-success/20 text-success border-0 text-xs py-0 h-5">
+                                      Active
+                                    </Badge>
+                                  </div>
+                                </div>
+
+                                {/* Performance Metrics */}
+                                <div className="text-right">
+                                  <div className="text-sm font-semibold text-success">
+                                    ${Number(submission.earnings).toFixed(2)}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    earned
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Stats Grid */}
+                              <div className="grid grid-cols-4 gap-3 pt-2">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="p-1.5 rounded bg-primary/10">
+                                    <Eye className="h-3.5 w-3.5 text-primary" />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground leading-none">Views</p>
+                                    <p className="font-semibold text-sm leading-tight">
+                                      {submission.views.toLocaleString()}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <div className="p-1.5 rounded bg-success/10">
+                                    <TrendingUp className="h-3.5 w-3.5 text-success" />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground leading-none">Trust</p>
+                                    <p className="font-semibold text-sm leading-tight">
+                                      {submission.profiles?.trust_score || 0}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <div className="p-1.5 rounded bg-warning/10">
+                                    <Eye className="h-3.5 w-3.5 text-warning" />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground leading-none">V-Score</p>
+                                    <p className="font-semibold text-sm leading-tight">
+                                      {submission.profiles?.views_score || 0}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <div className="p-1.5 rounded bg-primary/10">
+                                    <Users className="h-3.5 w-3.5 text-primary" />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground leading-none">Demo</p>
+                                    <p className="font-semibold text-sm leading-tight">
+                                      {submission.profiles?.demographics_score || 0}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Content URL if available */}
+                              {submission.content_url && (
+                                <div className="pt-1">
+                                  <a
+                                    href={submission.content_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                                  >
+                                    View content →
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
