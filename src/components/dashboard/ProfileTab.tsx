@@ -94,11 +94,33 @@ export function ProfileTab() {
     if (!session) return;
     const {
       data
-    } = await supabase.from("social_accounts").select("*, campaigns(id, title, brand_name, brand_logo_url)").eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
-      ascending: false
-    });
+    } = await supabase
+      .from("social_accounts")
+      .select(`
+        *,
+        campaigns(
+          id,
+          title,
+          brand_name,
+          brand_logo_url,
+          brands(logo_url)
+        )
+      `)
+      .eq("user_id", session.user.id)
+      .eq("is_verified", true)
+      .order("connected_at", {
+        ascending: false
+      });
     if (data) {
-      setSocialAccounts(data);
+      // Map the data to include brand logo from brands table if campaign brand_logo_url is null
+      const accountsWithBrandLogos = data.map(account => ({
+        ...account,
+        campaigns: account.campaigns ? {
+          ...account.campaigns,
+          brand_logo_url: account.campaigns.brand_logo_url || (account.campaigns as any).brands?.logo_url
+        } : null
+      }));
+      setSocialAccounts(accountsWithBrandLogos);
     }
   };
   const fetchJoinedCampaigns = async () => {
