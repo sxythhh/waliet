@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wallet, CreditCard } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface PayoutMethodDialogProps {
   open: boolean;
@@ -55,80 +56,75 @@ export default function PayoutMethodDialog({
           <p className="text-muted-foreground">Get ready to receive your payouts!</p>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          <div>
-            <Label className="text-base mb-3 block">Select your payout method</Label>
-            <div className="flex gap-3">
-              <Button
-                variant={selectedMethod === "crypto" ? "default" : "outline"}
-                className="flex-1 h-14"
-                onClick={() => setSelectedMethod("crypto")}
-              >
-                <Wallet className="mr-2 h-5 w-5" />
-                Crypto
-              </Button>
-              <Button
-                variant={selectedMethod === "paypal" ? "default" : "outline"}
-                className="flex-1 h-14"
-                onClick={() => setSelectedMethod("paypal")}
-              >
-                <CreditCard className="mr-2 h-5 w-5" />
-                PayPal
-              </Button>
-            </div>
-          </div>
+        <Tabs defaultValue="crypto" value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as "crypto" | "paypal")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="crypto" className="gap-2">
+              <Wallet className="h-4 w-4" />
+              Crypto
+            </TabsTrigger>
+            <TabsTrigger value="paypal" className="gap-2">
+              <CreditCard className="h-4 w-4" />
+              PayPal
+            </TabsTrigger>
+          </TabsList>
 
-          {selectedMethod === "crypto" ? (
-            <>
-              <div>
-                <Label className="text-base mb-3 block">Network</Label>
-                <div className="flex flex-wrap gap-2">
-                  {cryptoNetworks.map((network) => (
-                    <Button
-                      key={network.id}
-                      variant={selectedNetwork === network.id ? "default" : "outline"}
-                      className="h-12"
-                      onClick={() => setSelectedNetwork(network.id)}
-                    >
-                      {network.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-base mb-2 block">Wallet Address</Label>
-                <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter your wallet address"
-                    value={walletAddress}
-                    onChange={(e) => setWalletAddress(e.target.value)}
-                    className="pl-10 h-12 bg-background"
-                  />
-                </div>
-              </div>
-            </>
-          ) : (
-            <div>
-              <Label className="text-base mb-2 block">PayPal Email</Label>
-              <div className="relative">
-                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={paypalEmail}
-                  onChange={(e) => setPaypalEmail(e.target.value)}
-                  className="pl-10 h-12 bg-background"
-                />
+          <TabsContent value="crypto" className="space-y-5 mt-0">
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Network</Label>
+              <div className="flex flex-wrap gap-2">
+                {cryptoNetworks.map((network) => (
+                  <button
+                    key={network.id}
+                    type="button"
+                    onClick={() => setSelectedNetwork(network.id)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      selectedNetwork === network.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted hover:bg-muted/80"
+                    }`}
+                  >
+                    {network.name}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
 
-          <div className="flex gap-3 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="wallet-address" className="text-sm font-medium">Wallet Address</Label>
+              <Input
+                id="wallet-address"
+                placeholder="Enter your wallet address"
+                value={walletAddress}
+                onChange={(e) => setWalletAddress(e.target.value)}
+                className="h-11"
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="paypal" className="space-y-5 mt-0">
+            <div className="space-y-2">
+              <Label htmlFor="paypal-email" className="text-sm font-medium">PayPal Email</Label>
+              <Input
+                id="paypal-email"
+                type="email"
+                placeholder="your.email@example.com"
+                value={paypalEmail}
+                onChange={(e) => setPaypalEmail(e.target.value)}
+                className="h-11"
+              />
+            </div>
+          </TabsContent>
+
+          <div className="flex gap-3 pt-6 border-t mt-6">
             <Button
-              variant="default"
-              className="flex-1 h-12"
+              variant="outline"
+              className="flex-1"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
               onClick={handleSave}
               disabled={
                 selectedMethod === "crypto" ? !walletAddress : !paypalEmail
@@ -136,15 +132,8 @@ export default function PayoutMethodDialog({
             >
               Add Method
             </Button>
-            <Button
-              variant="outline"
-              className="flex-1 h-12"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
           </div>
-        </div>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
