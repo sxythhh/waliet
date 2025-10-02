@@ -94,9 +94,7 @@ export function ProfileTab() {
     if (!session) return;
     const {
       data
-    } = await supabase
-      .from("social_accounts")
-      .select(`
+    } = await supabase.from("social_accounts").select(`
         *,
         campaigns(
           id,
@@ -105,12 +103,9 @@ export function ProfileTab() {
           brand_logo_url,
           brands(logo_url)
         )
-      `)
-      .eq("user_id", session.user.id)
-      .eq("is_verified", true)
-      .order("connected_at", {
-        ascending: false
-      });
+      `).eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
+      ascending: false
+    });
     if (data) {
       // Map the data to include brand logo from brands table if campaign brand_logo_url is null
       const accountsWithBrandLogos = data.map(account => ({
@@ -189,23 +184,17 @@ export function ProfileTab() {
       });
     }
   };
-  
   const handleDeleteAccount = async () => {
     if (!accountToDelete) return;
-    
     try {
-      const { error } = await supabase
-        .from('social_accounts')
-        .delete()
-        .eq('id', accountToDelete);
-      
+      const {
+        error
+      } = await supabase.from('social_accounts').delete().eq('id', accountToDelete);
       if (error) throw error;
-      
       toast({
         title: "Success",
         description: "Account deleted successfully"
       });
-      
       fetchSocialAccounts();
       setShowDeleteDialog(false);
       setAccountToDelete(null);
@@ -407,15 +396,10 @@ export function ProfileTab() {
                           Link Campaign
                         </Button>}
                       
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => {
-                          setAccountToDelete(account.id);
-                          setShowDeleteDialog(true);
-                        }} 
-                        className="h-8 gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => {
+                  setAccountToDelete(account.id);
+                  setShowDeleteDialog(true);
+                }} className="h-8 gap-1 text-destructive hover:text-destructive hover:bg-destructive/10">
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -448,37 +432,7 @@ export function ProfileTab() {
       </Card>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Total Earnings</span>
-              <DollarSign className="h-4 w-4 text-success" />
-            </div>
-            <p className="text-2xl font-bold">${profile.total_earnings?.toFixed(2) || "0.00"}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Trust Score</span>
-              
-            </div>
-            <p className="text-2xl font-bold">{profile.trust_score}/100</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Views Score</span>
-              <Eye className="h-4 w-4 text-primary" />
-            </div>
-            <p className="text-2xl font-bold">{profile.views_score}/100</p>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Edit Profile */}
       <Card className="bg-card border-0">
@@ -558,15 +512,12 @@ export function ProfileTab() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => {
-              setShowDeleteDialog(false);
-              setAccountToDelete(null);
-            }}>
+            setShowDeleteDialog(false);
+            setAccountToDelete(null);
+          }}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteAccount}
-              className="bg-destructive hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
