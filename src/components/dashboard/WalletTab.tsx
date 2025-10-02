@@ -54,6 +54,7 @@ export function WalletTab() {
   const [withdrawalData, setWithdrawalData] = useState<WithdrawalDataPoint[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('3D');
+  const [earningsChartOffset, setEarningsChartOffset] = useState(0);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
@@ -74,7 +75,7 @@ export function WalletTab() {
       fetchWithdrawalData();
       fetchTransactions();
     }
-  }, [timePeriod, wallet]);
+  }, [timePeriod, wallet, earningsChartOffset]);
   const getDateRange = () => {
     const now = new Date();
     switch (timePeriod) {
@@ -189,32 +190,37 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
+    
+    // Calculate date range for 7 days with offset
+    const now = new Date();
+    const end = subDays(now, earningsChartOffset * 7);
+    const start = subDays(end, 7);
+    
+    // Fetch earnings from wallet transactions
     const {
-      start,
-      end
-    } = getDateRange();
-    const {
-      data: payouts
-    } = await supabase.from("payout_requests").select("amount, requested_at, status").eq("user_id", session.user.id).gte("requested_at", start.toISOString()).lte("requested_at", end.toISOString()).order("requested_at", {
+      data: walletTransactions
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).in("type", ["earning", "admin_adjustment", "bonus", "refund"]).gte("created_at", start.toISOString()).lte("created_at", end.toISOString()).order("created_at", {
       ascending: true
     });
-    const days = timePeriod === '3D' ? 3 : timePeriod === '1W' || timePeriod === 'TW' ? 7 : timePeriod === '1M' ? 30 : timePeriod === '3M' ? 90 : 365;
+    
     const dataPoints: WithdrawalDataPoint[] = [];
-    for (let i = 0; i <= days; i++) {
-      const currentDate = subDays(end, days - i);
+    for (let i = 0; i <= 7; i++) {
+      const currentDate = subDays(end, 7 - i);
       const dateStr = format(currentDate, 'MMM dd');
-      let withdrawalAmount = 0;
-      if (payouts) {
-        payouts.forEach(payout => {
-          const payoutDate = new Date(payout.requested_at);
-          if (format(payoutDate, 'MMM dd') === dateStr) {
-            withdrawalAmount += Number(payout.amount) || 0;
+      let earningsAmount = 0;
+      
+      if (walletTransactions) {
+        walletTransactions.forEach(txn => {
+          const txnDate = new Date(txn.created_at);
+          if (format(txnDate, 'MMM dd') === dateStr) {
+            earningsAmount += Number(txn.amount) || 0;
           }
         });
       }
+      
       dataPoints.push({
         date: dateStr,
-        amount: Number(withdrawalAmount.toFixed(2))
+        amount: Number(earningsAmount.toFixed(2))
       });
     }
     setWithdrawalData(dataPoints);
@@ -830,10 +836,32 @@ export function WalletTab() {
         </CardContent>
       </Card>
 
-      {/* Withdrawal Requests Chart */}
+      {/* Earnings History Chart */}
       <Card className="bg-card border-0">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">Withdrawal Requests</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-lg font-semibold">Earnings History</CardTitle>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setEarningsChartOffset(earningsChartOffset + 1)}
+              className="h-8 w-8"
+            >
+              <ChevronDown className="h-4 w-4 rotate-90" />
+            </Button>
+            <span className="text-xs text-muted-foreground min-w-[80px] text-center">
+              {earningsChartOffset === 0 ? 'Last 7 days' : `${earningsChartOffset * 7} days ago`}
+            </span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setEarningsChartOffset(Math.max(0, earningsChartOffset - 1))}
+              disabled={earningsChartOffset === 0}
+              className="h-8 w-8"
+            >
+              <ChevronDown className="h-4 w-4 -rotate-90" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-64">
@@ -858,17 +886,17 @@ export function WalletTab() {
                 marginBottom: "4px",
                 fontFamily: "Chakra Petch, sans-serif",
                 letterSpacing: "-0.5px"
-              }} formatter={(value: number) => [`$${value.toFixed(2)}`, 'Withdrawn']} itemStyle={{
-                color: "#ef4444",
+              }} formatter={(value: number) => [`$${value.toFixed(2)}`, 'Earned']} itemStyle={{
+                color: "#22c55e",
                 fontFamily: "Chakra Petch, sans-serif",
                 letterSpacing: "-0.5px"
               }} cursor={{
                 fill: "rgba(255, 255, 255, 0.05)"
               }} />
-                  <Bar dataKey="amount" fill="#ef4444" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="amount" fill="#22c55e" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer> : <div className="h-full flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">No withdrawal requests in this period</p>
+                <p className="text-sm text-muted-foreground">No earnings in this period</p>
               </div>}
           </div>
          </CardContent>
