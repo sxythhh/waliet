@@ -31,20 +31,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border p-6">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
-            V
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            Virality
-          </span>
-        </div>
-      </SidebarHeader>
-      
-      <SidebarContent>
+      <SidebarContent className="pt-6">
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -52,8 +40,9 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     onClick={() => handleTabClick(item.tab)}
                     isActive={currentTab === item.tab}
+                    className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground hover:bg-sidebar-accent"
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className="h-5 w-5 text-muted-foreground data-[active=true]:text-primary-foreground" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

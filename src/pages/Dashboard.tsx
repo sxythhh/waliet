@@ -63,7 +63,7 @@ export default function Dashboard() {
             Manage your campaigns, earnings, and profile
           </p>
         </div>
-        <Button onClick={handleSignOut} variant="outline">
+        <Button onClick={handleSignOut} variant="outline" className="border-none">
           Sign Out
         </Button>
       </div>
