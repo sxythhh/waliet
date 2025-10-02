@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, LogOut } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -353,12 +353,6 @@ export function ProfileTab() {
       });
     }
   };
-  
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/auth';
-  };
-  
   const profileUrl = `${window.location.origin}/${profile?.username}`;
   if (loading || !profile) {
     return <div className="flex items-center justify-center py-12">
@@ -519,12 +513,7 @@ export function ProfileTab() {
 
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input 
-                id="username" 
-                value={profile.username} 
-                disabled 
-                className="bg-muted/50 border-border/40 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border/40"
-              />
+              <Input id="username" value={profile.username} disabled />
               <p className="text-xs text-muted-foreground">
                 Username cannot be changed
               </p>
@@ -532,50 +521,26 @@ export function ProfileTab() {
 
             <div className="space-y-2">
               <Label htmlFor="fullName">Display Name</Label>
-              <Input 
-                id="fullName" 
-                value={profile.full_name || ""} 
-                onChange={e => setProfile({
-                  ...profile,
-                  full_name: e.target.value
-                })} 
-                placeholder="Your display name"
-                className="bg-muted/50 border-border/40 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border/40"
-              />
+              <Input id="fullName" value={profile.full_name || ""} onChange={e => setProfile({
+              ...profile,
+              full_name: e.target.value
+            })} placeholder="Your display name" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="bio">Bio</Label>
-              <Textarea 
-                id="bio" 
-                value={profile.bio || ""} 
-                onChange={e => setProfile({
-                  ...profile,
-                  bio: e.target.value
-                })} 
-                placeholder="Tell brands about yourself..." 
-                rows={4}
-                className="bg-muted/50 border-border/40 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border/40 resize-none"
-              />
+              <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
+              ...profile,
+              bio: e.target.value
+            })} placeholder="Tell brands about yourself..." rows={4} />
               <p className="text-xs text-muted-foreground">
                 This will appear on your public profile
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={saving} className="flex-1">
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleSignOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-            </div>
+            <Button type="submit" disabled={saving}>
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
           </form>
         </CardContent>
       </Card>
