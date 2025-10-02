@@ -476,12 +476,9 @@ export function WalletTab() {
   };
   return <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header with Main Balance */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Wallet</h2>
-          <p className="text-muted-foreground mt-1">Manage your earnings and payouts</p>
-        </div>
-        <Button onClick={handleRequestPayout} size="lg" className="gap-2">
+      <div className="flex items-center justify-between py-0">
+        
+        <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0">
           <ArrowUpRight className="h-4 w-4" />
           Request Payout
         </Button>
