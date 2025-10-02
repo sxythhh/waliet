@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,20 +6,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Profile {
+  id: string;
   username: string;
   full_name: string | null;
   bio: string | null;
   avatar_url: string | null;
   total_earnings: number;
+  trust_score: number;
+  demographics_score: number;
+  views_score: number;
 }
 
 export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,6 +50,88 @@ export function ProfileTab() {
     }
 
     setLoading(false);
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file",
+        description: "Please upload an image file",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "Image must be less than 5MB",
+      });
+      return;
+    }
+
+    setUploading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${session.user.id}/avatar.${fileExt}`;
+
+    // Delete old avatar if exists
+    if (profile.avatar_url) {
+      const oldPath = profile.avatar_url.split('/').pop();
+      if (oldPath) {
+        await supabase.storage.from('avatars').remove([`${session.user.id}/${oldPath}`]);
+      }
+    }
+
+    // Upload new avatar
+    const { error: uploadError, data } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) {
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: uploadError.message,
+      });
+      setUploading(false);
+      return;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    // Update profile with new avatar URL
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', session.user.id);
+
+    setUploading(false);
+
+    if (updateError) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update profile picture",
+      });
+    } else {
+      setProfile({ ...profile, avatar_url: publicUrl });
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully",
+      });
+    }
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -133,17 +222,17 @@ export function ProfileTab() {
               <span className="text-sm text-muted-foreground">Trust Score</span>
               <TrendingUp className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-2xl font-bold">4.8/5.0</p>
+            <p className="text-2xl font-bold">{profile.trust_score}/100</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-0">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Avg Views</span>
+              <span className="text-sm text-muted-foreground">Views Score</span>
               <Eye className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-2xl font-bold">12.5K</p>
+            <p className="text-2xl font-bold">{profile.views_score}/100</p>
           </CardContent>
         </Card>
       </div>
@@ -156,6 +245,41 @@ export function ProfileTab() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSaveProfile} className="space-y-4">
+            {/* Avatar Upload */}
+            <div className="space-y-2">
+              <Label>Profile Picture</Label>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20 border-2 border-primary">
+                  <AvatarImage src={profile.avatar_url || ""} />
+                  <AvatarFallback className="text-xl bg-primary/10">
+                    {profile.full_name?.[0] || profile.username[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {uploading ? "Uploading..." : "Upload New"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG or GIF. Max 5MB.
+                  </p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input

@@ -12,6 +12,9 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
   total_earnings: number;
+  trust_score: number;
+  demographics_score: number;
+  views_score: number;
 }
 
 interface SocialAccount {
@@ -82,11 +85,11 @@ export default function PublicProfile() {
     }
   };
 
-  // Mock ratings - these would come from your database
-  const trustScore = 4.8;
-  const demographicsScore = 4.5;
-  const viewsScore = 4.7;
-  const overallRating = ((trustScore + demographicsScore + viewsScore) / 3).toFixed(1);
+  // Calculate ratings from profile
+  const trustScore = profile?.trust_score || 0;
+  const demographicsScore = profile?.demographics_score || 0;
+  const viewsScore = profile?.views_score || 0;
+  const overallRating = Math.round((trustScore + demographicsScore + viewsScore) / 3);
 
   if (loading) {
     return (
@@ -149,7 +152,7 @@ export default function PublicProfile() {
                 <span className="text-sm text-muted-foreground">Overall Rating</span>
                 <TrendingUp className="h-4 w-4 text-primary" />
               </div>
-              <p className="text-2xl font-bold text-primary">{overallRating}/5.0</p>
+              <p className="text-2xl font-bold text-primary">{overallRating}/100</p>
             </CardContent>
           </Card>
         </div>
@@ -166,7 +169,7 @@ export default function PublicProfile() {
                 </div>
                 <span className="text-sm">Trust Score</span>
               </div>
-              <span className="text-sm font-semibold">{trustScore.toFixed(1)}/5.0</span>
+              <span className="text-sm font-semibold">{trustScore}/100</span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -176,7 +179,7 @@ export default function PublicProfile() {
                 </div>
                 <span className="text-sm">Demographics</span>
               </div>
-              <span className="text-sm font-semibold">{demographicsScore.toFixed(1)}/5.0</span>
+              <span className="text-sm font-semibold">{demographicsScore}/100</span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -186,7 +189,7 @@ export default function PublicProfile() {
                 </div>
                 <span className="text-sm">Views Performance</span>
               </div>
-              <span className="text-sm font-semibold">{viewsScore.toFixed(1)}/5.0</span>
+              <span className="text-sm font-semibold">{viewsScore}/100</span>
             </div>
           </CardContent>
         </Card>
