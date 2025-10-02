@@ -22,7 +22,12 @@ Deno.serve(async (req) => {
   try {
     const notification: WithdrawalNotification = await req.json();
 
-    const webhookUrl = "https://discord.com/api/webhooks/1423279762419351635/Cf-R5aygv08jYdgSYInYFi9yJNy4s_aZtUAQkMmhW0ijc9Lo2zLAnCA6T1MdnDbqr4E9";
+    const webhookUrl = Deno.env.get('DISCORD_WEBHOOK_URL');
+    
+    if (!webhookUrl) {
+      console.error('DISCORD_WEBHOOK_URL not configured');
+      throw new Error('Webhook URL not configured');
+    }
 
     // Format payout details based on method
     let payoutDetailsText = '';
