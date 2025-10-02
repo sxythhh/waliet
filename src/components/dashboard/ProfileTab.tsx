@@ -309,7 +309,7 @@ export function ProfileTab() {
       {/* Connected Accounts */}
       <Card className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-6">
             <div>
               <CardTitle className="text-lg">Connected Accounts</CardTitle>
               <CardDescription>Link your verified accounts to campaigns</CardDescription>
