@@ -20,6 +20,7 @@ import BrandAccount from "./pages/BrandAccount";
 import Training from "./pages/Training";
 import AdminOverview from "./pages/admin/Overview";
 import AdminBrands from "./pages/admin/Brands";
+import AdminPayouts from "./pages/admin/Payouts";
 import AdminCourses from "./pages/admin/Courses";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
@@ -85,6 +86,7 @@ const App = () => (
           <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
           <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
           <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
+          <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
           <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
           <Route path="/brand/:slug" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
           <Route path="/brand/:slug/management" element={<BrandLayout><BrandManagement /></BrandLayout>} />

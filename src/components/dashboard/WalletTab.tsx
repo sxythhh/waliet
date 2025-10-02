@@ -213,7 +213,7 @@ export function WalletTab() {
     }
   };
 
-  const handleRequestPayout = () => {
+  const handleRequestPayout = async () => {
     if (!wallet?.balance || wallet.balance < 50) {
       toast({
         variant: "destructive",
@@ -232,10 +232,32 @@ export function WalletTab() {
       return;
     }
 
-    toast({
-      title: "Payout Requested",
-      description: "Your payout request has been submitted and will be processed within 3-5 business days.",
-    });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Create payout request
+    const { error } = await supabase
+      .from("payout_requests")
+      .insert({
+        user_id: session.user.id,
+        amount: wallet.balance,
+        payout_method: payoutMethods[0].method,
+        payout_details: payoutMethods[0].details,
+        status: 'pending'
+      });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to submit payout request",
+      });
+    } else {
+      toast({
+        title: "Payout Requested",
+        description: "Your payout request has been submitted and will be processed within 3-5 business days.",
+      });
+    }
   };
 
   if (loading) {
