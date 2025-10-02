@@ -639,9 +639,9 @@ export function WalletTab() {
           <CardTitle className="text-lg font-semibold">Payout Methods</CardTitle>
           <Button 
             onClick={() => setDialogOpen(true)} 
-            variant="outline" 
             size="sm"
             disabled={payoutMethods.length >= 3}
+            className="bg-primary hover:bg-primary/90 text-white border-0"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Method {payoutMethods.length >= 3 ? "(Max 3)" : ""}
@@ -651,7 +651,7 @@ export function WalletTab() {
           {payoutMethods.length === 0 ? <div className="text-center py-8">
               <WalletIcon className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
               <p className="text-sm text-muted-foreground mb-3">No payout methods</p>
-              <Button onClick={() => setDialogOpen(true)} variant="outline" size="sm">
+              <Button onClick={() => setDialogOpen(true)} size="sm" className="bg-primary hover:bg-primary/90 text-white border-0">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Method
               </Button>
