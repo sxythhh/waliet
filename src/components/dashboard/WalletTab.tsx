@@ -76,43 +76,70 @@ export function WalletTab() {
 
     const { start, end } = getDateRange();
 
+    // Get all submissions up to the end date to calculate cumulative balance
     const { data: submissions } = await supabase
       .from("campaign_submissions")
       .select("earnings, submitted_at")
       .eq("creator_id", session.user.id)
-      .gte("submitted_at", start.toISOString())
       .lte("submitted_at", end.toISOString())
       .order("submitted_at", { ascending: true });
 
-    if (submissions && submissions.length > 0) {
-      // Aggregate earnings by date
-      const dataMap = new Map<string, number>();
+    // Get all payout requests up to the end date
+    const { data: payouts } = await supabase
+      .from("payout_requests")
+      .select("amount, requested_at, status")
+      .eq("user_id", session.user.id)
+      .in("status", ["completed"])
+      .lte("requested_at", end.toISOString())
+      .order("requested_at", { ascending: true });
+
+    // Generate date points for the selected period
+    const days = timePeriod === '1W' || timePeriod === 'TW' ? 7 : 
+                 timePeriod === '1M' ? 30 : 
+                 timePeriod === '3M' ? 90 : 365;
+    
+    const dataPoints: EarningsDataPoint[] = [];
+    let runningBalance = 0;
+
+    // Create array of dates in the period
+    for (let i = 0; i < days; i++) {
+      const currentDate = subDays(end, days - i - 1);
+      const dateStr = format(currentDate, 'MMM dd');
       
-      submissions.forEach((sub) => {
-        const date = format(new Date(sub.submitted_at), 'MMM dd');
-        const current = dataMap.get(date) || 0;
-        dataMap.set(date, current + (Number(sub.earnings) || 0));
-      });
+      // Add all earnings up to this date
+      if (submissions) {
+        submissions.forEach((sub) => {
+          const subDate = new Date(sub.submitted_at);
+          if (subDate <= currentDate && subDate > subDays(currentDate, 1)) {
+            runningBalance += Number(sub.earnings) || 0;
+          }
+        });
+      }
 
-      const chartData = Array.from(dataMap.entries()).map(([date, amount]) => ({
-        date,
-        amount: Number(amount.toFixed(2))
-      }));
+      // Subtract all completed payouts up to this date
+      if (payouts) {
+        payouts.forEach((payout) => {
+          const payoutDate = new Date(payout.requested_at);
+          if (payoutDate <= currentDate && payoutDate > subDays(currentDate, 1)) {
+            runningBalance -= Number(payout.amount) || 0;
+          }
+        });
+      }
 
-      setEarningsData(chartData);
-    } else {
-      // Generate empty data points for the time period
-      const days = timePeriod === '1W' || timePeriod === 'TW' ? 7 : 
-                   timePeriod === '1M' ? 30 : 
-                   timePeriod === '3M' ? 90 : 365;
-      
-      const emptyData = Array.from({ length: Math.min(days, 10) }, (_, i) => ({
-        date: format(subDays(end, days - i * (days / 10)), 'MMM dd'),
-        amount: 0
-      }));
-
-      setEarningsData(emptyData);
+      // Sample the data points to avoid overcrowding
+      const sampleRate = Math.max(1, Math.floor(days / 15));
+      if (i % sampleRate === 0 || i === days - 1) {
+        dataPoints.push({
+          date: dateStr,
+          amount: Number(runningBalance.toFixed(2))
+        });
+      }
     }
+
+    setEarningsData(dataPoints.length > 0 ? dataPoints : [{
+      date: format(new Date(), 'MMM dd'),
+      amount: wallet?.balance || 0
+    }]);
   };
 
   const fetchWallet = async () => {
@@ -330,9 +357,10 @@ export function WalletTab() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={earningsData}>
                   <defs>
-                    <linearGradient id="earningsGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="50%" stopColor="#60a5fa" stopOpacity={0.15} />
+                      <stop offset="100%" stopColor="#93c5fd" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <XAxis 
@@ -341,6 +369,7 @@ export function WalletTab() {
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
+                    style={{ opacity: 0.6 }}
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))"
@@ -348,28 +377,45 @@ export function WalletTab() {
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => `$${value}`}
+                    style={{ opacity: 0.6 }}
                   />
                   <Tooltip 
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
-                      border: "none",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "12px",
+                      boxShadow: "0 8px 24px rgba(59, 130, 246, 0.15)",
+                      padding: "12px 16px",
                     }}
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, 'Earnings']}
+                    labelStyle={{
+                      color: "hsl(var(--foreground))",
+                      fontWeight: 600,
+                      marginBottom: "4px",
+                    }}
+                    formatter={(value: number) => [`$${value.toFixed(2)}`, 'Balance']}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="amount" 
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    fill="url(#earningsGradient)"
+                    stroke="#3b82f6"
+                    strokeWidth={3}
+                    fill="url(#balanceGradient)"
+                    dot={false}
+                    activeDot={{ 
+                      r: 6, 
+                      fill: "#3b82f6",
+                      stroke: "#fff",
+                      strokeWidth: 2,
+                    }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                No earnings data for this period
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center space-y-2">
+                  <div className="text-4xl font-bold text-blue-500">${wallet?.balance?.toFixed(2) || "0.00"}</div>
+                  <p className="text-sm text-muted-foreground">Current Balance</p>
+                </div>
               </div>
             )}
           </div>
