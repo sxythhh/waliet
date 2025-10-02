@@ -46,6 +46,7 @@ interface Transaction {
   destination?: string;
   source?: string;
   status?: string;
+  rejection_reason?: string;
   metadata?: any;
 }
 type TimePeriod = '3D' | '1W' | '1M' | '3M' | '1Y' | 'TW';
@@ -68,9 +69,34 @@ export function WalletTab() {
   const {
     toast
   } = useToast();
+  
   useEffect(() => {
     fetchWallet();
+    
+    // Set up real-time listener for payout requests
+    const channel = supabase
+      .channel('payout-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'payout_requests'
+        },
+        (payload) => {
+          console.log('Payout request updated:', payload);
+          // Refetch wallet and transactions when payout request changes
+          fetchWallet();
+          fetchTransactions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+  
   useEffect(() => {
     if (wallet) {
       fetchEarningsData();
@@ -262,6 +288,11 @@ export function WalletTab() {
           const matchingPayout = payoutRequests.find(pr => Math.abs(new Date(pr.requested_at).getTime() - new Date(txn.created_at).getTime()) < 5000 && Number(pr.amount) === Number(txn.amount));
           if (matchingPayout) {
             payoutDetails = matchingPayout.payout_details;
+            // Add rejection reason if available
+            if (matchingPayout.rejection_reason) {
+              const metadataObj = typeof metadata === 'object' && metadata !== null ? metadata : {};
+              txn.metadata = { ...metadataObj, rejection_reason: matchingPayout.rejection_reason };
+            }
           }
         }
         switch (txn.type) {
@@ -308,6 +339,7 @@ export function WalletTab() {
           destination,
           source: source || txn.description || '',
           status: txn.status,
+          rejection_reason: (txn.metadata as any)?.rejection_reason,
           metadata: Object.assign({}, txn.metadata as any, {
             payoutDetails
           })
@@ -1050,10 +1082,23 @@ export function WalletTab() {
                   <span className="text-sm text-muted-foreground">
                     {format(selectedTransaction.date, 'MMMM dd yyyy, hh:mm a')}
                   </span>
-                  {selectedTransaction.status && <Badge variant={selectedTransaction.status === 'completed' ? 'default' : 'secondary'} className="capitalize">
+                  {selectedTransaction.status && <Badge variant={selectedTransaction.status === 'completed' ? 'default' : selectedTransaction.status === 'rejected' ? 'destructive' : 'secondary'} className="capitalize">
                       {selectedTransaction.status}
                     </Badge>}
                 </div>
+
+                {/* Rejection Reason */}
+                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && (
+                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <X className="h-5 w-5 text-destructive mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-sm text-destructive mb-1">Rejection Reason</h4>
+                        <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <Separator />
 
