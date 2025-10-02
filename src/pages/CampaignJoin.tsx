@@ -180,18 +180,18 @@ export default function CampaignJoin() {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">Loading campaign...</div>
+      <div className="p-8 flex items-center justify-center">
+        <div className="text-muted-foreground">Loading campaign...</div>
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
+      <div className="p-8 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-white text-xl mb-4">Campaign not found</div>
-          <Button onClick={() => navigate("/discover")} className="bg-primary">
+          <div className="text-xl mb-4">Campaign not found</div>
+          <Button onClick={() => navigate("/dashboard?tab=discover")}>
             Browse Campaigns
           </Button>
         </div>
@@ -200,16 +200,16 @@ export default function CampaignJoin() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="p-6">
+      <div className="p-6 border-b bg-background">
         <Button
           variant="ghost"
-          onClick={() => navigate("/dashboard?tab=discover")}
-          className="text-white hover:bg-white/10 gap-2"
+          onClick={() => navigate("/dashboard?tab=campaigns")}
+          className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Return
+          Back to Campaigns
         </Button>
       </div>
 
@@ -225,15 +225,15 @@ export default function CampaignJoin() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-4xl font-bold text-white">{campaign.brand_name}</div>
-              </div>
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-4xl font-bold text-primary-foreground">{campaign.brand_name}</div>
+                </div>
             )}
           </div>
           
           {/* Logo Badge - Overlapping bottom left */}
           <div className="absolute -bottom-10 left-8 z-10">
-            <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-[#080808] overflow-hidden shadow-xl">
+            <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-background overflow-hidden shadow-xl">
               {campaign.brand_logo_url ? (
                 <img
                   src={campaign.brand_logo_url}
@@ -241,7 +241,7 @@ export default function CampaignJoin() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="text-2xl font-bold text-white">
+                <div className="text-2xl font-bold text-primary-foreground">
                   {campaign.brand_name.charAt(0)}
                 </div>
               )}
@@ -257,7 +257,7 @@ export default function CampaignJoin() {
           {/* Step Indicator */}
           <div className="flex flex-col items-center">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-              currentStep === 1 ? 'bg-primary text-white' : 'bg-white/10 text-white/40'
+              currentStep === 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>
               1
             </div>
@@ -270,32 +270,32 @@ export default function CampaignJoin() {
               <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
             </div>
             
-            <Card className="bg-[#1a1a1a] border-0 hover:bg-[#1f1f1f] transition-colors cursor-pointer"
+            <Card className="bg-card border hover:bg-accent transition-colors cursor-pointer"
                   onClick={() => setCurrentStep(currentStep === 1 ? 2 : 1)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-semibold mb-1">Campaign Requirements</div>
-                    <div className="text-sm text-white/50">
+                    <div className="text-sm text-muted-foreground">
                       Please ensure you have gone through all campaign details
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-white/50" />
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
                 
                 {currentStep === 1 && (
-                  <div className="mt-4 pt-4 border-t border-white/10 space-y-4">
+                  <div className="mt-4 pt-4 border-t space-y-4">
                     {campaign.description && (
                       <div>
                         <div className="text-sm font-medium mb-2">Description</div>
-                        <p className="text-sm text-white/70">{campaign.description}</p>
+                        <p className="text-sm text-muted-foreground">{campaign.description}</p>
                       </div>
                     )}
                     
                     {campaign.guidelines && (
                       <div>
                         <div className="text-sm font-medium mb-2">Guidelines</div>
-                        <p className="text-sm text-white/70 whitespace-pre-wrap">{campaign.guidelines}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{campaign.guidelines}</p>
                       </div>
                     )}
                     
@@ -303,7 +303,7 @@ export default function CampaignJoin() {
                       <div className="text-sm font-medium mb-2">Platforms</div>
                       <div className="flex gap-2">
                         {campaign.allowed_platforms.map((platform) => (
-                          <div key={platform} className="px-3 py-1 bg-white/5 border-0 rounded-full text-xs">
+                          <div key={platform} className="px-3 py-1 bg-muted rounded-full text-xs">
                             {platform === "tiktok" ? "TikTok" : "Instagram"}
                           </div>
                         ))}
@@ -320,7 +320,7 @@ export default function CampaignJoin() {
                         e.stopPropagation();
                         setCurrentStep(2);
                       }}
-                      className="w-full bg-primary hover:bg-primary/90"
+                      className="w-full"
                     >
                       Continue to Account Selection
                     </Button>
@@ -337,7 +337,7 @@ export default function CampaignJoin() {
             {/* Step Indicator */}
             <div className="flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                currentStep === 2 ? 'bg-primary text-white' : 'bg-white/10 text-white/40'
+                currentStep === 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
               }`}>
                 2
               </div>
@@ -352,7 +352,7 @@ export default function CampaignJoin() {
               
               {socialAccounts.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-white/50 mb-4">You don't have any connected accounts yet</p>
+                  <p className="text-muted-foreground mb-4">You don't have any connected accounts yet</p>
                   <Button
                     onClick={handleAddAccount}
                     variant="outline"
@@ -374,10 +374,10 @@ export default function CampaignJoin() {
                             setSelectedAccount(account);
                             setValue("platform", account.platform);
                           }}
-                          className={`p-4 rounded-xl border-0 cursor-pointer transition-all ${
+                          className={`p-4 rounded-xl border cursor-pointer transition-all ${
                             selectedAccount?.id === account.id
                               ? 'bg-primary/10 ring-2 ring-primary'
-                              : 'bg-[#1a1a1a] hover:bg-[#1f1f1f]'
+                              : 'bg-card hover:bg-accent'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -388,7 +388,7 @@ export default function CampaignJoin() {
                                   @{account.username}
                                   <CheckCircle2 className="h-4 w-4 text-primary" />
                                 </div>
-                                <div className="text-sm text-white/50">
+                                <div className="text-sm text-muted-foreground">
                                   {account.follower_count.toLocaleString()} followers
                                 </div>
                               </div>
@@ -414,7 +414,7 @@ export default function CampaignJoin() {
                         <Input
                           {...register("content_url", { required: "Content URL is required" })}
                           placeholder="https://..."
-                          className="bg-[#1a1a1a] border-0 text-white placeholder:text-white/40"
+                          className="bg-background"
                         />
                         {errors.content_url && (
                           <p className="text-destructive text-sm mt-1">{errors.content_url.message}</p>
@@ -425,7 +425,7 @@ export default function CampaignJoin() {
                         <Button 
                           onClick={handleSubmit(onSubmit)}
                           disabled={submitting}
-                          className="w-full bg-primary hover:bg-primary/90"
+                          className="w-full"
                         >
                           {submitting ? "Submitting..." : "Submit Application"}
                         </Button>
@@ -434,7 +434,7 @@ export default function CampaignJoin() {
                       {campaign.application_questions.length > 0 && (
                         <Button 
                           onClick={() => setCurrentStep(3)}
-                          className="w-full bg-primary hover:bg-primary/90"
+                          className="w-full"
                         >
                           Continue to Application Questions
                         </Button>
@@ -452,7 +452,7 @@ export default function CampaignJoin() {
           <div className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
                 3
               </div>
             </div>
@@ -469,7 +469,7 @@ export default function CampaignJoin() {
                       {...register(`answers.${index}` as any, { required: "This answer is required" })}
                       placeholder="Your answer..."
                       rows={3}
-                      className="bg-[#1a1a1a] border-0 text-white placeholder:text-white/40 resize-none"
+                      className="bg-background resize-none"
                     />
                     {errors.answers?.[index] && (
                       <p className="text-destructive text-sm mt-1">{errors.answers[index].message}</p>
@@ -480,7 +480,7 @@ export default function CampaignJoin() {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-primary hover:bg-primary/90 py-6 text-lg"
+                  className="w-full py-6 text-lg"
                 >
                   {submitting ? "Submitting..." : "Submit Application"}
                 </Button>

@@ -72,14 +72,14 @@ export default function CampaignPreview() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col">
-      <div className="p-4 border-b">
+    <div className="h-[calc(100vh-4rem)] w-full flex flex-col">
+      <div className="p-4 border-b bg-background">
         <Button
           variant="ghost"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/dashboard?tab=campaigns")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
+          Back to Campaigns
         </Button>
       </div>
       <div className="flex-1">
