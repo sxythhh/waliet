@@ -997,17 +997,16 @@ export function WalletTab() {
               <div className="p-6 pb-8 bg-gradient-to-b from-card to-background border-b sticky top-0 z-10">
                 <Button 
                   variant="ghost" 
-                  size="sm" 
+                  size="icon" 
                   className="mb-6 -ml-2"
                   onClick={() => setTransactionSheetOpen(false)}
                 >
-                  <X className="h-4 w-4 mr-2" />
-                  Close
+                  <X className="h-4 w-4" />
                 </Button>
 
                 {/* Wordmark Logo */}
                 <div className="flex justify-center mb-4">
-                  <img src={wordmarkLogo} alt="Virality" className="h-8" />
+                  <img src={wordmarkLogo} alt="Virality" className="h-12" />
                 </div>
 
                 {/* Icon */}
