@@ -157,24 +157,7 @@ export default function CampaignJoin() {
       </div>
 
       {/* Campaign Banner with Logo */}
-      <div className="max-w-3xl mx-auto px-6 mb-8">
-        {/* Logo Badge - Above Banner */}
-        <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center overflow-hidden">
-            {campaign.brand_logo_url ? (
-              <img
-                src={campaign.brand_logo_url}
-                alt={campaign.brand_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-2xl font-bold text-white">
-                {campaign.brand_name.charAt(0)}
-              </div>
-            )}
-          </div>
-        </div>
-
+      <div className="max-w-3xl mx-auto px-6 mb-12">
         {/* Banner */}
         <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary to-primary/80 h-48">
           {campaign.banner_url ? (
@@ -188,6 +171,23 @@ export default function CampaignJoin() {
               <div className="text-4xl font-bold text-white">{campaign.brand_name}</div>
             </div>
           )}
+          
+          {/* Logo Badge - Overlapping bottom left */}
+          <div className="absolute -bottom-10 left-8 z-10">
+            <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-[#080808] overflow-hidden">
+              {campaign.brand_logo_url ? (
+                <img
+                  src={campaign.brand_logo_url}
+                  alt={campaign.brand_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-2xl font-bold text-white">
+                  {campaign.brand_name.charAt(0)}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
