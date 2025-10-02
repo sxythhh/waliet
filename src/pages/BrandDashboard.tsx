@@ -141,17 +141,7 @@ export default function BrandDashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          
-          <div className="bg-[#202020] rounded-2xl p-6">
-            <div className="text-white/60 text-sm mb-2">Active Campaigns</div>
-            <div className="text-3xl font-bold text-white">{activeCampaigns}</div>
-          </div>
-          <div className="bg-[#202020] rounded-2xl p-6">
-            <div className="text-white/60 text-sm mb-2">Total Campaigns</div>
-            <div className="text-3xl font-bold text-white">{campaigns.length}</div>
-          </div>
-        </div>
+        
 
         {/* Campaigns List */}
         {campaigns.length > 0 && <div className="space-y-4 mt-8">
