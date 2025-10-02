@@ -487,7 +487,7 @@ export default function BrandManagement() {
 
           {/* Creators Tab */}
           <TabsContent value="creators">
-            <Card className="bg-gradient-card border-0">
+            <Card className="bg-[#202020] border-0">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
@@ -630,7 +630,7 @@ export default function BrandManagement() {
 
           {/* Applications Tab */}
           <TabsContent value="applications">
-            <Card className="bg-gradient-card border-0">
+            <Card className="bg-[#202020] border-0">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
