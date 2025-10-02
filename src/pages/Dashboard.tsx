@@ -60,7 +60,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold">Joined Campaigns</h1>
           <Button
             onClick={() => setPrivateDialogOpen(true)}
-            variant="outline"
+            variant="secondary"
             className="gap-2"
           >
             <Lock className="h-4 w-4" />
