@@ -79,6 +79,7 @@ export default function BrandManagement() {
   const [assetsUrl, setAssetsUrl] = useState("");
   const [homeUrl, setHomeUrl] = useState("");
   const [savingUrls, setSavingUrls] = useState(false);
+  const [creatorSearch, setCreatorSearch] = useState("");
 
   useEffect(() => {
     fetchCampaigns();
@@ -245,6 +246,11 @@ export default function BrandManagement() {
 
   const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
+  
+  // Filter creators based on search
+  const filteredCreators = approvedSubmissions.filter((submission) =>
+    submission.profiles?.username?.toLowerCase().includes(creatorSearch.toLowerCase())
+  );
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
 
   const totalViews = approvedSubmissions.reduce((sum, s) => sum + s.views, 0);
@@ -487,141 +493,102 @@ export default function BrandManagement() {
           <TabsContent value="creators">
             <Card className="bg-gradient-card border-0">
               <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  Active Creators
-                  <Badge variant="secondary" className="ml-2">
-                    {approvedSubmissions.length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {approvedSubmissions.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                    <p className="text-muted-foreground text-sm">No active creators yet</p>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    Active Creators
+                    <Badge variant="secondary" className="ml-2">
+                      {approvedSubmissions.length}
+                    </Badge>
+                  </CardTitle>
+                  <div className="w-64">
+                    <Input
+                      placeholder="Search creators..."
+                      value={creatorSearch}
+                      onChange={(e) => setCreatorSearch(e.target.value)}
+                      className="bg-background/50 border-border/50"
+                    />
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {approvedSubmissions.map((submission) => (
-                      <Card key={submission.id} className="bg-background/50 border-0 overflow-hidden">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            {/* Creator Avatar & Info */}
-                            <div className="flex-shrink-0">
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border/50 hover:bg-transparent">
+                      <TableHead className="text-muted-foreground">Creator</TableHead>
+                      <TableHead className="text-muted-foreground">Platform</TableHead>
+                      <TableHead className="text-muted-foreground text-right">Views</TableHead>
+                      <TableHead className="text-muted-foreground text-right">Trust</TableHead>
+                      <TableHead className="text-muted-foreground text-right">V-Score</TableHead>
+                      <TableHead className="text-muted-foreground text-right">Demo</TableHead>
+                      <TableHead className="text-muted-foreground text-right">Earnings</TableHead>
+                      <TableHead className="text-muted-foreground">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCreators.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8">
+                          <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                          <p className="text-muted-foreground text-sm">
+                            {creatorSearch ? "No creators found" : "No active creators yet"}
+                          </p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredCreators.map((submission) => (
+                        <TableRow key={submission.id} className="border-border/50">
+                          <TableCell>
+                            <a
+                              href={`/${submission.profiles?.username}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 hover:underline text-primary font-medium"
+                            >
                               {submission.profiles?.avatar_url ? (
                                 <img
                                   src={submission.profiles.avatar_url}
                                   alt={submission.profiles.username}
-                                  className="w-12 h-12 rounded-full object-cover border-2 border-success/30"
+                                  className="w-8 h-8 rounded-full object-cover border border-border/50"
                                 />
                               ) : (
-                                <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center">
-                                  <Users className="h-6 w-6 text-success" />
+                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                                  <Users className="h-4 w-4 text-primary" />
                                 </div>
                               )}
-                            </div>
-
-                            {/* Main Content */}
-                            <div className="flex-1 space-y-2">
-                              {/* Creator Name & Status */}
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <h3 className="font-semibold">
-                                    {submission.profiles?.username || "Unknown"}
-                                  </h3>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <Badge variant="outline" className="text-xs py-0 h-5">
-                                      {submission.platform || "Unknown Platform"}
-                                    </Badge>
-                                    <Badge className="bg-success/20 text-success border-0 text-xs py-0 h-5">
-                                      Active
-                                    </Badge>
-                                  </div>
-                                </div>
-
-                                {/* Performance Metrics */}
-                                <div className="text-right">
-                                  <div className="text-sm font-semibold text-success">
-                                    ${Number(submission.earnings).toFixed(2)}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    earned
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Stats Grid */}
-                              <div className="grid grid-cols-4 gap-3 pt-2">
-                                <div className="flex items-center gap-1.5">
-                                  <div className="p-1.5 rounded bg-primary/10">
-                                    <Eye className="h-3.5 w-3.5 text-primary" />
-                                  </div>
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground leading-none">Views</p>
-                                    <p className="font-semibold text-sm leading-tight">
-                                      {submission.views.toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-1.5">
-                                  <div className="p-1.5 rounded bg-success/10">
-                                    <TrendingUp className="h-3.5 w-3.5 text-success" />
-                                  </div>
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground leading-none">Trust</p>
-                                    <p className="font-semibold text-sm leading-tight">
-                                      {submission.profiles?.trust_score || 0}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-1.5">
-                                  <div className="p-1.5 rounded bg-warning/10">
-                                    <Eye className="h-3.5 w-3.5 text-warning" />
-                                  </div>
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground leading-none">V-Score</p>
-                                    <p className="font-semibold text-sm leading-tight">
-                                      {submission.profiles?.views_score || 0}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-1.5">
-                                  <div className="p-1.5 rounded bg-primary/10">
-                                    <Users className="h-3.5 w-3.5 text-primary" />
-                                  </div>
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground leading-none">Demo</p>
-                                    <p className="font-semibold text-sm leading-tight">
-                                      {submission.profiles?.demographics_score || 0}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Content URL if available */}
-                              {submission.content_url && (
-                                <div className="pt-1">
-                                  <a
-                                    href={submission.content_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                                  >
-                                    View content →
-                                  </a>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                              {submission.profiles?.username || "Unknown"}
+                            </a>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {submission.platform || "Unknown"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {submission.views.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {submission.profiles?.trust_score || 0}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {submission.profiles?.views_score || 0}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {submission.profiles?.demographics_score || 0}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-success">
+                            ${Number(submission.earnings).toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className="bg-success/20 text-success border-0">
+                              Active
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
