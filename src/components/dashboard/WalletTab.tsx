@@ -237,7 +237,22 @@ export function WalletTab() {
             destination = 'Wallet';
             break;
           case 'withdrawal':
-            destination = metadata?.payout_method === 'paypal' ? 'PayPal' : `Crypto (${metadata?.network || 'ETH'})`;
+            const payoutMethod = metadata?.payout_method;
+            if (payoutMethod === 'paypal') {
+              destination = 'PayPal';
+            } else if (payoutMethod === 'crypto') {
+              destination = `Crypto (${metadata?.network || 'ETH'})`;
+            } else if (payoutMethod === 'bank') {
+              destination = 'Bank Transfer';
+            } else if (payoutMethod === 'wise') {
+              destination = 'Wise';
+            } else if (payoutMethod === 'revolut') {
+              destination = 'Revolut';
+            } else if (payoutMethod === 'tips') {
+              destination = 'TIPS';
+            } else {
+              destination = payoutMethod || 'Unknown';
+            }
             break;
           case 'bonus':
             source = 'Bonus Payment';
@@ -299,6 +314,16 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session || !wallet) return;
+    
+    if (payoutMethods.length >= 3) {
+      toast({
+        variant: "destructive",
+        title: "Limit Reached",
+        description: "You can only add up to 3 payout methods"
+      });
+      return;
+    }
+    
     const updatedMethods = [...payoutMethods, {
       id: `method-${Date.now()}`,
       method,
@@ -612,9 +637,14 @@ export function WalletTab() {
       <Card className="bg-card border-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-lg font-semibold">Payout Methods</CardTitle>
-          <Button onClick={() => setDialogOpen(true)} variant="outline" size="sm">
+          <Button 
+            onClick={() => setDialogOpen(true)} 
+            variant="outline" 
+            size="sm"
+            disabled={payoutMethods.length >= 3}
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Add Method
+            Add Method {payoutMethods.length >= 3 ? "(Max 3)" : ""}
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -625,31 +655,75 @@ export function WalletTab() {
                 <Plus className="mr-2 h-4 w-4" />
                 Add Method
               </Button>
-            </div> : payoutMethods.map(method => <div key={method.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-3">
-                  {method.method === "paypal" ? <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <CreditCard className="h-5 w-5 text-primary" />
-                    </div> : <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <WalletIcon className="h-5 w-5 text-primary" />
-                    </div>}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">
-                        {method.method === "paypal" ? "PayPal" : "Crypto"}
+            </div> : payoutMethods.map(method => {
+              const getMethodLabel = () => {
+                switch (method.method) {
+                  case "paypal": return "PayPal";
+                  case "crypto": return "Crypto";
+                  case "bank": return "Bank Transfer";
+                  case "wise": return "Wise";
+                  case "revolut": return "Revolut";
+                  case "tips": return "TIPS";
+                  default: return method.method;
+                }
+              };
+              
+              const getMethodDetails = () => {
+                switch (method.method) {
+                  case "paypal": return method.details.email;
+                  case "crypto": return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
+                  case "bank": return `${method.details.bankName} - ${method.details.accountNumber?.slice(-4)}`;
+                  case "wise": return method.details.email;
+                  case "revolut": return method.details.email;
+                  case "tips": return method.details.username;
+                  default: return "N/A";
+                }
+              };
+              
+              const getBadgeText = () => {
+                switch (method.method) {
+                  case "crypto": return method.details.network?.toUpperCase();
+                  case "bank": return "Bank";
+                  case "paypal": return "Email";
+                  case "wise": return "Email";
+                  case "revolut": return "Email";
+                  case "tips": return "Username";
+                  default: return "";
+                }
+              };
+              
+              return (
+                <div key={method.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    {method.method === "crypto" ? (
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <WalletIcon className="h-5 w-5 text-primary" />
+                      </div>
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <CreditCard className="h-5 w-5 text-primary" />
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">
+                          {getMethodLabel()}
+                        </p>
+                        <Badge variant="secondary" className="text-xs">
+                          {getBadgeText()}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {getMethodDetails()}
                       </p>
-                      <Badge variant="secondary" className="text-xs">
-                        {method.method === "paypal" ? "Email" : method.details.network?.toUpperCase()}
-                      </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {method.method === "paypal" ? method.details.email : `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`}
-                    </p>
                   </div>
+                  <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)}>
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                  </Button>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)}>
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>)}
+              );
+            })}
         </CardContent>
       </Card>
 
@@ -750,7 +824,12 @@ export function WalletTab() {
         </CardContent>
       </Card>
 
-      <PayoutMethodDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleAddPayoutMethod} />
+      <PayoutMethodDialog 
+        open={dialogOpen} 
+        onOpenChange={setDialogOpen} 
+        onSave={handleAddPayoutMethod}
+        currentMethodCount={payoutMethods.length}
+      />
 
       {/* Payout Request Dialog */}
       <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
@@ -778,10 +857,37 @@ export function WalletTab() {
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent>
-                  {payoutMethods.map(method => <SelectItem key={method.id} value={method.id}>
-                      {method.method === "paypal" ? "PayPal" : "Crypto"} - {" "}
-                      {method.method === "paypal" ? method.details.email : `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`}
-                    </SelectItem>)}
+                  {payoutMethods.map(method => {
+                    const getMethodLabel = () => {
+                      switch (method.method) {
+                        case "paypal": return "PayPal";
+                        case "crypto": return "Crypto";
+                        case "bank": return "Bank";
+                        case "wise": return "Wise";
+                        case "revolut": return "Revolut";
+                        case "tips": return "TIPS";
+                        default: return method.method;
+                      }
+                    };
+                    
+                    const getMethodDetails = () => {
+                      switch (method.method) {
+                        case "paypal": return method.details.email;
+                        case "crypto": return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
+                        case "bank": return `${method.details.bankName}`;
+                        case "wise": return method.details.email;
+                        case "revolut": return method.details.email;
+                        case "tips": return method.details.username;
+                        default: return "N/A";
+                      }
+                    };
+                    
+                    return (
+                      <SelectItem key={method.id} value={method.id}>
+                        {getMethodLabel()} - {getMethodDetails()}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
