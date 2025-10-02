@@ -178,7 +178,16 @@ export function CampaignsTab() {
                 <h3 className="text-base sm:text-lg font-bold text-foreground mb-1 line-clamp-2">
                   {campaign.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
+                <div className="flex items-center gap-2">
+                  {campaign.brand_logo_url && (
+                    <img 
+                      src={campaign.brand_logo_url}
+                      alt={campaign.brand_name}
+                      className="w-5 h-5 rounded object-cover"
+                    />
+                  )}
+                  <p className="text-sm text-white">{campaign.brand_name}</p>
+                </div>
               </div>
 
               {/* RPM Display */}
