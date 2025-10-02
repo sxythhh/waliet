@@ -388,7 +388,7 @@ export function ProfileTab() {
                       {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1 flex-1 sm:flex-initial">
                           <X className="h-3 w-3" />
                           Unlink
-                        </Button> : <Button variant="outline" size="sm" onClick={() => {
+                        </Button> : <Button variant="default" size="sm" onClick={() => {
                   setSelectedAccountForLinking(account.id);
                   setShowLinkCampaignDialog(true);
                 }} disabled={joinedCampaigns.length === 0} className="h-8 gap-1 flex-1 sm:flex-initial whitespace-nowrap">
