@@ -5,7 +5,7 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, TrendingUp, PanelLeft } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, PanelLeft, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
@@ -252,6 +252,19 @@ export default function BrandDashboard() {
                           )}
                         </div>
                         <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-white/60 hover:text-white hover:bg-white/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const joinUrl = `${window.location.origin}/campaign/${campaign.id}`;
+                              navigator.clipboard.writeText(joinUrl);
+                              toast.success("Campaign join URL copied to clipboard");
+                            }}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
                           <CreateCampaignDialog
                             brandId={brand.id}
                             brandName={brand.name}
