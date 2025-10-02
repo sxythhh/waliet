@@ -67,11 +67,13 @@ export default function CampaignDetail() {
         .eq("creator_id", user.id)
         .maybeSingle();
 
-      if (!submissionData) {
+      if (!submissionData || submissionData.status !== "approved") {
         toast({
           variant: "destructive",
           title: "Access Denied",
-          description: "You must be part of this campaign to view it",
+          description: submissionData?.status === "pending" 
+            ? "Your application is pending approval" 
+            : "You must be approved to view this campaign",
         });
         navigate("/dashboard?tab=discover");
         return;

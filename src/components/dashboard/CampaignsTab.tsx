@@ -110,8 +110,14 @@ export function CampaignsTab() {
       {campaigns.map((campaign) => (
         <Card 
           key={campaign.id}
-          className="bg-gradient-card border-0 transition-all duration-300 cursor-pointer overflow-hidden"
-          onClick={() => navigate(`/campaign/${campaign.id}`)}
+          className={`bg-gradient-card border-0 transition-all duration-300 ${
+            campaign.submission_status === 'approved' ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'
+          } overflow-hidden`}
+          onClick={() => {
+            if (campaign.submission_status === 'approved') {
+              navigate(`/campaign/${campaign.id}`);
+            }
+          }}
         >
           <div className="relative h-48 bg-gradient-to-br from-background to-muted overflow-hidden">
             {campaign.banner_url ? (
