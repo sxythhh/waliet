@@ -655,8 +655,15 @@ export function WalletTab() {
                   }}>
                           {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
                         </p>
-                        {transaction.status && <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'} className="text-xs capitalize">
-                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                        {transaction.status && <Badge 
+                            variant="outline" 
+                            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 ${
+                              transaction.status === 'completed' 
+                                ? 'border-green-500/30 text-green-500 bg-green-500/5' 
+                                : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                            }`}
+                          >
+                            {transaction.status}
                           </Badge>}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-foreground/70 mb-0.5">
