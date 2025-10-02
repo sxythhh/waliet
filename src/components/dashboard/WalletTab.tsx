@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import wordmarkLogo from "@/assets/wordmark.ai.png";
 import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
@@ -1003,6 +1004,11 @@ export function WalletTab() {
                   <X className="h-4 w-4 mr-2" />
                   Close
                 </Button>
+
+                {/* Wordmark Logo */}
+                <div className="flex justify-center mb-4">
+                  <img src={wordmarkLogo} alt="Virality" className="h-8" />
+                </div>
 
                 {/* Icon */}
                 <div className="flex justify-center mb-6">
