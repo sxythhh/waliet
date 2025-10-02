@@ -150,7 +150,7 @@ export function CampaignsTab() {
         return (
           <Card 
             key={campaign.id} 
-            className={`group bg-card transition-all duration-300 overflow-hidden animate-fade-in flex flex-col ${
+            className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col ${
               campaign.submission_status === 'approved' 
                 ? 'cursor-pointer' 
                 : 'cursor-not-allowed opacity-50 grayscale'
@@ -163,7 +163,7 @@ export function CampaignsTab() {
           >
             {/* Banner Image - Top Section */}
             {campaign.banner_url && (
-              <div className="relative w-full h-48 flex-shrink-0 overflow-hidden bg-muted">
+              <div className="relative w-full h-48 flex-shrink-0 overflow-hidden bg-muted rounded-t-lg">
                 <img
                   src={campaign.banner_url}
                   alt={campaign.title}
