@@ -176,7 +176,7 @@ export function CampaignsTab() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-lg font-bold text-primary">{budgetPercentage.toFixed(0)}%</span>
+                    
                   </div>
                 </div>
                 <div className="relative h-2 bg-neutral-950 rounded-full overflow-hidden">
