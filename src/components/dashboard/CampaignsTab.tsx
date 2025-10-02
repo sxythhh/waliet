@@ -70,7 +70,7 @@ export function CampaignsTab() {
       {campaigns.map((campaign) => (
         <Card 
           key={campaign.id}
-          className="bg-gradient-card border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-glow cursor-pointer overflow-hidden"
+          className="bg-gradient-card border-0 transition-all duration-300 cursor-pointer overflow-hidden"
           onClick={() => navigate(`/campaign/${campaign.id}`)}
         >
           <div className="relative h-48 bg-gradient-to-br from-background to-muted overflow-hidden">
@@ -82,10 +82,10 @@ export function CampaignsTab() {
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <img
+                <img 
                   src={campaign.brand_logo_url}
                   alt={campaign.brand_name}
-                  className="w-24 h-24 rounded-2xl object-cover border-2 border-border/50"
+                  className="w-24 h-24 rounded-2xl object-cover border-0"
                 />
               </div>
             )}
@@ -144,7 +144,7 @@ export function CampaignsTab() {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-border/50">
+            <div className="pt-3 border-t border-transparent">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground font-medium">Campaign Budget</span>
                 <div className="flex items-center gap-1.5">

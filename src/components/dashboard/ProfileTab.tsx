@@ -117,7 +117,7 @@ export function ProfileTab() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Profile Settings */}
-      <Card className="bg-gradient-card border-border/50">
+      <Card className="bg-gradient-card border-0">
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>
           <CardDescription>Update your personal details</CardDescription>
@@ -166,7 +166,7 @@ export function ProfileTab() {
       </Card>
 
       {/* Connected Accounts */}
-      <Card className="bg-gradient-card border-border/50">
+      <Card className="bg-gradient-card border-0">
         <CardHeader>
           <CardTitle>Connected Accounts</CardTitle>
           <CardDescription>Link your social media accounts to participate in campaigns</CardDescription>
@@ -176,7 +176,7 @@ export function ProfileTab() {
             socialAccounts.map((account) => (
               <div
                 key={account.platform}
-                className="flex items-center justify-between p-4 border border-border rounded-lg"
+                className="flex items-center justify-between p-4 border-0 rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   {getPlatformIcon(account.platform)}

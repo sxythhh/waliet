@@ -168,7 +168,7 @@ export function WalletTab() {
     <div className="space-y-6">
       {/* Balance Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card border-border/50">
+        <Card className="bg-card border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">Available Balance</CardTitle>
@@ -185,7 +185,7 @@ export function WalletTab() {
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border/50">
+        <Card className="bg-card border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Earned</CardTitle>
@@ -202,7 +202,7 @@ export function WalletTab() {
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border/50">
+        <Card className="bg-card border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Withdrawn</CardTitle>
@@ -221,7 +221,7 @@ export function WalletTab() {
       </div>
 
       {/* Payout Section */}
-      <Card className="bg-card border-border/50">
+      <Card className="bg-card border-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -251,7 +251,7 @@ export function WalletTab() {
         </CardHeader>
         <CardContent>
           {payoutMethods.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+            <div className="text-center py-12 border-0 rounded-lg">
               <WalletIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">No payout methods added yet</p>
               <Button onClick={() => setDialogOpen(true)} variant="outline" size="sm">
@@ -264,7 +264,7 @@ export function WalletTab() {
               {payoutMethods.map((method) => (
                 <div
                   key={method.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:border-border/80 transition-colors"
+                  className="flex items-center justify-between p-4 border-0 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     {method.method === "paypal" ? (

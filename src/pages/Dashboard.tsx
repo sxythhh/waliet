@@ -72,7 +72,7 @@ export default function Dashboard() {
 
           {/* Stats Cards */}
           {profile && <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-gradient-card border-border/50">
+              <Card className="bg-gradient-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
                   <DollarSign className="h-4 w-4 text-primary" />
@@ -82,7 +82,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
               
-              <Card className="bg-gradient-card border-border/50">
+              <Card className="bg-gradient-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
                   <TrendingUp className="h-4 w-4 text-success" />
@@ -92,7 +92,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
               
-              <Card className="bg-gradient-card border-border/50">
+              <Card className="bg-gradient-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">Creator Level</CardTitle>
                   <Sparkles className="h-4 w-4 text-warning" />

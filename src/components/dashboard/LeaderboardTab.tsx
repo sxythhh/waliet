@@ -42,7 +42,7 @@ export function LeaderboardTab() {
       {/* Top 3 Podium */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {/* 2nd Place */}
-        <Card className="bg-gradient-card border-border/50 mt-8">
+        <Card className="bg-gradient-card border-0 mt-8">
           <CardHeader className="text-center pb-2">
             <div className="flex justify-center mb-2">
               <Award className="h-12 w-12 text-muted-foreground" />
@@ -57,7 +57,7 @@ export function LeaderboardTab() {
         </Card>
 
         {/* 1st Place */}
-        <Card className="bg-gradient-card border-border/50 shadow-glow border-warning/50">
+        <Card className="bg-gradient-card border-0">
           <CardHeader className="text-center pb-2">
             <div className="flex justify-center mb-2">
               <Trophy className="h-16 w-16 text-warning" />
@@ -72,7 +72,7 @@ export function LeaderboardTab() {
         </Card>
 
         {/* 3rd Place */}
-        <Card className="bg-gradient-card border-border/50 mt-8">
+        <Card className="bg-gradient-card border-0 mt-8">
           <CardHeader className="text-center pb-2">
             <div className="flex justify-center mb-2">
               <Award className="h-12 w-12 text-destructive" />
@@ -88,7 +88,7 @@ export function LeaderboardTab() {
       </div>
 
       {/* Full Leaderboard */}
-      <Card className="bg-gradient-card border-border/50">
+      <Card className="bg-gradient-card border-0">
         <CardHeader>
           <CardTitle>Rankings</CardTitle>
           <CardDescription>This month's top performers</CardDescription>
@@ -98,7 +98,7 @@ export function LeaderboardTab() {
             {mockLeaderboard.map((creator) => (
               <div
                 key={creator.rank}
-                className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-4 rounded-lg border-0 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className={`text-2xl font-bold ${getRankColor(creator.rank)} min-w-[3rem] flex items-center justify-center`}>
@@ -120,7 +120,7 @@ export function LeaderboardTab() {
       </Card>
 
       {/* Your Rank */}
-      <Card className="bg-gradient-card border-border/50 border-primary/50">
+      <Card className="bg-gradient-card border-0">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
