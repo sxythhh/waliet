@@ -43,7 +43,6 @@ interface Campaign {
   id: string;
   title: string;
   budget: number;
-  budget_used: number;
   rpm_rate: number;
   status: string;
   banner_url: string | null;
@@ -133,7 +132,7 @@ export default function BrandManagement() {
 
       const { data, error } = await supabase
         .from("campaigns")
-        .select("id, title, budget, budget_used, rpm_rate, status, banner_url")
+        .select("id, title, budget, rpm_rate, status, banner_url")
         .eq("brand_id", brandData.id)
         .order("created_at", { ascending: false });
 
@@ -360,7 +359,7 @@ export default function BrandManagement() {
                     ${totalSpent.toFixed(2)}
                   </div>
                   <div className="text-sm text-white/40">
-                    of ${selectedCampaign?.budget.toFixed(2) || 0}
+                    of ${selectedCampaign?.budget || 0}
                   </div>
                 </CardContent>
               </Card>

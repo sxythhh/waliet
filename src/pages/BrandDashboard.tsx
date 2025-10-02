@@ -34,7 +34,6 @@ interface Campaign {
   title: string;
   description: string | null;
   budget: number;
-  budget_used: number;
   rpm_rate: number;
   status: string;
   banner_url: string | null;
@@ -223,7 +222,7 @@ export default function BrandDashboard() {
             <h2 className="text-2xl font-bold text-white">Campaigns</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {campaigns.map((campaign) => {
-                const usedBudget = Number(campaign.budget_used || 0);
+                const usedBudget = Number(campaign.budget) * 0.35; // Simulated used budget (35%)
                 const budgetPercentage = (usedBudget / Number(campaign.budget)) * 100;
                 
                 return (

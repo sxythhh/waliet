@@ -122,7 +122,6 @@ export type Database = {
           brand_logo_url: string | null
           brand_name: string
           budget: number
-          budget_used: number | null
           created_at: string | null
           description: string | null
           embed_url: string | null
@@ -144,7 +143,6 @@ export type Database = {
           brand_logo_url?: string | null
           brand_name: string
           budget: number
-          budget_used?: number | null
           created_at?: string | null
           description?: string | null
           embed_url?: string | null
@@ -166,7 +164,6 @@ export type Database = {
           brand_logo_url?: string | null
           brand_name?: string
           budget?: number
-          budget_used?: number | null
           created_at?: string | null
           description?: string | null
           embed_url?: string | null
