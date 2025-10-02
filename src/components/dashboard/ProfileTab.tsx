@@ -433,7 +433,7 @@ export function ProfileTab() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <Input value={profileUrl} readOnly className="bg-muted/50" />
+            <Input value={profileUrl} readOnly />
             <Button variant="outline" size="icon" onClick={() => {
             navigator.clipboard.writeText(profileUrl);
             toast({
@@ -513,7 +513,7 @@ export function ProfileTab() {
 
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input id="username" value={profile.username} disabled className="bg-muted/50" />
+              <Input id="username" value={profile.username} disabled />
               <p className="text-xs text-muted-foreground">
                 Username cannot be changed
               </p>
