@@ -6,11 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 
 interface Profile {
@@ -33,6 +39,7 @@ interface SocialAccount {
   follower_count: number;
   is_verified: boolean;
   connected_at: string;
+  campaign_id: string | null;
 }
 
 interface Campaign {
@@ -49,6 +56,8 @@ export function ProfileTab() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
+  const [showLinkCampaignDialog, setShowLinkCampaignDialog] = useState(false);
+  const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -112,6 +121,63 @@ export function ProfileTab() {
         }));
       setJoinedCampaigns(campaigns);
     }
+  };
+
+  const handleLinkCampaign = async (accountId: string, campaignId: string) => {
+    try {
+      const { error } = await supabase
+        .from('social_accounts')
+        .update({ campaign_id: campaignId })
+        .eq('id', accountId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Account linked to campaign",
+      });
+
+      fetchSocialAccounts();
+      setShowLinkCampaignDialog(false);
+      setSelectedAccountForLinking(null);
+    } catch (error) {
+      console.error('Error linking campaign:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to link campaign",
+      });
+    }
+  };
+
+  const handleUnlinkCampaign = async (accountId: string) => {
+    try {
+      const { error } = await supabase
+        .from('social_accounts')
+        .update({ campaign_id: null })
+        .eq('id', accountId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Account unlinked from campaign",
+      });
+
+      fetchSocialAccounts();
+    } catch (error) {
+      console.error('Error unlinking campaign:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to unlink campaign",
+      });
+    }
+  };
+
+  const getLinkedCampaign = (campaignId: string | null) => {
+    if (!campaignId) return null;
+    return joinedCampaigns.find(c => c.id === campaignId);
   };
 
   const getPlatformIcon = (platform: string) => {
@@ -278,40 +344,58 @@ export function ProfileTab() {
             </div>
           ) : (
             <div className="space-y-3">
-              {socialAccounts.map((account) => (
-                <div
-                  key={account.id}
-                  className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
-                      {getPlatformIcon(account.platform)}
+              {socialAccounts.map((account) => {
+                const linkedCampaign = getLinkedCampaign(account.campaign_id);
+                
+                return (
+                  <div
+                    key={account.id}
+                    className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
+                        {getPlatformIcon(account.platform)}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">@{account.username}</div>
+                        {linkedCampaign && (
+                          <div className="text-xs text-muted-foreground">
+                            Linked to {linkedCampaign.title}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-sm font-medium">
-                      @{account.username}
+                    
+                    <div className="flex gap-2">
+                      {linkedCampaign ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUnlinkCampaign(account.id)}
+                          className="h-8 gap-1"
+                        >
+                          <X className="h-3 w-3" />
+                          Unlink
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedAccountForLinking(account.id);
+                            setShowLinkCampaignDialog(true);
+                          }}
+                          disabled={joinedCampaigns.length === 0}
+                          className="h-8 gap-1"
+                        >
+                          <Link2 className="h-3 w-3" />
+                          Link Campaign
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  
-                  <Select>
-                    <SelectTrigger className="w-[180px] h-8 text-xs">
-                      <SelectValue placeholder="Link to campaign" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {joinedCampaigns.length === 0 ? (
-                        <div className="p-2 text-xs text-muted-foreground text-center">
-                          No campaigns joined yet
-                        </div>
-                      ) : (
-                        joinedCampaigns.map((campaign) => (
-                          <SelectItem key={campaign.id} value={campaign.id} className="text-xs">
-                            {campaign.title}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -469,6 +553,31 @@ export function ProfileTab() {
         onOpenChange={setShowAddAccountDialog}
         onSuccess={fetchSocialAccounts}
       />
+
+      {/* Link Campaign Dialog */}
+      <Dialog open={showLinkCampaignDialog} onOpenChange={setShowLinkCampaignDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Link to Campaign</DialogTitle>
+            <DialogDescription>
+              Choose which campaign you want to link this account to
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-2 mt-4">
+            {joinedCampaigns.map((campaign) => (
+              <button
+                key={campaign.id}
+                onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)}
+                className="w-full p-4 text-left border rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <div className="font-medium">{campaign.title}</div>
+                <div className="text-sm text-muted-foreground">{campaign.brand_name}</div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

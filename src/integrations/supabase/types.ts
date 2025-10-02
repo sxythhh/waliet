@@ -398,6 +398,7 @@ export type Database = {
       social_accounts: {
         Row: {
           account_link: string | null
+          campaign_id: string | null
           connected_at: string | null
           follower_count: number | null
           id: string
@@ -409,6 +410,7 @@ export type Database = {
         }
         Insert: {
           account_link?: string | null
+          campaign_id?: string | null
           connected_at?: string | null
           follower_count?: number | null
           id?: string
@@ -420,6 +422,7 @@ export type Database = {
         }
         Update: {
           account_link?: string | null
+          campaign_id?: string | null
           connected_at?: string | null
           follower_count?: number | null
           id?: string
@@ -430,6 +433,13 @@ export type Database = {
           verification_screenshot_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "social_accounts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "social_accounts_user_id_fkey"
             columns: ["user_id"]
