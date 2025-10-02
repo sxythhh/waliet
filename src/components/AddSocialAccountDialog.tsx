@@ -74,6 +74,24 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
         return;
       }
 
+      // Check if account already exists for this platform
+      const { data: existingAccount } = await supabase
+        .from('social_accounts')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('platform', selectedPlatform)
+        .maybeSingle();
+
+      if (existingAccount) {
+        toast({
+          variant: "destructive",
+          title: "Account Already Connected",
+          description: `You've already connected a ${getPlatformLabel(selectedPlatform)} account. Remove it first to add a different one.`,
+        });
+        setUploading(false);
+        return;
+      }
+
       // Upload screenshot
       const fileExt = screenshot.name.split('.').pop();
       const fileName = `${session.user.id}/${selectedPlatform}_${Date.now()}.${fileExt}`;
