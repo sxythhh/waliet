@@ -185,49 +185,60 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-card">
-        <DialogHeader>
-          <DialogTitle>Add Social Account</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[700px] bg-background/95 backdrop-blur-xl border-border/50">
+        <DialogHeader className="space-y-3 pb-4">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+            Add Social Account
+          </DialogTitle>
+          <DialogDescription className="text-base text-muted-foreground/80">
             Connect your social media account for verification
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Platform Selection */}
-          <div className="space-y-2">
-            <Label>Platform</Label>
-            <div className="flex gap-2">
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold text-foreground/90">Platform</Label>
+            <div className="grid grid-cols-3 gap-3">
               {(["tiktok", "instagram", "youtube"] as Platform[]).map((platform) => (
                 <Button
                   key={platform}
                   type="button"
                   variant={selectedPlatform === platform ? "default" : "outline"}
                   onClick={() => setSelectedPlatform(platform)}
-                  className="flex-1 gap-2"
+                  className={`h-auto py-4 flex-col gap-3 transition-all duration-300 ${
+                    selectedPlatform === platform
+                      ? "bg-primary hover:bg-primary/90 border-primary shadow-lg shadow-primary/20"
+                      : "bg-muted/30 hover:bg-muted/50 border-border/40"
+                  }`}
                 >
-                  {getPlatformIcon(platform)}
-                  {getPlatformLabel(platform)}
+                  <div className={`transition-transform duration-300 ${selectedPlatform === platform ? "scale-110" : ""}`}>
+                    {getPlatformIcon(platform)}
+                  </div>
+                  <span className="text-sm font-medium">{getPlatformLabel(platform)}</span>
                 </Button>
               ))}
             </div>
           </div>
 
           {/* Username */}
-          <div className="space-y-2">
-            <Label htmlFor="username">Account Username (don't include the @)</Label>
+          <div className="space-y-3">
+            <Label htmlFor="username" className="text-sm font-semibold text-foreground/90">
+              Account Username <span className="text-muted-foreground font-normal">(don't include the @)</span>
+            </Label>
             <Input
               id="username"
               placeholder="Example: mrbeast"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              className="h-12 bg-muted/30 border-border/40 focus-visible:border-primary/50 focus-visible:bg-muted/40"
             />
           </div>
 
           {/* Account Link */}
-          <div className="space-y-2">
-            <Label htmlFor="accountLink">Account Link</Label>
+          <div className="space-y-3">
+            <Label htmlFor="accountLink" className="text-sm font-semibold text-foreground/90">Account Link</Label>
             <Input
               id="accountLink"
               type="url"
@@ -235,26 +246,38 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
               value={accountLink}
               onChange={(e) => setAccountLink(e.target.value)}
               required
+              className="h-12 bg-muted/30 border-border/40 focus-visible:border-primary/50 focus-visible:bg-muted/40"
             />
           </div>
 
           {/* Screenshot Upload */}
-          <div className="space-y-2">
-            <Label>Please attach a screenshot proving your ownership (edit profile screen)</Label>
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold text-foreground/90">
+              Screenshot Proof <span className="text-muted-foreground font-normal">(edit profile screen)</span>
+            </Label>
             <div
-              className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
+              className="relative group border-2 border-dashed border-border/40 rounded-xl p-12 text-center cursor-pointer hover:border-primary/50 transition-all duration-300 bg-muted/20 hover:bg-muted/30"
               onClick={() => fileInputRef.current?.click()}
             >
               {screenshot ? (
-                <div className="space-y-2">
-                  <Upload className="h-8 w-8 mx-auto text-primary" />
-                  <p className="text-sm font-medium">{screenshot.name}</p>
-                  <p className="text-xs text-muted-foreground">Click to change</p>
+                <div className="space-y-3">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                    <Upload className="h-7 w-7 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{screenshot.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Click to change image</p>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Upload Image</p>
+                <div className="space-y-3">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-muted/40 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <Upload className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Upload Screenshot</p>
+                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WEBP (max 10MB)</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -269,7 +292,11 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" className="w-full" disabled={uploading}>
+          <Button 
+            type="submit" 
+            className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all" 
+            disabled={uploading}
+          >
             {uploading ? "Submitting..." : "Submit Account"}
           </Button>
         </form>
