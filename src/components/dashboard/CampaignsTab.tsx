@@ -137,7 +137,7 @@ export function CampaignsTab() {
         <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
       </div>;
   }
-  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl">
+  return <div className="grid grid-cols-1 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 max-w-7xl" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 350px))' }}>
       {campaigns.map(campaign => {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
