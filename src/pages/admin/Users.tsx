@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Search, Users as UsersIcon, Wallet } from "lucide-react";
+import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -86,6 +86,10 @@ export default function AdminUsers() {
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
+  const [csvImportDialogOpen, setCsvImportDialogOpen] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [importResults, setImportResults] = useState<any>(null);
+  const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -284,6 +288,75 @@ export default function AdminUsers() {
     fetchData();
   };
 
+  const handleCsvImport = async () => {
+    if (!csvFile) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a CSV file",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+    setImportResults(null);
+
+    try {
+      const fileContent = await csvFile.text();
+      
+      const { data, error } = await supabase.functions.invoke('import-transactions', {
+        body: { csvContent: fileContent }
+      });
+
+      if (error) throw error;
+
+      setImportResults(data);
+      
+      if (data.successful > 0) {
+        toast({
+          title: "Import Complete",
+          description: `Successfully imported ${data.successful} of ${data.processed} transactions`,
+        });
+        fetchData(); // Refresh user data
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Import Failed",
+          description: `Failed to import any transactions. Check the results for details.`,
+        });
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to import transactions",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setCsvFile(e.target.files[0]);
+      setImportResults(null);
+    }
+  };
+
+  const downloadCsvTemplate = () => {
+    const template = 'account_username;payout amount;date\nexample_user;100.50;2025-10-02\nanother_user;250.00;2025-10-01';
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'transaction_import_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const stats = {
     totalUsers: users.length,
     totalBalance: users.reduce((sum, u) => sum + (u.wallets?.balance || 0), 0),
@@ -300,9 +373,15 @@ export default function AdminUsers() {
 
   return (
     <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <p className="text-muted-foreground mt-1">View and manage creator accounts</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+          <p className="text-muted-foreground mt-1">View and manage creator accounts</p>
+        </div>
+        <Button onClick={() => setCsvImportDialogOpen(true)} className="gap-2">
+          <Upload className="h-4 w-4" />
+          Import CSV
+        </Button>
       </div>
 
       {/* Stats */}
@@ -521,6 +600,163 @@ export default function AdminUsers() {
               </Button>
               <Button onClick={handlePayUser}>
                 Send Payment
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* CSV Import Dialog */}
+      <Dialog open={csvImportDialogOpen} onOpenChange={setCsvImportDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import Transactions from CSV</DialogTitle>
+            <DialogDescription>
+              Upload a CSV file with format: account_username ; payout amount ; date
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="csv-file">CSV File</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={downloadCsvTemplate}
+                  className="gap-2 h-8"
+                >
+                  <FileDown className="h-4 w-4" />
+                  Download Template
+                </Button>
+              </div>
+              <Input
+                id="csv-file"
+                type="file"
+                accept=".csv"
+                onChange={handleCsvFileChange}
+                disabled={isImporting}
+              />
+              {csvFile && (
+                <p className="text-sm text-muted-foreground">
+                  Selected: {csvFile.name}
+                </p>
+              )}
+            </div>
+
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <p className="text-sm font-medium">CSV Format:</p>
+              <code className="text-xs block bg-background p-2 rounded">
+                account_username;payout amount;date<br />
+                john_doe;150.00;2025-10-02<br />
+                jane_smith;200.50;2025-10-01
+              </code>
+              <p className="text-xs text-muted-foreground">
+                • Use semicolons (;) as separators<br />
+                • Username must match the user's Virality account username<br />
+                • Amount should be in USD (e.g., 150.00)<br />
+                • Date is optional, defaults to today
+              </p>
+            </div>
+
+            {importResults && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-4">
+                  <Card className="bg-background">
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-muted-foreground">Processed</p>
+                      <p className="text-2xl font-bold">{importResults.processed}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-success/10">
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-muted-foreground">Successful</p>
+                      <p className="text-2xl font-bold text-success">{importResults.successful}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-destructive/10">
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-muted-foreground">Failed</p>
+                      <p className="text-2xl font-bold text-destructive">{importResults.failed}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {importResults.errors && importResults.errors.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-destructive">Errors:</p>
+                    <div className="bg-destructive/10 p-3 rounded-lg max-h-40 overflow-y-auto">
+                      {importResults.errors.map((error: any, idx: number) => (
+                        <p key={idx} className="text-xs text-destructive mb-1">
+                          Row {error.row} ({error.username}): {error.error}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {importResults.details && importResults.details.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Transaction Details:</p>
+                    <div className="bg-muted/50 p-3 rounded-lg max-h-60 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Username</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead className="text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {importResults.details.map((detail: any, idx: number) => (
+                            <TableRow key={idx}>
+                              <TableCell className="font-medium">{detail.username}</TableCell>
+                              <TableCell className="text-right">${detail.amount.toFixed(2)}</TableCell>
+                              <TableCell className="text-right">
+                                {detail.status === 'success' ? (
+                                  <span className="text-success">✓ Success</span>
+                                ) : (
+                                  <span className="text-destructive">✗ Failed</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setCsvImportDialogOpen(false);
+                  setCsvFile(null);
+                  setImportResults(null);
+                }}
+                disabled={isImporting}
+              >
+                Close
+              </Button>
+              <Button 
+                onClick={handleCsvImport}
+                disabled={!csvFile || isImporting}
+                className="gap-2"
+              >
+                {isImporting ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Import Transactions
+                  </>
+                )}
               </Button>
             </div>
           </div>
