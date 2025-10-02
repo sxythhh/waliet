@@ -40,6 +40,12 @@ interface SocialAccount {
   is_verified: boolean;
   connected_at: string;
   campaign_id: string | null;
+  campaigns?: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+  } | null;
 }
 
 interface Campaign {
@@ -93,7 +99,7 @@ export function ProfileTab() {
 
     const { data } = await supabase
       .from("social_accounts")
-      .select("*")
+      .select("*, campaigns(id, title, brand_name, brand_logo_url)")
       .eq("user_id", session.user.id)
       .eq("is_verified", true)
       .order("connected_at", { ascending: false });
@@ -347,7 +353,7 @@ export function ProfileTab() {
           ) : (
             <div className="space-y-3">
               {socialAccounts.map((account) => {
-                const linkedCampaign = getLinkedCampaign(account.campaign_id);
+                const linkedCampaign = account.campaigns;
                 
                 return (
                   <div
