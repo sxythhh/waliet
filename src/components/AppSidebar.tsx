@@ -42,7 +42,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       onClick={() => handleTabClick(item.tab)}
                       isActive={isActive}
-                      className="py-0.5 text-[15px] font-instrument data-[active=true]:bg-primary data-[active=true]:text-primary-foreground hover:bg-sidebar-accent"
+                      className="py-0.5 text-[14.4px] font-semibold font-instrument data-[active=true]:bg-primary data-[active=true]:text-primary-foreground hover:bg-sidebar-accent"
                     >
                       <item.icon className={`h-[22px] w-[22px] ${isActive ? 'text-white' : 'text-muted-foreground'}`} />
                       <span>{item.title}</span>
