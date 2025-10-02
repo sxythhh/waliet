@@ -124,6 +124,7 @@ export type Database = {
           budget: number
           created_at: string | null
           description: string | null
+          embed_url: string | null
           end_date: string | null
           guidelines: string | null
           id: string
@@ -144,6 +145,7 @@ export type Database = {
           budget: number
           created_at?: string | null
           description?: string | null
+          embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
           id?: string
@@ -164,6 +166,7 @@ export type Database = {
           budget?: number
           created_at?: string | null
           description?: string | null
+          embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
           id?: string

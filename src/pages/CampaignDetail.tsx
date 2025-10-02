@@ -22,6 +22,7 @@ interface Campaign {
   end_date: string;
   banner_url: string | null;
   allowed_platforms: string[];
+  embed_url: string | null;
 }
 
 interface Submission {
@@ -45,7 +46,40 @@ export default function CampaignDetail() {
     setLoading(true);
     
     try {
-      // Fetch campaign
+      // Get current user first
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please sign in to view campaigns",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      // Check if user has a submission for this campaign
+      const { data: submissionData } = await supabase
+        .from("campaign_submissions")
+        .select("id, status")
+        .eq("campaign_id", id)
+        .eq("creator_id", user.id)
+        .maybeSingle();
+
+      if (!submissionData) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You must be part of this campaign to view it",
+        });
+        navigate("/dashboard?tab=discover");
+        return;
+      }
+
+      setSubmission(submissionData);
+
+      // Fetch campaign only if user has access
       const { data: campaignData, error: campaignError } = await supabase
         .from("campaigns")
         .select("*")
@@ -65,20 +99,6 @@ export default function CampaignDetail() {
       }
 
       setCampaign(campaignData as Campaign);
-
-      // Check if user has already applied
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data: submissionData } = await supabase
-          .from("campaign_submissions")
-          .select("id, status")
-          .eq("campaign_id", id)
-          .eq("creator_id", user.id)
-          .maybeSingle();
-
-        setSubmission(submissionData);
-      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -100,6 +120,20 @@ export default function CampaignDetail() {
   }
 
   const hasApplied = !!submission;
+
+  // If campaign has embed_url, show it as an iframe
+  if (campaign.embed_url) {
+    return (
+      <div className="h-screen w-full">
+        <iframe
+          src={campaign.embed_url}
+          className="w-full h-full border-0"
+          title={campaign.title}
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-6 max-w-4xl mx-auto">
