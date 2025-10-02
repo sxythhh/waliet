@@ -803,30 +803,41 @@ export function WalletTab() {
                 return "";
             }
           };
-          return <div key={method.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    {method.method === "crypto" ? <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <WalletIcon className="h-5 w-5 text-primary" />
-                      </div> : <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <CreditCard className="h-5 w-5 text-primary" />
-                      </div>}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">
-                          {getMethodLabel()}
+          return <div key={method.id} className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-card via-card to-muted/20 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="relative flex items-center justify-between p-4">
+                    <div className="flex items-center gap-4 flex-1">
+                      {method.method === "crypto" ? <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all duration-300 group-hover:scale-110">
+                          <WalletIcon className="h-6 w-6 text-primary" />
+                          <div className="absolute inset-0 rounded-xl bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div> : <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all duration-300 group-hover:scale-110">
+                          <CreditCard className="h-6 w-6 text-primary" />
+                          <div className="absolute inset-0 rounded-xl bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <p className="text-base font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
+                            {getMethodLabel()}
+                          </p>
+                          <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5 bg-primary/10 text-primary border-0">
+                            {getBadgeText()}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground font-mono truncate">
+                          {getMethodDetails()}
                         </p>
-                        <Badge variant="secondary" className="text-xs">
-                          {getBadgeText()}
-                        </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {getMethodDetails()}
-                      </p>
                     </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDeleteMethod(method.id)}
+                      className="h-9 w-9 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)}>
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </Button>
                 </div>;
         })}
         </CardContent>
