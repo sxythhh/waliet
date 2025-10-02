@@ -1034,8 +1034,26 @@ export function WalletTab() {
                         return "N/A";
                     }
                   };
+                  const getNetworkLogo = () => {
+                    if (method.method !== "crypto") return null;
+                    const network = method.details?.network?.toLowerCase();
+                    
+                    if (network === 'ethereum') return ethereumLogo;
+                    if (network === 'optimism') return optimismLogo;
+                    if (network === 'solana') return solanaLogo;
+                    if (network === 'polygon') return polygonLogo;
+                    return null;
+                  };
+                  
+                  const networkLogo = getNetworkLogo();
+                  
                   return <SelectItem key={method.id} value={method.id}>
-                        {getMethodLabel()} - {getMethodDetails()}
+                        <div className="flex items-center gap-2">
+                          {networkLogo && (
+                            <img src={networkLogo} alt="Network logo" className="h-4 w-4" />
+                          )}
+                          <span>{getMethodLabel()} - {getMethodDetails()}</span>
+                        </div>
                       </SelectItem>;
                 })}
                 </SelectContent>
