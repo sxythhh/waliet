@@ -348,11 +348,11 @@ export function ProfileTab() {
         <p className="text-muted-foreground">Loading profile...</p>
       </div>;
   }
-  return <div className="space-y-6 max-w-4xl mx-auto">
+  return <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto px-4 sm:px-0">
       {/* Connected Accounts */}
       <Card className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
-          <div className="flex items-center justify-between p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
             <div>
               <CardTitle className="text-lg">Connected Accounts</CardTitle>
               <CardDescription>Link your verified accounts to campaigns</CardDescription>
@@ -370,7 +370,7 @@ export function ProfileTab() {
             </div> : <div className="space-y-3">
               {socialAccounts.map(account => {
             const linkedCampaign = account.campaigns;
-            return <div key={account.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+            return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-muted/30 rounded-lg border">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
                         {getPlatformIcon(account.platform)}
@@ -384,14 +384,14 @@ export function ProfileTab() {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
-                      {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1">
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1 flex-1 sm:flex-initial">
                           <X className="h-3 w-3" />
                           Unlink
                         </Button> : <Button variant="outline" size="sm" onClick={() => {
                   setSelectedAccountForLinking(account.id);
                   setShowLinkCampaignDialog(true);
-                }} disabled={joinedCampaigns.length === 0} className="h-8 gap-1">
+                }} disabled={joinedCampaigns.length === 0} className="h-8 gap-1 flex-1 sm:flex-initial whitespace-nowrap">
                           <Link2 className="h-3 w-3" />
                           Link Campaign
                         </Button>}
