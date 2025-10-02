@@ -657,10 +657,10 @@ export function WalletTab() {
                         </p>
                         {transaction.status && <Badge 
                             variant="outline" 
-                            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 ${
+                            className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border-0 ${
                               transaction.status === 'completed' 
-                                ? 'border-green-500/30 text-green-500 bg-green-500/5' 
-                                : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                                ? 'text-green-500 bg-green-500/5' 
+                                : 'text-yellow-500 bg-yellow-500/5'
                             }`}
                           >
                             {transaction.status}
