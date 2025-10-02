@@ -6,8 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ChevronRight, Instagram } from "lucide-react";
+import { ArrowLeft, ChevronRight, Instagram, Youtube, CheckCircle2, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 
 interface Campaign {
   id: string;
@@ -31,6 +33,14 @@ interface ApplicationForm {
   answers: Record<number, string>;
 }
 
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  follower_count: number;
+  is_verified: boolean;
+}
+
 export default function CampaignJoin() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -38,12 +48,33 @@ export default function CampaignJoin() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedPlatform, setSelectedPlatform] = useState<string>("");
+  const [selectedAccount, setSelectedAccount] = useState<SocialAccount | null>(null);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<ApplicationForm>();
 
   useEffect(() => {
     fetchCampaign();
+    fetchSocialAccounts();
   }, [slug]);
+
+  const fetchSocialAccounts = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('social_accounts')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_verified', true);
+
+      if (error) throw error;
+      setSocialAccounts(data || []);
+    } catch (error) {
+      console.error('Error fetching social accounts:', error);
+    }
+  };
 
   const fetchCampaign = async () => {
     if (!slug) return;
@@ -81,7 +112,7 @@ export default function CampaignJoin() {
   };
 
   const onSubmit = async (data: ApplicationForm) => {
-    if (!campaign) return;
+    if (!campaign || !selectedAccount) return;
 
     setSubmitting(true);
     try {
@@ -104,7 +135,7 @@ export default function CampaignJoin() {
         .insert({
           campaign_id: campaign.id,
           creator_id: user.id,
-          platform: data.platform,
+          platform: selectedAccount.platform,
           content_url: data.content_url,
           status: "pending",
         });
@@ -118,6 +149,19 @@ export default function CampaignJoin() {
       toast.error("Failed to submit application");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform) {
+      case 'tiktok':
+        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
+      case 'instagram':
+        return <Instagram className="h-5 w-5 text-pink-500" />;
+      case 'youtube':
+        return <Youtube className="h-5 w-5 text-red-500" />;
+      default:
+        return null;
     }
   };
 
@@ -293,63 +337,98 @@ export default function CampaignJoin() {
             <div className="flex-1 pb-8">
               <h2 className="text-xl font-bold mb-4">Select An Account For This Campaign</h2>
               
-              <div className="space-y-3 mb-4">
-                {campaign.allowed_platforms.map((platform) => (
-                  <div
-                    key={platform}
-                    onClick={() => {
-                      setSelectedPlatform(platform);
-                      setValue("platform", platform);
-                    }}
-                    className={`p-4 rounded-xl border-0 cursor-pointer transition-all ${
-                      selectedPlatform === platform
-                        ? 'bg-primary/10'
-                        : 'bg-[#1a1a1a] hover:bg-[#1f1f1f]'
-                    }`}
+              {socialAccounts.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-white/50 mb-4">You don't have any connected accounts yet</p>
+                  <Button
+                    onClick={() => setShowAddAccountDialog(true)}
+                    variant="outline"
+                    className="gap-2"
                   >
-                    <div className="flex items-center gap-3">
-                      <Instagram className="h-5 w-5" />
-                      <span className="text-white/70">
-                        {platform === "tiktok" ? "TikTok Account" : "Instagram Account"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {selectedPlatform && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Content URL</label>
-                    <Input
-                      {...register("content_url", { required: "Content URL is required" })}
-                      placeholder="https://..."
-                      className="bg-[#1a1a1a] border-0 text-white placeholder:text-white/40"
-                    />
-                    {errors.content_url && (
-                      <p className="text-destructive text-sm mt-1">{errors.content_url.message}</p>
-                    )}
-                  </div>
-
-                  {campaign.application_questions.length === 0 && (
-                    <Button 
-                      onClick={handleSubmit(onSubmit)}
-                      disabled={submitting}
-                      className="w-full bg-primary hover:bg-primary/90"
-                    >
-                      {submitting ? "Submitting..." : "Submit Account"}
-                    </Button>
-                  )}
-                  
-                  {campaign.application_questions.length > 0 && (
-                    <Button 
-                      onClick={() => setCurrentStep(3)}
-                      className="w-full bg-primary hover:bg-primary/90"
-                    >
-                      Continue to Application Questions
-                    </Button>
-                  )}
+                    <Plus className="h-4 w-4" />
+                    Connect Your First Account
+                  </Button>
                 </div>
+              ) : (
+                <>
+                  <div className="space-y-3 mb-4">
+                    {socialAccounts
+                      .filter(account => campaign.allowed_platforms.includes(account.platform))
+                      .map((account) => (
+                        <div
+                          key={account.id}
+                          onClick={() => {
+                            setSelectedAccount(account);
+                            setValue("platform", account.platform);
+                          }}
+                          className={`p-4 rounded-xl border-0 cursor-pointer transition-all ${
+                            selectedAccount?.id === account.id
+                              ? 'bg-primary/10 ring-2 ring-primary'
+                              : 'bg-[#1a1a1a] hover:bg-[#1f1f1f]'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {getPlatformIcon(account.platform)}
+                              <div>
+                                <div className="font-medium flex items-center gap-2">
+                                  @{account.username}
+                                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                                </div>
+                                <div className="text-sm text-white/50">
+                                  {account.follower_count.toLocaleString()} followers
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  <Button
+                    onClick={() => setShowAddAccountDialog(true)}
+                    variant="outline"
+                    className="w-full gap-2 mb-4"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Connect Another Account
+                  </Button>
+
+                  {selectedAccount && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Content URL</label>
+                        <Input
+                          {...register("content_url", { required: "Content URL is required" })}
+                          placeholder="https://..."
+                          className="bg-[#1a1a1a] border-0 text-white placeholder:text-white/40"
+                        />
+                        {errors.content_url && (
+                          <p className="text-destructive text-sm mt-1">{errors.content_url.message}</p>
+                        )}
+                      </div>
+
+                      {campaign.application_questions.length === 0 && (
+                        <Button 
+                          onClick={handleSubmit(onSubmit)}
+                          disabled={submitting}
+                          className="w-full bg-primary hover:bg-primary/90"
+                        >
+                          {submitting ? "Submitting..." : "Submit Application"}
+                        </Button>
+                      )}
+                      
+                      {campaign.application_questions.length > 0 && (
+                        <Button 
+                          onClick={() => setCurrentStep(3)}
+                          className="w-full bg-primary hover:bg-primary/90"
+                        >
+                          Continue to Application Questions
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -397,6 +476,15 @@ export default function CampaignJoin() {
           </div>
         )}
       </div>
+
+      <AddSocialAccountDialog
+        open={showAddAccountDialog}
+        onOpenChange={setShowAddAccountDialog}
+        onSuccess={() => {
+          fetchSocialAccounts();
+          setShowAddAccountDialog(false);
+        }}
+      />
     </div>
   );
 }

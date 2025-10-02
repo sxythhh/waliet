@@ -6,11 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2 } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 
 interface Profile {
@@ -35,16 +34,9 @@ interface SocialAccount {
   connected_at: string;
 }
 
-interface Campaign {
-  id: string;
-  title: string;
-  brand_name: string;
-}
-
 export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
-  const [joinedCampaigns, setJoinedCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -55,7 +47,6 @@ export function ProfileTab() {
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
-    fetchJoinedCampaigns();
   }, []);
 
   const fetchProfile = async () => {
@@ -91,27 +82,6 @@ export function ProfileTab() {
 
     if (data) {
       setSocialAccounts(data);
-    }
-  };
-
-  const fetchJoinedCampaigns = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { data } = await supabase
-      .from("campaign_submissions")
-      .select("campaign_id, campaigns(id, title, brand_name)")
-      .eq("creator_id", session.user.id);
-
-    if (data) {
-      const campaigns = data
-        .filter(item => item.campaigns)
-        .map(item => ({
-          id: item.campaigns.id,
-          title: item.campaigns.title,
-          brand_name: item.campaigns.brand_name,
-        }));
-      setJoinedCampaigns(campaigns);
     }
   };
 
@@ -254,6 +224,62 @@ export function ProfileTab() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Connected Accounts */}
+      <Card className="bg-card border-0">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Connected Accounts</CardTitle>
+              <CardDescription>Link your verified accounts to campaigns</CardDescription>
+            </div>
+            <Button
+              onClick={() => setShowAddAccountDialog(true)}
+              size="sm"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Account
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {socialAccounts.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="text-base font-medium">No verified accounts yet</p>
+              <p className="text-sm mt-2">Add and verify your social media accounts to start earning</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {socialAccounts.map((account) => (
+                <div
+                  key={account.id}
+                  className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-card to-muted/20 p-5 transition-all hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                        {getPlatformIcon(account.platform)}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold capitalize text-lg">{account.platform}</p>
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">@{account.username}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="secondary" className="font-medium">
+                            {account.follower_count.toLocaleString()} followers
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Public Profile Link */}
       <Card className="bg-card border-0">
         <CardHeader>
@@ -275,7 +301,7 @@ export function ProfileTab() {
                 toast({ title: "Copied!", description: "Profile URL copied to clipboard" });
               }}
             >
-              <ExternalLink className="h-4 w-4" />
+              <Copy className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>
@@ -398,80 +424,6 @@ export function ProfileTab() {
               {saving ? "Saving..." : "Save Changes"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      {/* Connected Accounts */}
-      <Card className="bg-card border-0">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Connected Accounts</CardTitle>
-              <CardDescription>Link your verified accounts to campaigns</CardDescription>
-            </div>
-            <Button
-              onClick={() => setShowAddAccountDialog(true)}
-              size="sm"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Account
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {socialAccounts.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="text-base font-medium">No verified accounts yet</p>
-              <p className="text-sm mt-2">Add and verify your social media accounts to start earning</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {socialAccounts.map((account) => (
-                <div
-                  key={account.id}
-                  className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-card to-muted/20 p-5 transition-all hover:shadow-lg"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                        {getPlatformIcon(account.platform)}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold capitalize text-lg">{account.platform}</p>
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
-                        </div>
-                        <p className="text-sm text-muted-foreground">@{account.username}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary" className="font-medium">
-                            {account.follower_count.toLocaleString()} followers
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {joinedCampaigns.length > 0 && (
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-xs text-muted-foreground">Link to Campaign</Label>
-                        <Select>
-                          <SelectTrigger className="w-[200px] h-9">
-                            <SelectValue placeholder="Select campaign" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {joinedCampaigns.map((campaign) => (
-                              <SelectItem key={campaign.id} value={campaign.id}>
-                                {campaign.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 

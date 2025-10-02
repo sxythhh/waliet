@@ -100,7 +100,7 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
           username: validation.data.username,
           account_link: validation.data.accountLink,
           verification_screenshot_url: publicUrl,
-          is_verified: false,
+          is_verified: true,
         });
 
       if (insertError) {
@@ -109,7 +109,7 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
 
       toast({
         title: "Success",
-        description: "Social account submitted for verification",
+        description: "Social account connected successfully",
       });
 
       // Reset form
