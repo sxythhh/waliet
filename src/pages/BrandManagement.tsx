@@ -512,8 +512,8 @@ export default function BrandManagement() {
 
           {/* Applications Tab */}
           <TabsContent value="applications">
-            <Card className="bg-gradient-card border-border/50">
-              <CardHeader>
+            <Card className="bg-gradient-card border-0">
+              <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
                   Pending Applications
@@ -522,65 +522,64 @@ export default function BrandManagement() {
                   </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 {pendingSubmissions.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                    <p className="text-muted-foreground">No pending applications</p>
+                  <div className="text-center py-8">
+                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                    <p className="text-muted-foreground text-sm">No pending applications</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {pendingSubmissions.map((submission) => (
-                      <Card key={submission.id} className="bg-background/50 border-border/50 overflow-hidden">
-                        <CardContent className="p-6">
-                          <div className="flex items-start gap-4">
+                      <Card key={submission.id} className="bg-background/50 border-0 overflow-hidden">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
                             {/* Creator Avatar & Info */}
                             <div className="flex-shrink-0">
                               {submission.profiles?.avatar_url ? (
                                 <img
                                   src={submission.profiles.avatar_url}
                                   alt={submission.profiles.username}
-                                  className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                                  className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
                                 />
                               ) : (
-                                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                                  <Users className="h-8 w-8 text-primary" />
+                                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                  <Users className="h-6 w-6 text-primary" />
                                 </div>
                               )}
                             </div>
 
                             {/* Main Content */}
-                            <div className="flex-1 space-y-3">
+                            <div className="flex-1 space-y-2">
                               {/* Creator Name & Platform */}
-                              <div className="flex items-start justify-between">
+                              <div className="flex items-start justify-between gap-2">
                                 <div>
-                                  <h3 className="font-semibold text-lg">
+                                  <h3 className="font-semibold">
                                     {submission.profiles?.username || "Unknown"}
                                   </h3>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className="text-xs">
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <Badge variant="outline" className="text-xs py-0 h-5">
                                       {submission.platform || "Unknown Platform"}
                                     </Badge>
                                     <span className="text-xs text-muted-foreground">
-                                      Applied {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
+                                      {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
                                         month: 'short', 
-                                        day: 'numeric', 
-                                        year: 'numeric' 
+                                        day: 'numeric'
                                       })}
                                     </span>
                                   </div>
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="flex gap-2">
+                                <div className="flex gap-1.5 flex-shrink-0">
                                   <Button
                                     size="sm"
                                     onClick={() =>
                                       handleApplicationAction(submission.id, "approved")
                                     }
-                                    className="bg-success/20 hover:bg-success/30 text-success border border-success/30"
+                                    className="bg-success/20 hover:bg-success/30 text-success border-0 h-8 px-3"
                                   >
-                                    <Check className="h-4 w-4 mr-1" />
+                                    <Check className="h-3.5 w-3.5 mr-1" />
                                     Approve
                                   </Button>
                                   <Button
@@ -589,48 +588,48 @@ export default function BrandManagement() {
                                     onClick={() =>
                                       handleApplicationAction(submission.id, "rejected")
                                     }
-                                    className="bg-destructive/20 hover:bg-destructive/30"
+                                    className="bg-destructive/20 hover:bg-destructive/30 border-0 h-8 px-3"
                                   >
-                                    <X className="h-4 w-4 mr-1" />
+                                    <X className="h-3.5 w-3.5 mr-1" />
                                     Reject
                                   </Button>
                                 </div>
                               </div>
 
                               {/* Creator Stats Grid */}
-                              <div className="grid grid-cols-3 gap-4 pt-3 border-t border-border/50">
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 rounded-lg bg-primary/10">
-                                    <TrendingUp className="h-4 w-4 text-primary" />
+                              <div className="grid grid-cols-3 gap-3 pt-2">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="p-1.5 rounded bg-primary/10">
+                                    <TrendingUp className="h-3.5 w-3.5 text-primary" />
                                   </div>
                                   <div>
-                                    <p className="text-xs text-muted-foreground">Trust Score</p>
-                                    <p className="font-semibold">
-                                      {submission.profiles?.trust_score || 0}/100
+                                    <p className="text-[10px] text-muted-foreground leading-none">Trust</p>
+                                    <p className="font-semibold text-sm leading-tight">
+                                      {submission.profiles?.trust_score || 0}
                                     </p>
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 rounded-lg bg-success/10">
-                                    <Eye className="h-4 w-4 text-success" />
+                                <div className="flex items-center gap-1.5">
+                                  <div className="p-1.5 rounded bg-success/10">
+                                    <Eye className="h-3.5 w-3.5 text-success" />
                                   </div>
                                   <div>
-                                    <p className="text-xs text-muted-foreground">Views Score</p>
-                                    <p className="font-semibold">
-                                      {submission.profiles?.views_score || 0}/100
+                                    <p className="text-[10px] text-muted-foreground leading-none">Views</p>
+                                    <p className="font-semibold text-sm leading-tight">
+                                      {submission.profiles?.views_score || 0}
                                     </p>
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 rounded-lg bg-warning/10">
-                                    <Users className="h-4 w-4 text-warning" />
+                                <div className="flex items-center gap-1.5">
+                                  <div className="p-1.5 rounded bg-warning/10">
+                                    <Users className="h-3.5 w-3.5 text-warning" />
                                   </div>
                                   <div>
-                                    <p className="text-xs text-muted-foreground">Demographics</p>
-                                    <p className="font-semibold">
-                                      {submission.profiles?.demographics_score || 0}/100
+                                    <p className="text-[10px] text-muted-foreground leading-none">Demo</p>
+                                    <p className="font-semibold text-sm leading-tight">
+                                      {submission.profiles?.demographics_score || 0}
                                     </p>
                                   </div>
                                 </div>
@@ -638,14 +637,14 @@ export default function BrandManagement() {
 
                               {/* Content URL if available */}
                               {submission.content_url && (
-                                <div className="pt-2">
+                                <div className="pt-1">
                                   <a
                                     href={submission.content_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
                                   >
-                                    View submitted content →
+                                    View content →
                                   </a>
                                 </div>
                               )}
