@@ -652,7 +652,7 @@ export function WalletTab() {
               setTransactionSheetOpen(true);
             }} style={{
               backgroundColor: '#292929'
-            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-neutral-950">
+            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#0d0d0d]">
                   <div className="flex items-center gap-4 flex-1">
                     
                     <div className="flex-1 min-w-0">
