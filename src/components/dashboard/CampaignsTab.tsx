@@ -142,7 +142,7 @@ export function CampaignsTab() {
               {/* Brand Logo Overlay */}
               <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4">
                 {campaign.brand_logo_url && (
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-background/90 backdrop-blur-sm border-2 border-white/20">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-background/90 backdrop-blur-sm shadow-lg">
                     <img 
                       src={campaign.brand_logo_url}
                       alt={campaign.brand_name}
@@ -215,7 +215,7 @@ export function CampaignsTab() {
               </div>
 
               {/* Info Grid */}
-              <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border/50">
+              <div className="grid grid-cols-3 gap-3 pt-2">
                 {/* Start Date */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-1 text-muted-foreground">
