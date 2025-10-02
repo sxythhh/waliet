@@ -16,6 +16,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import ethereumLogo from "@/assets/ethereum-logo.png";
+import optimismLogo from "@/assets/optimism-logo.png";
+import solanaLogo from "@/assets/solana-logo.png";
+import polygonLogo from "@/assets/polygon-logo.png";
+import usdtLogo from "@/assets/usdt-logo.png";
+import usdcLogo from "@/assets/usdc-logo.png";
 interface WalletData {
   id: string;
   balance: number;
@@ -851,13 +857,31 @@ export function WalletTab() {
                 return "";
             }
           };
-          return <div key={method.id} className="group relative overflow-hidden rounded-xl bg-neutral-900/50 transition-all duration-300">
+          const getCryptoLogo = () => {
+            const currency = method.details?.currency?.toLowerCase();
+            const network = method.details?.network?.toLowerCase();
+            
+            if (currency === 'usdt') return usdtLogo;
+            if (currency === 'usdc') return usdcLogo;
+            if (network === 'ethereum') return ethereumLogo;
+            if (network === 'optimism') return optimismLogo;
+            if (network === 'solana') return solanaLogo;
+            if (network === 'polygon') return polygonLogo;
+            return null;
+          };
+          
+          const cryptoLogo = getCryptoLogo();
+          
+          return <div key={method.id} className="relative overflow-hidden rounded-xl bg-neutral-900/50">
                   
                   <div className="relative flex items-center justify-between p-4">
                     <div className="flex items-center gap-4 flex-1">
+                      {cryptoLogo && (
+                        <img src={cryptoLogo} alt="Crypto logo" className="h-8 w-8 rounded-full" />
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
-                          <p className="text-base font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
+                          <p className="text-base font-semibold text-foreground">
                             {getMethodLabel()}
                           </p>
                           <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5 bg-primary/10 text-primary border-0">
