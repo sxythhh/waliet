@@ -376,7 +376,14 @@ export function ProfileTab() {
                         {getPlatformIcon(account.platform)}
                       </div>
                       <div>
-                        <div className="text-sm font-medium">@{account.username}</div>
+                        <a 
+                          href={account.account_link || '#'} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium hover:underline cursor-pointer"
+                        >
+                          @{account.username}
+                        </a>
                         {linkedCampaign && <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
                             <span>Linked to {linkedCampaign.title}</span>
