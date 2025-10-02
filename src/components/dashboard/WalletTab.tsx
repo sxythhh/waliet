@@ -995,18 +995,18 @@ export function WalletTab() {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="p-6 pb-8 bg-gradient-to-b from-card to-background border-b sticky top-0 z-10">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="mb-6 -ml-2"
-                  onClick={() => setTransactionSheetOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-
-                {/* Wordmark Logo */}
-                <div className="flex justify-center mb-4">
+                {/* Close button and Logo on same line */}
+                <div className="flex items-center justify-between mb-6">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="-ml-2"
+                    onClick={() => setTransactionSheetOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                   <img src={wordmarkLogo} alt="Virality" className="h-12" />
+                  <div className="w-8" />
                 </div>
 
                 {/* Icon */}
