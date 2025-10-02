@@ -260,30 +260,27 @@ export default function AdminPayouts() {
             requests.map((request) => (
               <div
                 key={request.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50"
+                className="flex items-center justify-between p-6 rounded-lg hover:bg-muted/20 transition-colors"
               >
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium">{request.profiles?.full_name || request.profiles?.username}</p>
+                    <div className="flex items-center gap-3 mb-2">
+                      <p className="font-semibold text-base">{request.profiles?.full_name || request.profiles?.username}</p>
                       {getStatusBadge(request.status)}
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-4 w-4" />
                         {format(new Date(request.requested_at), 'MMM dd, yyyy')}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <CreditCard className="h-3 w-3" />
+                      <span className="flex items-center gap-1.5">
+                        <CreditCard className="h-4 w-4" />
                         {request.payout_method === 'paypal' ? 'PayPal' : 'Crypto'}
                       </span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-success">${Number(request.amount).toFixed(2)}</p>
+                    <p className="text-2xl font-bold">${Number(request.amount).toFixed(2)}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 ml-4">
