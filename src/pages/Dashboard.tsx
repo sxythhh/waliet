@@ -55,12 +55,7 @@ export default function Dashboard() {
   return <div className={currentTab === "discover" ? "" : "p-8 space-y-8"}>
       {/* Header - Only show on campaigns tab */}
       {currentTab === "campaigns" && <>
-          <div className="flex items-center justify-between">
-            
-            <Button onClick={handleSignOut} variant="outline" className="border-none">
-              Sign Out
-        </Button>
-      </div>
+          <h1 className="text-2xl font-bold">Joined Campaigns</h1>
     </>}
 
       {/* Sign Out button for other tabs (except discover and wallet) */}
