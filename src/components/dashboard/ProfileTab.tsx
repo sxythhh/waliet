@@ -488,7 +488,7 @@ export function ProfileTab() {
                       Upload a professional photo. JPG, PNG or GIF. Max 5MB.
                     </p>
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 bg-muted hover:bg-muted/80 border-0">
                     <Upload className="h-4 w-4" />
                     {uploading ? "Uploading..." : "Change Photo"}
                   </Button>
