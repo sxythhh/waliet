@@ -220,79 +220,79 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     <>
       <div className="space-y-4">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           <Card className="bg-[#202020] border-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs sm:text-sm text-white/60 font-normal flex items-center gap-2">
-                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">Total Accounts</span>
+            <CardHeader className="pb-1 pt-2 px-3">
+              <CardTitle className="text-xs text-white/60 font-normal flex items-center gap-1.5">
+                <BarChart3 className="h-3 w-3" />
+                <span className="truncate">Accounts</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-white">{analytics.length}</div>
+            <CardContent className="px-3 pb-2">
+              <div className="text-lg font-bold text-white">{analytics.length}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-[#202020] border-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs sm:text-sm text-white/60 font-normal flex items-center gap-2">
-                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">Total Views</span>
+            <CardHeader className="pb-1 pt-2 px-3">
+              <CardTitle className="text-xs text-white/60 font-normal flex items-center gap-1.5">
+                <Eye className="h-3 w-3" />
+                <span className="truncate">Views</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-white">{totalViews.toLocaleString()}</div>
+            <CardContent className="px-3 pb-2">
+              <div className="text-lg font-bold text-white">{totalViews.toLocaleString()}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-[#202020] border-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs sm:text-sm text-white/60 font-normal flex items-center gap-2">
-                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">Total Videos</span>
+            <CardHeader className="pb-1 pt-2 px-3">
+              <CardTitle className="text-xs text-white/60 font-normal flex items-center gap-1.5">
+                <TrendingUp className="h-3 w-3" />
+                <span className="truncate">Videos</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-white">{totalVideos.toLocaleString()}</div>
+            <CardContent className="px-3 pb-2">
+              <div className="text-lg font-bold text-white">{totalVideos.toLocaleString()}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-[#202020] border-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs sm:text-sm text-white/60 font-normal flex items-center gap-2">
-                <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">Avg Engagement</span>
+            <CardHeader className="pb-1 pt-2 px-3">
+              <CardTitle className="text-xs text-white/60 font-normal flex items-center gap-1.5">
+                <Heart className="h-3 w-3" />
+                <span className="truncate">Avg Eng</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-white">{avgEngagement.toFixed(2)}%</div>
+            <CardContent className="px-3 pb-2">
+              <div className="text-lg font-bold text-white">{avgEngagement.toFixed(2)}%</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Filters and Table */}
         <Card className="bg-[#202020] border-transparent">
-          <CardHeader className="px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-              <CardTitle className="text-white text-base sm:text-lg">Account Analytics</CardTitle>
+          <CardHeader className="px-3 py-3">
+            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+              <CardTitle className="text-white text-sm">Account Analytics</CardTitle>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-48 md:w-64">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
+                <div className="relative flex-1 sm:w-40">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-white/40" />
                   <Input
-                    placeholder="Search accounts..."
+                    placeholder="Search..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 bg-[#191919] border-white/10 text-white text-sm"
+                    className="pl-7 h-8 bg-[#191919] border-white/10 text-white text-xs"
                   />
                 </div>
                 <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                  <SelectTrigger className="w-full sm:w-36 bg-[#191919] border-white/10 text-white text-sm">
+                  <SelectTrigger className="w-full sm:w-28 h-8 bg-[#191919] border-white/10 text-white text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#2a2a2a] border-white/10">
-                    <SelectItem value="all" className="text-white text-sm">All Platforms</SelectItem>
+                    <SelectItem value="all" className="text-white text-xs">All</SelectItem>
                     {platforms.map(platform => (
-                      <SelectItem key={platform} value={platform} className="text-white capitalize text-sm">
+                      <SelectItem key={platform} value={platform} className="text-white capitalize text-xs">
                         {platform}
                       </SelectItem>
                     ))}
@@ -301,115 +301,114 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                 <Button
                   variant={showLinkedOnly ? "default" : "outline"}
                   onClick={() => setShowLinkedOnly(!showLinkedOnly)}
-                  className={showLinkedOnly ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}
+                  size="sm"
+                  className={`h-8 text-xs ${showLinkedOnly ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}
                 >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Linked Only
+                  <Filter className="h-3 w-3 mr-1" />
+                  Linked
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-0">{/* Removed padding */}
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="text-white/60 font-medium text-xs sm:text-sm sticky left-0 bg-[#202020] z-10">Account</TableHead>
-                    <TableHead className="text-white/60 font-medium text-xs sm:text-sm">User</TableHead>
+                    <TableHead className="text-white/60 font-medium text-xs sticky left-0 bg-[#202020] z-10 py-2">Account</TableHead>
+                    <TableHead className="text-white/60 font-medium text-xs py-2">User</TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs sm:text-sm whitespace-nowrap"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap py-2"
                       onClick={() => handleSort('total_videos')}
                     >
                       <div className="flex items-center justify-end gap-1">
-                        <span className="hidden sm:inline">Videos</span>
-                        <span className="sm:hidden">Vids</span>
+                        Vids
                         {sortField === 'total_videos' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-30" />
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs sm:text-sm whitespace-nowrap"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap py-2"
                       onClick={() => handleSort('total_views')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Views
                         {sortField === 'total_views' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-30" />
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs sm:text-sm whitespace-nowrap hidden lg:table-cell"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap hidden lg:table-cell py-2"
                       onClick={() => handleSort('average_video_views')}
                     >
                       <div className="flex items-center justify-end gap-1">
-                        Avg Views
+                        Avg
                         {sortField === 'average_video_views' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-30" />
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs sm:text-sm whitespace-nowrap hidden md:table-cell"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap hidden md:table-cell py-2"
                       onClick={() => handleSort('total_likes')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Likes
                         {sortField === 'total_likes' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-30" />
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs sm:text-sm whitespace-nowrap hidden xl:table-cell"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap hidden xl:table-cell py-2"
                       onClick={() => handleSort('total_comments')}
                     >
                       <div className="flex items-center justify-end gap-1">
-                        Comments
+                        Comm
                         {sortField === 'total_comments' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-30" />
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs sm:text-sm whitespace-nowrap"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap py-2"
                       onClick={() => handleSort('average_engagement_rate')}
                     >
                       <div className="flex items-center justify-end gap-1">
-                        <span className="hidden sm:inline">Engagement</span>
-                        <span className="sm:hidden">Eng</span>
+                        Eng
                         {sortField === 'average_engagement_rate' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-30" />
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs sm:text-sm whitespace-nowrap hidden md:table-cell"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap hidden md:table-cell py-2"
                       onClick={() => handleSort('outperforming_video_rate')}
                     >
                       <div className="flex items-center justify-end gap-1">
-                        Outperform
+                        Out
                         {sortField === 'outperforming_video_rate' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-30" />
+                          <ArrowUpDown className="h-3 w-3 opacity-30" />
                         )}
                       </div>
                     </TableHead>
-                    <TableHead className="text-white/60 font-medium text-xs sm:text-sm w-10"></TableHead>
+                    <TableHead className="text-white/60 font-medium text-xs w-8 py-2"></TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
@@ -420,11 +419,11 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                     : item.account_username;
                   
                   return (
-                    <TableRow key={item.id} className="border-white/5 hover:bg-transparent">{/* Explicitly disable hover */}
-                      <TableCell className="py-3 sm:py-4 sticky left-0 bg-[#202020] z-10">{/* Sticky for mobile */}
-                        <div className="flex items-center gap-2 sm:gap-3">{/* Reduced gap on mobile */}
+                    <TableRow key={item.id} className="border-white/5 hover:bg-transparent">
+                      <TableCell className="py-2 sticky left-0 bg-[#202020] z-10">
+                        <div className="flex items-center gap-2">
                           {platformIcon && (
-                            <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center p-1 sm:p-1.5">
+                            <div className="flex-shrink-0 w-5 h-5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center p-0.5">
                               <img 
                                 src={platformIcon} 
                                 alt={item.platform}
@@ -441,17 +440,17 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                 e.preventDefault();
                                 window.open(item.account_link!, '_blank', 'noopener,noreferrer');
                               }}
-                              className="text-white hover:text-primary hover:underline transition-all font-medium cursor-pointer text-sm sm:text-base truncate max-w-[150px] sm:max-w-none"
+                              className="text-white hover:text-primary hover:underline transition-all font-medium cursor-pointer text-xs truncate max-w-[120px]"
                             >
                               {username}
                             </a>
                           ) : (
-                            <span className="text-white font-medium text-sm sm:text-base truncate max-w-[150px] sm:max-w-none">{username}</span>
+                            <span className="text-white font-medium text-xs truncate max-w-[120px]">{username}</span>
                           )}
                         </div>
                       </TableCell>
                       <TableCell 
-                        className="py-3 sm:py-4 bg-[#202020] cursor-pointer hover:bg-white/5 transition-colors"
+                        className="py-2 bg-[#202020] cursor-pointer hover:bg-white/5 transition-colors"
                         onClick={() => {
                           if (item.user_id && item.profiles) {
                             setSelectedUser(item);
@@ -460,40 +459,39 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                         }}
                       >
                         {item.user_id && item.profiles ? (
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                          <div className="flex items-center gap-1.5">
+                            <Avatar className="h-4 w-4">
                               <AvatarImage src={item.profiles.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/20 text-primary text-[10px] sm:text-xs">
+                              <AvatarFallback className="bg-primary/20 text-primary text-[8px]">
                                 {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-white/80 text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">@{item.profiles.username}</span>
+                            <span className="text-white/80 text-xs truncate max-w-[70px]">@{item.profiles.username}</span>
                           </div>
                         ) : (
-                          <span className="text-white/30 text-xs sm:text-sm flex items-center gap-1">
+                          <span className="text-white/30 text-xs flex items-center gap-1">
                             <User className="h-3 w-3" />
-                            <span className="hidden sm:inline">Not linked</span>
-                            <span className="sm:hidden">—</span>
+                            <span className="hidden sm:inline">—</span>
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm bg-[#202020]">
+                      <TableCell className="text-white/80 text-right font-mono text-xs bg-[#202020] py-2">
                         {item.total_videos.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white text-right font-semibold text-xs sm:text-sm bg-[#202020]">
+                      <TableCell className="text-white text-right font-semibold text-xs bg-[#202020] py-2">
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden lg:table-cell bg-[#202020]">
+                      <TableCell className="text-white/80 text-right font-mono text-xs hidden lg:table-cell bg-[#202020] py-2">
                         {Math.round(item.average_video_views).toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden md:table-cell bg-[#202020]">
+                      <TableCell className="text-white/80 text-right font-mono text-xs hidden md:table-cell bg-[#202020] py-2">
                         {item.total_likes.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden xl:table-cell bg-[#202020]">
+                      <TableCell className="text-white/80 text-right font-mono text-xs hidden xl:table-cell bg-[#202020] py-2">
                         {item.total_comments.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right bg-[#202020]">
-                        <span className={`font-semibold text-xs sm:text-sm ${
+                      <TableCell className="text-right bg-[#202020] py-2">
+                        <span className={`font-semibold text-xs ${
                           item.average_engagement_rate > 5 
                             ? "text-emerald-400" 
                             : item.average_engagement_rate > 3
@@ -503,16 +501,16 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                           {item.average_engagement_rate.toFixed(2)}%
                         </span>
                       </TableCell>
-                      <TableCell className="text-right hidden md:table-cell bg-[#202020]">
+                      <TableCell className="text-right hidden md:table-cell bg-[#202020] py-2">
                         {item.outperforming_video_rate > 0 ? (
-                          <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-semibold">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
                             {item.outperforming_video_rate.toFixed(1)}%
                           </span>
                         ) : (
-                          <span className="text-white/30 text-xs sm:text-sm">—</span>
+                          <span className="text-white/30 text-xs">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="py-4 bg-[#202020]">
+                      <TableCell className="py-2 bg-[#202020]">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -520,9 +518,9 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                             setDeleteAccountId(item.id);
                             setDeleteDialogOpen(true);
                           }}
-                          className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          className="h-6 w-6 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </TableCell>
                     </TableRow>
