@@ -138,8 +138,8 @@ export function ImportCampaignStatsDialog({
               account_link: values[1] || null,
               platform: values[2] || 'unknown',
               outperforming_video_rate: parseFloat(values[3]) || 0,
-              total_videos: parseInt(values[4]) || 0,
-              total_views: parseInt(values[5]) || 0,
+              total_views: parseInt(values[4]) || 0,  // Swapped: views is column 4
+              total_videos: parseInt(values[5]) || 0,  // Swapped: videos is column 5
               total_likes: parseInt(values[6]) || 0,
               total_comments: parseInt(values[7]) || 0,
               average_engagement_rate: parseFloat(values[8]) || 0,
