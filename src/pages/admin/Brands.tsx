@@ -146,15 +146,10 @@ export default function AdminBrands() {
                     </div>}
 
                   {/* Description */}
-                  {brand.description && <p className="text-sm text-muted-foreground line-clamp-2 mb-4 min-h-[40px]">
-                      {brand.description}
-                    </p>}
+                  {brand.description}
 
                   {/* Meta Info */}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-4 pt-4 border-t">
-                    <span>Created {new Date(brand.created_at).toLocaleDateString()}</span>
-                    {brand.show_account_tab && <Badge variant="outline" className="text-xs">Account Tab</Badge>}
-                  </div>
+                  
 
                   {/* Actions */}
                   <div className="flex gap-2">
