@@ -131,22 +131,14 @@ export default function AdminBrands() {
                         </div>}
                       <div>
                         <h3 className="font-semibold text-lg leading-none mb-1">{brand.name}</h3>
-                        <code className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
-                          {brand.slug}
-                        </code>
+                        {brand.brand_type && (
+                          <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
+                            {brand.brand_type}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
-
-                  {/* Type Badge */}
-                  {brand.brand_type && <div className="mb-3">
-                      <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
-                        {brand.brand_type}
-                      </Badge>
-                    </div>}
-
-                  {/* Description */}
-                  {brand.description}
 
                   {/* Meta Info */}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4 pb-4 border-b">
