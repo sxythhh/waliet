@@ -333,12 +333,10 @@ export default function CampaignJoin() {
                               <div>
                                 <div className="font-medium flex items-center gap-2">
                                   @{account.username}
-                                  {!isLinkedToCampaign && <CheckCircle2 className="h-4 w-4 text-primary" />}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  {account.follower_count.toLocaleString()} followers
-                                  {isLinkedToCampaign && " • Already linked to a campaign"}
-                                  {!isCompatible && !isLinkedToCampaign && " • Not compatible with this campaign"}
+                                  {isLinkedToCampaign && "Already linked to a campaign"}
+                                  {!isCompatible && !isLinkedToCampaign && "Not compatible with this campaign"}
                                 </div>
                               </div>
                             </div>
