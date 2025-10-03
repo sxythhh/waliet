@@ -36,7 +36,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -379,6 +379,14 @@ export default function BrandManagement() {
     }
   };
 
+  const handleRefresh = () => {
+    fetchCampaigns();
+    fetchSubmissions();
+    fetchAnalytics();
+    fetchTransactions();
+    toast.success("Data refreshed");
+  };
+
   const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
@@ -421,6 +429,15 @@ export default function BrandManagement() {
             <h1 className="text-3xl font-bold text-white">Campaign Management</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              className="bg-[#202020] border-white/10 text-white hover:bg-white/10"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
             <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
               <SelectTrigger className="w-[300px] bg-[#202020] border-white/10 text-white">
                 <SelectValue />
@@ -541,7 +558,10 @@ export default function BrandManagement() {
             </div>
             
             {/* Imported Analytics Data */}
-            <CampaignAnalyticsTable campaignId={selectedCampaignId} />
+            <CampaignAnalyticsTable 
+              campaignId={selectedCampaignId}
+              onPaymentComplete={handleRefresh}
+            />
             
             {/* Matching Dialog */}
             <MatchAccountsDialog

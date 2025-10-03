@@ -73,11 +73,13 @@ interface Transaction {
 }
 interface CampaignAnalyticsTableProps {
   campaignId: string;
+  onPaymentComplete?: () => void;
 }
 type SortField = 'total_videos' | 'total_views' | 'average_video_views' | 'total_likes' | 'total_comments' | 'average_engagement_rate' | 'outperforming_video_rate';
 type SortDirection = 'asc' | 'desc';
 export function CampaignAnalyticsTable({
-  campaignId
+  campaignId,
+  onPaymentComplete
 }: CampaignAnalyticsTableProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -485,6 +487,9 @@ export function CampaignAnalyticsTable({
       // Refresh analytics and transactions to show updated data
       fetchAnalytics();
       fetchTransactions();
+      
+      // Notify parent component to refresh
+      onPaymentComplete?.();
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment");
