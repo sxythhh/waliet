@@ -931,8 +931,11 @@ export function CampaignAnalyticsTable({
                             <span className="text-xs text-white/80 capitalize">{selectedUser.platform}</span>
                           </div>;
                     })()}
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                        <span className="text-xs text-white/60">@{selectedUser.account_username}</span>
+                      <div 
+                        className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 cursor-pointer transition-colors hover:text-white hover:underline"
+                        onClick={() => selectedUser.account_link && window.open(selectedUser.account_link, '_blank')}
+                      >
+                        <span className="text-xs text-white/60 hover:text-white transition-colors">@{selectedUser.account_username}</span>
                       </div>
                     </div>
                   </div>
