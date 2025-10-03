@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Minus, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import {
   Dialog,
   DialogContent,
@@ -231,7 +232,10 @@ export default function Wallets() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 p-6">
+    <div className="flex min-h-screen w-full">
+      <AdminSidebar />
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Wallet Management</h1>
         <p className="text-muted-foreground mt-1">Manage user wallet balances and transactions</p>
@@ -409,6 +413,8 @@ export default function Wallets() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </div>
+      </main>
     </div>
   );
 }

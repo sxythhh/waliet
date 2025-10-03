@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import {
   Table,
   TableBody,
@@ -205,8 +206,10 @@ export default function AdminCampaigns() {
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <div>
+    <div className="flex min-h-screen w-full">
+      <AdminSidebar />
+      <main className="flex-1 p-8 space-y-6">
+        <div>
         <h1 className="text-3xl font-bold tracking-tight">Campaign Management</h1>
         <p className="text-muted-foreground mt-1">View and manage all campaigns</p>
       </div>
@@ -458,6 +461,7 @@ export default function AdminCampaigns() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </main>
     </div>
   );
 }

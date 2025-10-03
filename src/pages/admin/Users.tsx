@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown } from "lucide-react";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import {
   Table,
   TableBody,
@@ -385,8 +386,10 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="flex min-h-screen w-full">
+      <AdminSidebar />
+      <main className="flex-1 p-8 space-y-6">
+        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
           <p className="text-muted-foreground mt-1">View and manage creator accounts</p>
@@ -866,6 +869,7 @@ export default function AdminUsers() {
           </div>
         </DialogContent>
       </Dialog>
+      </main>
     </div>
   );
 }
