@@ -374,9 +374,7 @@ export default function CampaignJoin() {
         {/* Step 3: Application Questions */}
         {currentStep >= 3 && campaign.application_questions.length > 0 && <div ref={applicationQuestionsRef} className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
-            <div className="flex flex-col items-center pt-1">
-              <div className="w-3 h-3 rounded-full bg-primary"></div>
-            </div>
+            
 
             {/* Step Content */}
             <div className="flex-1 pb-8">
