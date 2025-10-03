@@ -73,9 +73,9 @@ export function AdminSidebar() {
               key={item.title}
               to={item.path}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium",
+                "flex items-center gap-2 px-3 py-2 rounded-md transition-colors font-medium",
                 active
-                  ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+                  ? "bg-blue-500 text-white"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
             >
