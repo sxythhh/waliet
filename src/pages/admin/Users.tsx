@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown } from "lucide-react";
+import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 interface User {
   id: string;
   username: string;
@@ -67,6 +68,8 @@ export default function AdminUsers() {
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
+  const [transactionsOpen, setTransactionsOpen] = useState(false);
   const [csvImportDialogOpen, setCsvImportDialogOpen] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importResults, setImportResults] = useState<any>(null);
@@ -700,97 +703,119 @@ export default function AdminUsers() {
                 </div>
               </div>
 
-              {/* Social Accounts Section */}
-              <div className="pt-6 border-t">
-                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
-                  Connected Accounts ({userSocialAccounts.length})
-                </h3>
+              {/* Social Accounts Section - Collapsible */}
+              <Collapsible open={socialAccountsOpen} onOpenChange={setSocialAccountsOpen} className="pt-6 border-t">
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Connected Accounts ({userSocialAccounts.length})
+                    </h3>
+                    {socialAccountsOpen ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </CollapsibleTrigger>
                 
-                {loadingSocialAccounts ? <div className="text-center py-12 text-muted-foreground">
-                    Loading social accounts...
-                  </div> : userSocialAccounts.length === 0 ? <div className="text-center py-12 text-muted-foreground bg-card/30 rounded-lg">
-                    No social accounts connected
-                  </div> : <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                    {userSocialAccounts.map(account => <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                        <div className="flex items-center justify-between gap-4">
-                          {/* Account Info */}
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                <CollapsibleContent>
+                  {loadingSocialAccounts ? <div className="text-center py-8 text-muted-foreground">
+                      Loading social accounts...
+                    </div> : userSocialAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+                      No social accounts connected
+                    </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
+                      {userSocialAccounts.map(account => <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+                          <div className="flex items-center justify-between gap-4">
+                            {/* Account Info */}
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="shrink-0">
+                                {getPlatformIcon(account.platform)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium hover:text-primary transition-colors block truncate" onClick={e => e.stopPropagation()}>
+                                  @{account.username}
+                                </a>
+                              </div>
+                            </div>
+                            
+                            {/* Campaign Link */}
                             <div className="shrink-0">
-                              {getPlatformIcon(account.platform)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium hover:text-primary transition-colors block truncate" onClick={e => e.stopPropagation()}>
-                                @{account.username}
-                              </a>
+                              {account.campaigns ? <div className="flex items-center gap-2">
+                                  {account.campaigns.brand_logo_url && <img src={account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
+                                  <span className="font-medium text-sm">
+                                    {account.campaigns.title}
+                                  </span>
+                                </div> : <span className="text-xs text-muted-foreground italic">
+                                  Not linked
+                                </span>}
                             </div>
                           </div>
-                          
-                          {/* Campaign Link */}
-                          <div className="shrink-0">
-                            {account.campaigns ? <div className="flex items-center gap-2">
-                                {account.campaigns.brand_logo_url && <img src={account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
-                                <span className="font-medium text-sm">
-                                  {account.campaigns.title}
-                                </span>
-                              </div> : <span className="text-xs text-muted-foreground italic">
-                                Not linked
-                              </span>}
-                          </div>
-                        </div>
-                      </div>)}
-                  </div>}
-              </div>
+                        </div>)}
+                    </div>}
+                </CollapsibleContent>
+              </Collapsible>
 
-              {/* Recent Transactions Section */}
-              <div className="pt-6 border-t">
-                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
-                  Recent Transactions ({userTransactions.length})
-                </h3>
+              {/* Recent Transactions Section - Collapsible */}
+              <Collapsible open={transactionsOpen} onOpenChange={setTransactionsOpen} className="pt-6 border-t">
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Recent Transactions ({userTransactions.length})
+                    </h3>
+                    {transactionsOpen ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </CollapsibleTrigger>
                 
-                {loadingTransactions ? <div className="text-center py-12 text-muted-foreground">
-                    Loading transactions...
-                  </div> : userTransactions.length === 0 ? <div className="text-center py-12 text-muted-foreground bg-card/30 rounded-lg">
-                    No transactions yet
-                  </div> : <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                    {userTransactions.map(transaction => <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                        <div className="flex items-center justify-between gap-4">
-                          {/* Transaction Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium capitalize">{transaction.type}</span>
-                              <span className={`text-xs px-2 py-0.5 rounded ${
-                                transaction.status === 'completed' 
-                                  ? 'bg-success/10 text-success' 
-                                  : 'bg-muted text-muted-foreground'
-                              }`}>
-                                {transaction.status}
-                              </span>
+                <CollapsibleContent>
+                  {loadingTransactions ? <div className="text-center py-8 text-muted-foreground">
+                      Loading transactions...
+                    </div> : userTransactions.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+                      No transactions yet
+                    </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
+                      {userTransactions.map(transaction => <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+                          <div className="flex items-center justify-between gap-4">
+                            {/* Transaction Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium capitalize">{transaction.type}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded ${
+                                  transaction.status === 'completed' 
+                                    ? 'bg-success/10 text-success' 
+                                    : 'bg-muted text-muted-foreground'
+                                }`}>
+                                  {transaction.status}
+                                </span>
+                              </div>
+                              {transaction.description && (
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {transaction.description}
+                                </p>
+                              )}
                             </div>
-                            {transaction.description && (
-                              <p className="text-sm text-muted-foreground truncate">
-                                {transaction.description}
+                            
+                            {/* Amount & Date */}
+                            <div className="text-right shrink-0">
+                              <p className={`font-semibold ${
+                                transaction.type === 'withdrawal' || transaction.type === 'deduction'
+                                  ? 'text-destructive' 
+                                  : 'text-success'
+                              }`}>
+                                {transaction.type === 'withdrawal' || transaction.type === 'deduction' ? '-' : '+'}
+                                ${Math.abs(transaction.amount).toFixed(2)}
                               </p>
-                            )}
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(transaction.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          
-                          {/* Amount & Date */}
-                          <div className="text-right shrink-0">
-                            <p className={`font-semibold ${
-                              transaction.type === 'withdrawal' || transaction.type === 'deduction'
-                                ? 'text-destructive' 
-                                : 'text-success'
-                            }`}>
-                              {transaction.type === 'withdrawal' || transaction.type === 'deduction' ? '-' : '+'}
-                              ${Math.abs(transaction.amount).toFixed(2)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(transaction.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>)}
-                  </div>}
-              </div>
+                        </div>)}
+                    </div>}
+                </CollapsibleContent>
+              </Collapsible>
             </>}
         </DialogContent>
       </Dialog>
