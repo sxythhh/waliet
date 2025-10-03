@@ -131,20 +131,15 @@ export default function AdminBrands() {
                         </div>}
                       <div>
                         <h3 className="font-semibold text-lg leading-none mb-1">{brand.name}</h3>
-                        {brand.brand_type && (
-                          <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
+                        {brand.brand_type && <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
                             {brand.brand_type}
-                          </Badge>
-                        )}
+                          </Badge>}
                       </div>
                     </div>
                   </div>
 
                   {/* Meta Info */}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4 pb-4 border-b">
-                    <span>Created {new Date(brand.created_at).toLocaleDateString()}</span>
-                    {brand.show_account_tab && <Badge variant="outline" className="rounded">Account Tab</Badge>}
-                  </div>
+                  
                   
 
                   {/* Actions */}
