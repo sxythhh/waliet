@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -75,6 +76,8 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [campaignRPM, setCampaignRPM] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     fetchAnalytics();
@@ -303,6 +306,12 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     return (aValue > bValue ? 1 : -1) * modifier;
   });
 
+  const totalPages = Math.ceil(filteredAnalytics.length / itemsPerPage);
+  const paginatedAnalytics = filteredAnalytics.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const platforms = Array.from(new Set(analytics.map(a => a.platform)));
 
   const getPlatformIcon = (platform: string) => {
@@ -416,13 +425,13 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                   />
                 </div>
                 <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                  <SelectTrigger className="w-full sm:w-28 h-8 bg-[#191919] border-white/10 text-white text-xs">
+                  <SelectTrigger className="w-full sm:w-28 h-8 bg-[#191919] border-white/10 text-white text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#2a2a2a] border-white/10">
-                    <SelectItem value="all" className="text-white text-xs">All</SelectItem>
+                    <SelectItem value="all" className="text-white text-sm">All</SelectItem>
                     {platforms.map(platform => (
-                      <SelectItem key={platform} value={platform} className="text-white capitalize text-xs">
+                      <SelectItem key={platform} value={platform} className="text-white capitalize text-sm">
                         {platform}
                       </SelectItem>
                     ))}
@@ -432,9 +441,9 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                   variant={showLinkedOnly ? "default" : "outline"}
                   onClick={() => setShowLinkedOnly(!showLinkedOnly)}
                   size="sm"
-                  className={`h-8 text-xs ${showLinkedOnly ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}
+                  className={`h-8 text-sm ${showLinkedOnly ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}
                 >
-                  <Filter className="h-3 w-3 mr-1" />
+                  <Filter className="h-4 w-4 mr-1" />
                   Linked
                 </Button>
               </div>
@@ -445,104 +454,104 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="text-white/60 font-medium text-xs sticky left-0 bg-[#202020] z-10 py-2">Account</TableHead>
-                    <TableHead className="text-white/60 font-medium text-xs py-2">User</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm sticky left-0 bg-[#202020] z-10 py-3">Account</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3">User</TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap py-2"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3"
                       onClick={() => handleSort('total_videos')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Vids
                         {sortField === 'total_videos' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap py-2"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3"
                       onClick={() => handleSort('total_views')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Views
                         {sortField === 'total_views' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap hidden lg:table-cell py-2"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden lg:table-cell py-3"
                       onClick={() => handleSort('average_video_views')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Avg
                         {sortField === 'average_video_views' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap hidden md:table-cell py-2"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3"
                       onClick={() => handleSort('total_likes')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Likes
                         {sortField === 'total_likes' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap hidden xl:table-cell py-2"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden xl:table-cell py-3"
                       onClick={() => handleSort('total_comments')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Comm
                         {sortField === 'total_comments' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap py-2"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3"
                       onClick={() => handleSort('average_engagement_rate')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Eng
                         {sortField === 'average_engagement_rate' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
                         )}
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-xs whitespace-nowrap hidden md:table-cell py-2"
+                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3"
                       onClick={() => handleSort('outperforming_video_rate')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         Out
                         {sortField === 'outperforming_video_rate' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-30" />
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
                         )}
                       </div>
                     </TableHead>
-                    <TableHead className="text-white/60 font-medium text-xs w-8 py-2"></TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm w-8 py-3"></TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
-                {filteredAnalytics.map((item) => {
+                {paginatedAnalytics.map((item) => {
                   const platformIcon = getPlatformIcon(item.platform);
                   const username = item.account_username.startsWith('@') 
                     ? item.account_username.slice(1) 
@@ -550,7 +559,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                   
                   return (
                     <TableRow key={item.id} className="border-white/5 hover:bg-transparent">
-                      <TableCell className="py-2 sticky left-0 bg-[#202020] z-10">
+                      <TableCell className="py-3 sticky left-0 bg-[#202020] z-10">
                         <div className="flex items-center gap-2">
                           {platformIcon && (
                             <div className="flex-shrink-0 w-5 h-5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center p-0.5">
@@ -571,12 +580,12 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                   e.preventDefault();
                                   window.open(item.account_link!, '_blank', 'noopener,noreferrer');
                                 }}
-                                className="text-white hover:text-primary hover:underline transition-all font-medium cursor-pointer text-xs truncate max-w-[120px]"
+                                className="text-white hover:text-primary hover:underline transition-all font-medium cursor-pointer text-sm truncate max-w-[150px]"
                               >
                                 {username}
                               </a>
                             ) : (
-                              <span className="text-white font-medium text-xs truncate max-w-[120px]">{username}</span>
+                              <span className="text-white font-medium text-sm truncate max-w-[150px]">{username}</span>
                             )}
                             
                             {/* Demographic Status Icon */}
@@ -589,7 +598,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                     </div>
                                   </TooltipTrigger>
                                   <TooltipContent className="bg-[#2a2a2a] border-white/10 text-white">
-                                    <p className="text-xs">{getDemographicTooltip(getDemographicStatus(item), item.demographic_submission)}</p>
+                                    <p className="text-sm">{getDemographicTooltip(getDemographicStatus(item), item.demographic_submission)}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -598,7 +607,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                         </div>
                       </TableCell>
                       <TableCell 
-                        className="py-2 bg-[#202020] cursor-pointer hover:bg-white/5 transition-colors"
+                        className="py-3 bg-[#202020] cursor-pointer hover:bg-white/5 transition-colors"
                         onClick={() => {
                           if (item.user_id && item.profiles) {
                             setSelectedUser(item);
@@ -608,38 +617,38 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                       >
                         {item.user_id && item.profiles ? (
                           <div className="flex items-center gap-1.5">
-                            <Avatar className="h-4 w-4">
+                            <Avatar className="h-5 w-5">
                               <AvatarImage src={item.profiles.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/20 text-primary text-[8px]">
+                              <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
                                 {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-white/80 text-xs truncate max-w-[70px]">@{item.profiles.username}</span>
+                            <span className="text-white/80 text-sm truncate max-w-[90px]">@{item.profiles.username}</span>
                           </div>
                         ) : (
-                          <span className="text-white/30 text-xs flex items-center gap-1">
-                            <User className="h-3 w-3" />
+                          <span className="text-white/30 text-sm flex items-center gap-1">
+                            <User className="h-4 w-4" />
                             <span className="hidden sm:inline">—</span>
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs bg-[#202020] py-2">
+                      <TableCell className="text-white/80 text-right font-mono text-sm bg-[#202020] py-3">
                         {item.total_videos.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white text-right font-semibold text-xs bg-[#202020] py-2">
+                      <TableCell className="text-white text-right font-semibold text-sm bg-[#202020] py-3">
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs hidden lg:table-cell bg-[#202020] py-2">
+                      <TableCell className="text-white/80 text-right font-mono text-sm hidden lg:table-cell bg-[#202020] py-3">
                         {Math.round(item.average_video_views).toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs hidden md:table-cell bg-[#202020] py-2">
+                      <TableCell className="text-white/80 text-right font-mono text-sm hidden md:table-cell bg-[#202020] py-3">
                         {item.total_likes.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs hidden xl:table-cell bg-[#202020] py-2">
+                      <TableCell className="text-white/80 text-right font-mono text-sm hidden xl:table-cell bg-[#202020] py-3">
                         {item.total_comments.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right bg-[#202020] py-2">
-                        <span className={`font-semibold text-xs ${
+                      <TableCell className="text-right bg-[#202020] py-3">
+                        <span className={`font-semibold text-sm ${
                           item.average_engagement_rate > 5 
                             ? "text-emerald-400" 
                             : item.average_engagement_rate > 3
@@ -649,16 +658,16 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                           {item.average_engagement_rate.toFixed(2)}%
                         </span>
                       </TableCell>
-                      <TableCell className="text-right hidden md:table-cell bg-[#202020] py-2">
+                      <TableCell className="text-right hidden md:table-cell bg-[#202020] py-3">
                         {item.outperforming_video_rate > 0 ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
                             {item.outperforming_video_rate.toFixed(1)}%
                           </span>
                         ) : (
-                          <span className="text-white/30 text-xs">—</span>
+                          <span className="text-white/30 text-sm">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="py-2 bg-[#202020]">
+                      <TableCell className="py-3 bg-[#202020]">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -666,9 +675,9 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                             setDeleteAccountId(item.id);
                             setDeleteDialogOpen(true);
                           }}
-                          className="h-6 w-6 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -684,6 +693,57 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                // Show first page, last page, current page, and pages around current
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                } else if (page === currentPage - 2 || page === currentPage + 2) {
+                  return (
+                    <PaginationItem key={page}>
+                      <span className="px-4 text-white/40">...</span>
+                    </PaginationItem>
+                  );
+                }
+                return null;
+              })}
+
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
 
     {/* Delete Confirmation Dialog */}
