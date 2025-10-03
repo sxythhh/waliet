@@ -250,94 +250,94 @@ export default function AdminCampaigns() {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Campaign</DialogTitle>
-            <DialogDescription>Update campaign details</DialogDescription>
+        <DialogContent className="max-w-2xl bg-card border-0">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">Edit Campaign</DialogTitle>
+            <DialogDescription className="text-xs">Update campaign details</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
-              <Input id="title" value={editForm.title} onChange={e => setEditForm({
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="title" className="text-xs">Title *</Label>
+                <Input id="title" className="h-9 text-sm" value={editForm.title} onChange={e => setEditForm({
               ...editForm,
               title: e.target.value
             })} />
-            </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="brand">Brand Name *</Label>
-              <Input id="brand" value={editForm.brand_name} onChange={e => setEditForm({
+              <div className="space-y-1.5">
+                <Label htmlFor="brand" className="text-xs">Brand Name *</Label>
+                <Input id="brand" className="h-9 text-sm" value={editForm.brand_name} onChange={e => setEditForm({
               ...editForm,
               brand_name: e.target.value
             })} />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" value={editForm.description} onChange={e => setEditForm({
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-xs">Description</Label>
+              <Textarea id="description" className="text-sm min-h-[60px]" value={editForm.description} onChange={e => setEditForm({
               ...editForm,
               description: e.target.value
-            })} rows={3} />
+            })} rows={2} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="budget">Total Budget (USD) *</Label>
-                <Input id="budget" type="number" step="0.01" value={editForm.budget} onChange={e => setEditForm({
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="budget" className="text-xs">Total Budget *</Label>
+                <Input id="budget" type="number" step="0.01" className="h-9 text-sm" value={editForm.budget} onChange={e => setEditForm({
                 ...editForm,
                 budget: e.target.value
               })} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="budget_used">Used Budget (USD) *</Label>
-                <Input id="budget_used" type="number" step="0.01" value={editForm.budget_used} onChange={e => setEditForm({
+              <div className="space-y-1.5">
+                <Label htmlFor="budget_used" className="text-xs">Used Budget *</Label>
+                <Input id="budget_used" type="number" step="0.01" className="h-9 text-sm" value={editForm.budget_used} onChange={e => setEditForm({
                 ...editForm,
                 budget_used: e.target.value
               })} />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="rpm">RPM Rate (USD) *</Label>
-                <Input id="rpm" type="number" step="0.01" value={editForm.rpm_rate} onChange={e => setEditForm({
+              <div className="space-y-1.5">
+                <Label htmlFor="rpm" className="text-xs">RPM Rate *</Label>
+                <Input id="rpm" type="number" step="0.01" className="h-9 text-sm" value={editForm.rpm_rate} onChange={e => setEditForm({
                 ...editForm,
                 rpm_rate: e.target.value
               })} />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="status" className="text-xs">Status *</Label>
               <select id="status" value={editForm.status} onChange={e => setEditForm({
               ...editForm,
               status: e.target.value
-            })} className="w-full px-3 py-2 rounded-md border border-input bg-background">
+            })} className="w-full h-9 px-3 rounded-md border border-input bg-muted/50 text-sm">
                 <option value="active">Active</option>
                 <option value="paused">Paused</option>
                 <option value="completed">Completed</option>
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="preview_url">Preview URL</Label>
-              <Input id="preview_url" type="url" placeholder="https://..." value={editForm.preview_url} onChange={e => setEditForm({
+            <div className="space-y-1.5">
+              <Label htmlFor="preview_url" className="text-xs">Preview URL</Label>
+              <Input id="preview_url" type="url" placeholder="https://..." className="h-9 text-sm" value={editForm.preview_url} onChange={e => setEditForm({
               ...editForm,
               preview_url: e.target.value
             })} />
-              <p className="text-xs text-muted-foreground">URL to embed for non-members viewing this campaign</p>
+              <p className="text-[10px] text-muted-foreground">URL to embed for non-members viewing this campaign</p>
             </div>
+          </div>
 
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleUpdateCampaign}>
-                Save Changes
-              </Button>
-            </div>
+          <div className="flex gap-2 justify-end pt-3 border-t">
+            <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleUpdateCampaign}>
+              Save Changes
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
