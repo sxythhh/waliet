@@ -331,7 +331,7 @@ export default function AdminUsers() {
       </div>;
   }
   return <div className="p-8 space-y-6 py-0 px-[23px]">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between p-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
           <p className="text-muted-foreground mt-1">View and manage creator accounts</p>
