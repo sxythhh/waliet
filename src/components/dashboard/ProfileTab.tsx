@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ interface Campaign {
   brand_logo_url: string | null;
 }
 export function ProfileTab() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [joinedCampaigns, setJoinedCampaigns] = useState<Campaign[]>([]);
@@ -441,7 +443,7 @@ export function ProfileTab() {
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.location.href = `/campaign/${linkedCampaign.id}/preview`;
+                                navigate(`/campaign/${linkedCampaign.id}`);
                               }}
                               className="hover:underline text-xs text-muted-foreground"
                             >
