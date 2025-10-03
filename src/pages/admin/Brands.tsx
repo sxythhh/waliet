@@ -131,11 +131,9 @@ export default function AdminBrands() {
                         </div>}
                       <div>
                         <h3 className="font-semibold text-lg leading-none mb-1">{brand.name}</h3>
-                        {brand.brand_type && (
-                          <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
+                        {brand.brand_type && <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
                             {brand.brand_type}
-                          </Badge>
-                        )}
+                          </Badge>}
                       </div>
                     </div>
                   </div>
@@ -154,9 +152,7 @@ export default function AdminBrands() {
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                       View
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDeleteClick(brand)} className="text-destructive hover:text-destructive border-0 bg-[#1a1b1a]">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    
                   </div>
                 </CardContent>
               </Card>)}
