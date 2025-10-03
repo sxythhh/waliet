@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { ExternalLink, Package, Trash2 } from "lucide-react";
-
 interface Brand {
   id: string;
   name: string;
@@ -23,33 +22,34 @@ interface Brand {
   show_account_tab: boolean;
   created_at: string;
 }
-
 export default function AdminBrands() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null);
   const navigate = useNavigate();
-
   useEffect(() => {
     checkAuth();
     fetchBrands();
   }, []);
-
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
     }
   };
-
   const fetchBrands = async () => {
     try {
-      const { data, error } = await supabase
-        .from("brands")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("brands").select("*").order("created_at", {
+        ascending: false
+      });
       if (error) throw error;
       setBrands(data || []);
     } catch (error) {
@@ -59,23 +59,17 @@ export default function AdminBrands() {
       setLoading(false);
     }
   };
-
   const handleDeleteClick = (brand: Brand) => {
     setBrandToDelete(brand);
     setDeleteDialogOpen(true);
   };
-
   const handleDeleteConfirm = async () => {
     if (!brandToDelete) return;
-
     try {
-      const { error } = await supabase
-        .from("brands")
-        .delete()
-        .eq("id", brandToDelete.id);
-
+      const {
+        error
+      } = await supabase.from("brands").delete().eq("id", brandToDelete.id);
       if (error) throw error;
-
       toast.success("Brand deleted successfully");
       fetchBrands();
     } catch (error) {
@@ -86,7 +80,6 @@ export default function AdminBrands() {
       setBrandToDelete(null);
     }
   };
-
   const getBrandTypeBadgeColor = (type: string | null) => {
     switch (type) {
       case "Standard":
@@ -97,20 +90,15 @@ export default function AdminBrands() {
         return "";
     }
   };
-
   if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center">
+    return <div className="p-8 flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header Section */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto p-8">
+        <div className="max-w-7xl mx-auto p-8 bg-[080808] bg-[#080808]">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Brand Management</h1>
@@ -120,45 +108,27 @@ export default function AdminBrands() {
           </div>
           
           {/* Stats */}
-          <div className="mt-6 flex gap-6">
-            <div className="flex items-center gap-2 text-sm">
-              <Package className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Total Brands:</span>
-              <span className="font-semibold">{brands.length}</span>
-            </div>
-          </div>
+          
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto p-8">
-        {brands.length === 0 ? (
-          <Card className="border-dashed">
+      <div className="max-w-7xl mx-auto p-8 py-0">
+        {brands.length === 0 ? <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Package className="h-16 w-16 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-muted-foreground mb-1">No brands yet</p>
               <p className="text-sm text-muted-foreground">Create your first brand to get started</p>
             </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {brands.map((brand) => (
-              <Card key={brand.id} className="group hover:shadow-lg transition-all duration-200 border hover:border-primary/30">
+          </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {brands.map(brand => <Card key={brand.id} className="group hover:shadow-lg transition-all duration-200 border hover:border-primary/30">
                 <CardContent className="p-6">
                   {/* Logo & Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      {brand.logo_url ? (
-                        <img
-                          src={brand.logo_url}
-                          alt={brand.name}
-                          className="w-12 h-12 rounded-lg object-cover border"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center border">
+                      {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-12 h-12 rounded-lg object-cover border" /> : <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center border">
                           <Package className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                      )}
+                        </div>}
                       <div>
                         <h3 className="font-semibold text-lg leading-none mb-1">{brand.name}</h3>
                         <code className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
@@ -169,55 +139,37 @@ export default function AdminBrands() {
                   </div>
 
                   {/* Type Badge */}
-                  {brand.brand_type && (
-                    <div className="mb-3">
+                  {brand.brand_type && <div className="mb-3">
                       <Badge className={getBrandTypeBadgeColor(brand.brand_type)}>
                         {brand.brand_type}
                       </Badge>
-                    </div>
-                  )}
+                    </div>}
 
                   {/* Description */}
-                  {brand.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 min-h-[40px]">
+                  {brand.description && <p className="text-sm text-muted-foreground line-clamp-2 mb-4 min-h-[40px]">
                       {brand.description}
-                    </p>
-                  )}
+                    </p>}
 
                   {/* Meta Info */}
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-4 pt-4 border-t">
                     <span>Created {new Date(brand.created_at).toLocaleDateString()}</span>
-                    {brand.show_account_tab && (
-                      <Badge variant="outline" className="text-xs">Account Tab</Badge>
-                    )}
+                    {brand.show_account_tab && <Badge variant="outline" className="text-xs">Account Tab</Badge>}
                   </div>
 
                   {/* Actions */}
                   <div className="flex gap-2">
                     <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => navigate(`/brand/${brand.slug}`)}
-                    >
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/brand/${brand.slug}`)}>
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                       View
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDeleteClick(brand)}
-                    >
+                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(brand)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+              </Card>)}
+          </div>}
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -231,15 +183,11 @@ export default function AdminBrands() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 }
