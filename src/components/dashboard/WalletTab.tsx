@@ -905,15 +905,21 @@ export function WalletTab() {
                 border: "none",
                 borderRadius: "12px",
                 padding: "12px 16px",
-                fontFamily: "Chakra Petch, sans-serif",
+                fontFamily: "Instrument Sans, sans-serif",
                 letterSpacing: "-0.5px"
               }} labelStyle={{
-                color: "#ffffff",
-                fontWeight: 600,
+                color: "#666666",
+                fontWeight: 500,
                 marginBottom: "4px",
-                fontFamily: "Chakra Petch, sans-serif",
-                letterSpacing: "-0.5px"
-              }} cursor={{
+                fontFamily: "Instrument Sans, sans-serif",
+                letterSpacing: "-0.5px",
+                fontSize: "12px"
+              }} itemStyle={{
+                color: "#ffffff",
+                fontFamily: "Instrument Sans, sans-serif",
+                letterSpacing: "-0.5px",
+                fontWeight: 600
+              }} formatter={(value: number) => `$${value.toFixed(2)}`} cursor={{
                 fill: "rgba(255, 255, 255, 0.05)"
               }} />
                   <Bar dataKey="earnings" fill="#22c55e" radius={[8, 8, 0, 0]} name="Earnings" />
