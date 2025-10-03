@@ -622,10 +622,10 @@ export function CampaignAnalyticsTable({
                   <TableRow className="border-white/10 hover:bg-transparent">
                     <TableHead className="text-white/60 font-medium text-sm sticky left-0 bg-[#202020] z-10 py-3">Account</TableHead>
                     <TableHead className="text-white/60 font-medium text-sm py-3">User</TableHead>
-                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_videos')}>
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_likes')}>
                       <div className="flex items-center justify-end gap-1">
-                        Vids
-                        {sortField === 'total_videos' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        Likes
+                        {sortField === 'total_likes' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
                     <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_views')}>
@@ -634,22 +634,16 @@ export function CampaignAnalyticsTable({
                         {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3" onClick={() => handleSort('total_likes')}>
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3" onClick={() => handleSort('total_videos')}>
                       <div className="flex items-center justify-end gap-1">
-                        Likes
-                        {sortField === 'total_likes' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        Vids
+                        {sortField === 'total_videos' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
                     <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden xl:table-cell py-3" onClick={() => handleSort('total_comments')}>
                       <div className="flex items-center justify-end gap-1">
                         Comm
                         {sortField === 'total_comments' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('average_engagement_rate')}>
-                      <div className="flex items-center justify-end gap-1">
-                        Eng
-                        {sortField === 'average_engagement_rate' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
                     <TableHead className="text-white/60 font-medium text-sm w-8 py-3"></TableHead>
@@ -730,7 +724,7 @@ export function CampaignAnalyticsTable({
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
                     }}>
-                        {item.total_videos.toLocaleString()}
+                        {item.total_likes.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-white text-right text-sm bg-[#202020] py-3" style={{
                       fontFamily: 'Inter, sans-serif',
@@ -742,21 +736,13 @@ export function CampaignAnalyticsTable({
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
                     }}>
-                        {item.total_likes.toLocaleString()}
+                        {item.total_videos.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-white/80 text-right text-sm hidden xl:table-cell bg-[#202020] py-3" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
                     }}>
                         {item.total_comments.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right bg-[#202020] py-3">
-                        <span className={`text-sm ${item.average_engagement_rate > 5 ? "text-emerald-400" : item.average_engagement_rate > 3 ? "text-white" : "text-white/60"}`} style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500
-                      }}>
-                          {item.average_engagement_rate.toFixed(2)}%
-                        </span>
                       </TableCell>
                       <TableCell className="py-3 bg-[#202020]">
                         <Button variant="ghost" size="icon" onClick={() => {
