@@ -28,6 +28,7 @@ interface PayoutRequest {
   profiles: {
     username: string;
     full_name: string;
+    avatar_url: string | null;
   };
 }
 
@@ -56,7 +57,8 @@ export default function AdminPayouts() {
         *,
         profiles:user_id (
           username,
-          full_name
+          full_name,
+          avatar_url
         )
       `)
       .order("requested_at", { ascending: false });
@@ -336,9 +338,17 @@ export default function AdminPayouts() {
                       <div className="flex items-start gap-4">
                         {/* User Avatar */}
                         <Avatar className="h-12 w-12">
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {(request.profiles?.username || 'U').substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
+                          {request.profiles?.avatar_url ? (
+                            <img 
+                              src={request.profiles.avatar_url} 
+                              alt={request.profiles?.username || 'User'} 
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                              {(request.profiles?.username || 'U').substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          )}
                         </Avatar>
 
                         {/* Main Content */}
@@ -346,20 +356,14 @@ export default function AdminPayouts() {
                           {/* Header Row */}
                           <div className="flex items-start justify-between mb-3">
                             <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold text-lg">
-                                  {request.profiles?.full_name || request.profiles?.username}
-                                </h3>
-                                {getStatusBadge(request.status)}
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                @{request.profiles?.username}
-                              </p>
+                              <h3 className="font-semibold text-lg">
+                                {request.profiles?.full_name || request.profiles?.username}
+                              </h3>
                             </div>
 
                             {/* Amount Display */}
                             <div className="text-right">
-                              <p className="text-3xl font-bold text-primary">
+                              <p className="text-[60px] font-semibold text-success leading-none" style={{ fontFamily: 'Chakra Petch, sans-serif', letterSpacing: '-0.5px' }}>
                                 ${Number(request.amount).toFixed(2)}
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">
