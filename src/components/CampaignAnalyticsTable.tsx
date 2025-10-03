@@ -624,7 +624,7 @@ export function CampaignAnalyticsTable({
                     <TableHead className="text-white/60 font-medium text-sm py-3">User</TableHead>
                     <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_likes')}>
                       <div className="flex items-center justify-end gap-1">
-                        Likes
+                        Vids
                         {sortField === 'total_likes' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
@@ -636,7 +636,7 @@ export function CampaignAnalyticsTable({
                     </TableHead>
                     <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3" onClick={() => handleSort('total_videos')}>
                       <div className="flex items-center justify-end gap-1">
-                        Vids
+                        Likes
                         {sortField === 'total_videos' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
