@@ -390,7 +390,7 @@ export default function AdminUsers() {
         const balance = user.wallets?.balance || 0;
         const totalEarned = user.wallets?.total_earned || 0;
         const totalWithdrawn = user.wallets?.total_withdrawn || 0;
-        return <Card key={user.id} className="bg-card border-0 overflow-hidden cursor-pointer transition-all hover:bg-muted/50" onClick={() => openUserDetailsDialog(user)}>
+        return <Card key={user.id} className="bg-card border-0 overflow-hidden cursor-pointer transition-all hover:bg-[#1D1D1D]" onClick={() => openUserDetailsDialog(user)}>
                 <CardContent className="p-6">
                   {/* User Header */}
                   <div className="flex items-start justify-between mb-4">
