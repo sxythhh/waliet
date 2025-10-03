@@ -675,13 +675,13 @@ export default function AdminUsers() {
                     No social accounts connected
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
                     {userSocialAccounts.map(account => (
                       <div 
                         key={account.id} 
-                        className="p-4 rounded-lg bg-card/50 border border-border/50 hover:bg-[#1D1D1D] transition-colors"
+                        className="p-3 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors"
                       >
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center justify-between gap-4">
                           {/* Account Info */}
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="shrink-0">
@@ -692,28 +692,18 @@ export default function AdminUsers() {
                                 href={account.account_link} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="font-semibold hover:text-primary transition-colors block truncate"
+                                className="font-medium hover:text-primary transition-colors block truncate"
                                 onClick={e => e.stopPropagation()}
                               >
                                 @{account.username}
                               </a>
-                              <div className="flex items-center gap-3 mt-1">
-                                <span className="text-xs text-muted-foreground">
-                                  {account.follower_count.toLocaleString()} followers
-                                </span>
-                                {account.is_verified && (
-                                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                    Verified
-                                  </span>
-                                )}
-                              </div>
                             </div>
                           </div>
                           
                           {/* Campaign Link */}
                           <div className="shrink-0">
                             {account.campaigns ? (
-                              <div className="flex items-center gap-2 bg-card/70 px-3 py-2 rounded-lg">
+                              <div className="flex items-center gap-2">
                                 {account.campaigns.brand_logo_url && (
                                   <img 
                                     src={account.campaigns.brand_logo_url} 
@@ -721,18 +711,13 @@ export default function AdminUsers() {
                                     className="h-6 w-6 rounded object-cover"
                                   />
                                 )}
-                                <div className="flex flex-col items-end">
-                                  <span className="font-medium text-sm">
-                                    {account.campaigns.title}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {account.campaigns.brand_name}
-                                  </span>
-                                </div>
+                                <span className="font-medium text-sm">
+                                  {account.campaigns.title}
+                                </span>
                               </div>
                             ) : (
-                              <span className="text-xs text-muted-foreground italic px-3 py-2">
-                                Not linked to campaign
+                              <span className="text-xs text-muted-foreground italic">
+                                Not linked
                               </span>
                             )}
                           </div>

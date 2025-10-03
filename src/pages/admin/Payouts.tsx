@@ -187,8 +187,8 @@ export default function AdminPayouts() {
     const {
       variant,
       label
-    } = variants[status] || {};
-    return;
+    } = variants[status] || { variant: "secondary", label: "Unknown" };
+    return <Badge variant={variant as any}>{label}</Badge>;
   };
   const getPayoutMethodIcon = (method: string, details?: any) => {
     console.log('Payout method:', method, 'Details:', details);
