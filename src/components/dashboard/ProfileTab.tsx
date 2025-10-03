@@ -382,12 +382,7 @@ export function ProfileTab() {
                         {getPlatformIcon(account.platform)}
                       </div>
                       <div>
-                        <a 
-                          href={account.account_link || '#'} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium hover:underline cursor-pointer"
-                        >
+                        <a href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:underline cursor-pointer">
                           @{account.username}
                         </a>
                         {linkedCampaign && <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -471,14 +466,7 @@ export function ProfileTab() {
                       Upload a professional photo. JPG, PNG or GIF. Max 5MB.
                     </p>
                   </div>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => fileInputRef.current?.click()} 
-                    disabled={uploading}
-                    className="gap-2"
-                  >
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2">
                     <Upload className="h-4 w-4" />
                     {uploading ? "Uploading..." : "Change Photo"}
                   </Button>
@@ -493,12 +481,7 @@ export function ProfileTab() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
-                  <Input 
-                    id="username" 
-                    value={profile.username} 
-                    disabled 
-                    className="bg-muted/30 cursor-not-allowed"
-                  />
+                  <Input id="username" value={profile.username} disabled className="bg-muted/30 cursor-not-allowed" />
                   <p className="text-xs text-muted-foreground">
                     Username cannot be changed
                   </p>
@@ -506,16 +489,10 @@ export function ProfileTab() {
 
                 <div className="space-y-2">
                   <Label htmlFor="fullName" className="text-sm font-medium">Display Name</Label>
-                  <Input 
-                    id="fullName" 
-                    value={profile.full_name || ""} 
-                    onChange={e => setProfile({
-                      ...profile,
-                      full_name: e.target.value
-                    })} 
-                    placeholder="John Doe"
-                    className="bg-background"
-                  />
+                  <Input id="fullName" value={profile.full_name || ""} onChange={e => setProfile({
+                  ...profile,
+                  full_name: e.target.value
+                })} placeholder="John Doe" className="bg-background" />
                 </div>
               </div>
             </div>
@@ -526,45 +503,26 @@ export function ProfileTab() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-                  <Input 
-                    id="phone" 
-                    type="tel"
-                    value={profile.phone_number || ""} 
-                    onChange={e => setProfile({
-                      ...profile,
-                      phone_number: e.target.value
-                    })} 
-                    placeholder="+1 (555) 000-0000"
-                    className="bg-background"
-                  />
+                  <Input id="phone" type="tel" value={profile.phone_number || ""} onChange={e => setProfile({
+                  ...profile,
+                  phone_number: e.target.value
+                })} placeholder="+1 (555) 000-0000" className="bg-background" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="country" className="text-sm font-medium">Country</Label>
-                  <Input 
-                    id="country" 
-                    value={profile.country || ""} 
-                    onChange={e => setProfile({
-                      ...profile,
-                      country: e.target.value
-                    })} 
-                    placeholder="United States"
-                    className="bg-background"
-                  />
+                  <Input id="country" value={profile.country || ""} onChange={e => setProfile({
+                  ...profile,
+                  country: e.target.value
+                })} placeholder="United States" className="bg-background" />
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="city" className="text-sm font-medium">City</Label>
-                  <Input 
-                    id="city" 
-                    value={profile.city || ""} 
-                    onChange={e => setProfile({
-                      ...profile,
-                      city: e.target.value
-                    })} 
-                    placeholder="New York"
-                    className="bg-background"
-                  />
+                  <Input id="city" value={profile.city || ""} onChange={e => setProfile({
+                  ...profile,
+                  city: e.target.value
+                })} placeholder="New York" className="bg-background" />
                 </div>
               </div>
             </div>
@@ -574,17 +532,10 @@ export function ProfileTab() {
               <h3 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">About</h3>
               <div className="space-y-2">
                 <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
-                <Textarea 
-                  id="bio" 
-                  value={profile.bio || ""} 
-                  onChange={e => setProfile({
-                    ...profile,
-                    bio: e.target.value
-                  })} 
-                  placeholder="Tell brands and followers about yourself, your content style, and what makes you unique..."
-                  rows={5}
-                  className="bg-background resize-none"
-                />
+                <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
+                ...profile,
+                bio: e.target.value
+              })} placeholder="Tell brands and followers about yourself, your content style, and what makes you unique..." rows={5} className="bg-background resize-none" />
                 <p className="text-xs text-muted-foreground">
                   {profile.bio?.length || 0} characters
                 </p>
@@ -593,21 +544,15 @@ export function ProfileTab() {
 
             {/* Save Button */}
             <div className="flex items-center justify-between pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                All changes will be reflected on your public profile
-              </p>
+              
               <Button type="submit" disabled={saving} size="lg" className="gap-2 min-w-[140px]">
-                {saving ? (
-                  <>
+                {saving ? <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     Saving...
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <CheckCircle2 className="h-4 w-4" />
                     Save Changes
-                  </>
-                )}
+                  </>}
               </Button>
             </div>
           </form>
