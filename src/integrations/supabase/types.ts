@@ -68,6 +68,7 @@ export type Database = {
           average_video_views: number | null
           campaign_id: string
           created_at: string
+          end_date: string | null
           id: string
           last_payment_amount: number | null
           last_payment_date: string | null
@@ -76,6 +77,7 @@ export type Database = {
           paid_views: number | null
           platform: string
           posts_last_7_days: Json | null
+          start_date: string | null
           total_comments: number | null
           total_likes: number | null
           total_videos: number | null
@@ -91,6 +93,7 @@ export type Database = {
           average_video_views?: number | null
           campaign_id: string
           created_at?: string
+          end_date?: string | null
           id?: string
           last_payment_amount?: number | null
           last_payment_date?: string | null
@@ -99,6 +102,7 @@ export type Database = {
           paid_views?: number | null
           platform: string
           posts_last_7_days?: Json | null
+          start_date?: string | null
           total_comments?: number | null
           total_likes?: number | null
           total_videos?: number | null
@@ -114,6 +118,7 @@ export type Database = {
           average_video_views?: number | null
           campaign_id?: string
           created_at?: string
+          end_date?: string | null
           id?: string
           last_payment_amount?: number | null
           last_payment_date?: string | null
@@ -122,6 +127,7 @@ export type Database = {
           paid_views?: number | null
           platform?: string
           posts_last_7_days?: Json | null
+          start_date?: string | null
           total_comments?: number | null
           total_likes?: number | null
           total_videos?: number | null

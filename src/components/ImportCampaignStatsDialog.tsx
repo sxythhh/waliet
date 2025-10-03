@@ -3,10 +3,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload } from "lucide-react";
+import { Upload, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface ImportCampaignStatsDialogProps {
   campaignId: string;
@@ -23,6 +27,8 @@ export function ImportCampaignStatsDialog({
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
 
   const parseCSVLine = (line: string): string[] => {
     const result: string[] = [];
@@ -63,6 +69,16 @@ export function ImportCampaignStatsDialog({
   const handleImport = async () => {
     if (!file) {
       toast.error("Please select a file");
+      return;
+    }
+
+    if (!startDate || !endDate) {
+      toast.error("Please select both start and end dates for this data");
+      return;
+    }
+
+    if (endDate < startDate) {
+      toast.error("End date must be after start date");
       return;
     }
 
@@ -131,6 +147,8 @@ export function ImportCampaignStatsDialog({
               posts_last_7_days: postsLast7Days,
               last_tracked: parseDate(values[11]),
               amount_of_videos_tracked: values[12] || null,
+              start_date: format(startDate, 'yyyy-MM-dd'),
+              end_date: format(endDate, 'yyyy-MM-dd')
             };
 
             records.push(record);
@@ -143,7 +161,7 @@ export function ImportCampaignStatsDialog({
           const { data, error } = await supabase
             .from("campaign_account_analytics")
             .upsert(records, { 
-              onConflict: 'campaign_id,account_username',
+              onConflict: 'campaign_id,account_username,platform,start_date,end_date',
               ignoreDuplicates: false 
             });
 
@@ -160,10 +178,12 @@ export function ImportCampaignStatsDialog({
       }
 
       if (successCount > 0) {
-        toast.success(`Successfully imported ${successCount} records`);
+        toast.success(`Successfully imported ${successCount} records for ${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`);
         setOpen(false);
         setFile(null);
         setProgress(0);
+        setStartDate(undefined);
+        setEndDate(undefined);
         onImportComplete();
         // Trigger account matching
         onMatchingRequired();
@@ -190,10 +210,79 @@ export function ImportCampaignStatsDialog({
         <DialogHeader>
           <DialogTitle>Import Campaign Analytics</DialogTitle>
           <DialogDescription className="text-white/60">
-            Upload a CSV file with detailed account analytics data
+            Upload a CSV file with account analytics for a specific time period. Accounts can have multiple records for different date ranges.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          {/* Date Range Selection */}
+          <div className="space-y-3">
+            <Label className="text-white text-sm font-medium">Data Period</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="start-date" className="text-xs text-white/60">Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="start-date"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-[#191919] border-white/10 text-white hover:bg-white/5",
+                        !startDate && "text-white/40"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "MMM d, yyyy") : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-[#2a2a2a] border-white/10" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="end-date" className="text-xs text-white/60">End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="end-date"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-[#191919] border-white/10 text-white hover:bg-white/5",
+                        !endDate && "text-white/40"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "MMM d, yyyy") : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-[#2a2a2a] border-white/10" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      disabled={(date) => startDate ? date < startDate : false}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            {startDate && endDate && (
+              <p className="text-xs text-primary/80">
+                Importing data for {format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}
+              </p>
+            )}
+          </div>
+
+          {/* File Upload */}
           <div>
             <Label htmlFor="file" className="text-white">CSV File</Label>
             <Input
@@ -229,7 +318,7 @@ export function ImportCampaignStatsDialog({
           </Button>
           <Button
             onClick={handleImport}
-            disabled={!file || importing}
+            disabled={!file || !startDate || !endDate || importing}
             className="bg-primary hover:bg-primary/90"
           >
             {importing ? "Importing..." : "Import Analytics"}
