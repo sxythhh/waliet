@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload } from "lucide-react";
+
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -31,9 +31,7 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("tiktok");
   const [username, setUsername] = useState("");
   const [accountLink, setAccountLink] = useState("");
-  const [screenshot, setScreenshot] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,15 +53,6 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
       return;
     }
 
-    if (!screenshot) {
-      toast({
-        variant: "destructive",
-        title: "Screenshot Required",
-        description: "Please upload a screenshot proving your ownership",
-      });
-      return;
-    }
-
     setUploading(true);
 
     try {
@@ -77,23 +66,6 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
         return;
       }
 
-      // Upload screenshot
-      const fileExt = screenshot.name.split('.').pop();
-      const fileName = `${session.user.id}/${selectedPlatform}_${Date.now()}.${fileExt}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('verification-screenshots')
-        .upload(fileName, screenshot);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('verification-screenshots')
-        .getPublicUrl(fileName);
-
       // Insert social account
       const { error: insertError } = await supabase
         .from('social_accounts')
@@ -102,7 +74,6 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
           platform: selectedPlatform,
           username: validation.data.username,
           account_link: validation.data.accountLink,
-          verification_screenshot_url: publicUrl,
           is_verified: true,
         });
 
@@ -118,7 +89,6 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
       // Reset form
       setUsername("");
       setAccountLink("");
-      setScreenshot(null);
       setSelectedPlatform("tiktok");
       onOpenChange(false);
       onSuccess();
@@ -131,33 +101,6 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
     } finally {
       setUploading(false);
     }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        variant: "destructive",
-        title: "Invalid file",
-        description: "Please upload an image file",
-      });
-      return;
-    }
-
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        variant: "destructive",
-        title: "File too large",
-        description: "Image must be less than 10MB",
-      });
-      return;
-    }
-
-    setScreenshot(file);
   };
 
   const getPlatformLabel = (platform: Platform) => {
@@ -234,36 +177,6 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
               placeholder={`https://${selectedPlatform}.com/@${username || "username"}`}
               value={accountLink}
               onChange={(e) => setAccountLink(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Screenshot Upload */}
-          <div className="space-y-2">
-            <Label>Please attach a screenshot proving your ownership (edit profile screen)</Label>
-            <div
-              className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {screenshot ? (
-                <div className="space-y-2">
-                  <Upload className="h-8 w-8 mx-auto text-primary" />
-                  <p className="text-sm font-medium">{screenshot.name}</p>
-                  <p className="text-xs text-muted-foreground">Click to change</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Upload Image</p>
-                </div>
-              )}
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
               required
             />
           </div>
