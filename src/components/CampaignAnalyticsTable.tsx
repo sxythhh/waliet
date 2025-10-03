@@ -622,7 +622,6 @@ export function CampaignAnalyticsTable({
                   <TableRow className="border-white/10 hover:bg-transparent">
                     <TableHead className="text-white/60 font-medium text-sm sticky left-0 bg-[#202020] z-10 py-3">Account</TableHead>
                     <TableHead className="text-white/60 font-medium text-sm py-3">User</TableHead>
-                    <TableHead className="text-white/60 font-medium text-sm py-3">Period</TableHead>
                     <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_videos')}>
                       <div className="flex items-center justify-end gap-1">
                         Vids
@@ -726,15 +725,6 @@ export function CampaignAnalyticsTable({
                             <Link2 className="h-3.5 w-3.5 text-white/60" />
                             <span className="text-xs text-white/80 font-medium">Link User</span>
                           </div>}
-                      </TableCell>
-                      <TableCell className="py-3 bg-[#202020]">
-                        {item.start_date && item.end_date ? (
-                          <div className="text-xs text-white/60">
-                            {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-white/30">—</span>
-                        )}
                       </TableCell>
                       <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{
                       fontFamily: 'Inter, sans-serif',
