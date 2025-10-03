@@ -84,7 +84,12 @@ export default function CampaignJoin() {
     try {
       const { data, error } = await supabase
         .from("campaigns")
-        .select("*")
+        .select(`
+          *,
+          brands (
+            logo_url
+          )
+        `)
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle();
@@ -96,12 +101,13 @@ export default function CampaignJoin() {
         return;
       }
 
-      // Parse application_questions from JSON to array
+      // Parse application_questions from JSON to array and add brand logo
       const parsedData = {
         ...data,
         application_questions: Array.isArray(data.application_questions) 
           ? data.application_questions 
-          : []
+          : [],
+        brand_logo_url: data.brands?.logo_url || data.brand_logo_url
       };
 
       setCampaign(parsedData as Campaign);
