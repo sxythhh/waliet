@@ -116,19 +116,19 @@ export function ImportCampaignStatsDialog({
         for (const line of batch) {
           const values = parseCSVLine(line);
           
-          if (values.length < 13) {
-            console.warn("Skipping invalid line (expected 13 columns, got " + values.length + "):", line);
+          if (values.length < 11) {
+            console.warn("Skipping invalid line (expected at least 11 columns, got " + values.length + "):", line);
             continue;
           }
 
           try {
             // Parse posts_last_7_days JSON, handling escaped quotes
             let postsLast7Days = null;
-            if (values[10] && values[10].trim()) {
+            if (values[8] && values[8].trim()) {
               try {
-                postsLast7Days = JSON.parse(values[10]);
+                postsLast7Days = JSON.parse(values[8]);
               } catch (jsonError) {
-                console.error("Error parsing JSON for posts_last_7_days:", values[10], jsonError);
+                console.error("Error parsing JSON for posts_last_7_days:", values[8], jsonError);
               }
             }
 
@@ -137,16 +137,16 @@ export function ImportCampaignStatsDialog({
               account_username: values[0] || '',
               account_link: values[1] || null,
               platform: values[2] || 'unknown',
-              outperforming_video_rate: parseFloat(values[3]) || 0,
-              total_views: parseInt(values[4]) || 0,  // Swapped: views is column 4
-              total_videos: parseInt(values[5]) || 0,  // Swapped: videos is column 5
-              total_likes: parseInt(values[6]) || 0,
-              total_comments: parseInt(values[7]) || 0,
-              average_engagement_rate: parseFloat(values[8]) || 0,
-              average_video_views: parseFloat(values[9]) || 0,
+              total_videos: parseInt(values[3]) || 0,
+              total_views: parseInt(values[4]) || 0,
+              total_likes: parseInt(values[5]) || 0,
+              total_comments: parseInt(values[6]) || 0,
+              average_engagement_rate: parseFloat(values[7]) || 0,
               posts_last_7_days: postsLast7Days,
-              last_tracked: parseDate(values[11]),
-              amount_of_videos_tracked: values[12] || null,
+              last_tracked: parseDate(values[9]),
+              amount_of_videos_tracked: values[10] || null,
+              outperforming_video_rate: 0,
+              average_video_views: values[4] && values[3] ? parseInt(values[4]) / parseInt(values[3]) : 0,
               start_date: format(startDate, 'yyyy-MM-dd'),
               end_date: format(endDate, 'yyyy-MM-dd')
             };
