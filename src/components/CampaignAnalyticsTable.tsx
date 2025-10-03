@@ -614,6 +614,7 @@ export function CampaignAnalyticsTable({
                         {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3">Time Period</TableHead>
                     <TableHead className="text-white/60 font-medium text-sm w-8 py-3"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -695,6 +696,17 @@ export function CampaignAnalyticsTable({
                       fontWeight: 500
                     }}>
                         {item.total_views.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-white/60 text-sm bg-[#202020] py-3">
+                        {item.start_date && item.end_date ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs">{new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                            <span className="text-xs text-white/40">to</span>
+                            <span className="text-xs">{new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-white/40">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="py-3 bg-[#202020]">
                         <Button variant="ghost" size="icon" onClick={() => {
