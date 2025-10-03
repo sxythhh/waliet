@@ -105,6 +105,8 @@ export function CampaignAnalyticsTable({
     account_username: string;
   }>>([]);
   const [showTransactions, setShowTransactions] = useState(false);
+  const [selectedDateRange, setSelectedDateRange] = useState<string>("all");
+  const [dateRanges, setDateRanges] = useState<Array<{ start: string; end: string }>>([]);
   const itemsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
@@ -132,6 +134,18 @@ export function CampaignAnalyticsTable({
         ascending: false
       });
       if (error) throw error;
+
+      // Extract unique date ranges
+      const uniqueRanges = Array.from(new Set(
+        (data || [])
+          .filter(item => item.start_date && item.end_date)
+          .map(item => `${item.start_date}|${item.end_date}`)
+      )).map(range => {
+        const [start, end] = range.split('|');
+        return { start, end };
+      }).sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime());
+      
+      setDateRanges(uniqueRanges);
 
       // Manually fetch user profiles and demographic submissions for accounts with user_id
       const analyticsWithProfiles = await Promise.all((data || []).map(async item => {
@@ -461,7 +475,9 @@ export function CampaignAnalyticsTable({
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
     const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null;
-    return matchesSearch && matchesPlatform && matchesLinkedFilter;
+    const matchesDateRange = selectedDateRange === "all" || 
+      `${item.start_date}|${item.end_date}` === selectedDateRange;
+    return matchesSearch && matchesPlatform && matchesLinkedFilter && matchesDateRange;
   }).sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
@@ -508,7 +524,7 @@ export function CampaignAnalyticsTable({
         
 
         {/* Navigation Buttons */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 items-center">
           <Button variant={!showTransactions ? "default" : "outline"} onClick={() => setShowTransactions(false)} size="sm" className={`text-sm ${!showTransactions ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}>
             <BarChart3 className="h-4 w-4 mr-1.5" />
             Analytics
@@ -517,6 +533,29 @@ export function CampaignAnalyticsTable({
             <Receipt className="h-4 w-4 mr-1.5" />
             Transactions ({transactions.length})
           </Button>
+          
+          {!showTransactions && dateRanges.length > 0 && (
+            <div className="ml-auto flex items-center gap-2">
+              <Label className="text-white/60 text-sm">CSV Period:</Label>
+              <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
+                <SelectTrigger className="w-[200px] bg-[#191919] border-white/10 text-white">
+                  <SelectValue placeholder="All periods" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#202020] border-white/10">
+                  <SelectItem value="all" className="text-white hover:bg-white/10">All Periods</SelectItem>
+                  {dateRanges.map((range, idx) => (
+                    <SelectItem 
+                      key={idx} 
+                      value={`${range.start}|${range.end}`}
+                      className="text-white hover:bg-white/10"
+                    >
+                      {new Date(range.start).toLocaleDateString()} - {new Date(range.end).toLocaleDateString()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         {/* Filters and Table */}
