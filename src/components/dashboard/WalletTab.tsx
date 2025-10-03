@@ -738,16 +738,7 @@ export function WalletTab() {
                       </div>
 
                       {/* Transaction Details */}
-                      {transaction.metadata && (
-                        <div className="text-xs text-muted-foreground mt-1.5 space-y-0.5">
-                          {transaction.metadata.account_username && (
-                            <div>@{transaction.metadata.account_username}</div>
-                          )}
-                          {transaction.metadata.views !== undefined && (
-                            <div>{transaction.metadata.views.toLocaleString()} views</div>
-                          )}
-                        </div>
-                      )}
+                      {transaction.metadata}
                     </div>
                   </div>
                   <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
@@ -1107,35 +1098,25 @@ export function WalletTab() {
                 </div>
 
                 {/* Transaction Metadata - Account & Views */}
-                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined) && (
-                  <div className="p-4 bg-muted/20 rounded-lg border border-border">
+                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined) && <div className="p-4 bg-muted/20 rounded-lg border border-border">
                     <div className="space-y-3">
                       {/* Platform & Account */}
-                      {selectedTransaction.metadata.account_username && (
-                        <div className="flex items-center gap-3">
+                      {selectedTransaction.metadata.account_username && <div className="flex items-center gap-3">
                           {(() => {
-                            const platform = selectedTransaction.metadata.platform?.toLowerCase();
-                            const platformIcon = 
-                              platform === 'tiktok' ? tiktokLogo :
-                              platform === 'instagram' ? instagramLogo :
-                              platform === 'youtube' ? youtubeLogo : null;
-                            
-                            return platformIcon ? (
-                              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
+                    const platform = selectedTransaction.metadata.platform?.toLowerCase();
+                    const platformIcon = platform === 'tiktok' ? tiktokLogo : platform === 'instagram' ? instagramLogo : platform === 'youtube' ? youtubeLogo : null;
+                    return platformIcon ? <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
                                 <img src={platformIcon} alt={platform} className="w-full h-full object-contain" />
-                              </div>
-                            ) : null;
-                          })()}
+                              </div> : null;
+                  })()}
                           <div className="flex-1 min-w-0">
                             <div className="text-xs text-muted-foreground">Account</div>
                             <div className="text-sm font-semibold truncate">@{selectedTransaction.metadata.account_username}</div>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       
                       {/* Views Count */}
-                      {selectedTransaction.metadata.views !== undefined && (
-                        <div className="flex items-center gap-3">
+                      {selectedTransaction.metadata.views !== undefined && <div className="flex items-center gap-3">
                           <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center">
                             <Eye className="h-4 w-4 text-muted-foreground" />
                           </div>
@@ -1143,11 +1124,9 @@ export function WalletTab() {
                             <div className="text-xs text-muted-foreground">Views Paid</div>
                             <div className="text-sm font-semibold">{selectedTransaction.metadata.views.toLocaleString()}</div>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Rejection Reason */}
                 {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
