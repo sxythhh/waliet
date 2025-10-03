@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { AdminSidebar } from "@/components/AdminSidebar";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -186,10 +185,8 @@ export default function AdminPayouts() {
   };
 
   return (
-    <div className="flex min-h-screen w-full">
-      <AdminSidebar />
-      <main className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
+    <div className="p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
           <div>
             <h1 className="text-3xl font-bold">Payout Management</h1>
             <p className="text-muted-foreground mt-1">Review and process payout requests</p>
@@ -305,7 +302,6 @@ export default function AdminPayouts() {
             </TabsContent>
           </Tabs>
         </div>
-      </main>
 
       {/* Action Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

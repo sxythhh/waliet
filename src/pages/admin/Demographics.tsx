@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { AdminSidebar } from "@/components/AdminSidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -151,10 +150,8 @@ export default function Demographics() {
   const reviewedSubmissions = submissions.filter(s => s.status !== "pending");
 
   return (
-    <div className="flex min-h-screen w-full">
-      <AdminSidebar />
-      <main className="flex-1 p-8">
-        <div className="max-w-6xl mx-auto space-y-6">
+    <div className="p-8">
+      <div className="max-w-6xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Demographics Management</h1>
 
           <Tabs defaultValue="pending">
@@ -283,7 +280,6 @@ export default function Demographics() {
             </TabsContent>
           </Tabs>
         </div>
-      </main>
 
       <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
         <DialogContent>

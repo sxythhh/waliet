@@ -7,7 +7,6 @@ import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Pencil } from "lucide-react";
-import { AdminSidebar } from "@/components/AdminSidebar";
 
 interface Course {
   id: string;
@@ -93,10 +92,8 @@ export default function AdminCourses() {
   }
 
   return (
-    <div className="flex min-h-screen w-full">
-      <AdminSidebar />
-      <main className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
+    <div className="p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Training Courses</h1>
@@ -182,8 +179,7 @@ export default function AdminCourses() {
             )}
           </CardContent>
         </Card>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
