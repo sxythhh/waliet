@@ -29,19 +29,24 @@ export function ImportCampaignStatsDialog({
     
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
+      const nextChar = line[i + 1];
       
-      if (char === '"') {
+      if (char === '"' && nextChar === '"' && inQuotes) {
+        // Handle escaped quotes within a quoted field
+        current += '"';
+        i++; // Skip the next quote
+      } else if (char === '"') {
         inQuotes = !inQuotes;
       } else if (char === ',' && !inQuotes) {
-        result.push(current.trim());
+        result.push(current);
         current = '';
       } else {
         current += char;
       }
     }
     
-    result.push(current.trim());
-    return result.map(val => val.replace(/^"|"$/g, ''));
+    result.push(current);
+    return result;
   };
 
   const parseDate = (dateStr: string): string | null => {
