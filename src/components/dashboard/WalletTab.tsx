@@ -736,12 +736,6 @@ export function WalletTab() {
                       letterSpacing: '-0.5px'
                     }}>{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
                       </div>
-
-                      {/* Transaction Details */}
-                      {transaction.metadata && <div className="text-xs text-muted-foreground mt-1.5 space-y-0.5">
-                          {transaction.metadata.account_username && <div>@{transaction.metadata.account_username}</div>}
-                          {transaction.metadata.views !== undefined && <div>{transaction.metadata.views.toLocaleString()} views</div>}
-                        </div>}
                     </div>
                   </div>
                   <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
