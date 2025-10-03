@@ -200,10 +200,10 @@ export function CampaignsTab() {
 
               {/* Application Status */}
               {campaign.submission_status === 'pending' && (
-                <div className="mt-auto pt-2 border-t border-border/50">
-                  <div className="bg-muted/50 rounded-md px-2 py-1.5">
-                    <span className="text-[10px] font-chakra tracking-tight text-muted-foreground uppercase">
-                      Application Pending
+                <div className="mt-auto pt-2">
+                  <div className="bg-muted/30 rounded-md px-2.5 py-1.5 flex items-center justify-center">
+                    <span className="text-[11px] font-instrument tracking-tight text-muted-foreground font-medium">
+                      Pending Review
                     </span>
                   </div>
                 </div>
