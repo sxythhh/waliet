@@ -380,10 +380,9 @@ export default function BrandManagement() {
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
 
-  const totalViews = approvedSubmissions.reduce((sum, s) => sum + s.views, 0);
-  const totalSpent = approvedSubmissions.reduce((sum, s) => sum + Number(s.earnings), 0);
-  const effectiveCPM =
-    totalViews > 0 ? (totalSpent / totalViews) * 1000 : 0;
+  const totalViews = analytics.reduce((sum, a) => sum + a.total_views, 0);
+  const budgetUsed = Number(selectedCampaign?.budget_used || 0);
+  const effectiveCPM = totalViews > 0 ? (budgetUsed / totalViews) * 1000 : 0;
 
   if (loading || adminLoading) {
     return (
