@@ -10,6 +10,7 @@ import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, You
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -44,6 +45,13 @@ interface SocialAccount {
     brand_name: string;
     brand_logo_url: string | null;
   } | null;
+  demographic_submissions?: Array<{
+    id: string;
+    tier1_percentage: number;
+    status: string;
+    score: number | null;
+    submitted_at: string;
+  }>;
 }
 interface Campaign {
   id: string;
@@ -63,6 +71,12 @@ export function ProfileTab() {
   const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
+  const [showDemographicsDialog, setShowDemographicsDialog] = useState(false);
+  const [selectedAccountForDemographics, setSelectedAccountForDemographics] = useState<{
+    id: string;
+    platform: string;
+    username: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     toast
@@ -105,6 +119,13 @@ export function ProfileTab() {
           brand_name,
           brand_logo_url,
           brands(logo_url)
+        ),
+        demographic_submissions(
+          id,
+          tier1_percentage,
+          status,
+          score,
+          submitted_at
         )
       `).eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
       ascending: false
@@ -387,12 +408,26 @@ export function ProfileTab() {
           </div>
         </CardHeader>
         <CardContent>
-          {socialAccounts.length === 0 ? <div className="text-center py-12 text-muted-foreground">
+            {socialAccounts.length === 0 ? <div className="text-center py-12 text-muted-foreground">
               <p className="text-base font-medium">No verified accounts yet</p>
               <p className="text-sm mt-2">Add and verify your social media accounts to start earning</p>
             </div> : <div className="space-y-3">
               {socialAccounts.map(account => {
             const linkedCampaign = account.campaigns;
+            const latestDemographicSubmission = account.demographic_submissions?.[0];
+            const getStatusBadge = (status: string) => {
+              switch (status) {
+                case 'pending':
+                  return <Badge variant="outline" className="text-yellow-600 border-yellow-600">Pending Review</Badge>;
+                case 'approved':
+                  return <Badge variant="outline" className="text-green-600 border-green-600">Approved</Badge>;
+                case 'rejected':
+                  return <Badge variant="outline" className="text-red-600 border-red-600">Rejected</Badge>;
+                default:
+                  return null;
+              }
+            };
+            
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-muted/30 rounded-lg border">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
@@ -406,10 +441,36 @@ export function ProfileTab() {
                             {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
                             <span>Linked to {linkedCampaign.title}</span>
                           </div>}
+                        {latestDemographicSubmission && (
+                          <div className="flex items-center gap-2 mt-1">
+                            {getStatusBadge(latestDemographicSubmission.status)}
+                            {latestDemographicSubmission.score !== null && (
+                              <span className="text-xs text-muted-foreground">
+                                Score: {latestDemographicSubmission.score}/100
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     
                     <div className="flex gap-2 w-full sm:w-auto">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedAccountForDemographics({
+                            id: account.id,
+                            platform: account.platform,
+                            username: account.username
+                          });
+                          setShowDemographicsDialog(true);
+                        }}
+                        className="h-8 gap-1 flex-1 sm:flex-initial whitespace-nowrap"
+                      >
+                        📊 Demographics
+                      </Button>
+                      
                       {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1 flex-1 sm:flex-initial">
                           <X className="h-3 w-3" />
                           Unlink
@@ -568,6 +629,18 @@ export function ProfileTab() {
       </Card>
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
+
+      {/* Demographics Dialog */}
+      {selectedAccountForDemographics && (
+        <SubmitDemographicsDialog
+          open={showDemographicsDialog}
+          onOpenChange={setShowDemographicsDialog}
+          onSuccess={fetchSocialAccounts}
+          socialAccountId={selectedAccountForDemographics.id}
+          platform={selectedAccountForDemographics.platform}
+          username={selectedAccountForDemographics.username}
+        />
+      )}
 
       {/* Delete Account Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
