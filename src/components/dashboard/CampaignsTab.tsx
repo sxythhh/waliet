@@ -189,7 +189,7 @@ export function CampaignsTab() {
               {/* Connected Accounts & Footer */}
               <div className="mt-auto space-y-3">
                 {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Connected Accounts</span>
+                    
                     <div className="flex flex-wrap gap-2">
                       {campaign.connected_accounts.map(account => <div key={account.id} className="flex items-center gap-2 bg-neutral-900/50 rounded-lg px-3 py-2">
                           <div className="w-4 h-4">
@@ -202,14 +202,7 @@ export function CampaignsTab() {
                     </div>
                   </div>}
                 
-                {campaign.start_date && <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span className="font-medium">Started {new Date(campaign.start_date).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}</span>
-                  </div>}
+                {campaign.start_date}
               </div>
             </CardContent>
           </Card>;
