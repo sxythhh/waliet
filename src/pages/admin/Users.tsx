@@ -610,48 +610,140 @@ export default function AdminUsers() {
 
       {/* User Details Dialog */}
       <Dialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>User Details - {selectedUser?.username}</DialogTitle>
-            <DialogDescription>
-              View connected social accounts and linked campaigns
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-w-3xl">
+          {selectedUser && (
+            <>
+              {/* User Header */}
+              <div className="flex items-start gap-4 pb-6 border-b">
+                {selectedUser.avatar_url ? (
+                  <img 
+                    src={selectedUser.avatar_url} 
+                    alt={selectedUser.username} 
+                    className="h-16 w-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UsersIcon className="h-8 w-8 text-primary" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-semibold mb-1">
+                    {selectedUser.username}
+                  </h2>
+                  {selectedUser.full_name && (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {selectedUser.full_name}
+                    </p>
+                  )}
+                  
+                  {/* Wallet Stats */}
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="bg-card/50 px-3 py-2 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Balance</p>
+                      <p className="text-lg font-semibold text-success">
+                        ${(selectedUser.wallets?.balance || 0).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="bg-card/50 px-3 py-2 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Total Earned</p>
+                      <p className="text-lg font-semibold">
+                        ${(selectedUser.wallets?.total_earned || 0).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="bg-card/50 px-3 py-2 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Withdrawn</p>
+                      <p className="text-lg font-semibold">
+                        ${(selectedUser.wallets?.total_withdrawn || 0).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          <div className="space-y-4">
-            {loadingSocialAccounts ? <div className="text-center py-8 text-muted-foreground">
-                Loading social accounts...
-              </div> : userSocialAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-                No social accounts connected
-              </div> : <div className="space-y-3">
-                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+              {/* Social Accounts Section */}
+              <div className="pt-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
                   Connected Accounts ({userSocialAccounts.length})
                 </h3>
-                {userSocialAccounts.map(account => <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border">
-                    <div className="flex items-center gap-3 flex-1">
-                      {getPlatformIcon(account.platform)}
-                      <div className="flex flex-col">
-                        <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline" onClick={e => e.stopPropagation()}>
-                          @{account.username}
-                        </a>
-                        <span className="text-xs text-muted-foreground">
-                          {account.follower_count.toLocaleString()} followers
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      {account.campaigns ? <div className="flex items-center gap-2">
-                          {account.campaigns.brand_logo_url && <img src={account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
-                          <div className="flex flex-col items-end">
-                            <span className="font-medium text-sm">{account.campaigns.title}</span>
-                            <span className="text-xs text-muted-foreground">{account.campaigns.brand_name}</span>
+                
+                {loadingSocialAccounts ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    Loading social accounts...
+                  </div>
+                ) : userSocialAccounts.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground bg-card/30 rounded-lg">
+                    No social accounts connected
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                    {userSocialAccounts.map(account => (
+                      <div 
+                        key={account.id} 
+                        className="p-4 rounded-lg bg-card/50 border border-border/50 hover:bg-[#1D1D1D] transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          {/* Account Info */}
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="shrink-0">
+                              {getPlatformIcon(account.platform)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <a 
+                                href={account.account_link} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="font-semibold hover:text-primary transition-colors block truncate"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                @{account.username}
+                              </a>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className="text-xs text-muted-foreground">
+                                  {account.follower_count.toLocaleString()} followers
+                                </span>
+                                {account.is_verified && (
+                                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                    Verified
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div> : <span className="text-xs text-muted-foreground italic">Not linked</span>}
-                    </div>
-                  </div>)}
-              </div>}
-          </div>
+                          
+                          {/* Campaign Link */}
+                          <div className="shrink-0">
+                            {account.campaigns ? (
+                              <div className="flex items-center gap-2 bg-card/70 px-3 py-2 rounded-lg">
+                                {account.campaigns.brand_logo_url && (
+                                  <img 
+                                    src={account.campaigns.brand_logo_url} 
+                                    alt={account.campaigns.brand_name} 
+                                    className="h-6 w-6 rounded object-cover"
+                                  />
+                                )}
+                                <div className="flex flex-col items-end">
+                                  <span className="font-medium text-sm">
+                                    {account.campaigns.title}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {account.campaigns.brand_name}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic px-3 py-2">
+                                Not linked to campaign
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>;
