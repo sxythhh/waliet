@@ -470,15 +470,27 @@ export default function BrandManagement() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
                     <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                      {analytics.reduce((sum, a) => sum + a.total_views, 0).toLocaleString()}
+                      {(() => {
+                        // Group by account and sum views across all date ranges
+                        const accountViews = analytics.reduce((acc, a) => {
+                          const key = `${a.platform}-${a.account_username}`;
+                          acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
+                          return acc;
+                        }, {} as Record<string, number>);
+                        return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
+                      })()}
                     </div>
                     <div className="text-sm text-white/60 mt-1">Total Views</div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
                     <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                      {analytics.reduce((sum, a) => sum + a.total_videos, 0).toLocaleString()}
+                      {(() => {
+                        // Get unique accounts
+                        const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
+                        return uniqueAccounts.size;
+                      })()}
                     </div>
-                    <div className="text-sm text-white/60 mt-1">Total Videos</div>
+                    <div className="text-sm text-white/60 mt-1">Total Accounts</div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
                     <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
