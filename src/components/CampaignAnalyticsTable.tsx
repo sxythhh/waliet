@@ -214,12 +214,15 @@ export function CampaignAnalyticsTable({
   const handleLinkAccount = async (userId: string) => {
     if (!selectedAnalyticsAccount) return;
     try {
-      // Update the analytics account with the user_id
+      // Update ALL analytics entries for this account across all date ranges
       const {
         error: analyticsError
       } = await supabase.from('campaign_account_analytics').update({
         user_id: userId
-      }).eq('id', selectedAnalyticsAccount.id);
+      })
+      .eq('campaign_id', campaignId)
+      .eq('platform', selectedAnalyticsAccount.platform)
+      .ilike('account_username', selectedAnalyticsAccount.account_username);
       if (analyticsError) throw analyticsError;
 
       // Find if there's a matching social account for this user
