@@ -12,7 +12,6 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-
 interface Campaign {
   id: string;
   title: string;
@@ -28,12 +27,10 @@ interface Campaign {
   application_questions: string[];
   slug: string;
 }
-
 interface ApplicationForm {
   platform: string;
   answers: Record<number, string>;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -42,9 +39,10 @@ interface SocialAccount {
   is_verified: boolean;
   campaign_id: string | null;
 }
-
 export default function CampaignJoin() {
-  const { slug } = useParams();
+  const {
+    slug
+  } = useParams();
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,23 +51,31 @@ export default function CampaignJoin() {
   const [selectedAccount, setSelectedAccount] = useState<SocialAccount | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<ApplicationForm>();
+  const {
+    register,
+    handleSubmit,
+    formState: {
+      errors
+    },
+    setValue
+  } = useForm<ApplicationForm>();
   const applicationQuestionsRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     fetchCampaign();
     fetchSocialAccounts();
   }, [slug]);
-
   const fetchSocialAccounts = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data, error } = await supabase
-        .from('social_accounts')
-        .select('*')
-        .eq('user_id', user.id); // Show all accounts
+      const {
+        data,
+        error
+      } = await supabase.from('social_accounts').select('*').eq('user_id', user.id); // Show all accounts
 
       if (error) throw error;
       setSocialAccounts(data || []);
@@ -77,25 +83,19 @@ export default function CampaignJoin() {
       console.error('Error fetching social accounts:', error);
     }
   };
-
   const fetchCampaign = async () => {
     if (!slug) return;
-
     try {
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from("campaigns").select(`
           *,
           brands (
             logo_url
           )
-        `)
-        .eq("slug", slug)
-        .eq("status", "active")
-        .maybeSingle();
-
+        `).eq("slug", slug).eq("status", "active").maybeSingle();
       if (error) throw error;
-
       if (!data) {
         toast.error("Campaign not found or inactive");
         return;
@@ -104,12 +104,9 @@ export default function CampaignJoin() {
       // Parse application_questions from JSON to array and add brand logo
       const parsedData = {
         ...data,
-        application_questions: Array.isArray(data.application_questions) 
-          ? data.application_questions 
-          : [],
+        application_questions: Array.isArray(data.application_questions) ? data.application_questions : [],
         brand_logo_url: data.brands?.logo_url || data.brand_logo_url
       };
-
       setCampaign(parsedData as Campaign);
     } catch (error) {
       console.error("Error fetching campaign:", error);
@@ -118,14 +115,15 @@ export default function CampaignJoin() {
       setLoading(false);
     }
   };
-
   const onSubmit = async (data: ApplicationForm) => {
     if (!campaign || !selectedAccount) return;
-
     setSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please sign in to apply");
         navigate("/auth");
@@ -137,19 +135,17 @@ export default function CampaignJoin() {
         question,
         answer: data.answers[index] || ""
       }));
-
-      const { error } = await supabase
-        .from("campaign_submissions")
-        .insert({
-          campaign_id: campaign.id,
-          creator_id: user.id,
-          platform: selectedAccount.platform,
-          content_url: "", // Empty string as placeholder
-          status: "pending",
-        });
-
+      const {
+        error
+      } = await supabase.from("campaign_submissions").insert({
+        campaign_id: campaign.id,
+        creator_id: user.id,
+        platform: selectedAccount.platform,
+        content_url: "",
+        // Empty string as placeholder
+        status: "pending"
+      });
       if (error) throw error;
-
       toast.success("Application submitted successfully!");
       navigate("/dashboard");
     } catch (error) {
@@ -159,9 +155,12 @@ export default function CampaignJoin() {
       setSubmitting(false);
     }
   };
-
   const handleAddAccount = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please sign in to connect an account");
       navigate("/auth");
@@ -169,7 +168,6 @@ export default function CampaignJoin() {
     }
     setShowAddAccountDialog(true);
   };
-
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
     switch (platform) {
@@ -183,37 +181,25 @@ export default function CampaignJoin() {
         return null;
     }
   };
-
   if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center">
+    return <div className="p-8 flex items-center justify-center">
         <div className="text-muted-foreground">Loading campaign...</div>
-      </div>
-    );
+      </div>;
   }
-
   if (!campaign) {
-    return (
-      <div className="p-8 flex items-center justify-center">
+    return <div className="p-8 flex items-center justify-center">
         <div className="text-center">
           <div className="text-xl mb-4">Campaign not found</div>
           <Button onClick={() => navigate("/dashboard?tab=discover")}>
             Browse Campaigns
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-full bg-background">
+  return <div className="min-h-full bg-background">
       {/* Header */}
       <div className="p-6 border-b bg-background">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard?tab=campaigns")}
-          className="gap-2"
-        >
+        <Button variant="ghost" onClick={() => navigate("/dashboard?tab=campaigns")} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back to Campaigns
         </Button>
@@ -224,33 +210,17 @@ export default function CampaignJoin() {
         {/* Banner */}
         <div className="relative rounded-2xl bg-gradient-to-br from-primary to-primary/80 h-48">
           <div className="absolute inset-0 rounded-2xl overflow-hidden">
-            {campaign.banner_url ? (
-              <img
-                src={campaign.banner_url}
-                alt={campaign.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-                <div className="w-full h-full flex items-center justify-center">
+            {campaign.banner_url ? <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">
                   <div className="text-4xl font-bold text-primary-foreground">{campaign.brand_name}</div>
-                </div>
-            )}
+                </div>}
           </div>
           
           {/* Logo Badge - Overlapping bottom left */}
           <div className="absolute -bottom-10 left-8 z-10">
             <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-background overflow-hidden shadow-xl">
-              {campaign.brand_logo_url ? (
-                <img
-                  src={campaign.brand_logo_url}
-                  alt={campaign.brand_name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="text-2xl font-bold text-primary-foreground">
+              {campaign.brand_logo_url ? <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" /> : <div className="text-2xl font-bold text-primary-foreground">
                   {campaign.brand_name.charAt(0)}
-                </div>
-              )}
+                </div>}
             </div>
           </div>
         </div>
@@ -262,7 +232,7 @@ export default function CampaignJoin() {
         <div className="relative flex gap-6 mb-8">
           {/* Step Indicator */}
           <div className="flex flex-col items-center pt-1">
-            <div className="w-3 h-3 rounded-full bg-primary"></div>
+            
             {currentStep === 1 && <div className="w-1 h-full bg-gradient-to-b from-primary/40 to-transparent mt-3 rounded-full" />}
           </div>
 
@@ -272,8 +242,7 @@ export default function CampaignJoin() {
               <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
             </div>
             
-            <Card className="bg-card border hover:bg-card/80 transition-colors cursor-pointer"
-                  onClick={() => setCurrentStep(currentStep === 1 ? 2 : 1)}>
+            <Card className="bg-card border hover:bg-card/80 transition-colors cursor-pointer" onClick={() => setCurrentStep(currentStep === 1 ? 2 : 1)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -285,30 +254,23 @@ export default function CampaignJoin() {
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
                 
-                {currentStep === 1 && (
-                  <div className="mt-4 pt-4 border-t space-y-4">
-                    {campaign.description && (
-                      <div>
+                {currentStep === 1 && <div className="mt-4 pt-4 border-t space-y-4">
+                    {campaign.description && <div>
                         <div className="text-sm font-medium mb-2">Description</div>
                         <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                      </div>
-                    )}
+                      </div>}
                     
-                    {campaign.guidelines && (
-                      <div>
+                    {campaign.guidelines && <div>
                         <div className="text-sm font-medium mb-2">Guidelines</div>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{campaign.guidelines}</p>
-                      </div>
-                    )}
+                      </div>}
                     
                     <div>
                       <div className="text-sm font-medium mb-2">Platforms</div>
                       <div className="flex gap-2">
-                        {campaign.allowed_platforms.map((platform) => (
-                          <div key={platform} className="px-3 py-1 bg-muted rounded-full text-xs">
+                        {campaign.allowed_platforms.map(platform => <div key={platform} className="px-3 py-1 bg-muted rounded-full text-xs">
                             {platform === "tiktok" ? "TikTok" : "Instagram"}
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                     </div>
 
@@ -317,80 +279,54 @@ export default function CampaignJoin() {
                       <div className="text-2xl font-bold text-primary">${campaign.rpm_rate}</div>
                     </div>
 
-                    <Button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentStep(2);
-                      }}
-                      className="w-auto px-8"
-                    >
+                    <Button onClick={e => {
+                  e.stopPropagation();
+                  setCurrentStep(2);
+                }} className="w-auto px-8">
                       Continue to Account Selection
                     </Button>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
           </div>
         </div>
 
         {/* Step 2: Select Account */}
-        {currentStep >= 2 && (
-          <div className="relative flex gap-6 mb-8">
+        {currentStep >= 2 && <div className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center pt-1">
-              <div className="w-3 h-3 rounded-full bg-primary"></div>
-              {currentStep === 2 && campaign.application_questions.length > 0 && (
-                <div className="w-1 h-full bg-gradient-to-b from-primary/40 to-transparent mt-3 rounded-full" />
-              )}
+              
+              {currentStep === 2 && campaign.application_questions.length > 0 && <div className="w-1 h-full bg-gradient-to-b from-primary/40 to-transparent mt-3 rounded-full" />}
             </div>
 
             {/* Step Content */}
             <div className="flex-1 pb-8">
               <h2 className="text-xl font-bold mb-4">Select An Account For This Campaign</h2>
               
-              {socialAccounts.length === 0 ? (
-                <div className="text-center py-8">
+              {socialAccounts.length === 0 ? <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">You don't have any connected accounts yet</p>
-                  <Button
-                    onClick={handleAddAccount}
-                    variant="outline"
-                    className="gap-2"
-                  >
+                  <Button onClick={handleAddAccount} variant="outline" className="gap-2">
                     <Plus className="h-4 w-4" />
                     Connect Your First Account
                   </Button>
-                </div>
-              ) : (
-                <>
+                </div> : <>
                   <div className="space-y-3 mb-4">
-                    {socialAccounts.map((account) => {
-                      const isLinkedToCampaign = account.campaign_id !== null;
-                      const isCompatible = campaign.allowed_platforms.includes(account.platform);
-                      const isDisabled = isLinkedToCampaign || !isCompatible;
-                      
-                      return (
-                        <div
-                          key={account.id}
-                          onClick={() => {
-                            if (isDisabled) return;
-                            
-                            // Toggle selection - if already selected, deselect
-                            if (selectedAccount?.id === account.id) {
-                              setSelectedAccount(null);
-                              setValue("platform", "");
-                            } else {
-                              setSelectedAccount(account);
-                              setValue("platform", account.platform);
-                            }
-                          }}
-                          className={`p-4 rounded-xl border transition-all ${
-                            isDisabled
-                              ? 'bg-muted/50 cursor-not-allowed opacity-60'
-                              : selectedAccount?.id === account.id
-                                ? 'bg-primary/10 ring-2 ring-primary cursor-pointer'
-                                : 'bg-card hover:bg-card/80 cursor-pointer'
-                          }`}
-                        >
+                    {socialAccounts.map(account => {
+                const isLinkedToCampaign = account.campaign_id !== null;
+                const isCompatible = campaign.allowed_platforms.includes(account.platform);
+                const isDisabled = isLinkedToCampaign || !isCompatible;
+                return <div key={account.id} onClick={() => {
+                  if (isDisabled) return;
+
+                  // Toggle selection - if already selected, deselect
+                  if (selectedAccount?.id === account.id) {
+                    setSelectedAccount(null);
+                    setValue("platform", "");
+                  } else {
+                    setSelectedAccount(account);
+                    setValue("platform", account.platform);
+                  }
+                }} className={`p-4 rounded-xl border transition-all ${isDisabled ? 'bg-muted/50 cursor-not-allowed opacity-60' : selectedAccount?.id === account.id ? 'bg-primary/10 ring-2 ring-primary cursor-pointer' : 'bg-card hover:bg-card/80 cursor-pointer'}`}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {getPlatformIcon(account.platform)}
@@ -407,59 +343,38 @@ export default function CampaignJoin() {
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        </div>;
+              })}
                   </div>
 
-                  <Button
-                    onClick={handleAddAccount}
-                    variant="outline"
-                    className="w-full gap-2 mb-4"
-                  >
+                  <Button onClick={handleAddAccount} variant="outline" className="w-full gap-2 mb-4">
                     <Plus className="h-4 w-4" />
                     Connect Another Account
                   </Button>
 
-                  {selectedAccount && (
-                    <div className="space-y-4">
-                      {campaign.application_questions.length === 0 && (
-                        <Button 
-                          onClick={handleSubmit(onSubmit)}
-                          disabled={submitting}
-                          className="w-auto px-8"
-                        >
+                  {selectedAccount && <div className="space-y-4">
+                      {campaign.application_questions.length === 0 && <Button onClick={handleSubmit(onSubmit)} disabled={submitting} className="w-auto px-8">
                           {submitting ? "Submitting..." : "Submit Application"}
-                        </Button>
-                      )}
+                        </Button>}
                       
-                      {campaign.application_questions.length > 0 && (
-                        <Button 
-                          onClick={() => {
-                            setCurrentStep(3);
-                            setTimeout(() => {
-                              applicationQuestionsRef.current?.scrollIntoView({ 
-                                behavior: 'smooth', 
-                                block: 'start' 
-                              });
-                            }, 100);
-                          }}
-                          className="w-auto px-8"
-                        >
+                      {campaign.application_questions.length > 0 && <Button onClick={() => {
+                setCurrentStep(3);
+                setTimeout(() => {
+                  applicationQuestionsRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
+                }, 100);
+              }} className="w-auto px-8">
                           Continue to Application Questions
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
+                        </Button>}
+                    </div>}
+                </>}
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Step 3: Application Questions */}
-        {currentStep >= 3 && campaign.application_questions.length > 0 && (
-          <div ref={applicationQuestionsRef} className="relative flex gap-6 mb-8">
+        {currentStep >= 3 && campaign.application_questions.length > 0 && <div ref={applicationQuestionsRef} className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center pt-1">
               <div className="w-3 h-3 rounded-full bg-primary"></div>
@@ -470,42 +385,25 @@ export default function CampaignJoin() {
               <h2 className="text-xl font-bold mb-4">Application Questions</h2>
               
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {campaign.application_questions.map((question, index) => (
-                  <div key={index}>
+                {campaign.application_questions.map((question, index) => <div key={index}>
                     <label className="text-sm font-medium mb-2 block">{question}</label>
-                    <Textarea
-                      {...register(`answers.${index}` as any, { required: "This answer is required" })}
-                      placeholder="Your answer..."
-                      rows={3}
-                      className="bg-background resize-none"
-                    />
-                    {errors.answers?.[index] && (
-                      <p className="text-destructive text-sm mt-1">{errors.answers[index].message}</p>
-                    )}
-                  </div>
-                ))}
+                    <Textarea {...register(`answers.${index}` as any, {
+                required: "This answer is required"
+              })} placeholder="Your answer..." rows={3} className="bg-background resize-none" />
+                    {errors.answers?.[index] && <p className="text-destructive text-sm mt-1">{errors.answers[index].message}</p>}
+                  </div>)}
 
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-auto px-12 py-6 text-lg"
-                >
+                <Button type="submit" disabled={submitting} className="w-auto px-12 py-6 text-lg">
                   {submitting ? "Submitting..." : "Submit Application"}
                 </Button>
               </form>
             </div>
-          </div>
-        )}
+          </div>}
       </div>
 
-      <AddSocialAccountDialog
-        open={showAddAccountDialog}
-        onOpenChange={setShowAddAccountDialog}
-        onSuccess={() => {
-          fetchSocialAccounts();
-          setShowAddAccountDialog(false);
-        }}
-      />
-    </div>
-  );
+      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={() => {
+      fetchSocialAccounts();
+      setShowAddAccountDialog(false);
+    }} />
+    </div>;
 }
