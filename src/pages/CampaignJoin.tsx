@@ -6,8 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ChevronRight, Instagram, Youtube, CheckCircle2, Plus } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -24,12 +23,10 @@ interface Campaign {
   brand_name: string;
   brand_logo_url: string | null;
   allowed_platforms: string[];
-  application_questions: string[];
   slug: string;
 }
 interface ApplicationForm {
   platform: string;
-  answers: Record<number, string>;
 }
 interface SocialAccount {
   id: string;
@@ -51,15 +48,6 @@ export default function CampaignJoin() {
   const [selectedAccount, setSelectedAccount] = useState<SocialAccount | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    formState: {
-      errors
-    },
-    setValue
-  } = useForm<ApplicationForm>();
-  const applicationQuestionsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchCampaign();
     fetchSocialAccounts();
@@ -101,10 +89,9 @@ export default function CampaignJoin() {
         return;
       }
 
-      // Parse application_questions from JSON to array and add brand logo
+      // Add brand logo
       const parsedData = {
         ...data,
-        application_questions: Array.isArray(data.application_questions) ? data.application_questions : [],
         brand_logo_url: data.brands?.logo_url || data.brand_logo_url
       };
       setCampaign(parsedData as Campaign);
@@ -115,7 +102,7 @@ export default function CampaignJoin() {
       setLoading(false);
     }
   };
-  const onSubmit = async (data: ApplicationForm) => {
+  const onSubmit = async () => {
     if (!campaign || !selectedAccount) return;
     setSubmitting(true);
     try {
@@ -130,11 +117,6 @@ export default function CampaignJoin() {
         return;
       }
 
-      // Prepare answers as JSON
-      const answersJson = campaign.application_questions.map((question, index) => ({
-        question,
-        answer: data.answers[index] || ""
-      }));
       const {
         error
       } = await supabase.from("campaign_submissions").insert({
@@ -142,7 +124,6 @@ export default function CampaignJoin() {
         creator_id: user.id,
         platform: selectedAccount.platform,
         content_url: "",
-        // Empty string as placeholder
         status: "pending"
       });
       if (error) throw error;
@@ -295,8 +276,6 @@ export default function CampaignJoin() {
         {currentStep >= 2 && <div className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center pt-1">
-              
-              {currentStep === 2 && campaign.application_questions.length > 0}
             </div>
 
             {/* Step Content */}
@@ -315,16 +294,45 @@ export default function CampaignJoin() {
                 const isLinkedToCampaign = account.campaign_id !== null;
                 const isCompatible = campaign.allowed_platforms.includes(account.platform);
                 const isDisabled = isLinkedToCampaign || !isCompatible;
-                return <div key={account.id} onClick={() => {
+                return <div key={account.id} onClick={async () => {
                   if (isDisabled) return;
 
                   // Toggle selection - if already selected, deselect
                   if (selectedAccount?.id === account.id) {
                     setSelectedAccount(null);
-                    setValue("platform", "");
                   } else {
                     setSelectedAccount(account);
-                    setValue("platform", account.platform);
+                    // Auto-submit when account is selected
+                    setSubmitting(true);
+                    try {
+                      const {
+                        data: {
+                          user
+                        }
+                      } = await supabase.auth.getUser();
+                      if (!user) {
+                        toast.error("Please sign in to apply");
+                        navigate("/auth");
+                        return;
+                      }
+
+                      const {
+                        error
+                      } = await supabase.from("campaign_submissions").insert({
+                        campaign_id: campaign.id,
+                        creator_id: user.id,
+                        platform: account.platform,
+                        content_url: "",
+                        status: "pending"
+                      });
+                      if (error) throw error;
+                      toast.success("Application submitted successfully!");
+                      navigate("/dashboard");
+                    } catch (error) {
+                      console.error("Error submitting application:", error);
+                      toast.error("Failed to submit application");
+                      setSubmitting(false);
+                    }
                   }
                 }} className={`p-4 rounded-xl border transition-all ${isDisabled ? 'bg-muted/50 cursor-not-allowed opacity-60' : selectedAccount?.id === account.id ? 'bg-primary/10 ring-2 ring-primary cursor-pointer' : 'bg-card hover:bg-card/80 cursor-pointer'}`}>
                           <div className="flex items-center justify-between">
@@ -349,52 +357,10 @@ export default function CampaignJoin() {
                     <Plus className="h-4 w-4" />
                     Connect Another Account
                   </Button>
-
-                  {selectedAccount && <div className="space-y-4">
-                      {campaign.application_questions.length === 0 && <Button onClick={handleSubmit(onSubmit)} disabled={submitting} className="w-auto px-8">
-                          {submitting ? "Submitting..." : "Submit Application"}
-                        </Button>}
-                      
-                      {campaign.application_questions.length > 0 && <Button onClick={() => {
-                setCurrentStep(3);
-                setTimeout(() => {
-                  applicationQuestionsRef.current?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                  });
-                }, 100);
-              }} className="w-auto px-8">
-                          Continue to Application Questions
-                        </Button>}
-                    </div>}
                 </>}
             </div>
           </div>}
 
-        {/* Step 3: Application Questions */}
-        {currentStep >= 3 && campaign.application_questions.length > 0 && <div ref={applicationQuestionsRef} className="relative flex gap-6 mb-8">
-            {/* Step Indicator */}
-            
-
-            {/* Step Content */}
-            <div className="flex-1 pb-8">
-              <h2 className="text-xl font-bold mb-4">Application Questions</h2>
-              
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {campaign.application_questions.map((question, index) => <div key={index}>
-                    <label className="text-sm font-medium mb-2 block">{question}</label>
-                    <Textarea {...register(`answers.${index}` as any, {
-                required: "This answer is required"
-              })} placeholder="Your answer..." rows={3} className="bg-background resize-none" />
-                    {errors.answers?.[index] && <p className="text-destructive text-sm mt-1">{errors.answers[index].message}</p>}
-                  </div>)}
-
-                <Button type="submit" disabled={submitting} className="w-auto px-12 py-6 text-lg">
-                  {submitting ? "Submitting..." : "Submit Application"}
-                </Button>
-              </form>
-            </div>
-          </div>}
       </div>
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={() => {
