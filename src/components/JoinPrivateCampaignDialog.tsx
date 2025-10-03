@@ -41,8 +41,8 @@ export function JoinPrivateCampaignDialog({
       // Look up campaign by access code
       const { data: campaign, error } = await supabase
         .from("campaigns")
-        .select("id, title, is_private, preview_url")
-        .eq("access_code", accessCode.trim())
+        .select("id, title, is_private, preview_url, slug")
+        .eq("access_code", accessCode.trim().toUpperCase())
         .eq("status", "active")
         .maybeSingle();
 
@@ -78,12 +78,8 @@ export function JoinPrivateCampaignDialog({
         }
       }
 
-      // Navigate to the appropriate page
-      if (campaign.preview_url) {
-        navigate(`/campaign/preview/${campaign.id}`);
-      } else {
-        navigate(`/campaign/join/${campaign.id}`);
-      }
+      // Navigate to join page using slug
+      navigate(`/join/${campaign.slug}`);
 
       toast.success(`Access granted to ${campaign.title}`);
       onOpenChange(false);
