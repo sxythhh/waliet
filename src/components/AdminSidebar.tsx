@@ -75,12 +75,12 @@ export function AdminSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.path}
-                      end
+                      end={item.path === "/admin"}
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                           isActive
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : "hover:bg-accent"
+                            ? "bg-blue-500 text-white font-semibold hover:bg-blue-600"
+                            : "text-foreground hover:bg-accent hover:text-accent-foreground"
                         }`
                       }
                     >
