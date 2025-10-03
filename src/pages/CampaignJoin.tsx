@@ -296,7 +296,7 @@ export default function CampaignJoin() {
             {/* Step Indicator */}
             <div className="flex flex-col items-center pt-1">
               
-              {currentStep === 2 && campaign.application_questions.length > 0 && <div className="w-1 h-full bg-gradient-to-b from-primary/40 to-transparent mt-3 rounded-full" />}
+              {currentStep === 2 && campaign.application_questions.length > 0}
             </div>
 
             {/* Step Content */}
