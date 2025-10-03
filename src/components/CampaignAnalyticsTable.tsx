@@ -1061,33 +1061,26 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
 
             {/* Payment Status */}
             {selectedUser.paid_views > 0 && (
-              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Check className="h-4 w-4 text-green-400" />
-                  <span className="text-sm font-medium text-green-400">Last Payment</span>
+              <div className="px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-green-400" />
+                    <span className="text-xs font-medium text-green-400">Last Payment</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">${selectedUser.last_payment_amount.toFixed(2)}</span>
                 </div>
-                <div className="text-xs text-white/60 space-y-1">
-                  <div className="flex justify-between">
-                    <span>Amount:</span>
-                    <span className="text-white font-semibold">${selectedUser.last_payment_amount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Views Paid:</span>
-                    <span className="text-white">{selectedUser.paid_views.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Date:</span>
-                    <span className="text-white">{new Date(selectedUser.last_payment_date!).toLocaleDateString()}</span>
-                  </div>
-                  {selectedUser.total_views > selectedUser.paid_views && (
-                    <div className="flex justify-between pt-2 border-t border-green-500/20">
-                      <span className="text-yellow-400">New Unpaid Views:</span>
-                      <span className="text-yellow-400 font-semibold">
-                        {(selectedUser.total_views - selectedUser.paid_views).toLocaleString()}
-                      </span>
-                    </div>
-                  )}
+                <div className="flex items-center justify-between mt-1.5 text-xs text-white/50">
+                  <span>{selectedUser.paid_views.toLocaleString()} views</span>
+                  <span>{new Date(selectedUser.last_payment_date!).toLocaleDateString()}</span>
                 </div>
+                {selectedUser.total_views > selectedUser.paid_views && (
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-500/10 text-xs">
+                    <span className="text-yellow-400">New Unpaid Views</span>
+                    <span className="text-yellow-400 font-semibold">
+                      {(selectedUser.total_views - selectedUser.paid_views).toLocaleString()}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
