@@ -10,7 +10,6 @@ import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-
 interface Campaign {
   id: string;
   title: string;
@@ -146,7 +145,6 @@ export function CampaignsTab() {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
       const isPending = campaign.submission_status === 'pending';
-      
       return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => !isPending && navigate(`/campaign/${campaign.id}`)}>
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
@@ -170,7 +168,7 @@ export function CampaignsTab() {
               </div>
 
               {/* Budget Section - Redesigned */}
-              <div className="bg-muted/50 rounded-lg p-2.5 space-y-1.5">
+              <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
                 <div className="flex items-baseline justify-between">
                   <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
                     <span className="text-base font-bold tabular-nums">${budgetUsed.toLocaleString()}</span>
@@ -179,7 +177,7 @@ export function CampaignsTab() {
                 </div>
                 
                 {/* Progress Bar */}
-                <div className="relative h-1.5 bg-background rounded-full overflow-hidden">
+                <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
                   <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                 width: `${budgetPercentage}%`
               }} />
@@ -205,39 +203,26 @@ export function CampaignsTab() {
                 </div>}
 
               {/* Application Status */}
-              {isPending ? (
-                <div className="mt-auto pt-2">
+              {isPending ? <div className="mt-auto pt-2">
                   <div className="bg-muted/30 rounded-md px-2.5 py-1.5 flex items-center justify-center">
                     <span className="text-[11px] font-instrument tracking-tight text-muted-foreground font-medium">
                       Pending Review
                     </span>
                   </div>
-                </div>
-              ) : (
-                <div className="mt-auto pt-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-muted/50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDialogOpen(true);
-                    }}
-                  >
+                </div> : <div className="mt-auto pt-2">
+                  <Button variant="ghost" size="sm" className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-muted/50" onClick={e => {
+              e.stopPropagation();
+              setDialogOpen(true);
+            }}>
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Link Account
                   </Button>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>;
     })}
     
-    <AddSocialAccountDialog 
-      open={dialogOpen} 
-      onOpenChange={setDialogOpen} 
-      onSuccess={fetchCampaigns}
-    />
+    <AddSocialAccountDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={fetchCampaigns} />
     
     </div>;
 }
