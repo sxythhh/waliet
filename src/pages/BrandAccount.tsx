@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,42 +8,63 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { LogOut } from "lucide-react";
 
 export default function BrandAccount() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [brandId, setBrandId] = useState("");
   const [accountUrl, setAccountUrl] = useState("");
   const [showAccountTab, setShowAccountTab] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userFullName, setUserFullName] = useState("");
 
   useEffect(() => {
-    const fetchBrand = async () => {
+    const fetchData = async () => {
       if (!slug) return;
 
       try {
-        const { data, error } = await supabase
+        // Fetch brand data
+        const { data: brandData, error: brandError } = await supabase
           .from("brands")
           .select("id, account_url, show_account_tab")
           .eq("slug", slug)
           .maybeSingle() as any;
 
-        if (error) throw error;
-        if (data) {
-          setBrandId(data.id);
-          setAccountUrl(data.account_url || "");
-          setShowAccountTab(data.show_account_tab ?? true);
+        if (brandError) throw brandError;
+        if (brandData) {
+          setBrandId(brandData.id);
+          setAccountUrl(brandData.account_url || "");
+          setShowAccountTab(brandData.show_account_tab ?? true);
+        }
+
+        // Fetch user data
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserEmail(user.email || "");
+          
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", user.id)
+            .maybeSingle();
+          
+          if (profile) {
+            setUserFullName(profile.full_name || "");
+          }
         }
       } catch (error) {
-        console.error("Error fetching brand:", error);
+        console.error("Error fetching data:", error);
         toast.error("Failed to load account settings");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBrand();
+    fetchData();
   }, [slug]);
 
   const handleSave = async () => {
@@ -70,6 +91,17 @@ export default function BrandAccount() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Signed out successfully");
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out");
+    }
+  };
+
   if (loading || adminLoading) {
     return (
       <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
@@ -83,7 +115,32 @@ export default function BrandAccount() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-6">Account Settings</h1>
         
-        <Card className="bg-[#202020] border-white/10">
+        <div className="space-y-6">
+          <Card className="bg-[#202020] border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white">User Account</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-white/60">Full Name</Label>
+                <p className="text-white">{userFullName || "Not set"}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-white/60">Email</Label>
+                <p className="text-white">{userEmail}</p>
+              </div>
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                className="mt-4"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#202020] border-white/10">
           <CardHeader>
             <CardTitle className="text-white">Account Page Configuration</CardTitle>
           </CardHeader>
@@ -139,7 +196,8 @@ export default function BrandAccount() {
               {saving ? "Saving..." : "Save Settings"}
             </Button>
           </CardContent>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );
