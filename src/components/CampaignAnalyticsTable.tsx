@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2 } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -58,6 +59,21 @@ interface AnalyticsData {
   demographic_submission?: DemographicSubmission | null;
 }
 
+interface Transaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: string;
+  description: string;
+  status: string;
+  created_at: string;
+  metadata: any;
+  profiles?: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
 interface CampaignAnalyticsTableProps {
   campaignId: string;
 }
@@ -67,6 +83,7 @@ type SortDirection = 'asc' | 'desc';
 
 export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTableProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
@@ -90,11 +107,13 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     platform: string;
     account_username: string;
   }>>([]);
+  const [showTransactions, setShowTransactions] = useState(false);
   const itemsPerPage = 20;
 
   useEffect(() => {
     fetchAnalytics();
     fetchCampaignRPM();
+    fetchTransactions();
   }, [campaignId]);
 
   const fetchCampaignRPM = async () => {
@@ -374,6 +393,39 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     };
   };
 
+  const fetchTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("wallet_transactions")
+        .select("*")
+        .contains('metadata', { campaign_id: campaignId })
+        .eq('type', 'earning')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch user profiles separately
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(t => t.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url")
+          .in("id", userIds);
+
+        const transactionsWithProfiles = data.map(txn => ({
+          ...txn,
+          profiles: profiles?.find(p => p.id === txn.user_id)
+        })) as Transaction[];
+
+        setTransactions(transactionsWithProfiles);
+      } else {
+        setTransactions([]);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
+
   const handlePayUser = async () => {
     if (!selectedUser?.user_id) {
       toast.error("No user selected");
@@ -442,13 +494,32 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
 
       if (analyticsError) throw analyticsError;
 
+      // Update campaign budget_used
+      const { data: campaignData, error: campaignFetchError } = await supabase
+        .from("campaigns")
+        .select("budget_used")
+        .eq("id", campaignId)
+        .single();
+
+      if (campaignFetchError) throw campaignFetchError;
+
+      const { error: campaignUpdateError } = await supabase
+        .from("campaigns")
+        .update({
+          budget_used: (campaignData.budget_used || 0) + amount
+        })
+        .eq("id", campaignId);
+
+      if (campaignUpdateError) throw campaignUpdateError;
+
       toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
       setPaymentDialogOpen(false);
       setPaymentAmount("");
       setSelectedUser(null);
       
-      // Refresh analytics to show updated payment status
+      // Refresh analytics and transactions to show updated data
       fetchAnalytics();
+      fetchTransactions();
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment");
@@ -570,8 +641,30 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           </Card>
         </div>
 
+        {/* Navigation Buttons */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant={!showTransactions ? "default" : "outline"}
+            onClick={() => setShowTransactions(false)}
+            size="sm"
+            className={`text-sm ${!showTransactions ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}
+          >
+            <BarChart3 className="h-4 w-4 mr-1.5" />
+            Analytics
+          </Button>
+          <Button
+            variant={showTransactions ? "default" : "outline"}
+            onClick={() => setShowTransactions(true)}
+            size="sm"
+            className={`text-sm ${showTransactions ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}
+          >
+            <Receipt className="h-4 w-4 mr-1.5" />
+            Transactions ({transactions.length})
+          </Button>
+        </div>
+
         {/* Filters and Table */}
-        <Card className="bg-[#202020] border-transparent">
+        {!showTransactions && <Card className="bg-[#202020] border-transparent">
           <CardHeader className="px-3 py-3">
             <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
               <CardTitle className="text-white text-sm">Account Analytics</CardTitle>
@@ -874,10 +967,84 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card>}
+
+        {/* Transactions History */}
+        {showTransactions && <Card className="bg-[#202020] border-transparent">
+          <CardHeader className="px-3 py-3">
+            <CardTitle className="text-white text-sm">Transaction History</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-white/10 hover:bg-transparent">
+                    <TableHead className="text-white/60 font-medium text-sm py-3">Date</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3">User</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3">Account</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3 text-right">Views</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3 text-right">Amount</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((txn) => {
+                    const metadata = txn.metadata || {};
+                    const platformIcon = getPlatformIcon(metadata.platform || '');
+                    
+                    return (
+                      <TableRow key={txn.id} className="border-white/10 hover:bg-white/5">
+                        <TableCell className="text-white/60 text-sm bg-[#202020] py-3">
+                          {new Date(txn.created_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                          })}
+                        </TableCell>
+                        <TableCell className="bg-[#202020] py-3">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={txn.profiles?.avatar_url || undefined} />
+                              <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                                {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-white text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="bg-[#202020] py-3">
+                          <div className="flex items-center gap-2">
+                            {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
+                            <span className="text-white/80 text-sm">@{metadata.account_username || 'N/A'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                          {metadata.views?.toLocaleString() || '0'}
+                        </TableCell>
+                        <TableCell className="text-green-400 text-right font-semibold text-sm bg-[#202020] py-3">
+                          +${Number(txn.amount).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="bg-[#202020] py-3">
+                          <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
+                            {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+            {transactions.length === 0 && (
+              <div className="text-center py-12 text-white/40">
+                No transactions yet
+              </div>
+            )}
+          </CardContent>
+        </Card>}
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!showTransactions && totalPages > 1 && (
         <div className="flex justify-center mt-4">
           <Pagination>
             <PaginationContent>
