@@ -4,9 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2 } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -51,6 +53,10 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [showLinkedOnly, setShowLinkedOnly] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AnalyticsData | null>(null);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
 
   useEffect(() => {
     fetchAnalytics();
@@ -120,10 +126,46 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     }
   };
 
+  const handlePayUser = async () => {
+    if (!selectedUser?.user_id || !paymentAmount) {
+      toast.error("Please enter a payment amount");
+      return;
+    }
+
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("wallet_transactions")
+        .insert({
+          user_id: selectedUser.user_id,
+          amount: amount,
+          type: "credit",
+          description: `Payment for ${selectedUser.platform} account @${selectedUser.account_username}`,
+          status: "completed"
+        });
+
+      if (error) throw error;
+
+      toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
+      setPaymentDialogOpen(false);
+      setPaymentAmount("");
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      toast.error("Failed to process payment");
+    }
+  };
+
   const filteredAnalytics = analytics.filter(item => {
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
-    return matchesSearch && matchesPlatform;
+    const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null;
+    return matchesSearch && matchesPlatform && matchesLinkedFilter;
   }).sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
@@ -256,6 +298,14 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                     ))}
                   </SelectContent>
                 </Select>
+                <Button
+                  variant={showLinkedOnly ? "default" : "outline"}
+                  onClick={() => setShowLinkedOnly(!showLinkedOnly)}
+                  className={showLinkedOnly ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Linked Only
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -400,7 +450,15 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 sm:py-4 bg-[#202020]">
+                      <TableCell 
+                        className="py-3 sm:py-4 bg-[#202020] cursor-pointer hover:bg-white/5 transition-colors"
+                        onClick={() => {
+                          if (item.user_id && item.profiles) {
+                            setSelectedUser(item);
+                            setPaymentDialogOpen(true);
+                          }
+                        }}
+                      >
                         {item.user_id && item.profiles ? (
                           <div className="flex items-center gap-1.5 sm:gap-2">
                             <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
@@ -504,6 +562,94 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* Payment Dialog */}
+    <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+      <DialogContent className="bg-[#202020] border-white/10 text-white">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-primary" />
+            Pay User
+          </DialogTitle>
+          <DialogDescription className="text-white/60">
+            Send payment to user for their campaign performance
+          </DialogDescription>
+        </DialogHeader>
+        
+        {selectedUser && (
+          <div className="space-y-4 py-4">
+            {/* User Info */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={selectedUser.profiles?.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary/20 text-primary">
+                  {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="font-semibold text-white">@{selectedUser.profiles?.username}</div>
+                <div className="text-xs text-white/60">
+                  {selectedUser.platform} • @{selectedUser.account_username}
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Stats */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="text-xs text-white/60 mb-1">Total Views</div>
+                <div className="text-lg font-semibold text-white">
+                  {selectedUser.total_views.toLocaleString()}
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="text-xs text-white/60 mb-1">Videos</div>
+                <div className="text-lg font-semibold text-white">
+                  {selectedUser.total_videos.toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="payment-amount" className="text-white">
+                Payment Amount ($)
+              </Label>
+              <Input
+                id="payment-amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                placeholder="0.00"
+                className="bg-[#191919] border-white/10 text-white"
+              />
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setPaymentDialogOpen(false);
+              setPaymentAmount("");
+              setSelectedUser(null);
+            }}
+            className="bg-transparent border-white/10 text-white hover:bg-white/5"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handlePayUser}
+            className="bg-primary hover:bg-primary/90"
+          >
+            Send Payment
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </>
   );
 }
