@@ -261,73 +261,120 @@ export default function AdminCampaigns() {
         </CardContent>
       </Card>
 
-      {/* Campaigns Table */}
-      <Card className="bg-card border-0">
-        <CardHeader>
-          <CardTitle>Campaigns ({filteredCampaigns.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Campaign</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Budget</TableHead>
-                <TableHead className="text-right">RPM Rate</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCampaigns.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                    No campaigns found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCampaigns.map((campaign) => (
-                  <TableRow key={campaign.id}>
-                    <TableCell className="font-medium">{campaign.title}</TableCell>
-                    <TableCell>{campaign.brand_name}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={campaign.status === "active" ? "default" : "secondary"}
-                      >
-                        {campaign.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ${Number(campaign.budget).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ${Number(campaign.rpm_rate).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEditDialog(campaign)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => openDeleteDialog(campaign)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+      {/* Campaigns Gallery */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Campaigns ({filteredCampaigns.length})</h2>
+        {filteredCampaigns.length === 0 ? (
+          <Card className="bg-card border-0">
+            <CardContent className="py-12 text-center text-muted-foreground">
+              No campaigns found
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
+            {filteredCampaigns.map((campaign) => (
+              <Card 
+                key={campaign.id} 
+                className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 cursor-pointer"
+                onClick={() => openEditDialog(campaign)}
+              >
+                {/* Banner Section */}
+                <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <TrendingUp className="w-12 h-12 text-primary/30" />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <div className="absolute top-2 right-2">
+                    <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
+                      {campaign.status}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Content Section */}
+                <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
+                  {/* Title + Brand */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
+                      {campaign.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                  </div>
+
+                  {/* Budget Section */}
+                  <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
+                    <div className="flex items-baseline justify-between">
+                      <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                        <span className="text-base font-bold tabular-nums">
+                          ${(campaign.budget_used || 0).toLocaleString()}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-medium">
+                          / ${campaign.budget.toLocaleString()}
+                        </span>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                      <div 
+                        className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" 
+                        style={{
+                          width: `${campaign.budget > 0 ? ((campaign.budget_used || 0) / campaign.budget * 100) : 0}%`
+                        }} 
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                      <span>
+                        {campaign.budget > 0 ? ((campaign.budget_used || 0) / campaign.budget * 100).toFixed(0) : 0}% used
+                      </span>
+                      <span className="font-chakra">
+                        ${campaign.rpm_rate.toFixed(2)} RPM
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Dates */}
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <Calendar className="w-3 h-3" />
+                    <span>
+                      {format(new Date(campaign.start_date), 'MMM d')} - {format(new Date(campaign.end_date), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="mt-auto pt-2 flex gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex-1 h-8 text-[11px] font-instrument tracking-tight hover:bg-muted/50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditDialog(campaign);
+                      }}
+                    >
+                      <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex-1 h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDeleteDialog(campaign);
+                      }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                      Delete
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
