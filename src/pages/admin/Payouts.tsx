@@ -335,9 +335,9 @@ export default function AdminPayouts() {
                 {filteredRequests.map((request) => (
                   <Card key={request.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
+                      <div className="flex gap-6">
                         {/* User Avatar */}
-                        <Avatar className="h-12 w-12">
+                        <Avatar className="h-16 w-16 flex-shrink-0">
                           {request.profiles?.avatar_url ? (
                             <img 
                               src={request.profiles.avatar_url} 
@@ -345,136 +345,137 @@ export default function AdminPayouts() {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xl">
                               {(request.profiles?.username || 'U').substring(0, 2).toUpperCase()}
                             </AvatarFallback>
                           )}
                         </Avatar>
 
                         {/* Main Content */}
-                        <div className="flex-1 min-w-0">
-                          {/* Header Row */}
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h3 className="font-semibold text-lg">
+                        <div className="flex-1 space-y-4">
+                          {/* Top Row: Name, Status, and Amount */}
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <h3 className="text-xl font-semibold mb-1">
                                 {request.profiles?.full_name || request.profiles?.username}
                               </h3>
+                              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1.5">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  {format(new Date(request.requested_at), 'MMM dd, yyyy')}
+                                </span>
+                                {getStatusBadge(request.status)}
+                              </div>
                             </div>
 
-                            {/* Amount Display */}
-                            <div className="text-right">
-                              <p className="text-[60px] font-semibold text-success leading-none" style={{ fontFamily: 'Chakra Petch, sans-serif', letterSpacing: '-0.5px' }}>
-                                ${Number(request.amount).toFixed(2)}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
+                            {/* Amount Display - Made Smaller */}
+                            <div className="text-right flex-shrink-0">
+                              <p className="text-xs text-muted-foreground mb-0.5">
                                 Requested Amount
+                              </p>
+                              <p className="text-2xl font-semibold text-success" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+                                ${Number(request.amount).toFixed(2)}
                               </p>
                             </div>
                           </div>
 
-                          {/* Details Grid */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <p className="text-xs text-muted-foreground">Requested</p>
-                                <p className="text-sm font-medium">
-                                  {format(new Date(request.requested_at), 'MMM dd, yyyy')}
-                                </p>
-                              </div>
-                            </div>
-
+                          {/* Payment Details Row */}
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                             <div className="flex items-center gap-2">
                               {getPayoutMethodIcon(request.payout_method)}
                               <div>
-                                <p className="text-xs text-muted-foreground">Method</p>
-                                <p className="text-sm font-medium capitalize">
-                                  {request.payout_method}
-                                </p>
+                                <span className="text-muted-foreground">Method: </span>
+                                <span className="font-medium capitalize">{request.payout_method}</span>
                               </div>
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <CreditCard className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <p className="text-xs text-muted-foreground">Payment Details</p>
-                                <p className="text-sm font-medium truncate max-w-[200px]">
+                              <CreditCard className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <div className="min-w-0">
+                                <span className="text-muted-foreground">Details: </span>
+                                <span className="font-medium truncate">
                                   {request.payout_details?.email || 
                                    request.payout_details?.wallet_address || 
                                    request.payout_details?.account_number ||
                                    'N/A'}
-                                </p>
+                                </span>
                               </div>
                             </div>
 
                             {request.processed_at && (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 col-span-2">
                                 <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
                                 <div>
-                                  <p className="text-xs text-muted-foreground">Processed</p>
-                                  <p className="text-sm font-medium">
+                                  <span className="text-muted-foreground">Processed: </span>
+                                  <span className="font-medium">
                                     {format(new Date(request.processed_at), 'MMM dd, yyyy')}
-                                  </p>
+                                  </span>
                                 </div>
                               </div>
                             )}
                           </div>
 
-                          {/* Additional Info */}
-                          {request.transaction_id && (
-                            <div className="mb-3 p-3 bg-muted/50 rounded-lg">
-                              <p className="text-xs text-muted-foreground mb-1">Transaction ID</p>
-                              <p className="text-sm font-mono">{request.transaction_id}</p>
-                            </div>
-                          )}
+                          {/* Additional Info Sections */}
+                          {(request.transaction_id || request.rejection_reason || request.notes) && (
+                            <div className="space-y-2">
+                              {request.transaction_id && (
+                                <div className="p-2.5 bg-muted/50 rounded-md text-sm">
+                                  <span className="text-muted-foreground">Transaction ID: </span>
+                                  <span className="font-mono font-medium">{request.transaction_id}</span>
+                                </div>
+                              )}
 
-                          {request.rejection_reason && (
-                            <div className="mb-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
-                              <p className="text-xs text-destructive font-medium mb-1">Rejection Reason</p>
-                              <p className="text-sm text-destructive">{request.rejection_reason}</p>
-                            </div>
-                          )}
+                              {request.rejection_reason && (
+                                <div className="p-2.5 bg-destructive/10 rounded-md border border-destructive/20 text-sm">
+                                  <span className="text-destructive font-medium">Rejection Reason: </span>
+                                  <span className="text-destructive">{request.rejection_reason}</span>
+                                </div>
+                              )}
 
-                          {request.notes && (
-                            <div className="mb-3 p-3 bg-muted/50 rounded-lg">
-                              <p className="text-xs text-muted-foreground mb-1">Admin Notes</p>
-                              <p className="text-sm">{request.notes}</p>
+                              {request.notes && (
+                                <div className="p-2.5 bg-muted/50 rounded-md text-sm">
+                                  <span className="text-muted-foreground">Admin Notes: </span>
+                                  <span>{request.notes}</span>
+                                </div>
+                              )}
                             </div>
                           )}
 
                           {/* Action Buttons */}
-                          {request.status === 'pending' && (
-                            <div className="flex gap-2 pt-2">
+                          <div className="flex gap-2">
+                            {request.status === 'pending' && (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => openActionDialog(request, 'approve')}
+                                  className="gap-1.5"
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  Approve
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive" 
+                                  onClick={() => openActionDialog(request, 'reject')}
+                                  className="gap-1.5"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            
+                            {request.status === 'approved' && (
                               <Button 
                                 size="sm" 
-                                onClick={() => openActionDialog(request, 'approve')}
-                                className="gap-2"
+                                onClick={() => openActionDialog(request, 'complete')}
+                                className="gap-1.5"
                               >
-                                <CheckCircle2 className="h-4 w-4" />
-                                Approve
+                                <DollarSign className="h-4 w-4" />
+                                Mark as Complete
                               </Button>
-                              <Button 
-                                size="sm" 
-                                variant="destructive" 
-                                onClick={() => openActionDialog(request, 'reject')}
-                                className="gap-2"
-                              >
-                                <XCircle className="h-4 w-4" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
-                          
-                          {request.status === 'approved' && (
-                            <Button 
-                              size="sm" 
-                              onClick={() => openActionDialog(request, 'complete')}
-                              className="gap-2"
-                            >
-                              <DollarSign className="h-4 w-4" />
-                              Mark as Complete
-                            </Button>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
