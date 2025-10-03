@@ -120,14 +120,27 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               .eq("id", item.user_id)
               .single();
             
-            // Fetch social account for this platform
-            const { data: socialAccount } = await supabase
+            // Fetch social account for this platform (check campaign-specific first, then any)
+            let { data: socialAccount } = await supabase
               .from("social_accounts")
               .select("id, platform, username")
               .eq("user_id", item.user_id)
               .eq("platform", item.platform)
               .eq("campaign_id", campaignId)
               .maybeSingle();
+            
+            // If no campaign-specific account found, try to find any social account for this user/platform
+            if (!socialAccount) {
+              const { data: generalAccount } = await supabase
+                .from("social_accounts")
+                .select("id, platform, username")
+                .eq("user_id", item.user_id)
+                .eq("platform", item.platform)
+                .ilike("username", item.account_username.replace('@', ''))
+                .maybeSingle();
+              
+              socialAccount = generalAccount;
+            }
             
             let demographicSubmission = null;
             if (socialAccount) {
