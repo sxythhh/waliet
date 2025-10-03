@@ -189,12 +189,15 @@ export default function AdminPayouts() {
   };
 
   const getPayoutMethodIcon = (method: string, details?: any) => {
+    console.log('Payout method:', method, 'Details:', details);
+    
     if (method === 'paypal') {
       return <img src="/src/assets/paypal-logo.svg" alt="PayPal" className="h-5 w-5" />;
     } else if (method === 'wise') {
       return <img src="/src/assets/wise-logo.svg" alt="Wise" className="h-5 w-5" />;
     } else if (method === 'crypto' && details?.network) {
       const network = details.network.toLowerCase();
+      console.log('Network:', network);
       const logoMap: Record<string, string> = {
         'ethereum': '/src/assets/ethereum-logo.png',
         'polygon': '/src/assets/polygon-logo.png',
@@ -204,6 +207,7 @@ export default function AdminPayouts() {
         'usdt': '/src/assets/usdt-logo.png',
       };
       const logoUrl = logoMap[network];
+      console.log('Logo URL:', logoUrl);
       if (logoUrl) {
         return <img src={logoUrl} alt={details.network} className="h-5 w-5" />;
       }
