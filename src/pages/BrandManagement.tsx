@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -366,7 +367,10 @@ export default function BrandManagement() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Campaign Selector */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-white">Campaign Management</h1>
+          <div className="flex items-center gap-3">
+            <SidebarTrigger />
+            <h1 className="text-3xl font-bold text-white">Campaign Management</h1>
+          </div>
           <div className="flex items-center gap-2">
             <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
               <SelectTrigger className="w-[300px] bg-[#202020] border-white/10 text-white">
