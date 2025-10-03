@@ -181,17 +181,6 @@ export default function AdminCampaigns() {
             </CardContent>
           </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
             {filteredCampaigns.map(campaign => <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 cursor-pointer" onClick={() => openEditDialog(campaign)}>
-                {/* Banner Section */}
-                {campaign.preview_url ? <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                    <img src={campaign.preview_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  </div> : <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <TrendingUp className="w-12 h-12 text-primary/30" />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  </div>}
-
                 {/* Content Section */}
                 <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
                   {/* Title + Brand */}
