@@ -3,46 +3,22 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit } from "lucide-react";
-import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
 import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
-
 interface Campaign {
   id: string;
   title: string;
@@ -53,7 +29,6 @@ interface Campaign {
   banner_url: string | null;
   preview_url: string | null;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -61,7 +36,6 @@ interface SocialAccount {
   follower_count: number;
   account_link: string | null;
 }
-
 interface Submission {
   id: string;
   status: string;
@@ -80,10 +54,14 @@ interface Submission {
     social_accounts: SocialAccount[];
   };
 }
-
 export default function BrandManagement() {
-  const { slug } = useParams();
-  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const {
+    slug
+  } = useParams();
+  const {
+    isAdmin,
+    loading: adminLoading
+  } = useAdminCheck();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -100,11 +78,9 @@ export default function BrandManagement() {
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [deleteAnalyticsDialogOpen, setDeleteAnalyticsDialogOpen] = useState(false);
-
   useEffect(() => {
     fetchCampaigns();
   }, [slug]);
-
   useEffect(() => {
     if (selectedCampaignId) {
       fetchSubmissions();
@@ -112,89 +88,73 @@ export default function BrandManagement() {
       fetchTransactions();
 
       // Set up real-time subscription for campaign submissions
-      const channel = supabase
-        .channel('campaign-submissions-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'campaign_submissions',
-            filter: `campaign_id=eq.${selectedCampaignId}`
-          },
-          (payload) => {
-            console.log('Submission changed:', payload);
-            fetchSubmissions();
-          }
-        )
-        .subscribe();
-
+      const channel = supabase.channel('campaign-submissions-changes').on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'campaign_submissions',
+        filter: `campaign_id=eq.${selectedCampaignId}`
+      }, payload => {
+        console.log('Submission changed:', payload);
+        fetchSubmissions();
+      }).subscribe();
       return () => {
         supabase.removeChannel(channel);
       };
     }
   }, [selectedCampaignId]);
-
   const fetchAnalytics = async () => {
     try {
-      const { data, error } = await supabase
-        .from("campaign_account_analytics")
-        .select("*")
-        .eq("campaign_id", selectedCampaignId)
-        .order("total_views", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("campaign_account_analytics").select("*").eq("campaign_id", selectedCampaignId).order("total_views", {
+        ascending: false
+      });
       if (error) throw error;
       setAnalytics(data || []);
     } catch (error) {
       console.error("Error fetching analytics:", error);
     }
   };
-
   const fetchTransactions = async () => {
     try {
-      const { data, error } = await supabase
-        .from("wallet_transactions")
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from("wallet_transactions").select(`
           *,
           profiles:user_id(username, avatar_url)
-        `)
-        .contains('metadata', { campaign_id: selectedCampaignId })
-        .eq('type', 'earning')
-        .order('created_at', { ascending: false });
-
+        `).contains('metadata', {
+        campaign_id: selectedCampaignId
+      }).eq('type', 'earning').order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       setTransactions(data || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
   };
-
   const fetchCampaigns = async () => {
     if (!slug) return;
-
     try {
-      const { data: brandData, error: brandError } = await supabase
-        .from("brands")
-        .select("id, assets_url, home_url, brand_type")
-        .eq("slug", slug)
-        .maybeSingle();
-
+      const {
+        data: brandData,
+        error: brandError
+      } = await supabase.from("brands").select("id, assets_url, home_url, brand_type").eq("slug", slug).maybeSingle();
       if (brandError) throw brandError;
       if (!brandData) return;
-
       setBrandId(brandData.id);
       setAssetsUrl(brandData.assets_url || "");
       setHomeUrl(brandData.home_url || "");
       setBrandType(brandData.brand_type || "");
-
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("id, title, budget, budget_used, rpm_rate, status, banner_url, preview_url")
-        .eq("brand_id", brandData.id)
-        .order("created_at", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("campaigns").select("id, title, budget, budget_used, rpm_rate, status, banner_url, preview_url").eq("brand_id", brandData.id).order("created_at", {
+        ascending: false
+      });
       if (error) throw error;
-
       setCampaigns(data || []);
       if (data && data.length > 0) {
         setSelectedCampaignId(data[0].id);
@@ -206,13 +166,12 @@ export default function BrandManagement() {
       setLoading(false);
     }
   };
-
   const fetchSubmissions = async () => {
     try {
-      const { data, error } = await supabase
-        .from("campaign_submissions")
-        .select(
-          `
+      const {
+        data,
+        error
+      } = await supabase.from("campaign_submissions").select(`
           id,
           status,
           views,
@@ -228,51 +187,38 @@ export default function BrandManagement() {
             demographics_score, 
             views_score
           )
-        `
-        )
-        .eq("campaign_id", selectedCampaignId)
-        .order("submitted_at", { ascending: false });
-
+        `).eq("campaign_id", selectedCampaignId).order("submitted_at", {
+        ascending: false
+      });
       if (error) throw error;
 
       // Fetch social accounts separately - only campaign-specific accounts
-      const submissionsWithAccounts = await Promise.all(
-        (data || []).map(async (submission) => {
-          const { data: accounts } = await supabase
-            .from("social_accounts")
-            .select("id, platform, username, follower_count, account_link")
-            .eq("user_id", submission.creator_id)
-            .eq("campaign_id", selectedCampaignId);
-
-          return {
-            ...submission,
-            profiles: {
-              ...submission.profiles,
-              social_accounts: accounts || []
-            }
-          };
-        })
-      );
-
+      const submissionsWithAccounts = await Promise.all((data || []).map(async submission => {
+        const {
+          data: accounts
+        } = await supabase.from("social_accounts").select("id, platform, username, follower_count, account_link").eq("user_id", submission.creator_id).eq("campaign_id", selectedCampaignId);
+        return {
+          ...submission,
+          profiles: {
+            ...submission.profiles,
+            social_accounts: accounts || []
+          }
+        };
+      }));
       setSubmissions(submissionsWithAccounts);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast.error("Failed to load submissions");
     }
   };
-
-  const handleApplicationAction = async (
-    submissionId: string,
-    action: "approved" | "rejected"
-  ) => {
+  const handleApplicationAction = async (submissionId: string, action: "approved" | "rejected") => {
     try {
-      const { error } = await supabase
-        .from("campaign_submissions")
-        .update({ status: action })
-        .eq("id", submissionId);
-
+      const {
+        error
+      } = await supabase.from("campaign_submissions").update({
+        status: action
+      }).eq("id", submissionId);
       if (error) throw error;
-
       toast.success(`Application ${action}`);
       fetchSubmissions();
     } catch (error) {
@@ -280,18 +226,13 @@ export default function BrandManagement() {
       toast.error("Failed to update application");
     }
   };
-
   const handleDeleteCampaign = async () => {
     if (!selectedCampaignId) return;
-
     try {
-      const { error } = await supabase
-        .from("campaigns")
-        .delete()
-        .eq("id", selectedCampaignId);
-
+      const {
+        error
+      } = await supabase.from("campaigns").delete().eq("id", selectedCampaignId);
       if (error) throw error;
-
       toast.success("Campaign deleted successfully");
       fetchCampaigns();
       setDeleteDialogOpen(false);
@@ -300,23 +241,18 @@ export default function BrandManagement() {
       toast.error("Failed to delete campaign");
     }
   };
-
   const handleSaveUrls = async () => {
     if (!brandId) return;
-
     setSavingUrls(true);
     try {
-      const { error } = await supabase
-        .from("brands")
-        .update({
-          assets_url: assetsUrl || null,
-          home_url: homeUrl || null,
-          brand_type: brandType || null,
-        })
-        .eq("id", brandId);
-
+      const {
+        error
+      } = await supabase.from("brands").update({
+        assets_url: assetsUrl || null,
+        home_url: homeUrl || null,
+        brand_type: brandType || null
+      }).eq("id", brandId);
       if (error) throw error;
-
       toast.success("Settings updated successfully");
     } catch (error) {
       console.error("Error updating settings:", error);
@@ -325,29 +261,24 @@ export default function BrandManagement() {
       setSavingUrls(false);
     }
   };
-
   const handleEditBudgetUsed = () => {
     setEditingBudgetUsed(selectedCampaign?.budget_used?.toString() || "0");
     setEditBudgetDialogOpen(true);
   };
-
   const handleSaveBudgetUsed = async () => {
     if (!selectedCampaignId) return;
-
     const budgetUsedValue = parseFloat(editingBudgetUsed);
     if (isNaN(budgetUsedValue) || budgetUsedValue < 0) {
       toast.error("Please enter a valid budget amount");
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from("campaigns")
-        .update({ budget_used: budgetUsedValue })
-        .eq("id", selectedCampaignId);
-
+      const {
+        error
+      } = await supabase.from("campaigns").update({
+        budget_used: budgetUsedValue
+      }).eq("id", selectedCampaignId);
       if (error) throw error;
-
       toast.success("Budget updated successfully");
       setEditBudgetDialogOpen(false);
       fetchCampaigns();
@@ -356,18 +287,13 @@ export default function BrandManagement() {
       toast.error("Failed to update budget");
     }
   };
-
   const handleDeleteAllAnalytics = async () => {
     if (!selectedCampaignId) return;
-
     try {
-      const { error } = await supabase
-        .from("campaign_account_analytics")
-        .delete()
-        .eq("campaign_id", selectedCampaignId);
-
+      const {
+        error
+      } = await supabase.from("campaign_account_analytics").delete().eq("campaign_id", selectedCampaignId);
       if (error) throw error;
-
       toast.success("All analytics deleted successfully");
       setDeleteAnalyticsDialogOpen(false);
     } catch (error) {
@@ -375,34 +301,23 @@ export default function BrandManagement() {
       toast.error("Failed to delete analytics");
     }
   };
-
-  const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
-  const approvedSubmissions = submissions.filter((s) => s.status === "approved");
-  const pendingSubmissions = submissions.filter((s) => s.status === "pending");
-
+  const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
+  const approvedSubmissions = submissions.filter(s => s.status === "approved");
+  const pendingSubmissions = submissions.filter(s => s.status === "pending");
   const totalViews = approvedSubmissions.reduce((sum, s) => sum + s.views, 0);
   const totalSpent = approvedSubmissions.reduce((sum, s) => sum + Number(s.earnings), 0);
-  const effectiveCPM =
-    totalViews > 0 ? (totalSpent / totalViews) * 1000 : 0;
-
+  const effectiveCPM = totalViews > 0 ? totalSpent / totalViews * 1000 : 0;
   if (loading || adminLoading) {
-    return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
+    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">Loading...</div>
-      </div>
-    );
+      </div>;
   }
-
   if (campaigns.length === 0) {
-    return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
+    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">No campaigns found</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen p-8 bg-[#191919]">
+  return <div className="min-h-screen p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Campaign Selector */}
         <div className="flex items-center justify-between">
@@ -416,27 +331,14 @@ export default function BrandManagement() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-[#2a2a2a] border-white/10">
-                {campaigns.map((campaign) => (
-                  <SelectItem
-                    key={campaign.id}
-                    value={campaign.id}
-                    className="text-white hover:bg-white/10 focus:bg-white/10"
-                  >
+                {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="text-white hover:bg-white/10 focus:bg-white/10">
                     {campaign.title}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
-            {selectedCampaignId && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
+            {selectedCampaignId && <Button variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteDialogOpen(true)}>
                 <Trash2 className="h-5 w-5" />
-              </Button>
-            )}
+              </Button>}
           </div>
         </div>
 
@@ -451,9 +353,7 @@ export default function BrandManagement() {
             </TabsTrigger>
             <TabsTrigger value="applications" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Applications
-              {pendingSubmissions.length > 0 && (
-                <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>
-              )}
+              {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
             </TabsTrigger>
             <TabsTrigger value="settings" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Settings
@@ -463,45 +363,20 @@ export default function BrandManagement() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
             <div className="flex justify-end gap-2 mb-4">
-              <Button
-                variant="destructive"
-                onClick={() => setDeleteAnalyticsDialogOpen(true)}
-                className="bg-destructive/20 hover:bg-destructive/30"
-              >
+              <Button variant="destructive" onClick={() => setDeleteAnalyticsDialogOpen(true)} className="bg-destructive/20 hover:bg-destructive/30">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete All Analytics
               </Button>
-              <ImportCampaignStatsDialog 
-                campaignId={selectedCampaignId}
-                onImportComplete={fetchSubmissions}
-                onMatchingRequired={() => setMatchDialogOpen(true)}
-              />
+              <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
             </div>
             
             {/* Imported Analytics Data */}
             <CampaignAnalyticsTable campaignId={selectedCampaignId} />
             
             {/* Matching Dialog */}
-            <MatchAccountsDialog
-              open={matchDialogOpen}
-              onOpenChange={setMatchDialogOpen}
-              campaignId={selectedCampaignId}
-              onMatchComplete={fetchSubmissions}
-            />
+            <MatchAccountsDialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen} campaignId={selectedCampaignId} onMatchComplete={fetchSubmissions} />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-[#202020] border-transparent">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Effective CPM
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">
-                    ${effectiveCPM.toFixed(2)}
-                  </div>
-                </CardContent>
-              </Card>
+              
 
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">
@@ -510,17 +385,9 @@ export default function BrandManagement() {
                       <DollarSign className="h-4 w-4" />
                       Budget Used
                     </span>
-                    {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-white/60 hover:text-white hover:bg-white/10"
-                        onClick={handleEditBudgetUsed}
-                        title="Edit budget used"
-                      >
+                    {isAdmin && <Button variant="ghost" size="icon" className="h-6 w-6 text-white/60 hover:text-white hover:bg-white/10" onClick={handleEditBudgetUsed} title="Edit budget used">
                         <Edit className="h-3 w-3" />
-                      </Button>
-                    )}
+                      </Button>}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -568,192 +435,81 @@ export default function BrandManagement() {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-              {/* Views by Platform - Pie Chart */}
+              {/* Top Performing Accounts */}
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader>
-                  <CardTitle className="text-white text-sm">Views by Platform</CardTitle>
+                  <CardTitle className="text-white text-sm">Top Performing Accounts</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
-                    {(() => {
-                      const platformData = analytics.reduce((acc: any[], account) => {
-                        const existing = acc.find(item => item.platform === account.platform);
-                        if (existing) {
-                          existing.views += account.total_views;
-                        } else {
-                          acc.push({
-                            platform: account.platform,
-                            views: account.total_views
-                          });
-                        }
-                        return acc;
-                      }, []);
-
-                      const COLORS: Record<string, string> = {
-                        tiktok: '#EF4444',
-                        instagram: '#A855F7',
-                        youtube: '#EF4444',
-                      };
-
-                      if (platformData.length === 0) {
-                        return (
-                          <div className="h-full flex items-center justify-center text-white/40 text-sm">
-                            No platform data available
-                          </div>
-                        );
-                      }
-
-                      const totalViews = platformData.reduce((sum, item) => sum + item.views, 0);
-
-                      return (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={platformData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={60}
-                              outerRadius={80}
-                              paddingAngle={2}
-                              dataKey="views"
-                            >
-                              {platformData.map((entry, index) => (
-                                <Cell 
-                                  key={`cell-${index}`} 
-                                  fill={COLORS[entry.platform.toLowerCase()] || '#22C55E'}
-                                  className="transition-opacity hover:opacity-80"
-                                />
-                              ))}
-                            </Pie>
-                            <Tooltip 
-                              contentStyle={{
-                                backgroundColor: "#0C0C0C",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                borderRadius: "8px",
-                                padding: "8px 12px"
-                              }}
-                              labelStyle={{
-                                color: "#ffffff",
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "12px",
-                                fontWeight: 500,
-                                textTransform: "capitalize"
-                              }}
-                              itemStyle={{
-                                color: "#ffffff",
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "12px"
-                              }}
-                              formatter={(value: number) => [
-                                `${value.toLocaleString()} views (${((value / totalViews) * 100).toFixed(1)}%)`,
-                                ''
-                              ]}
-                            />
-                            <Legend 
-                              verticalAlign="bottom" 
-                              height={36}
-                              formatter={(value) => (
-                                <span className="text-white/70 text-xs capitalize">{value}</span>
-                              )}
-                              iconType="circle"
-                              iconSize={8}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      );
-                    })()}
+                  <div className="space-y-3">
+                    {analytics.length === 0 ? <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
+                        No analytics data available
+                      </div> : analytics.slice(0, 8).map((account, index) => <div key={account.id} className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-white text-sm font-medium truncate">
+                                  @{account.account_username}
+                                </div>
+                                <div className="text-white/40 text-xs capitalize">
+                                  {account.platform}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span className="text-white font-semibold text-sm" style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500
+                      }}>
+                                {account.total_views.toLocaleString()}
+                              </span>
+                              <span className="text-white/40 text-xs">views</span>
+                            </div>
+                          </div>)}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Daily Spend - Bar Chart */}
+              {/* Recent Payments */}
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader>
-                  <CardTitle className="text-white text-sm">Daily Spend</CardTitle>
+                  <CardTitle className="text-white text-sm">Recent Payments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
-                    {(() => {
-                      const dailySpendData = transactions.reduce((acc: any[], txn) => {
-                        const date = new Date(txn.created_at).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric' 
-                        });
-                        const existing = acc.find(item => item.date === date);
-                        if (existing) {
-                          existing.spend += Number(txn.amount);
-                        } else {
-                          acc.push({
-                            date,
-                            spend: Number(txn.amount)
-                          });
-                        }
-                        return acc;
-                      }, []);
-
-                      // Sort by date and take last 7 days
-                      const sortedData = dailySpendData
-                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                        .slice(-7);
-
-                      if (sortedData.length === 0) {
-                        return (
-                          <div className="h-full flex items-center justify-center text-white/40 text-sm">
-                            No spending data available
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={sortedData}>
-                            <XAxis 
-                              dataKey="date" 
-                              stroke="rgba(255, 255, 255, 0.4)" 
-                              fontSize={12} 
-                              tickLine={false} 
-                              axisLine={false}
-                              style={{ opacity: 0.6 }}
-                            />
-                            <YAxis 
-                              stroke="rgba(255, 255, 255, 0.4)" 
-                              fontSize={12} 
-                              tickLine={false} 
-                              axisLine={false} 
-                              tickFormatter={value => `$${value}`}
-                              style={{ opacity: 0.6 }}
-                            />
-                            <Tooltip 
-                              contentStyle={{
-                                backgroundColor: "#0C0C0C",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                borderRadius: "8px",
-                                padding: "8px 12px"
-                              }}
-                              labelStyle={{
-                                color: "#ffffff",
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "12px",
-                                fontWeight: 500
-                              }}
-                              itemStyle={{
-                                color: "#ffffff",
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "12px"
-                              }}
-                              formatter={(value: number) => `$${value.toFixed(2)}`}
-                              cursor={{ fill: "rgba(255, 255, 255, 0.05)" }}
-                            />
-                            <Bar 
-                              dataKey="spend" 
-                              fill="#22C55E" 
-                              radius={[8, 8, 0, 0]} 
-                              name="Spent"
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      );
-                    })()}
+                  <div className="space-y-3">
+                    {transactions.length === 0 ? <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
+                        No payment data available
+                      </div> : transactions.slice(0, 8).map(txn => {
+                    const metadata = txn.metadata || {};
+                    return <div key={txn.id} className="flex items-center justify-between py-2">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                                  <DollarSign className="h-4 w-4 text-green-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-white text-sm font-medium truncate">
+                                    {txn.profiles?.username || 'Unknown'}
+                                  </div>
+                                  <div className="text-white/40 text-xs">
+                                    @{metadata.account_username || 'N/A'} • {metadata.views?.toLocaleString() || '0'} views
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-0.5">
+                                <span className="text-green-400 font-semibold text-sm">
+                                  +${Number(txn.amount).toFixed(2)}
+                                </span>
+                                <span className="text-white/40 text-xs">
+                                  {new Date(txn.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                                </span>
+                              </div>
+                            </div>;
+                  })}
                   </div>
                 </CardContent>
               </Card>
@@ -766,28 +522,38 @@ export default function BrandManagement() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-4 rounded-lg bg-[#191919]">
-                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      <div className="text-2xl font-bold text-white" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600
+                    }}>
                         {analytics.reduce((sum, a) => sum + a.total_views, 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-white/60 mt-1">Total Views</div>
                     </div>
                     <div className="text-center p-4 rounded-lg bg-[#191919]">
-                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      <div className="text-2xl font-bold text-white" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600
+                    }}>
                         {analytics.reduce((sum, a) => sum + a.total_videos, 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-white/60 mt-1">Total Videos</div>
                     </div>
                     <div className="text-center p-4 rounded-lg bg-[#191919]">
-                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      <div className="text-2xl font-bold text-white" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600
+                    }}>
                         ${transactions.reduce((sum, t) => sum + Number(t.amount), 0).toFixed(2)}
                       </div>
                       <div className="text-sm text-white/60 mt-1">Total Paid</div>
                     </div>
                     <div className="text-center p-4 rounded-lg bg-[#191919]">
-                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                        {analytics.length > 0 
-                          ? (analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length).toFixed(2)
-                          : '0.00'}%
+                      <div className="text-2xl font-bold text-white" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600
+                    }}>
+                        {analytics.length > 0 ? (analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length).toFixed(2) : '0.00'}%
                       </div>
                       <div className="text-sm text-white/60 mt-1">Avg Engagement</div>
                     </div>
@@ -810,45 +576,32 @@ export default function BrandManagement() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {approvedSubmissions.length === 0 ? (
-                  <div className="text-center py-8">
+                {approvedSubmissions.length === 0 ? <div className="text-center py-8">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                     <p className="text-muted-foreground text-sm">No active creators yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {approvedSubmissions.map((submission) => {
-                      const getPlatformIcon = (platform: string) => {
-                        switch (platform.toLowerCase()) {
-                          case 'tiktok':
-                            return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
-                          case 'instagram':
-                            return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
-                          case 'youtube':
-                            return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
-                          default:
-                            return null;
-                        }
-                      };
-
-                      return (
-                        <Card key={submission.id} className="bg-transparent border border-white/10 overflow-hidden">
+                  </div> : <div className="space-y-3">
+                    {approvedSubmissions.map(submission => {
+                  const getPlatformIcon = (platform: string) => {
+                    switch (platform.toLowerCase()) {
+                      case 'tiktok':
+                        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
+                      case 'instagram':
+                        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
+                      case 'youtube':
+                        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
+                      default:
+                        return null;
+                    }
+                  };
+                  return <Card key={submission.id} className="bg-transparent border border-white/10 overflow-hidden">
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between gap-3">
                               {/* Creator Avatar & Info */}
                               <div className="flex items-start gap-3 flex-1">
                                 <div className="flex-shrink-0">
-                                  {submission.profiles?.avatar_url ? (
-                                    <img
-                                      src={submission.profiles.avatar_url}
-                                      alt={submission.profiles.username}
-                                      className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
-                                    />
-                                  ) : (
-                                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" /> : <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                                       <Users className="h-6 w-6 text-primary" />
-                                    </div>
-                                  )}
+                                    </div>}
                                 </div>
 
                                 <div className="flex-1 space-y-2">
@@ -859,34 +612,21 @@ export default function BrandManagement() {
                                   </div>
 
                                   {/* All Linked Accounts */}
-                                  {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
-                                    <div className="flex flex-wrap gap-2">
-                                      {submission.profiles.social_accounts.map((account) => (
-                                        <div key={account.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
-                                          <a
-                                            href={account.account_link || '#'}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors"
-                                          >
+                                  {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? <div className="flex flex-wrap gap-2">
+                                      {submission.profiles.social_accounts.map(account => <div key={account.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                                          <a href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors">
                                             {getPlatformIcon(account.platform)}
                                             <span>@{account.username}</span>
                                           </a>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p className="text-xs text-white/40">No accounts linked</p>
-                                  )}
+                                        </div>)}
+                                    </div> : <p className="text-xs text-white/40">No accounts linked</p>}
                                 </div>
                               </div>
                             </div>
                           </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
+                        </Card>;
+                })}
+                  </div>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -904,45 +644,32 @@ export default function BrandManagement() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {pendingSubmissions.length === 0 ? (
-                  <div className="text-center py-8">
+                {pendingSubmissions.length === 0 ? <div className="text-center py-8">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                     <p className="text-muted-foreground text-sm">No pending applications</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {pendingSubmissions.map((submission) => {
-                      const getPlatformIcon = (platform: string) => {
-                        switch (platform.toLowerCase()) {
-                          case 'tiktok':
-                            return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
-                          case 'instagram':
-                            return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
-                          case 'youtube':
-                            return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
-                          default:
-                            return null;
-                        }
-                      };
-
-                      return (
-                        <Card key={submission.id} className="bg-transparent border border-white/10 overflow-hidden">
+                  </div> : <div className="space-y-3">
+                    {pendingSubmissions.map(submission => {
+                  const getPlatformIcon = (platform: string) => {
+                    switch (platform.toLowerCase()) {
+                      case 'tiktok':
+                        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
+                      case 'instagram':
+                        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
+                      case 'youtube':
+                        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
+                      default:
+                        return null;
+                    }
+                  };
+                  return <Card key={submission.id} className="bg-transparent border border-white/10 overflow-hidden">
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between gap-3">
                               {/* Creator Avatar & Info */}
                               <div className="flex items-start gap-3 flex-1">
                                 <div className="flex-shrink-0">
-                                  {submission.profiles?.avatar_url ? (
-                                    <img
-                                      src={submission.profiles.avatar_url}
-                                      alt={submission.profiles.username}
-                                      className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
-                                    />
-                                  ) : (
-                                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" /> : <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                                       <Users className="h-6 w-6 text-primary" />
-                                    </div>
-                                  )}
+                                    </div>}
                                 </div>
 
                                 <div className="flex-1 space-y-2">
@@ -951,67 +678,41 @@ export default function BrandManagement() {
                                       {submission.profiles?.username || "Unknown"}
                                     </h3>
                                     <span className="text-xs text-white/60">
-                                      {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric'
-                                      })}
+                                      {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
                                     </span>
                                   </div>
 
                                   {/* All Linked Accounts */}
-                                  {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
-                                    <div className="flex flex-wrap gap-2">
-                                      {submission.profiles.social_accounts.map((account) => (
-                                        <div key={account.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
-                                          <a
-                                            href={account.account_link || '#'}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors"
-                                          >
+                                  {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? <div className="flex flex-wrap gap-2">
+                                      {submission.profiles.social_accounts.map(account => <div key={account.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                                          <a href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors">
                                             {getPlatformIcon(account.platform)}
                                             <span>@{account.username}</span>
                                           </a>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p className="text-xs text-white/40">No accounts linked</p>
-                                  )}
+                                        </div>)}
+                                    </div> : <p className="text-xs text-white/40">No accounts linked</p>}
                                 </div>
                               </div>
 
                               {/* Action Buttons */}
                               <div className="flex gap-1.5 flex-shrink-0">
-                                <Button
-                                  size="sm"
-                                  onClick={() =>
-                                    handleApplicationAction(submission.id, "approved")
-                                  }
-                                  className="bg-success/20 hover:bg-success/30 text-success border-0 h-8 px-3"
-                                >
+                                <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-success/20 hover:bg-success/30 text-success border-0 h-8 px-3">
                                   <Check className="h-3.5 w-3.5 mr-1" />
                                   Approve
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() =>
-                                    handleApplicationAction(submission.id, "rejected")
-                                  }
-                                  className="bg-destructive/20 hover:bg-destructive/30 border-0 h-8 px-3"
-                                >
+                                <Button size="sm" variant="destructive" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-destructive/20 hover:bg-destructive/30 border-0 h-8 px-3">
                                   <X className="h-3.5 w-3.5 mr-1" />
                                   Reject
                                 </Button>
                               </div>
                             </div>
                           </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
+                        </Card>;
+                })}
+                  </div>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1023,13 +724,11 @@ export default function BrandManagement() {
                 <CardTitle className="text-white">Brand Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {!isAdmin && (
-                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                {!isAdmin && <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                     <p className="text-yellow-500 text-sm">
                       Only administrators can edit brand settings
                     </p>
-                  </div>
-                )}
+                  </div>}
 
                 <div className="space-y-2">
                   <Label htmlFor="brand-type" className="text-white">
@@ -1057,15 +756,7 @@ export default function BrandManagement() {
                   <Label htmlFor="assets-url" className="text-white">
                     Assets Page URL
                   </Label>
-                  <Input
-                    id="assets-url"
-                    type="url"
-                    placeholder="https://example.com/assets"
-                    value={assetsUrl}
-                    onChange={(e) => setAssetsUrl(e.target.value)}
-                    className="bg-[#191919] border-white/10 text-white"
-                    disabled={!isAdmin}
-                  />
+                  <Input id="assets-url" type="url" placeholder="https://example.com/assets" value={assetsUrl} onChange={e => setAssetsUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white" disabled={!isAdmin} />
                   <p className="text-sm text-white/60">
                     This URL will be embedded when users visit the Assets page
                   </p>
@@ -1075,24 +766,13 @@ export default function BrandManagement() {
                   <Label htmlFor="home-url" className="text-white">
                     Home Page HTML (DWY Brands Only)
                   </Label>
-                  <Textarea
-                    id="home-url"
-                    placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />'
-                    value={homeUrl}
-                    onChange={(e) => setHomeUrl(e.target.value)}
-                    className="bg-[#191919] border-white/10 text-white font-mono min-h-[120px]"
-                    disabled={!isAdmin}
-                  />
+                  <Textarea id="home-url" placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />' value={homeUrl} onChange={e => setHomeUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white font-mono min-h-[120px]" disabled={!isAdmin} />
                   <p className="text-sm text-white/60">
                     For DWY brands, paste HTML code (like iframe) to embed on the Home page instead of the default dashboard
                   </p>
                 </div>
 
-                <Button
-                  onClick={handleSaveUrls}
-                  disabled={savingUrls || !isAdmin}
-                  className="bg-primary hover:bg-primary/90"
-                >
+                <Button onClick={handleSaveUrls} disabled={savingUrls || !isAdmin} className="bg-primary hover:bg-primary/90">
                   {savingUrls ? "Saving..." : "Save Settings"}
                 </Button>
               </CardContent>
@@ -1114,10 +794,7 @@ export default function BrandManagement() {
               <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteCampaign}
-                className="bg-destructive hover:bg-destructive/90"
-              >
+              <AlertDialogAction onClick={handleDeleteCampaign} className="bg-destructive hover:bg-destructive/90">
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -1138,16 +815,7 @@ export default function BrandManagement() {
                 <Label htmlFor="budget-used" className="text-white">
                   Budget Used ($)
                 </Label>
-                <Input
-                  id="budget-used"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={editingBudgetUsed}
-                  onChange={(e) => setEditingBudgetUsed(e.target.value)}
-                  className="bg-[#191919] border-white/10 text-white"
-                  placeholder="0.00"
-                />
+                <Input id="budget-used" type="number" step="0.01" min="0" value={editingBudgetUsed} onChange={e => setEditingBudgetUsed(e.target.value)} className="bg-[#191919] border-white/10 text-white" placeholder="0.00" />
                 <p className="text-sm text-white/40">
                   Total budget: ${selectedCampaign?.budget || 0}
                 </p>
@@ -1157,10 +825,7 @@ export default function BrandManagement() {
               <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleSaveBudgetUsed}
-                className="bg-primary hover:bg-primary/90"
-              >
+              <AlertDialogAction onClick={handleSaveBudgetUsed} className="bg-primary hover:bg-primary/90">
                 Save Changes
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -1180,16 +845,12 @@ export default function BrandManagement() {
               <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteAllAnalytics}
-                className="bg-destructive hover:bg-destructive/90"
-              >
+              <AlertDialogAction onClick={handleDeleteAllAnalytics} className="bg-destructive hover:bg-destructive/90">
                 Delete All
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </div>
-  );
+    </div>;
 }
