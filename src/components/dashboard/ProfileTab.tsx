@@ -475,9 +475,9 @@ export function ProfileTab() {
             {/* Avatar Upload Section */}
             <div className="space-y-4">
               <div className="flex items-start gap-6">
-                <Avatar className="h-24 w-24 border-2 border-primary/20 ring-4 ring-primary/5">
+                <Avatar className="h-24 w-24">
                   <AvatarImage src={profile.avatar_url || ""} />
-                  <AvatarFallback className="text-2xl bg-gradient-to-br from-primary/20 to-primary/5 font-semibold">
+                  <AvatarFallback className="text-2xl bg-muted font-semibold">
                     {profile.full_name?.[0] || profile.username[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -488,7 +488,7 @@ export function ProfileTab() {
                       Upload a professional photo. JPG, PNG or GIF. Max 5MB.
                     </p>
                   </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 bg-muted hover:bg-muted/80 border-0">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 bg-muted/50 hover:bg-muted/70 border-0">
                     <Upload className="h-4 w-4" />
                     {uploading ? "Uploading..." : "Change Photo"}
                   </Button>
