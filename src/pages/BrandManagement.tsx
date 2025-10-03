@@ -86,6 +86,8 @@ export default function BrandManagement() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [analytics, setAnalytics] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [brandId, setBrandId] = useState<string>("");
@@ -105,6 +107,8 @@ export default function BrandManagement() {
   useEffect(() => {
     if (selectedCampaignId) {
       fetchSubmissions();
+      fetchAnalytics();
+      fetchTransactions();
 
       // Set up real-time subscription for campaign submissions
       const channel = supabase
@@ -129,6 +133,40 @@ export default function BrandManagement() {
       };
     }
   }, [selectedCampaignId]);
+
+  const fetchAnalytics = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("campaign_account_analytics")
+        .select("*")
+        .eq("campaign_id", selectedCampaignId)
+        .order("total_views", { ascending: false });
+
+      if (error) throw error;
+      setAnalytics(data || []);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("wallet_transactions")
+        .select(`
+          *,
+          profiles:user_id(username, avatar_url)
+        `)
+        .contains('metadata', { campaign_id: selectedCampaignId })
+        .eq('type', 'earning')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
 
   const fetchCampaigns = async () => {
     if (!slug) return;
@@ -529,52 +567,40 @@ export default function BrandManagement() {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+              {/* Top Performing Accounts */}
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader>
-                  <CardTitle className="text-white">Views Over Time</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] flex items-center justify-center">
-                    <div className="text-white/40 text-sm">
-                      {approvedSubmissions.length > 0 
-                        ? `${approvedSubmissions.length} submissions tracked`
-                        : 'No data available'}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#202020] border-transparent">
-                <CardHeader>
-                  <CardTitle className="text-white">Earnings by Creator</CardTitle>
+                  <CardTitle className="text-white text-sm">Top Performing Accounts</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {approvedSubmissions.length === 0 ? (
+                    {analytics.length === 0 ? (
                       <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
-                        No creator data available
+                        No analytics data available
                       </div>
                     ) : (
-                      approvedSubmissions
-                        .sort((a, b) => Number(b.earnings) - Number(a.earnings))
-                        .slice(0, 5)
-                        .map((submission) => (
-                          <div key={submission.id} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm">
-                                {submission.profiles?.username?.[0]?.toUpperCase() || 'U'}
+                      analytics
+                        .slice(0, 8)
+                        .map((account, index) => (
+                          <div key={account.id} className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+                                {index + 1}
                               </div>
-                              <span className="text-white text-sm">
-                                {submission.profiles?.username || 'Unknown'}
-                              </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-white text-sm font-medium truncate">
+                                  @{account.account_username}
+                                </div>
+                                <div className="text-white/40 text-xs capitalize">
+                                  {account.platform}
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <span className="text-white/60 text-sm">
-                                {submission.views.toLocaleString()} views
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span className="text-white font-semibold text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                                {account.total_views.toLocaleString()}
                               </span>
-                              <span className="text-white font-semibold">
-                                ${Number(submission.earnings).toFixed(2)}
-                              </span>
+                              <span className="text-white/40 text-xs">views</span>
                             </div>
                           </div>
                         ))
@@ -583,33 +609,85 @@ export default function BrandManagement() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-[#202020] border-transparent lg:col-span-2">
+              {/* Recent Payments */}
+              <Card className="bg-[#202020] border-transparent">
                 <CardHeader>
-                  <CardTitle className="text-white">Campaign Performance</CardTitle>
+                  <CardTitle className="text-white text-sm">Recent Payments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">
-                        {((totalSpent / (selectedCampaign?.budget || 1)) * 100).toFixed(1)}%
+                  <div className="space-y-3">
+                    {transactions.length === 0 ? (
+                      <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
+                        No payment data available
                       </div>
-                      <div className="text-sm text-white/60 mt-1">Budget Used</div>
+                    ) : (
+                      transactions
+                        .slice(0, 8)
+                        .map((txn) => {
+                          const metadata = txn.metadata || {};
+                          return (
+                            <div key={txn.id} className="flex items-center justify-between py-2">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                                  <DollarSign className="h-4 w-4 text-green-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-white text-sm font-medium truncate">
+                                    {txn.profiles?.username || 'Unknown'}
+                                  </div>
+                                  <div className="text-white/40 text-xs">
+                                    @{metadata.account_username || 'N/A'} • {metadata.views?.toLocaleString() || '0'} views
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-0.5">
+                                <span className="text-green-400 font-semibold text-sm">
+                                  +${Number(txn.amount).toFixed(2)}
+                                </span>
+                                <span className="text-white/40 text-xs">
+                                  {new Date(txn.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Campaign Performance Stats */}
+              <Card className="bg-[#202020] border-transparent lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-white text-sm">Campaign Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 rounded-lg bg-[#191919]">
+                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                        {analytics.reduce((sum, a) => sum + a.total_views, 0).toLocaleString()}
+                      </div>
+                      <div className="text-sm text-white/60 mt-1">Total Views</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">
-                        {approvedSubmissions.length > 0 
-                          ? (totalViews / approvedSubmissions.length).toFixed(0)
-                          : '0'}
+                    <div className="text-center p-4 rounded-lg bg-[#191919]">
+                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                        {analytics.reduce((sum, a) => sum + a.total_videos, 0).toLocaleString()}
                       </div>
-                      <div className="text-sm text-white/60 mt-1">Avg Views per Creator</div>
+                      <div className="text-sm text-white/60 mt-1">Total Videos</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">
-                        {approvedSubmissions.length > 0
-                          ? (totalSpent / approvedSubmissions.length).toFixed(2)
-                          : '0.00'}
+                    <div className="text-center p-4 rounded-lg bg-[#191919]">
+                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                        ${transactions.reduce((sum, t) => sum + Number(t.amount), 0).toFixed(2)}
                       </div>
-                      <div className="text-sm text-white/60 mt-1">Avg Earnings per Creator</div>
+                      <div className="text-sm text-white/60 mt-1">Total Paid</div>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-[#191919]">
+                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                        {analytics.length > 0 
+                          ? (analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length).toFixed(2)
+                          : '0.00'}%
+                      </div>
+                      <div className="text-sm text-white/60 mt-1">Avg Engagement</div>
                     </div>
                   </div>
                 </CardContent>
