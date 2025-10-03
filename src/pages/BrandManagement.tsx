@@ -433,16 +433,16 @@ export default function BrandManagement() {
               variant="outline"
               size="sm"
               onClick={handleRefresh}
-              className="bg-[#202020] border-white/10 text-white hover:bg-white/10"
+              className="bg-[#202020] border-0 text-white hover:bg-white/10"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
             <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-              <SelectTrigger className="w-[300px] bg-[#202020] border-white/10 text-white">
+              <SelectTrigger className="w-[200px] bg-[#202020] border-0 text-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#2a2a2a] border-white/10">
+              <SelectContent className="bg-[#2a2a2a] border-0">
                 {campaigns.map((campaign) => (
                   <SelectItem
                     key={campaign.id}
@@ -456,9 +456,9 @@ export default function BrandManagement() {
             </Select>
             {selectedCampaignId && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                className="bg-[#202020] border-0 text-destructive/60 hover:text-destructive hover:bg-white/10"
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="h-5 w-5" />
