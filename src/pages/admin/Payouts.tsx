@@ -283,7 +283,20 @@ export default function AdminPayouts() {
                                   <Clock className="h-3.5 w-3.5" />
                                   {format(new Date(request.requested_at), 'MMM dd, yyyy')}
                                 </span>
-                                {getStatusBadge(request.status)}
+                                {(() => {
+                                  switch (request.status) {
+                                    case "pending":
+                                      return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
+                                    case "approved":
+                                      return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">Approved</Badge>;
+                                    case "completed":
+                                      return <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Completed</Badge>;
+                                    case "rejected":
+                                      return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">Rejected</Badge>;
+                                    default:
+                                      return <Badge variant="outline">Unknown</Badge>;
+                                  }
+                                })()}
                               </div>
                             </div>
 

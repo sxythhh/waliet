@@ -65,6 +65,8 @@ export default function AdminUsers() {
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
+  const [userTransactions, setUserTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [csvImportDialogOpen, setCsvImportDialogOpen] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importResults, setImportResults] = useState<any>(null);
@@ -186,10 +188,33 @@ export default function AdminUsers() {
     }
     setLoadingSocialAccounts(false);
   };
+  const fetchUserTransactions = async (userId: string) => {
+    setLoadingTransactions(true);
+    const { data, error } = await supabase
+      .from("wallet_transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch transactions"
+      });
+      setUserTransactions([]);
+    } else {
+      setUserTransactions(data || []);
+    }
+    setLoadingTransactions(false);
+  };
+
   const openUserDetailsDialog = (user: User) => {
     setSelectedUser(user);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(user.id);
+    fetchUserTransactions(user.id);
   };
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -676,7 +701,7 @@ export default function AdminUsers() {
               </div>
 
               {/* Social Accounts Section */}
-              <div className="pt-6">
+              <div className="pt-6 border-t">
                 <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
                   Connected Accounts ({userSocialAccounts.length})
                 </h3>
@@ -685,8 +710,8 @@ export default function AdminUsers() {
                     Loading social accounts...
                   </div> : userSocialAccounts.length === 0 ? <div className="text-center py-12 text-muted-foreground bg-card/30 rounded-lg">
                     No social accounts connected
-                  </div> : <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                    {userSocialAccounts.map(account => <div key={account.id} className="p-3 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+                  </div> : <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                    {userSocialAccounts.map(account => <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
                         <div className="flex items-center justify-between gap-4">
                           {/* Account Info */}
                           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -710,6 +735,57 @@ export default function AdminUsers() {
                               </div> : <span className="text-xs text-muted-foreground italic">
                                 Not linked
                               </span>}
+                          </div>
+                        </div>
+                      </div>)}
+                  </div>}
+              </div>
+
+              {/* Recent Transactions Section */}
+              <div className="pt-6 border-t">
+                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
+                  Recent Transactions ({userTransactions.length})
+                </h3>
+                
+                {loadingTransactions ? <div className="text-center py-12 text-muted-foreground">
+                    Loading transactions...
+                  </div> : userTransactions.length === 0 ? <div className="text-center py-12 text-muted-foreground bg-card/30 rounded-lg">
+                    No transactions yet
+                  </div> : <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                    {userTransactions.map(transaction => <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+                        <div className="flex items-center justify-between gap-4">
+                          {/* Transaction Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium capitalize">{transaction.type}</span>
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                transaction.status === 'completed' 
+                                  ? 'bg-success/10 text-success' 
+                                  : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {transaction.status}
+                              </span>
+                            </div>
+                            {transaction.description && (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {transaction.description}
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Amount & Date */}
+                          <div className="text-right shrink-0">
+                            <p className={`font-semibold ${
+                              transaction.type === 'withdrawal' || transaction.type === 'deduction'
+                                ? 'text-destructive' 
+                                : 'text-success'
+                            }`}>
+                              {transaction.type === 'withdrawal' || transaction.type === 'deduction' ? '-' : '+'}
+                              ${Math.abs(transaction.amount).toFixed(2)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(transaction.created_at).toLocaleDateString()}
+                            </p>
                           </div>
                         </div>
                       </div>)}
