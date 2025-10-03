@@ -40,6 +40,7 @@ interface SocialAccount {
   username: string;
   follower_count: number;
   is_verified: boolean;
+  campaign_id: string | null;
 }
 
 export default function CampaignJoin() {
@@ -68,8 +69,7 @@ export default function CampaignJoin() {
       const { data, error } = await supabase
         .from('social_accounts')
         .select('*')
-        .eq('user_id', user.id)
-        .is('campaign_id', null); // Only show accounts not yet linked to a campaign
+        .eq('user_id', user.id); // Show all accounts
 
       if (error) throw error;
       setSocialAccounts(data || []);
@@ -262,14 +262,9 @@ export default function CampaignJoin() {
         <div className="relative flex gap-6 mb-8">
           {/* Step Indicator */}
           <div className="flex flex-col items-center pt-1">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold shadow-sm transition-all ${
-              currentStep === 1 
-                ? 'bg-primary text-primary-foreground ring-4 ring-primary/20' 
-                : 'bg-muted text-muted-foreground'
-            }`}>
+            <div className="w-10 h-10 flex items-center justify-center text-base font-bold text-primary">
               1
             </div>
-            {currentStep === 1 && <div className="w-1 h-full bg-gradient-to-b from-primary/40 to-transparent mt-3 rounded-full" />}
           </div>
 
           {/* Step Content */}
@@ -344,16 +339,9 @@ export default function CampaignJoin() {
           <div className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center pt-1">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold shadow-sm transition-all ${
-                currentStep === 2 
-                  ? 'bg-primary text-primary-foreground ring-4 ring-primary/20' 
-                  : 'bg-muted text-muted-foreground'
-              }`}>
+              <div className="w-10 h-10 flex items-center justify-center text-base font-bold text-primary">
                 2
               </div>
-              {currentStep === 2 && campaign.application_questions.length > 0 && (
-                <div className="w-1 h-full bg-gradient-to-b from-primary/40 to-transparent mt-3 rounded-full" />
-              )}
             </div>
 
             {/* Step Content */}
@@ -375,12 +363,17 @@ export default function CampaignJoin() {
               ) : (
                 <>
                   <div className="space-y-3 mb-4">
-                    {socialAccounts
-                      .filter(account => campaign.allowed_platforms.includes(account.platform))
-                      .map((account) => (
+                    {socialAccounts.map((account) => {
+                      const isLinkedToCampaign = account.campaign_id !== null;
+                      const isCompatible = campaign.allowed_platforms.includes(account.platform);
+                      const isDisabled = isLinkedToCampaign || !isCompatible;
+                      
+                      return (
                         <div
                           key={account.id}
                           onClick={() => {
+                            if (isDisabled) return;
+                            
                             // Toggle selection - if already selected, deselect
                             if (selectedAccount?.id === account.id) {
                               setSelectedAccount(null);
@@ -390,10 +383,12 @@ export default function CampaignJoin() {
                               setValue("platform", account.platform);
                             }
                           }}
-                          className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                            selectedAccount?.id === account.id
-                              ? 'bg-primary/10 ring-2 ring-primary'
-                              : 'bg-card hover:bg-card/80'
+                          className={`p-4 rounded-xl border transition-all ${
+                            isDisabled
+                              ? 'bg-muted/50 cursor-not-allowed opacity-60'
+                              : selectedAccount?.id === account.id
+                                ? 'bg-primary/10 ring-2 ring-primary cursor-pointer'
+                                : 'bg-card hover:bg-card/80 cursor-pointer'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -402,16 +397,19 @@ export default function CampaignJoin() {
                               <div>
                                 <div className="font-medium flex items-center gap-2">
                                   @{account.username}
-                                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                                  {!isLinkedToCampaign && <CheckCircle2 className="h-4 w-4 text-primary" />}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
                                   {account.follower_count.toLocaleString()} followers
+                                  {isLinkedToCampaign && " • Already linked to a campaign"}
+                                  {!isCompatible && !isLinkedToCampaign && " • Not compatible with this campaign"}
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      ))}
+                      );
+                    })}
                   </div>
 
                   <Button
@@ -464,7 +462,7 @@ export default function CampaignJoin() {
           <div ref={applicationQuestionsRef} className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center pt-1">
-              <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-base font-bold shadow-sm ring-4 ring-primary/20 transition-all">
+              <div className="w-10 h-10 flex items-center justify-center text-base font-bold text-primary">
                 3
               </div>
             </div>
