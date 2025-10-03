@@ -417,6 +417,7 @@ export default function BrandManagement() {
                         size="icon"
                         className="h-6 w-6 text-white/60 hover:text-white hover:bg-white/10"
                         onClick={handleEditBudgetUsed}
+                        title="Edit budget used"
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -429,6 +430,10 @@ export default function BrandManagement() {
                   </div>
                   <div className="text-sm text-white/40">
                     of ${selectedCampaign?.budget || 0}
+                  </div>
+                  {/* Debug info */}
+                  <div className="text-xs text-white/20 mt-2">
+                    Admin: {isAdmin ? 'Yes' : 'No'}
                   </div>
                 </CardContent>
               </Card>
