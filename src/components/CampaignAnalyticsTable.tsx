@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -80,6 +80,16 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
   const [paymentAmount, setPaymentAmount] = useState("");
   const [campaignRPM, setCampaignRPM] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [linkAccountDialogOpen, setLinkAccountDialogOpen] = useState(false);
+  const [selectedAnalyticsAccount, setSelectedAnalyticsAccount] = useState<AnalyticsData | null>(null);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [availableUsers, setAvailableUsers] = useState<Array<{
+    user_id: string;
+    username: string;
+    avatar_url: string | null;
+    platform: string;
+    account_username: string;
+  }>>([]);
   const itemsPerPage = 20;
 
   useEffect(() => {
@@ -176,6 +186,96 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAvailableUsers = async (accountPlatform: string) => {
+    try {
+      // Get all users who have joined this campaign with social accounts on the matching platform
+      const { data: socialAccounts, error } = await supabase
+        .from('social_accounts')
+        .select(`
+          id,
+          user_id,
+          platform,
+          username,
+          profiles!inner(username, avatar_url)
+        `)
+        .eq('campaign_id', campaignId)
+        .eq('platform', accountPlatform);
+
+      if (error) throw error;
+
+      const users = socialAccounts?.map((account: any) => ({
+        user_id: account.user_id,
+        username: account.profiles.username,
+        avatar_url: account.profiles.avatar_url,
+        platform: account.platform,
+        account_username: account.username
+      })) || [];
+
+      setAvailableUsers(users);
+    } catch (error) {
+      console.error("Error fetching available users:", error);
+      toast.error("Failed to load users");
+    }
+  };
+
+  const handleLinkAccount = async (userId: string) => {
+    if (!selectedAnalyticsAccount) return;
+
+    try {
+      // Update the analytics account with the user_id
+      const { error: analyticsError } = await supabase
+        .from('campaign_account_analytics')
+        .update({ user_id: userId })
+        .eq('id', selectedAnalyticsAccount.id);
+
+      if (analyticsError) throw analyticsError;
+
+      // Find if there's a matching social account for this user
+      const { data: socialAccount, error: socialError } = await supabase
+        .from('social_accounts')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('campaign_id', campaignId)
+        .eq('platform', selectedAnalyticsAccount.platform)
+        .ilike('username', selectedAnalyticsAccount.account_username)
+        .maybeSingle();
+
+      if (socialError && socialError.code !== 'PGRST116') throw socialError;
+
+      // If no matching social account exists, create one
+      if (!socialAccount) {
+        const { error: createError } = await supabase
+          .from('social_accounts')
+          .insert({
+            user_id: userId,
+            campaign_id: campaignId,
+            platform: selectedAnalyticsAccount.platform,
+            username: selectedAnalyticsAccount.account_username,
+            account_link: selectedAnalyticsAccount.account_link,
+            is_verified: true
+          });
+
+        if (createError) throw createError;
+      }
+
+      toast.success("Account successfully linked to user");
+      setLinkAccountDialogOpen(false);
+      setSelectedAnalyticsAccount(null);
+      setUserSearchTerm("");
+      fetchAnalytics();
+    } catch (error: any) {
+      console.error("Error linking account:", error);
+      toast.error(error.message || "Failed to link account");
+    }
+  };
+
+  const openLinkDialog = (account: AnalyticsData) => {
+    setSelectedAnalyticsAccount(account);
+    setUserSearchTerm("");
+    fetchAvailableUsers(account.platform);
+    setLinkAccountDialogOpen(true);
   };
 
   const getDemographicStatus = (item: AnalyticsData): 'none' | 'pending' | 'approved' | 'outdated' => {
@@ -681,10 +781,17 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                             )}
                           </div>
                         ) : (
-                          <span className="text-white/30 text-sm flex items-center gap-1">
-                            <User className="h-4 w-4" />
-                            <span className="hidden sm:inline">—</span>
-                          </span>
+                          <div 
+                            className="flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openLinkDialog(item);
+                            }}
+                          >
+                            <User className="h-4 w-4 text-white/30" />
+                            <Link2 className="h-3 w-3 text-primary" />
+                            <span className="text-xs text-primary hidden sm:inline">Link</span>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="text-white/80 text-right font-mono text-sm bg-[#202020] py-3">
@@ -1045,6 +1152,123 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                   ? "Already Paid" 
                   : "Send Payment"}
               </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Link Account Dialog */}
+    <Dialog open={linkAccountDialogOpen} onOpenChange={setLinkAccountDialogOpen}>
+      <DialogContent className="bg-[#202020] border-white/10 text-white max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Link2 className="h-5 w-5 text-primary" />
+            Link Account to User
+          </DialogTitle>
+          <DialogDescription className="text-white/60">
+            Connect {selectedAnalyticsAccount?.account_username} to a user who joined this campaign
+          </DialogDescription>
+        </DialogHeader>
+
+        {selectedAnalyticsAccount && (
+          <div className="space-y-4 py-4">
+            {/* Account Info */}
+            <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="text-xs text-white/60 mb-1">Analytics Account</div>
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const platformIcon = 
+                    selectedAnalyticsAccount.platform === 'tiktok' ? tiktokLogo :
+                    selectedAnalyticsAccount.platform === 'instagram' ? instagramLogo :
+                    selectedAnalyticsAccount.platform === 'youtube' ? youtubeLogo : null;
+                  
+                  return platformIcon && (
+                    <img src={platformIcon} alt={selectedAnalyticsAccount.platform} className="w-4 h-4" />
+                  );
+                })()}
+                <span className="font-semibold">@{selectedAnalyticsAccount.account_username}</span>
+              </div>
+            </div>
+
+            {/* User Search */}
+            <div className="space-y-2">
+              <Label htmlFor="user-search" className="text-white text-sm">
+                Search Users
+              </Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                <Input
+                  id="user-search"
+                  type="text"
+                  placeholder="Search by username..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  className="bg-[#191919] border-white/10 text-white pl-9"
+                />
+              </div>
+            </div>
+
+            {/* Available Users List */}
+            <div className="space-y-2">
+              <div className="text-xs text-white/60 mb-2">
+                Available Users ({availableUsers.filter(u => 
+                  u.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                  u.account_username.toLowerCase().includes(userSearchTerm.toLowerCase())
+                ).length})
+              </div>
+              <div className="max-h-[300px] overflow-y-auto space-y-2">
+                {availableUsers.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-white/40">
+                    No users found with {selectedAnalyticsAccount.platform} accounts
+                  </div>
+                ) : (
+                  availableUsers
+                    .filter(user => 
+                      user.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                      user.account_username.toLowerCase().includes(userSearchTerm.toLowerCase())
+                    )
+                    .map(user => (
+                      <div
+                        key={user.user_id}
+                        onClick={() => handleLinkAccount(user.user_id)}
+                        className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={user.avatar_url || undefined} />
+                              <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                                {user.username?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="text-sm font-semibold">@{user.username}</div>
+                              <div className="text-xs text-white/60">
+                                {user.platform} • @{user.account_username}
+                              </div>
+                            </div>
+                          </div>
+                          <Link2 className="h-4 w-4 text-primary" />
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setLinkAccountDialogOpen(false);
+              setSelectedAnalyticsAccount(null);
+              setUserSearchTerm("");
+            }}
+            className="bg-transparent border-white/10 text-white hover:bg-white/5"
+          >
+            Cancel
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
