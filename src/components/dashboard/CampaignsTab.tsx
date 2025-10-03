@@ -9,6 +9,8 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Button } from "@/components/ui/button";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+
 interface Campaign {
   id: string;
   title: string;
@@ -31,6 +33,7 @@ interface Campaign {
 export function CampaignsTab() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -213,12 +216,12 @@ export function CampaignsTab() {
               ) : (
                 <div className="mt-auto pt-2">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="w-full h-8 text-[11px] font-instrument tracking-tight"
+                    className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-muted/50"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/campaign/${campaign.id}/join`);
+                      setDialogOpen(true);
                     }}
                   >
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
@@ -229,5 +232,12 @@ export function CampaignsTab() {
             </CardContent>
           </Card>;
     })}
+    
+    <AddSocialAccountDialog 
+      open={dialogOpen} 
+      onOpenChange={setDialogOpen} 
+      onSuccess={fetchCampaigns}
+    />
+    
     </div>;
 }
