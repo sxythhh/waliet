@@ -75,7 +75,7 @@ export function AdminSidebar() {
               )}
             >
               <item.icon className={cn("h-5 w-5", active && "text-white")} />
-              <span className={cn(active && "font-semibold")}>{item.title}</span>
+              <span className={cn("text-sm font-sans tracking-tight", active && "font-semibold")}>{item.title}</span>
             </NavLink>
           );
         })}
