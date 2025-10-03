@@ -369,7 +369,7 @@ export default function AdminPayouts() {
                           </div>
 
                           {/* Details Grid */}
-                          <div className="grid grid-cols-3 gap-4 mb-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-muted-foreground" />
                               <div>
@@ -386,6 +386,19 @@ export default function AdminPayouts() {
                                 <p className="text-xs text-muted-foreground">Method</p>
                                 <p className="text-sm font-medium capitalize">
                                   {request.payout_method}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">Payment Details</p>
+                                <p className="text-sm font-medium truncate max-w-[200px]">
+                                  {request.payout_details?.email || 
+                                   request.payout_details?.wallet_address || 
+                                   request.payout_details?.account_number ||
+                                   'N/A'}
                                 </p>
                               </div>
                             </div>
