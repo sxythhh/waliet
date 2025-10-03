@@ -8,12 +8,27 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+
+interface DemographicSubmission {
+  id: string;
+  status: string;
+  submitted_at: string;
+  tier1_percentage: number;
+  score: number | null;
+}
+
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+}
 
 interface AnalyticsData {
   id: string;
@@ -35,6 +50,8 @@ interface AnalyticsData {
     username: string;
     avatar_url: string | null;
   } | null;
+  social_account?: SocialAccount | null;
+  demographic_submission?: DemographicSubmission | null;
 }
 
 interface CampaignAnalyticsTableProps {
@@ -72,19 +89,48 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
 
       if (error) throw error;
       
-      // Manually fetch user profiles for accounts with user_id
+      // Manually fetch user profiles and demographic submissions for accounts with user_id
       const analyticsWithProfiles = await Promise.all(
         (data || []).map(async (item) => {
           if (item.user_id) {
+            // Fetch profile
             const { data: profile } = await supabase
               .from("profiles")
               .select("username, avatar_url")
               .eq("id", item.user_id)
               .single();
             
-            return { ...item, profiles: profile };
+            // Fetch social account for this platform
+            const { data: socialAccount } = await supabase
+              .from("social_accounts")
+              .select("id, platform, username")
+              .eq("user_id", item.user_id)
+              .eq("platform", item.platform)
+              .eq("campaign_id", campaignId)
+              .maybeSingle();
+            
+            let demographicSubmission = null;
+            if (socialAccount) {
+              // Fetch most recent demographic submission for this social account
+              const { data: submission } = await supabase
+                .from("demographic_submissions")
+                .select("id, status, submitted_at, tier1_percentage, score")
+                .eq("social_account_id", socialAccount.id)
+                .order("submitted_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              
+              demographicSubmission = submission;
+            }
+            
+            return { 
+              ...item, 
+              profiles: profile,
+              social_account: socialAccount,
+              demographic_submission: demographicSubmission
+            };
           }
-          return { ...item, profiles: null };
+          return { ...item, profiles: null, social_account: null, demographic_submission: null };
         })
       );
       
@@ -93,6 +139,51 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       console.error("Error fetching analytics:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getDemographicStatus = (item: AnalyticsData): 'none' | 'pending' | 'approved' | 'outdated' => {
+    if (!item.demographic_submission) return 'none';
+    
+    const submission = item.demographic_submission;
+    const submittedDate = new Date(submission.submitted_at);
+    const daysSinceSubmission = Math.floor((Date.now() - submittedDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // If older than 7 days, needs resubmission
+    if (daysSinceSubmission > 7) return 'outdated';
+    
+    // If pending review
+    if (submission.status === 'pending') return 'pending';
+    
+    // If approved and within 7 days
+    if (submission.status === 'approved') return 'approved';
+    
+    return 'none';
+  };
+
+  const getDemographicIcon = (status: 'none' | 'pending' | 'approved' | 'outdated') => {
+    switch (status) {
+      case 'none':
+        return <AlertTriangle className="h-3 w-3 text-red-400" />;
+      case 'outdated':
+        return <AlertTriangle className="h-3 w-3 text-red-400" />;
+      case 'pending':
+        return <Clock className="h-3 w-3 text-yellow-400" />;
+      case 'approved':
+        return <CheckCircle className="h-3 w-3 text-blue-400" />;
+    }
+  };
+
+  const getDemographicTooltip = (status: 'none' | 'pending' | 'approved' | 'outdated', submission?: DemographicSubmission | null) => {
+    switch (status) {
+      case 'none':
+        return 'No demographics submitted';
+      case 'outdated':
+        return 'Demographics outdated (>7 days) - resubmission required';
+      case 'pending':
+        return 'Demographics pending admin review';
+      case 'approved':
+        return submission ? `Demographics approved - ${submission.tier1_percentage}% Tier 1` : 'Demographics approved';
     }
   };
 
@@ -431,22 +522,40 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                               />
                             </div>
                           )}
-                          {item.account_link ? (
-                            <a
-                              href={item.account_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                window.open(item.account_link!, '_blank', 'noopener,noreferrer');
-                              }}
-                              className="text-white hover:text-primary hover:underline transition-all font-medium cursor-pointer text-xs truncate max-w-[120px]"
-                            >
-                              {username}
-                            </a>
-                          ) : (
-                            <span className="text-white font-medium text-xs truncate max-w-[120px]">{username}</span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            {item.account_link ? (
+                              <a
+                                href={item.account_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  window.open(item.account_link!, '_blank', 'noopener,noreferrer');
+                                }}
+                                className="text-white hover:text-primary hover:underline transition-all font-medium cursor-pointer text-xs truncate max-w-[120px]"
+                              >
+                                {username}
+                              </a>
+                            ) : (
+                              <span className="text-white font-medium text-xs truncate max-w-[120px]">{username}</span>
+                            )}
+                            
+                            {/* Demographic Status Icon */}
+                            {item.user_id && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex-shrink-0">
+                                      {getDemographicIcon(getDemographicStatus(item))}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="bg-[#2a2a2a] border-white/10 text-white">
+                                    <p className="text-xs">{getDemographicTooltip(getDemographicStatus(item), item.demographic_submission)}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell 
