@@ -522,14 +522,6 @@ export default function BrandManagement() {
             </Card>
 
             <div className="flex justify-end gap-2">
-              <Button
-                variant="destructive"
-                onClick={() => setDeleteAnalyticsDialogOpen(true)}
-                className="bg-destructive/20 hover:bg-destructive/30"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete All Analytics
-              </Button>
               <ImportCampaignStatsDialog 
                 campaignId={selectedCampaignId}
                 onImportComplete={fetchSubmissions}
