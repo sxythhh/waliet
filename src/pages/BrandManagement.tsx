@@ -39,6 +39,7 @@ import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit } from "luci
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
+import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
 
 interface Campaign {
   id: string;
@@ -93,6 +94,7 @@ export default function BrandManagement() {
   const [savingUrls, setSavingUrls] = useState(false);
   const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
@@ -388,11 +390,20 @@ export default function BrandManagement() {
               <ImportCampaignStatsDialog 
                 campaignId={selectedCampaignId}
                 onImportComplete={fetchSubmissions}
+                onMatchingRequired={() => setMatchDialogOpen(true)}
               />
             </div>
             
             {/* Imported Analytics Data */}
             <CampaignAnalyticsTable campaignId={selectedCampaignId} />
+            
+            {/* Matching Dialog */}
+            <MatchAccountsDialog
+              open={matchDialogOpen}
+              onOpenChange={setMatchDialogOpen}
+              campaignId={selectedCampaignId}
+              onMatchComplete={fetchSubmissions}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">

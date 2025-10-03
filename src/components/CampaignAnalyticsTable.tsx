@@ -4,7 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -24,6 +25,11 @@ interface AnalyticsData {
   posts_last_7_days: any;
   last_tracked: string | null;
   amount_of_videos_tracked: string | null;
+  user_id: string | null;
+  profiles?: {
+    username: string;
+    avatar_url: string | null;
+  } | null;
 }
 
 interface CampaignAnalyticsTableProps {
@@ -54,7 +60,24 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
         .order("total_views", { ascending: false });
 
       if (error) throw error;
-      setAnalytics(data || []);
+      
+      // Manually fetch user profiles for accounts with user_id
+      const analyticsWithProfiles = await Promise.all(
+        (data || []).map(async (item) => {
+          if (item.user_id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("username, avatar_url")
+              .eq("id", item.user_id)
+              .single();
+            
+            return { ...item, profiles: profile };
+          }
+          return { ...item, profiles: null };
+        })
+      );
+      
+      setAnalytics(analyticsWithProfiles);
     } catch (error) {
       console.error("Error fetching analytics:", error);
     } finally {
@@ -215,6 +238,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               <TableHeader>
                 <TableRow className="border-white/10 hover:bg-transparent">
                   <TableHead className="text-white/60 font-medium">Account</TableHead>
+                  <TableHead className="text-white/60 font-medium">User</TableHead>
                   <TableHead 
                     className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors"
                     onClick={() => handleSort('total_videos')}
@@ -345,6 +369,24 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                             <span className="text-white font-medium">{username}</span>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        {item.user_id && item.profiles ? (
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={item.profiles.avatar_url || undefined} />
+                              <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                                {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-white/80 text-sm">@{item.profiles.username}</span>
+                          </div>
+                        ) : (
+                          <span className="text-white/30 text-sm flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            Not linked
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-white/80 text-right font-mono text-sm">
                         {item.total_videos.toLocaleString()}

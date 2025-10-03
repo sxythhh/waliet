@@ -78,6 +78,7 @@ export type Database = {
           total_videos: number | null
           total_views: number | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           account_link?: string | null
@@ -97,6 +98,7 @@ export type Database = {
           total_videos?: number | null
           total_views?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           account_link?: string | null
@@ -116,6 +118,7 @@ export type Database = {
           total_videos?: number | null
           total_views?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -886,6 +889,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      match_analytics_to_users: {
+        Args: { p_campaign_id: string }
+        Returns: {
+          matched_count: number
+          total_count: number
+          unmatched_count: number
+        }[]
       }
     }
     Enums: {

@@ -11,11 +11,13 @@ import { Progress } from "@/components/ui/progress";
 interface ImportCampaignStatsDialogProps {
   campaignId: string;
   onImportComplete: () => void;
+  onMatchingRequired: () => void;
 }
 
 export function ImportCampaignStatsDialog({
   campaignId,
   onImportComplete,
+  onMatchingRequired,
 }: ImportCampaignStatsDialogProps) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -163,6 +165,8 @@ export function ImportCampaignStatsDialog({
         setFile(null);
         setProgress(0);
         onImportComplete();
+        // Trigger account matching
+        onMatchingRequired();
       } else {
         toast.error("No records were imported. Please check your CSV format.");
       }
