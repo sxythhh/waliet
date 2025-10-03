@@ -276,12 +276,16 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
   };
 
   const handlePayUser = async () => {
-    if (!selectedUser?.user_id || !paymentAmount) {
-      toast.error("Please enter a payment amount");
+    if (!selectedUser?.user_id) {
+      toast.error("No user selected");
       return;
     }
 
-    const amount = parseFloat(paymentAmount);
+    // Use custom amount if provided, otherwise use calculated payout
+    const amount = paymentAmount 
+      ? parseFloat(paymentAmount) 
+      : calculatePayout(selectedUser).payout;
+
     if (isNaN(amount) || amount <= 0) {
       toast.error("Please enter a valid amount");
       return;
@@ -1030,9 +1034,6 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           </Button>
           <Button
             onClick={() => {
-              // Use custom amount if provided, otherwise use calculated amount
-              const finalAmount = paymentAmount || calculatePayout(selectedUser).payout.toFixed(2);
-              setPaymentAmount(finalAmount);
               handlePayUser();
             }}
             className="bg-primary hover:bg-primary/90"
