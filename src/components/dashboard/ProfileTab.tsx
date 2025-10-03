@@ -427,7 +427,6 @@ export function ProfileTab() {
                   return null;
               }
             };
-            
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-muted/30 rounded-lg border">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
@@ -441,33 +440,24 @@ export function ProfileTab() {
                             {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
                             <span>Linked to {linkedCampaign.title}</span>
                           </div>}
-                        {latestDemographicSubmission && (
-                          <div className="flex items-center gap-2 mt-1">
+                        {latestDemographicSubmission && <div className="flex items-center gap-2 mt-1">
                             {getStatusBadge(latestDemographicSubmission.status)}
-                            {latestDemographicSubmission.score !== null && (
-                              <span className="text-xs text-muted-foreground">
+                            {latestDemographicSubmission.score !== null && <span className="text-xs text-muted-foreground">
                                 Score: {latestDemographicSubmission.score}/100
-                              </span>
-                            )}
-                          </div>
-                        )}
+                              </span>}
+                          </div>}
                       </div>
                     </div>
                     
                     <div className="flex gap-2 w-full sm:w-auto">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedAccountForDemographics({
-                            id: account.id,
-                            platform: account.platform,
-                            username: account.username
-                          });
-                          setShowDemographicsDialog(true);
-                        }}
-                        className="h-8 gap-1 flex-1 sm:flex-initial whitespace-nowrap"
-                      >
+                      <Button variant="outline" size="sm" onClick={() => {
+                  setSelectedAccountForDemographics({
+                    id: account.id,
+                    platform: account.platform,
+                    username: account.username
+                  });
+                  setShowDemographicsDialog(true);
+                }} className="h-8 gap-1 flex-1 sm:flex-initial whitespace-nowrap">
                         📊 Demographics
                       </Button>
                       
@@ -555,7 +545,7 @@ export function ProfileTab() {
 
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Basic Information</h3>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
@@ -631,16 +621,7 @@ export function ProfileTab() {
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
 
       {/* Demographics Dialog */}
-      {selectedAccountForDemographics && (
-        <SubmitDemographicsDialog
-          open={showDemographicsDialog}
-          onOpenChange={setShowDemographicsDialog}
-          onSuccess={fetchSocialAccounts}
-          socialAccountId={selectedAccountForDemographics.id}
-          platform={selectedAccountForDemographics.platform}
-          username={selectedAccountForDemographics.username}
-        />
-      )}
+      {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
 
       {/* Delete Account Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
