@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp } from "lucide-react";
+import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -28,8 +29,31 @@ interface PayoutRequest {
     username: string;
     full_name: string;
     avatar_url: string | null;
+    id: string;
+    wallets?: {
+      balance: number;
+      total_earned: number;
+      total_withdrawn: number;
+    };
   };
 }
+
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  follower_count: number;
+  is_verified: boolean;
+  account_link: string;
+  campaign_id: string | null;
+  campaigns?: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url: string;
+  };
+}
+
 export default function AdminPayouts() {
   const [allRequests, setAllRequests] = useState<PayoutRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +64,14 @@ export default function AdminPayouts() {
   const [transactionId, setTransactionId] = useState('');
   const [notes, setNotes] = useState('');
   const [activeTab, setActiveTab] = useState('pending');
+  const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
+  const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
+  const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
+  const [userTransactions, setUserTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
+  const [transactionsOpen, setTransactionsOpen] = useState(false);
+  const [selectedUserProfile, setSelectedUserProfile] = useState<PayoutRequest['profiles'] | null>(null);
   const {
     toast
   } = useToast();
@@ -54,9 +86,15 @@ export default function AdminPayouts() {
     } = await supabase.from("payout_requests").select(`
         *,
         profiles:user_id (
+          id,
           username,
           full_name,
-          avatar_url
+          avatar_url,
+          wallets (
+            balance,
+            total_earned,
+            total_withdrawn
+          )
         )
       `).order("requested_at", {
       ascending: false
@@ -71,6 +109,75 @@ export default function AdminPayouts() {
       setAllRequests(data as any || []);
     }
     setLoading(false);
+  };
+
+  const fetchUserSocialAccounts = async (userId: string) => {
+    setLoadingSocialAccounts(true);
+    const {
+      data,
+      error
+    } = await supabase.from("social_accounts").select(`
+        *,
+        campaigns:campaign_id (
+          id,
+          title,
+          brand_name,
+          brand_logo_url
+        )
+      `).eq("user_id", userId);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch social accounts"
+      });
+      setUserSocialAccounts([]);
+    } else {
+      setUserSocialAccounts(data || []);
+    }
+    setLoadingSocialAccounts(false);
+  };
+
+  const fetchUserTransactions = async (userId: string) => {
+    setLoadingTransactions(true);
+    const { data, error } = await supabase
+      .from("wallet_transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch transactions"
+      });
+      setUserTransactions([]);
+    } else {
+      setUserTransactions(data || []);
+    }
+    setLoadingTransactions(false);
+  };
+
+  const openUserDetailsDialog = (profile: PayoutRequest['profiles']) => {
+    setSelectedUserProfile(profile);
+    setUserDetailsDialogOpen(true);
+    fetchUserSocialAccounts(profile.id);
+    fetchUserTransactions(profile.id);
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'tiktok':
+        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="h-5 w-5" />;
+      case 'instagram':
+        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="h-5 w-5" />;
+      case 'youtube':
+        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="h-5 w-5" />;
+      default:
+        return <UsersIcon className="h-5 w-5" />;
+    }
   };
 
   // Filter requests locally for instant tab switching
@@ -266,7 +373,15 @@ export default function AdminPayouts() {
                         {/* Header Row: Name, Date, Status */}
                         <div className="flex items-start justify-between gap-4 pb-4 border-b">
                           <div className="flex-1">
-                            <h3 className="text-xl font-semibold mb-2">
+                            <h3 
+                              className="text-xl font-semibold mb-2 cursor-pointer hover:underline transition-all" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (request.profiles) {
+                                  openUserDetailsDialog(request.profiles);
+                                }
+                              }}
+                            >
                               {request.profiles?.full_name || request.profiles?.username}
                             </h3>
                             <div className="flex items-center gap-3 text-sm">
@@ -406,6 +521,164 @@ export default function AdminPayouts() {
                 </Button>
               </div>
             </div>}
+        </DialogContent>
+      </Dialog>
+
+      {/* User Details Dialog */}
+      <Dialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          {selectedUserProfile && <>
+              {/* User Header */}
+              <div className="flex items-start gap-4 pb-6 border-b">
+                {selectedUserProfile.avatar_url ? <img src={selectedUserProfile.avatar_url} alt={selectedUserProfile.username} className="h-16 w-16 rounded-full object-cover" /> : <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UsersIcon className="h-8 w-8 text-primary" />
+                  </div>}
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-semibold mb-1">
+                    {selectedUserProfile.username}
+                  </h2>
+                  {selectedUserProfile.full_name && <p className="text-sm text-muted-foreground mb-3">
+                      {selectedUserProfile.full_name}
+                    </p>}
+                  
+                  {/* Wallet Stats */}
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="bg-card/50 px-3 py-2 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Balance</p>
+                      <p className="text-lg font-semibold text-success">
+                        ${(selectedUserProfile.wallets?.balance || 0).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="bg-card/50 px-3 py-2 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Total Earned</p>
+                      <p className="text-lg font-semibold">
+                        ${(selectedUserProfile.wallets?.total_earned || 0).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="bg-card/50 px-3 py-2 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Withdrawn</p>
+                      <p className="text-lg font-semibold">
+                        ${(selectedUserProfile.wallets?.total_withdrawn || 0).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Accounts Section - Collapsible */}
+              <Collapsible open={socialAccountsOpen} onOpenChange={setSocialAccountsOpen} className="pt-6 border-t">
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Connected Accounts ({userSocialAccounts.length})
+                    </h3>
+                    {socialAccountsOpen ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  {loadingSocialAccounts ? <div className="text-center py-8 text-muted-foreground">
+                      Loading social accounts...
+                    </div> : userSocialAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+                      No social accounts connected
+                    </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
+                      {userSocialAccounts.map(account => <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+                          <div className="flex items-center justify-between gap-4">
+                            {/* Account Info */}
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="shrink-0">
+                                {getPlatformIcon(account.platform)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium hover:text-primary transition-colors block truncate" onClick={e => e.stopPropagation()}>
+                                  @{account.username}
+                                </a>
+                              </div>
+                            </div>
+                            
+                            {/* Campaign Link */}
+                            <div className="shrink-0">
+                              {account.campaigns ? <div className="flex items-center gap-2">
+                                  {account.campaigns.brand_logo_url && <img src={account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
+                                  <span className="font-medium text-sm">
+                                    {account.campaigns.title}
+                                  </span>
+                                </div> : <span className="text-xs text-muted-foreground italic">
+                                  Not linked
+                                </span>}
+                            </div>
+                          </div>
+                        </div>)}
+                    </div>}
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Recent Transactions Section - Collapsible */}
+              <Collapsible open={transactionsOpen} onOpenChange={setTransactionsOpen} className="pt-6 border-t">
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Recent Transactions ({userTransactions.length})
+                    </h3>
+                    {transactionsOpen ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  {loadingTransactions ? <div className="text-center py-8 text-muted-foreground">
+                      Loading transactions...
+                    </div> : userTransactions.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+                      No transactions yet
+                    </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
+                      {userTransactions.map(transaction => <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+                          <div className="flex items-center justify-between gap-4">
+                            {/* Transaction Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium capitalize">{transaction.type}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded ${
+                                  transaction.status === 'completed' 
+                                    ? 'bg-success/10 text-success' 
+                                    : 'bg-muted text-muted-foreground'
+                                }`}>
+                                  {transaction.status}
+                                </span>
+                              </div>
+                              {transaction.description && (
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {transaction.description}
+                                </p>
+                              )}
+                            </div>
+                            
+                            {/* Amount & Date */}
+                            <div className="text-right shrink-0">
+                              <p className={`font-semibold ${
+                                transaction.type === 'withdrawal' || transaction.type === 'deduction'
+                                  ? 'text-destructive' 
+                                  : 'text-success'
+                              }`}>
+                                {transaction.type === 'withdrawal' || transaction.type === 'deduction' ? '-' : '+'}
+                                ${Math.abs(transaction.amount).toFixed(2)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(transaction.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>)}
+                    </div>}
+                </CollapsibleContent>
+              </Collapsible>
+            </>}
         </DialogContent>
       </Dialog>
     </div>;
