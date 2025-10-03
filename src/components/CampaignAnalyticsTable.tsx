@@ -190,7 +190,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
 
   const fetchAvailableUsers = async (accountPlatform: string) => {
     try {
-      // Get all users who have joined this campaign with social accounts on the matching platform
+      // Get all users who have joined this campaign with any social accounts
       const { data: socialAccounts, error } = await supabase
         .from('social_accounts')
         .select(`
@@ -200,8 +200,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           username,
           profiles!inner(username, avatar_url)
         `)
-        .eq('campaign_id', campaignId)
-        .eq('platform', accountPlatform);
+        .eq('campaign_id', campaignId);
 
       if (error) throw error;
 
@@ -1229,7 +1228,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               <div className="max-h-[300px] overflow-y-auto space-y-2">
                 {availableUsers.length === 0 ? (
                   <div className="p-4 text-center text-sm text-white/40">
-                    No users found with {selectedAnalyticsAccount.platform} accounts
+                    No users have joined this campaign yet
                   </div>
                 ) : (
                   (() => {
