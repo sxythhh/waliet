@@ -657,13 +657,12 @@ export function CampaignAnalyticsTable({
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>}
-                          </div> : <div className="flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-2 py-1 -mx-2 -my-1 transition-colors" onClick={e => {
+                          </div> : <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/10 rounded-md px-2 py-1.5 border border-white/10 transition-all" onClick={e => {
                         e.stopPropagation();
                         openLinkDialog(item);
                       }}>
-                            <User className="h-4 w-4 text-white" />
-                            <Link2 className="h-3 w-3 text-primary" />
-                            <span className="text-xs text-primary hidden sm:inline">Link</span>
+                            <Link2 className="h-3.5 w-3.5 text-white/60" />
+                            <span className="text-xs text-white/80 font-medium">Link User</span>
                           </div>}
                       </TableCell>
                       <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{
