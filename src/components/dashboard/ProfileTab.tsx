@@ -438,7 +438,15 @@ export function ProfileTab() {
                         </a>
                         {linkedCampaign && <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
-                            <span>Linked to {linkedCampaign.title}</span>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = `/campaign/${linkedCampaign.id}/preview`;
+                              }}
+                              className="hover:underline text-xs text-muted-foreground"
+                            >
+                              Linked to {linkedCampaign.title}
+                            </button>
                           </div>}
                         {latestDemographicSubmission && <div className="flex items-center gap-2 mt-1">
                             {getStatusBadge(latestDemographicSubmission.status)}
