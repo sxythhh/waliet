@@ -236,7 +236,7 @@ export function CampaignsTab() {
         <div className="grid gap-3 py-4">
           <Button
             variant="ghost"
-            className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-muted"
+            className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-[#121212]"
             onClick={() => {
               setDialogOpen(false);
               navigate("/dashboard?tab=profile");
@@ -257,7 +257,7 @@ export function CampaignsTab() {
           
           <Button
             variant="ghost"
-            className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-muted"
+            className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-[#121212]"
             onClick={() => {
               setDialogOpen(false);
               setAddAccountDialogOpen(true);
