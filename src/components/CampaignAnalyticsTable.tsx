@@ -561,12 +561,6 @@ export function CampaignAnalyticsTable({
                         {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden lg:table-cell py-3" onClick={() => handleSort('average_video_views')}>
-                      <div className="flex items-center justify-end gap-1">
-                        Avg
-                        {sortField === 'average_video_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
-                      </div>
-                    </TableHead>
                     <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3" onClick={() => handleSort('total_likes')}>
                       <div className="flex items-center justify-end gap-1">
                         Likes
@@ -583,12 +577,6 @@ export function CampaignAnalyticsTable({
                       <div className="flex items-center justify-end gap-1">
                         Eng
                         {sortField === 'average_engagement_rate' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3" onClick={() => handleSort('outperforming_video_rate')}>
-                      <div className="flex items-center justify-end gap-1">
-                        Out
-                        {sortField === 'outperforming_video_rate' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
                     <TableHead className="text-white/60 font-medium text-sm w-8 py-3"></TableHead>
@@ -677,12 +665,6 @@ export function CampaignAnalyticsTable({
                     }}>
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right text-sm hidden lg:table-cell bg-[#202020] py-3" style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500
-                    }}>
-                        {Math.round(item.average_video_views).toLocaleString()}
-                      </TableCell>
                       <TableCell className="text-white/80 text-right text-sm hidden md:table-cell bg-[#202020] py-3" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
@@ -702,14 +684,6 @@ export function CampaignAnalyticsTable({
                       }}>
                           {item.average_engagement_rate.toFixed(2)}%
                         </span>
-                      </TableCell>
-                      <TableCell className="text-right hidden md:table-cell bg-[#202020] py-3">
-                        {item.outperforming_video_rate > 0 ? <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 border border-primary/20 text-primary text-sm" style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500
-                      }}>
-                            {item.outperforming_video_rate.toFixed(1)}%
-                          </span> : <span className="text-white/30 text-sm">—</span>}
                       </TableCell>
                       <TableCell className="py-3 bg-[#202020]">
                         <Button variant="ghost" size="icon" onClick={() => {
