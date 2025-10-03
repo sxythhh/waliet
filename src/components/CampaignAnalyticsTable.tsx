@@ -298,7 +298,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
         .insert({
           user_id: selectedUser.user_id,
           amount: amount,
-          type: "credit",
+          type: "earning",
           description: `Payment for ${selectedUser.platform} account @${selectedUser.account_username}`,
           status: "completed",
           metadata: {
