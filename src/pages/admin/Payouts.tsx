@@ -186,9 +186,9 @@ export default function AdminPayouts() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <>
       <AdminSidebar />
-      <main className="flex-1 p-8">
+      <main className="ml-64 p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           <div>
             <h1 className="text-3xl font-bold">Payout Management</h1>
@@ -373,6 +373,6 @@ export default function AdminPayouts() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

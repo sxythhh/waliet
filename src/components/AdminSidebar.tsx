@@ -1,14 +1,5 @@
 import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, Wallet, BarChart3 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -73,36 +64,29 @@ export function AdminSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-border bg-card">
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                const active = isActive(item.path);
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <NavLink
-                      to={item.path}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium",
-                        active
-                          ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      )}
-                    >
-                      <item.icon className={cn("h-5 w-5", active && "text-white")} />
-                      <span className={cn(active && "font-semibold")}>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-border bg-card flex flex-col">
+      <nav className="flex-1 p-4 space-y-1">
+        {menuItems.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <NavLink
+              key={item.title}
+              to={item.path}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium",
+                active
+                  ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <item.icon className={cn("h-5 w-5", active && "text-white")} />
+              <span className={cn(active && "font-semibold")}>{item.title}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
 
-      <SidebarFooter className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border">
         <Button
           onClick={handleSignOut}
           variant="ghost"
@@ -111,7 +95,7 @@ export function AdminSidebar() {
           <LogOut className="h-5 w-5 mr-3" />
           Sign Out
         </Button>
-      </SidebarFooter>
-    </Sidebar>
+      </div>
+    </aside>
   );
 }
