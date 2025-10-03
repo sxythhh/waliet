@@ -618,14 +618,14 @@ export default function BrandManagement() {
                         return null;
                     }
                   };
-                  return <Card key={submission.id} className="bg-[#1a1a1a] border border-white/10 overflow-hidden rounded-xl hover:border-primary/30 transition-all group">
+                  return <Card key={submission.id} className="bg-[#1a1a1a] overflow-hidden rounded-xl transition-all group">
                           <CardContent className="p-0">
                             <div className="p-5">
                               {/* Header Section */}
                               <div className="flex items-start gap-4 mb-4">
                                 {/* Avatar */}
                                 <div className="flex-shrink-0">
-                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-16 h-16 rounded-full object-cover border-2 border-primary/30 group-hover:border-primary/50 transition-all" /> : <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
+                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-16 h-16 rounded-full object-cover" /> : <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                                       <Users className="h-8 w-8 text-primary" />
                                     </div>}
                                 </div>
@@ -636,10 +636,10 @@ export default function BrandManagement() {
                                     {submission.profiles?.username || "Unknown"}
                                   </h3>
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <Badge variant="outline" className="border-green-500/30 bg-green-500/10 text-green-400 text-xs">
+                                    <Badge variant="outline" className="bg-green-500/10 text-green-400 text-xs border-0">
                                       Active
                                     </Badge>
-                                    <Badge variant="outline" className="border-white/20 text-white/70 text-xs">
+                                    <Badge variant="outline" className="text-white/70 text-xs border-0 bg-white/5">
                                       {submission.platform}
                                     </Badge>
                                   </div>
@@ -648,7 +648,7 @@ export default function BrandManagement() {
 
                               {/* Stats Grid */}
                               <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <div className="bg-white/5 rounded-lg p-3">
                                   <div className="flex items-center gap-2 mb-1">
                                     <Eye className="h-3.5 w-3.5 text-blue-400" />
                                     <span className="text-xs text-white/60">Views</span>
@@ -658,7 +658,7 @@ export default function BrandManagement() {
                                   </span>
                                 </div>
 
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <div className="bg-white/5 rounded-lg p-3">
                                   <div className="flex items-center gap-2 mb-1">
                                     <DollarSign className="h-3.5 w-3.5 text-green-400" />
                                     <span className="text-xs text-white/60">Earnings</span>
@@ -671,7 +671,7 @@ export default function BrandManagement() {
 
                               {/* Scores Section */}
                               <div className="grid grid-cols-3 gap-3 mb-4">
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <div className="bg-white/5 rounded-lg p-3">
                                   <div className="flex items-center justify-between mb-1.5">
                                     <span className="text-xs text-white/60">Trust</span>
                                     <span className="text-sm font-semibold text-white">
@@ -685,7 +685,7 @@ export default function BrandManagement() {
                                   </div>
                                 </div>
 
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <div className="bg-white/5 rounded-lg p-3">
                                   <div className="flex items-center justify-between mb-1.5">
                                     <span className="text-xs text-white/60">Demo</span>
                                     <span className="text-sm font-semibold text-white">
@@ -699,7 +699,7 @@ export default function BrandManagement() {
                                   </div>
                                 </div>
 
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <div className="bg-white/5 rounded-lg p-3">
                                   <div className="flex items-center justify-between mb-1.5">
                                     <span className="text-xs text-white/60">Views</span>
                                     <span className="text-sm font-semibold text-white">
@@ -718,7 +718,7 @@ export default function BrandManagement() {
                               {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div>
                                   <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
                                   <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all hover:scale-105">
+                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all hover:scale-105">
                                         {getPlatformIcon(account.platform)}
                                         <span className="text-sm font-medium text-white">
                                           @{account.username}
@@ -731,7 +731,7 @@ export default function BrandManagement() {
                                 </div>}
 
                               {/* Content Link */}
-                              {submission.content_url && <div className="pt-4 mt-4 border-t border-white/10">
+                              {submission.content_url && <div className="pt-4 mt-4">
                                   <a href={submission.content_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors group-hover:underline">
                                     <Eye className="h-4 w-4" />
                                     View content
@@ -784,7 +784,7 @@ export default function BrandManagement() {
                                 <div className="flex items-start gap-3 flex-1">
                                   {/* Avatar */}
                                   <div className="flex-shrink-0">
-                                    {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-14 h-14 rounded-full object-cover border-2 border-primary/30" /> : <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
+                                    {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-14 h-14 rounded-full object-cover" /> : <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
                                         <Users className="h-7 w-7 text-primary" />
                                       </div>}
                                   </div>
