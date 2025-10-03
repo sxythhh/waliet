@@ -388,58 +388,116 @@ export default function AdminUsers() {
         </CardContent>
       </Card>
 
-      {/* Users Table */}
-      <Card className="bg-card border-0">
-        <CardHeader>
-          <CardTitle>Users ({filteredUsers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead>Connected Accounts</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
-                <TableHead className="text-right">Total Earned</TableHead>
-                <TableHead className="text-right">Total Withdrawn</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.length === 0 ? <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                    No users found
-                  </TableCell>
-                </TableRow> : filteredUsers.map(user => <TableRow key={user.id} className="cursor-pointer" onClick={() => openUserDetailsDialog(user)}>
-                    <TableCell className="font-medium">{user.username}</TableCell>
-                    <TableCell>
-                      {user.social_accounts && user.social_accounts.length > 0 ? <div className="flex flex-wrap gap-1.5">
-                          {user.social_accounts.map(account => <div key={account.id} className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded text-xs" title={`${account.username} - ${account.follower_count.toLocaleString()} followers`}>
-                              {getPlatformIcon(account.platform)}
-                              <span className="font-medium">{account.username}</span>
-                            </div>)}
-                        </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-success">
-                      ${(user.wallets?.balance || 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ${(user.wallets?.total_earned || 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ${(user.wallets?.total_withdrawn || 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" onClick={() => openPayDialog(user)} className="gap-1">
-                        <DollarSign className="h-4 w-4" />
-                        Pay
-                      </Button>
-                    </TableCell>
-                  </TableRow>)}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Users Gallery */}
+      {filteredUsers.length === 0 ? (
+        <Card className="bg-card border-0">
+          <CardContent className="text-center py-12 text-muted-foreground">
+            No users found
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredUsers.map(user => {
+            const balance = user.wallets?.balance || 0;
+            const totalEarned = user.wallets?.total_earned || 0;
+            const totalWithdrawn = user.wallets?.total_withdrawn || 0;
+            const earningsPercentage = totalEarned > 0 ? ((totalEarned - totalWithdrawn) / totalEarned) * 100 : 0;
+
+            return (
+              <Card 
+                key={user.id} 
+                className="bg-card border-0 overflow-hidden cursor-pointer transition-all hover:bg-muted/50"
+                onClick={() => openUserDetailsDialog(user)}
+              >
+                <CardContent className="p-6">
+                  {/* User Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <UsersIcon className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold truncate">
+                          {user.username}
+                        </h3>
+                        {user.full_name && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {user.full_name}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPayDialog(user);
+                      }} 
+                      className="gap-1 shrink-0"
+                    >
+                      <DollarSign className="h-4 w-4" />
+                      Pay
+                    </Button>
+                  </div>
+
+                  {/* Connected Accounts */}
+                  <div className="mb-4">
+                    <p className="text-xs text-muted-foreground mb-2">Connected Accounts</p>
+                    {user.social_accounts && user.social_accounts.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {user.social_accounts.map(account => (
+                          <div 
+                            key={account.id} 
+                            className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 rounded-md text-xs"
+                            title={`${account.username} - ${account.follower_count.toLocaleString()} followers`}
+                          >
+                            {getPlatformIcon(account.platform)}
+                            <span className="font-medium">{account.username}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">No accounts</span>
+                    )}
+                  </div>
+
+                  {/* Wallet Progress Bar */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Balance</span>
+                      <span className="font-medium text-success">
+                        ${balance.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="absolute inset-0 bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(earningsPercentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Earnings Stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Earned</p>
+                      <p className="text-sm font-semibold">
+                        ${totalEarned.toFixed(2)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Withdrawn</p>
+                      <p className="text-sm font-semibold">
+                        ${totalWithdrawn.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Payment Dialog */}
       <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
