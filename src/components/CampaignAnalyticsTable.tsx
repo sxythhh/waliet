@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatDistanceToNow } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -615,6 +616,7 @@ export function CampaignAnalyticsTable({
                       </div>
                     </TableHead>
                     <TableHead className="text-white/60 font-medium text-sm py-3">Time Period</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3">Last Paid</TableHead>
                     <TableHead className="text-white/60 font-medium text-sm w-8 py-3"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -703,6 +705,15 @@ export function CampaignAnalyticsTable({
                             <span className="text-xs text-white/40">to</span>
                             <span className="text-xs">{new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                           </div>
+                        ) : (
+                          <span className="text-xs text-white/40">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-white/60 text-sm bg-[#202020] py-3">
+                        {item.last_payment_date ? (
+                          <span className="text-xs">
+                            {formatDistanceToNow(new Date(item.last_payment_date), { addSuffix: true })}
+                          </span>
                         ) : (
                           <span className="text-xs text-white/40">—</span>
                         )}
