@@ -194,14 +194,14 @@ export default function BrandManagement() {
 
       if (error) throw error;
 
-      // Fetch social accounts separately - check both campaign-specific and general accounts
+      // Fetch social accounts separately - only campaign-specific accounts
       const submissionsWithAccounts = await Promise.all(
         (data || []).map(async (submission) => {
           const { data: accounts } = await supabase
             .from("social_accounts")
             .select("id, platform, username, follower_count, account_link")
             .eq("user_id", submission.creator_id)
-            .or(`campaign_id.eq.${selectedCampaignId},campaign_id.is.null`);
+            .eq("campaign_id", selectedCampaignId);
 
           return {
             ...submission,
