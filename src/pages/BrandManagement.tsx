@@ -468,7 +468,7 @@ export default function BrandManagement() {
                 <CardTitle className="text-white text-sm">Campaign Performance Overview</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
                     <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                       {analytics.reduce((sum, a) => sum + a.total_views, 0).toLocaleString()}
@@ -480,26 +480,6 @@ export default function BrandManagement() {
                       {analytics.reduce((sum, a) => sum + a.total_videos, 0).toLocaleString()}
                     </div>
                     <div className="text-sm text-white/60 mt-1">Total Videos</div>
-                  </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                      ${transactions.reduce((sum, t) => sum + Number(t.amount), 0).toFixed(2)}
-                    </div>
-                    <div className="text-sm text-white/60 mt-1">Total Paid</div>
-                  </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                      {analytics.length > 0 
-                        ? (analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length).toFixed(2)
-                        : '0.00'}%
-                    </div>
-                    <div className="text-sm text-white/60 mt-1">Avg Engagement</div>
-                  </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                      ${effectiveCPM.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-white/60 mt-1">Effective CPM</div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
                     <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
@@ -522,19 +502,40 @@ export default function BrandManagement() {
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
                     <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                      {approvedSubmissions.length}
+                      ${effectiveCPM.toFixed(2)}
                     </div>
-                    <div className="text-sm text-white/60 mt-1">Active Creators</div>
-                  </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                      ${selectedCampaign?.budget || 0}
-                    </div>
-                    <div className="text-sm text-white/60 mt-1">Total Budget</div>
+                    <div className="text-sm text-white/60 mt-1">Effective CPM</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteAnalyticsDialogOpen(true)}
+                className="bg-destructive/20 hover:bg-destructive/30"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete All Analytics
+              </Button>
+              <ImportCampaignStatsDialog 
+                campaignId={selectedCampaignId}
+                onImportComplete={fetchSubmissions}
+                onMatchingRequired={() => setMatchDialogOpen(true)}
+              />
+            </div>
+            
+            {/* Imported Analytics Data */}
+            <CampaignAnalyticsTable campaignId={selectedCampaignId} />
+            
+            {/* Matching Dialog */}
+            <MatchAccountsDialog
+              open={matchDialogOpen}
+              onOpenChange={setMatchDialogOpen}
+              campaignId={selectedCampaignId}
+              onMatchComplete={fetchSubmissions}
+            />
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
