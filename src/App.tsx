@@ -10,6 +10,7 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import wordmarkLogo from "@/assets/wordmark-logo.png";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -62,7 +63,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
             <SidebarTrigger />
             <div className="flex-1 flex justify-center">
-              <img src="/src/assets/wordmark-logo.png" alt="Wordmark Logo" className="h-10" />
+              <img src={wordmarkLogo} alt="Wordmark Logo" className="h-10" />
             </div>
             {profile && (
               <button
