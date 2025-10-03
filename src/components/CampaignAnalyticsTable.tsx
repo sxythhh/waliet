@@ -1032,14 +1032,17 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           >
             Cancel
           </Button>
-          <Button
-            onClick={() => {
-              handlePayUser();
-            }}
-            className="bg-primary hover:bg-primary/90"
-          >
-            Send Payment
-          </Button>
+              <Button
+                onClick={() => {
+                  handlePayUser();
+                }}
+                className="bg-primary hover:bg-primary/90"
+                disabled={selectedUser && selectedUser.paid_views >= selectedUser.total_views}
+              >
+                {selectedUser && selectedUser.paid_views >= selectedUser.total_views 
+                  ? "Already Paid" 
+                  : "Send Payment"}
+              </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
