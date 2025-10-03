@@ -897,85 +897,162 @@ export default function BrandManagement() {
                       };
 
                       return (
-                        <Card key={submission.id} className="bg-transparent border border-white/10 overflow-hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between gap-3">
-                              {/* Creator Avatar & Info */}
-                              <div className="flex items-start gap-3 flex-1">
-                                <div className="flex-shrink-0">
-                                  {submission.profiles?.avatar_url ? (
-                                    <img
-                                      src={submission.profiles.avatar_url}
-                                      alt={submission.profiles.username}
-                                      className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
-                                    />
-                                  ) : (
-                                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                                      <Users className="h-6 w-6 text-primary" />
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="flex-1 space-y-2">
-                                  <div>
-                                    <h3 className="font-semibold text-white">
-                                      {submission.profiles?.username || "Unknown"}
-                                    </h3>
-                                    <span className="text-xs text-white/60">
-                                      {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric'
-                                      })}
-                                    </span>
+                        <Card key={submission.id} className="bg-[#1a1a1a] border border-white/10 overflow-hidden rounded-xl hover:border-primary/30 transition-all">
+                          <CardContent className="p-0">
+                            <div className="p-5">
+                              {/* Header Section */}
+                              <div className="flex items-start justify-between gap-4 mb-4">
+                                <div className="flex items-start gap-3 flex-1">
+                                  {/* Avatar */}
+                                  <div className="flex-shrink-0">
+                                    {submission.profiles?.avatar_url ? (
+                                      <img
+                                        src={submission.profiles.avatar_url}
+                                        alt={submission.profiles.username}
+                                        className="w-14 h-14 rounded-full object-cover border-2 border-primary/30"
+                                      />
+                                    ) : (
+                                      <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
+                                        <Users className="h-7 w-7 text-primary" />
+                                      </div>
+                                    )}
                                   </div>
 
-                                  {/* All Linked Accounts */}
-                                  {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
-                                    <div className="flex flex-wrap gap-2">
-                                      {submission.profiles.social_accounts.map((account) => (
-                                        <div key={account.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
-                                          <a
-                                            href={account.account_link || '#'}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors"
-                                          >
-                                            {getPlatformIcon(account.platform)}
-                                            <span>@{account.username}</span>
-                                          </a>
-                                        </div>
-                                      ))}
+                                  {/* Creator Info */}
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-white text-lg mb-1">
+                                      {submission.profiles?.username || "Unknown"}
+                                    </h3>
+                                    <div className="flex items-center gap-2 text-xs text-white/60">
+                                      <span>Applied {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                      })}</span>
+                                      <span className="text-white/30">•</span>
+                                      <Badge variant="outline" className="border-white/20 text-white/70 text-xs">
+                                        {submission.platform}
+                                      </Badge>
                                     </div>
-                                  ) : (
-                                    <p className="text-xs text-white/40">No accounts linked</p>
-                                  )}
+                                  </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-2 flex-shrink-0">
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      handleApplicationAction(submission.id, "approved")
+                                    }
+                                    className="bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 h-9 px-4"
+                                  >
+                                    <Check className="h-4 w-4 mr-1.5" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      handleApplicationAction(submission.id, "rejected")
+                                    }
+                                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/30 h-9 px-4"
+                                  >
+                                    <X className="h-4 w-4 mr-1.5" />
+                                    Reject
+                                  </Button>
                                 </div>
                               </div>
 
-                              {/* Action Buttons */}
-                              <div className="flex gap-1.5 flex-shrink-0">
-                                <Button
-                                  size="sm"
-                                  onClick={() =>
-                                    handleApplicationAction(submission.id, "approved")
-                                  }
-                                  className="bg-success/20 hover:bg-success/30 text-success border-0 h-8 px-3"
-                                >
-                                  <Check className="h-3.5 w-3.5 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() =>
-                                    handleApplicationAction(submission.id, "rejected")
-                                  }
-                                  className="bg-destructive/20 hover:bg-destructive/30 border-0 h-8 px-3"
-                                >
-                                  <X className="h-3.5 w-3.5 mr-1" />
-                                  Reject
-                                </Button>
+                              {/* Scores Section */}
+                              <div className="grid grid-cols-3 gap-3 mb-4">
+                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs text-white/60">Trust</span>
+                                    <span className="text-sm font-semibold text-white">
+                                      {submission.profiles?.trust_score || 0}
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-white/10 rounded-full h-1.5">
+                                    <div 
+                                      className="bg-blue-500 h-1.5 rounded-full transition-all"
+                                      style={{ width: `${((submission.profiles?.trust_score || 0) / 100) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs text-white/60">Demographics</span>
+                                    <span className="text-sm font-semibold text-white">
+                                      {submission.profiles?.demographics_score || 0}
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-white/10 rounded-full h-1.5">
+                                    <div 
+                                      className="bg-purple-500 h-1.5 rounded-full transition-all"
+                                      style={{ width: `${((submission.profiles?.demographics_score || 0) / 100) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs text-white/60">Views</span>
+                                    <span className="text-sm font-semibold text-white">
+                                      {submission.profiles?.views_score || 0}
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-white/10 rounded-full h-1.5">
+                                    <div 
+                                      className="bg-green-500 h-1.5 rounded-full transition-all"
+                                      style={{ width: `${((submission.profiles?.views_score || 0) / 100) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
                               </div>
+
+                              {/* Social Accounts */}
+                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && (
+                                <div className="mb-4">
+                                  <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {submission.profiles.social_accounts.map((account) => (
+                                      <a
+                                        key={account.id}
+                                        href={account.account_link || '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all group"
+                                      >
+                                        {getPlatformIcon(account.platform)}
+                                        <span className="text-sm font-medium text-white group-hover:text-primary transition-colors">
+                                          @{account.username}
+                                        </span>
+                                        {account.follower_count > 0 && (
+                                          <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
+                                            {account.follower_count.toLocaleString()}
+                                          </Badge>
+                                        )}
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Content Link */}
+                              {submission.content_url && (
+                                <div className="pt-3 border-t border-white/10">
+                                  <a
+                                    href={submission.content_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                    View submitted content
+                                  </a>
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
