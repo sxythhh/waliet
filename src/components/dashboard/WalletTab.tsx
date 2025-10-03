@@ -1103,6 +1103,26 @@ export function WalletTab() {
                     </Badge>}
                 </div>
 
+                {/* Transaction Metadata - Account & Views */}
+                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined) && (
+                  <div className="p-4 bg-primary/5 border border-primary/10 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      {selectedTransaction.metadata.account_username && (
+                        <div className="flex-1">
+                          <div className="text-xs text-muted-foreground mb-1">Account</div>
+                          <div className="text-sm font-semibold">@{selectedTransaction.metadata.account_username}</div>
+                        </div>
+                      )}
+                      {selectedTransaction.metadata.views !== undefined && (
+                        <div className="flex-1 text-right">
+                          <div className="text-xs text-muted-foreground mb-1">Views</div>
+                          <div className="text-sm font-semibold">{selectedTransaction.metadata.views.toLocaleString()}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Rejection Reason */}
                 {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                     <div className="flex items-start gap-2">
