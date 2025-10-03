@@ -279,17 +279,23 @@ export default function AdminCampaigns() {
                 onClick={() => openEditDialog(campaign)}
               >
                 {/* Banner Section */}
-                <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <TrendingUp className="w-12 h-12 text-primary/30" />
+                {campaign.preview_url ? (
+                  <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                    <img 
+                      src={campaign.preview_url} 
+                      alt={campaign.title} 
+                      className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  <div className="absolute top-2 right-2">
-                    <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
-                      {campaign.status}
-                    </Badge>
+                ) : (
+                  <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <TrendingUp className="w-12 h-12 text-primary/30" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                   </div>
-                </div>
+                )}
 
                 {/* Content Section */}
                 <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
