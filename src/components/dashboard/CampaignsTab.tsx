@@ -166,11 +166,10 @@ export function CampaignsTab() {
               {/* Budget Section - Redesigned */}
               <div className="bg-muted/50 rounded-lg p-2.5 space-y-1.5">
                 <div className="flex items-baseline justify-between">
-                  <div className="flex items-baseline gap-1.5">
+                  <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
                     <span className="text-base font-bold tabular-nums">${budgetUsed.toLocaleString()}</span>
                     <span className="text-xs text-muted-foreground font-medium">/ ${campaign.budget.toLocaleString()}</span>
                   </div>
-                  <span className="text-xs font-semibold text-primary tabular-nums">${campaign.rpm_rate}/RPM</span>
                 </div>
                 
                 {/* Progress Bar */}
@@ -182,12 +181,11 @@ export function CampaignsTab() {
                 
                 <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                   <span>{budgetPercentage.toFixed(0)}% used</span>
-                  <span className="uppercase tracking-wider">{campaign.status}</span>
                 </div>
               </div>
 
               {/* Connected Accounts */}
-              {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div className="mt-auto pt-1">
+              {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div className="pt-1">
                   <div className="flex flex-wrap gap-1.5">
                     {campaign.connected_accounts.map(account => <div key={account.id} className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1">
                         <div className="w-3 h-3">
@@ -199,6 +197,17 @@ export function CampaignsTab() {
                       </div>)}
                   </div>
                 </div>}
+
+              {/* Application Status */}
+              {campaign.submission_status === 'pending' && (
+                <div className="mt-auto pt-2 border-t border-border/50">
+                  <div className="bg-muted/50 rounded-md px-2 py-1.5">
+                    <span className="text-[10px] font-chakra tracking-tight text-muted-foreground uppercase">
+                      Application Pending
+                    </span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>;
     })}
