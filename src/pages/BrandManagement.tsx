@@ -387,10 +387,7 @@ export default function BrandManagement() {
             <div className="flex justify-end mb-4">
               <ImportCampaignStatsDialog 
                 campaignId={selectedCampaignId}
-                onImportComplete={() => {
-                  fetchSubmissions();
-                  window.location.reload();
-                }}
+                onImportComplete={fetchSubmissions}
               />
             </div>
             

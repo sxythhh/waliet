@@ -116,9 +116,12 @@ export function ImportCampaignStatsDialog({
         }
 
         if (records.length > 0) {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from("campaign_account_analytics")
-            .insert(records);
+            .upsert(records, { 
+              onConflict: 'campaign_id,account_username',
+              ignoreDuplicates: false 
+            });
 
           if (error) {
             console.error("Error inserting batch:", error);
@@ -132,11 +135,15 @@ export function ImportCampaignStatsDialog({
         setProgress((processedLines / totalLines) * 100);
       }
 
-      toast.success(`Successfully imported ${successCount} of ${totalLines} records`);
-      setOpen(false);
-      setFile(null);
-      setProgress(0);
-      onImportComplete();
+      if (successCount > 0) {
+        toast.success(`Successfully imported ${successCount} records`);
+        setOpen(false);
+        setFile(null);
+        setProgress(0);
+        onImportComplete();
+      } else {
+        toast.error("No records were imported. Please check your CSV format.");
+      }
     } catch (error) {
       console.error("Error importing stats:", error);
       toast.error("Failed to import stats");
