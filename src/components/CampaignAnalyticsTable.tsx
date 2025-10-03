@@ -685,19 +685,78 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
         
         {selectedUser && (
           <div className="space-y-4 py-4">
-            {/* User Info */}
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={selectedUser.profiles?.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/20 text-primary">
-                  {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="font-semibold text-white">@{selectedUser.profiles?.username}</div>
-                <div className="text-xs text-white/60">
-                  {selectedUser.platform} • @{selectedUser.account_username}
+            {/* User Info Card */}
+            <div className="p-4 rounded-lg bg-white/5 border border-white/10 space-y-3">
+              <div className="flex items-start gap-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={selectedUser.profiles?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/20 text-primary text-lg">
+                    {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-1">
+                  <div className="font-semibold text-white text-lg">@{selectedUser.profiles?.username}</div>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const platformIcon = getPlatformIcon(selectedUser.platform);
+                      return platformIcon && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10">
+                          <img src={platformIcon} alt={selectedUser.platform} className="w-3 h-3" />
+                          <span className="text-xs text-white/80 capitalize">{selectedUser.platform}</span>
+                        </div>
+                      );
+                    })()}
+                    <div className="flex items-center gap-1 px-2 py-1 rounded bg-white/5 border border-white/10">
+                      <span className="text-xs text-white/60">@{selectedUser.account_username}</span>
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Demographic Status */}
+              <div className="pt-3 border-t border-white/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/60 font-medium">Demographics Status</span>
+                  <div className="flex items-center gap-2">
+                    {getDemographicIcon(getDemographicStatus(selectedUser))}
+                    <span className="text-xs text-white/80">
+                      {(() => {
+                        const status = getDemographicStatus(selectedUser);
+                        const submission = selectedUser.demographic_submission;
+                        
+                        switch (status) {
+                          case 'none':
+                            return 'No submission';
+                          case 'outdated':
+                            return submission ? `Outdated (${Math.floor((Date.now() - new Date(submission.submitted_at).getTime()) / (1000 * 60 * 60 * 24))} days ago)` : 'Outdated';
+                          case 'pending':
+                            return 'Pending review';
+                          case 'approved':
+                            return submission ? `${submission.tier1_percentage}% Tier 1` : 'Approved';
+                        }
+                      })()}
+                    </span>
+                  </div>
+                </div>
+                
+                {selectedUser.demographic_submission && (
+                  <div className="mt-2 text-xs text-white/40">
+                    Last submitted: {new Date(selectedUser.demographic_submission.submitted_at).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                    {selectedUser.demographic_submission.score !== null && (
+                      <span className="ml-2">• Score: {selectedUser.demographic_submission.score}/100</span>
+                    )}
+                  </div>
+                )}
+                
+                {!selectedUser.demographic_submission && (
+                  <div className="mt-2 text-xs text-red-400/80">
+                    ⚠️ User has never submitted demographics
+                  </div>
+                )}
               </div>
             </div>
 
