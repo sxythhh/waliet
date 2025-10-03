@@ -59,6 +59,66 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_account_analytics: {
+        Row: {
+          account_link: string | null
+          account_username: string
+          amount_of_videos_tracked: string | null
+          average_engagement_rate: number | null
+          average_video_views: number | null
+          campaign_id: string
+          created_at: string
+          id: string
+          last_tracked: string | null
+          outperforming_video_rate: number | null
+          platform: string
+          posts_last_7_days: Json | null
+          total_comments: number | null
+          total_likes: number | null
+          total_videos: number | null
+          total_views: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_link?: string | null
+          account_username: string
+          amount_of_videos_tracked?: string | null
+          average_engagement_rate?: number | null
+          average_video_views?: number | null
+          campaign_id: string
+          created_at?: string
+          id?: string
+          last_tracked?: string | null
+          outperforming_video_rate?: number | null
+          platform: string
+          posts_last_7_days?: Json | null
+          total_comments?: number | null
+          total_likes?: number | null
+          total_videos?: number | null
+          total_views?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_link?: string | null
+          account_username?: string
+          amount_of_videos_tracked?: string | null
+          average_engagement_rate?: number | null
+          average_video_views?: number | null
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          last_tracked?: string | null
+          outperforming_video_rate?: number | null
+          platform?: string
+          posts_last_7_days?: Json | null
+          total_comments?: number | null
+          total_likes?: number | null
+          total_videos?: number | null
+          total_views?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       campaign_submissions: {
         Row: {
           campaign_id: string

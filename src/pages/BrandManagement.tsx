@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import {
   Select,
   SelectContent,
@@ -386,9 +387,15 @@ export default function BrandManagement() {
             <div className="flex justify-end mb-4">
               <ImportCampaignStatsDialog 
                 campaignId={selectedCampaignId}
-                onImportComplete={fetchSubmissions}
+                onImportComplete={() => {
+                  fetchSubmissions();
+                  window.location.reload();
+                }}
               />
             </div>
+            
+            {/* Imported Analytics Data */}
+            <CampaignAnalyticsTable campaignId={selectedCampaignId} />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">
