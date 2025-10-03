@@ -517,9 +517,9 @@ export function ProfileTab() {
           <CardDescription>Update your public profile information</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSaveProfile} className="space-y-8">
+          <form onSubmit={handleSaveProfile} className="space-y-6">
             {/* Avatar Upload Section */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-start gap-6">
                 <Avatar className="h-24 w-24">
                   <AvatarImage src={profile.avatar_url || ""} />
@@ -544,7 +544,7 @@ export function ProfileTab() {
             </div>
 
             {/* Basic Information */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -552,7 +552,7 @@ export function ProfileTab() {
                   <Input id="username" value={profile.username} onChange={e => setProfile({
                   ...profile,
                   username: e.target.value
-                })} placeholder="username" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
+                })} placeholder="username" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
                 </div>
 
                 <div className="space-y-2">
@@ -560,13 +560,13 @@ export function ProfileTab() {
                   <Input id="fullName" value={profile.full_name || ""} onChange={e => setProfile({
                   ...profile,
                   full_name: e.target.value
-                })} placeholder="John Doe" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
+                })} placeholder="John Doe" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
                 </div>
               </div>
             </div>
 
             {/* Contact Information */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -574,7 +574,7 @@ export function ProfileTab() {
                   <Input id="phone" type="tel" value={profile.phone_number || ""} onChange={e => setProfile({
                   ...profile,
                   phone_number: e.target.value
-                })} placeholder="+1 (555) 000-0000" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
+                })} placeholder="+1 (555) 000-0000" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
                 </div>
 
                 <div className="space-y-2">
@@ -582,7 +582,7 @@ export function ProfileTab() {
                   <Input id="country" value={profile.country || ""} onChange={e => setProfile({
                   ...profile,
                   country: e.target.value
-                })} placeholder="United States" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
+                })} placeholder="United States" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -590,7 +590,7 @@ export function ProfileTab() {
                   <Input id="city" value={profile.city || ""} onChange={e => setProfile({
                   ...profile,
                   city: e.target.value
-                })} placeholder="New York" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
+                })} placeholder="New York" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
                 </div>
               </div>
             </div>
