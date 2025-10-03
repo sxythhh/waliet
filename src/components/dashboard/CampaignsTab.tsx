@@ -137,71 +137,68 @@ export function CampaignsTab() {
         <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
       </div>;
   }
-  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl">
+  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
       {campaigns.map(campaign => {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-      return <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col cursor-pointer overflow-hidden" onClick={() => navigate(`/campaign/${campaign.id}`)}>
+      return <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col cursor-pointer overflow-hidden border hover:border-primary/50" onClick={() => navigate(`/campaign/${campaign.id}`)}>
             {/* Banner Image - Top Section */}
-            {campaign.banner_url && <div className="relative w-full h-48 flex-shrink-0 overflow-hidden bg-muted rounded-t-lg">
+            {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                
-                {/* Status Badge */}
-                {campaign.submission_status && <div className="absolute top-4 right-4">
-                    
-                  </div>}
-
               </div>}
 
             {/* Content Section */}
-            <CardContent className="p-4 pt-4 flex-1 flex flex-col gap-3">
+            <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
               {/* Brand Logo + Title */}
-              <div className="flex items-center gap-3">
-                {campaign.brand_logo_url && <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ring-2 ring-border shadow-md">
+              <div className="flex items-start gap-2.5">
+                {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
                     <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                   </div>}
-                <h3 className="text-lg font-bold line-clamp-2 leading-tight flex-1">
-                  {campaign.title}
-                </h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
+                    {campaign.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                </div>
               </div>
 
-              {/* Budget Section */}
-              <div className="relative bg-neutral-900/50 rounded-xl p-3">
-                <div className="flex items-end justify-between mb-2">
-                  <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold">${budgetUsed.toLocaleString()}</span>
-                      <span className="text-sm text-muted-foreground font-medium">of ${campaign.budget.toLocaleString()}</span>
-                    </div>
+              {/* Budget Section - Redesigned */}
+              <div className="bg-muted/50 rounded-lg p-2.5 space-y-1.5">
+                <div className="flex items-baseline justify-between">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-base font-bold tabular-nums">${budgetUsed.toLocaleString()}</span>
+                    <span className="text-xs text-muted-foreground font-medium">/ ${campaign.budget.toLocaleString()}</span>
                   </div>
-                  <div className="text-right">
-                    
-                  </div>
+                  <span className="text-xs font-semibold text-primary tabular-nums">${campaign.rpm_rate}/RPM</span>
                 </div>
-                <div className="relative h-2 bg-neutral-950 rounded-full overflow-hidden">
+                
+                {/* Progress Bar */}
+                <div className="relative h-1.5 bg-background rounded-full overflow-hidden">
                   <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                 width: `${budgetPercentage}%`
               }} />
                 </div>
+                
+                <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                  <span>{budgetPercentage.toFixed(0)}% used</span>
+                  <span className="uppercase tracking-wider">{campaign.status}</span>
+                </div>
               </div>
 
-              {/* Connected Accounts & Footer */}
-              <div className="mt-auto space-y-3">
-                {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {campaign.connected_accounts.map(account => <div key={account.id} className="flex items-center gap-2 bg-neutral-900/50 rounded-lg px-3 py-2">
-                          <div className="w-4 h-4">
-                            {account.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
-                            {account.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
-                            {account.platform.toLowerCase() === 'youtube'}
-                          </div>
-                          <span className="text-sm font-semibold">@{account.username}</span>
-                        </div>)}
-                    </div>
-                  </div>}
-              </div>
+              {/* Connected Accounts */}
+              {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div className="mt-auto pt-1">
+                  <div className="flex flex-wrap gap-1.5">
+                    {campaign.connected_accounts.map(account => <div key={account.id} className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1">
+                        <div className="w-3 h-3">
+                          {account.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
+                          {account.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
+                          {account.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
+                        </div>
+                        <span className="text-[11px] font-semibold">@{account.username}</span>
+                      </div>)}
+                  </div>
+                </div>}
             </CardContent>
           </Card>;
     })}
