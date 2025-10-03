@@ -391,7 +391,26 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     }
 
     try {
-      // Create wallet transaction
+      // First, update the wallet balance
+      const { data: currentWallet, error: walletFetchError } = await supabase
+        .from("wallets")
+        .select("balance, total_earned")
+        .eq("user_id", selectedUser.user_id)
+        .single();
+
+      if (walletFetchError) throw walletFetchError;
+
+      const { error: walletUpdateError } = await supabase
+        .from("wallets")
+        .update({
+          balance: (currentWallet.balance || 0) + amount,
+          total_earned: (currentWallet.total_earned || 0) + amount
+        })
+        .eq("user_id", selectedUser.user_id);
+
+      if (walletUpdateError) throw walletUpdateError;
+
+      // Create wallet transaction with proper metadata
       const { error: transactionError } = await supabase
         .from("wallet_transactions")
         .insert({
@@ -403,7 +422,9 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           metadata: {
             campaign_id: campaignId,
             analytics_id: selectedUser.id,
-            views_paid: selectedUser.total_views
+            account_username: selectedUser.account_username,
+            platform: selectedUser.platform,
+            views: selectedUser.total_views
           }
         });
 
