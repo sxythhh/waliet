@@ -429,7 +429,7 @@ export function ProfileTab() {
             };
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border bg-[#0d0d0d]">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background">
+                      <div className="flex h-8 w-8 items-center justify-center bg-[#1b1b1b] rounded">
                         {getPlatformIcon(account.platform)}
                       </div>
                       <div>
