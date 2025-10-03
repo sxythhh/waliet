@@ -75,34 +75,24 @@ export function WalletTab() {
   const {
     toast
   } = useToast();
-  
   useEffect(() => {
     fetchWallet();
-    
-    // Set up real-time listener for payout requests
-    const channel = supabase
-      .channel('payout-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'payout_requests'
-        },
-        (payload) => {
-          console.log('Payout request updated:', payload);
-          // Refetch wallet and transactions when payout request changes
-          fetchWallet();
-          fetchTransactions();
-        }
-      )
-      .subscribe();
 
+    // Set up real-time listener for payout requests
+    const channel = supabase.channel('payout-updates').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'payout_requests'
+    }, payload => {
+      console.log('Payout request updated:', payload);
+      // Refetch wallet and transactions when payout request changes
+      fetchWallet();
+      fetchTransactions();
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
-  
   useEffect(() => {
     if (wallet) {
       fetchEarningsData();
@@ -297,7 +287,10 @@ export function WalletTab() {
             // Add rejection reason if available
             if (matchingPayout.rejection_reason) {
               const metadataObj = typeof metadata === 'object' && metadata !== null ? metadata : {};
-              txn.metadata = { ...metadataObj, rejection_reason: matchingPayout.rejection_reason };
+              txn.metadata = {
+                ...metadataObj,
+                rejection_reason: matchingPayout.rejection_reason
+              };
             }
           }
         }
@@ -568,7 +561,6 @@ export function WalletTab() {
       } catch (notifError) {
         console.error('Failed to send Discord notification:', notifError);
       }
-
       toast({
         title: "Payout Requested",
         description: "Your payout request has been submitted and will be processed within 3-5 business days."
@@ -715,7 +707,7 @@ export function WalletTab() {
               {transactions.map(transaction => <div key={transaction.id} onClick={() => {
               setSelectedTransaction(transaction);
               setTransactionSheetOpen(true);
-             }} style={{
+            }} style={{
               backgroundColor: '#0d0d0d'
             }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#0d0d0d] hover:bg-[#151515]">
                   <div className="flex items-center gap-4 flex-1">
@@ -728,14 +720,18 @@ export function WalletTab() {
                     }}>
                           {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
                         </p>
-                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{ letterSpacing: '-0.5px' }}>
+                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
+                      letterSpacing: '-0.5px'
+                    }}>
                             {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
                           </Badge>}
                       </div>
                       
                       <div className="flex items-center gap-1.5 text-xs text-foreground/50">
                         <Clock className="h-3 w-3" />
-                        <span style={{ letterSpacing: '-0.5px' }}>{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
+                        <span style={{
+                      letterSpacing: '-0.5px'
+                    }}>{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
                       </div>
                     </div>
                   </div>
@@ -752,40 +748,7 @@ export function WalletTab() {
       </div>
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Earned</p>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="text-2xl font-bold">${wallet?.total_earned?.toFixed(2) || "0.00"}</p>
-            <p className="text-xs text-muted-foreground mt-1">All time</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Withdrawn</p>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="text-2xl font-bold">${wallet?.total_withdrawn?.toFixed(2) || "0.00"}</p>
-            <p className="text-xs text-muted-foreground mt-1">Total paid</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Period Earnings</p>
-              <WalletIcon className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="text-2xl font-bold">${totalEarnings.toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Selected period</p>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Payout Methods */}
       <Card className="bg-card border-0">
@@ -863,7 +826,6 @@ export function WalletTab() {
           const getNetworkLogo = () => {
             if (method.method !== "crypto") return null;
             const network = method.details?.network?.toLowerCase();
-            
             if (network === 'ethereum') return ethereumLogo;
             if (network === 'optimism') return optimismLogo;
             if (network === 'solana') return solanaLogo;
@@ -873,7 +835,6 @@ export function WalletTab() {
           const getCryptoLogo = () => {
             const currency = method.details?.currency?.toLowerCase();
             const network = method.details?.network?.toLowerCase();
-            
             if (currency === 'usdt') return usdtLogo;
             if (currency === 'usdc') return usdcLogo;
             if (network === 'ethereum') return ethereumLogo;
@@ -882,26 +843,20 @@ export function WalletTab() {
             if (network === 'polygon') return polygonLogo;
             return null;
           };
-          
           const cryptoLogo = getCryptoLogo();
           const networkLogo = getNetworkLogo();
-          
           return <div key={method.id} className="relative overflow-hidden rounded-xl bg-neutral-900/50">
                   
                   <div className="relative flex items-center justify-between p-4">
                     <div className="flex items-center gap-4 flex-1">
-                      {cryptoLogo && (
-                        <img src={cryptoLogo} alt="Crypto logo" className="h-8 w-8 rounded-full" />
-                      )}
+                      {cryptoLogo && <img src={cryptoLogo} alt="Crypto logo" className="h-8 w-8 rounded-full" />}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
                           <p className="text-base font-semibold text-foreground">
                             {getMethodLabel()}
                           </p>
                           <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-primary/10 text-white border-0 flex items-center gap-1.5 normal-case">
-                            {networkLogo && (
-                              <img src={networkLogo} alt="Network logo" className="h-3 w-3" />
-                            )}
+                            {networkLogo && <img src={networkLogo} alt="Network logo" className="h-3 w-3" />}
                             {getBadgeText()}
                           </Badge>
                         </div>
@@ -986,17 +941,7 @@ export function WalletTab() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="payout-amount">Amount ($)</Label>
-              <Input 
-                id="payout-amount" 
-                type="number" 
-                min="50" 
-                step="0.01" 
-                max={wallet?.balance || 0} 
-                placeholder="50.00" 
-                value={payoutAmount} 
-                onChange={e => setPayoutAmount(e.target.value)}
-                className="bg-[#171717] border-transparent text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50"
-              />
+              <Input id="payout-amount" type="number" min="50" step="0.01" max={wallet?.balance || 0} placeholder="50.00" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} className="bg-[#171717] border-transparent text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50" />
               <p className="text-xs text-muted-foreground">
                 Minimum: $50.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
               </p>
@@ -1049,21 +994,16 @@ export function WalletTab() {
                   const getNetworkLogo = () => {
                     if (method.method !== "crypto") return null;
                     const network = method.details?.network?.toLowerCase();
-                    
                     if (network === 'ethereum') return ethereumLogo;
                     if (network === 'optimism') return optimismLogo;
                     if (network === 'solana') return solanaLogo;
                     if (network === 'polygon') return polygonLogo;
                     return null;
                   };
-                  
                   const networkLogo = getNetworkLogo();
-                  
                   return <SelectItem key={method.id} value={method.id}>
                         <div className="flex items-center gap-2">
-                          {networkLogo && (
-                            <img src={networkLogo} alt="Network logo" className="h-4 w-4" />
-                          )}
+                          {networkLogo && <img src={networkLogo} alt="Network logo" className="h-4 w-4" />}
                           <span>{getMethodLabel()} - {getMethodDetails()}</span>
                         </div>
                       </SelectItem>;
@@ -1112,28 +1052,24 @@ export function WalletTab() {
 
                 {/* Amount */}
                 <div className="text-center mb-2">
-                  {selectedTransaction.type === 'withdrawal' ? (
-                    <>
+                  {selectedTransaction.type === 'withdrawal' ? <>
                       <div className="flex items-center justify-center mb-3">
                         <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
                           <Check className="w-8 h-8 text-green-500" />
                         </div>
                       </div>
                       <p className="text-muted-foreground font-semibold tracking-tight" style={{
-                        fontFamily: 'Instrument Sans, sans-serif',
-                        letterSpacing: '-0.5px'
-                      }}>
+                  fontFamily: 'Instrument Sans, sans-serif',
+                  letterSpacing: '-0.5px'
+                }}>
                         Your ${selectedTransaction.amount.toFixed(2)} is on its way!
                       </p>
-                    </>
-                  ) : (
-                    <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
-                      fontFamily: 'Chakra Petch, sans-serif',
-                      letterSpacing: '-1px'
-                    }}>
+                    </> : <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
+                fontFamily: 'Chakra Petch, sans-serif',
+                letterSpacing: '-1px'
+              }}>
                       {selectedTransaction.type === 'earning' ? '+' : '-'}${selectedTransaction.amount.toFixed(2)}
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
 
@@ -1150,8 +1086,7 @@ export function WalletTab() {
                 </div>
 
                 {/* Rejection Reason */}
-                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                     <div className="flex items-start gap-2">
                       <X className="h-5 w-5 text-destructive mt-0.5" />
                       <div>
@@ -1159,8 +1094,7 @@ export function WalletTab() {
                         <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 <Separator />
 
@@ -1232,29 +1166,26 @@ export function WalletTab() {
                           </div>}
                         
                         {selectedTransaction.metadata.network && (() => {
-                          const network = selectedTransaction.metadata.network.toLowerCase();
-                          const getNetworkLogo = () => {
-                            if (network === 'ethereum') return ethereumLogo;
-                            if (network === 'optimism') return optimismLogo;
-                            if (network === 'solana') return solanaLogo;
-                            if (network === 'polygon') return polygonLogo;
-                            return null;
-                          };
-                          const networkLogo = getNetworkLogo();
-                          const networkName = selectedTransaction.metadata.network.charAt(0).toUpperCase() + selectedTransaction.metadata.network.slice(1).toLowerCase();
-                          
-                          return <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                    const network = selectedTransaction.metadata.network.toLowerCase();
+                    const getNetworkLogo = () => {
+                      if (network === 'ethereum') return ethereumLogo;
+                      if (network === 'optimism') return optimismLogo;
+                      if (network === 'solana') return solanaLogo;
+                      if (network === 'polygon') return polygonLogo;
+                      return null;
+                    };
+                    const networkLogo = getNetworkLogo();
+                    const networkName = selectedTransaction.metadata.network.charAt(0).toUpperCase() + selectedTransaction.metadata.network.slice(1).toLowerCase();
+                    return <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                               <span className="text-sm text-muted-foreground">Network</span>
                               <div className="flex items-center gap-2">
-                                {networkLogo && (
-                                  <img src={networkLogo} alt="Network logo" className="h-4 w-4" />
-                                )}
+                                {networkLogo && <img src={networkLogo} alt="Network logo" className="h-4 w-4" />}
                                 <span className="text-sm font-medium font-instrument">
                                   {networkName}
                                 </span>
                               </div>
                             </div>;
-                        })()}
+                  })()}
                         
                         {/* Display crypto address if available */}
                         {selectedTransaction.metadata.payoutDetails?.address && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
