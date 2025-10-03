@@ -547,20 +547,11 @@ export function ProfileTab() {
             {/* About */}
             <div className="space-y-4">
               
-              <div className="space-y-2">
-                <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
-                <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
-                ...profile,
-                bio: e.target.value
-              })} placeholder="Tell brands and followers about yourself, your content style, and what makes you unique..." rows={5} className="bg-input focus:bg-input resize-none focus-visible:ring-0 focus-visible:ring-offset-0" />
-                <p className="text-xs text-muted-foreground">
-                  {profile.bio?.length || 0} characters
-                </p>
-              </div>
+              
             </div>
 
             {/* Save Button */}
-            <div className="flex items-center justify-between pt-4 border-t">
+            <div className="flex items-center justify-between pt-4 border-t py-0">
               
               <Button type="submit" disabled={saving} size="lg" className="gap-2 min-w-[140px]">
                 {saving ? <>
