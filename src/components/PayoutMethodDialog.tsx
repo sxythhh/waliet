@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wallet, CreditCard } from "lucide-react";
+import { Wallet, Landmark, CreditCard } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import wiseLogo from "@/assets/wise-logo.svg";
 import wiseLogoBlue from "@/assets/wise-logo-blue.svg";
-import paypalLogo from "@/assets/paypal-logo.svg";
+import paypalLogo from "@/assets/paypal-logo-grey.svg";
+import paypalLogoBlue from "@/assets/paypal-logo.svg";
 import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
@@ -40,7 +41,7 @@ export default function PayoutMethodDialog({
   onSave,
   currentMethodCount,
 }: PayoutMethodDialogProps) {
-  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise" | "revolut">("crypto");
+  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise" | "revolut" | "debit">("crypto");
   const [selectedCurrency, setSelectedCurrency] = useState(cryptoCurrencies[0].id);
   const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
@@ -57,6 +58,11 @@ export default function PayoutMethodDialog({
   
   // Revolut fields
   const [revolutTag, setRevolutTag] = useState("");
+  
+  // Debit card fields
+  const [cardNumber, setCardNumber] = useState("");
+  const [legalName, setLegalName] = useState("");
+  const [address, setAddress] = useState("");
 
   const handleSave = () => {
     if (selectedMethod === "crypto") {
@@ -81,6 +87,13 @@ export default function PayoutMethodDialog({
       onSave("revolut", {
         revtag: revolutTag,
       });
+    } else if (selectedMethod === "debit") {
+      if (!cardNumber || !legalName || !address) return;
+      onSave("debit", {
+        cardNumber,
+        legalName,
+        address,
+      });
     }
     
     // Reset all fields
@@ -88,6 +101,9 @@ export default function PayoutMethodDialog({
     setPaypalEmail("");
     setWiseEmail("");
     setRevolutTag("");
+    setCardNumber("");
+    setLegalName("");
+    setAddress("");
     onOpenChange(false);
   };
 
@@ -124,9 +140,10 @@ export default function PayoutMethodDialog({
               </p>
               {[
                 { id: "crypto", icon: Wallet, label: "Crypto Wallet", isLogo: false },
-                { id: "paypal", icon: paypalLogo, label: "PayPal", isLogo: true },
+                { id: "paypal", icon: paypalLogo, iconActive: paypalLogoBlue, label: "PayPal", isLogo: true },
                 { id: "wise", icon: wiseLogo, iconActive: wiseLogoBlue, label: "Wise", isLogo: true },
-                { id: "revolut", icon: CreditCard, label: "Revolut", isLogo: false },
+                { id: "revolut", icon: Landmark, label: "Revolut", isLogo: false },
+                { id: "debit", icon: CreditCard, label: "Debit Card", isLogo: false },
               ].map((method) => {
                 const Icon = method.icon;
                 const isActive = selectedMethod === method.id;
@@ -277,6 +294,47 @@ export default function PayoutMethodDialog({
                   />
                 </div>
               )}
+
+              {selectedMethod === "debit" && (
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <Label htmlFor="card-number" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                      CARD NUMBER
+                    </Label>
+                    <Input
+                      id="card-number"
+                      placeholder="Enter your debit card number"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(e.target.value)}
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="legal-name" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                      LEGAL NAME
+                    </Label>
+                    <Input
+                      id="legal-name"
+                      placeholder="Full name as it appears on card"
+                      value={legalName}
+                      onChange={(e) => setLegalName(e.target.value)}
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="address" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                      ADDRESS
+                    </Label>
+                    <Input
+                      id="address"
+                      placeholder="Your full billing address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -297,7 +355,8 @@ export default function PayoutMethodDialog({
                 (selectedMethod === "crypto" && !walletAddress) ||
                 (selectedMethod === "paypal" && !paypalEmail) ||
                 (selectedMethod === "wise" && !wiseEmail) ||
-                (selectedMethod === "revolut" && !revolutTag)
+                (selectedMethod === "revolut" && !revolutTag) ||
+                (selectedMethod === "debit" && (!cardNumber || !legalName || !address))
               }
             >
               Add Method
