@@ -7,6 +7,7 @@ import { Instagram, Youtube, Music, DollarSign, TrendingUp, Users, Eye } from "l
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import viralityLogo from "@/assets/virality-logo.webp";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Profile {
@@ -234,9 +235,10 @@ export default function PublicProfile() {
 
         {/* Footer */}
         <div className="text-center pt-8">
-          <p className="text-sm text-muted-foreground">
-            Powered by <span className="text-primary font-semibold">Virality</span>
+          <p className="text-sm text-muted-foreground mb-2">
+            Powered by
           </p>
+          <img src={viralityLogo} alt="Virality" className="h-6 mx-auto" />
         </div>
       </div>
     </div>
