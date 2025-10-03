@@ -1047,11 +1047,12 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       {!showTransactions && totalPages > 1 && (
         <div className="flex justify-center mt-4">
           <Pagination>
-            <PaginationContent>
+            <PaginationContent className="gap-1">
               <PaginationItem>
                 <PaginationPrevious 
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  className={currentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"}
+                  style={{ backgroundColor: 'transparent' }}
                 />
               </PaginationItem>
               
@@ -1067,16 +1068,22 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                       <PaginationLink
                         onClick={() => setCurrentPage(page)}
                         isActive={currentPage === page}
-                        className="cursor-pointer"
+                        className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md"
+                        style={{ 
+                          backgroundColor: currentPage === page ? '#202020' : 'transparent',
+                          border: currentPage === page ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                        }}
                       >
-                        {page}
+                        <span className={currentPage === page ? "text-white font-medium" : "text-white/50"}>
+                          {page}
+                        </span>
                       </PaginationLink>
                     </PaginationItem>
                   );
                 } else if (page === currentPage - 2 || page === currentPage + 2) {
                   return (
                     <PaginationItem key={page}>
-                      <span className="px-4 text-white/40">...</span>
+                      <span className="px-2 text-white/20 text-sm">...</span>
                     </PaginationItem>
                   );
                 }
@@ -1086,7 +1093,8 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               <PaginationItem>
                 <PaginationNext 
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"}
+                  style={{ backgroundColor: 'transparent' }}
                 />
               </PaginationItem>
             </PaginationContent>
