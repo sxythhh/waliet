@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2 } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, AlertCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -460,16 +460,19 @@ export function ProfileTab() {
                     </div>
                     
                     <div className="flex gap-2 w-full sm:w-auto">
-                      <Button variant="outline" size="sm" onClick={() => {
+                      {latestDemographicSubmission ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
+                          Pending Review
+                        </Button> : <Button variant="secondary" size="sm" onClick={() => {
                   setSelectedAccountForDemographics({
                     id: account.id,
                     platform: account.platform,
                     username: account.username
                   });
                   setShowDemographicsDialog(true);
-                }} className="h-8 gap-1 flex-1 sm:flex-initial whitespace-nowrap">
-                        📊 Demographics
-                      </Button>
+                }} className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          Submit Demographics
+                        </Button>}
                       
                       {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1 flex-1 sm:flex-initial">
                           <X className="h-3 w-3" />
