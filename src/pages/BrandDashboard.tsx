@@ -133,10 +133,7 @@ export default function BrandDashboard() {
             <Button variant="ghost" size="icon" onClick={toggleSidebar} className="text-white/60 hover:text-white hover:bg-white/10">
               <PanelLeft className="h-5 w-5" />
             </Button>
-            {brand.logo_url ? <img src={brand.logo_url} alt={`${brand.name} logo`} className="h-12 w-12 rounded-lg object-cover" /> : <div className="h-12 w-12 rounded-lg bg-white/5 flex items-center justify-center">
-                <div className="h-10 w-10 rounded-md bg-white/10" />
-              </div>}
-            <h1 className="text-2xl font-bold text-white">{brand.name}</h1>
+            <h1 className="text-2xl font-bold text-white font-['Instrument_Sans'] tracking-[-0.5px]">Campaigns</h1>
           </div>
           <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
         </div>
@@ -146,7 +143,6 @@ export default function BrandDashboard() {
 
         {/* Campaigns List */}
         {campaigns.length > 0 && <div className="space-y-4 mt-8">
-            <h2 className="text-2xl font-bold text-white">Campaigns</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {campaigns.map(campaign => {
             const usedBudget = Number(campaign.budget_used || 0);
