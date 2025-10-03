@@ -140,25 +140,31 @@ export default function AdminBrands() {
 
                   {/* Type Badge */}
                   {brand.brand_type && <div className="mb-3">
-                      <Badge className={getBrandTypeBadgeColor(brand.brand_type)}>
+                      <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
                         {brand.brand_type}
                       </Badge>
                     </div>}
 
                   {/* Description */}
-                  {brand.description}
+                  {brand.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {brand.description}
+                    </p>}
 
                   {/* Meta Info */}
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4 pb-4 border-b">
+                    <span>Created {new Date(brand.created_at).toLocaleDateString()}</span>
+                    {brand.show_account_tab && <Badge variant="outline" className="rounded">Account Tab</Badge>}
+                  </div>
                   
 
                   {/* Actions */}
                   <div className="flex gap-2">
                     <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/brand/${brand.slug}`)}>
+                    <Button size="sm" variant="outline" className="flex-1 border-0" onClick={() => navigate(`/brand/${brand.slug}`)}>
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                       View
                     </Button>
-                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(brand)}>
+                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-0" onClick={() => handleDeleteClick(brand)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
