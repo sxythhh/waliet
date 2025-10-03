@@ -63,15 +63,22 @@ export function ImportCampaignStatsDialog({
     setProgress(0);
     
     try {
-      const text = await file.text();
+      let text = await file.text();
+      
+      // Remove BOM if present
+      if (text.charCodeAt(0) === 0xFEFF) {
+        text = text.substring(1);
+      }
+      
       const lines = text.split("\n").filter(line => line.trim());
       
       if (lines.length < 2) {
         toast.error("CSV file is empty or invalid");
+        setImporting(false);
         return;
       }
 
-      // Skip header row and BOM if present
+      // Skip header row
       const dataLines = lines.slice(1).filter(line => line.trim());
       const totalLines = dataLines.length;
       let processedLines = 0;
@@ -87,11 +94,21 @@ export function ImportCampaignStatsDialog({
           const values = parseCSVLine(line);
           
           if (values.length < 13) {
-            console.warn("Skipping invalid line:", line);
+            console.warn("Skipping invalid line (expected 13 columns, got " + values.length + "):", line);
             continue;
           }
 
           try {
+            // Parse posts_last_7_days JSON, handling escaped quotes
+            let postsLast7Days = null;
+            if (values[10] && values[10].trim()) {
+              try {
+                postsLast7Days = JSON.parse(values[10]);
+              } catch (jsonError) {
+                console.error("Error parsing JSON for posts_last_7_days:", values[10], jsonError);
+              }
+            }
+
             const record = {
               campaign_id: campaignId,
               account_username: values[0] || '',
@@ -104,7 +121,7 @@ export function ImportCampaignStatsDialog({
               total_comments: parseInt(values[7]) || 0,
               average_engagement_rate: parseFloat(values[8]) || 0,
               average_video_views: parseFloat(values[9]) || 0,
-              posts_last_7_days: values[10] ? JSON.parse(values[10]) : null,
+              posts_last_7_days: postsLast7Days,
               last_tracked: parseDate(values[11]),
               amount_of_videos_tracked: values[12] || null,
             };
