@@ -73,13 +73,11 @@ interface Transaction {
 }
 interface CampaignAnalyticsTableProps {
   campaignId: string;
-  onPaymentComplete?: () => void;
 }
 type SortField = 'total_videos' | 'total_views' | 'average_video_views' | 'total_likes' | 'total_comments' | 'average_engagement_rate' | 'outperforming_video_rate';
 type SortDirection = 'asc' | 'desc';
 export function CampaignAnalyticsTable({
-  campaignId,
-  onPaymentComplete
+  campaignId
 }: CampaignAnalyticsTableProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -108,7 +106,10 @@ export function CampaignAnalyticsTable({
   }>>([]);
   const [showTransactions, setShowTransactions] = useState(false);
   const [selectedDateRange, setSelectedDateRange] = useState<string>("all");
-  const [dateRanges, setDateRanges] = useState<Array<{ start: string; end: string }>>([]);
+  const [dateRanges, setDateRanges] = useState<Array<{
+    start: string;
+    end: string;
+  }>>([]);
   const itemsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
@@ -138,15 +139,13 @@ export function CampaignAnalyticsTable({
       if (error) throw error;
 
       // Extract unique date ranges
-      const uniqueRanges = Array.from(new Set(
-        (data || [])
-          .filter(item => item.start_date && item.end_date)
-          .map(item => `${item.start_date}|${item.end_date}`)
-      )).map(range => {
+      const uniqueRanges = Array.from(new Set((data || []).filter(item => item.start_date && item.end_date).map(item => `${item.start_date}|${item.end_date}`))).map(range => {
         const [start, end] = range.split('|');
-        return { start, end };
+        return {
+          start,
+          end
+        };
       }).sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime());
-      
       setDateRanges(uniqueRanges);
 
       // Manually fetch user profiles and demographic submissions for accounts with user_id
@@ -235,10 +234,7 @@ export function CampaignAnalyticsTable({
         error: analyticsError
       } = await supabase.from('campaign_account_analytics').update({
         user_id: userId
-      })
-      .eq('campaign_id', campaignId)
-      .eq('platform', selectedAnalyticsAccount.platform)
-      .ilike('account_username', selectedAnalyticsAccount.account_username);
+      }).eq('campaign_id', campaignId).eq('platform', selectedAnalyticsAccount.platform).ilike('account_username', selectedAnalyticsAccount.account_username);
       if (analyticsError) throw analyticsError;
 
       // Find if there's a matching social account for this user
@@ -342,25 +338,6 @@ export function CampaignAnalyticsTable({
       toast.error('Failed to delete account analytics');
     }
   };
-  const calculateTotalEarned = (userId: string | null, accountUsername: string, platform: string) => {
-    if (!userId) return 0;
-    
-    // Sum last_payment_amount only for the selected date range
-    return analytics
-      .filter(item => {
-        const matchesUser = item.user_id === userId && 
-                           item.account_username === accountUsername && 
-                           item.platform === platform &&
-                           item.last_payment_amount > 0;
-        
-        const matchesDateRange = selectedDateRange === "all" || 
-                                `${item.start_date}|${item.end_date}` === selectedDateRange;
-        
-        return matchesUser && matchesDateRange;
-      })
-      .reduce((sum, item) => sum + item.last_payment_amount, 0);
-  };
-
   const calculatePayout = (user: AnalyticsData) => {
     const views = user.total_views;
     const rpm = campaignRPM;
@@ -487,9 +464,6 @@ export function CampaignAnalyticsTable({
       // Refresh analytics and transactions to show updated data
       fetchAnalytics();
       fetchTransactions();
-      
-      // Notify parent component to refresh
-      onPaymentComplete?.();
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment");
@@ -499,8 +473,7 @@ export function CampaignAnalyticsTable({
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
     const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null;
-    const matchesDateRange = selectedDateRange === "all" || 
-      `${item.start_date}|${item.end_date}` === selectedDateRange;
+    const matchesDateRange = selectedDateRange === "all" || `${item.start_date}|${item.end_date}` === selectedDateRange;
     return matchesSearch && matchesPlatform && matchesLinkedFilter && matchesDateRange;
   }).sort((a, b) => {
     const aValue = a[sortField];
@@ -558,8 +531,7 @@ export function CampaignAnalyticsTable({
             Transactions ({transactions.length})
           </Button>
           
-          {!showTransactions && dateRanges.length > 0 && (
-            <div className="ml-auto flex items-center gap-2">
+          {!showTransactions && dateRanges.length > 0 && <div className="ml-auto flex items-center gap-2">
               <Label className="text-white/60 text-sm">CSV Period:</Label>
               <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
                 <SelectTrigger className="w-[200px] bg-[#191919] border-white/10 text-white">
@@ -567,48 +539,30 @@ export function CampaignAnalyticsTable({
                 </SelectTrigger>
                 <SelectContent className="bg-[#202020] border-white/10">
                   <SelectItem value="all" className="text-white hover:bg-white/10">All Periods</SelectItem>
-                  {dateRanges.map((range, idx) => (
-                    <SelectItem 
-                      key={idx} 
-                      value={`${range.start}|${range.end}`}
-                      className="text-white hover:bg-white/10"
-                    >
+                  {dateRanges.map((range, idx) => <SelectItem key={idx} value={`${range.start}|${range.end}`} className="text-white hover:bg-white/10">
                       {new Date(range.start).toLocaleDateString()} - {new Date(range.end).toLocaleDateString()}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
-              {selectedDateRange !== "all" && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={async () => {
-                    const [start, end] = selectedDateRange.split('|');
-                    try {
-                      const { error } = await supabase
-                        .from('campaign_account_analytics')
-                        .delete()
-                        .eq('campaign_id', campaignId)
-                        .eq('start_date', start)
-                        .eq('end_date', end);
-                      
-                      if (error) throw error;
-                      toast.success("CSV period deleted successfully");
-                      setSelectedDateRange("all");
-                      fetchAnalytics();
-                    } catch (error) {
-                      console.error("Error deleting CSV period:", error);
-                      toast.error("Failed to delete CSV period");
-                    }
-                  }}
-                  className="bg-destructive/20 hover:bg-destructive/30"
-                >
+              {selectedDateRange !== "all" && <Button variant="destructive" size="sm" onClick={async () => {
+            const [start, end] = selectedDateRange.split('|');
+            try {
+              const {
+                error
+              } = await supabase.from('campaign_account_analytics').delete().eq('campaign_id', campaignId).eq('start_date', start).eq('end_date', end);
+              if (error) throw error;
+              toast.success("CSV period deleted successfully");
+              setSelectedDateRange("all");
+              fetchAnalytics();
+            } catch (error) {
+              console.error("Error deleting CSV period:", error);
+              toast.error("Failed to delete CSV period");
+            }
+          }} className="bg-destructive/20 hover:bg-destructive/30">
                   <Trash2 className="h-4 w-4 mr-1.5" />
                   Delete Period
-                </Button>
-              )}
-            </div>
-          )}
+                </Button>}
+            </div>}
         </div>
 
         {/* Filters and Table */}
@@ -646,14 +600,29 @@ export function CampaignAnalyticsTable({
                   <TableRow className="border-white/10 hover:bg-transparent">
                     <TableHead className="text-white/60 font-medium text-sm sticky left-0 bg-[#202020] z-10 py-3">Account</TableHead>
                     <TableHead className="text-white/60 font-medium text-sm py-3">User</TableHead>
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_likes')}>
+                      <div className="flex items-center justify-end gap-1">
+                        Vids
+                        {sortField === 'total_likes' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                      </div>
+                    </TableHead>
                     <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_views')}>
                       <div className="flex items-center justify-end gap-1">
                         Views
                         {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead className="text-white/60 font-medium text-right text-sm whitespace-nowrap py-3">
-                      Total Earned
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3" onClick={() => handleSort('total_videos')}>
+                      <div className="flex items-center justify-end gap-1">
+                        Likes
+                        {sortField === 'total_videos' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden xl:table-cell py-3" onClick={() => handleSort('total_comments')}>
+                      <div className="flex items-center justify-end gap-1">
+                        Comm
+                        {sortField === 'total_comments' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                      </div>
                     </TableHead>
                     <TableHead className="text-white/60 font-medium text-sm w-8 py-3"></TableHead>
                   </TableRow>
@@ -693,7 +662,7 @@ export function CampaignAnalyticsTable({
                         </div>
                       </TableCell>
                       <TableCell className="py-3 bg-[#202020] cursor-pointer transition-colors" onClick={() => {
-                      if (item.user_id && item.profiles && selectedDateRange !== "all") {
+                      if (item.user_id && item.profiles) {
                         setSelectedUser(item);
                         setPaymentDialogOpen(true);
                       }
@@ -729,17 +698,29 @@ export function CampaignAnalyticsTable({
                             <span className="text-xs text-white/80 font-medium">Link User</span>
                           </div>}
                       </TableCell>
+                      <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500
+                    }}>
+                        {item.total_likes.toLocaleString()}
+                      </TableCell>
                       <TableCell className="text-white text-right text-sm bg-[#202020] py-3" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
                     }}>
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-green-400 text-right text-sm font-semibold bg-[#202020] py-3" style={{
+                      <TableCell className="text-white/80 text-right text-sm hidden md:table-cell bg-[#202020] py-3" style={{
                       fontFamily: 'Inter, sans-serif',
-                      fontWeight: 600
+                      fontWeight: 500
                     }}>
-                        {item.user_id ? `$${calculateTotalEarned(item.user_id, item.account_username, item.platform).toFixed(2)}` : '-'}
+                        {item.total_videos.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-white/80 text-right text-sm hidden xl:table-cell bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500
+                    }}>
+                        {item.total_comments.toLocaleString()}
                       </TableCell>
                       <TableCell className="py-3 bg-[#202020]">
                         <Button variant="ghost" size="icon" onClick={() => {
@@ -928,30 +909,14 @@ export function CampaignAnalyticsTable({
                             <span className="text-xs text-white/80 capitalize">{selectedUser.platform}</span>
                           </div>;
                     })()}
-                      <div 
-                        className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 cursor-pointer transition-colors hover:text-white hover:underline"
-                        onClick={() => selectedUser.account_link && window.open(selectedUser.account_link, '_blank')}
-                      >
-                        <span className="text-xs text-white/60 hover:text-white transition-colors">@{selectedUser.account_username}</span>
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                        <span className="text-xs text-white/60">@{selectedUser.account_username}</span>
                       </div>
                     </div>
                   </div>
                   
                   {/* Performance Stats - Moved here */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2 rounded bg-white/5 border border-white/10">
-                      <div className="text-xs text-white/60">Views</div>
-                      <div className="text-sm font-semibold text-white">
-                        {selectedUser.total_views.toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="p-2 rounded bg-white/5 border border-white/10">
-                      <div className="text-xs text-white/60">Videos</div>
-                      <div className="text-sm font-semibold text-white">
-                        {selectedUser.total_videos.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
 
@@ -1070,18 +1035,10 @@ export function CampaignAnalyticsTable({
           }} className="bg-transparent border-white/10 text-white hover:bg-white/5">
             Cancel
           </Button>
-              <Button 
-                onClick={() => {
-                  handlePayUser();
-                }} 
-                className="bg-primary hover:bg-primary/90" 
-                disabled={selectedUser && (selectedUser.paid_views >= selectedUser.total_views || selectedDateRange === "all")}
-              >
-                {selectedDateRange === "all" 
-                  ? "Cannot Pay (All Periods)" 
-                  : selectedUser && selectedUser.paid_views >= selectedUser.total_views 
-                    ? "Already Paid" 
-                    : "Send Payment"}
+              <Button onClick={() => {
+            handlePayUser();
+          }} className="bg-primary hover:bg-primary/90" disabled={selectedUser && selectedUser.paid_views >= selectedUser.total_views}>
+                {selectedUser && selectedUser.paid_views >= selectedUser.total_views ? "Already Paid" : "Send Payment"}
               </Button>
         </DialogFooter>
       </DialogContent>
