@@ -230,7 +230,11 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                               href={item.account_link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-white hover:text-primary transition-colors font-medium"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.open(item.account_link!, '_blank', 'noopener,noreferrer');
+                              }}
+                              className="text-white hover:text-primary hover:underline transition-all font-medium cursor-pointer"
                             >
                               {username}
                             </a>
