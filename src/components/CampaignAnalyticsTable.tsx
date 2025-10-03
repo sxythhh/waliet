@@ -842,33 +842,51 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
             {/* User Info Card */}
             <div className="p-4 rounded-lg bg-white/5 border border-white/10 space-y-3">
               <div className="flex items-start gap-3">
-                <Avatar className="h-12 w-12">
+                <Avatar className="h-10 w-10">
                   <AvatarImage src={selectedUser.profiles?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary/20 text-primary text-lg">
+                  <AvatarFallback className="bg-primary/20 text-primary">
                     {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 space-y-1">
-                  <div className="font-semibold text-white text-lg">@{selectedUser.profiles?.username}</div>
-                  <div className="flex items-center gap-2">
-                    {(() => {
-                      const platformIcon = getPlatformIcon(selectedUser.platform);
-                      return platformIcon && (
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10">
-                          <img src={platformIcon} alt={selectedUser.platform} className="w-3 h-3" />
-                          <span className="text-xs text-white/80 capitalize">{selectedUser.platform}</span>
-                        </div>
-                      );
-                    })()}
-                    <div className="flex items-center gap-1 px-2 py-1 rounded bg-white/5 border border-white/10">
-                      <span className="text-xs text-white/60">@{selectedUser.account_username}</span>
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <div className="font-semibold text-white">@{selectedUser.profiles?.username}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      {(() => {
+                        const platformIcon = getPlatformIcon(selectedUser.platform);
+                        return platformIcon && (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                            <img src={platformIcon} alt={selectedUser.platform} className="w-3 h-3" />
+                            <span className="text-xs text-white/80 capitalize">{selectedUser.platform}</span>
+                          </div>
+                        );
+                      })()}
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                        <span className="text-xs text-white/60">@{selectedUser.account_username}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Performance Stats - Moved here */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 rounded bg-white/5 border border-white/10">
+                      <div className="text-xs text-white/60">Views</div>
+                      <div className="text-sm font-semibold text-white">
+                        {selectedUser.total_views.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="p-2 rounded bg-white/5 border border-white/10">
+                      <div className="text-xs text-white/60">Videos</div>
+                      <div className="text-sm font-semibold text-white">
+                        {selectedUser.total_videos.toLocaleString()}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Demographic Status */}
-              <div className="pt-3 border-t border-white/10">
+              <div className="pt-2 border-t border-white/10">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-white/60 font-medium">Demographics Status</span>
                   <div className="flex items-center gap-2">
@@ -894,7 +912,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                 </div>
                 
                 {selectedUser.demographic_submission && (
-                  <div className="mt-2 text-xs text-white/40">
+                  <div className="mt-1 text-xs text-white/40">
                     Last submitted: {new Date(selectedUser.demographic_submission.submitted_at).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric',
@@ -907,26 +925,10 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                 )}
                 
                 {!selectedUser.demographic_submission && (
-                  <div className="mt-2 text-xs text-red-400/80">
+                  <div className="mt-1 text-xs text-red-400/80">
                     ⚠️ User has never submitted demographics
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Performance Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <div className="text-xs text-white/60 mb-1">Total Views</div>
-                <div className="text-lg font-semibold text-white">
-                  {selectedUser.total_views.toLocaleString()}
-                </div>
-              </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <div className="text-xs text-white/60 mb-1">Videos</div>
-                <div className="text-lg font-semibold text-white">
-                  {selectedUser.total_videos.toLocaleString()}
-                </div>
               </div>
             </div>
 
