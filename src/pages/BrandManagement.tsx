@@ -3,36 +3,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -42,7 +20,6 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
 import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
-
 interface Campaign {
   id: string;
   title: string;
@@ -53,7 +30,6 @@ interface Campaign {
   banner_url: string | null;
   preview_url: string | null;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -61,7 +37,6 @@ interface SocialAccount {
   follower_count: number;
   account_link: string | null;
 }
-
 interface Submission {
   id: string;
   status: string;
@@ -80,10 +55,14 @@ interface Submission {
     social_accounts: SocialAccount[];
   };
 }
-
 export default function BrandManagement() {
-  const { slug } = useParams();
-  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const {
+    slug
+  } = useParams();
+  const {
+    isAdmin,
+    loading: adminLoading
+  } = useAdminCheck();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -100,11 +79,9 @@ export default function BrandManagement() {
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [deleteAnalyticsDialogOpen, setDeleteAnalyticsDialogOpen] = useState(false);
-
   useEffect(() => {
     fetchCampaigns();
   }, [slug]);
-
   useEffect(() => {
     if (selectedCampaignId) {
       fetchSubmissions();
@@ -112,92 +89,76 @@ export default function BrandManagement() {
       fetchTransactions();
 
       // Set up real-time subscription for campaign submissions
-      const channel = supabase
-        .channel('campaign-submissions-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'campaign_submissions',
-            filter: `campaign_id=eq.${selectedCampaignId}`
-          },
-          (payload) => {
-            console.log('Submission changed:', payload);
-            fetchSubmissions();
-          }
-        )
-        .subscribe();
-
+      const channel = supabase.channel('campaign-submissions-changes').on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'campaign_submissions',
+        filter: `campaign_id=eq.${selectedCampaignId}`
+      }, payload => {
+        console.log('Submission changed:', payload);
+        fetchSubmissions();
+      }).subscribe();
       return () => {
         supabase.removeChannel(channel);
       };
     }
   }, [selectedCampaignId]);
-
   const fetchAnalytics = async () => {
     try {
-      const { data, error } = await supabase
-        .from("campaign_account_analytics")
-        .select("*")
-        .eq("campaign_id", selectedCampaignId)
-        .order("total_views", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("campaign_account_analytics").select("*").eq("campaign_id", selectedCampaignId).order("total_views", {
+        ascending: false
+      });
       if (error) throw error;
       setAnalytics(data || []);
-      
+
       // Refresh campaign data to get updated budget_used
       fetchCampaigns();
     } catch (error) {
       console.error("Error fetching analytics:", error);
     }
   };
-
   const fetchTransactions = async () => {
     try {
-      const { data, error } = await supabase
-        .from("wallet_transactions")
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from("wallet_transactions").select(`
           *,
           profiles:user_id(username, avatar_url)
-        `)
-        .contains('metadata', { campaign_id: selectedCampaignId })
-        .eq('type', 'earning')
-        .order('created_at', { ascending: false });
-
+        `).contains('metadata', {
+        campaign_id: selectedCampaignId
+      }).eq('type', 'earning').order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       setTransactions(data || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
   };
-
   const fetchCampaigns = async () => {
     if (!slug) return;
-
     try {
-      const { data: brandData, error: brandError } = await supabase
-        .from("brands")
-        .select("id, assets_url, home_url, brand_type")
-        .eq("slug", slug)
-        .maybeSingle();
-
+      const {
+        data: brandData,
+        error: brandError
+      } = await supabase.from("brands").select("id, assets_url, home_url, brand_type").eq("slug", slug).maybeSingle();
       if (brandError) throw brandError;
       if (!brandData) return;
-
       setBrandId(brandData.id);
       setAssetsUrl(brandData.assets_url || "");
       setHomeUrl(brandData.home_url || "");
       setBrandType(brandData.brand_type || "");
-
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("id, title, budget, budget_used, rpm_rate, status, banner_url, preview_url")
-        .eq("brand_id", brandData.id)
-        .order("created_at", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("campaigns").select("id, title, budget, budget_used, rpm_rate, status, banner_url, preview_url").eq("brand_id", brandData.id).order("created_at", {
+        ascending: false
+      });
       if (error) throw error;
-
       setCampaigns(data || []);
       if (data && data.length > 0) {
         setSelectedCampaignId(data[0].id);
@@ -209,13 +170,12 @@ export default function BrandManagement() {
       setLoading(false);
     }
   };
-
   const fetchSubmissions = async () => {
     try {
-      const { data, error } = await supabase
-        .from("campaign_submissions")
-        .select(
-          `
+      const {
+        data,
+        error
+      } = await supabase.from("campaign_submissions").select(`
           id,
           status,
           views,
@@ -231,51 +191,38 @@ export default function BrandManagement() {
             demographics_score, 
             views_score
           )
-        `
-        )
-        .eq("campaign_id", selectedCampaignId)
-        .order("submitted_at", { ascending: false });
-
+        `).eq("campaign_id", selectedCampaignId).order("submitted_at", {
+        ascending: false
+      });
       if (error) throw error;
 
       // Fetch social accounts separately - only campaign-specific accounts
-      const submissionsWithAccounts = await Promise.all(
-        (data || []).map(async (submission) => {
-          const { data: accounts } = await supabase
-            .from("social_accounts")
-            .select("id, platform, username, follower_count, account_link")
-            .eq("user_id", submission.creator_id)
-            .eq("campaign_id", selectedCampaignId);
-
-          return {
-            ...submission,
-            profiles: {
-              ...submission.profiles,
-              social_accounts: accounts || []
-            }
-          };
-        })
-      );
-
+      const submissionsWithAccounts = await Promise.all((data || []).map(async submission => {
+        const {
+          data: accounts
+        } = await supabase.from("social_accounts").select("id, platform, username, follower_count, account_link").eq("user_id", submission.creator_id).eq("campaign_id", selectedCampaignId);
+        return {
+          ...submission,
+          profiles: {
+            ...submission.profiles,
+            social_accounts: accounts || []
+          }
+        };
+      }));
       setSubmissions(submissionsWithAccounts);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast.error("Failed to load submissions");
     }
   };
-
-  const handleApplicationAction = async (
-    submissionId: string,
-    action: "approved" | "rejected"
-  ) => {
+  const handleApplicationAction = async (submissionId: string, action: "approved" | "rejected") => {
     try {
-      const { error } = await supabase
-        .from("campaign_submissions")
-        .update({ status: action })
-        .eq("id", submissionId);
-
+      const {
+        error
+      } = await supabase.from("campaign_submissions").update({
+        status: action
+      }).eq("id", submissionId);
       if (error) throw error;
-
       toast.success(`Application ${action}`);
       fetchSubmissions();
     } catch (error) {
@@ -283,18 +230,13 @@ export default function BrandManagement() {
       toast.error("Failed to update application");
     }
   };
-
   const handleDeleteCampaign = async () => {
     if (!selectedCampaignId) return;
-
     try {
-      const { error } = await supabase
-        .from("campaigns")
-        .delete()
-        .eq("id", selectedCampaignId);
-
+      const {
+        error
+      } = await supabase.from("campaigns").delete().eq("id", selectedCampaignId);
       if (error) throw error;
-
       toast.success("Campaign deleted successfully");
       fetchCampaigns();
       setDeleteDialogOpen(false);
@@ -303,23 +245,18 @@ export default function BrandManagement() {
       toast.error("Failed to delete campaign");
     }
   };
-
   const handleSaveUrls = async () => {
     if (!brandId) return;
-
     setSavingUrls(true);
     try {
-      const { error } = await supabase
-        .from("brands")
-        .update({
-          assets_url: assetsUrl || null,
-          home_url: homeUrl || null,
-          brand_type: brandType || null,
-        })
-        .eq("id", brandId);
-
+      const {
+        error
+      } = await supabase.from("brands").update({
+        assets_url: assetsUrl || null,
+        home_url: homeUrl || null,
+        brand_type: brandType || null
+      }).eq("id", brandId);
       if (error) throw error;
-
       toast.success("Settings updated successfully");
     } catch (error) {
       console.error("Error updating settings:", error);
@@ -328,29 +265,24 @@ export default function BrandManagement() {
       setSavingUrls(false);
     }
   };
-
   const handleEditBudgetUsed = () => {
     setEditingBudgetUsed(selectedCampaign?.budget_used?.toString() || "0");
     setEditBudgetDialogOpen(true);
   };
-
   const handleSaveBudgetUsed = async () => {
     if (!selectedCampaignId) return;
-
     const budgetUsedValue = parseFloat(editingBudgetUsed);
     if (isNaN(budgetUsedValue) || budgetUsedValue < 0) {
       toast.error("Please enter a valid budget amount");
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from("campaigns")
-        .update({ budget_used: budgetUsedValue })
-        .eq("id", selectedCampaignId);
-
+      const {
+        error
+      } = await supabase.from("campaigns").update({
+        budget_used: budgetUsedValue
+      }).eq("id", selectedCampaignId);
       if (error) throw error;
-
       toast.success("Budget updated successfully");
       setEditBudgetDialogOpen(false);
       fetchCampaigns();
@@ -359,18 +291,13 @@ export default function BrandManagement() {
       toast.error("Failed to update budget");
     }
   };
-
   const handleDeleteAllAnalytics = async () => {
     if (!selectedCampaignId) return;
-
     try {
-      const { error } = await supabase
-        .from("campaign_account_analytics")
-        .delete()
-        .eq("campaign_id", selectedCampaignId);
-
+      const {
+        error
+      } = await supabase.from("campaign_account_analytics").delete().eq("campaign_id", selectedCampaignId);
       if (error) throw error;
-
       toast.success("All analytics deleted successfully");
       setDeleteAnalyticsDialogOpen(false);
     } catch (error) {
@@ -378,7 +305,6 @@ export default function BrandManagement() {
       toast.error("Failed to delete analytics");
     }
   };
-
   const handleRefresh = () => {
     fetchCampaigns();
     fetchSubmissions();
@@ -386,10 +312,9 @@ export default function BrandManagement() {
     fetchTransactions();
     toast.success("Data refreshed");
   };
-
-  const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
-  const approvedSubmissions = submissions.filter((s) => s.status === "approved");
-  const pendingSubmissions = submissions.filter((s) => s.status === "pending");
+  const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
+  const approvedSubmissions = submissions.filter(s => s.status === "approved");
+  const pendingSubmissions = submissions.filter(s => s.status === "pending");
 
   // Group by account and sum views across all date ranges to avoid counting duplicates
   const accountViews = analytics.reduce((acc: Record<string, number>, a: any) => {
@@ -397,30 +322,20 @@ export default function BrandManagement() {
     acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
     return acc;
   }, {} as Record<string, number>);
-  
   const totalViews = (Object.values(accountViews) as number[]).reduce((sum, views) => sum + views, 0);
-  
   const budgetUsed = Number(selectedCampaign?.budget_used || 0);
-  const effectiveCPM = totalViews > 0 ? (budgetUsed / totalViews) * 1000 : 0;
-
+  const effectiveCPM = totalViews > 0 ? budgetUsed / totalViews * 1000 : 0;
   if (loading || adminLoading) {
-    return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
+    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">Loading...</div>
-      </div>
-    );
+      </div>;
   }
-
   if (campaigns.length === 0) {
-    return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
+    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">No campaigns found</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen p-8 bg-[#191919]">
+  return <div className="min-h-screen p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Campaign Selector */}
         <div className="flex items-center justify-between">
@@ -429,12 +344,7 @@ export default function BrandManagement() {
             <h1 className="text-3xl font-bold text-white">Campaign Management</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              className="bg-[#202020] border-0 text-white hover:bg-white/10"
-            >
+            <Button variant="outline" size="sm" onClick={handleRefresh} className="bg-[#202020] border-0 text-white hover:bg-white/10">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -443,27 +353,14 @@ export default function BrandManagement() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-[#2a2a2a] border-0">
-                {campaigns.map((campaign) => (
-                  <SelectItem
-                    key={campaign.id}
-                    value={campaign.id}
-                    className="text-white hover:bg-white/10 focus:bg-white/10"
-                  >
+                {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="text-white hover:bg-white/10 focus:bg-white/10">
                     {campaign.title}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
-            {selectedCampaignId && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="bg-[#202020] border-0 text-destructive/60 hover:text-destructive hover:bg-white/10"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
+            {selectedCampaignId && <Button variant="outline" size="icon" className="bg-[#202020] border-0 text-destructive/60 hover:text-destructive hover:bg-white/10" onClick={() => setDeleteDialogOpen(true)}>
                 <Trash2 className="h-5 w-5" />
-              </Button>
-            )}
+              </Button>}
           </div>
         </div>
 
@@ -478,9 +375,7 @@ export default function BrandManagement() {
             </TabsTrigger>
             <TabsTrigger value="applications" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Applications
-              {pendingSubmissions.length > 0 && (
-                <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>
-              )}
+              {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
             </TabsTrigger>
             <TabsTrigger value="settings" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Settings
@@ -497,50 +392,54 @@ export default function BrandManagement() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    <div className="text-2xl font-bold text-white" style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600
+                  }}>
                       {(() => {
-                        // Group by account and sum views across all date ranges
-                        const accountViews = analytics.reduce((acc, a) => {
-                          const key = `${a.platform}-${a.account_username}`;
-                          acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
-                          return acc;
-                        }, {} as Record<string, number>);
-                        return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
-                      })()}
+                      // Group by account and sum views across all date ranges
+                      const accountViews = analytics.reduce((acc, a) => {
+                        const key = `${a.platform}-${a.account_username}`;
+                        acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
+                        return acc;
+                      }, {} as Record<string, number>);
+                      return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
+                    })()}
                     </div>
                     <div className="text-sm text-white/60 mt-1">Total Views</div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    <div className="text-2xl font-bold text-white" style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600
+                  }}>
                       {(() => {
-                        // Get unique accounts
-                        const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
-                        return uniqueAccounts.size;
-                      })()}
+                      // Get unique accounts
+                      const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
+                      return uniqueAccounts.size;
+                    })()}
                     </div>
                     <div className="text-sm text-white/60 mt-1">Total Accounts</div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    <div className="text-2xl font-bold text-white" style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600
+                  }}>
                       ${Number(selectedCampaign?.budget_used || 0).toFixed(2)}
                     </div>
                     <div className="text-sm text-white/60 mt-1 flex items-center justify-center gap-1">
                       Budget Used
-                      {isAdmin && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-4 w-4 text-white/40 hover:text-white hover:bg-white/10 p-0"
-                          onClick={handleEditBudgetUsed}
-                          title="Edit budget used"
-                        >
+                      {isAdmin && <Button variant="ghost" size="icon" className="h-4 w-4 text-white/40 hover:text-white hover:bg-white/10 p-0" onClick={handleEditBudgetUsed} title="Edit budget used">
                           <Edit className="h-3 w-3" />
-                        </Button>
-                      )}
+                        </Button>}
                     </div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    <div className="text-2xl font-bold text-white" style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600
+                  }}>
                       ${effectiveCPM.toFixed(2)}
                     </div>
                     <div className="text-sm text-white/60 mt-1">Effective CPM</div>
@@ -550,26 +449,14 @@ export default function BrandManagement() {
             </Card>
 
             <div className="flex justify-end gap-2">
-              <ImportCampaignStatsDialog 
-                campaignId={selectedCampaignId}
-                onImportComplete={fetchSubmissions}
-                onMatchingRequired={() => setMatchDialogOpen(true)}
-              />
+              <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
             </div>
             
             {/* Imported Analytics Data */}
-            <CampaignAnalyticsTable 
-              campaignId={selectedCampaignId}
-              onPaymentComplete={handleRefresh}
-            />
+            <CampaignAnalyticsTable campaignId={selectedCampaignId} onPaymentComplete={handleRefresh} />
             
             {/* Matching Dialog */}
-            <MatchAccountsDialog
-              open={matchDialogOpen}
-              onOpenChange={setMatchDialogOpen}
-              campaignId={selectedCampaignId}
-              onMatchComplete={fetchSubmissions}
-            />
+            <MatchAccountsDialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen} campaignId={selectedCampaignId} onMatchComplete={fetchSubmissions} />
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
@@ -581,94 +468,54 @@ export default function BrandManagement() {
                 <CardContent>
                   <div className="h-64">
                     {(() => {
-                      const platformData = analytics.reduce((acc: any[], account) => {
-                        const existing = acc.find(item => item.platform === account.platform);
-                        if (existing) {
-                          existing.views += account.total_views;
-                        } else {
-                          acc.push({
-                            platform: account.platform,
-                            views: account.total_views
-                          });
-                        }
-                        return acc;
-                      }, []);
-
-                      const COLORS: Record<string, string> = {
-                        tiktok: '#EF4444',
-                        instagram: '#A855F7',
-                        youtube: '#EF4444',
-                      };
-
-                      if (platformData.length === 0) {
-                        return (
-                          <div className="h-full flex items-center justify-center text-white/40 text-sm">
-                            No platform data available
-                          </div>
-                        );
+                    const platformData = analytics.reduce((acc: any[], account) => {
+                      const existing = acc.find(item => item.platform === account.platform);
+                      if (existing) {
+                        existing.views += account.total_views;
+                      } else {
+                        acc.push({
+                          platform: account.platform,
+                          views: account.total_views
+                        });
                       }
-
-                      const totalViews = platformData.reduce((sum, item) => sum + item.views, 0);
-
-                      return (
-                        <ResponsiveContainer width="100%" height="100%">
+                      return acc;
+                    }, []);
+                    const COLORS: Record<string, string> = {
+                      tiktok: '#EF4444',
+                      instagram: '#A855F7',
+                      youtube: '#EF4444'
+                    };
+                    if (platformData.length === 0) {
+                      return <div className="h-full flex items-center justify-center text-white/40 text-sm">
+                            No platform data available
+                          </div>;
+                    }
+                    const totalViews = platformData.reduce((sum, item) => sum + item.views, 0);
+                    return <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
-                            <Pie
-                              data={platformData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={60}
-                              outerRadius={80}
-                              paddingAngle={2}
-                              dataKey="views"
-                              nameKey="platform"
-                              stroke="none"
-                            >
-                              {platformData.map((entry, index) => (
-                                <Cell 
-                                  key={`cell-${index}`} 
-                                  fill={COLORS[entry.platform.toLowerCase()] || '#22C55E'}
-                                  className="transition-opacity hover:opacity-80"
-                                />
-                              ))}
+                            <Pie data={platformData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="views" nameKey="platform" stroke="none">
+                              {platformData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[entry.platform.toLowerCase()] || '#22C55E'} className="transition-opacity hover:opacity-80" />)}
                             </Pie>
-                            <Tooltip 
-                              contentStyle={{
-                                backgroundColor: "#0C0C0C",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "8px 12px"
-                              }}
-                              labelStyle={{
-                                color: "#ffffff",
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "12px",
-                                fontWeight: 500,
-                                textTransform: "capitalize"
-                              }}
-                              itemStyle={{
-                                color: "#ffffff",
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "12px"
-                              }}
-                              formatter={(value: number) => [
-                                `${value.toLocaleString()} views (${((value / totalViews) * 100).toFixed(1)}%)`,
-                                ''
-                              ]}
-                            />
-                            <Legend 
-                              verticalAlign="bottom" 
-                              height={36}
-                              formatter={(value) => (
-                                <span className="text-white/70 text-xs capitalize">{value}</span>
-                              )}
-                              iconType="circle"
-                              iconSize={8}
-                            />
+                            <Tooltip contentStyle={{
+                          backgroundColor: "#0C0C0C",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "8px 12px"
+                        }} labelStyle={{
+                          color: "#ffffff",
+                          fontFamily: "Inter, sans-serif",
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          textTransform: "capitalize"
+                        }} itemStyle={{
+                          color: "#ffffff",
+                          fontFamily: "Inter, sans-serif",
+                          fontSize: "12px"
+                        }} formatter={(value: number) => [`${value.toLocaleString()} views (${(value / totalViews * 100).toFixed(1)}%)`, '']} />
+                            <Legend verticalAlign="bottom" height={36} formatter={value => <span className="text-white/70 text-xs capitalize">{value}</span>} iconType="circle" iconSize={8} />
                           </PieChart>
-                        </ResponsiveContainer>
-                      );
-                    })()}
+                        </ResponsiveContainer>;
+                  })()}
                   </div>
                 </CardContent>
               </Card>
@@ -681,86 +528,59 @@ export default function BrandManagement() {
                 <CardContent>
                   <div className="h-64">
                     {(() => {
-                      const dailySpendData = transactions.reduce((acc: any[], txn) => {
-                        const date = new Date(txn.created_at).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric' 
+                    const dailySpendData = transactions.reduce((acc: any[], txn) => {
+                      const date = new Date(txn.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                      });
+                      const existing = acc.find(item => item.date === date);
+                      if (existing) {
+                        existing.spend += Number(txn.amount);
+                      } else {
+                        acc.push({
+                          date,
+                          spend: Number(txn.amount)
                         });
-                        const existing = acc.find(item => item.date === date);
-                        if (existing) {
-                          existing.spend += Number(txn.amount);
-                        } else {
-                          acc.push({
-                            date,
-                            spend: Number(txn.amount)
-                          });
-                        }
-                        return acc;
-                      }, []);
-
-                      // Sort by date and take last 7 days
-                      const sortedData = dailySpendData
-                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                        .slice(-7);
-
-                      if (sortedData.length === 0) {
-                        return (
-                          <div className="h-full flex items-center justify-center text-white/40 text-sm">
-                            No spending data available
-                          </div>
-                        );
                       }
+                      return acc;
+                    }, []);
 
-                      return (
-                        <ResponsiveContainer width="100%" height="100%">
+                    // Sort by date and take last 7 days
+                    const sortedData = dailySpendData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(-7);
+                    if (sortedData.length === 0) {
+                      return <div className="h-full flex items-center justify-center text-white/40 text-sm">
+                            No spending data available
+                          </div>;
+                    }
+                    return <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={sortedData}>
-                            <XAxis 
-                              dataKey="date" 
-                              stroke="rgba(255, 255, 255, 0.4)" 
-                              fontSize={12} 
-                              tickLine={false} 
-                              axisLine={false}
-                              style={{ opacity: 0.6 }}
-                            />
-                            <YAxis 
-                              stroke="rgba(255, 255, 255, 0.4)" 
-                              fontSize={12} 
-                              tickLine={false} 
-                              axisLine={false} 
-                              tickFormatter={value => `$${value}`}
-                              style={{ opacity: 0.6 }}
-                            />
-                            <Tooltip 
-                              contentStyle={{
-                                backgroundColor: "#0C0C0C",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                borderRadius: "8px",
-                                padding: "8px 12px"
-                              }}
-                              labelStyle={{
-                                color: "#ffffff",
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "12px",
-                                fontWeight: 500
-                              }}
-                              itemStyle={{
-                                color: "#ffffff",
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "12px"
-                              }}
-                              formatter={(value: number) => `$${value.toFixed(2)}`}
-                              cursor={{ fill: "rgba(255, 255, 255, 0.05)" }}
-                            />
-                            <Bar 
-                              dataKey="spend" 
-                              fill="#22C55E" 
-                              radius={[8, 8, 0, 0]} 
-                              name="Spent"
-                            />
+                            <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.4)" fontSize={12} tickLine={false} axisLine={false} style={{
+                          opacity: 0.6
+                        }} />
+                            <YAxis stroke="rgba(255, 255, 255, 0.4)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} style={{
+                          opacity: 0.6
+                        }} />
+                            <Tooltip contentStyle={{
+                          backgroundColor: "#0C0C0C",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          borderRadius: "8px",
+                          padding: "8px 12px"
+                        }} labelStyle={{
+                          color: "#ffffff",
+                          fontFamily: "Inter, sans-serif",
+                          fontSize: "12px",
+                          fontWeight: 500
+                        }} itemStyle={{
+                          color: "#ffffff",
+                          fontFamily: "Inter, sans-serif",
+                          fontSize: "12px"
+                        }} formatter={(value: number) => `$${value.toFixed(2)}`} cursor={{
+                          fill: "rgba(255, 255, 255, 0.05)"
+                        }} />
+                            <Bar dataKey="spend" fill="#22C55E" radius={[8, 8, 0, 0]} name="Spent" />
                           </BarChart>
-                        </ResponsiveContainer>
-                      );
-                    })()}
+                        </ResponsiveContainer>;
+                  })()}
                   </div>
                 </CardContent>
               </Card>
@@ -781,46 +601,33 @@ export default function BrandManagement() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {approvedSubmissions.length === 0 ? (
-                  <div className="text-center py-8">
+                {approvedSubmissions.length === 0 ? <div className="text-center py-8">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                     <p className="text-muted-foreground text-sm">No active creators yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {approvedSubmissions.map((submission) => {
-                      const getPlatformIcon = (platform: string) => {
-                        switch (platform.toLowerCase()) {
-                          case 'tiktok':
-                            return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
-                          case 'instagram':
-                            return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
-                          case 'youtube':
-                            return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
-                          default:
-                            return null;
-                        }
-                      };
-
-                      return (
-                        <Card key={submission.id} className="bg-[#1a1a1a] border border-white/10 overflow-hidden rounded-xl hover:border-primary/30 transition-all group">
+                  </div> : <div className="space-y-3">
+                    {approvedSubmissions.map(submission => {
+                  const getPlatformIcon = (platform: string) => {
+                    switch (platform.toLowerCase()) {
+                      case 'tiktok':
+                        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
+                      case 'instagram':
+                        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
+                      case 'youtube':
+                        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
+                      default:
+                        return null;
+                    }
+                  };
+                  return <Card key={submission.id} className="bg-[#1a1a1a] border border-white/10 overflow-hidden rounded-xl hover:border-primary/30 transition-all group">
                           <CardContent className="p-0">
                             <div className="p-5">
                               {/* Header Section */}
                               <div className="flex items-start gap-4 mb-4">
                                 {/* Avatar */}
                                 <div className="flex-shrink-0">
-                                  {submission.profiles?.avatar_url ? (
-                                    <img
-                                      src={submission.profiles.avatar_url}
-                                      alt={submission.profiles.username}
-                                      className="w-16 h-16 rounded-full object-cover border-2 border-primary/30 group-hover:border-primary/50 transition-all"
-                                    />
-                                  ) : (
-                                    <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
+                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-16 h-16 rounded-full object-cover border-2 border-primary/30 group-hover:border-primary/50 transition-all" /> : <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
                                       <Users className="h-8 w-8 text-primary" />
-                                    </div>
-                                  )}
+                                    </div>}
                                 </div>
 
                                 {/* Creator Info */}
@@ -872,10 +679,9 @@ export default function BrandManagement() {
                                     </span>
                                   </div>
                                   <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div 
-                                      className="bg-blue-500 h-1.5 rounded-full transition-all"
-                                      style={{ width: `${((submission.profiles?.trust_score || 0) / 100) * 100}%` }}
-                                    />
+                                    <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{
+                                width: `${(submission.profiles?.trust_score || 0) / 100 * 100}%`
+                              }} />
                                   </div>
                                 </div>
 
@@ -887,10 +693,9 @@ export default function BrandManagement() {
                                     </span>
                                   </div>
                                   <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div 
-                                      className="bg-purple-500 h-1.5 rounded-full transition-all"
-                                      style={{ width: `${((submission.profiles?.demographics_score || 0) / 100) * 100}%` }}
-                                    />
+                                    <div className="bg-purple-500 h-1.5 rounded-full transition-all" style={{
+                                width: `${(submission.profiles?.demographics_score || 0) / 100 * 100}%`
+                              }} />
                                   </div>
                                 </div>
 
@@ -902,63 +707,41 @@ export default function BrandManagement() {
                                     </span>
                                   </div>
                                   <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div 
-                                      className="bg-green-500 h-1.5 rounded-full transition-all"
-                                      style={{ width: `${((submission.profiles?.views_score || 0) / 100) * 100}%` }}
-                                    />
+                                    <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{
+                                width: `${(submission.profiles?.views_score || 0) / 100 * 100}%`
+                              }} />
                                   </div>
                                 </div>
                               </div>
 
                               {/* Social Accounts */}
-                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && (
-                                <div>
+                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div>
                                   <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
                                   <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map((account) => (
-                                      <a
-                                        key={account.id}
-                                        href={account.account_link || '#'}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all hover:scale-105"
-                                      >
+                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all hover:scale-105">
                                         {getPlatformIcon(account.platform)}
                                         <span className="text-sm font-medium text-white">
                                           @{account.username}
                                         </span>
-                                        {account.follower_count > 0 && (
-                                          <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
+                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
                                             {account.follower_count.toLocaleString()}
-                                          </Badge>
-                                        )}
-                                      </a>
-                                    ))}
+                                          </Badge>}
+                                      </a>)}
                                   </div>
-                                </div>
-                              )}
+                                </div>}
 
                               {/* Content Link */}
-                              {submission.content_url && (
-                                <div className="pt-4 mt-4 border-t border-white/10">
-                                  <a
-                                    href={submission.content_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors group-hover:underline"
-                                  >
+                              {submission.content_url && <div className="pt-4 mt-4 border-t border-white/10">
+                                  <a href={submission.content_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors group-hover:underline">
                                     <Eye className="h-4 w-4" />
                                     View content
                                   </a>
-                                </div>
-                              )}
+                                </div>}
                             </div>
                           </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
+                        </Card>;
+                })}
+                  </div>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -976,29 +759,24 @@ export default function BrandManagement() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {pendingSubmissions.length === 0 ? (
-                  <div className="text-center py-8">
+                {pendingSubmissions.length === 0 ? <div className="text-center py-8">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                     <p className="text-muted-foreground text-sm">No pending applications</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {pendingSubmissions.map((submission) => {
-                      const getPlatformIcon = (platform: string) => {
-                        switch (platform.toLowerCase()) {
-                          case 'tiktok':
-                            return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
-                          case 'instagram':
-                            return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
-                          case 'youtube':
-                            return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
-                          default:
-                            return null;
-                        }
-                      };
-
-                      return (
-                        <Card key={submission.id} className="bg-[#1a1a1a] border border-white/10 overflow-hidden rounded-xl hover:border-primary/30 transition-all">
+                  </div> : <div className="space-y-3">
+                    {pendingSubmissions.map(submission => {
+                  const getPlatformIcon = (platform: string) => {
+                    switch (platform.toLowerCase()) {
+                      case 'tiktok':
+                        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
+                      case 'instagram':
+                        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
+                      case 'youtube':
+                        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
+                      default:
+                        return null;
+                    }
+                  };
+                  return <Card key={submission.id} className="bg-[#1a1a1a] border border-white/10 overflow-hidden rounded-xl hover:border-primary/30 transition-all">
                           <CardContent className="p-0">
                             <div className="p-5">
                               {/* Header Section */}
@@ -1006,17 +784,9 @@ export default function BrandManagement() {
                                 <div className="flex items-start gap-3 flex-1">
                                   {/* Avatar */}
                                   <div className="flex-shrink-0">
-                                    {submission.profiles?.avatar_url ? (
-                                      <img
-                                        src={submission.profiles.avatar_url}
-                                        alt={submission.profiles.username}
-                                        className="w-14 h-14 rounded-full object-cover border-2 border-primary/30"
-                                      />
-                                    ) : (
-                                      <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
+                                    {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-14 h-14 rounded-full object-cover border-2 border-primary/30" /> : <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/30">
                                         <Users className="h-7 w-7 text-primary" />
-                                      </div>
-                                    )}
+                                      </div>}
                                   </div>
 
                                   {/* Creator Info */}
@@ -1025,12 +795,12 @@ export default function BrandManagement() {
                                       {submission.profiles?.username || "Unknown"}
                                     </h3>
                                     <div className="flex items-center gap-2 text-xs text-white/60">
-                                      <span>Applied {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        year: 'numeric'
-                                      })}</span>
-                                      <span className="text-white/30">•</span>
+                                      <span>Applied {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}</span>
+                                      
                                       <Badge variant="outline" className="border-white/20 text-white/70 text-xs">
                                         {submission.platform}
                                       </Badge>
@@ -1040,24 +810,11 @@ export default function BrandManagement() {
 
                                 {/* Action Buttons */}
                                 <div className="flex gap-2 flex-shrink-0">
-                                  <Button
-                                    size="sm"
-                                    onClick={() =>
-                                      handleApplicationAction(submission.id, "approved")
-                                    }
-                                    className="bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 h-9 px-4"
-                                  >
+                                  <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 h-9 px-4">
                                     <Check className="h-4 w-4 mr-1.5" />
                                     Approve
                                   </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      handleApplicationAction(submission.id, "rejected")
-                                    }
-                                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/30 h-9 px-4"
-                                  >
+                                  <Button size="sm" variant="outline" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/30 h-9 px-4">
                                     <X className="h-4 w-4 mr-1.5" />
                                     Reject
                                   </Button>
@@ -1074,10 +831,9 @@ export default function BrandManagement() {
                                     </span>
                                   </div>
                                   <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div 
-                                      className="bg-blue-500 h-1.5 rounded-full transition-all"
-                                      style={{ width: `${((submission.profiles?.trust_score || 0) / 100) * 100}%` }}
-                                    />
+                                    <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{
+                                width: `${(submission.profiles?.trust_score || 0) / 100 * 100}%`
+                              }} />
                                   </div>
                                 </div>
 
@@ -1089,10 +845,9 @@ export default function BrandManagement() {
                                     </span>
                                   </div>
                                   <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div 
-                                      className="bg-purple-500 h-1.5 rounded-full transition-all"
-                                      style={{ width: `${((submission.profiles?.demographics_score || 0) / 100) * 100}%` }}
-                                    />
+                                    <div className="bg-purple-500 h-1.5 rounded-full transition-all" style={{
+                                width: `${(submission.profiles?.demographics_score || 0) / 100 * 100}%`
+                              }} />
                                   </div>
                                 </div>
 
@@ -1104,63 +859,41 @@ export default function BrandManagement() {
                                     </span>
                                   </div>
                                   <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div 
-                                      className="bg-green-500 h-1.5 rounded-full transition-all"
-                                      style={{ width: `${((submission.profiles?.views_score || 0) / 100) * 100}%` }}
-                                    />
+                                    <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{
+                                width: `${(submission.profiles?.views_score || 0) / 100 * 100}%`
+                              }} />
                                   </div>
                                 </div>
                               </div>
 
                               {/* Social Accounts */}
-                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && (
-                                <div className="mb-4">
+                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
                                   <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
                                   <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map((account) => (
-                                      <a
-                                        key={account.id}
-                                        href={account.account_link || '#'}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all group"
-                                      >
+                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all group">
                                         {getPlatformIcon(account.platform)}
                                         <span className="text-sm font-medium text-white group-hover:text-primary transition-colors">
                                           @{account.username}
                                         </span>
-                                        {account.follower_count > 0 && (
-                                          <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
+                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
                                             {account.follower_count.toLocaleString()}
-                                          </Badge>
-                                        )}
-                                      </a>
-                                    ))}
+                                          </Badge>}
+                                      </a>)}
                                   </div>
-                                </div>
-                              )}
+                                </div>}
 
                               {/* Content Link */}
-                              {submission.content_url && (
-                                <div className="pt-3 border-t border-white/10">
-                                  <a
-                                    href={submission.content_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
-                                  >
+                              {submission.content_url && <div className="pt-3 border-t border-white/10">
+                                  <a href={submission.content_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors">
                                     <Eye className="h-4 w-4" />
                                     View submitted content
                                   </a>
-                                </div>
-                              )}
+                                </div>}
                             </div>
                           </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
+                        </Card>;
+                })}
+                  </div>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1172,13 +905,11 @@ export default function BrandManagement() {
                 <CardTitle className="text-white">Brand Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {!isAdmin && (
-                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                {!isAdmin && <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                     <p className="text-yellow-500 text-sm">
                       Only administrators can edit brand settings
                     </p>
-                  </div>
-                )}
+                  </div>}
 
                 <div className="space-y-2">
                   <Label htmlFor="brand-type" className="text-white">
@@ -1206,15 +937,7 @@ export default function BrandManagement() {
                   <Label htmlFor="assets-url" className="text-white">
                     Assets Page URL
                   </Label>
-                  <Input
-                    id="assets-url"
-                    type="url"
-                    placeholder="https://example.com/assets"
-                    value={assetsUrl}
-                    onChange={(e) => setAssetsUrl(e.target.value)}
-                    className="bg-[#191919] border-white/10 text-white"
-                    disabled={!isAdmin}
-                  />
+                  <Input id="assets-url" type="url" placeholder="https://example.com/assets" value={assetsUrl} onChange={e => setAssetsUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white" disabled={!isAdmin} />
                   <p className="text-sm text-white/60">
                     This URL will be embedded when users visit the Assets page
                   </p>
@@ -1224,24 +947,13 @@ export default function BrandManagement() {
                   <Label htmlFor="home-url" className="text-white">
                     Home Page HTML (DWY Brands Only)
                   </Label>
-                  <Textarea
-                    id="home-url"
-                    placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />'
-                    value={homeUrl}
-                    onChange={(e) => setHomeUrl(e.target.value)}
-                    className="bg-[#191919] border-white/10 text-white font-mono min-h-[120px]"
-                    disabled={!isAdmin}
-                  />
+                  <Textarea id="home-url" placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />' value={homeUrl} onChange={e => setHomeUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white font-mono min-h-[120px]" disabled={!isAdmin} />
                   <p className="text-sm text-white/60">
                     For DWY brands, paste HTML code (like iframe) to embed on the Home page instead of the default dashboard
                   </p>
                 </div>
 
-                <Button
-                  onClick={handleSaveUrls}
-                  disabled={savingUrls || !isAdmin}
-                  className="bg-primary hover:bg-primary/90"
-                >
+                <Button onClick={handleSaveUrls} disabled={savingUrls || !isAdmin} className="bg-primary hover:bg-primary/90">
                   {savingUrls ? "Saving..." : "Save Settings"}
                 </Button>
               </CardContent>
@@ -1263,10 +975,7 @@ export default function BrandManagement() {
               <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteCampaign}
-                className="bg-destructive hover:bg-destructive/90"
-              >
+              <AlertDialogAction onClick={handleDeleteCampaign} className="bg-destructive hover:bg-destructive/90">
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -1287,16 +996,7 @@ export default function BrandManagement() {
                 <Label htmlFor="budget-used" className="text-white">
                   Budget Used ($)
                 </Label>
-                <Input
-                  id="budget-used"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={editingBudgetUsed}
-                  onChange={(e) => setEditingBudgetUsed(e.target.value)}
-                  className="bg-[#191919] border-white/10 text-white"
-                  placeholder="0.00"
-                />
+                <Input id="budget-used" type="number" step="0.01" min="0" value={editingBudgetUsed} onChange={e => setEditingBudgetUsed(e.target.value)} className="bg-[#191919] border-white/10 text-white" placeholder="0.00" />
                 <p className="text-sm text-white/40">
                   Total budget: ${selectedCampaign?.budget || 0}
                 </p>
@@ -1306,10 +1006,7 @@ export default function BrandManagement() {
               <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleSaveBudgetUsed}
-                className="bg-primary hover:bg-primary/90"
-              >
+              <AlertDialogAction onClick={handleSaveBudgetUsed} className="bg-primary hover:bg-primary/90">
                 Save Changes
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -1329,16 +1026,12 @@ export default function BrandManagement() {
               <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteAllAnalytics}
-                className="bg-destructive hover:bg-destructive/90"
-              >
+              <AlertDialogAction onClick={handleDeleteAllAnalytics} className="bg-destructive hover:bg-destructive/90">
                 Delete All
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </div>
-  );
+    </div>;
 }
