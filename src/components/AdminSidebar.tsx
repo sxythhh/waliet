@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, BarChart3, LineChart } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,11 @@ const menuItems = [
     title: "Overview",
     icon: LayoutDashboard,
     path: "/admin",
+  },
+  {
+    title: "Analytics",
+    icon: LineChart,
+    path: "/admin/analytics",
   },
   {
     title: "Brands",
