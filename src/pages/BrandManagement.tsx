@@ -776,7 +776,7 @@ export default function BrandManagement() {
                         return null;
                     }
                   };
-                  return <Card key={submission.id} className="bg-[#1a1a1a] border border-white/10 overflow-hidden rounded-xl hover:border-primary/30 transition-all">
+                  return <Card key={submission.id} className="bg-[#1a1a1a] overflow-hidden rounded-xl transition-all">
                           <CardContent className="p-0">
                             <div className="p-5">
                               {/* Header Section */}
@@ -801,7 +801,7 @@ export default function BrandManagement() {
                                     year: 'numeric'
                                   })}</span>
                                       
-                                      <Badge variant="outline" className="border-white/20 text-white/70 text-xs">
+                                    <Badge variant="outline" className="text-white/70 text-xs border-0 bg-white/5">
                                         {submission.platform}
                                       </Badge>
                                     </div>
@@ -810,11 +810,11 @@ export default function BrandManagement() {
 
                                 {/* Action Buttons */}
                                 <div className="flex gap-2 flex-shrink-0">
-                                  <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 h-9 px-4">
+                                  <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-green-500/20 hover:bg-green-500/30 text-green-400 h-9 px-4">
                                     <Check className="h-4 w-4 mr-1.5" />
                                     Approve
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/30 h-9 px-4">
+                                  <Button size="sm" variant="outline" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-0 h-9 px-4">
                                     <X className="h-4 w-4 mr-1.5" />
                                     Reject
                                   </Button>
@@ -823,7 +823,7 @@ export default function BrandManagement() {
 
                               {/* Scores Section */}
                               <div className="grid grid-cols-3 gap-3 mb-4">
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <div className="bg-white/5 rounded-lg p-3">
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-xs text-white/60">Trust</span>
                                     <span className="text-sm font-semibold text-white">
@@ -837,7 +837,7 @@ export default function BrandManagement() {
                                   </div>
                                 </div>
 
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <div className="bg-white/5 rounded-lg p-3">
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-xs text-white/60">Demographics</span>
                                     <span className="text-sm font-semibold text-white">
@@ -851,7 +851,7 @@ export default function BrandManagement() {
                                   </div>
                                 </div>
 
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <div className="bg-white/5 rounded-lg p-3">
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-xs text-white/60">Views</span>
                                     <span className="text-sm font-semibold text-white">
@@ -870,7 +870,7 @@ export default function BrandManagement() {
                               {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
                                   <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
                                   <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all group">
+                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all group">
                                         {getPlatformIcon(account.platform)}
                                         <span className="text-sm font-medium text-white group-hover:text-primary transition-colors">
                                           @{account.username}
@@ -883,7 +883,7 @@ export default function BrandManagement() {
                                 </div>}
 
                               {/* Content Link */}
-                              {submission.content_url && <div className="pt-3 border-t border-white/10">
+                              {submission.content_url && <div className="pt-3">
                                   <a href={submission.content_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors">
                                     <Eye className="h-4 w-4" />
                                     View submitted content
