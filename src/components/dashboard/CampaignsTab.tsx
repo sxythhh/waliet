@@ -201,8 +201,6 @@ export function CampaignsTab() {
                         </div>)}
                     </div>
                   </div>}
-                
-                {campaign.start_date}
               </div>
             </CardContent>
           </Card>;
