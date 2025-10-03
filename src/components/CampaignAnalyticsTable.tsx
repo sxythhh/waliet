@@ -593,7 +593,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                   e.preventDefault();
                                   window.open(item.account_link!, '_blank', 'noopener,noreferrer');
                                 }}
-                                className="text-white hover:text-primary hover:underline transition-all font-medium cursor-pointer text-sm truncate max-w-[150px]"
+                                className="text-white hover:underline transition-all font-medium cursor-pointer text-sm truncate max-w-[150px]"
                               >
                                 {username}
                               </a>
