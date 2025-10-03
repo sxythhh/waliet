@@ -262,9 +262,8 @@ export default function CampaignJoin() {
         <div className="relative flex gap-6 mb-8">
           {/* Step Indicator */}
           <div className="flex flex-col items-center pt-1">
-            <div className="w-10 h-10 flex items-center justify-center text-base font-bold text-primary">
-              1
-            </div>
+            <div className="w-3 h-3 rounded-full bg-primary"></div>
+            {currentStep === 1 && <div className="w-1 h-full bg-gradient-to-b from-primary/40 to-transparent mt-3 rounded-full" />}
           </div>
 
           {/* Step Content */}
@@ -339,9 +338,10 @@ export default function CampaignJoin() {
           <div className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center pt-1">
-              <div className="w-10 h-10 flex items-center justify-center text-base font-bold text-primary">
-                2
-              </div>
+              <div className="w-3 h-3 rounded-full bg-primary"></div>
+              {currentStep === 2 && campaign.application_questions.length > 0 && (
+                <div className="w-1 h-full bg-gradient-to-b from-primary/40 to-transparent mt-3 rounded-full" />
+              )}
             </div>
 
             {/* Step Content */}
@@ -462,9 +462,7 @@ export default function CampaignJoin() {
           <div ref={applicationQuestionsRef} className="relative flex gap-6 mb-8">
             {/* Step Indicator */}
             <div className="flex flex-col items-center pt-1">
-              <div className="w-10 h-10 flex items-center justify-center text-base font-bold text-primary">
-                3
-              </div>
+              <div className="w-3 h-3 rounded-full bg-primary"></div>
             </div>
 
             {/* Step Content */}
