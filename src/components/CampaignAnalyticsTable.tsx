@@ -913,23 +913,11 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                             {calc.demographicMultiplier === 0.4 && ' (default)'}
                           </span>
                         </div>
-                        <div className="pt-2 border-t border-white/10 flex justify-between text-sm">
-                          <span className="text-white/80">Formula:</span>
-                          <span className="text-white/60 font-mono text-xs">
-                            ({calc.views.toLocaleString()} ÷ 1000) × ${calc.rpm} × {calc.demographicPercentage.toFixed(0)}%
-                          </span>
-                        </div>
                       </div>
                       
-                      <div className="text-2xl font-bold text-primary text-center py-2">
+                      <div className="text-2xl font-bold text-white text-center py-2">
                         ${calc.payout.toFixed(2)}
                       </div>
-                      
-                      {calc.demographicMultiplier === 0.4 && (
-                        <div className="text-xs text-yellow-400/80 text-center mt-2">
-                          ⚠️ Using default 40% (no approved demographics)
-                        </div>
-                      )}
                     </>
                   );
                 })()}
