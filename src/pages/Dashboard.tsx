@@ -55,19 +55,13 @@ export default function Dashboard() {
   };
   return <div className={currentTab === "discover" ? "" : "px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-4 sm:space-y-6 md:space-y-8"}>
       {/* Header - Only show on campaigns tab */}
-      {currentTab === "campaigns" && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {currentTab === "campaigns" && <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Joined Campaigns</h1>
-          <Button
-            onClick={() => setPrivateDialogOpen(true)}
-            variant="secondary"
-            className="gap-2 whitespace-nowrap"
-          >
+          <Button onClick={() => setPrivateDialogOpen(true)} variant="secondary" className="gap-2 whitespace-nowrap bg-[#1a1a1a]">
             <Lock className="h-4 w-4" />
             Join Private Campaign
           </Button>
-        </div>
-      )}
+        </div>}
 
       {/* Sign Out button for other tabs (except discover and wallet) */}
       {currentTab !== "campaigns" && currentTab !== "discover" && currentTab !== "wallet" && <div className="flex justify-between items-center">
@@ -98,9 +92,6 @@ export default function Dashboard() {
         </TabsContent>
       </Tabs>
 
-      <JoinPrivateCampaignDialog 
-        open={privateDialogOpen} 
-        onOpenChange={setPrivateDialogOpen}
-      />
+      <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
     </div>;
 }
