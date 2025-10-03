@@ -818,9 +818,8 @@ export function CampaignAnalyticsTable({
               // Show first page, last page, current page, and pages around current
               if (page === 1 || page === totalPages || page >= currentPage - 1 && page <= currentPage + 1) {
                 return <PaginationItem key={page}>
-                      <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md" style={{
-                    backgroundColor: currentPage === page ? '#202020' : 'transparent',
-                    border: currentPage === page ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                      <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md border border-transparent" style={{
+                    backgroundColor: currentPage === page ? '#202020' : 'transparent'
                   }}>
                         <span className={currentPage === page ? "text-white font-medium" : "text-white/50"}>
                           {page}
