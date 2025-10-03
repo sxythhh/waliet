@@ -7,6 +7,10 @@ const menuItems = [{
   tab: "campaigns",
   icon: Home
 }, {
+  title: "Wallet",
+  tab: "wallet",
+  icon: DollarSign
+}, {
   title: "Discover",
   tab: "discover",
   icon: Compass
@@ -14,10 +18,6 @@ const menuItems = [{
   title: "Referrals",
   tab: "referrals",
   icon: Users
-}, {
-  title: "Wallet",
-  tab: "wallet",
-  icon: DollarSign
 }, {
   title: "Profile",
   tab: "profile",
