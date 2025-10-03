@@ -146,9 +146,7 @@ export default function AdminBrands() {
                     </div>}
 
                   {/* Description */}
-                  {brand.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {brand.description}
-                    </p>}
+                  {brand.description}
 
                   {/* Meta Info */}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4 pb-4 border-b">
@@ -160,11 +158,11 @@ export default function AdminBrands() {
                   {/* Actions */}
                   <div className="flex gap-2">
                     <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
-                    <Button size="sm" variant="outline" className="flex-1 border-0" onClick={() => navigate(`/brand/${brand.slug}`)}>
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/brand/${brand.slug}`)} className="flex-1 border-0 bg-[#1a1b1a]">
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                       View
                     </Button>
-                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-0" onClick={() => handleDeleteClick(brand)}>
+                    <Button size="sm" variant="outline" onClick={() => handleDeleteClick(brand)} className="text-destructive hover:text-destructive border-0 bg-[#1a1b1a]">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
