@@ -661,18 +661,20 @@ export function WalletTab() {
                   border: "none",
                   borderRadius: "12px",
                   padding: "12px 16px",
-                  fontFamily: "Chakra Petch, sans-serif",
+                  fontFamily: "Instrument Sans, sans-serif",
                   letterSpacing: "-0.5px"
                 }} labelStyle={{
-                  color: "#ffffff",
-                  fontWeight: 600,
+                  color: "#666666",
+                  fontWeight: 500,
                   marginBottom: "4px",
-                  fontFamily: "Chakra Petch, sans-serif",
-                  letterSpacing: "-0.5px"
+                  fontFamily: "Instrument Sans, sans-serif",
+                  letterSpacing: "-0.5px",
+                  fontSize: "12px"
                 }} formatter={(value: number) => [`$${value.toFixed(2)}`, 'Balance']} itemStyle={{
-                  color: "#60a5fa",
-                  fontFamily: "Chakra Petch, sans-serif",
-                  letterSpacing: "-0.5px"
+                  color: "#ffffff",
+                  fontFamily: "Instrument Sans, sans-serif",
+                  letterSpacing: "-0.5px",
+                  fontWeight: 600
                 }} cursor={{
                   stroke: "#333333",
                   strokeWidth: 2
