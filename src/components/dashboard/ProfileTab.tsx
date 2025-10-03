@@ -325,9 +325,31 @@ export function ProfileTab() {
         session
       }
     } = await supabase.auth.getSession();
+
+    // Check for duplicate username if username changed
+    if (profile.username) {
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", profile.username)
+        .neq("id", session?.user.id)
+        .maybeSingle();
+
+      if (existingProfile) {
+        setSaving(false);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Username already taken"
+        });
+        return;
+      }
+    }
+
     const {
       error
     } = await supabase.from("profiles").update({
+      username: profile.username,
       full_name: profile.full_name,
       bio: profile.bio,
       country: profile.country,
@@ -481,10 +503,10 @@ export function ProfileTab() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
-                  <Input id="username" value={profile.username} disabled className="bg-muted/30 cursor-not-allowed" />
-                  <p className="text-xs text-muted-foreground">
-                    Username cannot be changed
-                  </p>
+                  <Input id="username" value={profile.username} onChange={e => setProfile({
+                  ...profile,
+                  username: e.target.value
+                })} placeholder="username" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
                 </div>
 
                 <div className="space-y-2">
@@ -492,7 +514,7 @@ export function ProfileTab() {
                   <Input id="fullName" value={profile.full_name || ""} onChange={e => setProfile({
                   ...profile,
                   full_name: e.target.value
-                })} placeholder="John Doe" className="bg-background" />
+                })} placeholder="John Doe" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
                 </div>
               </div>
             </div>
@@ -506,7 +528,7 @@ export function ProfileTab() {
                   <Input id="phone" type="tel" value={profile.phone_number || ""} onChange={e => setProfile({
                   ...profile,
                   phone_number: e.target.value
-                })} placeholder="+1 (555) 000-0000" className="bg-background" />
+                })} placeholder="+1 (555) 000-0000" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
                 </div>
 
                 <div className="space-y-2">
@@ -514,7 +536,7 @@ export function ProfileTab() {
                   <Input id="country" value={profile.country || ""} onChange={e => setProfile({
                   ...profile,
                   country: e.target.value
-                })} placeholder="United States" className="bg-background" />
+                })} placeholder="United States" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -522,7 +544,7 @@ export function ProfileTab() {
                   <Input id="city" value={profile.city || ""} onChange={e => setProfile({
                   ...profile,
                   city: e.target.value
-                })} placeholder="New York" className="bg-background" />
+                })} placeholder="New York" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0" />
                 </div>
               </div>
             </div>
@@ -535,7 +557,7 @@ export function ProfileTab() {
                 <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
                 ...profile,
                 bio: e.target.value
-              })} placeholder="Tell brands and followers about yourself, your content style, and what makes you unique..." rows={5} className="bg-background resize-none" />
+              })} placeholder="Tell brands and followers about yourself, your content style, and what makes you unique..." rows={5} className="bg-background resize-none focus-visible:ring-0 focus-visible:ring-offset-0" />
                 <p className="text-xs text-muted-foreground">
                   {profile.bio?.length || 0} characters
                 </p>
