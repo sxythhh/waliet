@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle, XCircle, Clock, Users, TrendingUp, Image as ImageIcon, FileText } from "lucide-react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 interface DemographicSubmission {
   id: string;
@@ -87,7 +89,6 @@ export default function Demographics() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      // Update submission
       const { error: updateError } = await supabase
         .from("demographic_submissions")
         .update({
@@ -101,7 +102,6 @@ export default function Demographics() {
 
       if (updateError) throw updateError;
 
-      // If approved, update the profile's demographics_score
       if (reviewStatus === "approved") {
         const { error: profileError } = await supabase
           .from("profiles")
@@ -141,209 +141,353 @@ export default function Demographics() {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive"> = {
-      pending: "secondary",
-      approved: "default",
-      rejected: "destructive",
-    };
-    return <Badge variant={variants[status] || "default"}>{status}</Badge>;
+    switch (status) {
+      case "pending":
+        return (
+          <Badge variant="outline" className="border-yellow-500/30 bg-yellow-500/10 text-yellow-400">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      case "approved":
+        return (
+          <Badge variant="outline" className="border-green-500/30 bg-green-500/10 text-green-400">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Approved
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge variant="outline" className="border-red-500/30 bg-red-500/10 text-red-400">
+            <XCircle className="h-3 w-3 mr-1" />
+            Rejected
+          </Badge>
+        );
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-5 h-5" />;
+      case "instagram":
+        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-5 h-5" />;
+      case "youtube":
+        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-5 h-5" />;
+      default:
+        return <Users className="w-5 h-5" />;
+    }
   };
 
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
   const reviewedSubmissions = submissions.filter(s => s.status !== "pending");
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AdminSidebar />
-      <div className="flex-1 p-8 ml-64">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8">Demographics Management</h1>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-[#0a0a0a]">
+        <AdminSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-sm px-6">
+            <SidebarTrigger />
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-white">Demographics Management</h1>
+            </div>
+          </header>
 
-          <Tabs defaultValue="pending" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="pending">
-                Pending ({pendingSubmissions.length})
-              </TabsTrigger>
-              <TabsTrigger value="reviewed">
-                Reviewed ({reviewedSubmissions.length})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="pending" className="space-y-4">
-              {loading ? (
-                <p>Loading...</p>
-              ) : pendingSubmissions.length === 0 ? (
-                <Card>
-                  <CardContent className="p-8 text-center text-muted-foreground">
-                    No pending submissions
+          {/* Main Content */}
+          <main className="flex-1 p-6 overflow-auto">
+            <div className="max-w-7xl mx-auto space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="bg-[#1a1a1a] border-white/10">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-white/60 mb-1">Pending</p>
+                        <p className="text-3xl font-bold text-yellow-400">{pendingSubmissions.length}</p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <Clock className="h-6 w-6 text-yellow-400" />
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              ) : (
-                pendingSubmissions.map((submission) => (
-                  <Card key={submission.id}>
-                    <CardHeader className="flex flex-row items-center justify-between">
+
+                <Card className="bg-[#1a1a1a] border-white/10">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="text-lg">
-                          @{submission.social_accounts.username}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {submission.social_accounts.platform}
+                        <p className="text-sm text-white/60 mb-1">Approved</p>
+                        <p className="text-3xl font-bold text-green-400">
+                          {submissions.filter(s => s.status === "approved").length}
                         </p>
                       </div>
-                      {getStatusBadge(submission.status)}
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Tier 1 Percentage</p>
-                          <p className="text-2xl font-bold">{submission.tier1_percentage}%</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Submitted</p>
-                          <p className="font-medium">
-                            {new Date(submission.submitted_at).toLocaleDateString()}
-                          </p>
-                        </div>
+                      <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-400" />
                       </div>
-
-                      {submission.screenshot_url && (
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-2">Screenshot</p>
-                          <img
-                            src={submission.screenshot_url}
-                            alt="Demographics screenshot"
-                            className="max-h-64 rounded-lg border"
-                          />
-                        </div>
-                      )}
-
-                      <Button onClick={() => openReviewDialog(submission)} className="w-full">
-                        Review Submission
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </TabsContent>
-
-            <TabsContent value="reviewed" className="space-y-4">
-              {loading ? (
-                <p>Loading...</p>
-              ) : reviewedSubmissions.length === 0 ? (
-                <Card>
-                  <CardContent className="p-8 text-center text-muted-foreground">
-                    No reviewed submissions
+                    </div>
                   </CardContent>
                 </Card>
-              ) : (
-                reviewedSubmissions.map((submission) => (
-                  <Card key={submission.id}>
-                    <CardHeader className="flex flex-row items-center justify-between">
+
+                <Card className="bg-[#1a1a1a] border-white/10">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="text-lg">
-                          @{submission.social_accounts.username}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {submission.social_accounts.platform}
+                        <p className="text-sm text-white/60 mb-1">Rejected</p>
+                        <p className="text-3xl font-bold text-red-400">
+                          {submissions.filter(s => s.status === "rejected").length}
                         </p>
                       </div>
-                      {getStatusBadge(submission.status)}
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Tier 1 %</p>
-                          <p className="text-xl font-bold">{submission.tier1_percentage}%</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Score</p>
-                          <p className="text-xl font-bold">{submission.score || "N/A"}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Submitted</p>
-                          <p className="font-medium">
-                            {new Date(submission.submitted_at).toLocaleDateString()}
-                          </p>
-                        </div>
+                      <div className="h-12 w-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <XCircle className="h-6 w-6 text-red-400" />
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-                      {submission.admin_notes && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Admin Notes</p>
-                          <p className="text-sm">{submission.admin_notes}</p>
-                        </div>
-                      )}
+              {/* Submissions Tabs */}
+              <Tabs defaultValue="pending" className="space-y-6">
+                <TabsList className="bg-[#1a1a1a] border border-white/10">
+                  <TabsTrigger value="pending" className="data-[state=active]:bg-blue-500">
+                    Pending ({pendingSubmissions.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="reviewed" className="data-[state=active]:bg-blue-500">
+                    Reviewed ({reviewedSubmissions.length})
+                  </TabsTrigger>
+                </TabsList>
 
-                      <Button 
-                        variant="outline" 
-                        onClick={() => openReviewDialog(submission)} 
-                        className="w-full"
-                      >
-                        Update Review
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </TabsContent>
-          </Tabs>
+                <TabsContent value="pending" className="space-y-4">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    </div>
+                  ) : pendingSubmissions.length === 0 ? (
+                    <Card className="bg-[#1a1a1a] border-white/10">
+                      <CardContent className="p-12 text-center">
+                        <Clock className="h-16 w-16 mx-auto mb-4 text-white/20" />
+                        <p className="text-white/60 text-lg">No pending submissions</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {pendingSubmissions.map((submission) => (
+                        <Card key={submission.id} className="bg-[#1a1a1a] border-white/10 hover:border-primary/30 transition-all group">
+                          <CardContent className="p-6">
+                            {/* Header */}
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                {getPlatformIcon(submission.social_accounts.platform)}
+                                <div>
+                                  <h3 className="font-semibold text-white text-lg">
+                                    @{submission.social_accounts.username}
+                                  </h3>
+                                  <p className="text-sm text-white/60 capitalize">
+                                    {submission.social_accounts.platform}
+                                  </p>
+                                </div>
+                              </div>
+                              {getStatusBadge(submission.status)}
+                            </div>
+
+                            {/* Stats */}
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <TrendingUp className="h-4 w-4 text-blue-400" />
+                                  <p className="text-xs text-white/60">Tier 1</p>
+                                </div>
+                                <p className="text-2xl font-bold text-white">{submission.tier1_percentage}%</p>
+                              </div>
+                              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Clock className="h-4 w-4 text-purple-400" />
+                                  <p className="text-xs text-white/60">Submitted</p>
+                                </div>
+                                <p className="text-sm font-medium text-white">
+                                  {new Date(submission.submitted_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Screenshot Preview */}
+                            {submission.screenshot_url && (
+                              <div className="mb-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <ImageIcon className="h-4 w-4 text-white/60" />
+                                  <p className="text-xs text-white/60">Screenshot</p>
+                                </div>
+                                <img
+                                  src={submission.screenshot_url}
+                                  alt="Demographics screenshot"
+                                  className="w-full h-40 object-cover rounded-lg border border-white/10"
+                                />
+                              </div>
+                            )}
+
+                            {/* Action Button */}
+                            <Button 
+                              onClick={() => openReviewDialog(submission)} 
+                              className="w-full bg-blue-500 hover:bg-blue-600"
+                            >
+                              Review Submission
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="reviewed" className="space-y-4">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    </div>
+                  ) : reviewedSubmissions.length === 0 ? (
+                    <Card className="bg-[#1a1a1a] border-white/10">
+                      <CardContent className="p-12 text-center">
+                        <FileText className="h-16 w-16 mx-auto mb-4 text-white/20" />
+                        <p className="text-white/60 text-lg">No reviewed submissions</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {reviewedSubmissions.map((submission) => (
+                        <Card key={submission.id} className="bg-[#1a1a1a] border-white/10 hover:border-primary/30 transition-all">
+                          <CardContent className="p-6">
+                            {/* Header */}
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                {getPlatformIcon(submission.social_accounts.platform)}
+                                <div>
+                                  <h3 className="font-semibold text-white text-lg">
+                                    @{submission.social_accounts.username}
+                                  </h3>
+                                  <p className="text-sm text-white/60 capitalize">
+                                    {submission.social_accounts.platform}
+                                  </p>
+                                </div>
+                              </div>
+                              {getStatusBadge(submission.status)}
+                            </div>
+
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-3 gap-3 mb-4">
+                              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <p className="text-xs text-white/60 mb-1">Tier 1</p>
+                                <p className="text-xl font-bold text-white">{submission.tier1_percentage}%</p>
+                              </div>
+                              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <p className="text-xs text-white/60 mb-1">Score</p>
+                                <p className="text-xl font-bold text-blue-400">{submission.score || "N/A"}</p>
+                              </div>
+                              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                <p className="text-xs text-white/60 mb-1">Date</p>
+                                <p className="text-xs font-medium text-white">
+                                  {new Date(submission.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Admin Notes */}
+                            {submission.admin_notes && (
+                              <div className="mb-4 bg-white/5 rounded-lg p-3 border border-white/10">
+                                <p className="text-xs text-white/60 mb-1">Admin Notes</p>
+                                <p className="text-sm text-white/80">{submission.admin_notes}</p>
+                              </div>
+                            )}
+
+                            {/* Action Button */}
+                            <Button 
+                              variant="outline" 
+                              onClick={() => openReviewDialog(submission)} 
+                              className="w-full border-white/20 hover:bg-white/10"
+                            >
+                              Update Review
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </main>
         </div>
       </div>
 
       {/* Review Dialog */}
       <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px] bg-[#1a1a1a] border-white/10">
           <DialogHeader>
-            <DialogTitle>Review Submission</DialogTitle>
+            <DialogTitle className="text-2xl text-white">Review Submission</DialogTitle>
           </DialogHeader>
 
           {selectedSubmission && (
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Account</p>
-                <p className="font-medium">
-                  @{selectedSubmission.social_accounts.username} ({selectedSubmission.social_accounts.platform})
-                </p>
+            <div className="space-y-6">
+              {/* Account Info */}
+              <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
+                {getPlatformIcon(selectedSubmission.social_accounts.platform)}
+                <div>
+                  <p className="font-semibold text-white text-lg">
+                    @{selectedSubmission.social_accounts.username}
+                  </p>
+                  <p className="text-sm text-white/60 capitalize">
+                    {selectedSubmission.social_accounts.platform}
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <p className="text-sm text-muted-foreground">Tier 1 Percentage</p>
-                <p className="text-2xl font-bold">{selectedSubmission.tier1_percentage}%</p>
+              {/* Tier 1 Percentage */}
+              <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg p-6 border border-blue-500/30">
+                <p className="text-sm text-white/80 mb-2">Tier 1 Percentage</p>
+                <p className="text-4xl font-bold text-white">{selectedSubmission.tier1_percentage}%</p>
               </div>
 
+              {/* Screenshot */}
               {selectedSubmission.screenshot_url && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Screenshot</p>
+                  <p className="text-sm text-white/60 mb-3">Screenshot Evidence</p>
                   <img
                     src={selectedSubmission.screenshot_url}
                     alt="Demographics screenshot"
-                    className="max-h-96 w-full rounded-lg border object-contain"
+                    className="w-full rounded-lg border border-white/10 object-contain max-h-[400px]"
                   />
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <div className="flex gap-2">
+              {/* Status Selection */}
+              <div className="space-y-3">
+                <Label className="text-white">Review Decision</Label>
+                <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant={reviewStatus === "approved" ? "default" : "outline"}
                     onClick={() => setReviewStatus("approved")}
-                    className="flex-1"
+                    className={reviewStatus === "approved" ? "bg-green-500 hover:bg-green-600" : "border-white/20 hover:bg-white/10"}
                   >
+                    <CheckCircle className="h-4 w-4 mr-2" />
                     Approve
                   </Button>
                   <Button
-                    variant={reviewStatus === "rejected" ? "destructive" : "outline"}
+                    variant={reviewStatus === "rejected" ? "default" : "outline"}
                     onClick={() => setReviewStatus("rejected")}
-                    className="flex-1"
+                    className={reviewStatus === "rejected" ? "bg-red-500 hover:bg-red-600" : "border-white/20 hover:bg-white/10"}
                   >
+                    <XCircle className="h-4 w-4 mr-2" />
                     Reject
                   </Button>
                 </div>
               </div>
 
+              {/* Score Input */}
               <div className="space-y-2">
-                <Label htmlFor="score">Score (0-100)</Label>
+                <Label htmlFor="score" className="text-white">Demographics Score (0-100)</Label>
                 <Input
                   id="score"
                   type="number"
@@ -352,27 +496,35 @@ export default function Demographics() {
                   value={score}
                   onChange={(e) => setScore(e.target.value)}
                   placeholder="Enter score"
+                  className="bg-white/5 border-white/10 text-white"
                 />
               </div>
 
+              {/* Admin Notes */}
               <div className="space-y-2">
-                <Label htmlFor="notes">Admin Notes (Optional)</Label>
+                <Label htmlFor="notes" className="text-white">Admin Notes (Optional)</Label>
                 <Textarea
                   id="notes"
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Add notes about this review..."
                   rows={4}
+                  className="bg-white/5 border-white/10 text-white"
                 />
               </div>
 
-              <Button onClick={handleReview} disabled={updating} className="w-full">
-                {updating ? "Updating..." : "Submit Review"}
+              {/* Submit Button */}
+              <Button 
+                onClick={handleReview} 
+                disabled={updating} 
+                className="w-full bg-blue-500 hover:bg-blue-600 h-12 text-lg"
+              >
+                {updating ? "Submitting Review..." : "Submit Review"}
               </Button>
             </div>
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </SidebarProvider>
   );
 }
