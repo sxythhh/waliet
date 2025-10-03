@@ -95,6 +95,7 @@ export default function BrandManagement() {
   const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
+  const [deleteAnalyticsDialogOpen, setDeleteAnalyticsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
@@ -316,6 +317,25 @@ export default function BrandManagement() {
     }
   };
 
+  const handleDeleteAllAnalytics = async () => {
+    if (!selectedCampaignId) return;
+
+    try {
+      const { error } = await supabase
+        .from("campaign_account_analytics")
+        .delete()
+        .eq("campaign_id", selectedCampaignId);
+
+      if (error) throw error;
+
+      toast.success("All analytics deleted successfully");
+      setDeleteAnalyticsDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting analytics:", error);
+      toast.error("Failed to delete analytics");
+    }
+  };
+
   const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
@@ -399,7 +419,15 @@ export default function BrandManagement() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-end gap-2 mb-4">
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteAnalyticsDialogOpen(true)}
+                className="bg-destructive/20 hover:bg-destructive/30"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete All Analytics
+              </Button>
               <ImportCampaignStatsDialog 
                 campaignId={selectedCampaignId}
                 onImportComplete={fetchSubmissions}
@@ -950,6 +978,29 @@ export default function BrandManagement() {
                 className="bg-primary hover:bg-primary/90"
               >
                 Save Changes
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete All Analytics Dialog */}
+        <AlertDialog open={deleteAnalyticsDialogOpen} onOpenChange={setDeleteAnalyticsDialogOpen}>
+          <AlertDialogContent className="bg-[#202020] border-white/10">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white">Delete All Analytics?</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/60">
+                This will permanently delete all analytics data for this campaign. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteAllAnalytics}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Delete All
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
