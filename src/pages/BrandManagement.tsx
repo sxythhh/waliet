@@ -462,109 +462,79 @@ export default function BrandManagement() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
-            <div className="flex justify-end gap-2 mb-4">
-              <Button
-                variant="destructive"
-                onClick={() => setDeleteAnalyticsDialogOpen(true)}
-                className="bg-destructive/20 hover:bg-destructive/30"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete All Analytics
-              </Button>
-              <ImportCampaignStatsDialog 
-                campaignId={selectedCampaignId}
-                onImportComplete={fetchSubmissions}
-                onMatchingRequired={() => setMatchDialogOpen(true)}
-              />
-            </div>
-            
-            {/* Imported Analytics Data */}
-            <CampaignAnalyticsTable campaignId={selectedCampaignId} />
-            
-            {/* Matching Dialog */}
-            <MatchAccountsDialog
-              open={matchDialogOpen}
-              onOpenChange={setMatchDialogOpen}
-              campaignId={selectedCampaignId}
-              onMatchComplete={fetchSubmissions}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-[#202020] border-transparent">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Effective CPM
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">
-                    ${effectiveCPM.toFixed(2)}
+            {/* Campaign Performance Overview */}
+            <Card className="bg-[#202020] border-transparent">
+              <CardHeader>
+                <CardTitle className="text-white text-sm">Campaign Performance Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                  <div className="text-center p-4 rounded-lg bg-[#191919]">
+                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      {analytics.reduce((sum, a) => sum + a.total_views, 0).toLocaleString()}
+                    </div>
+                    <div className="text-sm text-white/60 mt-1">Total Views</div>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#202020] border-transparent">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-white/60 font-normal flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
+                  <div className="text-center p-4 rounded-lg bg-[#191919]">
+                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      {analytics.reduce((sum, a) => sum + a.total_videos, 0).toLocaleString()}
+                    </div>
+                    <div className="text-sm text-white/60 mt-1">Total Videos</div>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-[#191919]">
+                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      ${transactions.reduce((sum, t) => sum + Number(t.amount), 0).toFixed(2)}
+                    </div>
+                    <div className="text-sm text-white/60 mt-1">Total Paid</div>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-[#191919]">
+                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      {analytics.length > 0 
+                        ? (analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length).toFixed(2)
+                        : '0.00'}%
+                    </div>
+                    <div className="text-sm text-white/60 mt-1">Avg Engagement</div>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-[#191919]">
+                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      ${effectiveCPM.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-white/60 mt-1">Effective CPM</div>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-[#191919]">
+                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      ${Number(selectedCampaign?.budget_used || 0).toFixed(2)}
+                    </div>
+                    <div className="text-sm text-white/60 mt-1 flex items-center justify-center gap-1">
                       Budget Used
-                    </span>
-                    {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-white/60 hover:text-white hover:bg-white/10"
-                        onClick={handleEditBudgetUsed}
-                        title="Edit budget used"
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">
-                    ${Number(selectedCampaign?.budget_used || 0).toFixed(2)}
+                      {isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 text-white/40 hover:text-white hover:bg-white/10 p-0"
+                          onClick={handleEditBudgetUsed}
+                          title="Edit budget used"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-sm text-white/40">
-                    of ${selectedCampaign?.budget || 0}
+                  <div className="text-center p-4 rounded-lg bg-[#191919]">
+                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      {approvedSubmissions.length}
+                    </div>
+                    <div className="text-sm text-white/60 mt-1">Active Creators</div>
                   </div>
-                  {/* Debug info */}
-                  <div className="text-xs text-white/20 mt-2">
-                    Admin: {isAdmin ? 'Yes' : 'No'}
+                  <div className="text-center p-4 rounded-lg bg-[#191919]">
+                    <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      ${selectedCampaign?.budget || 0}
+                    </div>
+                    <div className="text-sm text-white/60 mt-1">Total Budget</div>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#202020] border-transparent">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
-                    <Eye className="h-4 w-4" />
-                    Total Views
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">
-                    {totalViews.toLocaleString()}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#202020] border-transparent">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Total Creators
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">
-                    {approvedSubmissions.length}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
@@ -760,42 +730,6 @@ export default function BrandManagement() {
                 </CardContent>
               </Card>
 
-              {/* Campaign Performance Stats */}
-              <Card className="bg-[#202020] border-transparent lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-white text-sm">Campaign Performance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 rounded-lg bg-[#191919]">
-                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                        {analytics.reduce((sum, a) => sum + a.total_views, 0).toLocaleString()}
-                      </div>
-                      <div className="text-sm text-white/60 mt-1">Total Views</div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-[#191919]">
-                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                        {analytics.reduce((sum, a) => sum + a.total_videos, 0).toLocaleString()}
-                      </div>
-                      <div className="text-sm text-white/60 mt-1">Total Videos</div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-[#191919]">
-                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                        ${transactions.reduce((sum, t) => sum + Number(t.amount), 0).toFixed(2)}
-                      </div>
-                      <div className="text-sm text-white/60 mt-1">Total Paid</div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-[#191919]">
-                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                        {analytics.length > 0 
-                          ? (analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length).toFixed(2)
-                          : '0.00'}%
-                      </div>
-                      <div className="text-sm text-white/60 mt-1">Avg Engagement</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 
