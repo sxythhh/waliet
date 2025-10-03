@@ -6,38 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-
 interface User {
   id: string;
   username: string;
@@ -55,12 +30,10 @@ interface User {
     follower_count: number;
   }>;
 }
-
 interface Campaign {
   id: string;
   title: string;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -76,7 +49,6 @@ interface SocialAccount {
     brand_logo_url: string;
   };
 }
-
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -96,23 +68,23 @@ export default function AdminUsers() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importResults, setImportResults] = useState<any>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchData();
   }, []);
-
   useEffect(() => {
     filterUsers();
   }, [searchQuery, selectedCampaign, users]);
-
   const fetchData = async () => {
     setLoading(true);
-    
+
     // Fetch users with wallets and social accounts
-    const { data: usersData, error: usersError } = await supabase
-      .from("profiles")
-      .select(`
+    const {
+      data: usersData,
+      error: usersError
+    } = await supabase.from("profiles").select(`
         *,
         wallets (
           balance,
@@ -125,14 +97,14 @@ export default function AdminUsers() {
           username,
           follower_count
         )
-      `)
-      .order("created_at", { ascending: false });
-
+      `).order("created_at", {
+      ascending: false
+    });
     if (usersError) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch users",
+        description: "Failed to fetch users"
       });
     } else {
       setUsers(usersData as any || []);
@@ -140,58 +112,47 @@ export default function AdminUsers() {
     }
 
     // Fetch campaigns
-    const { data: campaignsData, error: campaignsError } = await supabase
-      .from("campaigns")
-      .select("id, title")
-      .order("title");
-
+    const {
+      data: campaignsData,
+      error: campaignsError
+    } = await supabase.from("campaigns").select("id, title").order("title");
     if (!campaignsError) {
       setCampaigns(campaignsData || []);
     }
-
     setLoading(false);
   };
-
   const filterUsers = async () => {
     let filtered = users;
 
     // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(
-        (user) =>
-          user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      filtered = filtered.filter(user => user.username?.toLowerCase().includes(searchQuery.toLowerCase()) || user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()));
     }
 
     // Campaign filter
     if (selectedCampaign !== "all") {
-      const { data: submissions } = await supabase
-        .from("campaign_submissions")
-        .select("creator_id")
-        .eq("campaign_id", selectedCampaign);
-
+      const {
+        data: submissions
+      } = await supabase.from("campaign_submissions").select("creator_id").eq("campaign_id", selectedCampaign);
       if (submissions) {
-        const creatorIds = submissions.map((s) => s.creator_id);
-        filtered = filtered.filter((user) => creatorIds.includes(user.id));
+        const creatorIds = submissions.map(s => s.creator_id);
+        filtered = filtered.filter(user => creatorIds.includes(user.id));
       }
     }
-
     setFilteredUsers(filtered);
   };
-
   const openPayDialog = (user: User) => {
     setSelectedUser(user);
     setPaymentAmount("");
     setPaymentNotes("");
     setPayDialogOpen(true);
   };
-
   const fetchUserSocialAccounts = async (userId: string) => {
     setLoadingSocialAccounts(true);
-    const { data, error } = await supabase
-      .from("social_accounts")
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from("social_accounts").select(`
         *,
         campaigns:campaign_id (
           id,
@@ -199,14 +160,12 @@ export default function AdminUsers() {
           brand_name,
           brand_logo_url
         )
-      `)
-      .eq("user_id", userId);
-
+      `).eq("user_id", userId);
     if (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch social accounts",
+        description: "Failed to fetch social accounts"
       });
       setUserSocialAccounts([]);
     } else {
@@ -214,13 +173,11 @@ export default function AdminUsers() {
     }
     setLoadingSocialAccounts(false);
   };
-
   const openUserDetailsDialog = (user: User) => {
     setSelectedUser(user);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(user.id);
   };
-
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'tiktok':
@@ -233,47 +190,45 @@ export default function AdminUsers() {
         return <UsersIcon className="h-5 w-5" />;
     }
   };
-
   const handlePayUser = async () => {
     if (!selectedUser || !paymentAmount) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please enter a payment amount",
+        description: "Please enter a payment amount"
       });
       return;
     }
-
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please enter a valid amount",
+        description: "Please enter a valid amount"
       });
       return;
     }
-
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     // Update wallet balance
     const currentBalance = selectedUser.wallets?.balance || 0;
     const currentEarned = selectedUser.wallets?.total_earned || 0;
-
-    const { error: walletError } = await supabase
-      .from("wallets")
-      .update({
-        balance: currentBalance + amount,
-        total_earned: currentEarned + amount,
-      })
-      .eq("user_id", selectedUser.id);
-
+    const {
+      error: walletError
+    } = await supabase.from("wallets").update({
+      balance: currentBalance + amount,
+      total_earned: currentEarned + amount
+    }).eq("user_id", selectedUser.id);
     if (walletError) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to process payment",
+        description: "Failed to process payment"
       });
       return;
     }
@@ -287,54 +242,50 @@ export default function AdminUsers() {
       new_data: {
         amount,
         recipient: selectedUser.username,
-        notes: paymentNotes,
-      },
+        notes: paymentNotes
+      }
     });
-
     toast({
       title: "Success",
-      description: `Payment of $${amount.toFixed(2)} sent to ${selectedUser.username}`,
+      description: `Payment of $${amount.toFixed(2)} sent to ${selectedUser.username}`
     });
-
     setPayDialogOpen(false);
     fetchData();
   };
-
   const handleCsvImport = async () => {
     if (!csvFile) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please select a CSV file",
+        description: "Please select a CSV file"
       });
       return;
     }
-
     setIsImporting(true);
     setImportResults(null);
-
     try {
       const fileContent = await csvFile.text();
-      
-      const { data, error } = await supabase.functions.invoke('import-transactions', {
-        body: { csvContent: fileContent }
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('import-transactions', {
+        body: {
+          csvContent: fileContent
+        }
       });
-
       if (error) throw error;
-
       setImportResults(data);
-      
       if (data.successful > 0) {
         toast({
           title: "Import Complete",
-          description: `Successfully imported ${data.successful} of ${data.processed} transactions`,
+          description: `Successfully imported ${data.successful} of ${data.processed} transactions`
         });
         fetchData(); // Refresh user data
       } else {
         toast({
           variant: "destructive",
           title: "Import Failed",
-          description: `Failed to import any transactions. Check the results for details.`,
+          description: `Failed to import any transactions. Check the results for details.`
         });
       }
     } catch (error) {
@@ -342,23 +293,23 @@ export default function AdminUsers() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to import transactions",
+        description: error instanceof Error ? error.message : "Failed to import transactions"
       });
     } finally {
       setIsImporting(false);
     }
   };
-
   const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setCsvFile(e.target.files[0]);
       setImportResults(null);
     }
   };
-
   const downloadCsvTemplate = () => {
     const template = 'account_username;payout amount;date\ntiktok_user123;100.50;2025-10-02\ninsta_creator;250.00;2025-10-01';
-    const blob = new Blob([template], { type: 'text/csv' });
+    const blob = new Blob([template], {
+      type: 'text/csv'
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -368,24 +319,17 @@ export default function AdminUsers() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-
-
   const stats = {
     totalUsers: users.length,
     totalBalance: users.reduce((sum, u) => sum + (u.wallets?.balance || 0), 0),
-    totalEarned: users.reduce((sum, u) => sum + (u.wallets?.total_earned || 0), 0),
+    totalEarned: users.reduce((sum, u) => sum + (u.wallets?.total_earned || 0), 0)
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading users...</p>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="p-8 space-y-6">
+  return <div className="p-8 space-y-6 py-0 px-[23px]">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
@@ -398,68 +342,19 @@ export default function AdminUsers() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Users</p>
-              <UsersIcon className="h-4 w-4 text-primary" />
-            </div>
-            <p className="text-2xl font-bold">{stats.totalUsers}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Balance</p>
-              <Wallet className="h-4 w-4 text-success" />
-            </div>
-            <p className="text-2xl font-bold">${stats.totalBalance.toFixed(2)}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Earned</p>
-              <DollarSign className="h-4 w-4 text-success" />
-            </div>
-            <p className="text-2xl font-bold">${stats.totalEarned.toFixed(2)}</p>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Filters */}
       <Card className="bg-card border-0">
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 bg-[#000a00] py-0">
           <div className="flex gap-4">
-            <div className="flex-1">
-              <Label htmlFor="search">Search Users</Label>
-              <div className="relative mt-2">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search by username or name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+            
             <div className="w-64">
               <Label htmlFor="campaign">Filter by Campaign</Label>
               <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={campaignPopoverOpen}
-                    className="w-full justify-between mt-2"
-                  >
-                    {selectedCampaign === "all"
-                      ? "All Campaigns"
-                      : campaigns.find((c) => c.id === selectedCampaign)?.title}
+                  <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2">
+                    {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -469,39 +364,20 @@ export default function AdminUsers() {
                     <CommandList>
                       <CommandEmpty>No campaign found.</CommandEmpty>
                       <CommandGroup>
-                        <CommandItem
-                          value="all"
-                          onSelect={() => {
-                            setSelectedCampaign("all");
-                            setCampaignPopoverOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedCampaign === "all" ? "opacity-100" : "opacity-0"
-                            )}
-                          />
+                        <CommandItem value="all" onSelect={() => {
+                        setSelectedCampaign("all");
+                        setCampaignPopoverOpen(false);
+                      }}>
+                          <Check className={cn("mr-2 h-4 w-4", selectedCampaign === "all" ? "opacity-100" : "opacity-0")} />
                           All Campaigns
                         </CommandItem>
-                        {campaigns.map((campaign) => (
-                          <CommandItem
-                            key={campaign.id}
-                            value={campaign.title}
-                            onSelect={() => {
-                              setSelectedCampaign(campaign.id);
-                              setCampaignPopoverOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedCampaign === campaign.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
+                        {campaigns.map(campaign => <CommandItem key={campaign.id} value={campaign.title} onSelect={() => {
+                        setSelectedCampaign(campaign.id);
+                        setCampaignPopoverOpen(false);
+                      }}>
+                            <Check className={cn("mr-2 h-4 w-4", selectedCampaign === campaign.id ? "opacity-100" : "opacity-0")} />
                             {campaign.title}
-                          </CommandItem>
-                        ))}
+                          </CommandItem>)}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -530,37 +406,19 @@ export default function AdminUsers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.length === 0 ? (
-                <TableRow>
+              {filteredUsers.length === 0 ? <TableRow>
                   <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                     No users found
                   </TableCell>
-                </TableRow>
-              ) : (
-                filteredUsers.map((user) => (
-                  <TableRow 
-                    key={user.id}
-                    className="cursor-pointer"
-                    onClick={() => openUserDetailsDialog(user)}
-                  >
+                </TableRow> : filteredUsers.map(user => <TableRow key={user.id} className="cursor-pointer" onClick={() => openUserDetailsDialog(user)}>
                     <TableCell className="font-medium">{user.username}</TableCell>
                     <TableCell>
-                      {user.social_accounts && user.social_accounts.length > 0 ? (
-                        <div className="flex flex-wrap gap-1.5">
-                          {user.social_accounts.map((account) => (
-                            <div
-                              key={account.id}
-                              className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded text-xs"
-                              title={`${account.username} - ${account.follower_count.toLocaleString()} followers`}
-                            >
+                      {user.social_accounts && user.social_accounts.length > 0 ? <div className="flex flex-wrap gap-1.5">
+                          {user.social_accounts.map(account => <div key={account.id} className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded text-xs" title={`${account.username} - ${account.follower_count.toLocaleString()} followers`}>
                               {getPlatformIcon(account.platform)}
                               <span className="font-medium">{account.username}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">No accounts</span>
-                      )}
+                            </div>)}
+                        </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
                     </TableCell>
                     <TableCell className="text-right font-medium text-success">
                       ${(user.wallets?.balance || 0).toFixed(2)}
@@ -572,18 +430,12 @@ export default function AdminUsers() {
                       ${(user.wallets?.total_withdrawn || 0).toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        onClick={() => openPayDialog(user)}
-                        className="gap-1"
-                      >
+                      <Button size="sm" onClick={() => openPayDialog(user)} className="gap-1">
                         <DollarSign className="h-4 w-4" />
                         Pay
                       </Button>
                     </TableCell>
-                  </TableRow>
-                ))
-              )}
+                  </TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
@@ -602,26 +454,12 @@ export default function AdminUsers() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="amount">Amount (USD) *</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder="0.00"
-              />
+              <Input id="amount" type="number" step="0.01" min="0" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="0.00" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (Optional)</Label>
-              <Textarea
-                id="notes"
-                value={paymentNotes}
-                onChange={(e) => setPaymentNotes(e.target.value)}
-                placeholder="Add payment notes..."
-                rows={3}
-              />
+              <Textarea id="notes" value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} placeholder="Add payment notes..." rows={3} />
             </div>
 
             <div className="flex gap-2 justify-end">
@@ -650,28 +488,15 @@ export default function AdminUsers() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="csv-file">CSV File</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={downloadCsvTemplate}
-                  className="gap-2 h-8"
-                >
+                <Button variant="ghost" size="sm" onClick={downloadCsvTemplate} className="gap-2 h-8">
                   <FileDown className="h-4 w-4" />
                   Download Template
                 </Button>
               </div>
-              <Input
-                id="csv-file"
-                type="file"
-                accept=".csv"
-                onChange={handleCsvFileChange}
-                disabled={isImporting}
-              />
-              {csvFile && (
-                <p className="text-sm text-muted-foreground">
+              <Input id="csv-file" type="file" accept=".csv" onChange={handleCsvFileChange} disabled={isImporting} />
+              {csvFile && <p className="text-sm text-muted-foreground">
                   Selected: {csvFile.name}
-                </p>
-              )}
+                </p>}
             </div>
 
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
@@ -689,8 +514,7 @@ export default function AdminUsers() {
               </p>
             </div>
 
-            {importResults && (
-              <div className="space-y-3">
+            {importResults && <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-4">
                   <Card className="bg-background">
                     <CardContent className="pt-4">
@@ -712,21 +536,16 @@ export default function AdminUsers() {
                   </Card>
                 </div>
 
-                {importResults.errors && importResults.errors.length > 0 && (
-                  <div className="space-y-2">
+                {importResults.errors && importResults.errors.length > 0 && <div className="space-y-2">
                     <p className="text-sm font-medium text-destructive">Errors:</p>
                     <div className="bg-destructive/10 p-3 rounded-lg max-h-40 overflow-y-auto">
-                      {importResults.errors.map((error: any, idx: number) => (
-                        <p key={idx} className="text-xs text-destructive mb-1">
+                      {importResults.errors.map((error: any, idx: number) => <p key={idx} className="text-xs text-destructive mb-1">
                           Row {error.row} ({error.username}): {error.error}
-                        </p>
-                      ))}
+                        </p>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
-                {importResults.details && importResults.details.length > 0 && (
-                  <div className="space-y-2">
+                {importResults.details && importResults.details.length > 0 && <div className="space-y-2">
                     <p className="text-sm font-medium">Transaction Details:</p>
                     <div className="bg-muted/50 p-3 rounded-lg max-h-60 overflow-y-auto">
                       <Table>
@@ -738,55 +557,35 @@ export default function AdminUsers() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {importResults.details.map((detail: any, idx: number) => (
-                            <TableRow key={idx}>
+                          {importResults.details.map((detail: any, idx: number) => <TableRow key={idx}>
                               <TableCell className="font-medium">{detail.username}</TableCell>
                               <TableCell className="text-right">${detail.amount.toFixed(2)}</TableCell>
                               <TableCell className="text-right">
-                                {detail.status === 'success' ? (
-                                  <span className="text-success">✓ Success</span>
-                                ) : (
-                                  <span className="text-destructive">✗ Failed</span>
-                                )}
+                                {detail.status === 'success' ? <span className="text-success">✓ Success</span> : <span className="text-destructive">✗ Failed</span>}
                               </TableCell>
-                            </TableRow>
-                          ))}
+                            </TableRow>)}
                         </TableBody>
                       </Table>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
 
             <div className="flex gap-2 justify-end pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setCsvImportDialogOpen(false);
-                  setCsvFile(null);
-                  setImportResults(null);
-                }}
-                disabled={isImporting}
-              >
+              <Button variant="outline" onClick={() => {
+              setCsvImportDialogOpen(false);
+              setCsvFile(null);
+              setImportResults(null);
+            }} disabled={isImporting}>
                 Close
               </Button>
-              <Button 
-                onClick={handleCsvImport}
-                disabled={!csvFile || isImporting}
-                className="gap-2"
-              >
-                {isImporting ? (
-                  <>
+              <Button onClick={handleCsvImport} disabled={!csvFile || isImporting} className="gap-2">
+                {isImporting ? <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     Importing...
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <Upload className="h-4 w-4" />
                     Import Transactions
-                  </>
-                )}
+                  </>}
               </Button>
             </div>
           </div>
@@ -804,34 +603,19 @@ export default function AdminUsers() {
           </DialogHeader>
 
           <div className="space-y-4">
-            {loadingSocialAccounts ? (
-              <div className="text-center py-8 text-muted-foreground">
+            {loadingSocialAccounts ? <div className="text-center py-8 text-muted-foreground">
                 Loading social accounts...
-              </div>
-            ) : userSocialAccounts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              </div> : userSocialAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                 No social accounts connected
-              </div>
-            ) : (
-              <div className="space-y-3">
+              </div> : <div className="space-y-3">
                 <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                   Connected Accounts ({userSocialAccounts.length})
                 </h3>
-                {userSocialAccounts.map((account) => (
-                  <div
-                    key={account.id}
-                    className="flex items-center justify-between p-4 rounded-lg border"
-                  >
+                {userSocialAccounts.map(account => <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border">
                     <div className="flex items-center gap-3 flex-1">
                       {getPlatformIcon(account.platform)}
                       <div className="flex flex-col">
-                        <a 
-                          href={account.account_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-semibold hover:underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline" onClick={e => e.stopPropagation()}>
                           @{account.username}
                         </a>
                         <span className="text-xs text-muted-foreground">
@@ -841,31 +625,18 @@ export default function AdminUsers() {
                     </div>
                     
                     <div className="text-right">
-                      {account.campaigns ? (
-                        <div className="flex items-center gap-2">
-                          {account.campaigns.brand_logo_url && (
-                            <img 
-                              src={account.campaigns.brand_logo_url} 
-                              alt={account.campaigns.brand_name}
-                              className="h-6 w-6 rounded object-cover"
-                            />
-                          )}
+                      {account.campaigns ? <div className="flex items-center gap-2">
+                          {account.campaigns.brand_logo_url && <img src={account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
                           <div className="flex flex-col items-end">
                             <span className="font-medium text-sm">{account.campaigns.title}</span>
                             <span className="text-xs text-muted-foreground">{account.campaigns.brand_name}</span>
                           </div>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground italic">Not linked</span>
-                      )}
+                        </div> : <span className="text-xs text-muted-foreground italic">Not linked</span>}
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 }
