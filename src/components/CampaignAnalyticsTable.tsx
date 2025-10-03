@@ -17,7 +17,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
-
 interface DemographicSubmission {
   id: string;
   status: string;
@@ -25,13 +24,11 @@ interface DemographicSubmission {
   tier1_percentage: number;
   score: number | null;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
   username: string;
 }
-
 interface AnalyticsData {
   id: string;
   account_username: string;
@@ -58,7 +55,6 @@ interface AnalyticsData {
   social_account?: SocialAccount | null;
   demographic_submission?: DemographicSubmission | null;
 }
-
 interface Transaction {
   id: string;
   user_id: string;
@@ -73,15 +69,14 @@ interface Transaction {
     avatar_url: string | null;
   };
 }
-
 interface CampaignAnalyticsTableProps {
   campaignId: string;
 }
-
 type SortField = 'total_videos' | 'total_views' | 'average_video_views' | 'total_likes' | 'total_comments' | 'average_engagement_rate' | 'outperforming_video_rate';
 type SortDirection = 'asc' | 'desc';
-
-export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTableProps) {
+export function CampaignAnalyticsTable({
+  campaignId
+}: CampaignAnalyticsTableProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,96 +104,77 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
   }>>([]);
   const [showTransactions, setShowTransactions] = useState(false);
   const itemsPerPage = 20;
-
   useEffect(() => {
     fetchAnalytics();
     fetchCampaignRPM();
     fetchTransactions();
   }, [campaignId]);
-
   const fetchCampaignRPM = async () => {
     try {
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("rpm_rate")
-        .eq("id", campaignId)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from("campaigns").select("rpm_rate").eq("id", campaignId).single();
       if (error) throw error;
       setCampaignRPM(data?.rpm_rate || 0);
     } catch (error) {
       console.error("Error fetching campaign RPM:", error);
     }
   };
-
   const fetchAnalytics = async () => {
     try {
-      const { data, error } = await supabase
-        .from("campaign_account_analytics")
-        .select("*")
-        .eq("campaign_id", campaignId)
-        .order("total_views", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("campaign_account_analytics").select("*").eq("campaign_id", campaignId).order("total_views", {
+        ascending: false
+      });
       if (error) throw error;
-      
+
       // Manually fetch user profiles and demographic submissions for accounts with user_id
-      const analyticsWithProfiles = await Promise.all(
-        (data || []).map(async (item) => {
-          if (item.user_id) {
-            // Fetch profile
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("username, avatar_url")
-              .eq("id", item.user_id)
-              .single();
-            
-            // Fetch social account for this platform (check campaign-specific first, then any)
-            let { data: socialAccount } = await supabase
-              .from("social_accounts")
-              .select("id, platform, username")
-              .eq("user_id", item.user_id)
-              .eq("platform", item.platform)
-              .eq("campaign_id", campaignId)
-              .maybeSingle();
-            
-            // If no campaign-specific account found, try to find any social account for this user/platform
-            if (!socialAccount) {
-              const { data: generalAccount } = await supabase
-                .from("social_accounts")
-                .select("id, platform, username")
-                .eq("user_id", item.user_id)
-                .eq("platform", item.platform)
-                .ilike("username", item.account_username.replace('@', ''))
-                .maybeSingle();
-              
-              socialAccount = generalAccount;
-            }
-            
-            let demographicSubmission = null;
-            if (socialAccount) {
-              // Fetch most recent demographic submission for this social account
-              const { data: submission } = await supabase
-                .from("demographic_submissions")
-                .select("id, status, submitted_at, tier1_percentage, score")
-                .eq("social_account_id", socialAccount.id)
-                .order("submitted_at", { ascending: false })
-                .limit(1)
-                .maybeSingle();
-              
-              demographicSubmission = submission;
-            }
-            
-            return { 
-              ...item, 
-              profiles: profile,
-              social_account: socialAccount,
-              demographic_submission: demographicSubmission
-            };
+      const analyticsWithProfiles = await Promise.all((data || []).map(async item => {
+        if (item.user_id) {
+          // Fetch profile
+          const {
+            data: profile
+          } = await supabase.from("profiles").select("username, avatar_url").eq("id", item.user_id).single();
+
+          // Fetch social account for this platform (check campaign-specific first, then any)
+          let {
+            data: socialAccount
+          } = await supabase.from("social_accounts").select("id, platform, username").eq("user_id", item.user_id).eq("platform", item.platform).eq("campaign_id", campaignId).maybeSingle();
+
+          // If no campaign-specific account found, try to find any social account for this user/platform
+          if (!socialAccount) {
+            const {
+              data: generalAccount
+            } = await supabase.from("social_accounts").select("id, platform, username").eq("user_id", item.user_id).eq("platform", item.platform).ilike("username", item.account_username.replace('@', '')).maybeSingle();
+            socialAccount = generalAccount;
           }
-          return { ...item, profiles: null, social_account: null, demographic_submission: null };
-        })
-      );
-      
+          let demographicSubmission = null;
+          if (socialAccount) {
+            // Fetch most recent demographic submission for this social account
+            const {
+              data: submission
+            } = await supabase.from("demographic_submissions").select("id, status, submitted_at, tier1_percentage, score").eq("social_account_id", socialAccount.id).order("submitted_at", {
+              ascending: false
+            }).limit(1).maybeSingle();
+            demographicSubmission = submission;
+          }
+          return {
+            ...item,
+            profiles: profile,
+            social_account: socialAccount,
+            demographic_submission: demographicSubmission
+          };
+        }
+        return {
+          ...item,
+          profiles: null,
+          social_account: null,
+          demographic_submission: null
+        };
+      }));
       setAnalytics(analyticsWithProfiles);
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -206,23 +182,20 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       setLoading(false);
     }
   };
-
   const fetchAvailableUsers = async (accountPlatform: string) => {
     try {
       // Get all users who have joined this campaign with any social accounts
-      const { data: socialAccounts, error } = await supabase
-        .from('social_accounts')
-        .select(`
+      const {
+        data: socialAccounts,
+        error
+      } = await supabase.from('social_accounts').select(`
           id,
           user_id,
           platform,
           username,
           profiles!inner(username, avatar_url)
-        `)
-        .eq('campaign_id', campaignId);
-
+        `).eq('campaign_id', campaignId);
       if (error) throw error;
-
       const users = socialAccounts?.map((account: any) => ({
         user_id: account.user_id,
         username: account.profiles.username,
@@ -230,54 +203,44 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
         platform: account.platform,
         account_username: account.username
       })) || [];
-
       setAvailableUsers(users);
     } catch (error) {
       console.error("Error fetching available users:", error);
       toast.error("Failed to load users");
     }
   };
-
   const handleLinkAccount = async (userId: string) => {
     if (!selectedAnalyticsAccount) return;
-
     try {
       // Update the analytics account with the user_id
-      const { error: analyticsError } = await supabase
-        .from('campaign_account_analytics')
-        .update({ user_id: userId })
-        .eq('id', selectedAnalyticsAccount.id);
-
+      const {
+        error: analyticsError
+      } = await supabase.from('campaign_account_analytics').update({
+        user_id: userId
+      }).eq('id', selectedAnalyticsAccount.id);
       if (analyticsError) throw analyticsError;
 
       // Find if there's a matching social account for this user
-      const { data: socialAccount, error: socialError } = await supabase
-        .from('social_accounts')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('campaign_id', campaignId)
-        .eq('platform', selectedAnalyticsAccount.platform)
-        .ilike('username', selectedAnalyticsAccount.account_username)
-        .maybeSingle();
-
+      const {
+        data: socialAccount,
+        error: socialError
+      } = await supabase.from('social_accounts').select('id').eq('user_id', userId).eq('campaign_id', campaignId).eq('platform', selectedAnalyticsAccount.platform).ilike('username', selectedAnalyticsAccount.account_username).maybeSingle();
       if (socialError && socialError.code !== 'PGRST116') throw socialError;
 
       // If no matching social account exists, create one
       if (!socialAccount) {
-        const { error: createError } = await supabase
-          .from('social_accounts')
-          .insert({
-            user_id: userId,
-            campaign_id: campaignId,
-            platform: selectedAnalyticsAccount.platform,
-            username: selectedAnalyticsAccount.account_username,
-            account_link: selectedAnalyticsAccount.account_link,
-            is_verified: true
-          });
-
+        const {
+          error: createError
+        } = await supabase.from('social_accounts').insert({
+          user_id: userId,
+          campaign_id: campaignId,
+          platform: selectedAnalyticsAccount.platform,
+          username: selectedAnalyticsAccount.account_username,
+          account_link: selectedAnalyticsAccount.account_link,
+          is_verified: true
+        });
         if (createError) throw createError;
       }
-
       toast.success("Account successfully linked to user");
       setLinkAccountDialogOpen(false);
       setSelectedAnalyticsAccount(null);
@@ -288,33 +251,28 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       toast.error(error.message || "Failed to link account");
     }
   };
-
   const openLinkDialog = (account: AnalyticsData) => {
     setSelectedAnalyticsAccount(account);
     setUserSearchTerm("");
     fetchAvailableUsers(account.platform);
     setLinkAccountDialogOpen(true);
   };
-
   const getDemographicStatus = (item: AnalyticsData): 'none' | 'pending' | 'approved' | 'outdated' => {
     if (!item.demographic_submission) return 'none';
-    
     const submission = item.demographic_submission;
     const submittedDate = new Date(submission.submitted_at);
     const daysSinceSubmission = Math.floor((Date.now() - submittedDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     // If older than 7 days, needs resubmission
     if (daysSinceSubmission > 7) return 'outdated';
-    
+
     // If pending review
     if (submission.status === 'pending') return 'pending';
-    
+
     // If approved and within 7 days
     if (submission.status === 'approved') return 'approved';
-    
     return 'none';
   };
-
   const getDemographicIcon = (status: 'none' | 'pending' | 'approved' | 'outdated') => {
     switch (status) {
       case 'none':
@@ -327,7 +285,6 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
         return <CheckCircle className="h-3 w-3 text-blue-400" />;
     }
   };
-
   const getDemographicTooltip = (status: 'none' | 'pending' | 'approved' | 'outdated', submission?: DemographicSubmission | null) => {
     switch (status) {
       case 'none':
@@ -340,7 +297,6 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
         return submission ? `Demographics approved - ${submission.tier1_percentage}% Tier 1` : 'Demographics approved';
     }
   };
-
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -349,18 +305,13 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       setSortDirection('desc');
     }
   };
-
   const handleDeleteAccount = async () => {
     if (!deleteAccountId) return;
-    
     try {
-      const { error } = await supabase
-        .from('campaign_account_analytics')
-        .delete()
-        .eq('id', deleteAccountId);
-      
+      const {
+        error
+      } = await supabase.from('campaign_account_analytics').delete().eq('id', deleteAccountId);
       if (error) throw error;
-      
       toast.success('Account analytics deleted');
       setDeleteDialogOpen(false);
       setDeleteAccountId(null);
@@ -370,20 +321,18 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       toast.error('Failed to delete account analytics');
     }
   };
-
   const calculatePayout = (user: AnalyticsData) => {
     const views = user.total_views;
     const rpm = campaignRPM;
-    
+
     // Get demographic percentage
     let demographicMultiplier = 0.4; // Default if no submission
     if (user.demographic_submission?.status === 'approved' && user.demographic_submission.tier1_percentage) {
       demographicMultiplier = user.demographic_submission.tier1_percentage / 100;
     }
-    
+
     // Calculate: (views / 1000) * RPM * demographic%
-    const payout = (views / 1000) * rpm * demographicMultiplier;
-    
+    const payout = views / 1000 * rpm * demographicMultiplier;
     return {
       payout: payout,
       views: views,
@@ -392,31 +341,28 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       demographicPercentage: demographicMultiplier * 100
     };
   };
-
   const fetchTransactions = async () => {
     try {
-      const { data, error } = await supabase
-        .from("wallet_transactions")
-        .select("*")
-        .contains('metadata', { campaign_id: campaignId })
-        .eq('type', 'earning')
-        .order('created_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("wallet_transactions").select("*").contains('metadata', {
+        campaign_id: campaignId
+      }).eq('type', 'earning').order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
 
       // Fetch user profiles separately
       if (data && data.length > 0) {
         const userIds = [...new Set(data.map(t => t.user_id))];
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, username, avatar_url")
-          .in("id", userIds);
-
+        const {
+          data: profiles
+        } = await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds);
         const transactionsWithProfiles = data.map(txn => ({
           ...txn,
           profiles: profiles?.find(p => p.id === txn.user_id)
         })) as Transaction[];
-
         setTransactions(transactionsWithProfiles);
       } else {
         setTransactions([]);
@@ -425,7 +371,6 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       console.error("Error fetching transactions:", error);
     }
   };
-
   const handlePayUser = async () => {
     if (!selectedUser?.user_id) {
       toast.error("No user selected");
@@ -433,90 +378,72 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     }
 
     // Use custom amount if provided, otherwise use calculated payout
-    const amount = paymentAmount 
-      ? parseFloat(paymentAmount) 
-      : calculatePayout(selectedUser).payout;
-
+    const amount = paymentAmount ? parseFloat(paymentAmount) : calculatePayout(selectedUser).payout;
     if (isNaN(amount) || amount <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
-
     try {
       // First, update the wallet balance
-      const { data: currentWallet, error: walletFetchError } = await supabase
-        .from("wallets")
-        .select("balance, total_earned")
-        .eq("user_id", selectedUser.user_id)
-        .single();
-
+      const {
+        data: currentWallet,
+        error: walletFetchError
+      } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", selectedUser.user_id).single();
       if (walletFetchError) throw walletFetchError;
-
-      const { error: walletUpdateError } = await supabase
-        .from("wallets")
-        .update({
-          balance: (currentWallet.balance || 0) + amount,
-          total_earned: (currentWallet.total_earned || 0) + amount
-        })
-        .eq("user_id", selectedUser.user_id);
-
+      const {
+        error: walletUpdateError
+      } = await supabase.from("wallets").update({
+        balance: (currentWallet.balance || 0) + amount,
+        total_earned: (currentWallet.total_earned || 0) + amount
+      }).eq("user_id", selectedUser.user_id);
       if (walletUpdateError) throw walletUpdateError;
 
       // Create wallet transaction with proper metadata
-      const { error: transactionError } = await supabase
-        .from("wallet_transactions")
-        .insert({
-          user_id: selectedUser.user_id,
-          amount: amount,
-          type: "earning",
-          description: `Payment for ${selectedUser.platform} account @${selectedUser.account_username}`,
-          status: "completed",
-          metadata: {
-            campaign_id: campaignId,
-            analytics_id: selectedUser.id,
-            account_username: selectedUser.account_username,
-            platform: selectedUser.platform,
-            views: selectedUser.total_views
-          }
-        });
-
+      const {
+        error: transactionError
+      } = await supabase.from("wallet_transactions").insert({
+        user_id: selectedUser.user_id,
+        amount: amount,
+        type: "earning",
+        description: `Payment for ${selectedUser.platform} account @${selectedUser.account_username}`,
+        status: "completed",
+        metadata: {
+          campaign_id: campaignId,
+          analytics_id: selectedUser.id,
+          account_username: selectedUser.account_username,
+          platform: selectedUser.platform,
+          views: selectedUser.total_views
+        }
+      });
       if (transactionError) throw transactionError;
 
       // Update analytics record with payment info
-      const { error: analyticsError } = await supabase
-        .from("campaign_account_analytics")
-        .update({
-          paid_views: selectedUser.total_views,
-          last_payment_amount: amount,
-          last_payment_date: new Date().toISOString()
-        })
-        .eq("id", selectedUser.id);
-
+      const {
+        error: analyticsError
+      } = await supabase.from("campaign_account_analytics").update({
+        paid_views: selectedUser.total_views,
+        last_payment_amount: amount,
+        last_payment_date: new Date().toISOString()
+      }).eq("id", selectedUser.id);
       if (analyticsError) throw analyticsError;
 
       // Update campaign budget_used
-      const { data: campaignData, error: campaignFetchError } = await supabase
-        .from("campaigns")
-        .select("budget_used")
-        .eq("id", campaignId)
-        .single();
-
+      const {
+        data: campaignData,
+        error: campaignFetchError
+      } = await supabase.from("campaigns").select("budget_used").eq("id", campaignId).single();
       if (campaignFetchError) throw campaignFetchError;
-
-      const { error: campaignUpdateError } = await supabase
-        .from("campaigns")
-        .update({
-          budget_used: (campaignData.budget_used || 0) + amount
-        })
-        .eq("id", campaignId);
-
+      const {
+        error: campaignUpdateError
+      } = await supabase.from("campaigns").update({
+        budget_used: (campaignData.budget_used || 0) + amount
+      }).eq("id", campaignId);
       if (campaignUpdateError) throw campaignUpdateError;
-
       toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
       setPaymentDialogOpen(false);
       setPaymentAmount("");
       setSelectedUser(null);
-      
+
       // Refresh analytics and transactions to show updated data
       fetchAnalytics();
       fetchTransactions();
@@ -525,7 +452,6 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       toast.error("Failed to process payment");
     }
   };
-
   const filteredAnalytics = analytics.filter(item => {
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
@@ -537,15 +463,9 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     const modifier = sortDirection === 'asc' ? 1 : -1;
     return (aValue > bValue ? 1 : -1) * modifier;
   });
-
   const totalPages = Math.ceil(filteredAnalytics.length / itemsPerPage);
-  const paginatedAnalytics = filteredAnalytics.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
+  const paginatedAnalytics = filteredAnalytics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const platforms = Array.from(new Set(analytics.map(a => a.platform)));
-
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'tiktok':
@@ -558,106 +478,37 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
         return null;
     }
   };
-
   const totalViews = analytics.reduce((sum, a) => sum + a.total_views, 0);
   const totalVideos = analytics.reduce((sum, a) => sum + a.total_videos, 0);
-  const avgEngagement = analytics.length > 0 
-    ? analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length 
-    : 0;
-
+  const avgEngagement = analytics.length > 0 ? analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length : 0;
   if (loading) {
-    return (
-      <Card className="bg-[#202020] border-transparent">
+    return <Card className="bg-[#202020] border-transparent">
         <CardContent className="p-8">
           <div className="text-center text-white/60">Loading analytics...</div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   if (analytics.length === 0) {
-    return (
-      <Card className="bg-[#202020] border-transparent">
+    return <Card className="bg-[#202020] border-transparent">
         <CardContent className="p-8">
           <div className="text-center text-white/60">
             No analytics data available. Import a CSV file to get started.
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <>
+  return <>
       <div className="space-y-4">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-          <Card className="bg-[#202020] border-transparent">
-            <CardHeader className="pb-1 pt-2 px-3">
-              <CardTitle className="text-xs text-white/60 font-normal flex items-center gap-1.5">
-                <BarChart3 className="h-3 w-3" />
-                <span className="truncate">Accounts</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-2">
-              <div className="text-lg font-bold text-white">{analytics.length}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#202020] border-transparent">
-            <CardHeader className="pb-1 pt-2 px-3">
-              <CardTitle className="text-xs text-white/60 font-normal flex items-center gap-1.5">
-                <Eye className="h-3 w-3" />
-                <span className="truncate">Views</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-2">
-              <div className="text-lg font-bold text-white">{totalViews.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#202020] border-transparent">
-            <CardHeader className="pb-1 pt-2 px-3">
-              <CardTitle className="text-xs text-white/60 font-normal flex items-center gap-1.5">
-                <TrendingUp className="h-3 w-3" />
-                <span className="truncate">Videos</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-2">
-              <div className="text-lg font-bold text-white">{totalVideos.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#202020] border-transparent">
-            <CardHeader className="pb-1 pt-2 px-3">
-              <CardTitle className="text-xs text-white/60 font-normal flex items-center gap-1.5">
-                <Heart className="h-3 w-3" />
-                <span className="truncate">Avg Eng</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-2">
-              <div className="text-lg font-bold text-white">{avgEngagement.toFixed(2)}%</div>
-            </CardContent>
-          </Card>
-        </div>
+        
 
         {/* Navigation Buttons */}
         <div className="flex gap-2 mb-4">
-          <Button
-            variant={!showTransactions ? "default" : "outline"}
-            onClick={() => setShowTransactions(false)}
-            size="sm"
-            className={`text-sm ${!showTransactions ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}
-          >
+          <Button variant={!showTransactions ? "default" : "outline"} onClick={() => setShowTransactions(false)} size="sm" className={`text-sm ${!showTransactions ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}>
             <BarChart3 className="h-4 w-4 mr-1.5" />
             Analytics
           </Button>
-          <Button
-            variant={showTransactions ? "default" : "outline"}
-            onClick={() => setShowTransactions(true)}
-            size="sm"
-            className={`text-sm ${showTransactions ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}
-          >
+          <Button variant={showTransactions ? "default" : "outline"} onClick={() => setShowTransactions(true)} size="sm" className={`text-sm ${showTransactions ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}>
             <Receipt className="h-4 w-4 mr-1.5" />
             Transactions ({transactions.length})
           </Button>
@@ -671,12 +522,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <div className="relative flex-1 sm:w-40">
                   <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-white/40" />
-                  <Input
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-7 h-8 bg-[#191919] border-white/10 text-white text-xs"
-                  />
+                  <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-7 h-8 bg-[#191919] border-white/10 text-white text-xs" />
                 </div>
                 <Select value={platformFilter} onValueChange={setPlatformFilter}>
                   <SelectTrigger className="w-full sm:w-28 h-8 bg-[#191919] border-white/10 text-white text-sm">
@@ -684,19 +530,12 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                   </SelectTrigger>
                   <SelectContent className="bg-[#2a2a2a] border-white/10">
                     <SelectItem value="all" className="text-white text-sm">All</SelectItem>
-                    {platforms.map(platform => (
-                      <SelectItem key={platform} value={platform} className="text-white capitalize text-sm">
+                    {platforms.map(platform => <SelectItem key={platform} value={platform} className="text-white capitalize text-sm">
                         {platform}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Button
-                  variant={showLinkedOnly ? "default" : "outline"}
-                  onClick={() => setShowLinkedOnly(!showLinkedOnly)}
-                  size="sm"
-                  className={`h-8 text-sm ${showLinkedOnly ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}
-                >
+                <Button variant={showLinkedOnly ? "default" : "outline"} onClick={() => setShowLinkedOnly(!showLinkedOnly)} size="sm" className={`h-8 text-sm ${showLinkedOnly ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}>
                   <Filter className="h-4 w-4 mr-1" />
                   Linked
                 </Button>
@@ -710,115 +549,71 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                   <TableRow className="border-white/10 hover:bg-transparent">
                     <TableHead className="text-white/60 font-medium text-sm sticky left-0 bg-[#202020] z-10 py-3">Account</TableHead>
                     <TableHead className="text-white/60 font-medium text-sm py-3">User</TableHead>
-                    <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3"
-                      onClick={() => handleSort('total_videos')}
-                    >
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_videos')}>
                       <div className="flex items-center justify-end gap-1">
                         Vids
-                        {sortField === 'total_videos' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        ) : (
-                          <ArrowUpDown className="h-4 w-4 opacity-30" />
-                        )}
+                        {sortField === 'total_videos' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3"
-                      onClick={() => handleSort('total_views')}
-                    >
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_views')}>
                       <div className="flex items-center justify-end gap-1">
                         Views
-                        {sortField === 'total_views' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        ) : (
-                          <ArrowUpDown className="h-4 w-4 opacity-30" />
-                        )}
+                        {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3"
-                      onClick={() => handleSort('total_likes')}
-                    >
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden lg:table-cell py-3" onClick={() => handleSort('average_video_views')}>
+                      <div className="flex items-center justify-end gap-1">
+                        Avg
+                        {sortField === 'average_video_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3" onClick={() => handleSort('total_likes')}>
                       <div className="flex items-center justify-end gap-1">
                         Likes
-                        {sortField === 'total_likes' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        ) : (
-                          <ArrowUpDown className="h-4 w-4 opacity-30" />
-                        )}
+                        {sortField === 'total_likes' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden xl:table-cell py-3"
-                      onClick={() => handleSort('total_comments')}
-                    >
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden xl:table-cell py-3" onClick={() => handleSort('total_comments')}>
                       <div className="flex items-center justify-end gap-1">
                         Comm
-                        {sortField === 'total_comments' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        ) : (
-                          <ArrowUpDown className="h-4 w-4 opacity-30" />
-                        )}
+                        {sortField === 'total_comments' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead 
-                      className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3"
-                      onClick={() => handleSort('average_engagement_rate')}
-                    >
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('average_engagement_rate')}>
                       <div className="flex items-center justify-end gap-1">
                         Eng
-                        {sortField === 'average_engagement_rate' ? (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        ) : (
-                          <ArrowUpDown className="h-4 w-4 opacity-30" />
-                        )}
+                        {sortField === 'average_engagement_rate' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors text-sm whitespace-nowrap hidden md:table-cell py-3" onClick={() => handleSort('outperforming_video_rate')}>
+                      <div className="flex items-center justify-end gap-1">
+                        Out
+                        {sortField === 'outperforming_video_rate' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
                     <TableHead className="text-white/60 font-medium text-sm w-8 py-3"></TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
-                {paginatedAnalytics.map((item) => {
+                {paginatedAnalytics.map(item => {
                   const platformIcon = getPlatformIcon(item.platform);
-                  const username = item.account_username.startsWith('@') 
-                    ? item.account_username.slice(1) 
-                    : item.account_username;
-                  
-                  return (
-                    <TableRow key={item.id} className="border-white/5 hover:bg-transparent">
+                  const username = item.account_username.startsWith('@') ? item.account_username.slice(1) : item.account_username;
+                  return <TableRow key={item.id} className="border-white/5 hover:bg-transparent">
                       <TableCell className="py-3 sticky left-0 bg-[#202020] z-10">
                         <div className="flex items-center gap-2">
-                          {platformIcon && (
-                            <div className="flex-shrink-0 w-5 h-5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center p-0.5">
-                              <img 
-                                src={platformIcon} 
-                                alt={item.platform}
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                          )}
+                          {platformIcon && <div className="flex-shrink-0 w-5 h-5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center p-0.5">
+                              <img src={platformIcon} alt={item.platform} className="w-full h-full object-contain" />
+                            </div>}
                           <div className="flex items-center gap-1.5">
-                            {item.account_link ? (
-                              <a
-                                href={item.account_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  window.open(item.account_link!, '_blank', 'noopener,noreferrer');
-                                }}
-                                className="text-white hover:underline transition-all font-medium cursor-pointer text-sm truncate max-w-[150px]"
-                              >
+                            {item.account_link ? <a href={item.account_link} target="_blank" rel="noopener noreferrer" onClick={e => {
+                            e.preventDefault();
+                            window.open(item.account_link!, '_blank', 'noopener,noreferrer');
+                          }} className="text-white hover:underline transition-all font-medium cursor-pointer text-sm truncate max-w-[150px]">
                                 {username}
-                              </a>
-                            ) : (
-                              <span className="text-white font-medium text-sm truncate max-w-[150px]">{username}</span>
-                            )}
+                              </a> : <span className="text-white font-medium text-sm truncate max-w-[150px]">{username}</span>}
                             
                             {/* Demographic Status Icon */}
-                            {item.user_id && (
-                              <TooltipProvider>
+                            {item.user_id && <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <div className="flex-shrink-0">
@@ -829,31 +624,28 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                     <p className="text-sm">{getDemographicTooltip(getDemographicStatus(item), item.demographic_submission)}</p>
                                   </TooltipContent>
                                 </Tooltip>
-                              </TooltipProvider>
-                            )}
+                              </TooltipProvider>}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell 
-                        className="py-3 bg-[#202020] cursor-pointer transition-colors"
-                        onClick={() => {
-                          if (item.user_id && item.profiles) {
-                            setSelectedUser(item);
-                            setPaymentDialogOpen(true);
-                          }
-                        }}
-                      >
-                        {item.user_id && item.profiles ? (
-                          <div className="flex items-center gap-1.5">
+                      <TableCell className="py-3 bg-[#202020] cursor-pointer transition-colors" onClick={() => {
+                      if (item.user_id && item.profiles) {
+                        setSelectedUser(item);
+                        setPaymentDialogOpen(true);
+                      }
+                    }}>
+                        {item.user_id && item.profiles ? <div className="flex items-center gap-1.5">
                             <Avatar className="h-5 w-5">
                               <AvatarImage src={item.profiles.avatar_url || undefined} />
                               <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
                                 {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{ letterSpacing: '-0.3px', fontWeight: 600 }}>{item.profiles.username}</span>
-                            {item.paid_views >= item.total_views && item.paid_views > 0 && (
-                              <TooltipProvider>
+                            <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{
+                          letterSpacing: '-0.3px',
+                          fontWeight: 600
+                        }}>{item.profiles.username}</span>
+                            {item.paid_views >= item.total_views && item.paid_views > 0 && <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <div className="flex-shrink-0">
@@ -864,70 +656,78 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                     <p className="text-sm">Paid ${item.last_payment_amount.toFixed(2)} on {new Date(item.last_payment_date!).toLocaleDateString()}</p>
                                   </TooltipContent>
                                 </Tooltip>
-                              </TooltipProvider>
-                            )}
-                          </div>
-                        ) : (
-                          <div 
-                            className="flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openLinkDialog(item);
-                            }}
-                          >
+                              </TooltipProvider>}
+                          </div> : <div className="flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-2 py-1 -mx-2 -my-1 transition-colors" onClick={e => {
+                        e.stopPropagation();
+                        openLinkDialog(item);
+                      }}>
                             <User className="h-4 w-4 text-white" />
                             <Link2 className="h-3 w-3 text-primary" />
                             <span className="text-xs text-primary hidden sm:inline">Link</span>
-                          </div>
-                        )}
+                          </div>}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                      <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500
+                    }}>
                         {item.total_videos.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white text-right text-sm bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                      <TableCell className="text-white text-right text-sm bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500
+                    }}>
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right text-sm hidden md:table-cell bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                      <TableCell className="text-white/80 text-right text-sm hidden lg:table-cell bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500
+                    }}>
+                        {Math.round(item.average_video_views).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-white/80 text-right text-sm hidden md:table-cell bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500
+                    }}>
                         {item.total_likes.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right text-sm hidden xl:table-cell bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                      <TableCell className="text-white/80 text-right text-sm hidden xl:table-cell bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500
+                    }}>
                         {item.total_comments.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right bg-[#202020] py-3">
-                        <span className={`text-sm ${
-                          item.average_engagement_rate > 5 
-                            ? "text-emerald-400" 
-                            : item.average_engagement_rate > 3
-                            ? "text-white"
-                            : "text-white/60"
-                        }`} style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                        <span className={`text-sm ${item.average_engagement_rate > 5 ? "text-emerald-400" : item.average_engagement_rate > 3 ? "text-white" : "text-white/60"}`} style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500
+                      }}>
                           {item.average_engagement_rate.toFixed(2)}%
                         </span>
                       </TableCell>
+                      <TableCell className="text-right hidden md:table-cell bg-[#202020] py-3">
+                        {item.outperforming_video_rate > 0 ? <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 border border-primary/20 text-primary text-sm" style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500
+                      }}>
+                            {item.outperforming_video_rate.toFixed(1)}%
+                          </span> : <span className="text-white/30 text-sm">—</span>}
+                      </TableCell>
                       <TableCell className="py-3 bg-[#202020]">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDeleteAccountId(item.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => {
+                        setDeleteAccountId(item.id);
+                        setDeleteDialogOpen(true);
+                      }} className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
-                    </TableRow>
-                  );
+                    </TableRow>;
                 })}
               </TableBody>
             </Table>
           </div>
-          {filteredAnalytics.length === 0 && (
-            <div className="text-center py-12 text-white/40">
+          {filteredAnalytics.length === 0 && <div className="text-center py-12 text-white/40">
               No accounts match your filters
-            </div>
-          )}
+            </div>}
         </CardContent>
       </Card>}
 
@@ -950,18 +750,16 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.map((txn) => {
-                    const metadata = txn.metadata || {};
-                    const platformIcon = getPlatformIcon(metadata.platform || '');
-                    
-                    return (
-                      <TableRow key={txn.id} className="border-white/10 hover:bg-white/5">
+                  {transactions.map(txn => {
+                  const metadata = txn.metadata || {};
+                  const platformIcon = getPlatformIcon(metadata.platform || '');
+                  return <TableRow key={txn.id} className="border-white/10 hover:bg-white/5">
                         <TableCell className="text-white/60 text-sm bg-[#202020] py-3">
-                          {new Date(txn.created_at).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric', 
-                            year: 'numeric' 
-                          })}
+                          {new Date(txn.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
                         </TableCell>
                         <TableCell className="bg-[#202020] py-3">
                           <div className="flex items-center gap-2">
@@ -980,7 +778,10 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                             <span className="text-white/80 text-sm">@{metadata.account_username || 'N/A'}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                        <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500
+                    }}>
                           {metadata.views?.toLocaleString() || '0'}
                         </TableCell>
                         <TableCell className="text-green-400 text-right font-semibold text-sm bg-[#202020] py-3">
@@ -991,78 +792,58 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                             {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
                           </Badge>
                         </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                      </TableRow>;
+                })}
                 </TableBody>
               </Table>
             </div>
-            {transactions.length === 0 && (
-              <div className="text-center py-12 text-white/40">
+            {transactions.length === 0 && <div className="text-center py-12 text-white/40">
                 No transactions yet
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>}
 
       {/* Pagination */}
-      {!showTransactions && totalPages > 1 && (
-        <div className="flex justify-center mt-4">
+      {!showTransactions && totalPages > 1 && <div className="flex justify-center mt-4">
           <Pagination>
             <PaginationContent className="gap-1">
               <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"}
-                  style={{ backgroundColor: 'transparent' }}
-                />
+                <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className={currentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} style={{
+                backgroundColor: 'transparent'
+              }} />
               </PaginationItem>
               
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                // Show first page, last page, current page, and pages around current
-                if (
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= currentPage - 1 && page <= currentPage + 1)
-                ) {
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md"
-                        style={{ 
-                          backgroundColor: currentPage === page ? '#202020' : 'transparent',
-                          border: currentPage === page ? '1px solid rgba(255,255,255,0.1)' : 'none'
-                        }}
-                      >
+              {Array.from({
+              length: totalPages
+            }, (_, i) => i + 1).map(page => {
+              // Show first page, last page, current page, and pages around current
+              if (page === 1 || page === totalPages || page >= currentPage - 1 && page <= currentPage + 1) {
+                return <PaginationItem key={page}>
+                      <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md" style={{
+                    backgroundColor: currentPage === page ? '#202020' : 'transparent',
+                    border: currentPage === page ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                  }}>
                         <span className={currentPage === page ? "text-white font-medium" : "text-white/50"}>
                           {page}
                         </span>
                       </PaginationLink>
-                    </PaginationItem>
-                  );
-                } else if (page === currentPage - 2 || page === currentPage + 2) {
-                  return (
-                    <PaginationItem key={page}>
+                    </PaginationItem>;
+              } else if (page === currentPage - 2 || page === currentPage + 2) {
+                return <PaginationItem key={page}>
                       <span className="px-2 text-white/20 text-sm">...</span>
-                    </PaginationItem>
-                  );
-                }
-                return null;
-              })}
+                    </PaginationItem>;
+              }
+              return null;
+            })}
 
               <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"}
-                  style={{ backgroundColor: 'transparent' }}
-                />
+                <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} style={{
+                backgroundColor: 'transparent'
+              }} />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-        </div>
-      )}
+        </div>}
     </div>
 
     {/* Delete Confirmation Dialog */}
@@ -1078,10 +859,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/10">
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDeleteAccount}
-            className="bg-red-500 hover:bg-red-600 text-white"
-          >
+          <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-500 hover:bg-red-600 text-white">
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -1101,8 +879,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           </DialogDescription>
         </DialogHeader>
         
-        {selectedUser && (
-          <div className="space-y-4 py-4">
+        {selectedUser && <div className="space-y-4 py-4">
             {/* User Info Card */}
             <div className="p-4 rounded-lg bg-white/5 border border-white/10 space-y-3">
               <div className="flex items-start gap-3">
@@ -1117,14 +894,12 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                     <div className="font-semibold text-white">@{selectedUser.profiles?.username}</div>
                     <div className="flex items-center gap-2 mt-1">
                       {(() => {
-                        const platformIcon = getPlatformIcon(selectedUser.platform);
-                        return platformIcon && (
-                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                      const platformIcon = getPlatformIcon(selectedUser.platform);
+                      return platformIcon && <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/5 border border-white/10">
                             <img src={platformIcon} alt={selectedUser.platform} className="w-3 h-3" />
                             <span className="text-xs text-white/80 capitalize">{selectedUser.platform}</span>
-                          </div>
-                        );
-                      })()}
+                          </div>;
+                    })()}
                       <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10">
                         <span className="text-xs text-white/60">@{selectedUser.account_username}</span>
                       </div>
@@ -1157,48 +932,40 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                     {getDemographicIcon(getDemographicStatus(selectedUser))}
                     <span className="text-xs text-white/80">
                       {(() => {
-                        const status = getDemographicStatus(selectedUser);
-                        const submission = selectedUser.demographic_submission;
-                        
-                        switch (status) {
-                          case 'none':
-                            return 'No submission';
-                          case 'outdated':
-                            return submission ? `Outdated (${Math.floor((Date.now() - new Date(submission.submitted_at).getTime()) / (1000 * 60 * 60 * 24))} days ago)` : 'Outdated';
-                          case 'pending':
-                            return 'Pending review';
-                          case 'approved':
-                            return submission ? `${submission.tier1_percentage}% Tier 1` : 'Approved';
-                        }
-                      })()}
+                      const status = getDemographicStatus(selectedUser);
+                      const submission = selectedUser.demographic_submission;
+                      switch (status) {
+                        case 'none':
+                          return 'No submission';
+                        case 'outdated':
+                          return submission ? `Outdated (${Math.floor((Date.now() - new Date(submission.submitted_at).getTime()) / (1000 * 60 * 60 * 24))} days ago)` : 'Outdated';
+                        case 'pending':
+                          return 'Pending review';
+                        case 'approved':
+                          return submission ? `${submission.tier1_percentage}% Tier 1` : 'Approved';
+                      }
+                    })()}
                     </span>
                   </div>
                 </div>
                 
-                {selectedUser.demographic_submission && (
-                  <div className="mt-1 text-xs text-white/40">
-                    Last submitted: {new Date(selectedUser.demographic_submission.submitted_at).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                    {selectedUser.demographic_submission.score !== null && (
-                      <span className="ml-2">• Score: {selectedUser.demographic_submission.score}/100</span>
-                    )}
-                  </div>
-                )}
+                {selectedUser.demographic_submission && <div className="mt-1 text-xs text-white/40">
+                    Last submitted: {new Date(selectedUser.demographic_submission.submitted_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+                    {selectedUser.demographic_submission.score !== null && <span className="ml-2">• Score: {selectedUser.demographic_submission.score}/100</span>}
+                  </div>}
                 
-                {!selectedUser.demographic_submission && (
-                  <div className="mt-1 text-xs text-red-400/80">
+                {!selectedUser.demographic_submission && <div className="mt-1 text-xs text-red-400/80">
                     ⚠️ User has never submitted demographics
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
 
             {/* Payment Status */}
-            {selectedUser.paid_views > 0 && (
-              <div className="px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/10">
+            {selectedUser.paid_views > 0 && <div className="px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Check className="h-3.5 w-3.5 text-green-400" />
@@ -1210,16 +977,13 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                   <span>{selectedUser.paid_views.toLocaleString()} views</span>
                   <span>{new Date(selectedUser.last_payment_date!).toLocaleDateString()}</span>
                 </div>
-                {selectedUser.total_views > selectedUser.paid_views && (
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-500/10 text-xs">
+                {selectedUser.total_views > selectedUser.paid_views && <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-500/10 text-xs">
                     <span className="text-yellow-400">New Unpaid Views</span>
                     <span className="text-yellow-400 font-semibold">
                       {(selectedUser.total_views - selectedUser.paid_views).toLocaleString()}
                     </span>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
 
             {/* Payout Calculation */}
             <div className="space-y-3">
@@ -1227,9 +991,8 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                 <div className="text-sm font-medium text-white mb-2">Calculated Payout</div>
                 
                 {(() => {
-                  const calc = calculatePayout(selectedUser);
-                  return (
-                    <>
+                const calc = calculatePayout(selectedUser);
+                return <>
                       <div className="space-y-2 text-xs text-white/60 mb-3">
                         <div className="flex justify-between">
                           <span>Views:</span>
@@ -1251,9 +1014,8 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                       <div className="text-2xl font-bold text-white text-center py-2">
                         ${calc.payout.toFixed(2)}
                       </div>
-                    </>
-                  );
-                })()}
+                    </>;
+              })()}
               </div>
 
               {/* Manual Override */}
@@ -1261,46 +1023,26 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                 <Label htmlFor="payment-amount" className="text-white text-sm">
                   Custom Amount (Optional)
                 </Label>
-                <Input
-                  id="payment-amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  placeholder="Leave empty to use calculated amount"
-                  className="bg-[#191919] border-white/10 text-white"
-                />
+                <Input id="payment-amount" type="number" step="0.01" min="0" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="Leave empty to use calculated amount" className="bg-[#191919] border-white/10 text-white" />
                 <p className="text-xs text-white/40">
                   Override the calculated amount if needed
                 </p>
               </div>
             </div>
-          </div>
-        )}
+          </div>}
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setPaymentDialogOpen(false);
-              setPaymentAmount("");
-              setSelectedUser(null);
-            }}
-            className="bg-transparent border-white/10 text-white hover:bg-white/5"
-          >
+          <Button variant="outline" onClick={() => {
+            setPaymentDialogOpen(false);
+            setPaymentAmount("");
+            setSelectedUser(null);
+          }} className="bg-transparent border-white/10 text-white hover:bg-white/5">
             Cancel
           </Button>
-              <Button
-                onClick={() => {
-                  handlePayUser();
-                }}
-                className="bg-primary hover:bg-primary/90"
-                disabled={selectedUser && selectedUser.paid_views >= selectedUser.total_views}
-              >
-                {selectedUser && selectedUser.paid_views >= selectedUser.total_views 
-                  ? "Already Paid" 
-                  : "Send Payment"}
+              <Button onClick={() => {
+            handlePayUser();
+          }} className="bg-primary hover:bg-primary/90" disabled={selectedUser && selectedUser.paid_views >= selectedUser.total_views}>
+                {selectedUser && selectedUser.paid_views >= selectedUser.total_views ? "Already Paid" : "Send Payment"}
               </Button>
         </DialogFooter>
       </DialogContent>
@@ -1319,22 +1061,15 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
           </DialogDescription>
         </DialogHeader>
 
-        {selectedAnalyticsAccount && (
-          <div className="space-y-4 py-4">
+        {selectedAnalyticsAccount && <div className="space-y-4 py-4">
             {/* Account Info */}
             <div className="p-3 rounded-lg bg-white/5 border border-white/10">
               <div className="text-xs text-white/60 mb-1">Analytics Account</div>
               <div className="flex items-center gap-2">
                 {(() => {
-                  const platformIcon = 
-                    selectedAnalyticsAccount.platform === 'tiktok' ? tiktokLogo :
-                    selectedAnalyticsAccount.platform === 'instagram' ? instagramLogo :
-                    selectedAnalyticsAccount.platform === 'youtube' ? youtubeLogo : null;
-                  
-                  return platformIcon && (
-                    <img src={platformIcon} alt={selectedAnalyticsAccount.platform} className="w-4 h-4" />
-                  );
-                })()}
+                const platformIcon = selectedAnalyticsAccount.platform === 'tiktok' ? tiktokLogo : selectedAnalyticsAccount.platform === 'instagram' ? instagramLogo : selectedAnalyticsAccount.platform === 'youtube' ? youtubeLogo : null;
+                return platformIcon && <img src={platformIcon} alt={selectedAnalyticsAccount.platform} className="w-4 h-4" />;
+              })()}
                 <span className="font-semibold">@{selectedAnalyticsAccount.account_username}</span>
               </div>
             </div>
@@ -1346,14 +1081,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                <Input
-                  id="user-search"
-                  type="text"
-                  placeholder="Search by username..."
-                  value={userSearchTerm}
-                  onChange={(e) => setUserSearchTerm(e.target.value)}
-                  className="bg-[#191919] border-white/10 text-white pl-9"
-                />
+                <Input id="user-search" type="text" placeholder="Search by username..." value={userSearchTerm} onChange={e => setUserSearchTerm(e.target.value)} className="bg-[#191919] border-white/10 text-white pl-9" />
               </div>
             </div>
 
@@ -1361,65 +1089,45 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
             <div className="space-y-2">
               <div className="text-xs text-white/60 mb-2">
                 Available Users ({(() => {
-                  const uniqueUsers = availableUsers.reduce((acc, user) => {
-                    if (!acc.find(u => u.user_id === user.user_id)) {
-                      acc.push(user);
-                    }
-                    return acc;
-                  }, [] as typeof availableUsers);
-                  
-                  return uniqueUsers.filter(u => 
-                    u.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                    availableUsers.filter(a => a.user_id === u.user_id).some(a => 
-                      a.account_username.toLowerCase().includes(userSearchTerm.toLowerCase())
-                    )
-                  ).length;
-                })()})
+                const uniqueUsers = availableUsers.reduce((acc, user) => {
+                  if (!acc.find(u => u.user_id === user.user_id)) {
+                    acc.push(user);
+                  }
+                  return acc;
+                }, [] as typeof availableUsers);
+                return uniqueUsers.filter(u => u.username.toLowerCase().includes(userSearchTerm.toLowerCase()) || availableUsers.filter(a => a.user_id === u.user_id).some(a => a.account_username.toLowerCase().includes(userSearchTerm.toLowerCase()))).length;
+              })()})
               </div>
               <div className="max-h-[300px] overflow-y-auto space-y-2">
-                {availableUsers.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-white/40">
+                {availableUsers.length === 0 ? <div className="p-4 text-center text-sm text-white/40">
                     No users have joined this campaign yet
-                  </div>
-                ) : (
-                  (() => {
-                    // Group accounts by user
-                    const userGroups = availableUsers.reduce((acc, account) => {
-                      if (!acc[account.user_id]) {
-                        acc[account.user_id] = {
-                          user_id: account.user_id,
-                          username: account.username,
-                          avatar_url: account.avatar_url,
-                          accounts: []
-                        };
-                      }
-                      acc[account.user_id].accounts.push({
-                        platform: account.platform,
-                        account_username: account.account_username
-                      });
-                      return acc;
-                    }, {} as Record<string, {
-                      user_id: string;
-                      username: string;
-                      avatar_url: string | null;
-                      accounts: Array<{ platform: string; account_username: string }>;
-                    }>);
-
-                    const users = Object.values(userGroups);
-
-                    return users
-                      .filter(user => 
-                        user.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                        user.accounts.some(a => 
-                          a.account_username.toLowerCase().includes(userSearchTerm.toLowerCase())
-                        )
-                      )
-                      .map(user => (
-                        <div
-                          key={user.user_id}
-                          onClick={() => handleLinkAccount(user.user_id)}
-                          className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
-                        >
+                  </div> : (() => {
+                // Group accounts by user
+                const userGroups = availableUsers.reduce((acc, account) => {
+                  if (!acc[account.user_id]) {
+                    acc[account.user_id] = {
+                      user_id: account.user_id,
+                      username: account.username,
+                      avatar_url: account.avatar_url,
+                      accounts: []
+                    };
+                  }
+                  acc[account.user_id].accounts.push({
+                    platform: account.platform,
+                    account_username: account.account_username
+                  });
+                  return acc;
+                }, {} as Record<string, {
+                  user_id: string;
+                  username: string;
+                  avatar_url: string | null;
+                  accounts: Array<{
+                    platform: string;
+                    account_username: string;
+                  }>;
+                }>);
+                const users = Object.values(userGroups);
+                return users.filter(user => user.username.toLowerCase().includes(userSearchTerm.toLowerCase()) || user.accounts.some(a => a.account_username.toLowerCase().includes(userSearchTerm.toLowerCase()))).map(user => <div key={user.user_id} onClick={() => handleLinkAccount(user.user_id)} className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 flex-1">
                               <Avatar className="h-8 w-8">
@@ -1432,49 +1140,33 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                 <div className="text-sm font-semibold mb-1">@{user.username}</div>
                                 <div className="flex flex-wrap gap-1.5">
                                   {user.accounts.map((account, idx) => {
-                                    const platformIcon = 
-                                      account.platform === 'tiktok' ? tiktokLogo :
-                                      account.platform === 'instagram' ? instagramLogo :
-                                      account.platform === 'youtube' ? youtubeLogo : null;
-                                    
-                                    return (
-                                      <div key={idx} className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                                        {platformIcon && (
-                                          <img src={platformIcon} alt={account.platform} className="w-3 h-3" />
-                                        )}
+                            const platformIcon = account.platform === 'tiktok' ? tiktokLogo : account.platform === 'instagram' ? instagramLogo : account.platform === 'youtube' ? youtubeLogo : null;
+                            return <div key={idx} className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                                        {platformIcon && <img src={platformIcon} alt={account.platform} className="w-3 h-3" />}
                                         <span className="text-xs text-white/80">@{account.account_username}</span>
-                                      </div>
-                                    );
-                                  })}
+                                      </div>;
+                          })}
                                 </div>
                               </div>
                             </div>
                             <Link2 className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
                           </div>
-                        </div>
-                      ));
-                  })()
-                )}
+                        </div>);
+              })()}
               </div>
             </div>
-          </div>
-        )}
+          </div>}
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setLinkAccountDialogOpen(false);
-              setSelectedAnalyticsAccount(null);
-              setUserSearchTerm("");
-            }}
-            className="bg-transparent border-white/10 text-white hover:bg-white/5"
-          >
+          <Button variant="outline" onClick={() => {
+            setLinkAccountDialogOpen(false);
+            setSelectedAnalyticsAccount(null);
+            setUserSearchTerm("");
+          }} className="bg-transparent border-white/10 text-white hover:bg-white/5">
             Cancel
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  </>
-  );
+  </>;
 }
