@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2 } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
@@ -90,6 +90,8 @@ export default function BrandManagement() {
   const [assetsUrl, setAssetsUrl] = useState("");
   const [homeUrl, setHomeUrl] = useState("");
   const [savingUrls, setSavingUrls] = useState(false);
+  const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
+  const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
 
   useEffect(() => {
     fetchCampaigns();
@@ -267,6 +269,37 @@ export default function BrandManagement() {
     }
   };
 
+  const handleEditBudgetUsed = () => {
+    setEditingBudgetUsed(selectedCampaign?.budget_used?.toString() || "0");
+    setEditBudgetDialogOpen(true);
+  };
+
+  const handleSaveBudgetUsed = async () => {
+    if (!selectedCampaignId) return;
+
+    const budgetUsedValue = parseFloat(editingBudgetUsed);
+    if (isNaN(budgetUsedValue) || budgetUsedValue < 0) {
+      toast.error("Please enter a valid budget amount");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("campaigns")
+        .update({ budget_used: budgetUsedValue })
+        .eq("id", selectedCampaignId);
+
+      if (error) throw error;
+
+      toast.success("Budget updated successfully");
+      setEditBudgetDialogOpen(false);
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error updating budget:", error);
+      toast.error("Failed to update budget");
+    }
+  };
+
   const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
@@ -373,14 +406,26 @@ export default function BrandManagement() {
 
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-white/60 font-normal flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    Budget Spent
+                  <CardTitle className="text-sm text-white/60 font-normal flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Budget Used
+                    </span>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-white/60 hover:text-white hover:bg-white/10"
+                        onClick={handleEditBudgetUsed}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    ${totalSpent.toFixed(2)}
+                    ${Number(selectedCampaign?.budget_used || 0).toFixed(2)}
                   </div>
                   <div className="text-sm text-white/40">
                     of ${selectedCampaign?.budget || 0}
@@ -833,6 +878,49 @@ export default function BrandManagement() {
                 className="bg-destructive hover:bg-destructive/90"
               >
                 Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Edit Budget Used Dialog */}
+        <AlertDialog open={editBudgetDialogOpen} onOpenChange={setEditBudgetDialogOpen}>
+          <AlertDialogContent className="bg-[#2a2a2a] border-white/10">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white">Edit Budget Used</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/60">
+                Update the used budget for this campaign.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="budget-used" className="text-white">
+                  Budget Used ($)
+                </Label>
+                <Input
+                  id="budget-used"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={editingBudgetUsed}
+                  onChange={(e) => setEditingBudgetUsed(e.target.value)}
+                  className="bg-[#191919] border-white/10 text-white"
+                  placeholder="0.00"
+                />
+                <p className="text-sm text-white/40">
+                  Total budget: ${selectedCampaign?.budget || 0}
+                </p>
+              </div>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleSaveBudgetUsed}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Save Changes
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
