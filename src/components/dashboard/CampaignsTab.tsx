@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2 } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import { Button } from "@/components/ui/button";
 interface Campaign {
   id: string;
   title: string;
@@ -141,7 +142,9 @@ export function CampaignsTab() {
       {campaigns.map(campaign => {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-      return <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col cursor-pointer overflow-hidden border hover:border-primary/50" onClick={() => navigate(`/campaign/${campaign.id}`)}>
+      const isPending = campaign.submission_status === 'pending';
+      
+      return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => !isPending && navigate(`/campaign/${campaign.id}`)}>
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
@@ -199,13 +202,28 @@ export function CampaignsTab() {
                 </div>}
 
               {/* Application Status */}
-              {campaign.submission_status === 'pending' && (
+              {isPending ? (
                 <div className="mt-auto pt-2">
                   <div className="bg-muted/30 rounded-md px-2.5 py-1.5 flex items-center justify-center">
                     <span className="text-[11px] font-instrument tracking-tight text-muted-foreground font-medium">
                       Pending Review
                     </span>
                   </div>
+                </div>
+              ) : (
+                <div className="mt-auto pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-8 text-[11px] font-instrument tracking-tight"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/campaign/${campaign.id}/join`);
+                    }}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1.5" />
+                    Link Account
+                  </Button>
                 </div>
               )}
             </CardContent>
