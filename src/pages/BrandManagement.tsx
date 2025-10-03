@@ -616,6 +616,8 @@ export default function BrandManagement() {
                               outerRadius={80}
                               paddingAngle={2}
                               dataKey="views"
+                              nameKey="platform"
+                              stroke="none"
                             >
                               {platformData.map((entry, index) => (
                                 <Cell 
@@ -628,7 +630,7 @@ export default function BrandManagement() {
                             <Tooltip 
                               contentStyle={{
                                 backgroundColor: "#0C0C0C",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                border: "none",
                                 borderRadius: "8px",
                                 padding: "8px 12px"
                               }}
