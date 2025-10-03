@@ -847,7 +847,7 @@ export function WalletTab() {
           const networkLogo = getNetworkLogo();
           return <div key={method.id} className="relative overflow-hidden rounded-xl bg-neutral-900/50">
                   
-                  <div className="relative flex items-center justify-between p-4">
+                  <div className="relative flex items-center justify-between p-4 bg-[#0d0d0d]">
                     <div className="flex items-center gap-4 flex-1">
                       {cryptoLogo && <img src={cryptoLogo} alt="Crypto logo" className="h-8 w-8 rounded-full" />}
                       <div className="flex-1 min-w-0">
