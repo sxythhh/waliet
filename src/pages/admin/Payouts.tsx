@@ -191,7 +191,7 @@ export default function AdminPayouts() {
       variant: "secondary",
       label: "Unknown"
     };
-    return;
+    return <Badge variant={variant}>{label}</Badge>;
   };
   const getPayoutMethodIcon = (method: string, details?: any) => {
     console.log('Payout method:', method, 'Details:', details);

@@ -377,7 +377,7 @@ export default function AdminUsers() {
       
 
       {/* Filters */}
-      <Card className="bg-card border-0">
+      <Card className="bg-card border-0 mt-6">
         <CardContent className="pt-6 px-6">
           <div className="flex gap-4 items-end">
             <div className="flex-1">
@@ -390,7 +390,7 @@ export default function AdminUsers() {
                   placeholder="Search by Virality username or account username..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-[#1a1a1a] border-0"
                 />
               </div>
             </div>
@@ -399,7 +399,7 @@ export default function AdminUsers() {
               <Label htmlFor="campaign">Filter by Campaign</Label>
               <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2">
+                  <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2 border-0 bg-[#1a1a1a]">
                     {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
