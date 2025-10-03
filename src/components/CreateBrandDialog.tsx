@@ -150,143 +150,149 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
           Create Brand
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Brand</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-2xl bg-card border-0">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg">Create New Brand</DialogTitle>
+          <DialogDescription className="text-xs">
             Add a new brand to the platform
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Logo Upload */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Brand Logo</label>
-              <div className="flex flex-col gap-3">
-                {logoPreview ? (
-                  <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={logoPreview}
-                      alt="Brand logo"
-                      className="w-full h-full object-cover"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={removeLogo}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="text-center">
-                      <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">Upload logo</p>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <div className="max-h-[55vh] overflow-y-auto pr-2 space-y-3">
+              {/* Logo Upload */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium">Brand Logo</label>
+                <div className="flex flex-col gap-2">
+                  {logoPreview ? (
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted">
+                      <img
+                        src={logoPreview}
+                        alt="Brand logo"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6"
+                        onClick={removeLogo}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
                     </div>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
+                  ) : (
+                    <div
+                      className="w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <div className="text-center">
+                        <Upload className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                        <p className="text-[10px] text-muted-foreground">Upload</p>
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Brand Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter brand name" className="h-9 text-sm" {...field} />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="slug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Slug</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="brand-slug"
+                          className="h-9 text-sm"
+                          {...field}
+                          onChange={(e) => {
+                            const slug = e.target.value
+                              .toLowerCase()
+                              .replace(/[^a-z0-9-]/g, "-")
+                              .replace(/-+/g, "-")
+                              .replace(/^-|-$/g, "");
+                            field.onChange(slug);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="brand_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Brand Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue placeholder="Select brand type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Lead">Lead</SelectItem>
+                        <SelectItem value="DWY">DWY</SelectItem>
+                        <SelectItem value="Client">Client</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe the brand"
+                        className="resize-none text-sm min-h-[60px]"
+                        rows={2}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter brand name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="slug"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Slug</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="brand-slug"
-                      {...field}
-                      onChange={(e) => {
-                        const slug = e.target.value
-                          .toLowerCase()
-                          .replace(/[^a-z0-9-]/g, "-")
-                          .replace(/-+/g, "-")
-                          .replace(/^-|-$/g, "");
-                        field.onChange(slug);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="brand_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select brand type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Lead">Lead</SelectItem>
-                      <SelectItem value="DWY">DWY</SelectItem>
-                      <SelectItem value="Client">Client</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe the brand"
-                      className="resize-none"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-2 pt-3 border-t">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setOpen(false);
                   form.reset();
@@ -297,7 +303,7 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" size="sm" disabled={isSubmitting}>
                 {isSubmitting ? "Creating..." : "Create Brand"}
               </Button>
             </div>
