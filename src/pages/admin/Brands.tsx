@@ -98,12 +98,9 @@ export default function AdminBrands() {
   return <div className="min-h-screen bg-background">
       {/* Header Section */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto p-8 bg-[080808] bg-[#080808]">
+        <div className="max-w-7xl mx-auto p-8 bg-[080808] bg-[#080808] py-[13px]">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Brand Management</h1>
-              <p className="text-muted-foreground mt-1">Manage all brands and their configurations</p>
-            </div>
+            
             <CreateBrandDialog onSuccess={fetchBrands} />
           </div>
           
