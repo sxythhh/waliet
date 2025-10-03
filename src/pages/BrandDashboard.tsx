@@ -23,6 +23,7 @@ interface Campaign {
   title: string;
   description: string | null;
   budget: number;
+  budget_used: number;
   rpm_rate: number;
   status: string;
   banner_url: string | null;
@@ -148,8 +149,8 @@ export default function BrandDashboard() {
             <h2 className="text-2xl font-bold text-white">Campaigns</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {campaigns.map(campaign => {
-            const usedBudget = Number(campaign.budget) * 0.35; // Simulated used budget (35%)
-            const budgetPercentage = usedBudget / Number(campaign.budget) * 100;
+            const usedBudget = Number(campaign.budget_used || 0);
+            const budgetPercentage = Number(campaign.budget) > 0 ? (usedBudget / Number(campaign.budget)) * 100 : 0;
             return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
                     {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
                         <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
