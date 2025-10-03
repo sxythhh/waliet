@@ -180,19 +180,12 @@ export default function BrandManagement() {
           creator_id,
           platform,
           content_url,
-          profiles (
+          profiles!campaign_submissions_creator_id_fkey (
             username, 
             avatar_url, 
             trust_score, 
             demographics_score, 
-            views_score,
-            social_accounts (
-              id,
-              platform,
-              username,
-              follower_count,
-              account_link
-            )
+            views_score
           )
         `
         )
@@ -200,7 +193,27 @@ export default function BrandManagement() {
         .order("submitted_at", { ascending: false });
 
       if (error) throw error;
-      setSubmissions(data || []);
+
+      // Fetch social accounts separately, filtered by campaign_id
+      const submissionsWithAccounts = await Promise.all(
+        (data || []).map(async (submission) => {
+          const { data: accounts } = await supabase
+            .from("social_accounts")
+            .select("id, platform, username, follower_count, account_link")
+            .eq("user_id", submission.creator_id)
+            .eq("campaign_id", selectedCampaignId);
+
+          return {
+            ...submission,
+            profiles: {
+              ...submission.profiles,
+              social_accounts: accounts || []
+            }
+          };
+        })
+      );
+
+      setSubmissions(submissionsWithAccounts);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast.error("Failed to load submissions");
