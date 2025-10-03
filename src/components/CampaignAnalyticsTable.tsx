@@ -784,7 +784,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                 {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-white/80 text-sm truncate max-w-[90px] hover:underline">{item.profiles.username}</span>
+                            <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{ letterSpacing: '-0.3px', fontWeight: 600 }}>{item.profiles.username}</span>
                             {item.paid_views >= item.total_views && item.paid_views > 0 && (
                               <TooltipProvider>
                                 <Tooltip>
@@ -808,41 +808,41 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                               openLinkDialog(item);
                             }}
                           >
-                            <User className="h-4 w-4 text-white/30" />
+                            <User className="h-4 w-4 text-white" />
                             <Link2 className="h-3 w-3 text-primary" />
                             <span className="text-xs text-primary hidden sm:inline">Link</span>
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-sm bg-[#202020] py-3">
+                      <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
                         {item.total_videos.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white text-right font-semibold text-sm bg-[#202020] py-3">
+                      <TableCell className="text-white text-right text-sm bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-sm hidden lg:table-cell bg-[#202020] py-3">
+                      <TableCell className="text-white/80 text-right text-sm hidden lg:table-cell bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
                         {Math.round(item.average_video_views).toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-sm hidden md:table-cell bg-[#202020] py-3">
+                      <TableCell className="text-white/80 text-right text-sm hidden md:table-cell bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
                         {item.total_likes.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-sm hidden xl:table-cell bg-[#202020] py-3">
+                      <TableCell className="text-white/80 text-right text-sm hidden xl:table-cell bg-[#202020] py-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
                         {item.total_comments.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right bg-[#202020] py-3">
-                        <span className={`font-semibold text-sm ${
+                        <span className={`text-sm ${
                           item.average_engagement_rate > 5 
                             ? "text-emerald-400" 
                             : item.average_engagement_rate > 3
                             ? "text-white"
                             : "text-white/60"
-                        }`}>
+                        }`} style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
                           {item.average_engagement_rate.toFixed(2)}%
                         </span>
                       </TableCell>
                       <TableCell className="text-right hidden md:table-cell bg-[#202020] py-3">
                         {item.outperforming_video_rate > 0 ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 border border-primary/20 text-primary text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
                             {item.outperforming_video_rate.toFixed(1)}%
                           </span>
                         ) : (
