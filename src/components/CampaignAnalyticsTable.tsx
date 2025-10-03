@@ -400,7 +400,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 sm:py-4">
+                      <TableCell className="py-3 sm:py-4 bg-[#202020]">
                         {item.user_id && item.profiles ? (
                           <div className="flex items-center gap-1.5 sm:gap-2">
                             <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
@@ -419,22 +419,22 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm">
+                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm bg-[#202020]">
                         {item.total_videos.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white text-right font-semibold text-xs sm:text-sm">
+                      <TableCell className="text-white text-right font-semibold text-xs sm:text-sm bg-[#202020]">
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden lg:table-cell">
+                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden lg:table-cell bg-[#202020]">
                         {Math.round(item.average_video_views).toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden md:table-cell">
+                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden md:table-cell bg-[#202020]">
                         {item.total_likes.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden xl:table-cell">
+                      <TableCell className="text-white/80 text-right font-mono text-xs sm:text-sm hidden xl:table-cell bg-[#202020]">
                         {item.total_comments.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right bg-[#202020]">
                         <span className={`font-semibold text-xs sm:text-sm ${
                           item.average_engagement_rate > 5 
                             ? "text-emerald-400" 
@@ -445,7 +445,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                           {item.average_engagement_rate.toFixed(2)}%
                         </span>
                       </TableCell>
-                      <TableCell className="text-right hidden md:table-cell">
+                      <TableCell className="text-right hidden md:table-cell bg-[#202020]">
                         {item.outperforming_video_rate > 0 ? (
                           <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-semibold">
                             {item.outperforming_video_rate.toFixed(1)}%
@@ -454,7 +454,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                           <span className="text-white/30 text-xs sm:text-sm">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="py-4">
+                      <TableCell className="py-4 bg-[#202020]">
                         <Button
                           variant="ghost"
                           size="icon"
