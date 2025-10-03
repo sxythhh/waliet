@@ -341,7 +341,7 @@ export default function BrandManagement() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
-            <h1 className="text-3xl font-bold text-white">Campaign Management</h1>
+            <h1 className="text-white text-2xl font-bold">Campaign Management</h1>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleRefresh} className="bg-[#202020] border-0 text-white hover:bg-white/10">
@@ -387,7 +387,7 @@ export default function BrandManagement() {
             {/* Campaign Performance Overview */}
             <Card className="bg-[#202020] border-transparent">
               <CardHeader>
-                <CardTitle className="text-white text-sm">Campaign Performance Overview</CardTitle>
+                <CardTitle className="text-white text-sm">Performance Overview</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
