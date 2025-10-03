@@ -463,9 +463,15 @@ export function CampaignAnalyticsTable({
       setPaymentAmount("");
       setSelectedUser(null);
 
-      // Refresh analytics and transactions to show updated data
-      fetchAnalytics();
-      fetchTransactions();
+      // Immediate refresh for instant UI update
+      await Promise.all([
+        fetchAnalytics(),
+        fetchTransactions()
+      ]);
+      
+      if (onPaymentComplete) {
+        onPaymentComplete();
+      }
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment");
@@ -665,12 +671,14 @@ export function CampaignAnalyticsTable({
                             {item.paid_views >= item.total_views && item.paid_views > 0 && <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <div className="flex-shrink-0">
-                                      <Check className="h-3 w-3 text-green-400" />
-                                    </div>
+                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30 text-xs font-semibold px-2 py-0.5 flex items-center gap-1">
+                                      <Check className="h-3 w-3" />
+                                      PAID
+                                    </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent className="bg-[#2a2a2a] border-white/10 text-white">
-                                    <p className="text-sm">Paid ${item.last_payment_amount.toFixed(2)} on {new Date(item.last_payment_date!).toLocaleDateString()}</p>
+                                    <p className="text-sm font-medium">Paid ${item.last_payment_amount.toFixed(2)}</p>
+                                    <p className="text-xs text-white/60">{new Date(item.last_payment_date!).toLocaleDateString()}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>}
