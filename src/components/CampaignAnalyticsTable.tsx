@@ -1210,10 +1210,21 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
             {/* Available Users List */}
             <div className="space-y-2">
               <div className="text-xs text-white/60 mb-2">
-                Available Users ({availableUsers.filter(u => 
-                  u.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                  u.account_username.toLowerCase().includes(userSearchTerm.toLowerCase())
-                ).length})
+                Available Users ({(() => {
+                  const uniqueUsers = availableUsers.reduce((acc, user) => {
+                    if (!acc.find(u => u.user_id === user.user_id)) {
+                      acc.push(user);
+                    }
+                    return acc;
+                  }, [] as typeof availableUsers);
+                  
+                  return uniqueUsers.filter(u => 
+                    u.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                    availableUsers.filter(a => a.user_id === u.user_id).some(a => 
+                      a.account_username.toLowerCase().includes(userSearchTerm.toLowerCase())
+                    )
+                  ).length;
+                })()})
               </div>
               <div className="max-h-[300px] overflow-y-auto space-y-2">
                 {availableUsers.length === 0 ? (
@@ -1221,36 +1232,78 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                     No users found with {selectedAnalyticsAccount.platform} accounts
                   </div>
                 ) : (
-                  availableUsers
-                    .filter(user => 
-                      user.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                      user.account_username.toLowerCase().includes(userSearchTerm.toLowerCase())
-                    )
-                    .map(user => (
-                      <div
-                        key={user.user_id}
-                        onClick={() => handleLinkAccount(user.user_id)}
-                        className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                                {user.username?.charAt(0).toUpperCase() || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="text-sm font-semibold">@{user.username}</div>
-                              <div className="text-xs text-white/60">
-                                {user.platform} • @{user.account_username}
+                  (() => {
+                    // Group accounts by user
+                    const userGroups = availableUsers.reduce((acc, account) => {
+                      if (!acc[account.user_id]) {
+                        acc[account.user_id] = {
+                          user_id: account.user_id,
+                          username: account.username,
+                          avatar_url: account.avatar_url,
+                          accounts: []
+                        };
+                      }
+                      acc[account.user_id].accounts.push({
+                        platform: account.platform,
+                        account_username: account.account_username
+                      });
+                      return acc;
+                    }, {} as Record<string, {
+                      user_id: string;
+                      username: string;
+                      avatar_url: string | null;
+                      accounts: Array<{ platform: string; account_username: string }>;
+                    }>);
+
+                    const users = Object.values(userGroups);
+
+                    return users
+                      .filter(user => 
+                        user.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                        user.accounts.some(a => 
+                          a.account_username.toLowerCase().includes(userSearchTerm.toLowerCase())
+                        )
+                      )
+                      .map(user => (
+                        <div
+                          key={user.user_id}
+                          onClick={() => handleLinkAccount(user.user_id)}
+                          className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 flex-1">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.avatar_url || undefined} />
+                                <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                                  {user.username?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold mb-1">@{user.username}</div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {user.accounts.map((account, idx) => {
+                                    const platformIcon = 
+                                      account.platform === 'tiktok' ? tiktokLogo :
+                                      account.platform === 'instagram' ? instagramLogo :
+                                      account.platform === 'youtube' ? youtubeLogo : null;
+                                    
+                                    return (
+                                      <div key={idx} className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                                        {platformIcon && (
+                                          <img src={platformIcon} alt={account.platform} className="w-3 h-3" />
+                                        )}
+                                        <span className="text-xs text-white/80">@{account.account_username}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             </div>
+                            <Link2 className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
                           </div>
-                          <Link2 className="h-4 w-4 text-primary" />
                         </div>
-                      </div>
-                    ))
+                      ));
+                  })()
                 )}
               </div>
             </div>
