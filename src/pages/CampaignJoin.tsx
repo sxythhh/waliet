@@ -45,7 +45,7 @@ export default function CampaignJoin() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedAccount, setSelectedAccount] = useState<SocialAccount | null>(null);
+  const [selectedAccounts, setSelectedAccounts] = useState<SocialAccount[]>([]);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function CampaignJoin() {
     }
   };
   const onSubmit = async () => {
-    if (!campaign || !selectedAccount) return;
+    if (!campaign || selectedAccounts.length === 0) return;
     setSubmitting(true);
     try {
       const {
@@ -117,17 +117,22 @@ export default function CampaignJoin() {
         return;
       }
 
-      const {
-        error
-      } = await supabase.from("campaign_submissions").insert({
+      // Submit application for each selected account
+      const submissions = selectedAccounts.map(account => ({
         campaign_id: campaign.id,
         creator_id: user.id,
-        platform: selectedAccount.platform,
+        platform: account.platform,
         content_url: "",
         status: "pending"
-      });
+      }));
+
+      const { error } = await supabase
+        .from("campaign_submissions")
+        .insert(submissions);
+
       if (error) throw error;
-      toast.success("Application submitted successfully!");
+      
+      toast.success(`Application${selectedAccounts.length > 1 ? 's' : ''} submitted successfully!`);
       navigate("/dashboard");
     } catch (error) {
       console.error("Error submitting application:", error);
@@ -294,47 +299,18 @@ export default function CampaignJoin() {
                 const isLinkedToCampaign = account.campaign_id !== null;
                 const isCompatible = campaign.allowed_platforms.includes(account.platform);
                 const isDisabled = isLinkedToCampaign || !isCompatible;
-                return <div key={account.id} onClick={async () => {
+                const isSelected = selectedAccounts.some(acc => acc.id === account.id);
+                
+                return <div key={account.id} onClick={() => {
                   if (isDisabled) return;
 
-                  // Toggle selection - if already selected, deselect
-                  if (selectedAccount?.id === account.id) {
-                    setSelectedAccount(null);
+                  // Toggle selection
+                  if (isSelected) {
+                    setSelectedAccounts(selectedAccounts.filter(acc => acc.id !== account.id));
                   } else {
-                    setSelectedAccount(account);
-                    // Auto-submit when account is selected
-                    setSubmitting(true);
-                    try {
-                      const {
-                        data: {
-                          user
-                        }
-                      } = await supabase.auth.getUser();
-                      if (!user) {
-                        toast.error("Please sign in to apply");
-                        navigate("/auth");
-                        return;
-                      }
-
-                      const {
-                        error
-                      } = await supabase.from("campaign_submissions").insert({
-                        campaign_id: campaign.id,
-                        creator_id: user.id,
-                        platform: account.platform,
-                        content_url: "",
-                        status: "pending"
-                      });
-                      if (error) throw error;
-                      toast.success("Application submitted successfully!");
-                      navigate("/dashboard");
-                    } catch (error) {
-                      console.error("Error submitting application:", error);
-                      toast.error("Failed to submit application");
-                      setSubmitting(false);
-                    }
+                    setSelectedAccounts([...selectedAccounts, account]);
                   }
-                }} className={`p-4 rounded-xl border transition-all ${isDisabled ? 'bg-muted/50 cursor-not-allowed opacity-60' : selectedAccount?.id === account.id ? 'bg-primary/10 ring-2 ring-primary cursor-pointer' : 'bg-card hover:bg-card/80 cursor-pointer'}`}>
+                }} className={`p-4 rounded-xl border transition-all ${isDisabled ? 'bg-muted/50 cursor-not-allowed opacity-60' : isSelected ? 'bg-primary/10 ring-2 ring-primary cursor-pointer' : 'bg-card hover:bg-card/80 cursor-pointer'}`}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {getPlatformIcon(account.platform)}
@@ -353,10 +329,20 @@ export default function CampaignJoin() {
               })}
                   </div>
 
-                  <Button onClick={handleAddAccount} variant="outline" className="w-full gap-2 mb-4">
+                  <Button onClick={handleAddAccount} variant="outline" className="w-full gap-2">
                     <Plus className="h-4 w-4" />
                     Connect Another Account
                   </Button>
+
+                  {selectedAccounts.length > 0 && (
+                    <Button 
+                      onClick={onSubmit} 
+                      disabled={submitting} 
+                      className="w-full mt-4"
+                    >
+                      {submitting ? "Submitting..." : `Submit Application${selectedAccounts.length > 1 ? 's' : ''} (${selectedAccounts.length})`}
+                    </Button>
+                  )}
                 </>}
             </div>
           </div>}
