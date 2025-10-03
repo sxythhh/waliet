@@ -549,35 +549,6 @@ export function CreateCampaignDialog({
               )}
             </div>
 
-            <div className="space-y-3">
-              <FormLabel className="text-white">Application Questions (Max 3)</FormLabel>
-              {[0, 1, 2].map((index) => (
-                <FormField
-                  key={index}
-                  control={form.control}
-                  name={`application_questions.${index}` as any}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          placeholder={`Question ${index + 1} (optional)`}
-                          className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) => {
-                            const questions = form.getValues("application_questions") || [];
-                            questions[index] = e.target.value;
-                            form.setValue("application_questions", questions.filter(q => q && q.trim()));
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ))}
-              <FormMessage className="text-destructive/80" />
-            </div>
-
             <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
               <Button
                 type="button"
