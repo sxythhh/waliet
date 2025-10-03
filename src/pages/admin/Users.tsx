@@ -331,23 +331,14 @@ export default function AdminUsers() {
       </div>;
   }
   return <div className="p-8 space-y-6 py-0 px-[23px]">
-      <div className="flex items-center justify-between p-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground mt-1">View and manage creator accounts</p>
-        </div>
-        <Button onClick={() => setCsvImportDialogOpen(true)} className="gap-2">
-          <Upload className="h-4 w-4" />
-          Import CSV
-        </Button>
-      </div>
+      
 
       {/* Stats */}
       
 
       {/* Filters */}
       <Card className="bg-card border-0">
-        <CardContent className="pt-6 bg-[#000a00] py-0">
+        <CardContent className="pt-6 bg-[#000a00] px-0 py-0">
           <div className="flex gap-4">
             
             <div className="w-64">
@@ -390,59 +381,36 @@ export default function AdminUsers() {
       </Card>
 
       {/* Users Gallery */}
-      {filteredUsers.length === 0 ? (
-        <Card className="bg-card border-0">
+      {filteredUsers.length === 0 ? <Card className="bg-card border-0">
           <CardContent className="text-center py-12 text-muted-foreground">
             No users found
           </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-2 gap-6 w-full">
+        </Card> : <div className="grid grid-cols-2 gap-6 w-full">
           {filteredUsers.map(user => {
-            const balance = user.wallets?.balance || 0;
-            const totalEarned = user.wallets?.total_earned || 0;
-            const totalWithdrawn = user.wallets?.total_withdrawn || 0;
-
-            return (
-              <Card 
-                key={user.id} 
-                className="bg-card border-0 overflow-hidden cursor-pointer transition-all hover:bg-muted/50"
-                onClick={() => openUserDetailsDialog(user)}
-              >
+        const balance = user.wallets?.balance || 0;
+        const totalEarned = user.wallets?.total_earned || 0;
+        const totalWithdrawn = user.wallets?.total_withdrawn || 0;
+        return <Card key={user.id} className="bg-card border-0 overflow-hidden cursor-pointer transition-all hover:bg-muted/50" onClick={() => openUserDetailsDialog(user)}>
                 <CardContent className="p-6">
                   {/* User Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3 flex-1">
-                      {user.avatar_url ? (
-                        <img 
-                          src={user.avatar_url} 
-                          alt={user.username} 
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-10 w-10 rounded-full object-cover" /> : <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <UsersIcon className="h-5 w-5 text-primary" />
-                        </div>
-                      )}
+                        </div>}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold truncate">
                           {user.username}
                         </h3>
-                        {user.full_name && (
-                          <p className="text-sm text-muted-foreground truncate">
+                        {user.full_name && <p className="text-sm text-muted-foreground truncate">
                             {user.full_name}
-                          </p>
-                        )}
+                          </p>}
                       </div>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openPayDialog(user);
-                      }} 
-                      className="gap-1 shrink-0"
-                    >
+                    <Button size="sm" onClick={e => {
+                e.stopPropagation();
+                openPayDialog(user);
+              }} className="gap-1 shrink-0">
                       <DollarSign className="h-4 w-4" />
                       Pay
                     </Button>
@@ -451,22 +419,12 @@ export default function AdminUsers() {
                   {/* Connected Accounts */}
                   <div className="mb-4">
                     <p className="text-xs text-muted-foreground mb-2">Connected Accounts</p>
-                    {user.social_accounts && user.social_accounts.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {user.social_accounts.map(account => (
-                          <div 
-                            key={account.id} 
-                            className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 rounded-md text-xs"
-                            title={`${account.username} - ${account.follower_count.toLocaleString()} followers`}
-                          >
+                    {user.social_accounts && user.social_accounts.length > 0 ? <div className="flex flex-wrap gap-2">
+                        {user.social_accounts.map(account => <div key={account.id} title={`${account.username} - ${account.follower_count.toLocaleString()} followers`} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
                             {getPlatformIcon(account.platform)}
                             <span className="font-medium">{account.username}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">No accounts</span>
-                    )}
+                          </div>)}
+                      </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
                   </div>
 
                   {/* Balance */}
@@ -495,11 +453,9 @@ export default function AdminUsers() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+              </Card>;
+      })}
+        </div>}
 
       {/* Payment Dialog */}
       <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
