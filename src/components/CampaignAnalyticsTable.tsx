@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, Eye, Heart, MessageCircle, BarChart3 } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3 } from "lucide-react";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 
 interface AnalyticsData {
   id: string;
@@ -62,6 +64,19 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
   });
 
   const platforms = Array.from(new Set(analytics.map(a => a.platform)));
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'tiktok':
+        return tiktokLogo;
+      case 'instagram':
+        return instagramLogo;
+      case 'youtube':
+        return youtubeLogo;
+      default:
+        return null;
+    }
+  };
 
   const totalViews = analytics.reduce((sum, a) => sum + a.total_views, 0);
   const totalVideos = analytics.reduce((sum, a) => sum + a.total_videos, 0);
@@ -180,65 +195,93 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
             <Table>
               <TableHeader>
                 <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/60">Account</TableHead>
-                  <TableHead className="text-white/60">Platform</TableHead>
-                  <TableHead className="text-white/60 text-right">Videos</TableHead>
-                  <TableHead className="text-white/60 text-right">Views</TableHead>
-                  <TableHead className="text-white/60 text-right">Avg Views</TableHead>
-                  <TableHead className="text-white/60 text-right">Likes</TableHead>
-                  <TableHead className="text-white/60 text-right">Comments</TableHead>
-                  <TableHead className="text-white/60 text-right">Engagement</TableHead>
-                  <TableHead className="text-white/60 text-right">Outperform Rate</TableHead>
+                  <TableHead className="text-white/60 font-medium">Account</TableHead>
+                  <TableHead className="text-white/60 font-medium text-right">Videos</TableHead>
+                  <TableHead className="text-white/60 font-medium text-right">Views</TableHead>
+                  <TableHead className="text-white/60 font-medium text-right">Avg Views</TableHead>
+                  <TableHead className="text-white/60 font-medium text-right">Likes</TableHead>
+                  <TableHead className="text-white/60 font-medium text-right">Comments</TableHead>
+                  <TableHead className="text-white/60 font-medium text-right">Engagement</TableHead>
+                  <TableHead className="text-white/60 font-medium text-right">Outperform</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAnalytics.map((item) => (
-                  <TableRow key={item.id} className="border-white/10 hover:bg-white/5">
-                    <TableCell className="text-white">
-                      {item.account_link ? (
-                        <a
-                          href={item.account_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:text-primary transition-colors"
-                        >
-                          @{item.account_username}
-                        </a>
-                      ) : (
-                        <span>@{item.account_username}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize border-white/20 text-white">
-                        {item.platform}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-white text-right">{item.total_videos.toLocaleString()}</TableCell>
-                    <TableCell className="text-white text-right">{item.total_views.toLocaleString()}</TableCell>
-                    <TableCell className="text-white text-right">{Math.round(item.average_video_views).toLocaleString()}</TableCell>
-                    <TableCell className="text-white text-right">{item.total_likes.toLocaleString()}</TableCell>
-                    <TableCell className="text-white text-right">{item.total_comments.toLocaleString()}</TableCell>
-                    <TableCell className="text-white text-right">
-                      <span className={item.average_engagement_rate > 5 ? "text-green-400" : "text-white"}>
-                        {item.average_engagement_rate.toFixed(2)}%
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-white text-right">
-                      {item.outperforming_video_rate > 0 ? (
-                        <Badge className="bg-primary/20 text-primary border-primary/40">
-                          {item.outperforming_video_rate.toFixed(1)}%
-                        </Badge>
-                      ) : (
-                        <span className="text-white/40">-</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredAnalytics.map((item) => {
+                  const platformIcon = getPlatformIcon(item.platform);
+                  const username = item.account_username.startsWith('@') 
+                    ? item.account_username.slice(1) 
+                    : item.account_username;
+                  
+                  return (
+                    <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3">
+                          {platformIcon && (
+                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center p-1.5">
+                              <img 
+                                src={platformIcon} 
+                                alt={item.platform}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          )}
+                          {item.account_link ? (
+                            <a
+                              href={item.account_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-white hover:text-primary transition-colors font-medium"
+                            >
+                              {username}
+                            </a>
+                          ) : (
+                            <span className="text-white font-medium">{username}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-white/80 text-right font-mono text-sm">
+                        {item.total_videos.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-white text-right font-semibold">
+                        {item.total_views.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-white/80 text-right font-mono text-sm">
+                        {Math.round(item.average_video_views).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-white/80 text-right font-mono text-sm">
+                        {item.total_likes.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-white/80 text-right font-mono text-sm">
+                        {item.total_comments.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className={`font-semibold ${
+                          item.average_engagement_rate > 5 
+                            ? "text-emerald-400" 
+                            : item.average_engagement_rate > 3
+                            ? "text-white"
+                            : "text-white/60"
+                        }`}>
+                          {item.average_engagement_rate.toFixed(2)}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {item.outperforming_video_rate > 0 ? (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
+                            {item.outperforming_video_rate.toFixed(1)}%
+                          </span>
+                        ) : (
+                          <span className="text-white/30 text-sm">—</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
           {filteredAnalytics.length === 0 && (
-            <div className="text-center py-8 text-white/40">
+            <div className="text-center py-12 text-white/40">
               No accounts match your filters
             </div>
           )}
