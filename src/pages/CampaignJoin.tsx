@@ -276,62 +276,18 @@ export default function CampaignJoin() {
               <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
             </div>
             
-            <Card className="bg-card border hover:bg-card/80 transition-colors cursor-pointer"
-                  onClick={() => setCurrentStep(currentStep === 1 ? 2 : 1)}>
+            <Card className="bg-card border">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold mb-1">Campaign Requirements</div>
-                    <div className="text-sm text-muted-foreground">
-                      Please ensure you have gone through all campaign details
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-                
-                {currentStep === 1 && (
-                  <div className="mt-4 pt-4 border-t space-y-4">
-                    {campaign.description && (
-                      <div>
-                        <div className="text-sm font-medium mb-2">Description</div>
-                        <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                      </div>
-                    )}
-                    
-                    {campaign.guidelines && (
-                      <div>
-                        <div className="text-sm font-medium mb-2">Guidelines</div>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{campaign.guidelines}</p>
-                      </div>
-                    )}
-                    
-                    <div>
-                      <div className="text-sm font-medium mb-2">Platforms</div>
-                      <div className="flex gap-2">
-                        {campaign.allowed_platforms.map((platform) => (
-                          <div key={platform} className="px-3 py-1 bg-muted rounded-full text-xs">
-                            {platform === "tiktok" ? "TikTok" : "Instagram"}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-medium mb-2">RPM Rate</div>
-                      <div className="text-2xl font-bold text-primary">${campaign.rpm_rate}</div>
-                    </div>
-
-                    <Button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentStep(2);
-                      }}
-                      className="w-auto px-8"
-                    >
-                      Continue to Account Selection
-                    </Button>
-                  </div>
+                {campaign.description && (
+                  <p className="text-sm text-muted-foreground">{campaign.description}</p>
                 )}
+                
+                <Button 
+                  onClick={() => setCurrentStep(2)}
+                  className="w-auto px-8 mt-4"
+                >
+                  Continue to Account Selection
+                </Button>
               </CardContent>
             </Card>
           </div>
