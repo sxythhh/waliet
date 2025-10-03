@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -108,124 +107,139 @@ export default function AdminBrands() {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Brands Management</CardTitle>
-                <CardDescription>
-                  Manage all brands on the platform
-                </CardDescription>
-              </div>
-              <CreateBrandDialog onSuccess={fetchBrands} />
+    <div className="min-h-screen bg-background">
+      {/* Header Section */}
+      <div className="border-b bg-card/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto p-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Brand Management</h1>
+              <p className="text-muted-foreground mt-1">Manage all brands and their configurations</p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Logo</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {brands.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      No brands yet. Create your first brand to get started.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  brands.map((brand) => (
-                    <TableRow key={brand.id}>
-                      <TableCell>
-                        {brand.logo_url ? (
-                          <img
-                            src={brand.logo_url}
-                            alt={brand.name}
-                            className="w-10 h-10 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                            <Package className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{brand.name}</TableCell>
-                      <TableCell>
-                        {brand.brand_type && (
-                          <Badge className={getBrandTypeBadgeColor(brand.brand_type)}>
-                            {brand.brand_type}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <code className="text-xs bg-muted px-2 py-1 rounded">
+            <CreateBrandDialog onSuccess={fetchBrands} />
+          </div>
+          
+          {/* Stats */}
+          <div className="mt-6 flex gap-6">
+            <div className="flex items-center gap-2 text-sm">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Total Brands:</span>
+              <span className="font-semibold">{brands.length}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-8">
+        {brands.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <Package className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg font-medium text-muted-foreground mb-1">No brands yet</p>
+              <p className="text-sm text-muted-foreground">Create your first brand to get started</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {brands.map((brand) => (
+              <Card key={brand.id} className="group hover:shadow-lg transition-all duration-200 border hover:border-primary/30">
+                <CardContent className="p-6">
+                  {/* Logo & Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      {brand.logo_url ? (
+                        <img
+                          src={brand.logo_url}
+                          alt={brand.name}
+                          className="w-12 h-12 rounded-lg object-cover border"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center border">
+                          <Package className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-semibold text-lg leading-none mb-1">{brand.name}</h3>
+                        <code className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
                           {brand.slug}
                         </code>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {brand.description || "-"}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(brand.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => navigate(`/brand/${brand.slug}`)}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteClick(brand)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                      </div>
+                    </div>
+                  </div>
 
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete <strong>{brandToDelete?.name}</strong> and all
-                associated campaigns. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                className="bg-destructive hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                  {/* Type Badge */}
+                  {brand.brand_type && (
+                    <div className="mb-3">
+                      <Badge className={getBrandTypeBadgeColor(brand.brand_type)}>
+                        {brand.brand_type}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {brand.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 min-h-[40px]">
+                      {brand.description}
+                    </p>
+                  )}
+
+                  {/* Meta Info */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-4 pt-4 border-t">
+                    <span>Created {new Date(brand.created_at).toLocaleDateString()}</span>
+                    {brand.show_account_tab && (
+                      <Badge variant="outline" className="text-xs">Account Tab</Badge>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => navigate(`/brand/${brand.slug}`)}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeleteClick(brand)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{brandToDelete?.name}</strong> and all
+              associated campaigns. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
