@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 interface Campaign {
   id: string;
   title: string;
@@ -33,6 +34,7 @@ export function CampaignsTab() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -222,7 +224,62 @@ export function CampaignsTab() {
           </Card>;
     })}
     
-    <AddSocialAccountDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={fetchCampaigns} />
+    {/* Link Account Options Dialog */}
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Link Account to Campaign</DialogTitle>
+          <DialogDescription>
+            Choose how you want to link an account to this campaign
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3 py-4">
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-4 px-4"
+            onClick={() => {
+              setDialogOpen(false);
+              navigate("/dashboard?tab=profile");
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Link2 className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <div className="font-semibold">Link Existing Account</div>
+                <div className="text-xs text-muted-foreground">
+                  Use an account you've already connected
+                </div>
+              </div>
+            </div>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-4 px-4"
+            onClick={() => {
+              setDialogOpen(false);
+              setAddAccountDialogOpen(true);
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <UserPlus className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <div className="font-semibold">Add New Account</div>
+                <div className="text-xs text-muted-foreground">
+                  Connect and verify a new social account
+                </div>
+              </div>
+            </div>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    
+    <AddSocialAccountDialog open={addAccountDialogOpen} onOpenChange={setAddAccountDialogOpen} onSuccess={fetchCampaigns} />
     
     </div>;
 }
