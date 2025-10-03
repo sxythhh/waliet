@@ -552,7 +552,7 @@ export function ProfileTab() {
                 <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
                 ...profile,
                 bio: e.target.value
-              })} placeholder="Tell brands and followers about yourself, your content style, and what makes you unique..." rows={5} className="bg-background resize-none focus-visible:ring-0 focus-visible:ring-offset-0" />
+              })} placeholder="Tell brands and followers about yourself, your content style, and what makes you unique..." rows={5} className="bg-background focus:bg-background resize-none focus-visible:ring-0 focus-visible:ring-offset-0" />
                 <p className="text-xs text-muted-foreground">
                   {profile.bio?.length || 0} characters
                 </p>
