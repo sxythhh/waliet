@@ -625,24 +625,16 @@ export default function BrandManagement() {
                               <div className="flex items-start gap-4 mb-4">
                                 {/* Avatar */}
                                 <div className="flex-shrink-0">
-                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-16 h-16 rounded-full object-cover" /> : <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                                      <Users className="h-8 w-8 text-primary" />
+                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-12 h-12 rounded-full object-cover" /> : <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                      <Users className="h-6 w-6 text-primary" />
                                     </div>}
                                 </div>
 
                                 {/* Creator Info */}
                                 <div className="flex-1">
-                                  <h3 className="font-semibold text-white text-lg mb-1">
+                                  <h3 className="font-semibold text-white text-lg">
                                     {submission.profiles?.username || "Unknown"}
                                   </h3>
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <Badge variant="outline" className="bg-green-500/10 text-green-400 text-xs border-0">
-                                      Active
-                                    </Badge>
-                                    <Badge variant="outline" className="text-white/70 text-xs border-0 bg-white/5">
-                                      {submission.platform}
-                                    </Badge>
-                                  </div>
                                 </div>
                               </div>
 
