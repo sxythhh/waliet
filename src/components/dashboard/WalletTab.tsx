@@ -1196,19 +1196,19 @@ export function WalletTab() {
                 </div>
 
                 {/* Payout Method Details */}
-                {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && <>
+                {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && typeof selectedTransaction.metadata === 'object' && <>
                     <Separator />
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold mb-4">Payout Method</h3>
                       <div className="space-y-3">
-                        {selectedTransaction.metadata.payout_method && <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                        {typeof selectedTransaction.metadata.payout_method === 'string' && <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Method</span>
                             <span className="text-sm font-medium capitalize">
                               {selectedTransaction.metadata.payout_method}
                             </span>
                           </div>}
                         
-                        {selectedTransaction.metadata.network && (() => {
+                        {typeof selectedTransaction.metadata.network === 'string' && (() => {
                     const network = selectedTransaction.metadata.network.toLowerCase();
                     const getNetworkLogo = () => {
                       if (network === 'ethereum') return ethereumLogo;
@@ -1231,7 +1231,7 @@ export function WalletTab() {
                   })()}
                         
                         {/* Display crypto address if available */}
-                        {selectedTransaction.metadata.payoutDetails?.address && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails && typeof selectedTransaction.metadata.payoutDetails === 'object' && typeof selectedTransaction.metadata.payoutDetails.address === 'string' && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Address</span>
                             <div className="flex items-center gap-2 flex-1 justify-end">
                               <span className="text-sm font-mono text-right break-all max-w-[200px]">
@@ -1249,7 +1249,7 @@ export function WalletTab() {
                           </div>}
                         
                         {/* Display PayPal email if available */}
-                        {selectedTransaction.metadata.payoutDetails?.email && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails && typeof selectedTransaction.metadata.payoutDetails === 'object' && typeof selectedTransaction.metadata.payoutDetails.email === 'string' && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Email</span>
                             <span className="text-sm font-medium text-right max-w-[200px] truncate">
                               {selectedTransaction.metadata.payoutDetails.email}
@@ -1257,7 +1257,7 @@ export function WalletTab() {
                           </div>}
                         
                         {/* Display bank details if available */}
-                        {selectedTransaction.metadata.payoutDetails?.account_number && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails && typeof selectedTransaction.metadata.payoutDetails === 'object' && typeof selectedTransaction.metadata.payoutDetails.account_number === 'string' && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Account</span>
                             <span className="text-sm font-medium text-right">
                               •••• {selectedTransaction.metadata.payoutDetails.account_number.slice(-4)}
