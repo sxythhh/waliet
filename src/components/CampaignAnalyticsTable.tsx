@@ -817,8 +817,8 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
 
             {/* Payout Calculation */}
             <div className="space-y-3">
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                <div className="text-sm font-medium text-white mb-3">Calculated Payout</div>
+              <div className="p-2">
+                <div className="text-sm font-medium text-white mb-2">Calculated Payout</div>
                 
                 {(() => {
                   const calc = calculatePayout(selectedUser);
