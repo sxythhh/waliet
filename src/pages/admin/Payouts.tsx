@@ -187,8 +187,11 @@ export default function AdminPayouts() {
     const {
       variant,
       label
-    } = variants[status] || { variant: "secondary", label: "Unknown" };
-    return <Badge variant={variant as any}>{label}</Badge>;
+    } = variants[status] || {
+      variant: "secondary",
+      label: "Unknown"
+    };
+    return;
   };
   const getPayoutMethodIcon = (method: string, details?: any) => {
     console.log('Payout method:', method, 'Details:', details);
@@ -225,7 +228,7 @@ export default function AdminPayouts() {
       <div className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-2xl grid-cols-5 mb-6 bg-[#111111]">
-            <TabsTrigger value="pending" className="gap-2 bg-[#1c1c1c]">
+            <TabsTrigger value="pending" className="gap-2 bg-[#1c1c1c]/0">
               <Clock className="h-4 w-4" />
               Pending
             </TabsTrigger>
@@ -258,7 +261,7 @@ export default function AdminPayouts() {
                 </CardContent>
               </Card> : <div className="grid grid-cols-1 gap-4">
                 {filteredRequests.map(request => <Card key={request.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 py-[11px] px-[23px]">
                       <div className="flex gap-6">
                         {/* User Avatar */}
                         <Avatar className="h-16 w-16 flex-shrink-0">
@@ -310,7 +313,7 @@ export default function AdminPayouts() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <CreditCard className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              
                               <div className="min-w-0">
                                 <span className="text-muted-foreground">
                                   {request.payout_method === 'crypto' ? 'Wallet: ' : 'Details: '}
