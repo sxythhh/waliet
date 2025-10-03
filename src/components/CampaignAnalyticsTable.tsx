@@ -340,6 +340,20 @@ export function CampaignAnalyticsTable({
       toast.error('Failed to delete account analytics');
     }
   };
+  const calculateTotalEarned = (userId: string | null, accountUsername: string, platform: string) => {
+    if (!userId) return 0;
+    
+    // Sum all last_payment_amount for this user's account across all date ranges
+    return analytics
+      .filter(item => 
+        item.user_id === userId && 
+        item.account_username === accountUsername && 
+        item.platform === platform &&
+        item.last_payment_amount > 0
+      )
+      .reduce((sum, item) => sum + item.last_payment_amount, 0);
+  };
+
   const calculatePayout = (user: AnalyticsData) => {
     const views = user.total_views;
     const rpm = campaignRPM;
@@ -646,6 +660,9 @@ export function CampaignAnalyticsTable({
                         {sortField === 'total_comments' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
+                    <TableHead className="text-white/60 font-medium text-right text-sm whitespace-nowrap hidden lg:table-cell py-3">
+                      Total Earned
+                    </TableHead>
                     <TableHead className="text-white/60 font-medium text-sm w-8 py-3"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -684,7 +701,7 @@ export function CampaignAnalyticsTable({
                         </div>
                       </TableCell>
                       <TableCell className="py-3 bg-[#202020] cursor-pointer transition-colors" onClick={() => {
-                      if (item.user_id && item.profiles) {
+                      if (item.user_id && item.profiles && selectedDateRange !== "all") {
                         setSelectedUser(item);
                         setPaymentDialogOpen(true);
                       }
@@ -743,6 +760,12 @@ export function CampaignAnalyticsTable({
                       fontWeight: 500
                     }}>
                         {item.total_comments.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-green-400 text-right text-sm font-semibold hidden lg:table-cell bg-[#202020] py-3" style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600
+                    }}>
+                        {item.user_id ? `$${calculateTotalEarned(item.user_id, item.account_username, item.platform).toFixed(2)}` : '-'}
                       </TableCell>
                       <TableCell className="py-3 bg-[#202020]">
                         <Button variant="ghost" size="icon" onClick={() => {
@@ -1073,10 +1096,18 @@ export function CampaignAnalyticsTable({
           }} className="bg-transparent border-white/10 text-white hover:bg-white/5">
             Cancel
           </Button>
-              <Button onClick={() => {
-            handlePayUser();
-          }} className="bg-primary hover:bg-primary/90" disabled={selectedUser && selectedUser.paid_views >= selectedUser.total_views}>
-                {selectedUser && selectedUser.paid_views >= selectedUser.total_views ? "Already Paid" : "Send Payment"}
+              <Button 
+                onClick={() => {
+                  handlePayUser();
+                }} 
+                className="bg-primary hover:bg-primary/90" 
+                disabled={selectedUser && (selectedUser.paid_views >= selectedUser.total_views || selectedDateRange === "all")}
+              >
+                {selectedDateRange === "all" 
+                  ? "Cannot Pay (All Periods)" 
+                  : selectedUser && selectedUser.paid_views >= selectedUser.total_views 
+                    ? "Already Paid" 
+                    : "Send Payment"}
               </Button>
         </DialogFooter>
       </DialogContent>
