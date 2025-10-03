@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit } from "lucide-react";
+import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
@@ -567,91 +568,192 @@ export default function BrandManagement() {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-              {/* Top Performing Accounts */}
+              {/* Views by Platform - Pie Chart */}
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader>
-                  <CardTitle className="text-white text-sm">Top Performing Accounts</CardTitle>
+                  <CardTitle className="text-white text-sm">Views by Platform</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {analytics.length === 0 ? (
-                      <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
-                        No analytics data available
-                      </div>
-                    ) : (
-                      analytics
-                        .slice(0, 8)
-                        .map((account, index) => (
-                          <div key={account.id} className="flex items-center justify-between py-2">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
-                                {index + 1}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-white text-sm font-medium truncate">
-                                  @{account.account_username}
-                                </div>
-                                <div className="text-white/40 text-xs capitalize">
-                                  {account.platform}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-0.5">
-                              <span className="text-white font-semibold text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-                                {account.total_views.toLocaleString()}
-                              </span>
-                              <span className="text-white/40 text-xs">views</span>
-                            </div>
+                  <div className="h-64">
+                    {(() => {
+                      const platformData = analytics.reduce((acc: any[], account) => {
+                        const existing = acc.find(item => item.platform === account.platform);
+                        if (existing) {
+                          existing.views += account.total_views;
+                        } else {
+                          acc.push({
+                            platform: account.platform,
+                            views: account.total_views
+                          });
+                        }
+                        return acc;
+                      }, []);
+
+                      const COLORS: Record<string, string> = {
+                        tiktok: '#EF4444',
+                        instagram: '#A855F7',
+                        youtube: '#EF4444',
+                      };
+
+                      if (platformData.length === 0) {
+                        return (
+                          <div className="h-full flex items-center justify-center text-white/40 text-sm">
+                            No platform data available
                           </div>
-                        ))
-                    )}
+                        );
+                      }
+
+                      const totalViews = platformData.reduce((sum, item) => sum + item.views, 0);
+
+                      return (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={platformData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="views"
+                            >
+                              {platformData.map((entry, index) => (
+                                <Cell 
+                                  key={`cell-${index}`} 
+                                  fill={COLORS[entry.platform.toLowerCase()] || '#22C55E'}
+                                  className="transition-opacity hover:opacity-80"
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{
+                                backgroundColor: "#0C0C0C",
+                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                borderRadius: "8px",
+                                padding: "8px 12px"
+                              }}
+                              labelStyle={{
+                                color: "#ffffff",
+                                fontFamily: "Inter, sans-serif",
+                                fontSize: "12px",
+                                fontWeight: 500,
+                                textTransform: "capitalize"
+                              }}
+                              itemStyle={{
+                                color: "#ffffff",
+                                fontFamily: "Inter, sans-serif",
+                                fontSize: "12px"
+                              }}
+                              formatter={(value: number) => [
+                                `${value.toLocaleString()} views (${((value / totalViews) * 100).toFixed(1)}%)`,
+                                ''
+                              ]}
+                            />
+                            <Legend 
+                              verticalAlign="bottom" 
+                              height={36}
+                              formatter={(value) => (
+                                <span className="text-white/70 text-xs capitalize">{value}</span>
+                              )}
+                              iconType="circle"
+                              iconSize={8}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Recent Payments */}
+              {/* Daily Spend - Bar Chart */}
               <Card className="bg-[#202020] border-transparent">
                 <CardHeader>
-                  <CardTitle className="text-white text-sm">Recent Payments</CardTitle>
+                  <CardTitle className="text-white text-sm">Daily Spend</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {transactions.length === 0 ? (
-                      <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
-                        No payment data available
-                      </div>
-                    ) : (
-                      transactions
-                        .slice(0, 8)
-                        .map((txn) => {
-                          const metadata = txn.metadata || {};
-                          return (
-                            <div key={txn.id} className="flex items-center justify-between py-2">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                                  <DollarSign className="h-4 w-4 text-green-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-white text-sm font-medium truncate">
-                                    {txn.profiles?.username || 'Unknown'}
-                                  </div>
-                                  <div className="text-white/40 text-xs">
-                                    @{metadata.account_username || 'N/A'} • {metadata.views?.toLocaleString() || '0'} views
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-end gap-0.5">
-                                <span className="text-green-400 font-semibold text-sm">
-                                  +${Number(txn.amount).toFixed(2)}
-                                </span>
-                                <span className="text-white/40 text-xs">
-                                  {new Date(txn.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })
-                    )}
+                  <div className="h-64">
+                    {(() => {
+                      const dailySpendData = transactions.reduce((acc: any[], txn) => {
+                        const date = new Date(txn.created_at).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        });
+                        const existing = acc.find(item => item.date === date);
+                        if (existing) {
+                          existing.spend += Number(txn.amount);
+                        } else {
+                          acc.push({
+                            date,
+                            spend: Number(txn.amount)
+                          });
+                        }
+                        return acc;
+                      }, []);
+
+                      // Sort by date and take last 7 days
+                      const sortedData = dailySpendData
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                        .slice(-7);
+
+                      if (sortedData.length === 0) {
+                        return (
+                          <div className="h-full flex items-center justify-center text-white/40 text-sm">
+                            No spending data available
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={sortedData}>
+                            <XAxis 
+                              dataKey="date" 
+                              stroke="rgba(255, 255, 255, 0.4)" 
+                              fontSize={12} 
+                              tickLine={false} 
+                              axisLine={false}
+                              style={{ opacity: 0.6 }}
+                            />
+                            <YAxis 
+                              stroke="rgba(255, 255, 255, 0.4)" 
+                              fontSize={12} 
+                              tickLine={false} 
+                              axisLine={false} 
+                              tickFormatter={value => `$${value}`}
+                              style={{ opacity: 0.6 }}
+                            />
+                            <Tooltip 
+                              contentStyle={{
+                                backgroundColor: "#0C0C0C",
+                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                borderRadius: "8px",
+                                padding: "8px 12px"
+                              }}
+                              labelStyle={{
+                                color: "#ffffff",
+                                fontFamily: "Inter, sans-serif",
+                                fontSize: "12px",
+                                fontWeight: 500
+                              }}
+                              itemStyle={{
+                                color: "#ffffff",
+                                fontFamily: "Inter, sans-serif",
+                                fontSize: "12px"
+                              }}
+                              formatter={(value: number) => `$${value.toFixed(2)}`}
+                              cursor={{ fill: "rgba(255, 255, 255, 0.05)" }}
+                            />
+                            <Bar 
+                              dataKey="spend" 
+                              fill="#22C55E" 
+                              radius={[8, 8, 0, 0]} 
+                              name="Spent"
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>
