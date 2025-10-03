@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -47,6 +47,9 @@ interface AnalyticsData {
   last_tracked: string | null;
   amount_of_videos_tracked: string | null;
   user_id: string | null;
+  paid_views: number;
+  last_payment_amount: number;
+  last_payment_date: string | null;
   profiles?: {
     username: string;
     avatar_url: string | null;
@@ -285,22 +288,43 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     }
 
     try {
-      const { error } = await supabase
+      // Create wallet transaction
+      const { error: transactionError } = await supabase
         .from("wallet_transactions")
         .insert({
           user_id: selectedUser.user_id,
           amount: amount,
           type: "credit",
           description: `Payment for ${selectedUser.platform} account @${selectedUser.account_username}`,
-          status: "completed"
+          status: "completed",
+          metadata: {
+            campaign_id: campaignId,
+            analytics_id: selectedUser.id,
+            views_paid: selectedUser.total_views
+          }
         });
 
-      if (error) throw error;
+      if (transactionError) throw transactionError;
+
+      // Update analytics record with payment info
+      const { error: analyticsError } = await supabase
+        .from("campaign_account_analytics")
+        .update({
+          paid_views: selectedUser.total_views,
+          last_payment_amount: amount,
+          last_payment_date: new Date().toISOString()
+        })
+        .eq("id", selectedUser.id);
+
+      if (analyticsError) throw analyticsError;
 
       toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
       setPaymentDialogOpen(false);
       setPaymentAmount("");
       setSelectedUser(null);
+      
+      // Refresh analytics to show updated payment status
+      fetchAnalytics();
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment");
@@ -637,6 +661,20 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                               </AvatarFallback>
                             </Avatar>
                             <span className="text-white/80 text-sm truncate max-w-[90px] hover:underline">{item.profiles.username}</span>
+                            {item.paid_views >= item.total_views && item.paid_views > 0 && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex-shrink-0">
+                                      <Check className="h-3 w-3 text-green-400" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="bg-[#2a2a2a] border-white/10 text-white">
+                                    <p className="text-sm">Paid ${item.last_payment_amount.toFixed(2)} on {new Date(item.last_payment_date!).toLocaleDateString()}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </div>
                         ) : (
                           <span className="text-white/30 text-sm flex items-center gap-1">
@@ -887,6 +925,38 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                 </div>
               </div>
             </div>
+
+            {/* Payment Status */}
+            {selectedUser.paid_views > 0 && (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Check className="h-4 w-4 text-green-400" />
+                  <span className="text-sm font-medium text-green-400">Last Payment</span>
+                </div>
+                <div className="text-xs text-white/60 space-y-1">
+                  <div className="flex justify-between">
+                    <span>Amount:</span>
+                    <span className="text-white font-semibold">${selectedUser.last_payment_amount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Views Paid:</span>
+                    <span className="text-white">{selectedUser.paid_views.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Date:</span>
+                    <span className="text-white">{new Date(selectedUser.last_payment_date!).toLocaleDateString()}</span>
+                  </div>
+                  {selectedUser.total_views > selectedUser.paid_views && (
+                    <div className="flex justify-between pt-2 border-t border-green-500/20">
+                      <span className="text-yellow-400">New Unpaid Views:</span>
+                      <span className="text-yellow-400 font-semibold">
+                        {(selectedUser.total_views - selectedUser.paid_views).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Payout Calculation */}
             <div className="space-y-3">
