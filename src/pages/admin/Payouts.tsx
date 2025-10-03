@@ -188,11 +188,25 @@ export default function AdminPayouts() {
     return <Badge variant={variant}>{label}</Badge>;
   };
 
-  const getPayoutMethodIcon = (method: string) => {
+  const getPayoutMethodIcon = (method: string, details?: any) => {
     if (method === 'paypal') {
       return <img src="/src/assets/paypal-logo.svg" alt="PayPal" className="h-5 w-5" />;
     } else if (method === 'wise') {
       return <img src="/src/assets/wise-logo.svg" alt="Wise" className="h-5 w-5" />;
+    } else if (method === 'crypto' && details?.network) {
+      const network = details.network.toLowerCase();
+      const logoMap: Record<string, string> = {
+        'ethereum': '/src/assets/ethereum-logo.png',
+        'polygon': '/src/assets/polygon-logo.png',
+        'solana': '/src/assets/solana-logo.png',
+        'optimism': '/src/assets/optimism-logo.png',
+        'usdc': '/src/assets/usdc-logo.png',
+        'usdt': '/src/assets/usdt-logo.png',
+      };
+      const logoUrl = logoMap[network];
+      if (logoUrl) {
+        return <img src={logoUrl} alt={details.network} className="h-5 w-5" />;
+      }
     }
     return <Wallet className="h-5 w-5" />;
   };
@@ -382,20 +396,26 @@ export default function AdminPayouts() {
                           {/* Payment Details Row */}
                           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                             <div className="flex items-center gap-2">
-                              {getPayoutMethodIcon(request.payout_method)}
+                              {getPayoutMethodIcon(request.payout_method, request.payout_details)}
                               <div>
                                 <span className="text-muted-foreground">Method: </span>
-                                <span className="font-medium capitalize">{request.payout_method}</span>
+                                <span className="font-medium capitalize">
+                                  {request.payout_method === 'crypto' && request.payout_details?.network
+                                    ? request.payout_details.network
+                                    : request.payout_method}
+                                </span>
                               </div>
                             </div>
 
                             <div className="flex items-center gap-2">
                               <CreditCard className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                               <div className="min-w-0">
-                                <span className="text-muted-foreground">Details: </span>
+                                <span className="text-muted-foreground">
+                                  {request.payout_method === 'crypto' ? 'Wallet: ' : 'Details: '}
+                                </span>
                                 <span className="font-medium truncate">
-                                  {request.payout_details?.email || 
-                                   request.payout_details?.wallet_address || 
+                                  {request.payout_details?.wallet_address || 
+                                   request.payout_details?.email || 
                                    request.payout_details?.account_number ||
                                    'N/A'}
                                 </span>
