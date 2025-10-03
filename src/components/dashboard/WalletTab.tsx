@@ -709,7 +709,7 @@ export function WalletTab() {
         <CardContent>
           {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
-            </div> : <div className="space-y-3">
+            </div> : <div className="space-y-3 max-h-[400px] overflow-y-auto">
               {transactions.map(transaction => <div key={transaction.id} onClick={() => {
               setSelectedTransaction(transaction);
               setTransactionSheetOpen(true);
