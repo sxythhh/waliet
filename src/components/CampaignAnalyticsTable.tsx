@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, Eye, Heart, BarChart3 } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -30,11 +30,16 @@ interface CampaignAnalyticsTableProps {
   campaignId: string;
 }
 
+type SortField = 'total_videos' | 'total_views' | 'average_video_views' | 'total_likes' | 'total_comments' | 'average_engagement_rate' | 'outperforming_video_rate';
+type SortDirection = 'asc' | 'desc';
+
 export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTableProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<SortField>('total_views');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchAnalytics();
@@ -57,10 +62,24 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
     }
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
   const filteredAnalytics = analytics.filter(item => {
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
     return matchesSearch && matchesPlatform;
+  }).sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    const modifier = sortDirection === 'asc' ? 1 : -1;
+    return (aValue > bValue ? 1 : -1) * modifier;
   });
 
   const platforms = Array.from(new Set(analytics.map(a => a.platform)));
@@ -196,13 +215,97 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               <TableHeader>
                 <TableRow className="border-white/10 hover:bg-transparent">
                   <TableHead className="text-white/60 font-medium">Account</TableHead>
-                  <TableHead className="text-white/60 font-medium text-right">Videos</TableHead>
-                  <TableHead className="text-white/60 font-medium text-right">Views</TableHead>
-                  <TableHead className="text-white/60 font-medium text-right">Avg Views</TableHead>
-                  <TableHead className="text-white/60 font-medium text-right">Likes</TableHead>
-                  <TableHead className="text-white/60 font-medium text-right">Comments</TableHead>
-                  <TableHead className="text-white/60 font-medium text-right">Engagement</TableHead>
-                  <TableHead className="text-white/60 font-medium text-right">Outperform</TableHead>
+                  <TableHead 
+                    className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('total_videos')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Videos
+                      {sortField === 'total_videos' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 opacity-30" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('total_views')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Views
+                      {sortField === 'total_views' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 opacity-30" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('average_video_views')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Avg Views
+                      {sortField === 'average_video_views' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 opacity-30" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('total_likes')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Likes
+                      {sortField === 'total_likes' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 opacity-30" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('total_comments')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Comments
+                      {sortField === 'total_comments' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 opacity-30" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('average_engagement_rate')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Engagement
+                      {sortField === 'average_engagement_rate' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 opacity-30" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-white/60 font-medium text-right cursor-pointer hover:text-white transition-colors"
+                    onClick={() => handleSort('outperforming_video_rate')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Outperform
+                      {sortField === 'outperforming_video_rate' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 opacity-30" />
+                      )}
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
