@@ -158,11 +158,8 @@ export default function AdminCampaigns() {
         <p className="text-muted-foreground">Loading campaigns...</p>
       </div>;
   }
-  return <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Campaign Management</h1>
-        <p className="text-muted-foreground mt-1">View and manage all campaigns</p>
-      </div>
+  return <div className="p-8 space-y-6 px-[27px] py-0">
+      
 
       {/* Stats */}
       
