@@ -25,6 +25,9 @@ interface Profile {
   trust_score: number;
   demographics_score: number;
   views_score: number;
+  country: string | null;
+  city: string | null;
+  phone_number: string | null;
 }
 interface SocialAccount {
   id: string;
@@ -326,7 +329,10 @@ export function ProfileTab() {
       error
     } = await supabase.from("profiles").update({
       full_name: profile.full_name,
-      bio: profile.bio
+      bio: profile.bio,
+      country: profile.country,
+      city: profile.city,
+      phone_number: profile.phone_number
     }).eq("id", session?.user.id);
     setSaving(false);
     if (error) {
@@ -448,60 +454,162 @@ export function ProfileTab() {
           <CardDescription>Update your public profile information</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            {/* Avatar Upload */}
-            <div className="space-y-2">
-              <Label>Profile Picture</Label>
-              <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20 border-2 border-primary">
+          <form onSubmit={handleSaveProfile} className="space-y-8">
+            {/* Avatar Upload Section */}
+            <div className="space-y-4">
+              <div className="flex items-start gap-6">
+                <Avatar className="h-24 w-24 border-2 border-primary/20 ring-4 ring-primary/5">
                   <AvatarImage src={profile.avatar_url || ""} />
-                  <AvatarFallback className="text-xl bg-primary/10">
+                  <AvatarFallback className="text-2xl bg-gradient-to-br from-primary/20 to-primary/5 font-semibold">
                     {profile.full_name?.[0] || profile.username[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    {uploading ? "Uploading..." : "Upload New"}
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <Label className="text-sm font-semibold">Profile Picture</Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Upload a professional photo. JPG, PNG or GIF. Max 5MB.
+                    </p>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => fileInputRef.current?.click()} 
+                    disabled={uploading}
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {uploading ? "Uploading..." : "Change Photo"}
                   </Button>
-                  <p className="text-xs text-muted-foreground">
-                    JPG, PNG or GIF. Max 5MB.
-                  </p>
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input id="username" value={profile.username} disabled />
-              <p className="text-xs text-muted-foreground">
-                Username cannot be changed
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-sm font-medium">Username</Label>
+                  <Input 
+                    id="username" 
+                    value={profile.username} 
+                    disabled 
+                    className="bg-muted/30 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Username cannot be changed
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-sm font-medium">Display Name</Label>
+                  <Input 
+                    id="fullName" 
+                    value={profile.full_name || ""} 
+                    onChange={e => setProfile({
+                      ...profile,
+                      full_name: e.target.value
+                    })} 
+                    placeholder="John Doe"
+                    className="bg-background"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Contact Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+                  <Input 
+                    id="phone" 
+                    type="tel"
+                    value={profile.phone_number || ""} 
+                    onChange={e => setProfile({
+                      ...profile,
+                      phone_number: e.target.value
+                    })} 
+                    placeholder="+1 (555) 000-0000"
+                    className="bg-background"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country" className="text-sm font-medium">Country</Label>
+                  <Input 
+                    id="country" 
+                    value={profile.country || ""} 
+                    onChange={e => setProfile({
+                      ...profile,
+                      country: e.target.value
+                    })} 
+                    placeholder="United States"
+                    className="bg-background"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="city" className="text-sm font-medium">City</Label>
+                  <Input 
+                    id="city" 
+                    value={profile.city || ""} 
+                    onChange={e => setProfile({
+                      ...profile,
+                      city: e.target.value
+                    })} 
+                    placeholder="New York"
+                    className="bg-background"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* About */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">About</h3>
+              <div className="space-y-2">
+                <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
+                <Textarea 
+                  id="bio" 
+                  value={profile.bio || ""} 
+                  onChange={e => setProfile({
+                    ...profile,
+                    bio: e.target.value
+                  })} 
+                  placeholder="Tell brands and followers about yourself, your content style, and what makes you unique..."
+                  rows={5}
+                  className="bg-background resize-none"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {profile.bio?.length || 0} characters
+                </p>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex items-center justify-between pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                All changes will be reflected on your public profile
               </p>
+              <Button type="submit" disabled={saving} size="lg" className="gap-2 min-w-[140px]">
+                {saving ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Display Name</Label>
-              <Input id="fullName" value={profile.full_name || ""} onChange={e => setProfile({
-              ...profile,
-              full_name: e.target.value
-            })} placeholder="Your display name" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
-              ...profile,
-              bio: e.target.value
-            })} placeholder="Tell brands about yourself..." rows={4} />
-              <p className="text-xs text-muted-foreground">
-                This will appear on your public profile
-              </p>
-            </div>
-
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
           </form>
         </CardContent>
       </Card>
