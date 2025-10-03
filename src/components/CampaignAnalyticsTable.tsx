@@ -700,11 +700,9 @@ export function CampaignAnalyticsTable({
                       </TableCell>
                       <TableCell className="text-white/60 text-sm bg-[#202020] py-3">
                         {item.start_date && item.end_date ? (
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-xs">{new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                            <span className="text-xs text-white/40">to</span>
-                            <span className="text-xs">{new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                          </div>
+                          <span className="text-xs whitespace-nowrap">
+                            {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
                         ) : (
                           <span className="text-xs text-white/40">—</span>
                         )}
