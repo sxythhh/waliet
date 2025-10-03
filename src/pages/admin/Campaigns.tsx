@@ -7,34 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-
 interface Campaign {
   id: string;
   title: string;
@@ -49,7 +26,6 @@ interface Campaign {
   created_at: string;
   preview_url: string | null;
 }
-
 export default function AdminCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [filteredCampaigns, setFilteredCampaigns] = useState<Campaign[]>([]);
@@ -66,31 +42,30 @@ export default function AdminCampaigns() {
     budget_used: "",
     rpm_rate: "",
     status: "active",
-    preview_url: "",
+    preview_url: ""
   });
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchCampaigns();
   }, []);
-
   useEffect(() => {
     filterCampaigns();
   }, [searchQuery, campaigns]);
-
   const fetchCampaigns = async () => {
     setLoading(true);
-    
-    const { data, error } = await supabase
-      .from("campaigns")
-      .select("*")
-      .order("created_at", { ascending: false });
-
+    const {
+      data,
+      error
+    } = await supabase.from("campaigns").select("*").order("created_at", {
+      ascending: false
+    });
     if (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch campaigns",
+        description: "Failed to fetch campaigns"
       });
     } else {
       setCampaigns(data || []);
@@ -98,21 +73,14 @@ export default function AdminCampaigns() {
     }
     setLoading(false);
   };
-
   const filterCampaigns = () => {
     if (!searchQuery) {
       setFilteredCampaigns(campaigns);
       return;
     }
-
-    const filtered = campaigns.filter(
-      (campaign) =>
-        campaign.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        campaign.brand_name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = campaigns.filter(campaign => campaign.title?.toLowerCase().includes(searchQuery.toLowerCase()) || campaign.brand_name?.toLowerCase().includes(searchQuery.toLowerCase()));
     setFilteredCampaigns(filtered);
   };
-
   const openEditDialog = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setEditForm({
@@ -123,179 +91,106 @@ export default function AdminCampaigns() {
       budget_used: (campaign.budget_used || 0).toString(),
       rpm_rate: campaign.rpm_rate.toString(),
       status: campaign.status,
-      preview_url: campaign.preview_url || "",
+      preview_url: campaign.preview_url || ""
     });
     setEditDialogOpen(true);
   };
-
   const handleUpdateCampaign = async () => {
     if (!selectedCampaign) return;
-
-    const { error } = await supabase
-      .from("campaigns")
-      .update({
-        title: editForm.title,
-        brand_name: editForm.brand_name,
-        description: editForm.description,
-        budget: parseFloat(editForm.budget),
-        budget_used: parseFloat(editForm.budget_used),
-        rpm_rate: parseFloat(editForm.rpm_rate),
-        status: editForm.status,
-        preview_url: editForm.preview_url || null,
-      })
-      .eq("id", selectedCampaign.id);
-
+    const {
+      error
+    } = await supabase.from("campaigns").update({
+      title: editForm.title,
+      brand_name: editForm.brand_name,
+      description: editForm.description,
+      budget: parseFloat(editForm.budget),
+      budget_used: parseFloat(editForm.budget_used),
+      rpm_rate: parseFloat(editForm.rpm_rate),
+      status: editForm.status,
+      preview_url: editForm.preview_url || null
+    }).eq("id", selectedCampaign.id);
     if (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update campaign",
+        description: "Failed to update campaign"
       });
     } else {
       toast({
         title: "Success",
-        description: "Campaign updated successfully",
+        description: "Campaign updated successfully"
       });
       setEditDialogOpen(false);
       fetchCampaigns();
     }
   };
-
   const openDeleteDialog = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setDeleteDialogOpen(true);
   };
-
   const handleDeleteCampaign = async () => {
     if (!selectedCampaign) return;
-
-    const { error } = await supabase
-      .from("campaigns")
-      .delete()
-      .eq("id", selectedCampaign.id);
-
+    const {
+      error
+    } = await supabase.from("campaigns").delete().eq("id", selectedCampaign.id);
     if (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete campaign",
+        description: "Failed to delete campaign"
       });
     } else {
       toast({
         title: "Success",
-        description: "Campaign deleted successfully",
+        description: "Campaign deleted successfully"
       });
       setDeleteDialogOpen(false);
       fetchCampaigns();
     }
   };
-
   const stats = {
     totalCampaigns: campaigns.length,
-    activeCampaigns: campaigns.filter((c) => c.status === "active").length,
-    totalBudget: campaigns.reduce((sum, c) => sum + Number(c.budget), 0),
+    activeCampaigns: campaigns.filter(c => c.status === "active").length,
+    totalBudget: campaigns.reduce((sum, c) => sum + Number(c.budget), 0)
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading campaigns...</p>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="p-8 space-y-6">
+  return <div className="p-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Campaign Management</h1>
         <p className="text-muted-foreground mt-1">View and manage all campaigns</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Campaigns</p>
-              <TrendingUp className="h-4 w-4 text-primary" />
-            </div>
-            <p className="text-2xl font-bold">{stats.totalCampaigns}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Active Campaigns</p>
-              <Calendar className="h-4 w-4 text-success" />
-            </div>
-            <p className="text-2xl font-bold">{stats.activeCampaigns}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Budget</p>
-              <DollarSign className="h-4 w-4 text-success" />
-            </div>
-            <p className="text-2xl font-bold">${stats.totalBudget.toFixed(2)}</p>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Search */}
       <Card className="bg-card border-0">
-        <CardContent className="pt-6">
-          <Label htmlFor="search">Search Campaigns</Label>
-          <div className="relative mt-2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="search"
-              placeholder="Search by title or brand..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
+        
       </Card>
 
       {/* Campaigns Gallery */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Campaigns ({filteredCampaigns.length})</h2>
-        {filteredCampaigns.length === 0 ? (
-          <Card className="bg-card border-0">
+        {filteredCampaigns.length === 0 ? <Card className="bg-card border-0">
             <CardContent className="py-12 text-center text-muted-foreground">
               No campaigns found
             </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
-            {filteredCampaigns.map((campaign) => (
-              <Card 
-                key={campaign.id} 
-                className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 cursor-pointer"
-                onClick={() => openEditDialog(campaign)}
-              >
+          </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
+            {filteredCampaigns.map(campaign => <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 cursor-pointer" onClick={() => openEditDialog(campaign)}>
                 {/* Banner Section */}
-                {campaign.preview_url ? (
-                  <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                    <img 
-                      src={campaign.preview_url} 
-                      alt={campaign.title} 
-                      className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
-                    />
+                {campaign.preview_url ? <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                    <img src={campaign.preview_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  </div>
-                ) : (
-                  <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+                  </div> : <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <TrendingUp className="w-12 h-12 text-primary/30" />
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  </div>
-                )}
+                  </div>}
 
                 {/* Content Section */}
                 <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
@@ -322,12 +217,9 @@ export default function AdminCampaigns() {
                     
                     {/* Progress Bar */}
                     <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
-                      <div 
-                        className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" 
-                        style={{
-                          width: `${campaign.budget > 0 ? ((campaign.budget_used || 0) / campaign.budget * 100) : 0}%`
-                        }} 
-                      />
+                      <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                  width: `${campaign.budget > 0 ? (campaign.budget_used || 0) / campaign.budget * 100 : 0}%`
+                }} />
                     </div>
                     
                     <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
@@ -350,36 +242,24 @@ export default function AdminCampaigns() {
 
                   {/* Actions */}
                   <div className="mt-auto pt-2 flex gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="flex-1 h-8 text-[11px] font-instrument tracking-tight hover:bg-muted/50"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditDialog(campaign);
-                      }}
-                    >
+                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[11px] font-instrument tracking-tight hover:bg-muted/50" onClick={e => {
+                e.stopPropagation();
+                openEditDialog(campaign);
+              }}>
                       <Pencil className="w-3.5 h-3.5 mr-1.5" />
                       Edit
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="flex-1 h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openDeleteDialog(campaign);
-                      }}
-                    >
+                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive" onClick={e => {
+                e.stopPropagation();
+                openDeleteDialog(campaign);
+              }}>
                       <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                       Delete
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+              </Card>)}
+          </div>}
       </div>
 
       {/* Edit Dialog */}
@@ -393,77 +273,62 @@ export default function AdminCampaigns() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                value={editForm.title}
-                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-              />
+              <Input id="title" value={editForm.title} onChange={e => setEditForm({
+              ...editForm,
+              title: e.target.value
+            })} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="brand">Brand Name *</Label>
-              <Input
-                id="brand"
-                value={editForm.brand_name}
-                onChange={(e) => setEditForm({ ...editForm, brand_name: e.target.value })}
-              />
+              <Input id="brand" value={editForm.brand_name} onChange={e => setEditForm({
+              ...editForm,
+              brand_name: e.target.value
+            })} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={editForm.description}
-                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                rows={3}
-              />
+              <Textarea id="description" value={editForm.description} onChange={e => setEditForm({
+              ...editForm,
+              description: e.target.value
+            })} rows={3} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="budget">Total Budget (USD) *</Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  step="0.01"
-                  value={editForm.budget}
-                  onChange={(e) => setEditForm({ ...editForm, budget: e.target.value })}
-                />
+                <Input id="budget" type="number" step="0.01" value={editForm.budget} onChange={e => setEditForm({
+                ...editForm,
+                budget: e.target.value
+              })} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="budget_used">Used Budget (USD) *</Label>
-                <Input
-                  id="budget_used"
-                  type="number"
-                  step="0.01"
-                  value={editForm.budget_used}
-                  onChange={(e) => setEditForm({ ...editForm, budget_used: e.target.value })}
-                />
+                <Input id="budget_used" type="number" step="0.01" value={editForm.budget_used} onChange={e => setEditForm({
+                ...editForm,
+                budget_used: e.target.value
+              })} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rpm">RPM Rate (USD) *</Label>
-                <Input
-                  id="rpm"
-                  type="number"
-                  step="0.01"
-                  value={editForm.rpm_rate}
-                  onChange={(e) => setEditForm({ ...editForm, rpm_rate: e.target.value })}
-                />
+                <Input id="rpm" type="number" step="0.01" value={editForm.rpm_rate} onChange={e => setEditForm({
+                ...editForm,
+                rpm_rate: e.target.value
+              })} />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <select
-                id="status"
-                value={editForm.status}
-                onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                className="w-full px-3 py-2 rounded-md border border-input bg-background"
-              >
+              <select id="status" value={editForm.status} onChange={e => setEditForm({
+              ...editForm,
+              status: e.target.value
+            })} className="w-full px-3 py-2 rounded-md border border-input bg-background">
                 <option value="active">Active</option>
                 <option value="paused">Paused</option>
                 <option value="completed">Completed</option>
@@ -472,13 +337,10 @@ export default function AdminCampaigns() {
 
             <div className="space-y-2">
               <Label htmlFor="preview_url">Preview URL</Label>
-              <Input
-                id="preview_url"
-                type="url"
-                placeholder="https://..."
-                value={editForm.preview_url}
-                onChange={(e) => setEditForm({ ...editForm, preview_url: e.target.value })}
-              />
+              <Input id="preview_url" type="url" placeholder="https://..." value={editForm.preview_url} onChange={e => setEditForm({
+              ...editForm,
+              preview_url: e.target.value
+            })} />
               <p className="text-xs text-muted-foreground">URL to embed for non-members viewing this campaign</p>
             </div>
 
@@ -511,6 +373,5 @@ export default function AdminCampaigns() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 }
