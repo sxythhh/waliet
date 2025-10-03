@@ -855,6 +855,9 @@ export function WalletTab() {
                       {cryptoLogo && <img src={cryptoLogo} alt="Crypto logo" className="h-8 w-8 rounded-full" />}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
+                          <p className="text-base font-semibold text-foreground">
+                            {getMethodLabel()}
+                          </p>
                           {method.method.includes('crypto') && (
                             <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-transparent text-white border-0 flex items-center gap-1.5 normal-case hover:bg-transparent">
                               {networkLogo && <img src={networkLogo} alt="Network logo" className="h-3 w-3" />}
