@@ -59,6 +59,9 @@ interface Campaign {
   title: string;
   brand_name: string;
   brand_logo_url: string | null;
+  brands?: {
+    logo_url: string;
+  } | null;
 }
 export function ProfileTab() {
   const navigate = useNavigate();
@@ -669,14 +672,45 @@ export function ProfileTab() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-2 mt-4">
-            {joinedCampaigns.map(campaign => <button key={campaign.id} onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)} className="w-full p-4 text-left border rounded-lg hover:bg-[#121212] transition-colors flex items-center gap-3">
-                {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="h-10 w-10 rounded object-cover" />}
-                <div>
-                  <div className="font-medium">{campaign.title}</div>
-                  <div className="text-sm text-muted-foreground">{campaign.brand_name}</div>
+          <div className="grid gap-3 mt-4">
+            {joinedCampaigns.map(campaign => (
+              <div 
+                key={campaign.id} 
+                onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)}
+                className="group relative overflow-hidden rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/50 transition-all duration-200 cursor-pointer p-4"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-shrink-0">
+                    {(campaign.brands?.logo_url || campaign.brand_logo_url) ? (
+                      <img 
+                        src={campaign.brands?.logo_url || campaign.brand_logo_url} 
+                        alt={campaign.brand_name} 
+                        className="h-16 w-16 rounded-lg object-cover ring-2 ring-border group-hover:ring-primary/50 transition-all" 
+                      />
+                    ) : (
+                      <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center ring-2 ring-border group-hover:ring-primary/50 transition-all">
+                        <span className="text-2xl font-bold text-muted-foreground">
+                          {campaign.brand_name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base text-foreground mb-1 truncate">
+                      {campaign.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {campaign.brand_name}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
-              </button>)}
+              </div>
+            ))}
           </div>
         </DialogContent>
       </Dialog>
