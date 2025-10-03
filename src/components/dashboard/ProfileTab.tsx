@@ -156,13 +156,14 @@ export function ProfileTab() {
     if (!session) return;
     const {
       data
-    } = await supabase.from("campaign_submissions").select("campaign_id, campaigns(id, title, brand_name, brand_logo_url)").eq("creator_id", session.user.id);
+    } = await supabase.from("campaign_submissions").select("campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))").eq("creator_id", session.user.id);
     if (data) {
       const campaigns = data.filter(item => item.campaigns).map(item => ({
         id: item.campaigns.id,
         title: item.campaigns.title,
         brand_name: item.campaigns.brand_name,
-        brand_logo_url: item.campaigns.brand_logo_url
+        brand_logo_url: item.campaigns.brand_logo_url,
+        brands: item.campaigns.brands
       }));
       setJoinedCampaigns(campaigns);
     }
@@ -677,7 +678,7 @@ export function ProfileTab() {
               <div 
                 key={campaign.id} 
                 onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)}
-                className="group relative overflow-hidden rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/50 transition-all duration-200 cursor-pointer p-4"
+                className="group relative overflow-hidden rounded-lg border border-border bg-card hover:bg-muted/50 transition-all duration-200 cursor-pointer p-4"
               >
                 <div className="flex items-center gap-4">
                   <div className="relative flex-shrink-0">
@@ -685,10 +686,10 @@ export function ProfileTab() {
                       <img 
                         src={campaign.brands?.logo_url || campaign.brand_logo_url} 
                         alt={campaign.brand_name} 
-                        className="h-16 w-16 rounded-lg object-cover ring-2 ring-border group-hover:ring-primary/50 transition-all" 
+                        className="h-16 w-16 rounded-lg object-cover ring-2 ring-border transition-all" 
                       />
                     ) : (
-                      <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center ring-2 ring-border group-hover:ring-primary/50 transition-all">
+                      <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center ring-2 ring-border transition-all">
                         <span className="text-2xl font-bold text-muted-foreground">
                           {campaign.brand_name.charAt(0)}
                         </span>
@@ -704,7 +705,7 @@ export function ProfileTab() {
                     </p>
                   </div>
                   <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
