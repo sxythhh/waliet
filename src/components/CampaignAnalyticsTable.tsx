@@ -554,6 +554,35 @@ export function CampaignAnalyticsTable({
                   ))}
                 </SelectContent>
               </Select>
+              {selectedDateRange !== "all" && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={async () => {
+                    const [start, end] = selectedDateRange.split('|');
+                    try {
+                      const { error } = await supabase
+                        .from('campaign_account_analytics')
+                        .delete()
+                        .eq('campaign_id', campaignId)
+                        .eq('start_date', start)
+                        .eq('end_date', end);
+                      
+                      if (error) throw error;
+                      toast.success("CSV period deleted successfully");
+                      setSelectedDateRange("all");
+                      fetchAnalytics();
+                    } catch (error) {
+                      console.error("Error deleting CSV period:", error);
+                      toast.error("Failed to delete CSV period");
+                    }
+                  }}
+                  className="bg-destructive/20 hover:bg-destructive/30"
+                >
+                  <Trash2 className="h-4 w-4 mr-1.5" />
+                  Delete Period
+                </Button>
+              )}
             </div>
           )}
         </div>
