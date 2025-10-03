@@ -2,11 +2,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { BrandSidebar } from "@/components/BrandSidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -33,6 +36,24 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("username, avatar_url, full_name")
+          .eq("id", session.user.id)
+          .single();
+        setProfile(data);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -43,7 +64,20 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="flex-1 flex justify-center">
               <img src="/src/assets/wordmark-logo.png" alt="Wordmark Logo" className="h-10" />
             </div>
-            <div className="w-10" />
+            {profile && (
+              <button
+                onClick={() => navigate(`/${profile.username}`)}
+                className="md:hidden"
+              >
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={profile.avatar_url || ""} />
+                  <AvatarFallback className="text-sm bg-muted font-semibold">
+                    {profile.full_name?.[0] || profile.username[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            )}
+            <div className="w-10 hidden md:block" />
           </header>
           <main className="flex-1">{children}</main>
         </div>
