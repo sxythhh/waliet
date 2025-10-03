@@ -7,6 +7,7 @@ import { Wallet, CreditCard } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import wiseLogo from "@/assets/wise-logo.svg";
 import wiseLogoBlue from "@/assets/wise-logo-blue.svg";
+import paypalLogo from "@/assets/paypal-logo.svg";
 import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
@@ -39,7 +40,7 @@ export default function PayoutMethodDialog({
   onSave,
   currentMethodCount,
 }: PayoutMethodDialogProps) {
-  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "bank" | "wise" | "revolut" | "tips">("crypto");
+  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise" | "revolut">("crypto");
   const [selectedCurrency, setSelectedCurrency] = useState(cryptoCurrencies[0].id);
   const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
@@ -55,10 +56,7 @@ export default function PayoutMethodDialog({
   const [wiseEmail, setWiseEmail] = useState("");
   
   // Revolut fields
-  const [revolutEmail, setRevolutEmail] = useState("");
-  
-  // TIPS fields
-  const [tipsUsername, setTipsUsername] = useState("");
+  const [revolutTag, setRevolutTag] = useState("");
 
   const handleSave = () => {
     if (selectedMethod === "crypto") {
@@ -73,41 +71,23 @@ export default function PayoutMethodDialog({
       onSave("paypal", {
         email: paypalEmail,
       });
-    } else if (selectedMethod === "bank") {
-      if (!bankName || !accountNumber || !routingNumber || !accountHolderName) return;
-      onSave("bank", {
-        bankName,
-        accountNumber,
-        routingNumber,
-        accountHolderName,
-      });
     } else if (selectedMethod === "wise") {
       if (!wiseEmail) return;
       onSave("wise", {
         email: wiseEmail,
       });
     } else if (selectedMethod === "revolut") {
-      if (!revolutEmail) return;
+      if (!revolutTag) return;
       onSave("revolut", {
-        email: revolutEmail,
-      });
-    } else if (selectedMethod === "tips") {
-      if (!tipsUsername) return;
-      onSave("tips", {
-        username: tipsUsername,
+        revtag: revolutTag,
       });
     }
     
     // Reset all fields
     setWalletAddress("");
     setPaypalEmail("");
-    setBankName("");
-    setAccountNumber("");
-    setRoutingNumber("");
-    setAccountHolderName("");
     setWiseEmail("");
-    setRevolutEmail("");
-    setTipsUsername("");
+    setRevolutTag("");
     onOpenChange(false);
   };
 
@@ -144,11 +124,9 @@ export default function PayoutMethodDialog({
               </p>
               {[
                 { id: "crypto", icon: Wallet, label: "Crypto Wallet", isLogo: false },
-                { id: "paypal", icon: CreditCard, label: "PayPal", isLogo: false },
-                { id: "bank", icon: CreditCard, label: "Bank Transfer", isLogo: false },
+                { id: "paypal", icon: paypalLogo, label: "PayPal", isLogo: true },
                 { id: "wise", icon: wiseLogo, iconActive: wiseLogoBlue, label: "Wise", isLogo: true },
                 { id: "revolut", icon: CreditCard, label: "Revolut", isLogo: false },
-                { id: "tips", icon: CreditCard, label: "TIPS", isLogo: false },
               ].map((method) => {
                 const Icon = method.icon;
                 const isActive = selectedMethod === method.id;
@@ -269,61 +247,6 @@ export default function PayoutMethodDialog({
                 </div>
               )}
 
-              {selectedMethod === "bank" && (
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <Label htmlFor="bank-name" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
-                      BANK NAME
-                    </Label>
-                    <Input
-                      id="bank-name"
-                      placeholder="Enter bank name"
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <Label htmlFor="account-holder" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
-                      ACCOUNT HOLDER NAME
-                    </Label>
-                    <Input
-                      id="account-holder"
-                      placeholder="Full name on account"
-                      value={accountHolderName}
-                      onChange={(e) => setAccountHolderName(e.target.value)}
-                      className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <Label htmlFor="account-number" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
-                        ACCOUNT NUMBER
-                      </Label>
-                      <Input
-                        id="account-number"
-                        placeholder="Account #"
-                        value={accountNumber}
-                        onChange={(e) => setAccountNumber(e.target.value)}
-                        className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="routing-number" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
-                        ROUTING NUMBER
-                      </Label>
-                      <Input
-                        id="routing-number"
-                        placeholder="Routing #"
-                        value={routingNumber}
-                        onChange={(e) => setRoutingNumber(e.target.value)}
-                        className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {selectedMethod === "wise" && (
                 <div className="space-y-3">
                   <Label htmlFor="wise-email" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
@@ -342,30 +265,14 @@ export default function PayoutMethodDialog({
 
               {selectedMethod === "revolut" && (
                 <div className="space-y-3">
-                  <Label htmlFor="revolut-email" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
-                    REVOLUT EMAIL
+                  <Label htmlFor="revolut-tag" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
+                    REVTAG
                   </Label>
                   <Input
-                    id="revolut-email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={revolutEmail}
-                    onChange={(e) => setRevolutEmail(e.target.value)}
-                    className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
-                  />
-                </div>
-              )}
-
-              {selectedMethod === "tips" && (
-                <div className="space-y-3">
-                  <Label htmlFor="tips-username" className="font-medium text-muted-foreground" style={{ fontSize: '11px', letterSpacing: '-0.5px' }}>
-                    TIPS USERNAME
-                  </Label>
-                  <Input
-                    id="tips-username"
-                    placeholder="Enter your TIPS username"
-                    value={tipsUsername}
-                    onChange={(e) => setTipsUsername(e.target.value)}
+                    id="revolut-tag"
+                    placeholder="@yourtag"
+                    value={revolutTag}
+                    onChange={(e) => setRevolutTag(e.target.value)}
                     className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]"
                   />
                 </div>
@@ -389,10 +296,8 @@ export default function PayoutMethodDialog({
               disabled={
                 (selectedMethod === "crypto" && !walletAddress) ||
                 (selectedMethod === "paypal" && !paypalEmail) ||
-                (selectedMethod === "bank" && (!bankName || !accountNumber || !routingNumber || !accountHolderName)) ||
                 (selectedMethod === "wise" && !wiseEmail) ||
-                (selectedMethod === "revolut" && !revolutEmail) ||
-                (selectedMethod === "tips" && !tipsUsername)
+                (selectedMethod === "revolut" && !revolutTag)
               }
             >
               Add Method
