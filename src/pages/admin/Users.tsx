@@ -397,7 +397,7 @@ export default function AdminUsers() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 gap-6 w-full">
           {filteredUsers.map(user => {
             const balance = user.wallets?.balance || 0;
             const totalEarned = user.wallets?.total_earned || 0;
