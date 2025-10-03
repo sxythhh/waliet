@@ -672,9 +672,8 @@ export function CampaignAnalyticsTable({
                             {item.paid_views >= item.total_views && item.paid_views > 0 && <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30 text-xs font-semibold px-2 py-0.5 flex items-center gap-1">
-                                      <Check className="h-3 w-3" />
-                                      PAID
+                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30 text-[10px] font-semibold px-1.5 py-0 rounded-[4px]">
+                                      Paid
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent className="bg-[#2a2a2a] border-white/10 text-white">
