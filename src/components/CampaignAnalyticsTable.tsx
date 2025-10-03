@@ -370,7 +370,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                     : item.account_username;
                   
                   return (
-                    <TableRow key={item.id} className="border-white/5">{/* Removed hover effect */}
+                    <TableRow key={item.id} className="border-white/5 hover:bg-transparent">{/* Explicitly disable hover */}
                       <TableCell className="py-3 sm:py-4 sticky left-0 bg-[#202020] z-10">{/* Sticky for mobile */}
                         <div className="flex items-center gap-2 sm:gap-3">{/* Reduced gap on mobile */}
                           {platformIcon && (
