@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -272,7 +272,7 @@ export default function AdminPayouts() {
                             <div className="flex items-center gap-3 text-sm">
                               <span className="flex items-center gap-1.5 text-muted-foreground">
                                 <Clock className="h-3.5 w-3.5" />
-                                {format(new Date(request.requested_at), 'MMM dd, yyyy')}
+                                {formatDistanceToNow(new Date(request.requested_at), { addSuffix: true })}
                               </span>
                               {getStatusBadge(request.status)}
                             </div>
