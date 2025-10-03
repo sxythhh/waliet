@@ -328,13 +328,9 @@ export function ProfileTab() {
 
     // Check for duplicate username if username changed
     if (profile.username) {
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", profile.username)
-        .neq("id", session?.user.id)
-        .maybeSingle();
-
+      const {
+        data: existingProfile
+      } = await supabase.from("profiles").select("id").eq("username", profile.username).neq("id", session?.user.id).maybeSingle();
       if (existingProfile) {
         setSaving(false);
         toast({
@@ -345,7 +341,6 @@ export function ProfileTab() {
         return;
       }
     }
-
     const {
       error
     } = await supabase.from("profiles").update({
@@ -521,7 +516,7 @@ export function ProfileTab() {
 
             {/* Contact Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Contact Details</h3>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
@@ -551,7 +546,7 @@ export function ProfileTab() {
 
             {/* About */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">About</h3>
+              
               <div className="space-y-2">
                 <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
                 <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
