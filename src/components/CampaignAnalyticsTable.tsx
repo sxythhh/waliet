@@ -620,7 +620,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                         </div>
                       </TableCell>
                       <TableCell 
-                        className="py-3 bg-[#202020] cursor-pointer hover:bg-white/5 transition-colors"
+                        className="py-3 bg-[#202020] cursor-pointer transition-colors"
                         onClick={() => {
                           if (item.user_id && item.profiles) {
                             setSelectedUser(item);
@@ -636,7 +636,7 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
                                 {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-white/80 text-sm truncate max-w-[90px]">@{item.profiles.username}</span>
+                            <span className="text-white/80 text-sm truncate max-w-[90px] hover:underline">{item.profiles.username}</span>
                           </div>
                         ) : (
                           <span className="text-white/30 text-sm flex items-center gap-1">
