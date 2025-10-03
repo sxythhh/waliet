@@ -330,7 +330,7 @@ export default function AdminUsers() {
         <p className="text-muted-foreground">Loading users...</p>
       </div>;
   }
-  return <div className="p-8 space-y-6 py-0 px-[23px]">
+  return <div className="p-8 space-y-6 px-[20px] py-px">
       
 
       {/* Stats */}
@@ -341,11 +341,11 @@ export default function AdminUsers() {
         <CardContent className="pt-6 bg-[#000a00] px-0 py-0">
           <div className="flex gap-4">
             
-            <div className="w-64">
+            <div className="w-64 py-[15px]">
               <Label htmlFor="campaign">Filter by Campaign</Label>
               <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2">
+                  <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2 bg-[#111111]">
                     {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -611,30 +611,19 @@ export default function AdminUsers() {
       {/* User Details Dialog */}
       <Dialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen}>
         <DialogContent className="max-w-3xl">
-          {selectedUser && (
-            <>
+          {selectedUser && <>
               {/* User Header */}
               <div className="flex items-start gap-4 pb-6 border-b">
-                {selectedUser.avatar_url ? (
-                  <img 
-                    src={selectedUser.avatar_url} 
-                    alt={selectedUser.username} 
-                    className="h-16 w-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                {selectedUser.avatar_url ? <img src={selectedUser.avatar_url} alt={selectedUser.username} className="h-16 w-16 rounded-full object-cover" /> : <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                     <UsersIcon className="h-8 w-8 text-primary" />
-                  </div>
-                )}
+                  </div>}
                 <div className="flex-1 min-w-0">
                   <h2 className="text-2xl font-semibold mb-1">
                     {selectedUser.username}
                   </h2>
-                  {selectedUser.full_name && (
-                    <p className="text-sm text-muted-foreground mb-3">
+                  {selectedUser.full_name && <p className="text-sm text-muted-foreground mb-3">
                       {selectedUser.full_name}
-                    </p>
-                  )}
+                    </p>}
                   
                   {/* Wallet Stats */}
                   <div className="grid grid-cols-3 gap-4 mt-4">
@@ -666,21 +655,12 @@ export default function AdminUsers() {
                   Connected Accounts ({userSocialAccounts.length})
                 </h3>
                 
-                {loadingSocialAccounts ? (
-                  <div className="text-center py-12 text-muted-foreground">
+                {loadingSocialAccounts ? <div className="text-center py-12 text-muted-foreground">
                     Loading social accounts...
-                  </div>
-                ) : userSocialAccounts.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground bg-card/30 rounded-lg">
+                  </div> : userSocialAccounts.length === 0 ? <div className="text-center py-12 text-muted-foreground bg-card/30 rounded-lg">
                     No social accounts connected
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                    {userSocialAccounts.map(account => (
-                      <div 
-                        key={account.id} 
-                        className="p-3 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors"
-                      >
+                  </div> : <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                    {userSocialAccounts.map(account => <div key={account.id} className="p-3 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
                         <div className="flex items-center justify-between gap-4">
                           {/* Account Info */}
                           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -688,13 +668,7 @@ export default function AdminUsers() {
                               {getPlatformIcon(account.platform)}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <a 
-                                href={account.account_link} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="font-medium hover:text-primary transition-colors block truncate"
-                                onClick={e => e.stopPropagation()}
-                              >
+                              <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium hover:text-primary transition-colors block truncate" onClick={e => e.stopPropagation()}>
                                 @{account.username}
                               </a>
                             </div>
@@ -702,33 +676,20 @@ export default function AdminUsers() {
                           
                           {/* Campaign Link */}
                           <div className="shrink-0">
-                            {account.campaigns ? (
-                              <div className="flex items-center gap-2">
-                                {account.campaigns.brand_logo_url && (
-                                  <img 
-                                    src={account.campaigns.brand_logo_url} 
-                                    alt={account.campaigns.brand_name} 
-                                    className="h-6 w-6 rounded object-cover"
-                                  />
-                                )}
+                            {account.campaigns ? <div className="flex items-center gap-2">
+                                {account.campaigns.brand_logo_url && <img src={account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
                                 <span className="font-medium text-sm">
                                   {account.campaigns.title}
                                 </span>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground italic">
+                              </div> : <span className="text-xs text-muted-foreground italic">
                                 Not linked
-                              </span>
-                            )}
+                              </span>}
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </div>
-            </>
-          )}
+            </>}
         </DialogContent>
       </Dialog>
     </div>;
