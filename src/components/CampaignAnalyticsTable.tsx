@@ -74,10 +74,27 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
   const [selectedUser, setSelectedUser] = useState<AnalyticsData | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [campaignRPM, setCampaignRPM] = useState<number>(0);
 
   useEffect(() => {
     fetchAnalytics();
+    fetchCampaignRPM();
   }, [campaignId]);
+
+  const fetchCampaignRPM = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("rpm_rate")
+        .eq("id", campaignId)
+        .single();
+
+      if (error) throw error;
+      setCampaignRPM(data?.rpm_rate || 0);
+    } catch (error) {
+      console.error("Error fetching campaign RPM:", error);
+    }
+  };
 
   const fetchAnalytics = async () => {
     try {
@@ -215,6 +232,28 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
       console.error('Error deleting account:', error);
       toast.error('Failed to delete account analytics');
     }
+  };
+
+  const calculatePayout = (user: AnalyticsData) => {
+    const views = user.total_views;
+    const rpm = campaignRPM;
+    
+    // Get demographic percentage
+    let demographicMultiplier = 0.4; // Default if no submission
+    if (user.demographic_submission?.status === 'approved' && user.demographic_submission.tier1_percentage) {
+      demographicMultiplier = user.demographic_submission.tier1_percentage / 100;
+    }
+    
+    // Calculate: (views / 1000) * RPM * demographic%
+    const payout = (views / 1000) * rpm * demographicMultiplier;
+    
+    return {
+      payout: payout,
+      views: views,
+      rpm: rpm,
+      demographicMultiplier: demographicMultiplier,
+      demographicPercentage: demographicMultiplier * 100
+    };
   };
 
   const handlePayUser = async () => {
@@ -776,21 +815,72 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
               </div>
             </div>
 
-            {/* Payment Amount */}
-            <div className="space-y-2">
-              <Label htmlFor="payment-amount" className="text-white">
-                Payment Amount ($)
-              </Label>
-              <Input
-                id="payment-amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder="0.00"
-                className="bg-[#191919] border-white/10 text-white"
-              />
+            {/* Payout Calculation */}
+            <div className="space-y-3">
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="text-sm font-medium text-white mb-3">Calculated Payout</div>
+                
+                {(() => {
+                  const calc = calculatePayout(selectedUser);
+                  return (
+                    <>
+                      <div className="space-y-2 text-xs text-white/60 mb-3">
+                        <div className="flex justify-between">
+                          <span>Views:</span>
+                          <span className="text-white font-mono">{calc.views.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>RPM Rate:</span>
+                          <span className="text-white font-mono">${calc.rpm.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Demographic %:</span>
+                          <span className={`font-mono ${calc.demographicMultiplier === 0.4 ? 'text-yellow-400' : 'text-white'}`}>
+                            {calc.demographicPercentage.toFixed(0)}% 
+                            {calc.demographicMultiplier === 0.4 && ' (default)'}
+                          </span>
+                        </div>
+                        <div className="pt-2 border-t border-white/10 flex justify-between text-sm">
+                          <span className="text-white/80">Formula:</span>
+                          <span className="text-white/60 font-mono text-xs">
+                            ({calc.views.toLocaleString()} ÷ 1000) × ${calc.rpm} × {calc.demographicPercentage.toFixed(0)}%
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-2xl font-bold text-primary text-center py-2">
+                        ${calc.payout.toFixed(2)}
+                      </div>
+                      
+                      {calc.demographicMultiplier === 0.4 && (
+                        <div className="text-xs text-yellow-400/80 text-center mt-2">
+                          ⚠️ Using default 40% (no approved demographics)
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Manual Override */}
+              <div className="space-y-2">
+                <Label htmlFor="payment-amount" className="text-white text-sm">
+                  Custom Amount (Optional)
+                </Label>
+                <Input
+                  id="payment-amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  placeholder="Leave empty to use calculated amount"
+                  className="bg-[#191919] border-white/10 text-white"
+                />
+                <p className="text-xs text-white/40">
+                  Override the calculated amount if needed
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -808,7 +898,12 @@ export function CampaignAnalyticsTable({ campaignId }: CampaignAnalyticsTablePro
             Cancel
           </Button>
           <Button
-            onClick={handlePayUser}
+            onClick={() => {
+              // Use custom amount if provided, otherwise use calculated amount
+              const finalAmount = paymentAmount || calculatePayout(selectedUser).payout.toFixed(2);
+              setPaymentAmount(finalAmount);
+              handlePayUser();
+            }}
             className="bg-primary hover:bg-primary/90"
           >
             Send Payment
