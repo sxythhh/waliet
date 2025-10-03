@@ -125,9 +125,21 @@ export default function AdminUsers() {
   const filterUsers = async () => {
     let filtered = users;
 
-    // Search filter
+    // Search filter - search by Virality username, full name, or social account username
     if (searchQuery) {
-      filtered = filtered.filter(user => user.username?.toLowerCase().includes(searchQuery.toLowerCase()) || user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()));
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(user => {
+        // Search in profile username and full name
+        const matchesProfile = user.username?.toLowerCase().includes(query) || 
+                              user.full_name?.toLowerCase().includes(query);
+        
+        // Search in social account usernames
+        const matchesSocialAccount = user.social_accounts?.some(account => 
+          account.username?.toLowerCase().includes(query)
+        );
+        
+        return matchesProfile || matchesSocialAccount;
+      });
     }
 
     // Campaign filter
@@ -338,14 +350,28 @@ export default function AdminUsers() {
 
       {/* Filters */}
       <Card className="bg-card border-0">
-        <CardContent className="pt-6 bg-[#000a00] px-0 py-0">
-          <div className="flex gap-4">
+        <CardContent className="pt-6 px-6">
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <Label htmlFor="search">Search Users</Label>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  type="text"
+                  placeholder="Search by Virality username or account username..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
             
-            <div className="w-64 py-[15px]">
+            <div className="w-64">
               <Label htmlFor="campaign">Filter by Campaign</Label>
               <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2 bg-[#111111]">
+                  <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2">
                     {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
