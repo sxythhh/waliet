@@ -17,6 +17,7 @@ interface User {
   id: string;
   username: string;
   full_name: string;
+  avatar_url: string | null;
   total_earnings: number;
   wallets: {
     balance: number;
@@ -396,12 +397,11 @@ export default function AdminUsers() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredUsers.map(user => {
             const balance = user.wallets?.balance || 0;
             const totalEarned = user.wallets?.total_earned || 0;
             const totalWithdrawn = user.wallets?.total_withdrawn || 0;
-            const earningsPercentage = totalEarned > 0 ? ((totalEarned - totalWithdrawn) / totalEarned) * 100 : 0;
 
             return (
               <Card 
@@ -413,9 +413,17 @@ export default function AdminUsers() {
                   {/* User Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <UsersIcon className="h-6 w-6 text-primary" />
-                      </div>
+                      {user.avatar_url ? (
+                        <img 
+                          src={user.avatar_url} 
+                          alt={user.username} 
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <UsersIcon className="h-5 w-5 text-primary" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold truncate">
                           {user.username}
@@ -461,19 +469,13 @@ export default function AdminUsers() {
                     )}
                   </div>
 
-                  {/* Wallet Progress Bar */}
-                  <div className="space-y-2 mb-4">
+                  {/* Balance */}
+                  <div className="mb-4">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Balance</span>
                       <span className="font-medium text-success">
                         ${balance.toFixed(2)}
                       </span>
-                    </div>
-                    <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="absolute inset-0 bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(earningsPercentage, 100)}%` }}
-                      />
                     </div>
                   </div>
 
