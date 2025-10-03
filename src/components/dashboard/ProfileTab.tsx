@@ -420,11 +420,11 @@ export function ProfileTab() {
             const getStatusBadge = (status: string) => {
               switch (status) {
                 case 'pending':
-                  return <Badge variant="outline" className="text-yellow-600 border-yellow-600">Pending Review</Badge>;
+                  return <Badge variant="secondary" className="text-xs font-medium bg-yellow-500/10 text-yellow-500 border-0 px-3 py-1">Pending Review</Badge>;
                 case 'approved':
-                  return <Badge variant="outline" className="text-green-600 border-green-600">Approved</Badge>;
+                  return <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-3 py-1">Approved</Badge>;
                 case 'rejected':
-                  return <Badge variant="outline" className="text-red-600 border-red-600">Rejected</Badge>;
+                  return <Badge variant="secondary" className="text-xs font-medium bg-red-500/10 text-red-500 border-0 px-3 py-1">Rejected</Badge>;
                 default:
                   return null;
               }
@@ -436,7 +436,7 @@ export function ProfileTab() {
                       </div>
                       <div>
                         <a href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:underline cursor-pointer">
-                          @{account.username}
+                          {account.username}
                         </a>
                         {linkedCampaign && <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
