@@ -618,27 +618,31 @@ export default function BrandManagement() {
                                     </h3>
                                   </div>
 
-                                  {/* Connected Accounts */}
+                                  {/* Application Account */}
                                   {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
-                                    <div className="space-y-1.5">
-                                      {submission.profiles.social_accounts.map((account) => (
-                                        <a
-                                          key={account.id}
-                                          href={account.account_link || '#'}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors"
-                                        >
-                                          {getPlatformIcon(account.platform)}
-                                          <span>@{account.username}</span>
-                                          <span className="text-xs text-white/50">
-                                            {account.follower_count.toLocaleString()} followers
-                                          </span>
-                                        </a>
-                                      ))}
+                                    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                                      {(() => {
+                                        const applicationAccount = submission.profiles.social_accounts.find(
+                                          account => account.platform.toLowerCase() === submission.platform.toLowerCase()
+                                        );
+                                        
+                                        if (!applicationAccount) return null;
+                                        
+                                        return (
+                                          <a
+                                            href={applicationAccount.account_link || '#'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-sm font-medium text-white hover:text-primary transition-colors"
+                                          >
+                                            {getPlatformIcon(applicationAccount.platform)}
+                                            <span>@{applicationAccount.username}</span>
+                                          </a>
+                                        );
+                                      })()}
                                     </div>
                                   ) : (
-                                    <p className="text-xs text-white/40">No accounts connected</p>
+                                    <p className="text-xs text-white/40">No account found</p>
                                   )}
                                 </div>
                               </div>
