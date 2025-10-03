@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, Wallet, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, BarChart3 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,11 +29,6 @@ const menuItems = [
     title: "Payouts",
     icon: DollarSign,
     path: "/admin/payouts",
-  },
-  {
-    title: "Wallets",
-    icon: Wallet,
-    path: "/admin/wallets",
   },
   {
     title: "Training Courses",
