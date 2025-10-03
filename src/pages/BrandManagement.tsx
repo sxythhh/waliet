@@ -145,6 +145,9 @@ export default function BrandManagement() {
 
       if (error) throw error;
       setAnalytics(data || []);
+      
+      // Refresh campaign data to get updated budget_used
+      fetchCampaigns();
     } catch (error) {
       console.error("Error fetching analytics:", error);
     }
@@ -380,7 +383,15 @@ export default function BrandManagement() {
   const approvedSubmissions = submissions.filter((s) => s.status === "approved");
   const pendingSubmissions = submissions.filter((s) => s.status === "pending");
 
-  const totalViews = analytics.reduce((sum, a) => sum + a.total_views, 0);
+  // Group by account and sum views across all date ranges to avoid counting duplicates
+  const accountViews = analytics.reduce((acc: Record<string, number>, a: any) => {
+    const key = `${a.platform}-${a.account_username}`;
+    acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const totalViews = (Object.values(accountViews) as number[]).reduce((sum, views) => sum + views, 0);
+  
   const budgetUsed = Number(selectedCampaign?.budget_used || 0);
   const effectiveCPM = totalViews > 0 ? (budgetUsed / totalViews) * 1000 : 0;
 
