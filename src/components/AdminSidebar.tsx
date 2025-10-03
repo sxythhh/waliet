@@ -1,5 +1,5 @@
 import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, Wallet, BarChart3 } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -7,11 +7,11 @@ import {
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   {
@@ -58,10 +58,18 @@ const menuItems = [
 
 export function AdminSidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
+  };
+
+  const isActive = (path: string) => {
+    if (path === "/admin") {
+      return location.pathname === "/admin";
+    }
+    return location.pathname.startsWith(path);
   };
 
   return (
@@ -70,26 +78,25 @@ export function AdminSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+              {menuItems.map((item) => {
+                const active = isActive(item.path);
+                return (
+                  <SidebarMenuItem key={item.title}>
                     <NavLink
                       to={item.path}
-                      end={item.path === "/admin"}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                          isActive
-                            ? "bg-blue-500 text-white font-semibold hover:bg-blue-600"
-                            : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                        }`
-                      }
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium",
+                        active
+                          ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
                     >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
+                      <item.icon className={cn("h-5 w-5", active && "text-white")} />
+                      <span className={cn(active && "font-semibold")}>{item.title}</span>
                     </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -99,7 +106,7 @@ export function AdminSidebar() {
         <Button
           onClick={handleSignOut}
           variant="ghost"
-          className="w-full justify-start"
+          className="w-full justify-start hover:bg-destructive/10 hover:text-destructive"
         >
           <LogOut className="h-5 w-5 mr-3" />
           Sign Out
