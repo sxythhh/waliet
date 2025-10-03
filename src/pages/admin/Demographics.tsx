@@ -151,9 +151,9 @@ export default function Demographics() {
   const reviewedSubmissions = submissions.filter(s => s.status !== "pending");
 
   return (
-    <>
+    <div className="flex min-h-screen">
       <AdminSidebar />
-      <main className="p-8">
+      <main className="flex-1 p-8">
         <div className="max-w-6xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Demographics Management</h1>
 
@@ -367,6 +367,6 @@ export default function Demographics() {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
