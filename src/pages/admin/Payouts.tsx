@@ -556,13 +556,13 @@ export default function AdminPayouts() {
                 </CardContent>
               </Card> : <div className="grid grid-cols-1 gap-4">
                 {filteredRequests.map(request => <Card key={request.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
                         {/* Header Row: Name, Date, Status */}
-                        <div className="flex items-start justify-between gap-4 pb-4 border-b">
-                          <div className="flex-1">
+                        <div className="flex items-start justify-between gap-3 pb-2 border-b">
+                          <div className="flex-1 min-w-0">
                             <h3 
-                              className="text-xl font-semibold mb-2 cursor-pointer hover:underline transition-all" 
+                              className="text-base font-semibold mb-1 cursor-pointer hover:underline transition-all truncate" 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (request.profiles) {
@@ -572,9 +572,9 @@ export default function AdminPayouts() {
                             >
                               {request.profiles?.full_name || request.profiles?.username}
                             </h3>
-                            <div className="flex items-center gap-3 text-sm">
-                              <span className="flex items-center gap-1.5 text-muted-foreground">
-                                <Clock className="h-3.5 w-3.5" />
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="flex items-center gap-1 text-muted-foreground">
+                                <Clock className="h-3 w-3" />
                                 {formatDistanceToNow(new Date(request.requested_at), { addSuffix: true })}
                               </span>
                               {getStatusBadge(request.status)}
@@ -582,9 +582,9 @@ export default function AdminPayouts() {
                           </div>
                           
                           {/* Amount Display */}
-                          <div className="text-right">
-                            <p className="text-xs text-muted-foreground mb-1">Amount</p>
-                            <p className="text-3xl font-semibold text-success" style={{
+                          <div className="text-right shrink-0">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">Amount</p>
+                            <p className="text-xl font-semibold text-success" style={{
                               fontFamily: 'Chakra Petch, sans-serif'
                             }}>
                               ${Number(request.amount).toFixed(2)}
@@ -593,91 +593,91 @@ export default function AdminPayouts() {
                         </div>
 
                         {/* Payment Details */}
-                        <div className="grid grid-cols-2 gap-4 py-3">
-                          <div className="flex items-center gap-2">
+                        <div className="grid grid-cols-2 gap-3 py-2">
+                          <div className="flex items-center gap-2 min-w-0">
                             {getPayoutMethodIcon(request.payout_method, request.payout_details)}
-                            <div>
-                              <p className="text-xs text-muted-foreground">Payment Method</p>
-                              <p className="font-medium capitalize text-sm">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[10px] text-muted-foreground">Payment Method</p>
+                              <p className="font-medium capitalize text-xs truncate">
                                 {request.payout_method === 'crypto' && request.payout_details?.network ? request.payout_details.network : request.payout_method}
                               </p>
                             </div>
                           </div>
 
                           <div className="min-w-0">
-                            <p className="text-xs text-muted-foreground mb-1">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">
                               {request.payout_method === 'crypto' ? 'Wallet Address' : 'Account Details'}
                             </p>
-                            <p className="font-medium truncate text-sm">
+                            <p className="font-medium truncate text-xs">
                               {request.payout_details?.wallet_address || request.payout_details?.email || request.payout_details?.account_number || 'N/A'}
                             </p>
                           </div>
 
                           {request.processed_at && <div className="col-span-2">
-                              <p className="text-xs text-muted-foreground mb-1">Processed Date</p>
-                              <p className="font-medium text-sm flex items-center gap-1.5">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              <p className="text-[10px] text-muted-foreground mb-0.5">Processed Date</p>
+                              <p className="font-medium text-xs flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
                                 {format(new Date(request.processed_at), 'MMM dd, yyyy')}
                               </p>
                             </div>}
                         </div>
 
                         {/* Additional Info Sections */}
-                        {(request.transaction_id || request.rejection_reason || request.notes) && <div className="space-y-2 pt-3 border-t">
-                            {request.transaction_id && <div className="p-3 bg-muted/30 rounded-md">
-                                <p className="text-xs text-muted-foreground mb-1">Transaction ID</p>
-                                <p className="font-mono font-medium text-sm">{request.transaction_id}</p>
+                        {(request.transaction_id || request.rejection_reason || request.notes) && <div className="space-y-2 pt-2 border-t">
+                            {request.transaction_id && <div className="p-2 bg-muted/30 rounded-md">
+                                <p className="text-[10px] text-muted-foreground mb-0.5">Transaction ID</p>
+                                <p className="font-mono font-medium text-xs">{request.transaction_id}</p>
                               </div>}
 
-                            {request.rejection_reason && <div className="p-3 bg-destructive/10 rounded-md border border-destructive/20">
-                                <p className="text-xs text-destructive font-medium mb-1">Rejection Reason</p>
-                                <p className="text-destructive text-sm">{request.rejection_reason}</p>
+                            {request.rejection_reason && <div className="p-2 bg-destructive/10 rounded-md border border-destructive/20">
+                                <p className="text-[10px] text-destructive font-medium mb-0.5">Rejection Reason</p>
+                                <p className="text-destructive text-xs">{request.rejection_reason}</p>
                               </div>}
 
-                            {request.notes && <div className="p-3 bg-muted/30 rounded-md">
-                                <p className="text-xs text-muted-foreground mb-1">Admin Notes</p>
-                                <p className="text-sm">{request.notes}</p>
+                            {request.notes && <div className="p-2 bg-muted/30 rounded-md">
+                                <p className="text-[10px] text-muted-foreground mb-0.5">Admin Notes</p>
+                                <p className="text-xs">{request.notes}</p>
                               </div>}
                           </div>}
 
                         {/* Action Buttons */}
-                        <div className="flex gap-2 pt-3 border-t">
+                        <div className="flex gap-1.5 pt-2 border-t">
                         {request.status === 'pending' && <>
-                              <Button size="sm" onClick={() => openActionDialog(request, 'approve')} className="gap-1.5">
-                                <CheckCircle2 className="h-4 w-4" />
+                              <Button size="sm" onClick={() => openActionDialog(request, 'approve')} className="gap-1 h-8 text-xs px-2.5">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
                                 Approve
                               </Button>
-                              <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1.5 bg-green-600 hover:bg-green-700 text-white border-0">
-                                <DollarSign className="h-4 w-4" />
+                              <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1 bg-green-600 hover:bg-green-700 text-white border-0 h-8 text-xs px-2.5">
+                                <DollarSign className="h-3.5 w-3.5" />
                                 Mark as Completed
                               </Button>
-                              <Button size="sm" variant="destructive" onClick={() => openActionDialog(request, 'reject')} className="gap-1.5">
-                                <XCircle className="h-4 w-4" />
+                              <Button size="sm" variant="destructive" onClick={() => openActionDialog(request, 'reject')} className="gap-1 h-8 text-xs px-2.5">
+                                <XCircle className="h-3.5 w-3.5" />
                                 Reject
                               </Button>
                             </>}
                           
                           {request.status === 'in_transit' && <>
-                              <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1.5">
-                                <DollarSign className="h-4 w-4" />
+                              <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1 h-8 text-xs px-2.5">
+                                <DollarSign className="h-3.5 w-3.5" />
                                 Mark as Complete
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1.5">
-                                <RotateCcw className="h-4 w-4" />
+                              <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
+                                <RotateCcw className="h-3.5 w-3.5" />
                                 Revert to Pending
                               </Button>
                             </>}
 
                           {request.status === 'completed' && (
-                            <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1.5">
-                              <RotateCcw className="h-4 w-4" />
+                            <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
+                              <RotateCcw className="h-3.5 w-3.5" />
                               Revert to In Transit
                             </Button>
                           )}
 
                           {request.status === 'rejected' && (
-                            <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1.5">
-                              <RotateCcw className="h-4 w-4" />
+                            <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
+                              <RotateCcw className="h-3.5 w-3.5" />
                               Revert to Pending
                             </Button>
                           )}
