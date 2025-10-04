@@ -174,14 +174,14 @@ export default function BrandDashboard() {
       {/* Content Area */}
       {showToggle ? <>
           {/* Home Embed View - Full Width */}
-          {effectiveView === "home" && <div className="w-full h-[calc(100vh-200px)] bg-[#202020]">
+          {effectiveView === "home" && <div className="w-full h-[calc(100vh-180px)] bg-[#202020]">
               <div dangerouslySetInnerHTML={{
             __html: brand.home_url
           }} className="w-full h-full" />
             </div>}
 
           {/* Campaigns View - With Padding */}
-          {effectiveView === "campaigns" && <div className="max-w-7xl mx-auto px-8">
+          {effectiveView === "campaigns" && <div className="max-w-7xl mx-auto px-8 pb-8">
               {campaigns.length > 0 ? <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {campaigns.map(campaign => {
@@ -259,11 +259,11 @@ export default function BrandDashboard() {
             </div>}
         </> : 
         // Single view - no toggle needed
-        effectiveView === "home" ? <div className="w-full h-[calc(100vh-200px)] bg-[#202020]">
+        effectiveView === "home" ? <div className="w-full h-[calc(100vh-180px)] bg-[#202020]">
             <div dangerouslySetInnerHTML={{
           __html: brand.home_url || ""
         }} className="w-full h-full" />
-          </div> : <div className="max-w-7xl mx-auto px-8">
+          </div> : <div className="max-w-7xl mx-auto px-8 pb-8">
             {campaigns.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {campaigns.map(campaign => {
               const usedBudget = Number(campaign.budget_used || 0);
