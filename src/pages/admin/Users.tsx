@@ -1105,20 +1105,6 @@ export default function AdminUsers() {
                       </div>
                     </div>}
 
-                  <div className="space-y-2">
-                    <Label className="text-xs">Review Decision</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant={reviewStatus === "approved" ? "default" : "outline"} onClick={() => setReviewStatus("approved")} className="h-9 text-sm">
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Approve
-                      </Button>
-                      <Button variant={reviewStatus === "rejected" ? "destructive" : "outline"} onClick={() => setReviewStatus("rejected")} className="h-9 text-sm">
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Reject
-                      </Button>
-                    </div>
-                  </div>
-
                   <div className="space-y-1.5">
                     <Label htmlFor="score" className="text-xs">Score (0-100)</Label>
                     <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm" />
@@ -1130,11 +1116,30 @@ export default function AdminUsers() {
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedSubmission(null)} disabled={updating} className="flex-1">
-                      Cancel
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => {
+                        setReviewStatus("rejected");
+                        handleReview();
+                      }} 
+                      disabled={updating} 
+                      className="flex-1"
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Reject
                     </Button>
-                    <Button onClick={handleReview} disabled={updating} size="sm" className="flex-1">
-                      {updating ? "Submitting..." : "Submit Review"}
+                    <Button 
+                      onClick={() => {
+                        setReviewStatus("approved");
+                        handleReview();
+                      }} 
+                      disabled={updating} 
+                      size="sm" 
+                      className="flex-1"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      {updating ? "Accepting..." : "Accept"}
                     </Button>
                   </div>
                 </div>}
