@@ -1096,11 +1096,11 @@ export default function AdminUsers() {
 
                   {selectedSubmission.screenshot_url && <div>
                       <Label className="text-xs mb-2 block">Demographics Video</Label>
-                      <div className="rounded-lg overflow-hidden border bg-black">
+                      <div className="rounded-lg overflow-hidden border bg-black flex items-center justify-center">
                         <video 
                           src={selectedSubmission.screenshot_url} 
                           controls 
-                          className="w-full"
+                          className="w-full max-h-[60vh] object-contain"
                           preload="metadata"
                         >
                           Your browser does not support the video tag.
