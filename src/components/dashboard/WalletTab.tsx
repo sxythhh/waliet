@@ -1253,7 +1253,13 @@ export function WalletTab() {
                     {selectedTransaction.destination && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                         <span className="text-sm text-muted-foreground">To</span>
                         <span className="text-sm font-medium text-right max-w-[200px] truncate">
-                          {selectedTransaction.destination}
+                          {(() => {
+                            const details = selectedTransaction.metadata?.payoutDetails;
+                            if (details?.address) return details.address;
+                            if (details?.email) return details.email;
+                            if (details?.account_number) return `•••• ${details.account_number.slice(-4)}`;
+                            return selectedTransaction.destination;
+                          })()}
                         </span>
                       </div>}
                   </div>
