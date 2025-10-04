@@ -360,7 +360,27 @@ export default function AdminUsers() {
       description: `Payment of $${amount.toFixed(2)} sent to ${selectedUser.username}`
     });
     setPayDialogOpen(false);
-    fetchData();
+    
+    // Refresh data and update the selected user with new wallet balance
+    await fetchData();
+    
+    // If user details dialog is open, update the selected user with new data
+    if (userDetailsDialogOpen) {
+      const { data: updatedUserData } = await supabase
+        .from("profiles")
+        .select(`
+          *,
+          wallets(balance, total_earned, total_withdrawn)
+        `)
+        .eq("id", selectedUser.id)
+        .single();
+      
+      if (updatedUserData) {
+        setSelectedUser(updatedUserData);
+        // Also refresh transactions to show the new payment
+        fetchUserTransactions(selectedUser.id);
+      }
+    }
   };
   const handleCsvImport = async () => {
     if (!csvFile) {
