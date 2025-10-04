@@ -607,8 +607,8 @@ export function WalletTab() {
         letterSpacing: '-0.5px',
         fontWeight: 600
       }}>Virality Wallet</h2>
-        <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0">
-          <ArrowUpRight className="h-4 w-4" />
+        <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0 ml-auto">
+          <ArrowDownLeft className="h-4 w-4" />
           Request Payout
         </Button>
       </div>
