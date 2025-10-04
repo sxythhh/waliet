@@ -178,67 +178,7 @@ export default function Demographics() {
       
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-card border-0 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-warning/10 to-transparent" />
-          <CardContent className="p-4 relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-warning/10">
-                <Clock className="h-5 w-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold font-chakra">{pendingSubmissions.length}</p>
-                <p className="text-xs text-muted-foreground">Pending Review</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-success/10 to-transparent" />
-          <CardContent className="p-4 relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-success/10">
-                <CheckCircle2 className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold font-chakra">{approvedSubmissions.length}</p>
-                <p className="text-xs text-muted-foreground">Approved</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-destructive/10 to-transparent" />
-          <CardContent className="p-4 relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-destructive/10">
-                <XCircle className="h-5 w-5 text-destructive" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold font-chakra">{rejectedSubmissions.length}</p>
-                <p className="text-xs text-muted-foreground">Rejected</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-0 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
-          <CardContent className="p-4 relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold font-chakra">{avgTier1.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground">Avg Tier 1</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Tabs */}
       <Tabs defaultValue="pending" className="space-y-4">
