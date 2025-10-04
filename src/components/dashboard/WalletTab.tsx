@@ -539,7 +539,9 @@ export function WalletTab() {
         description: `Withdrawal to ${selectedMethod.method === 'paypal' ? 'PayPal' : 'Crypto'}`,
         metadata: {
           payout_method: selectedMethod.method,
-          network: selectedMethod.details.network || null
+          network: selectedMethod.details.network || null,
+          balance_before: balance_before,
+          balance_after: balance_after
         },
         created_by: session.user.id
       });

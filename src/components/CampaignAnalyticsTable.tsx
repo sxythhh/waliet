@@ -410,10 +410,14 @@ export function CampaignAnalyticsTable({
         error: walletFetchError
       } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", selectedUser.user_id).single();
       if (walletFetchError) throw walletFetchError;
+      
+      const balance_before = currentWallet.balance || 0;
+      const balance_after = balance_before + amount;
+      
       const {
         error: walletUpdateError
       } = await supabase.from("wallets").update({
-        balance: (currentWallet.balance || 0) + amount,
+        balance: balance_after,
         total_earned: (currentWallet.total_earned || 0) + amount
       }).eq("user_id", selectedUser.user_id);
       if (walletUpdateError) throw walletUpdateError;
@@ -432,7 +436,9 @@ export function CampaignAnalyticsTable({
           analytics_id: selectedUser.id,
           account_username: selectedUser.account_username,
           platform: selectedUser.platform,
-          views: selectedUser.total_views
+          views: selectedUser.total_views,
+          balance_before: balance_before,
+          balance_after: balance_after
         }
       });
       if (transactionError) throw transactionError;
