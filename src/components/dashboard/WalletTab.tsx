@@ -451,11 +451,11 @@ export function WalletTab() {
     }
   };
   const handleRequestPayout = async () => {
-    if (!wallet?.balance || wallet.balance < 50) {
+    if (!wallet?.balance || wallet.balance < 20) {
       toast({
         variant: "destructive",
         title: "Insufficient Balance",
-        description: "Minimum payout amount is $50"
+        description: "Minimum payout amount is $20"
       });
       return;
     }
@@ -481,11 +481,11 @@ export function WalletTab() {
       return;
     }
     const amount = Number(payoutAmount);
-    if (amount < 50) {
+    if (amount < 20) {
       toast({
         variant: "destructive",
         title: "Minimum Amount",
-        description: "Minimum payout amount is $50"
+        description: "Minimum payout amount is $20"
       });
       return;
     }
@@ -970,9 +970,34 @@ export function WalletTab() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="payout-amount">Amount ($)</Label>
-              <Input id="payout-amount" type="number" min="50" step="0.01" max={wallet?.balance || 0} placeholder="50.00" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} className="bg-[#171717] border-transparent text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50" />
+              <Input 
+                id="payout-amount" 
+                type="number" 
+                min="20" 
+                step="0.01" 
+                max={wallet?.balance || 0} 
+                placeholder="20.00" 
+                value={payoutAmount} 
+                onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} 
+                className="bg-[#171717] border-transparent text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50" 
+              />
+              <div className="flex gap-2 flex-wrap">
+                {[20, 50, 100, 500].map(amount => (
+                  <Button
+                    key={amount}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPayoutAmount(amount.toString())}
+                    disabled={wallet?.balance ? wallet.balance < amount : true}
+                    className="bg-[#1a1a1a] border-border/50 hover:bg-[#252525]"
+                  >
+                    ${amount}
+                  </Button>
+                ))}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Minimum: $50.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
+                Minimum: $20.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
               </p>
             </div>
 
