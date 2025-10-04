@@ -139,7 +139,7 @@ export default function Auth() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
+                    className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none"
                   />
                 </div>
                 
@@ -153,7 +153,7 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
-                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
+                    className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none"
                   />
                 </div>
                 
@@ -175,7 +175,7 @@ export default function Auth() {
                     onChange={(e) => setUsername(e.target.value)}
                     required
                     disabled={loading}
-                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
+                    className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none"
                   />
                 </div>
                 
@@ -189,7 +189,7 @@ export default function Auth() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
+                    className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none"
                   />
                 </div>
                 
@@ -204,7 +204,7 @@ export default function Auth() {
                     required
                     disabled={loading}
                     minLength={6}
-                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
+                    className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none"
                   />
                 </div>
                 
