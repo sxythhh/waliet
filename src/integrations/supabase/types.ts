@@ -492,6 +492,38 @@ export type Database = {
         }
         Relationships: []
       }
+      module_completions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          module_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          module_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          module_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_completions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_requests: {
         Row: {
           amount: number
