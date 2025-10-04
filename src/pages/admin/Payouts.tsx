@@ -577,7 +577,6 @@ export default function AdminPayouts() {
                                 <Clock className="h-3 w-3" />
                                 {formatDistanceToNow(new Date(request.requested_at), { addSuffix: true })}
                               </span>
-                              {getStatusBadge(request.status)}
                             </div>
                           </div>
                           
