@@ -303,14 +303,28 @@ export default function AdminUsers() {
     } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Update wallet balance
-    const currentBalance = selectedUser.wallets?.balance || 0;
-    const currentEarned = selectedUser.wallets?.total_earned || 0;
+    // Get the current wallet balance from database to ensure accuracy
+    const { data: currentWallet, error: fetchError } = await supabase
+      .from("wallets")
+      .select("balance, total_earned")
+      .eq("user_id", selectedUser.id)
+      .single();
+
+    if (fetchError || !currentWallet) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch current wallet balance"
+      });
+      return;
+    }
+
+    // Update wallet balance with fresh data
     const {
       error: walletError
     } = await supabase.from("wallets").update({
-      balance: currentBalance + amount,
-      total_earned: currentEarned + amount
+      balance: currentWallet.balance + amount,
+      total_earned: currentWallet.total_earned + amount
     }).eq("user_id", selectedUser.id);
     if (walletError) {
       toast({
