@@ -266,6 +266,48 @@ export default function AdminPayouts() {
       fetchPayoutRequests();
     }
   };
+  const handleCompleteDirectly = async (request: PayoutRequest) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const updateData = {
+      status: 'completed' as const,
+      processed_at: new Date().toISOString(),
+      processed_by: session.user.id
+    };
+
+    // Update wallet balance
+    const { error: walletError } = await supabase.from("wallets").update({
+      balance: 0,
+      total_withdrawn: request.amount
+    }).eq("user_id", request.user_id);
+
+    if (walletError) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update wallet balance"
+      });
+      return;
+    }
+
+    const { error } = await supabase.from("payout_requests").update(updateData).eq("id", request.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to complete payout request"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Payout marked as completed"
+      });
+      fetchPayoutRequests();
+    }
+  };
+
   const handleProcessRequest = async () => {
     if (!selectedRequest || !action) return;
 
@@ -298,33 +340,6 @@ export default function AdminPayouts() {
       }
       updateData.status = 'rejected';
       updateData.rejection_reason = rejectionReason;
-    } else if (action === 'complete') {
-      if (!transactionId) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Please provide a transaction ID"
-        });
-        return;
-      }
-      updateData.status = 'completed';
-      updateData.transaction_id = transactionId;
-
-      // Update wallet balance
-      const {
-        error: walletError
-      } = await supabase.from("wallets").update({
-        balance: 0,
-        total_withdrawn: selectedRequest.amount
-      }).eq("user_id", selectedRequest.user_id);
-      if (walletError) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to update wallet balance"
-        });
-        return;
-      }
     }
     const {
       error
@@ -540,7 +555,7 @@ export default function AdminPayouts() {
                                 <CheckCircle2 className="h-4 w-4" />
                                 Approve
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'complete')} className="gap-1.5">
+                              <Button size="sm" variant="outline" onClick={() => handleCompleteDirectly(request)} className="gap-1.5">
                                 <DollarSign className="h-4 w-4" />
                                 Mark as Completed
                               </Button>
@@ -606,10 +621,6 @@ export default function AdminPayouts() {
                   <Textarea id="reason" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Explain why..." rows={3} />
                 </div>}
 
-              {action === 'complete' && <div className="space-y-2">
-                  <Label htmlFor="transactionId">Transaction ID *</Label>
-                  <Input id="transactionId" value={transactionId} onChange={e => setTransactionId(e.target.value)} placeholder="Payment transaction ID" />
-                </div>}
 
               {action === 'revert' && selectedRequest && <div className="p-4 bg-muted/20 rounded-lg">
                   <p className="text-sm text-muted-foreground mb-2">
