@@ -840,7 +840,7 @@ export default function BrandManagement() {
                                   <div className="flex flex-wrap gap-2">
                                     {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all group">
                                         {getPlatformIcon(account.platform)}
-                                        <span className="text-sm font-medium text-white group-hover:text-primary transition-colors">
+                                        <span className="text-sm font-medium text-white group-hover:underline">
                                           @{account.username}
                                         </span>
                                         {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
@@ -850,8 +850,6 @@ export default function BrandManagement() {
                                   </div>
                                 </div>}
 
-                              {/* Content Link */}
-                              {submission.content_url}
                             </div>
                           </CardContent>
                         </Card>;
