@@ -6,9 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle } from "lucide-react";
-import tiktokLogo from "@/assets/tiktok-logo.svg";
-import instagramLogo from "@/assets/instagram-logo.svg";
-import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -255,11 +252,11 @@ export default function AdminUsers() {
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'tiktok':
-        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
+        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="h-5 w-5" />;
       case 'instagram':
-        return <img src={instagramLogo} alt="Instagram" className="h-5 w-5" />;
+        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="h-5 w-5" />;
       case 'youtube':
-        return <img src={youtubeLogo} alt="YouTube" className="h-5 w-5" />;
+        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="h-5 w-5" />;
       default:
         return <UsersIcon className="h-5 w-5" />;
     }
@@ -631,19 +628,44 @@ export default function AdminUsers() {
                     <p className="text-xs text-muted-foreground mb-2">Connected Accounts</p>
                     {user.social_accounts && user.social_accounts.length > 0 ? <div className="flex flex-wrap gap-2">
                         {user.social_accounts.map(account => {
-                          const demographicStatus = account.demographic_submissions?.[0]?.status;
-                          return <div key={account.id} title={`${account.username} - ${account.follower_count.toLocaleString()} followers`} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
+                      const demographicStatus = account.demographic_submissions?.[0]?.status;
+                      return <div key={account.id} title={`${account.username} - ${account.follower_count.toLocaleString()} followers`} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
                             {getPlatformIcon(account.platform)}
                             <span className="font-medium">{account.username}</span>
                             {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
                             {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
                             {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
                             {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
-                          </div>
-                        })}
+                          </div>;
+                    })}
                       </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
                   </div>
 
+                  {/* Balance */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Balance</span>
+                      <span className="font-medium text-success">
+                        ${balance.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Earnings Stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Earned</p>
+                      <p className="text-sm font-semibold">
+                        ${totalEarned.toFixed(2)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Withdrawn</p>
+                      <p className="text-sm font-semibold">
+                        ${totalWithdrawn.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>;
           })}
@@ -922,15 +944,7 @@ export default function AdminUsers() {
                             </div>
                             
                             {/* Amount & Date */}
-                            <div className="text-right shrink-0">
-                              <p className={`font-semibold ${transaction.type === 'withdrawal' || transaction.type === 'deduction' ? 'text-destructive' : 'text-success'}`}>
-                                {transaction.type === 'withdrawal' || transaction.type === 'deduction' ? '-' : '+'}
-                                ${Math.abs(transaction.amount).toFixed(2)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(transaction.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
+                            
                           </div>
                         </div>)}
                     </div>}
@@ -1037,10 +1051,7 @@ export default function AdminUsers() {
                         </div>
 
                         {submission.screenshot_url ? <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
-                            {submission.screenshot_url.endsWith('.mp4') || submission.screenshot_url.endsWith('.webm') || submission.screenshot_url.endsWith('.mov') ? 
-                              <video src={submission.screenshot_url} className="w-full h-32 object-cover" controls muted playsInline /> :
-                              <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
-                            }
+                            <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
                           </div> : <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
                             <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
                           </div>}
@@ -1142,91 +1153,61 @@ export default function AdminUsers() {
 
           {/* Review Dialog */}
           <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Review Demographic Submission</DialogTitle>
+            <DialogContent className="max-w-2xl bg-card border-0">
+              <DialogHeader className="pb-2">
+                <DialogTitle className="text-lg">Review Demographic Submission</DialogTitle>
               </DialogHeader>
 
               {selectedSubmission && <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                     {getPlatformIcon(selectedSubmission.social_accounts.platform)}
                     <div>
                       <p className="font-semibold">@{selectedSubmission.social_accounts.username}</p>
-                      <p className="text-sm text-muted-foreground capitalize">{selectedSubmission.social_accounts.platform}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{selectedSubmission.social_accounts.platform}</p>
                     </div>
                   </div>
 
-                  {selectedSubmission.screenshot_url && <div className="space-y-2">
-                      <Label className="text-sm">Demographics Screenshot</Label>
-                      <div className="rounded-lg overflow-hidden border border-border">
-                        {selectedSubmission.screenshot_url.endsWith('.mp4') || selectedSubmission.screenshot_url.endsWith('.webm') || selectedSubmission.screenshot_url.endsWith('.mov') ?
-                          <video src={selectedSubmission.screenshot_url} className="w-full" controls muted playsInline /> :
-                          <img src={selectedSubmission.screenshot_url} alt="Demographics screenshot" className="w-full" />
-                        }
+                  <div className="bg-[#0d0d0d] rounded-lg p-4">
+                    <p className="text-xs text-muted-foreground mb-2">Tier 1 Audience Percentage</p>
+                    <p className="text-4xl font-bold font-chakra text-primary">{selectedSubmission.tier1_percentage}%</p>
+                  </div>
+
+                  {selectedSubmission.screenshot_url && <div>
+                      <Label className="text-xs mb-2 block">Demographics Screenshot</Label>
+                      <div className="rounded-lg overflow-hidden border">
+                        <img src={selectedSubmission.screenshot_url} alt="Demographics screenshot" className="w-full" />
                       </div>
                     </div>}
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Review Decision</Label>
+                    <Label className="text-xs">Review Decision</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant={reviewStatus === "approved" ? "default" : "outline"} 
-                        onClick={() => setReviewStatus("approved")} 
-                        className="h-10"
-                      >
+                      <Button variant={reviewStatus === "approved" ? "default" : "outline"} onClick={() => setReviewStatus("approved")} className="h-9 text-sm">
                         <CheckCircle2 className="h-4 w-4 mr-2" />
                         Approve
                       </Button>
-                      <Button 
-                        variant={reviewStatus === "rejected" ? "destructive" : "outline"} 
-                        onClick={() => setReviewStatus("rejected")} 
-                        className="h-10"
-                      >
+                      <Button variant={reviewStatus === "rejected" ? "destructive" : "outline"} onClick={() => setReviewStatus("rejected")} className="h-9 text-sm">
                         <XCircle className="h-4 w-4 mr-2" />
                         Reject
                       </Button>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="score" className="text-sm">Tier 1 Audience Percentage (%)</Label>
-                    <Input 
-                      id="score" 
-                      type="number" 
-                      min="0" 
-                      max="100" 
-                      value={score} 
-                      onChange={e => setScore(e.target.value)} 
-                      placeholder="Enter percentage (0-100)" 
-                    />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="score" className="text-xs">Score (0-100)</Label>
+                    <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm" />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="notes" className="text-sm">Admin Notes</Label>
-                    <Textarea 
-                      id="notes" 
-                      value={adminNotes} 
-                      onChange={e => setAdminNotes(e.target.value)} 
-                      placeholder="Optional notes about this submission..." 
-                      rows={3}
-                      className="resize-none"
-                    />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="notes" className="text-xs">Admin Notes</Label>
+                    <Textarea id="notes" value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="Optional notes about this submission..." rows={3} className="text-sm min-h-[70px]" />
                   </div>
 
-                  <div className="flex gap-2 pt-1">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setSelectedSubmission(null)} 
-                      disabled={updating} 
-                      className="flex-1 h-11"
-                    >
+                  <div className="flex gap-2 pt-3 border-t">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedSubmission(null)} disabled={updating} className="flex-1">
                       Cancel
                     </Button>
-                    <Button 
-                      onClick={handleReview} 
-                      disabled={updating} 
-                      className="flex-1 h-11"
-                    >
+                    <Button onClick={handleReview} disabled={updating} size="sm" className="flex-1">
                       {updating ? "Submitting..." : "Submit Review"}
                     </Button>
                   </div>
