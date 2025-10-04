@@ -1016,8 +1016,8 @@ export default function AdminUsers() {
                   </CardContent>
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {approvedSubmissions.map(submission => {
-                    const reviewedDate = submission.reviewed_at ? new Date(submission.reviewed_at) : null;
-                    const nextSubmissionDate = reviewedDate ? new Date(reviewedDate.getTime() + 30 * 24 * 60 * 60 * 1000) : null;
+                    const submittedDate = new Date(submission.submitted_at);
+                    const nextSubmissionDate = new Date(submittedDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                     
                     return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
                       <CardContent className="p-4">
@@ -1039,31 +1039,27 @@ export default function AdminUsers() {
                         </div>
 
                         <div className="space-y-1.5 text-xs">
-                          {reviewedDate && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Approved</span>
-                              <span className="font-medium">
-                                {reviewedDate.toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                          )}
-                          {nextSubmissionDate && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Next Update</span>
-                              <span className="font-medium">
-                                {nextSubmissionDate.toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Submitted</span>
+                            <span className="font-medium">
+                              {submittedDate.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Next Update</span>
+                            <span className="font-medium">
+                              {nextSubmissionDate.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                         </div>
 
                         {submission.admin_notes && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{submission.admin_notes}</p>}
                       </CardContent>
