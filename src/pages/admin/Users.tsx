@@ -390,7 +390,7 @@ export default function AdminUsers() {
                   placeholder="Search by Virality username or account username..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-[#1a1a1a] border-0"
+                  className="pl-10 bg-[#1a1a1a] border-0 h-10"
                 />
               </div>
             </div>
