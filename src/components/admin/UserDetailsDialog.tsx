@@ -61,6 +61,7 @@ interface UserDetailsDialogProps {
   onSocialAccountsOpenChange: (open: boolean) => void;
   transactionsOpen: boolean;
   onTransactionsOpenChange: (open: boolean) => void;
+  onEditScore?: (account: SocialAccount) => void;
 }
 
 const getPlatformIcon = (platform: string) => {
@@ -87,7 +88,8 @@ export function UserDetailsDialog({
   socialAccountsOpen,
   onSocialAccountsOpenChange,
   transactionsOpen,
-  onTransactionsOpenChange
+  onTransactionsOpenChange,
+  onEditScore
 }: UserDetailsDialogProps) {
   if (!user) return null;
 
@@ -214,7 +216,14 @@ export function UserDetailsDialog({
                             {latestDemographic && (
                               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                 {latestDemographic.status === 'approved' && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                  <Badge 
+                                    variant="secondary" 
+                                    className="text-[10px] px-1.5 py-0 cursor-pointer hover:bg-secondary/80 transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onEditScore?.(account);
+                                    }}
+                                  >
                                     Tier 1: {latestDemographic.tier1_percentage}%
                                   </Badge>
                                 )}

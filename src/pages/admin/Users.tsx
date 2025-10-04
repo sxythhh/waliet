@@ -500,6 +500,31 @@ export default function AdminUsers() {
     setEditScore(submission.score?.toString() || "");
     setEditScoreDialogOpen(true);
   };
+
+  const openEditScoreFromSocialAccount = async (account: SocialAccount) => {
+    // Fetch the latest demographic submission for this account
+    const { data, error } = await supabase
+      .from("demographic_submissions")
+      .select("*")
+      .eq("social_account_id", account.id)
+      .order("submitted_at", { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (!error && data) {
+      setEditingSubmission({
+        ...data,
+        social_accounts: {
+          id: account.id,
+          platform: account.platform,
+          username: account.username,
+          user_id: selectedUser?.id || ""
+        }
+      });
+      setEditScore(data.score?.toString() || "");
+      setEditScoreDialogOpen(true);
+    }
+  };
   const handleUpdateScore = async () => {
     if (!editingSubmission) return;
     const scoreValue = parseInt(editScore);
@@ -865,7 +890,7 @@ export default function AdminUsers() {
       </Dialog>
 
       {/* User Details Dialog */}
-      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} transactions={userTransactions} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} />
+      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} transactions={userTransactions} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} onEditScore={openEditScoreFromSocialAccount} />
         </TabsContent>
 
         {/* Demographics Tab */}
