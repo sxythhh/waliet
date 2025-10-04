@@ -55,6 +55,9 @@ interface SocialAccount {
     title: string;
     brand_name: string;
     brand_logo_url: string;
+    brands?: {
+      logo_url: string;
+    } | null;
   };
   demographic_submissions?: Array<{
     status: string;
@@ -211,7 +214,10 @@ export default function AdminUsers() {
           id,
           title,
           brand_name,
-          brand_logo_url
+          brand_logo_url,
+          brands:brand_id (
+            logo_url
+          )
         ),
         demographic_submissions (
           status,

@@ -28,6 +28,9 @@ interface SocialAccount {
     title: string;
     brand_name: string;
     brand_logo_url?: string | null;
+    brands?: {
+      logo_url?: string | null;
+    } | null;
   } | null;
   demographic_submissions?: Array<{
     status: string;
@@ -228,9 +231,9 @@ export function UserDetailsDialog({
                         <div className="shrink-0">
                           {account.campaigns ? (
                             <div className="flex items-center gap-2">
-                              {account.campaigns.brand_logo_url && (
+                              {(account.campaigns.brands?.logo_url || account.campaigns.brand_logo_url) && (
                                 <img 
-                                  src={account.campaigns.brand_logo_url} 
+                                  src={account.campaigns.brands?.logo_url || account.campaigns.brand_logo_url} 
                                   alt={account.campaigns.brand_name} 
                                   className="h-6 w-6 rounded object-cover" 
                                 />
