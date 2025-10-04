@@ -326,40 +326,6 @@ export default function AdminPayouts() {
       return;
     }
 
-    // Get current wallet balance
-    const { data: walletData, error: walletFetchError } = await supabase
-      .from("wallets")
-      .select("balance, total_withdrawn")
-      .eq("user_id", request.user_id)
-      .single();
-
-    if (walletFetchError || !walletData) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch wallet data"
-      });
-      return;
-    }
-
-    const newBalance = Number(walletData.balance) - Number(request.amount);
-    const newTotalWithdrawn = Number(walletData.total_withdrawn) + Number(request.amount);
-
-    // Update wallet balance
-    const { error: walletError } = await supabase.from("wallets").update({
-      balance: newBalance,
-      total_withdrawn: newTotalWithdrawn
-    }).eq("user_id", request.user_id);
-
-    if (walletError) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update wallet balance"
-      });
-      return;
-    }
-
     // Update the specific transaction to completed
     const { error: transactionError } = await supabase
       .from("wallet_transactions")
