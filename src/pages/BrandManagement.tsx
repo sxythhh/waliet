@@ -196,8 +196,22 @@ export default function BrandManagement() {
       });
       if (error) throw error;
 
+      // Filter out pending applications from users who already have approved submissions
+      const approvedCreatorIds = new Set(
+        (data || []).filter(s => s.status === 'approved').map(s => s.creator_id)
+      );
+      
+      const filteredData = (data || []).filter(submission => {
+        // Keep approved submissions
+        if (submission.status === 'approved') return true;
+        // Keep pending submissions only if user doesn't have an approved one
+        if (submission.status === 'pending') return !approvedCreatorIds.has(submission.creator_id);
+        // Filter out rejected submissions
+        return false;
+      });
+
       // Fetch social accounts separately - only campaign-specific accounts
-      const submissionsWithAccounts = await Promise.all((data || []).map(async submission => {
+      const submissionsWithAccounts = await Promise.all(filteredData.map(async submission => {
         const {
           data: accounts
         } = await supabase.from("social_accounts").select("id, platform, username, follower_count, account_link").eq("user_id", submission.creator_id).eq("campaign_id", selectedCampaignId);
