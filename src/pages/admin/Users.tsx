@@ -135,14 +135,10 @@ export default function AdminUsers() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(user => {
         // Search in profile username and full name
-        const matchesProfile = user.username?.toLowerCase().includes(query) || 
-                              user.full_name?.toLowerCase().includes(query);
-        
+        const matchesProfile = user.username?.toLowerCase().includes(query) || user.full_name?.toLowerCase().includes(query);
+
         // Search in social account usernames
-        const matchesSocialAccount = user.social_accounts?.some(account => 
-          account.username?.toLowerCase().includes(query)
-        );
-        
+        const matchesSocialAccount = user.social_accounts?.some(account => account.username?.toLowerCase().includes(query));
         return matchesProfile || matchesSocialAccount;
       });
     }
@@ -193,13 +189,12 @@ export default function AdminUsers() {
   };
   const fetchUserTransactions = async (userId: string) => {
     setLoadingTransactions(true);
-    const { data, error } = await supabase
-      .from("wallet_transactions")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
+    const {
+      data,
+      error
+    } = await supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", {
+      ascending: false
+    }).limit(10);
     if (error) {
       toast({
         variant: "destructive",
@@ -212,7 +207,6 @@ export default function AdminUsers() {
     }
     setLoadingTransactions(false);
   };
-
   const openUserDetailsDialog = (user: User) => {
     setSelectedUser(user);
     setUserDetailsDialogOpen(true);
@@ -378,20 +372,13 @@ export default function AdminUsers() {
 
       {/* Filters */}
       <Card className="bg-card border-0 mt-6">
-        <CardContent className="pt-6 px-6">
+        <CardContent className="pt-6 px-[10px] bg-[#080808] py-0">
           <div className="flex gap-4 items-end">
             <div className="flex-1">
               <Label htmlFor="search">Search Users</Label>
               <div className="relative mt-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  type="text"
-                  placeholder="Search by Virality username or account username..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-[#1a1a1a] border-0 h-10"
-                />
+                <Input id="search" type="text" placeholder="Search by Virality username or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-[#1a1a1a] border-0 h-10" />
               </div>
             </div>
             
@@ -710,11 +697,7 @@ export default function AdminUsers() {
                     <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                       Connected Accounts ({userSocialAccounts.length})
                     </h3>
-                    {socialAccountsOpen ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    {socialAccountsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                   </div>
                 </CollapsibleTrigger>
                 
@@ -762,11 +745,7 @@ export default function AdminUsers() {
                     <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                       Recent Transactions ({userTransactions.length})
                     </h3>
-                    {transactionsOpen ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    {transactionsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                   </div>
                 </CollapsibleTrigger>
                 
@@ -782,28 +761,18 @@ export default function AdminUsers() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-medium capitalize">{transaction.type}</span>
-                                <span className={`text-xs px-2 py-0.5 rounded ${
-                                  transaction.status === 'completed' 
-                                    ? 'bg-success/10 text-success' 
-                                    : 'bg-muted text-muted-foreground'
-                                }`}>
+                                <span className={`text-xs px-2 py-0.5 rounded ${transaction.status === 'completed' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                                   {transaction.status}
                                 </span>
                               </div>
-                              {transaction.description && (
-                                <p className="text-sm text-muted-foreground truncate">
+                              {transaction.description && <p className="text-sm text-muted-foreground truncate">
                                   {transaction.description}
-                                </p>
-                              )}
+                                </p>}
                             </div>
                             
                             {/* Amount & Date */}
                             <div className="text-right shrink-0">
-                              <p className={`font-semibold ${
-                                transaction.type === 'withdrawal' || transaction.type === 'deduction'
-                                  ? 'text-destructive' 
-                                  : 'text-success'
-                              }`}>
+                              <p className={`font-semibold ${transaction.type === 'withdrawal' || transaction.type === 'deduction' ? 'text-destructive' : 'text-success'}`}>
                                 {transaction.type === 'withdrawal' || transaction.type === 'deduction' ? '-' : '+'}
                                 ${Math.abs(transaction.amount).toFixed(2)}
                               </p>
