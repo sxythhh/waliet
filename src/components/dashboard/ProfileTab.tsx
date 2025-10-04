@@ -482,11 +482,11 @@ export function ProfileTab() {
                       </div>}
                     </div>
                     
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      {demographicStatus === 'approved' && daysUntilNext !== null ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                      {demographicStatus === 'approved' && daysUntilNext !== null ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
                           <Calendar className="h-3.5 w-3.5" />
                           Next in {daysUntilNext} days
-                        </Button> : demographicStatus === 'pending' ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
+                        </Button> : demographicStatus === 'pending' ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
                           Pending Review
                         </Button> : demographicStatus === 'rejected' ? <Button variant="secondary" size="sm" onClick={() => {
                   setSelectedAccountForDemographics({
@@ -495,7 +495,7 @@ export function ProfileTab() {
                     username: account.username
                   });
                   setShowDemographicsDialog(true);
-                }} className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
+                }} className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
                           Resubmit Demographics
                         </Button> : <Button variant="secondary" size="sm" onClick={() => {
                   setSelectedAccountForDemographics({
@@ -504,17 +504,17 @@ export function ProfileTab() {
                     username: account.username
                   });
                   setShowDemographicsDialog(true);
-                }} className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
+                }} className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
                           Submit Demographics
                         </Button>}
                       
-                      {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1 flex-1 sm:flex-initial">
+                      {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1 w-full sm:w-auto">
                           <X className="h-3 w-3" />
                           Unlink
                         </Button> : <Button variant="default" size="sm" onClick={() => {
                   setSelectedAccountForLinking(account.id);
                   setShowLinkCampaignDialog(true);
-                }} disabled={joinedCampaigns.length === 0} className="h-8 gap-1 flex-1 sm:flex-initial whitespace-nowrap">
+                }} disabled={joinedCampaigns.length === 0} className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap">
                           <Link2 className="h-3 w-3" />
                           Link Campaign
                         </Button>}
@@ -522,8 +522,9 @@ export function ProfileTab() {
                       <Button variant="ghost" size="sm" onClick={() => {
                   setAccountToDelete(account.id);
                   setShowDeleteDialog(true);
-                }} className="h-8 gap-1 text-destructive hover:text-destructive hover:bg-destructive/10">
+                }} className="h-8 gap-1 w-full sm:w-auto text-destructive hover:text-destructive hover:bg-destructive/10">
                         <Trash2 className="h-3 w-3" />
+                        <span className="sm:hidden">Delete</span>
                       </Button>
                     </div>
                   </div>;
