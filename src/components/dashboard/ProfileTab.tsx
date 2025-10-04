@@ -159,14 +159,20 @@ export function ProfileTab() {
       data
     } = await supabase.from("campaign_submissions").select("campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))").eq("creator_id", session.user.id);
     if (data) {
-      const campaigns = data.filter(item => item.campaigns).map(item => ({
-        id: item.campaigns.id,
-        title: item.campaigns.title,
-        brand_name: item.campaigns.brand_name,
-        brand_logo_url: item.campaigns.brand_logo_url,
-        brands: item.campaigns.brands
-      }));
-      setJoinedCampaigns(campaigns);
+      // Deduplicate campaigns by ID
+      const uniqueCampaignsMap = new Map();
+      data.filter(item => item.campaigns).forEach(item => {
+        if (!uniqueCampaignsMap.has(item.campaigns.id)) {
+          uniqueCampaignsMap.set(item.campaigns.id, {
+            id: item.campaigns.id,
+            title: item.campaigns.title,
+            brand_name: item.campaigns.brand_name,
+            brand_logo_url: item.campaigns.brand_logo_url,
+            brands: item.campaigns.brands
+          });
+        }
+      });
+      setJoinedCampaigns(Array.from(uniqueCampaignsMap.values()));
     }
   };
   const handleLinkCampaign = async (accountId: string, campaignId: string) => {
