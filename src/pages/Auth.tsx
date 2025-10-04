@@ -106,32 +106,31 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-glow opacity-50" />
-      
-      <Card className="w-full max-w-md relative z-10 border-0 bg-card/95 backdrop-blur-sm shadow-glow">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-glow overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md border">
+        <CardHeader className="text-center space-y-6 pb-8">
+          <div className="flex justify-center">
+            <div className="h-20 w-20 rounded-full flex items-center justify-center overflow-hidden bg-muted">
               <img src={viralityLogo} alt="Virality Logo" className="w-full h-full object-cover" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">Welcome to Virality</CardTitle>
-          <CardDescription>Join the creator economy revolution</CardDescription>
+          <div className="space-y-2">
+            <CardTitle className="text-2xl font-semibold tracking-tight">Welcome to Virality</CardTitle>
+            <CardDescription className="text-sm">Join the creator economy revolution</CardDescription>
+          </div>
         </CardHeader>
         
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/50">
+              <TabsTrigger value="signin" className="data-[state=active]:bg-background">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-background">Sign Up</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+                  <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
                   <Input
                     id="signin-email"
                     type="email"
@@ -140,11 +139,12 @@ export default function Auth() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
+                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                  <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
                   <Input
                     id="signin-password"
                     type="password"
@@ -153,19 +153,20 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
+                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
                   />
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full h-11 mt-6" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
             </TabsContent>
             
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-username">Username</Label>
+                  <Label htmlFor="signup-username" className="text-sm font-medium">Username</Label>
                   <Input
                     id="signup-username"
                     type="text"
@@ -174,11 +175,12 @@ export default function Auth() {
                     onChange={(e) => setUsername(e.target.value)}
                     required
                     disabled={loading}
+                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -187,11 +189,12 @@ export default function Auth() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
+                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
                   <Input
                     id="signup-password"
                     type="password"
@@ -201,10 +204,11 @@ export default function Auth() {
                     required
                     disabled={loading}
                     minLength={6}
+                    className="h-11 bg-muted/30 border-muted focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted transition-none"
                   />
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full h-11 mt-6" disabled={loading}>
                   {loading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
