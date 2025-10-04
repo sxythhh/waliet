@@ -213,7 +213,7 @@ export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open:
           Manage Training
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#202020] border-white/10">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#202020] border-white/10">
         <DialogHeader>
           <DialogTitle className="text-white">Manage Training Content</DialogTitle>
         </DialogHeader>
