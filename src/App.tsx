@@ -66,14 +66,6 @@ function DashboardLayout({
             <div className="flex-1 flex justify-center">
               <img src={wordmarkLogo} alt="Wordmark Logo" className="h-10" />
             </div>
-            {profile && <button onClick={() => navigate(`/${profile.username}`)} className="md:hidden">
-                <Avatar className="h-10 w-10">
-                  
-                  <AvatarFallback className="text-sm bg-muted font-semibold">
-                    {profile.full_name?.[0] || profile.username[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </button>}
             <div className="w-10 hidden md:block" />
           </header>
           <main className="flex-1">{children}</main>
