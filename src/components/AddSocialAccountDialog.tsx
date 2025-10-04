@@ -135,13 +135,13 @@ export function AddSocialAccountDialog({
           {/* Platform Selection - Card Style */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Select Platform</Label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {(["tiktok", "instagram", "youtube"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`
-                    relative flex flex-col items-center gap-3 p-4 rounded-xl
+                    relative flex flex-col items-center gap-2 p-3 rounded-lg
                     transition-all duration-300 hover:scale-105
                     ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
                   `}>
-                  <div className="p-2 rounded-lg bg-background/50">
+                  <div className="p-1.5 rounded-lg bg-background/50">
                     {getPlatformIcon(platform)}
                   </div>
                   <span className={`text-xs font-medium ${selectedPlatform === platform ? 'text-white' : 'text-foreground/70'}`}>
