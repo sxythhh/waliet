@@ -501,10 +501,7 @@ export default function AdminUsers() {
       icon: Icon,
       color
     } = config[status as keyof typeof config] || config.pending;
-    return <Badge variant={variant} className="flex items-center gap-1">
-        <Icon className={`h-3 w-3 ${color}`} />
-        {status}
-      </Badge>;
+    return;
   };
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
   const approvedSubmissions = submissions.filter(s => s.status === "approved");
