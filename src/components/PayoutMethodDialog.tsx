@@ -111,9 +111,9 @@ export default function PayoutMethodDialog({
       <DialogContent className="sm:max-w-[700px] bg-[#0a0a0a] border-[#1a1a1a] max-h-[90vh] overflow-y-auto">
         
 
-        {!isMaxMethodsReached && <div className="flex gap-6 pt-6 py-[19px]">
+        {!isMaxMethodsReached && <div className="flex flex-col sm:flex-row gap-6 pt-6 py-[19px]">
             {/* Payment Method Sidebar */}
-            <div className="w-48 flex-shrink-0 space-y-2">
+            <div className="w-full sm:w-48 flex-shrink-0 space-y-2">
               <p className="font-medium text-muted-foreground mb-4 px-3" style={{
             fontSize: '11px',
             letterSpacing: '-0.5px'
