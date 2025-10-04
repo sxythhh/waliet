@@ -116,11 +116,11 @@ export default function Auth() {
               <img src={viralityLogo} alt="Virality Logo" className="w-full h-full object-cover" />
             </div>
           </div>
-          
+          <CardTitle className="text-3xl font-bold">Welcome to Virality</CardTitle>
           <CardDescription>Join the creator economy revolution</CardDescription>
         </CardHeader>
         
-        <CardContent className="bg-black/0">
+        <CardContent>
           <Tabs defaultValue="signin" className="w-full bg-[#1e1e1e]">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
