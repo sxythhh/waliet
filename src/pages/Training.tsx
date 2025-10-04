@@ -162,18 +162,13 @@ export default function Training() {
                 )}
                 {course.is_locked && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <Lock className="h-12 w-12 text-red-500" />
+                    <Lock className="h-12 w-12 text-blue-500" />
                   </div>
                 )}
               </div>
 
               <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <h2 className="text-xl font-bold text-white">{course.title}</h2>
-                  {course.is_locked && (
-                    <span className="text-xs text-red-500 font-medium">Locked</span>
-                  )}
-                </div>
+                <h2 className="text-xl font-bold text-white mb-2">{course.title}</h2>
                 {course.description && (
                   <p className="text-white/60 text-sm line-clamp-3">{course.description}</p>
                 )}
