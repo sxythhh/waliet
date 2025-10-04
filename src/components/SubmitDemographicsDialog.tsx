@@ -1,18 +1,13 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload } from "lucide-react";
-import { z } from "zod";
-
-const demographicsSchema = z.object({
-  tier1_percentage: z.number()
-    .min(0, "Percentage must be at least 0")
-    .max(100, "Percentage cannot exceed 100"),
-});
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 
 interface SubmitDemographicsDialogProps {
   open: boolean;
@@ -31,34 +26,33 @@ export function SubmitDemographicsDialog({
   platform,
   username 
 }: SubmitDemographicsDialogProps) {
-  const [tier1Percentage, setTier1Percentage] = useState("");
-  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  const getPlatformIcon = (platform: string) => {
+    const iconClass = "h-5 w-5";
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
+      case "instagram":
+        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
+      case "youtube":
+        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
+      default:
+        return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form data
-    const validation = demographicsSchema.safeParse({
-      tier1_percentage: parseFloat(tier1Percentage),
-    });
-
-    if (!validation.success) {
+    if (!videoFile) {
       toast({
         variant: "destructive",
-        title: "Validation Error",
-        description: validation.error.errors[0].message,
-      });
-      return;
-    }
-
-    if (!screenshot) {
-      toast({
-        variant: "destructive",
-        title: "Screenshot Required",
-        description: "Please upload a screenshot showing your audience demographics",
+        title: "Video Required",
+        description: "Please upload a video showing your audience demographics",
       });
       return;
     }
@@ -101,13 +95,13 @@ export function SubmitDemographicsDialog({
         }
       }
 
-      // Upload screenshot
-      const fileExt = screenshot.name.split('.').pop();
+      // Upload video
+      const fileExt = videoFile.name.split('.').pop();
       const fileName = `${session.user.id}/demographics_${socialAccountId}_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('verification-screenshots')
-        .upload(fileName, screenshot);
+        .upload(fileName, videoFile);
 
       if (uploadError) {
         throw uploadError;
@@ -118,12 +112,12 @@ export function SubmitDemographicsDialog({
         .from('verification-screenshots')
         .getPublicUrl(fileName);
 
-      // Insert demographic submission
+      // Insert demographic submission (with tier1_percentage set to 0 as placeholder)
       const { error: insertError } = await supabase
         .from('demographic_submissions')
         .insert({
           social_account_id: socialAccountId,
-          tier1_percentage: validation.data.tier1_percentage,
+          tier1_percentage: 0, // Placeholder value since we removed the input
           screenshot_url: publicUrl,
           status: 'pending',
         });
@@ -138,8 +132,7 @@ export function SubmitDemographicsDialog({
       });
 
       // Reset form
-      setTier1Percentage("");
-      setScreenshot(null);
+      setVideoFile(null);
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -158,26 +151,26 @@ export function SubmitDemographicsDialog({
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith('video/')) {
       toast({
         variant: "destructive",
         title: "Invalid file",
-        description: "Please upload an image file",
+        description: "Please upload a video file",
       });
       return;
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
       toast({
         variant: "destructive",
         title: "File too large",
-        description: "Image must be less than 10MB",
+        description: "Video must be less than 50MB",
       });
       return;
     }
 
-    setScreenshot(file);
+    setVideoFile(file);
   };
 
   return (
@@ -186,69 +179,52 @@ export function SubmitDemographicsDialog({
         <DialogHeader>
           <DialogTitle>Submit Account Demographics</DialogTitle>
           <DialogDescription>
-            Submit demographics data for @{username} ({platform})
+            Upload a video showing your audience demographics
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Tier 1 Percentage */}
-          <div className="space-y-2">
-            <Label htmlFor="tier1_percentage">
-              Tier 1 Audience Percentage (%)
-            </Label>
-            <Input
-              id="tier1_percentage"
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              placeholder="e.g., 75.5"
-              value={tier1Percentage}
-              onChange={(e) => setTier1Percentage(e.target.value)}
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter the percentage of your audience from Tier 1 countries (USA, Canada, UK, Australia, etc.)
-            </p>
+          {/* Account Display */}
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 border">
+            {getPlatformIcon(platform)}
+            <div className="flex flex-col">
+              <span className="font-semibold text-sm">@{username}</span>
+              <span className="text-xs text-muted-foreground capitalize">{platform}</span>
+            </div>
           </div>
 
-          {/* Screenshot Upload */}
+          {/* Video Upload */}
           <div className="space-y-2">
-            <Label>Analytics Screenshot</Label>
+            <Label>Demographics Video</Label>
             <p className="text-xs text-muted-foreground mb-2">
-              Upload a screenshot showing your audience demographics from your platform's analytics
+              Record a video showing your audience demographics from your platform's analytics
             </p>
             <div
               className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
-              {screenshot ? (
+              {videoFile ? (
                 <div className="space-y-2">
                   <Upload className="h-8 w-8 mx-auto text-primary" />
-                  <p className="text-sm font-medium">{screenshot.name}</p>
+                  <p className="text-sm font-medium">{videoFile.name}</p>
                   <p className="text-xs text-muted-foreground">Click to change</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Upload Screenshot</p>
+                  <p className="text-sm text-muted-foreground">Upload Video (Max 50MB)</p>
+                  <p className="text-xs text-muted-foreground">MP4, MOV, or other video formats</p>
                 </div>
               )}
             </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="video/*"
               onChange={handleFileChange}
               className="hidden"
               required
             />
-          </div>
-
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              📊 You can submit new demographics every 7 days. Your submission will be reviewed by an admin who will assign a score (0-100).
-            </p>
           </div>
 
           {/* Submit Button */}
