@@ -40,11 +40,6 @@ const menuItems = [
     icon: GraduationCap,
     path: "/admin/courses",
   },
-  {
-    title: "Demographics",
-    icon: BarChart3,
-    path: "/admin/demographics",
-  },
 ];
 
 export function AdminSidebar() {

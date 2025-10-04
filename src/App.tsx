@@ -31,7 +31,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminPayouts from "./pages/admin/Payouts";
 import AdminCourses from "./pages/admin/Courses";
 import AdminWallets from "./pages/admin/Wallets";
-import AdminDemographics from "./pages/admin/Demographics";
+
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 
@@ -130,7 +130,6 @@ const App = () => (
           <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
           <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
           <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
-          <Route path="/admin/demographics" element={<AdminLayout><AdminDemographics /></AdminLayout>} />
           <Route path="/brand/:slug" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
           <Route path="/brand/:slug/management" element={<BrandLayout><BrandManagement /></BrandLayout>} />
           <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
