@@ -54,23 +54,39 @@ export function BrandSidebar() {
     title: "Home",
     icon: Home,
     path: ""
-  }, {
-    title: "Management",
-    icon: FolderOpen,
-    path: "management"
-  }, currentBrand?.brand_type === "DWY" ? {
-    title: "Roadmap",
-    icon: Map,
-    path: "assets"
-  } : {
-    title: "Assets",
-    icon: Pyramid,
-    path: "assets"
-  }, {
-    title: "Library",
-    icon: GalleryHorizontalEnd,
-    path: "library"
   }];
+
+  // Add Training as 2nd item for DWY brands
+  if (currentBrand?.brand_type === "DWY") {
+    baseMenuItems.push({
+      title: "Training",
+      icon: GraduationCap,
+      path: "training"
+    });
+  }
+
+  // Add remaining items
+  baseMenuItems.push(
+    {
+      title: "Management",
+      icon: FolderOpen,
+      path: "management"
+    },
+    currentBrand?.brand_type === "DWY" ? {
+      title: "Roadmap",
+      icon: Map,
+      path: "assets"
+    } : {
+      title: "Assets",
+      icon: Pyramid,
+      path: "assets"
+    },
+    {
+      title: "Library",
+      icon: GalleryHorizontalEnd,
+      path: "library"
+    }
+  );
 
   // Conditionally add Account tab based on show_account_tab setting
   if (currentBrand?.show_account_tab !== false) {
@@ -81,12 +97,7 @@ export function BrandSidebar() {
     });
   }
 
-  // Add Training for DWY brands
-  const dynamicMenuItems = currentBrand?.brand_type === "DWY" ? [...baseMenuItems, {
-    title: "Training",
-    icon: GraduationCap,
-    path: "training"
-  }] : baseMenuItems;
+  const dynamicMenuItems = baseMenuItems;
   return <Sidebar className="border-r border-[#272727] bg-[#202020] font-instrument">
       <SidebarHeader className="p-4 bg-[#202020] px-[5px] py-[5px]">
         <Select value={currentSlug} onValueChange={value => navigate(`/brand/${value}`)}>
