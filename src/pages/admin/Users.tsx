@@ -326,10 +326,11 @@ export default function AdminUsers() {
         .insert({ user_id: selectedUser.id, balance: 0, total_earned: 0 });
       
       if (createError) {
+        console.error("Failed to create wallet:", createError);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to create wallet"
+          description: `Failed to create wallet: ${createError.message}`
         });
         return;
       }
