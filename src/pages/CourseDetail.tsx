@@ -204,12 +204,12 @@ export default function CourseDetail() {
                       {selectedModule.title}
                     </h2>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => toggleCompletion(selectedModule.id, completions.some(c => c.module_id === selectedModule.id))} className="border-white/10">
+                  <Button variant="outline" size="sm" onClick={() => toggleCompletion(selectedModule.id, completions.some(c => c.module_id === selectedModule.id))} className="border-white/10 bg-white/10 hover:bg-white/20">
                     {completions.some(c => c.module_id === selectedModule.id) ? <>
-                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                        <CheckCircle2 className="h-4 w-4 mr-2 text-white" />
                         Completed
                       </> : <>
-                        <Circle className="h-4 w-4 mr-2" />
+                        <Circle className="h-4 w-4 mr-2 text-white" />
                         Mark Complete
                       </>}
                   </Button>
