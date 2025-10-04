@@ -308,23 +308,42 @@ export default function AdminUsers() {
       .from("wallets")
       .select("balance, total_earned")
       .eq("user_id", selectedUser.id)
-      .single();
+      .maybeSingle();
 
-    if (fetchError || !currentWallet) {
+    if (fetchError) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch current wallet balance"
+        description: "Failed to fetch wallet"
       });
       return;
     }
+
+    // Create wallet if it doesn't exist
+    if (!currentWallet) {
+      const { error: createError } = await supabase
+        .from("wallets")
+        .insert({ user_id: selectedUser.id, balance: 0, total_earned: 0 });
+      
+      if (createError) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to create wallet"
+        });
+        return;
+      }
+    }
+
+    const currentBalance = currentWallet?.balance || 0;
+    const currentEarned = currentWallet?.total_earned || 0;
 
     // Update wallet balance with fresh data
     const {
       error: walletError
     } = await supabase.from("wallets").update({
-      balance: currentWallet.balance + amount,
-      total_earned: currentWallet.total_earned + amount
+      balance: currentBalance + amount,
+      total_earned: currentEarned + amount
     }).eq("user_id", selectedUser.id);
     if (walletError) {
       toast({
