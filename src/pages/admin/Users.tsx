@@ -1093,11 +1093,6 @@ export default function AdminUsers() {
                     </div>
                   </a>
 
-                  <div className="bg-[#0d0d0d] rounded-lg p-4">
-                    <p className="text-xs text-muted-foreground mb-2">Tier 1 Audience Percentage</p>
-                    <p className="text-4xl font-bold font-chakra text-primary">{selectedSubmission.tier1_percentage}%</p>
-                  </div>
-
                   {selectedSubmission.screenshot_url && <div>
                       <Label className="text-xs mb-2 block">Demographics Screenshot</Label>
                       <div className="rounded-lg overflow-hidden border">
@@ -1108,11 +1103,6 @@ export default function AdminUsers() {
                   <div className="space-y-1.5">
                     <Label htmlFor="score" className="text-xs">Score (0-100)</Label>
                     <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="notes" className="text-xs">Admin Notes</Label>
-                    <Textarea id="notes" value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="Optional notes about this submission..." rows={3} className="text-sm min-h-[70px]" />
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t">
