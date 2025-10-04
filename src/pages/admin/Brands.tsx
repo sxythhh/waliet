@@ -118,7 +118,7 @@ export default function AdminBrands() {
               <p className="text-sm text-muted-foreground">Create your first brand to get started</p>
             </CardContent>
           </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {brands.map(brand => <Card key={brand.id} className="group hover:shadow-lg transition-all duration-200 border hover:border-primary/30">
+            {brands.map(brand => <Card key={brand.id} className="group transition-all duration-200 border">
                 <CardContent className="p-6">
                   {/* Logo & Header */}
                   <div className="flex items-start justify-between mb-4">
@@ -135,21 +135,15 @@ export default function AdminBrands() {
                     </div>
                   </div>
 
-                  {/* Meta Info */}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4 pb-4 border-b">
-                    <span>Created {new Date(brand.created_at).toLocaleDateString()}</span>
-                    {brand.show_account_tab && <Badge variant="outline" className="rounded">Account Tab</Badge>}
-                  </div>
-                  
 
                   {/* Actions */}
                   <div className="flex gap-2">
                     <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
-                    <Button size="sm" variant="outline" onClick={() => navigate(`/brand/${brand.slug}`)} className="flex-1 border-0 bg-[#1a1b1a]">
+                    <Button size="sm" variant="outline" onClick={() => window.open(`/brand/${brand.slug}`, '_blank')} className="flex-1 border-0 bg-[#1a1b1a]">
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                       View
                     </Button>
-                    
+
                   </div>
                 </CardContent>
               </Card>)}
