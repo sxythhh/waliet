@@ -442,10 +442,10 @@ export function ProfileTab() {
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
                         {getPlatformIcon(account.platform)}
                         <span className="font-medium">{account.username}</span>
-                        {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success" />}
-                        {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning" />}
-                        {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive" />}
-                        {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive" />}
+                        {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
+                        {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
+                        {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
+                        {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
                       </div>
                       
                       {linkedCampaign && <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
