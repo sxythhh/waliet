@@ -89,7 +89,7 @@ export function UserDetailsDialog({
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl bg-[#0b0b0b]">
         {/* User Header */}
-        <div className="flex items-start gap-4 pb-6 border-b py-0">
+        <div className="flex items-start gap-4 pb-6 border-b py-0 my-0">
           {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-16 w-16 rounded-full object-cover" /> : <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
               <UsersIcon className="h-8 w-8 text-primary" />
             </div>}
