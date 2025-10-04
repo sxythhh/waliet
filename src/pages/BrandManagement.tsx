@@ -206,7 +206,7 @@ export default function BrandManagement() {
         if (submission.status === 'approved') return true;
         // Keep pending submissions only if user doesn't have an approved one
         if (submission.status === 'pending') return !approvedCreatorIds.has(submission.creator_id);
-        // Filter out rejected submissions
+        // Filter out rejected and withdrawn submissions
         return false;
       });
 

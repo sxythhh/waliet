@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -36,6 +37,8 @@ export function CampaignsTab() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
+  const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const navigate = useNavigate();
   const {
     toast
@@ -61,7 +64,7 @@ export function CampaignsTab() {
     const {
       data: submissions,
       error: submissionsError
-    } = await supabase.from("campaign_submissions").select("campaign_id, status").eq("creator_id", user.id);
+    } = await supabase.from("campaign_submissions").select("campaign_id, status").eq("creator_id", user.id).neq("status", "withdrawn");
     if (submissionsError) {
       toast({
         variant: "destructive",
@@ -133,6 +136,43 @@ export function CampaignsTab() {
     }
     setLoading(false);
   };
+
+  const handleWithdrawApplication = async () => {
+    if (!selectedCampaignId) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("campaign_submissions")
+        .update({ status: 'withdrawn' })
+        .eq("campaign_id", selectedCampaignId)
+        .eq("creator_id", user.id)
+        .eq("status", "pending");
+
+      if (error) throw error;
+
+      toast({
+        title: "Application withdrawn",
+        description: "Your application has been successfully withdrawn"
+      });
+
+      // Refresh campaigns to remove the withdrawn one
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error withdrawing application:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to withdraw application"
+      });
+    } finally {
+      setWithdrawDialogOpen(false);
+      setSelectedCampaignId(null);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-12">
         <p className="text-muted-foreground">Loading campaigns...</p>
@@ -207,12 +247,25 @@ export function CampaignsTab() {
                 </div>}
 
               {/* Application Status */}
-              {isPending ? <div className="mt-auto pt-2">
+              {isPending ? <div className="mt-auto pt-2 space-y-2">
                   <div className="bg-muted/30 rounded-md px-2.5 py-1.5 flex items-center justify-center">
                     <span className="text-[11px] font-instrument tracking-tight text-muted-foreground font-medium">
                       Pending Review
                     </span>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={e => {
+                      e.stopPropagation();
+                      setSelectedCampaignId(campaign.id);
+                      setWithdrawDialogOpen(true);
+                    }} 
+                    className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="w-3.5 h-3.5 mr-1.5" />
+                    Withdraw Application
+                  </Button>
                 </div> : <div className="mt-auto pt-2">
                   <Button variant="ghost" size="sm" onClick={e => {
               e.stopPropagation();
@@ -272,6 +325,24 @@ export function CampaignsTab() {
         </div>
       </DialogContent>
     </Dialog>
+    
+    {/* Withdraw Application Confirmation Dialog */}
+    <AlertDialog open={withdrawDialogOpen} onOpenChange={setWithdrawDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Withdraw Application?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to withdraw your application? You can always reapply later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleWithdrawApplication} className="bg-destructive hover:bg-destructive/90">
+            Withdraw
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     
     <AddSocialAccountDialog open={addAccountDialogOpen} onOpenChange={setAddAccountDialogOpen} onSuccess={fetchCampaigns} />
     
