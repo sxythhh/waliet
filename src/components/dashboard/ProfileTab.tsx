@@ -496,7 +496,6 @@ export function ProfileTab() {
                   });
                   setShowDemographicsDialog(true);
                 }} className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
-                          <AlertCircle className="h-3.5 w-3.5" />
                           Resubmit Demographics
                         </Button> : <Button variant="secondary" size="sm" onClick={() => {
                   setSelectedAccountForDemographics({
@@ -506,7 +505,6 @@ export function ProfileTab() {
                   });
                   setShowDemographicsDialog(true);
                 }} className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
-                          <AlertCircle className="h-3.5 w-3.5" />
                           Submit Demographics
                         </Button>}
                       
