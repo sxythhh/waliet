@@ -46,7 +46,19 @@ export default function BrandDashboard() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
-  const [activeView, setActiveView] = useState<"campaigns" | "home">("campaigns");
+  const [activeView, setActiveView] = useState<"campaigns" | "home">("home");
+  
+  const sidebar = useSidebar();
+  
+  const handleViewChange = (value: string) => {
+    const newView = value as "campaigns" | "home";
+    setActiveView(newView);
+    
+    // Auto-hide sidebar when switching to Home view
+    if (newView === "home" && sidebar.state !== "collapsed") {
+      toggleSidebar();
+    }
+  };
   const fetchBrandData = async () => {
     if (!slug) return;
     try {
@@ -120,6 +132,15 @@ export default function BrandDashboard() {
   }
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
+  
+  // Determine which views are available
+  const hasHomeEmbed = !!brand.home_url;
+  const hasCampaigns = campaigns.length > 0;
+  const showToggle = hasHomeEmbed && hasCampaigns;
+  
+  // If only one view is available, set it as active
+  const effectiveView = !hasHomeEmbed ? "campaigns" : !hasCampaigns ? "home" : activeView;
+  
   return <div className="min-h-screen bg-[#191919]">
       <div className="max-w-7xl mx-auto p-8">
         {/* Header */}
@@ -132,21 +153,30 @@ export default function BrandDashboard() {
               {brand.name}
             </h1>
           </div>
-          {activeView === "campaigns" && <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />}
+          {effectiveView === "campaigns" && <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />}
         </div>
 
-        {/* View Toggle */}
-        <Tabs value={activeView} onValueChange={(value) => setActiveView(value as "campaigns" | "home")} className="w-full">
+        {/* View Toggle - Only show if both views are available */}
+        {showToggle ? <Tabs value={effectiveView} onValueChange={handleViewChange} className="w-full">
           <TabsList className="bg-[#202020] border-white/10 mb-6">
+            <TabsTrigger value="home" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
+              <Home className="h-4 w-4" />
+              Home
+            </TabsTrigger>
             <TabsTrigger value="campaigns" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
               <LayoutGrid className="h-4 w-4" />
               Campaigns
             </TabsTrigger>
-            <TabsTrigger value="home" className="gap-2 data-[state=active]:bg-[#2a2a2a]" disabled={!brand.home_url}>
-              <Home className="h-4 w-4" />
-              Home
-            </TabsTrigger>
           </TabsList>
+
+          {/* Home Embed View */}
+          <TabsContent value="home" className="mt-0">
+            <div className="w-full h-[calc(100vh-200px)] bg-[#202020] rounded-lg overflow-hidden">
+              <div dangerouslySetInnerHTML={{
+              __html: brand.home_url
+            }} className="w-full h-full" />
+            </div>
+          </TabsContent>
 
           {/* Campaigns View */}
           <TabsContent value="campaigns" className="mt-0">
@@ -225,18 +255,86 @@ export default function BrandDashboard() {
                 <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
               </div>}
           </TabsContent>
+        </Tabs> : 
+        // Single view - no toggle needed
+        effectiveView === "home" ? <div className="w-full h-[calc(100vh-200px)] bg-[#202020] rounded-lg overflow-hidden">
+            <div dangerouslySetInnerHTML={{
+          __html: brand.home_url || ""
+        }} className="w-full h-full" />
+          </div> : <div className="space-y-4">
+            {campaigns.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {campaigns.map(campaign => {
+              const usedBudget = Number(campaign.budget_used || 0);
+              const budgetPercentage = Number(campaign.budget) > 0 ? (usedBudget / Number(campaign.budget)) * 100 : 0;
+              return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+                      {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
+                          <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
+                        </div>}
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-semibold text-white mb-1">
+                              {campaign.title}
+                            </h3>
+                            {campaign.description && <p className="text-sm text-white/60 line-clamp-2">
+                                {campaign.description}
+                              </p>}
+                          </div>
+                          <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                            <Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10" onClick={e => {
+                        e.stopPropagation();
+                        navigate(`/join/${campaign.slug}`);
+                      }} title="Go to join page">
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>} />
+                            <Button size="icon" variant="ghost" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={e => {
+                        e.stopPropagation();
+                        handleDeleteClick(campaign);
+                      }}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
 
-          {/* Home Embed View */}
-          <TabsContent value="home" className="mt-0">
-            {brand.home_url ? <div className="w-full h-[calc(100vh-200px)] bg-[#202020] rounded-lg overflow-hidden">
-                <div dangerouslySetInnerHTML={{
-              __html: brand.home_url
-            }} className="w-full h-full" />
-              </div> : <div className="flex items-center justify-center py-12 text-center">
-                <p className="text-white/60">No home embed configured</p>
+                        {/* Budget Progress Bar */}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-white/60">Budget Usage</span>
+                            <span className="text-white font-medium">
+                              ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#3b4ad9] to-[#5865F2] rounded-full transition-all duration-500" style={{
+                        width: `${budgetPercentage}%`
+                      }}>
+                              <div className="absolute inset-0 opacity-40" style={{
+                          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.2) 10px, rgba(255,255,255,.2) 20px)',
+                          animation: 'slide 1.5s linear infinite',
+                          backgroundSize: '40px 40px'
+                        }} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* RPM Display */}
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-white/60">RPM:</span>
+                          <span className="text-white font-semibold">
+                            ${Number(campaign.rpm_rate).toFixed(2)}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>;
+            })}
+              </div> : <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-white/60 mb-4">No campaigns yet</p>
+                <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
               </div>}
-          </TabsContent>
-        </Tabs>
+          </div>}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
