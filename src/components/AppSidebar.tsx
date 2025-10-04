@@ -31,7 +31,7 @@ export function AppSidebar() {
     navigate(`/dashboard?tab=${tab}`);
   };
   return <Sidebar className="border-none">
-      <SidebarContent className="pt-0">
+      <SidebarContent className="pt-0 bg-[#0c0c0c]">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -49,7 +49,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="p-4 border-t">
+      <SidebarFooter className="p-4 border-t bg-[#0c0c0c]">
         <Button asChild className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-medium">
           <a href="https://forms.virality.gg/launch" target="_blank" rel="noopener noreferrer">
             <ArrowUpRight className="h-4 w-4" />
