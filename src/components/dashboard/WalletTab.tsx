@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, Hourglass } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -1102,14 +1102,20 @@ export function WalletTab() {
                 <div className="text-center mb-2">
                   {selectedTransaction.type === 'withdrawal' ? <>
                       <div className="flex items-center justify-center mb-3">
-                        <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
-                          <Check className="w-8 h-8 text-green-500" />
+                        <div className={`w-16 h-16 rounded-full ${selectedTransaction.status === 'completed' ? 'bg-green-500/10' : 'bg-orange-500/10'} flex items-center justify-center`}>
+                          {selectedTransaction.status === 'completed' ? (
+                            <Check className="w-8 h-8 text-green-500" />
+                          ) : (
+                            <Hourglass className="w-8 h-8 text-orange-500" />
+                          )}
                         </div>
                       </div>
                       <p className="text-white font-bold font-chakra" style={{
                   letterSpacing: '-0.3px'
                 }}>
-                        Your ${selectedTransaction.amount.toFixed(2)} is on its way!
+                        {selectedTransaction.status === 'completed' 
+                          ? `You have received $${selectedTransaction.amount.toFixed(2)}!`
+                          : `Your $${selectedTransaction.amount.toFixed(2)} is on its way!`}
                       </p>
                     </> : <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
