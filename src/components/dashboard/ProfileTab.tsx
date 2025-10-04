@@ -455,9 +455,12 @@ export function ProfileTab() {
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border bg-[#0d0d0d]">
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
+                        <div 
+                          onClick={() => account.account_link && window.open(account.account_link, '_blank')}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50 w-fit cursor-pointer group"
+                        >
                           {getPlatformIcon(account.platform)}
-                          <span className="font-medium">{account.username}</span>
+                          <span className="font-medium group-hover:underline">{account.username}</span>
                           {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
                           {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
                           {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
