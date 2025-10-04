@@ -422,7 +422,6 @@ export function ProfileTab() {
             const linkedCampaign = account.campaigns;
             const latestDemographicSubmission = account.demographic_submissions?.[0];
             const demographicStatus = latestDemographicSubmission?.status;
-            
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border bg-[#0d0d0d]">
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
@@ -436,13 +435,10 @@ export function ProfileTab() {
                       
                       {linkedCampaign && <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
                         {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/campaign/${linkedCampaign.id}`);
-                          }}
-                          className="hover:underline font-medium"
-                        >
+                        <button onClick={e => {
+                    e.stopPropagation();
+                    navigate(`/campaign/${linkedCampaign.id}`);
+                  }} className="hover:underline font-medium">
                           {linkedCampaign.title}
                         </button>
                       </div>}
@@ -488,26 +484,7 @@ export function ProfileTab() {
       </Card>
 
       {/* Public Profile Link */}
-      <Card className="bg-card border-0">
-        <CardHeader>
-          <CardTitle className="text-lg">Your Public Profile</CardTitle>
-          <CardDescription>Share your Virality profile with brands and followers</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <Input value={profileUrl} readOnly />
-            <Button variant="outline" size="icon" onClick={() => {
-            navigator.clipboard.writeText(profileUrl);
-            toast({
-              title: "Copied!",
-              description: "Profile URL copied to clipboard"
-            });
-          }}>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      
 
       {/* Stats Overview */}
       
@@ -659,27 +636,14 @@ export function ProfileTab() {
           </DialogHeader>
           
           <div className="grid gap-3 mt-4">
-            {joinedCampaigns.map(campaign => (
-              <div 
-                key={campaign.id} 
-                onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)}
-                className="group relative overflow-hidden rounded-lg border border-border bg-card hover:bg-muted/50 transition-all duration-200 cursor-pointer p-4"
-              >
+            {joinedCampaigns.map(campaign => <div key={campaign.id} onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)} className="group relative overflow-hidden rounded-lg border border-border bg-card hover:bg-muted/50 transition-all duration-200 cursor-pointer p-4">
                 <div className="flex items-center gap-4">
                   <div className="relative flex-shrink-0">
-                    {(campaign.brands?.logo_url || campaign.brand_logo_url) ? (
-                      <img 
-                        src={campaign.brands?.logo_url || campaign.brand_logo_url} 
-                        alt={campaign.brand_name} 
-                        className="h-16 w-16 rounded-lg object-cover ring-2 ring-border transition-all" 
-                      />
-                    ) : (
-                      <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center ring-2 ring-border transition-all">
+                    {campaign.brands?.logo_url || campaign.brand_logo_url ? <img src={campaign.brands?.logo_url || campaign.brand_logo_url} alt={campaign.brand_name} className="h-16 w-16 rounded-lg object-cover ring-2 ring-border transition-all" /> : <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center ring-2 ring-border transition-all">
                         <span className="text-2xl font-bold text-muted-foreground">
                           {campaign.brand_name.charAt(0)}
                         </span>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-base text-foreground mb-1 truncate">
@@ -695,8 +659,7 @@ export function ProfileTab() {
                     </svg>
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </DialogContent>
       </Dialog>
