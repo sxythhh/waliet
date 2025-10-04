@@ -141,7 +141,7 @@ export function CampaignsTab() {
   if (campaigns.length === 0) {
     return <div className="text-center py-12 flex flex-col items-center gap-4">
         <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
-        <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
+        <p className="text-slate-50 font-medium">You haven't joined any campaigns yet</p>
       </div>;
   }
   return <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
