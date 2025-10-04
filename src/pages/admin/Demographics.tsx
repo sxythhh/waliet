@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Clock, TrendingUp, Users, Image as ImageIcon } from "lucide-react";
-
 interface DemographicSubmission {
   id: string;
   tier1_percentage: number;
@@ -27,7 +26,6 @@ interface DemographicSubmission {
     user_id: string;
   };
 }
-
 export default function Demographics() {
   const [submissions, setSubmissions] = useState<DemographicSubmission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,17 +34,18 @@ export default function Demographics() {
   const [adminNotes, setAdminNotes] = useState("");
   const [reviewStatus, setReviewStatus] = useState<"approved" | "rejected">("approved");
   const [updating, setUpdating] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchSubmissions();
   }, []);
-
   const fetchSubmissions = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("demographic_submissions")
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from("demographic_submissions").select(`
         *,
         social_accounts (
           id,
@@ -54,69 +53,61 @@ export default function Demographics() {
           username,
           user_id
         )
-      `)
-      .order("submitted_at", { ascending: false });
-
+      `).order("submitted_at", {
+      ascending: false
+    });
     if (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch submissions",
+        description: "Failed to fetch submissions"
       });
     } else {
       setSubmissions(data || []);
     }
     setLoading(false);
   };
-
   const handleReview = async () => {
     if (!selectedSubmission) return;
-
     const scoreValue = parseInt(score);
     if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
       toast({
         variant: "destructive",
         title: "Invalid Score",
-        description: "Score must be between 0 and 100",
+        description: "Score must be between 0 and 100"
       });
       return;
     }
-
     setUpdating(true);
-
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
-
-      const { error: updateError } = await supabase
-        .from("demographic_submissions")
-        .update({
-          status: reviewStatus,
-          score: scoreValue,
-          admin_notes: adminNotes.trim() || null,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: session.user.id,
-        })
-        .eq("id", selectedSubmission.id);
-
+      const {
+        error: updateError
+      } = await supabase.from("demographic_submissions").update({
+        status: reviewStatus,
+        score: scoreValue,
+        admin_notes: adminNotes.trim() || null,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: session.user.id
+      }).eq("id", selectedSubmission.id);
       if (updateError) throw updateError;
-
       if (reviewStatus === "approved") {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            demographics_score: scoreValue,
-          })
-          .eq("id", selectedSubmission.social_accounts.user_id);
-
+        const {
+          error: profileError
+        } = await supabase.from("profiles").update({
+          demographics_score: scoreValue
+        }).eq("id", selectedSubmission.social_accounts.user_id);
         if (profileError) throw profileError;
       }
-
       toast({
         title: "Success",
-        description: "Submission reviewed successfully",
+        description: "Submission reviewed successfully"
       });
-
       setSelectedSubmission(null);
       setScore("");
       setAdminNotes("");
@@ -125,67 +116,66 @@ export default function Demographics() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to update submission",
+        description: error.message || "Failed to update submission"
       });
     } finally {
       setUpdating(false);
     }
   };
-
   const openReviewDialog = (submission: DemographicSubmission) => {
     setSelectedSubmission(submission);
     setScore(submission.score?.toString() || "");
     setAdminNotes(submission.admin_notes || "");
     setReviewStatus(submission.status as "approved" | "rejected" || "approved");
   };
-
   const getStatusBadge = (status: string) => {
     const config = {
-      pending: { variant: "secondary" as const, icon: Clock, color: "text-warning" },
-      approved: { variant: "default" as const, icon: CheckCircle2, color: "text-success" },
-      rejected: { variant: "destructive" as const, icon: XCircle, color: "text-destructive" },
+      pending: {
+        variant: "secondary" as const,
+        icon: Clock,
+        color: "text-warning"
+      },
+      approved: {
+        variant: "default" as const,
+        icon: CheckCircle2,
+        color: "text-success"
+      },
+      rejected: {
+        variant: "destructive" as const,
+        icon: XCircle,
+        color: "text-destructive"
+      }
     };
-    const { variant, icon: Icon, color } = config[status as keyof typeof config] || config.pending;
-    
-    return (
-      <Badge variant={variant} className="flex items-center gap-1">
+    const {
+      variant,
+      icon: Icon,
+      color
+    } = config[status as keyof typeof config] || config.pending;
+    return <Badge variant={variant} className="flex items-center gap-1">
         <Icon className={`h-3 w-3 ${color}`} />
         {status}
-      </Badge>
-    );
+      </Badge>;
   };
-
   const getPlatformIcon = (platform: string) => {
     const icons: Record<string, string> = {
       tiktok: "/src/assets/tiktok-logo.svg",
       instagram: "/src/assets/instagram-logo.svg",
-      youtube: "/src/assets/youtube-logo.svg",
+      youtube: "/src/assets/youtube-logo.svg"
     };
     return icons[platform.toLowerCase()] || null;
   };
-
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
   const approvedSubmissions = submissions.filter(s => s.status === "approved");
   const rejectedSubmissions = submissions.filter(s => s.status === "rejected");
-  const avgTier1 = submissions.length > 0 
-    ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length 
-    : 0;
-
+  const avgTier1 = submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0;
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading submissions...</p>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="p-8 space-y-6 px-[27px] py-0">
+  return <div className="p-8 space-y-6 px-[27px] py-0">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Demographics Review</h1>
-        <p className="text-muted-foreground mt-1">Review and approve creator demographic submissions</p>
-      </div>
+      
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -266,27 +256,17 @@ export default function Demographics() {
 
         {/* Pending Tab */}
         <TabsContent value="pending" className="space-y-4">
-          {pendingSubmissions.length === 0 ? (
-            <Card className="bg-card border-0">
+          {pendingSubmissions.length === 0 ? <Card className="bg-card border-0">
               <CardContent className="py-12 text-center text-muted-foreground">
                 No pending submissions
               </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {pendingSubmissions.map((submission) => (
-                <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
+            </Card> : <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {pendingSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
                   <CardContent className="p-4">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        {getPlatformIcon(submission.social_accounts.platform) && (
-                          <img 
-                            src={getPlatformIcon(submission.social_accounts.platform)!} 
-                            alt={submission.social_accounts.platform}
-                            className="h-5 w-5"
-                          />
-                        )}
+                        {getPlatformIcon(submission.social_accounts.platform) && <img src={getPlatformIcon(submission.social_accounts.platform)!} alt={submission.social_accounts.platform} className="h-5 w-5" />}
                         <div>
                           <h3 className="font-semibold text-base">@{submission.social_accounts.username}</h3>
                           <p className="text-xs text-muted-foreground capitalize">{submission.social_accounts.platform}</p>
@@ -305,65 +285,45 @@ export default function Demographics() {
                     </div>
 
                     {/* Screenshot Preview */}
-                    {submission.screenshot_url ? (
-                      <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
-                        <img
-                          src={submission.screenshot_url}
-                          alt="Demographics screenshot"
-                          className="w-full h-32 object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
+                    {submission.screenshot_url ? <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
+                        <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
+                      </div> : <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
                         <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                      </div>
-                    )}
+                      </div>}
 
                     {/* Footer */}
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">
-                        {new Date(submission.submitted_at).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
+                        {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
                       </span>
-                      <Button size="sm" className="h-7 text-xs" onClick={(e) => {
-                        e.stopPropagation();
-                        openReviewDialog(submission);
-                      }}>
+                      <Button size="sm" className="h-7 text-xs" onClick={e => {
+                  e.stopPropagation();
+                  openReviewDialog(submission);
+                }}>
                         Review
                       </Button>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                </Card>)}
+            </div>}
         </TabsContent>
 
         {/* Approved Tab */}
         <TabsContent value="approved" className="space-y-4">
-          {approvedSubmissions.length === 0 ? (
-            <Card className="bg-card border-0">
+          {approvedSubmissions.length === 0 ? <Card className="bg-card border-0">
               <CardContent className="py-12 text-center text-muted-foreground">
                 No approved submissions
               </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {approvedSubmissions.map((submission) => (
-                <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
+            </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {approvedSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        {getPlatformIcon(submission.social_accounts.platform) && (
-                          <img 
-                            src={getPlatformIcon(submission.social_accounts.platform)!} 
-                            alt={submission.social_accounts.platform}
-                            className="h-5 w-5"
-                          />
-                        )}
+                        {getPlatformIcon(submission.social_accounts.platform) && <img src={getPlatformIcon(submission.social_accounts.platform)!} alt={submission.social_accounts.platform} className="h-5 w-5" />}
                         <div>
                           <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
                         </div>
@@ -382,47 +342,28 @@ export default function Demographics() {
                       </div>
                     </div>
 
-                    {submission.admin_notes && (
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>
-                    )}
+                    {submission.admin_notes && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>}
 
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full h-7 text-xs"
-                      onClick={() => openReviewDialog(submission)}
-                    >
+                    <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => openReviewDialog(submission)}>
                       View Details
                     </Button>
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                </Card>)}
+            </div>}
         </TabsContent>
 
         {/* Rejected Tab */}
         <TabsContent value="rejected" className="space-y-4">
-          {rejectedSubmissions.length === 0 ? (
-            <Card className="bg-card border-0">
+          {rejectedSubmissions.length === 0 ? <Card className="bg-card border-0">
               <CardContent className="py-12 text-center text-muted-foreground">
                 No rejected submissions
               </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {rejectedSubmissions.map((submission) => (
-                <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-destructive/50 transition-all">
+            </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {rejectedSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-destructive/50 transition-all">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        {getPlatformIcon(submission.social_accounts.platform) && (
-                          <img 
-                            src={getPlatformIcon(submission.social_accounts.platform)!} 
-                            alt={submission.social_accounts.platform}
-                            className="h-5 w-5"
-                          />
-                        )}
+                        {getPlatformIcon(submission.social_accounts.platform) && <img src={getPlatformIcon(submission.social_accounts.platform)!} alt={submission.social_accounts.platform} className="h-5 w-5" />}
                         <div>
                           <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
                         </div>
@@ -435,23 +376,14 @@ export default function Demographics() {
                       <p className="text-lg font-bold font-chakra">{submission.tier1_percentage}%</p>
                     </div>
 
-                    {submission.admin_notes && (
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>
-                    )}
+                    {submission.admin_notes && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>}
 
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full h-7 text-xs"
-                      onClick={() => openReviewDialog(submission)}
-                    >
+                    <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => openReviewDialog(submission)}>
                       View Details
                     </Button>
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                </Card>)}
+            </div>}
         </TabsContent>
       </Tabs>
 
@@ -462,17 +394,10 @@ export default function Demographics() {
             <DialogTitle className="text-lg">Review Demographic Submission</DialogTitle>
           </DialogHeader>
 
-          {selectedSubmission && (
-            <div className="space-y-4">
+          {selectedSubmission && <div className="space-y-4">
               {/* Account Info */}
               <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                {getPlatformIcon(selectedSubmission.social_accounts.platform) && (
-                  <img 
-                    src={getPlatformIcon(selectedSubmission.social_accounts.platform)!} 
-                    alt={selectedSubmission.social_accounts.platform}
-                    className="h-6 w-6"
-                  />
-                )}
+                {getPlatformIcon(selectedSubmission.social_accounts.platform) && <img src={getPlatformIcon(selectedSubmission.social_accounts.platform)!} alt={selectedSubmission.social_accounts.platform} className="h-6 w-6" />}
                 <div>
                   <p className="font-semibold">@{selectedSubmission.social_accounts.username}</p>
                   <p className="text-xs text-muted-foreground capitalize">{selectedSubmission.social_accounts.platform}</p>
@@ -486,36 +411,22 @@ export default function Demographics() {
               </div>
 
               {/* Screenshot */}
-              {selectedSubmission.screenshot_url && (
-                <div>
+              {selectedSubmission.screenshot_url && <div>
                   <Label className="text-xs mb-2 block">Demographics Screenshot</Label>
                   <div className="rounded-lg overflow-hidden border">
-                    <img
-                      src={selectedSubmission.screenshot_url}
-                      alt="Demographics screenshot"
-                      className="w-full"
-                    />
+                    <img src={selectedSubmission.screenshot_url} alt="Demographics screenshot" className="w-full" />
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Status Selection */}
               <div className="space-y-2">
                 <Label className="text-xs">Review Decision</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant={reviewStatus === "approved" ? "default" : "outline"}
-                    onClick={() => setReviewStatus("approved")}
-                    className="h-9 text-sm"
-                  >
+                  <Button variant={reviewStatus === "approved" ? "default" : "outline"} onClick={() => setReviewStatus("approved")} className="h-9 text-sm">
                     <CheckCircle2 className="h-4 w-4 mr-2" />
                     Approve
                   </Button>
-                  <Button
-                    variant={reviewStatus === "rejected" ? "destructive" : "outline"}
-                    onClick={() => setReviewStatus("rejected")}
-                    className="h-9 text-sm"
-                  >
+                  <Button variant={reviewStatus === "rejected" ? "destructive" : "outline"} onClick={() => setReviewStatus("rejected")} className="h-9 text-sm">
                     <XCircle className="h-4 w-4 mr-2" />
                     Reject
                   </Button>
@@ -525,55 +436,26 @@ export default function Demographics() {
               {/* Score Input */}
               <div className="space-y-1.5">
                 <Label htmlFor="score" className="text-xs">Score (0-100)</Label>
-                <Input
-                  id="score"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={score}
-                  onChange={(e) => setScore(e.target.value)}
-                  placeholder="Enter score"
-                  className="h-9 text-sm"
-                />
+                <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm" />
               </div>
 
               {/* Admin Notes */}
               <div className="space-y-1.5">
                 <Label htmlFor="notes" className="text-xs">Admin Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="Optional notes about this submission..."
-                  rows={3}
-                  className="text-sm min-h-[70px]"
-                />
+                <Textarea id="notes" value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="Optional notes about this submission..." rows={3} className="text-sm min-h-[70px]" />
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-3 border-t">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setSelectedSubmission(null)}
-                  disabled={updating}
-                  className="flex-1"
-                >
+                <Button variant="outline" size="sm" onClick={() => setSelectedSubmission(null)} disabled={updating} className="flex-1">
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleReview} 
-                  disabled={updating}
-                  size="sm"
-                  className="flex-1"
-                >
+                <Button onClick={handleReview} disabled={updating} size="sm" className="flex-1">
                   {updating ? "Submitting..." : "Submit Review"}
                 </Button>
               </div>
-            </div>
-          )}
+            </div>}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 }
