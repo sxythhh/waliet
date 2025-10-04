@@ -289,7 +289,38 @@ export default function AdminPayouts() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Get current wallet balance first
+    // Find the matching pending transaction
+    const { data: pendingTransaction, error: findError } = await supabase
+      .from("wallet_transactions")
+      .select("id")
+      .eq("user_id", request.user_id)
+      .eq("type", "withdrawal")
+      .eq("amount", -Number(request.amount))
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (findError) {
+      console.error("Error finding transaction:", findError);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to find pending transaction"
+      });
+      return;
+    }
+
+    if (!pendingTransaction) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No matching pending transaction found"
+      });
+      return;
+    }
+
+    // Get current wallet balance
     const { data: walletData, error: walletFetchError } = await supabase
       .from("wallets")
       .select("balance, total_withdrawn")
@@ -323,19 +354,24 @@ export default function AdminPayouts() {
       return;
     }
 
-    // Update existing transaction to completed - match by user, type, amount, and pending status
+    // Update the specific transaction to completed
     const { error: transactionError } = await supabase
       .from("wallet_transactions")
       .update({
         status: 'completed',
         updated_at: new Date().toISOString()
       })
-      .eq("user_id", request.user_id)
-      .eq("type", "withdrawal")
-      .eq("amount", -Number(request.amount))
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1);
+      .eq("id", pendingTransaction.id);
+
+    if (transactionError) {
+      console.error("Failed to update transaction:", transactionError);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update transaction status"
+      });
+      return;
+    }
 
     if (transactionError) {
       console.error("Failed to update transaction:", transactionError);
