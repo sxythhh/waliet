@@ -128,62 +128,100 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-card">
-        <DialogHeader>
-          <DialogTitle>Add Social Account</DialogTitle>
-          <DialogDescription>
-            Connect your social media account for verification
+      <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-card to-card/80 backdrop-blur-xl border-0">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            Connect Your Account
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            Choose your platform and link your social media account
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Platform Selection */}
-          <div className="space-y-2">
-            <Label>Platform</Label>
-            <div className="flex gap-2">
+        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          {/* Platform Selection - Card Style */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Select Platform</Label>
+            <div className="grid grid-cols-3 gap-3">
               {(["tiktok", "instagram", "youtube"] as Platform[]).map((platform) => (
-                <Button
+                <button
                   key={platform}
                   type="button"
-                  variant={selectedPlatform === platform ? "default" : "outline"}
                   onClick={() => setSelectedPlatform(platform)}
-                  className="flex-1 gap-2"
+                  className={`
+                    relative flex flex-col items-center gap-3 p-4 rounded-xl
+                    transition-all duration-300 hover:scale-105
+                    ${selectedPlatform === platform 
+                      ? 'bg-primary/10 ring-2 ring-primary shadow-lg shadow-primary/20' 
+                      : 'bg-muted/30 hover:bg-muted/50'
+                    }
+                  `}
                 >
-                  {getPlatformIcon(platform)}
-                  {getPlatformLabel(platform)}
-                </Button>
+                  <div className={`p-2 rounded-lg ${selectedPlatform === platform ? 'bg-primary/20' : 'bg-background/50'}`}>
+                    {getPlatformIcon(platform)}
+                  </div>
+                  <span className={`text-xs font-medium ${selectedPlatform === platform ? 'text-primary' : 'text-foreground/70'}`}>
+                    {getPlatformLabel(platform)}
+                  </span>
+                  {selectedPlatform === platform && (
+                    <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary animate-pulse" />
+                  )}
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Username */}
+          {/* Username Input */}
           <div className="space-y-2">
-            <Label htmlFor="username">Account Username (don't include the @)</Label>
-            <Input
-              id="username"
-              placeholder="Example: mrbeast"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+            <Label htmlFor="username" className="text-sm font-medium flex items-center gap-2">
+              <span className="text-muted-foreground">@</span>
+              Username
+            </Label>
+            <div className="relative">
+              <Input
+                id="username"
+                placeholder="mrbeast"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Don't include the @ symbol</p>
           </div>
 
-          {/* Account Link */}
+          {/* Account Link Input */}
           <div className="space-y-2">
-            <Label htmlFor="accountLink">Account Link</Label>
-            <Input
-              id="accountLink"
-              type="url"
-              placeholder={`https://${selectedPlatform}.com/@${username || "username"}`}
-              value={accountLink}
-              onChange={(e) => setAccountLink(e.target.value)}
-              required
-            />
+            <Label htmlFor="accountLink" className="text-sm font-medium">
+              Profile Link
+            </Label>
+            <div className="relative">
+              <Input
+                id="accountLink"
+                type="url"
+                placeholder={`https://${selectedPlatform}.com/@${username || "username"}`}
+                value={accountLink}
+                onChange={(e) => setAccountLink(e.target.value)}
+                required
+                className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+              />
+            </div>
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" className="w-full" disabled={uploading}>
-            {uploading ? "Submitting..." : "Submit Account"}
+          <Button 
+            type="submit" 
+            className="w-full h-11 bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-opacity shadow-lg shadow-primary/20" 
+            disabled={uploading}
+          >
+            {uploading ? (
+              <span className="flex items-center gap-2">
+                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Connecting...
+              </span>
+            ) : (
+              "Connect Account"
+            )}
           </Button>
         </form>
       </DialogContent>
