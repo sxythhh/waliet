@@ -16,6 +16,7 @@ interface Course {
   description: string | null;
   order_index: number;
   is_locked?: boolean;
+  banner_url?: string | null;
 }
 
 interface Module {
@@ -246,45 +247,74 @@ export default function Training() {
 
         {!selectedModule ? (
           /* Course Overview */
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <Card key={course.id} className={`bg-[#202020] border-none ${course.is_locked ? 'opacity-60' : ''}`}>
+              <Card key={course.id} className={`bg-[#202020] border-none overflow-hidden group hover:border-white/20 transition-all ${course.is_locked ? 'opacity-60' : ''}`}>
+                {/* Banner Image */}
+                <div className="relative h-48 bg-gradient-to-br from-[#5865F2]/20 to-[#202020] overflow-hidden">
+                  {course.banner_url ? (
+                    <img 
+                      src={course.banner_url} 
+                      alt={course.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <BookOpen className="h-16 w-16 text-white/20" />
+                    </div>
+                  )}
+                  {course.is_locked && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <Lock className="h-12 w-12 text-red-500" />
+                    </div>
+                  )}
+                </div>
+
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    {course.is_locked && <Lock className="h-5 w-5 text-red-500" />}
-                    <h2 className="text-2xl font-bold text-white">{course.title}</h2>
-                    {course.is_locked && (
-                      <span className="ml-auto text-sm text-red-500 font-medium">Locked</span>
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h2 className="text-xl font-bold text-white">{course.title}</h2>
+                      {course.is_locked && (
+                        <span className="text-xs text-red-500 font-medium">Locked</span>
+                      )}
+                    </div>
+                    {course.description && (
+                      <p className="text-white/60 text-sm line-clamp-2">{course.description}</p>
                     )}
                   </div>
-                  {course.description && (
-                    <p className="text-white/60 mb-4">{course.description}</p>
-                  )}
+
                   {course.is_locked ? (
-                    <div className="text-center py-8 text-white/60">
-                      <Lock className="h-12 w-12 mx-auto mb-3 text-red-500/50" />
-                      <p>This course is locked.</p>
-                      <p className="text-sm">Contact your administrator for access.</p>
+                    <div className="text-center py-4 text-white/60 text-sm">
+                      <p>Contact your administrator for access.</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                      {modules[course.id]?.map((module, moduleIndex) => (
-                        <Button
-                          key={module.id}
-                          variant="outline"
-                          className="h-auto min-h-[80px] p-4 justify-start text-left border-white/10 bg-[#191919] hover:bg-white/5"
-                          onClick={() => handleModuleSelect(module.id, course.id, course.is_locked)}
-                        >
-                          <div className="flex items-start gap-3 w-full">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white text-sm font-medium">
-                              {moduleIndex + 1}
+                    <div className="space-y-2">
+                      <div className="text-white/60 text-xs font-medium mb-2">
+                        {modules[course.id]?.length || 0} Modules
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                        {modules[course.id]?.slice(0, 5).map((module, moduleIndex) => (
+                          <Button
+                            key={module.id}
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-3 justify-start text-left border border-white/10 bg-[#191919] hover:bg-white/5 hover:border-white/20"
+                            onClick={() => handleModuleSelect(module.id, course.id, course.is_locked)}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5865F2] flex items-center justify-center text-white text-xs font-medium">
+                                {moduleIndex + 1}
+                              </div>
+                              <span className="text-white/80 text-sm truncate">{module.title}</span>
                             </div>
-                            <div className="flex-1 min-w-0 pt-1">
-                              <div className="text-white font-medium leading-tight break-words">{module.title}</div>
-                            </div>
+                          </Button>
+                        ))}
+                        {modules[course.id]?.length > 5 && (
+                          <div className="text-white/40 text-xs text-center py-2">
+                            +{modules[course.id].length - 5} more modules
                           </div>
-                        </Button>
-                      ))}
+                        )}
+                      </div>
                     </div>
                   )}
                 </CardContent>

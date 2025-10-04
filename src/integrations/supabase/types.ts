@@ -376,6 +376,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          banner_url: string | null
           brand_id: string | null
           created_at: string
           description: string | null
@@ -385,6 +386,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          banner_url?: string | null
           brand_id?: string | null
           created_at?: string
           description?: string | null
@@ -394,6 +396,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          banner_url?: string | null
           brand_id?: string | null
           created_at?: string
           description?: string | null

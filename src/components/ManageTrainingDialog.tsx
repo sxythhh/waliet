@@ -11,11 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { ManageBrandAccessDialog } from "@/components/ManageBrandAccessDialog";
+import { useState as useReactState } from "react";
+import { Upload, Image } from "lucide-react";
 interface Course {
   id: string;
   title: string;
   description: string | null;
   order_index: number;
+  banner_url: string | null;
 }
 interface Module {
   id: string;
@@ -46,6 +49,7 @@ export function ManageTrainingDialog({
   const [loading, setLoading] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Partial<Course> | null>(null);
   const [editingModule, setEditingModule] = useState<Partial<Module> | null>(null);
+  const [uploadingBanner, setUploadingBanner] = useState<string | null>(null);
   useEffect(() => {
     if (open) {
       fetchData();
@@ -107,6 +111,40 @@ export function ManageTrainingDialog({
       setLoading(false);
     }
   };
+  const handleBannerUpload = async (courseId: string, file: File) => {
+    setUploadingBanner(courseId);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${courseId}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course-images')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('course-images')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('courses')
+        .update({ banner_url: publicUrl })
+        .eq('id', courseId);
+
+      if (updateError) throw updateError;
+
+      toast.success("Banner uploaded successfully");
+      fetchData();
+    } catch (error) {
+      console.error("Error uploading banner:", error);
+      toast.error("Failed to upload banner");
+    } finally {
+      setUploadingBanner(null);
+    }
+  };
+
   const saveCourse = async (courseId: string, updates: Partial<Course>) => {
     setLoading(true);
     try {
@@ -218,6 +256,33 @@ export function ManageTrainingDialog({
                   <div className="flex items-center gap-2">
                     
                     <div className="flex-1 space-y-2">
+                      {/* Banner Upload */}
+                      <div className="space-y-2">
+                        <Label className="text-white text-sm flex items-center gap-2">
+                          <Image className="h-4 w-4" />
+                          Course Banner
+                        </Label>
+                        {course.banner_url && (
+                          <div className="relative w-full h-32 rounded-lg overflow-hidden bg-[#202020]">
+                            <img 
+                              src={course.banner_url} 
+                              alt="Course banner"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleBannerUpload(course.id, file);
+                          }}
+                          disabled={uploadingBanner === course.id}
+                          className="bg-[#202020] border-white/10 text-white file:text-white/80"
+                        />
+                      </div>
+                      
                       <Input value={displayCourse?.title || ""} onChange={e => setEditingCourse({
                     ...course,
                     title: e.target.value
