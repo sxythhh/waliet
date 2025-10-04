@@ -769,9 +769,7 @@ export default function BrandManagement() {
                                     year: 'numeric'
                                   })}</span>
                                       
-                                    <Badge variant="outline" className="text-white/70 text-xs border-0 bg-white/5">
-                                        {submission.platform}
-                                      </Badge>
+                                    
                                     </div>
                                   </div>
                                 </div>
