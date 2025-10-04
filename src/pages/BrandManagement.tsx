@@ -724,13 +724,6 @@ export default function BrandManagement() {
                                   </div>
                                 </div>}
 
-                              {/* Content Link */}
-                              {submission.content_url && <div className="pt-4 mt-4">
-                                  <a href={submission.content_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors group-hover:underline">
-                                    <Eye className="h-4 w-4" />
-                                    View content
-                                  </a>
-                                </div>}
                             </div>
                           </CardContent>
                         </Card>;
