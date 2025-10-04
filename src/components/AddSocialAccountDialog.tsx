@@ -141,7 +141,7 @@ export function AddSocialAccountDialog({
                     transition-all duration-300 hover:scale-105
                     ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
                   `}>
-                  <div className={`p-2 rounded-lg ${selectedPlatform === platform ? 'bg-primary/20' : 'bg-background/50'}`}>
+                  <div className="p-2 rounded-lg bg-background/50">
                     {getPlatformIcon(platform)}
                   </div>
                   <span className={`text-xs font-medium ${selectedPlatform === platform ? 'text-white' : 'text-foreground/70'}`}>
