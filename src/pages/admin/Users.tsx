@@ -1147,8 +1147,8 @@ export default function AdminUsers() {
                 <DialogTitle>Review Demographic Submission</DialogTitle>
               </DialogHeader>
 
-              {selectedSubmission && <div className="space-y-6">
-                  <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border border-border/50">
+              {selectedSubmission && <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                     {getPlatformIcon(selectedSubmission.social_accounts.platform)}
                     <div>
                       <p className="font-semibold">@{selectedSubmission.social_accounts.username}</p>
@@ -1157,7 +1157,7 @@ export default function AdminUsers() {
                   </div>
 
                   {selectedSubmission.screenshot_url && <div className="space-y-2">
-                      <Label>Demographics Screenshot</Label>
+                      <Label className="text-sm">Demographics Screenshot</Label>
                       <div className="rounded-lg overflow-hidden border border-border">
                         {selectedSubmission.screenshot_url.endsWith('.mp4') || selectedSubmission.screenshot_url.endsWith('.webm') || selectedSubmission.screenshot_url.endsWith('.mov') ?
                           <video src={selectedSubmission.screenshot_url} className="w-full" controls muted playsInline /> :
@@ -1166,13 +1166,13 @@ export default function AdminUsers() {
                       </div>
                     </div>}
 
-                  <div className="space-y-3">
-                    <Label>Review Decision</Label>
-                    <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm">Review Decision</Label>
+                    <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant={reviewStatus === "approved" ? "default" : "outline"} 
                         onClick={() => setReviewStatus("approved")} 
-                        className="h-11 border-2"
+                        className="h-10"
                       >
                         <CheckCircle2 className="h-4 w-4 mr-2" />
                         Approve
@@ -1180,7 +1180,7 @@ export default function AdminUsers() {
                       <Button 
                         variant={reviewStatus === "rejected" ? "destructive" : "outline"} 
                         onClick={() => setReviewStatus("rejected")} 
-                        className="h-11 border-2"
+                        className="h-10"
                       >
                         <XCircle className="h-4 w-4 mr-2" />
                         Reject
@@ -1189,7 +1189,7 @@ export default function AdminUsers() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="score">Tier 1 Audience Percentage (%)</Label>
+                    <Label htmlFor="score" className="text-sm">Tier 1 Audience Percentage (%)</Label>
                     <Input 
                       id="score" 
                       type="number" 
@@ -1198,23 +1198,22 @@ export default function AdminUsers() {
                       value={score} 
                       onChange={e => setScore(e.target.value)} 
                       placeholder="Enter percentage (0-100)" 
-                      className="h-11"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Admin Notes</Label>
+                    <Label htmlFor="notes" className="text-sm">Admin Notes</Label>
                     <Textarea 
                       id="notes" 
                       value={adminNotes} 
                       onChange={e => setAdminNotes(e.target.value)} 
                       placeholder="Optional notes about this submission..." 
-                      rows={4}
+                      rows={3}
                       className="resize-none"
                     />
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  <div className="flex gap-2 pt-1">
                     <Button 
                       variant="outline" 
                       onClick={() => setSelectedSubmission(null)} 
