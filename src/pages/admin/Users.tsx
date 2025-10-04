@@ -598,9 +598,9 @@ export default function AdminUsers() {
         {status}
       </Badge>;
   };
-  const pendingSubmissions = submissions.filter(s => s.status === "pending");
-  const approvedSubmissions = submissions.filter(s => s.status === "approved");
-  const rejectedSubmissions = submissions.filter(s => s.status === "rejected");
+  const pendingSubmissions = submissions.filter(s => s.status === "pending" && s.social_accounts);
+  const approvedSubmissions = submissions.filter(s => s.status === "approved" && s.social_accounts);
+  const rejectedSubmissions = submissions.filter(s => s.status === "rejected" && s.social_accounts);
   const avgTier1 = submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0;
   const stats = {
     totalUsers: users.length,
@@ -916,7 +916,7 @@ export default function AdminUsers() {
                     No pending submissions
                   </CardContent>
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {pendingSubmissions.filter(submission => submission.social_accounts).map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
+                  {pendingSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -951,7 +951,7 @@ export default function AdminUsers() {
                     No approved submissions
                   </CardContent>
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {approvedSubmissions.filter(submission => submission.social_accounts).map(submission => {
+                  {approvedSubmissions.map(submission => {
                 const submittedDate = new Date(submission.submitted_at);
                 const nextSubmissionDate = new Date(submittedDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                 return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
