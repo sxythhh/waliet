@@ -986,11 +986,11 @@ export function WalletTab() {
                   <Button
                     key={amount}
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => setPayoutAmount(amount.toString())}
                     disabled={wallet?.balance ? wallet.balance < amount : true}
-                    className="bg-[#1a1a1a] border-border/50 hover:bg-[#252525]"
+                    className="bg-[#1a1a1a] hover:bg-[#252525]"
                   >
                     ${amount}
                   </Button>
