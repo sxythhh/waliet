@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp } from "lucide-react";
+import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 interface PayoutRequest {
@@ -59,7 +59,7 @@ export default function AdminPayouts() {
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<PayoutRequest | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [action, setAction] = useState<'approve' | 'reject' | 'complete' | null>(null);
+  const [action, setAction] = useState<'approve' | 'reject' | 'complete' | 'revert' | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [transactionId, setTransactionId] = useState('');
   const [notes, setNotes] = useState('');
@@ -192,7 +192,7 @@ export default function AdminPayouts() {
     rejected: allRequests.filter(r => r.status === 'rejected').length,
     totalPending: allRequests.filter(r => r.status === 'pending').reduce((sum, r) => sum + Number(r.amount), 0)
   }), [allRequests]);
-  const openActionDialog = (request: PayoutRequest, actionType: 'approve' | 'reject' | 'complete') => {
+  const openActionDialog = (request: PayoutRequest, actionType: 'approve' | 'reject' | 'complete' | 'revert') => {
     setSelectedRequest(request);
     setAction(actionType);
     setRejectionReason('');
@@ -200,8 +200,80 @@ export default function AdminPayouts() {
     setNotes('');
     setDialogOpen(true);
   };
+
+  const handleRevertStatus = async () => {
+    if (!selectedRequest) return;
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    let newStatus: 'pending' | 'in_transit' | 'completed' | 'rejected' = 'pending';
+    let updateData: any = {
+      processed_at: new Date().toISOString(),
+      processed_by: session.user.id,
+      notes: notes || null
+    };
+
+    // Determine new status based on current status
+    if (selectedRequest.status === 'in_transit') {
+      newStatus = 'pending';
+      updateData.rejection_reason = null;
+    } else if (selectedRequest.status === 'completed') {
+      newStatus = 'in_transit';
+      updateData.transaction_id = null;
+      
+      // Restore wallet balance
+      const { error: walletError } = await supabase
+        .from("wallets")
+        .update({
+          balance: selectedRequest.amount,
+          total_withdrawn: 0
+        })
+        .eq("user_id", selectedRequest.user_id);
+      
+      if (walletError) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to restore wallet balance"
+        });
+        return;
+      }
+    } else if (selectedRequest.status === 'rejected') {
+      newStatus = 'pending';
+      updateData.rejection_reason = null;
+    }
+
+    updateData.status = newStatus;
+
+    const { error } = await supabase
+      .from("payout_requests")
+      .update(updateData)
+      .eq("id", selectedRequest.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to revert payout status"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: `Payout status reverted to ${newStatus}`
+      });
+      setDialogOpen(false);
+      fetchPayoutRequests();
+    }
+  };
   const handleProcessRequest = async () => {
     if (!selectedRequest || !action) return;
+
+    if (action === 'revert') {
+      await handleRevertStatus();
+      return;
+    }
+
     const {
       data: {
         session
@@ -462,25 +534,43 @@ export default function AdminPayouts() {
                           </div>}
 
                         {/* Action Buttons */}
-                        {(request.status === 'pending' || request.status === 'in_transit') && (
-                          <div className="flex gap-2 pt-3 border-t">
-                            {request.status === 'pending' && <>
-                                <Button size="sm" onClick={() => openActionDialog(request, 'approve')} className="gap-1.5">
-                                  <CheckCircle2 className="h-4 w-4" />
-                                  Approve
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => openActionDialog(request, 'reject')} className="gap-1.5">
-                                  <XCircle className="h-4 w-4" />
-                                  Reject
-                                </Button>
-                              </>}
-                            
-                            {request.status === 'in_transit' && <Button size="sm" onClick={() => openActionDialog(request, 'complete')} className="gap-1.5">
+                        <div className="flex gap-2 pt-3 border-t">
+                          {request.status === 'pending' && <>
+                              <Button size="sm" onClick={() => openActionDialog(request, 'approve')} className="gap-1.5">
+                                <CheckCircle2 className="h-4 w-4" />
+                                Approve
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => openActionDialog(request, 'reject')} className="gap-1.5">
+                                <XCircle className="h-4 w-4" />
+                                Reject
+                              </Button>
+                            </>}
+                          
+                          {request.status === 'in_transit' && <>
+                              <Button size="sm" onClick={() => openActionDialog(request, 'complete')} className="gap-1.5">
                                 <DollarSign className="h-4 w-4" />
                                 Mark as Complete
-                              </Button>}
-                          </div>
-                        )}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1.5">
+                                <RotateCcw className="h-4 w-4" />
+                                Revert to Pending
+                              </Button>
+                            </>}
+
+                          {request.status === 'completed' && (
+                            <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1.5">
+                              <RotateCcw className="h-4 w-4" />
+                              Revert to In Transit
+                            </Button>
+                          )}
+
+                          {request.status === 'rejected' && (
+                            <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1.5">
+                              <RotateCcw className="h-4 w-4" />
+                              Revert to Pending
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>)}
@@ -497,6 +587,7 @@ export default function AdminPayouts() {
               {action === 'approve' && 'Approve Payout'}
               {action === 'reject' && 'Reject Payout'}
               {action === 'complete' && 'Complete Payout'}
+              {action === 'revert' && 'Revert Payout Status'}
             </DialogTitle>
           </DialogHeader>
 
@@ -514,6 +605,22 @@ export default function AdminPayouts() {
               {action === 'complete' && <div className="space-y-2">
                   <Label htmlFor="transactionId">Transaction ID *</Label>
                   <Input id="transactionId" value={transactionId} onChange={e => setTransactionId(e.target.value)} placeholder="Payment transaction ID" />
+                </div>}
+
+              {action === 'revert' && selectedRequest && <div className="p-4 bg-muted/20 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    This will revert the status from <span className="font-semibold text-foreground">{selectedRequest.status}</span> to{' '}
+                    <span className="font-semibold text-foreground">
+                      {selectedRequest.status === 'in_transit' ? 'pending' : 
+                       selectedRequest.status === 'completed' ? 'in transit' : 
+                       'pending'}
+                    </span>.
+                  </p>
+                  {selectedRequest.status === 'completed' && (
+                    <p className="text-sm text-warning">
+                      ⚠️ This will restore the funds to the user's wallet balance.
+                    </p>
+                  )}
                 </div>}
 
               <div className="space-y-2">
