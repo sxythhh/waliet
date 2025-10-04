@@ -141,7 +141,7 @@ const Sidebar = React.forwardRef<
   if (collapsible === "none") {
     return (
       <div
-        className={cn("flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground", className)}
+        className={cn("flex h-full w-[--sidebar-width] flex-col bg-[#202020] text-sidebar-foreground", className)}
         ref={ref}
         {...props}
       >
@@ -156,7 +156,7 @@ const Sidebar = React.forwardRef<
         <SheetContent
           data-sidebar="sidebar"
           data-mobile="true"
-          className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          className="w-[--sidebar-width] bg-[#202020] p-0 text-sidebar-foreground [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -164,7 +164,7 @@ const Sidebar = React.forwardRef<
           }
           side={side}
         >
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex h-full w-full flex-col bg-[#202020]">{children}</div>
         </SheetContent>
       </Sheet>
     );
@@ -206,7 +206,7 @@ const Sidebar = React.forwardRef<
       >
         <div
           data-sidebar="sidebar"
-          className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+          className="flex h-full w-full flex-col bg-[#202020] group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
         >
           {children}
         </div>
