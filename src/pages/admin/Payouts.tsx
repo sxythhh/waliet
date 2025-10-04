@@ -662,6 +662,21 @@ export default function AdminPayouts() {
                             </p>
                           </div>
 
+                          {request.profiles?.wallets && (
+                            <>
+                              <div>
+                                <p className="text-[10px] text-muted-foreground mb-0.5">Current Balance</p>
+                                <p className="font-medium text-xs">${Number(request.profiles.wallets.balance).toFixed(2)}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-muted-foreground mb-0.5">Balance After Payout</p>
+                                <p className="font-medium text-xs">
+                                  ${(Number(request.profiles.wallets.balance) + (request.status === 'rejected' ? Number(request.amount) : 0)).toFixed(2)}
+                                </p>
+                              </div>
+                            </>
+                          )}
+
                           {request.processed_at && <div className="col-span-2">
                               <p className="text-[10px] text-muted-foreground mb-0.5">Processed Date</p>
                               <p className="font-medium text-xs flex items-center gap-1">
