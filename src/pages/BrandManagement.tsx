@@ -222,11 +222,11 @@ export default function BrandManagement() {
         return false;
       });
 
-      // Fetch social accounts separately - match by user and platform only
+      // Fetch social accounts separately - match by platform and campaign
       const submissionsWithAccounts = await Promise.all(filteredData.map(async submission => {
         const {
           data: accounts
-        } = await supabase.from("social_accounts").select("id, platform, username, follower_count, account_link").eq("user_id", submission.creator_id).eq("platform", submission.platform);
+        } = await supabase.from("social_accounts").select("id, platform, username, follower_count, account_link").eq("user_id", submission.creator_id).eq("campaign_id", selectedCampaignId).eq("platform", submission.platform);
         return {
           ...submission,
           profiles: {
