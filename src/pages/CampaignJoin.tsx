@@ -125,16 +125,14 @@ export default function CampaignJoin() {
         content_url: "pending",
         status: "pending"
       }));
-
-      const { data, error } = await supabase
-        .from("campaign_submissions")
-        .insert(submissions);
-
+      const {
+        data,
+        error
+      } = await supabase.from("campaign_submissions").insert(submissions);
       if (error) {
         console.error("Submission error details:", error);
         throw error;
       }
-      
       toast.success(`Application${selectedAccounts.length > 1 ? 's' : ''} submitted successfully!`);
       navigate("/dashboard");
     } catch (error) {
@@ -218,67 +216,7 @@ export default function CampaignJoin() {
       {/* Step Process */}
       <div className="max-w-3xl mx-auto px-6">
         {/* Step 1: Campaign Requirements */}
-        <div className="relative flex gap-6 mb-4">
-          {/* Step Indicator */}
-          <div className="flex flex-col items-center pt-1">
-            
-            {currentStep === 1}
-          </div>
-
-          {/* Step Content */}
-          <div className="flex-1 pb-8">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
-            </div>
-            
-            <Card className="bg-card border hover:bg-card/80 transition-colors cursor-pointer" onClick={() => setCurrentStep(currentStep === 1 ? 2 : 1)}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold mb-1">Campaign Requirements</div>
-                    <div className="text-sm text-muted-foreground">
-                      Please ensure you have gone through all campaign details
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-                
-                {currentStep === 1 && <div className="mt-4 pt-4 border-t space-y-4">
-                    {campaign.description && <div>
-                        <div className="text-sm font-medium mb-2">Description</div>
-                        <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                      </div>}
-                    
-                    {campaign.guidelines && <div>
-                        <div className="text-sm font-medium mb-2">Guidelines</div>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{campaign.guidelines}</p>
-                      </div>}
-                    
-                    <div>
-                      <div className="text-sm font-medium mb-2">Platforms</div>
-                      <div className="flex gap-2">
-                        {campaign.allowed_platforms.map(platform => <div key={platform} className="px-3 py-1 bg-muted rounded-full text-xs">
-                            {platform === "tiktok" ? "TikTok" : "Instagram"}
-                          </div>)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-medium mb-2">RPM Rate</div>
-                      <div className="text-2xl font-bold text-primary">${campaign.rpm_rate}</div>
-                    </div>
-
-                    <Button onClick={e => {
-                  e.stopPropagation();
-                  setCurrentStep(2);
-                }} className="w-auto px-8">
-                      Continue to Account Selection
-                    </Button>
-                  </div>}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        
 
         {/* Step 2: Select Account */}
         {currentStep >= 2 && <div className="relative flex gap-6 mb-8">
@@ -303,7 +241,6 @@ export default function CampaignJoin() {
                 const isCompatible = campaign.allowed_platforms.includes(account.platform);
                 const isDisabled = isLinkedToCampaign || !isCompatible;
                 const isSelected = selectedAccounts.some(acc => acc.id === account.id);
-                
                 return <div key={account.id} onClick={() => {
                   if (isDisabled) return;
 
@@ -337,15 +274,9 @@ export default function CampaignJoin() {
                     Connect Another Account
                   </Button>
 
-                  {selectedAccounts.length > 0 && (
-                    <Button 
-                      onClick={onSubmit} 
-                      disabled={submitting} 
-                      className="w-full mt-4"
-                    >
+                  {selectedAccounts.length > 0 && <Button onClick={onSubmit} disabled={submitting} className="w-full mt-4">
                       {submitting ? "Submitting..." : `Submit Application${selectedAccounts.length > 1 ? 's' : ''} (${selectedAccounts.length})`}
-                    </Button>
-                  )}
+                    </Button>}
                 </>}
             </div>
           </div>}
