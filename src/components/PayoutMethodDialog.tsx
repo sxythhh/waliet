@@ -5,8 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wallet, Landmark, CreditCard } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import wiseLogo from "@/assets/wise-logo.svg";
-import wiseLogoBlue from "@/assets/wise-logo-blue.svg";
 import paypalLogo from "@/assets/paypal-logo-grey.svg";
 import paypalLogoBlue from "@/assets/paypal-logo.svg";
 import ethereumLogo from "@/assets/ethereum-logo.png";
@@ -65,9 +63,6 @@ export default function PayoutMethodDialog({
   const [routingNumber, setRoutingNumber] = useState("");
   const [accountHolderName, setAccountHolderName] = useState("");
 
-  // Wise fields
-  const [wiseEmail, setWiseEmail] = useState("");
-
   // Revolut fields
   const [revolutTag, setRevolutTag] = useState("");
 
@@ -88,11 +83,6 @@ export default function PayoutMethodDialog({
       onSave("paypal", {
         email: paypalEmail
       });
-    } else if (selectedMethod === "wise") {
-      if (!wiseEmail) return;
-      onSave("wise", {
-        email: wiseEmail
-      });
     } else if (selectedMethod === "revolut") {
       if (!revolutTag) return;
       onSave("revolut", {
@@ -110,7 +100,6 @@ export default function PayoutMethodDialog({
     // Reset all fields
     setWalletAddress("");
     setPaypalEmail("");
-    setWiseEmail("");
     setRevolutTag("");
     setCardNumber("");
     setLegalName("");
@@ -141,12 +130,6 @@ export default function PayoutMethodDialog({
             icon: paypalLogo,
             iconActive: paypalLogoBlue,
             label: "PayPal",
-            isLogo: true
-          }, {
-            id: "wise",
-            icon: wiseLogo,
-            iconActive: wiseLogoBlue,
-            label: "Wise",
             isLogo: true
           }, {
             id: "revolut",
@@ -236,16 +219,6 @@ export default function PayoutMethodDialog({
                   <Input id="paypal-email" type="email" placeholder="your.email@example.com" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
                 </div>}
 
-              {selectedMethod === "wise" && <div className="space-y-3">
-                  <Label htmlFor="wise-email" className="font-medium text-muted-foreground" style={{
-              fontSize: '11px',
-              letterSpacing: '-0.5px'
-            }}>
-                    WISE EMAIL
-                  </Label>
-                  <Input id="wise-email" type="email" placeholder="your.email@example.com" value={wiseEmail} onChange={e => setWiseEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
-                </div>}
-
               {selectedMethod === "revolut" && <div className="space-y-3">
                   <Label htmlFor="revolut-tag" className="font-medium text-muted-foreground" style={{
               fontSize: '11px',
@@ -292,7 +265,7 @@ export default function PayoutMethodDialog({
             <Button variant="outline" className="flex-1 h-12 bg-[#0f0f0f] border-[#2a2a2a] hover:bg-[#1a1a1a]" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "wise" && !wiseEmail || selectedMethod === "revolut" && !revolutTag || selectedMethod === "debit" && (!cardNumber || !legalName || !address)}>
+            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "revolut" && !revolutTag || selectedMethod === "debit" && (!cardNumber || !legalName || !address)}>
               Add Method
             </Button>
           </div>}
