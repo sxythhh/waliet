@@ -8,6 +8,7 @@ import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -138,7 +139,8 @@ export function CampaignsTab() {
       </div>;
   }
   if (campaigns.length === 0) {
-    return <div className="text-center py-12">
+    return <div className="text-center py-12 flex flex-col items-center gap-4">
+        <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
         <p className="text-muted-foreground">You haven't joined any campaigns yet</p>
       </div>;
   }
