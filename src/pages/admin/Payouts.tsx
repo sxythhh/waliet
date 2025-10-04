@@ -694,10 +694,6 @@ export default function AdminPayouts() {
                         {/* Action Buttons */}
                         <div className="flex gap-1.5 pt-2 border-t">
                         {request.status === 'pending' && <>
-                              <Button size="sm" onClick={() => openActionDialog(request, 'approve')} className="gap-1 h-8 text-xs px-2.5">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Approve
-                              </Button>
                               <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1 bg-green-600 hover:bg-green-700 text-white border-0 h-8 text-xs px-2.5">
                                 <DollarSign className="h-3.5 w-3.5" />
                                 Mark as Completed
