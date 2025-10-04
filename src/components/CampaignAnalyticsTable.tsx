@@ -249,17 +249,28 @@ export function CampaignAnalyticsTable({
 
       // If no matching social account exists, create one
       if (!socialAccount) {
-        const {
-          error: createError
-        } = await supabase.from('social_accounts').insert({
+        console.log('Creating social account for user:', userId, 'platform:', selectedAnalyticsAccount.platform);
+        const insertData = {
           user_id: userId,
           campaign_id: campaignId,
           platform: selectedAnalyticsAccount.platform,
-          username: selectedAnalyticsAccount.account_username,
+          username: selectedAnalyticsAccount.account_username.replace('@', ''),
           account_link: selectedAnalyticsAccount.account_link,
-          is_verified: true
-        });
-        if (createError) throw createError;
+          is_verified: true,
+          follower_count: 0
+        };
+        console.log('Insert data:', insertData);
+        
+        const {
+          data: newAccount,
+          error: createError
+        } = await supabase.from('social_accounts').insert(insertData).select();
+        
+        if (createError) {
+          console.error('Error creating social account:', createError);
+          throw createError;
+        }
+        console.log('Successfully created social account:', newAccount);
       }
       toast.success("Account successfully linked to user");
       setLinkAccountDialogOpen(false);
