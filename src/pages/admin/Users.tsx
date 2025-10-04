@@ -112,6 +112,9 @@ export default function AdminUsers() {
   const [adminNotes, setAdminNotes] = useState("");
   const [reviewStatus, setReviewStatus] = useState<"approved" | "rejected">("approved");
   const [updating, setUpdating] = useState(false);
+  const [editScoreDialogOpen, setEditScoreDialogOpen] = useState(false);
+  const [editingSubmission, setEditingSubmission] = useState<DemographicSubmission | null>(null);
+  const [editScore, setEditScore] = useState("");
   const {
     toast
   } = useToast();
@@ -491,6 +494,58 @@ export default function AdminUsers() {
     setScore(submission.score?.toString() || "");
     setAdminNotes(submission.admin_notes || "");
     setReviewStatus(submission.status as "approved" | "rejected" || "approved");
+  };
+  const openEditScoreDialog = (submission: DemographicSubmission) => {
+    setEditingSubmission(submission);
+    setEditScore(submission.score?.toString() || "");
+    setEditScoreDialogOpen(true);
+  };
+  const handleUpdateScore = async () => {
+    if (!editingSubmission) return;
+    const scoreValue = parseInt(editScore);
+    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Score",
+        description: "Score must be between 0 and 100"
+      });
+      return;
+    }
+    setUpdating(true);
+    try {
+      const { error: updateError } = await supabase
+        .from("demographic_submissions")
+        .update({ score: scoreValue })
+        .eq("id", editingSubmission.id);
+      
+      if (updateError) throw updateError;
+
+      // Also update the profile's demographics score
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ demographics_score: scoreValue })
+        .eq("id", editingSubmission.social_accounts.user_id);
+      
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Success",
+        description: "Demographics score updated successfully"
+      });
+      
+      setEditScoreDialogOpen(false);
+      setEditingSubmission(null);
+      setEditScore("");
+      fetchSubmissions();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update score"
+      });
+    } finally {
+      setUpdating(false);
+    }
   };
   const getStatusBadge = (status: string) => {
     const config = {
@@ -930,7 +985,10 @@ export default function AdminUsers() {
                           </div>
                         </a>
 
-                        <div className="bg-[#0d0d0d] rounded-lg p-3 mb-3">
+                        <div 
+                          className="bg-[#0d0d0d] rounded-lg p-3 mb-3 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+                          onClick={() => openEditScoreDialog(submission)}
+                        >
                           <p className="text-[10px] text-muted-foreground mb-0.5">Demographics Score</p>
                           <p className="text-2xl font-bold font-chakra text-success">{submission.score}</p>
                         </div>
@@ -1030,5 +1088,50 @@ export default function AdminUsers() {
           </Dialog>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Score Dialog */}
+      <Dialog open={editScoreDialogOpen} onOpenChange={setEditScoreDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Demographics Score</DialogTitle>
+            <DialogDescription>
+              Update the demographics score for @{editingSubmission?.social_accounts.username}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-score">Score (0-100)</Label>
+              <Input 
+                id="edit-score"
+                type="number" 
+                min="0" 
+                max="100" 
+                value={editScore} 
+                onChange={e => setEditScore(e.target.value)} 
+                placeholder="Enter score"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setEditScoreDialogOpen(false)}
+                disabled={updating}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleUpdateScore}
+                disabled={updating}
+                className="flex-1"
+              >
+                {updating ? "Updating..." : "Update Score"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>;
 }
