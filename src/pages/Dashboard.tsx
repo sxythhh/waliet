@@ -65,12 +65,7 @@ export default function Dashboard() {
         </div>}
 
       {/* Sign Out button for other tabs (except discover, referrals and wallet) */}
-      {currentTab !== "campaigns" && currentTab !== "discover" && currentTab !== "referrals" && currentTab !== "wallet" && <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Profile</h1>
-          <Button onClick={handleSignOut} variant="outline" className="border-none">
-            Sign Out
-          </Button>
-        </div>}
+      {currentTab !== "campaigns" && currentTab !== "discover" && currentTab !== "referrals" && currentTab !== "wallet"}
 
       {/* Main Tabs */}
       <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
