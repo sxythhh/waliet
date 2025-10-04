@@ -128,9 +128,9 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-card to-card/80 backdrop-blur-xl border-0">
+      <DialogContent className="sm:max-w-[500px] bg-card backdrop-blur-xl border-0">
         <DialogHeader className="space-y-3">
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-bold text-white">
             Connect Your Account
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -152,7 +152,7 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
                     relative flex flex-col items-center gap-3 p-4 rounded-xl
                     transition-all duration-300 hover:scale-105
                     ${selectedPlatform === platform 
-                      ? 'bg-primary/10 ring-2 ring-primary shadow-lg shadow-primary/20' 
+                      ? 'bg-primary/10 ring-2 ring-primary' 
                       : 'bg-muted/30 hover:bg-muted/50'
                     }
                   `}
@@ -163,9 +163,6 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
                   <span className={`text-xs font-medium ${selectedPlatform === platform ? 'text-primary' : 'text-foreground/70'}`}>
                     {getPlatformLabel(platform)}
                   </span>
-                  {selectedPlatform === platform && (
-                    <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary animate-pulse" />
-                  )}
                 </button>
               ))}
             </div>
@@ -211,7 +208,7 @@ export function AddSocialAccountDialog({ open, onOpenChange, onSuccess }: AddSoc
           {/* Submit Button */}
           <Button 
             type="submit" 
-            className="w-full h-11 bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-opacity shadow-lg shadow-primary/20" 
+            className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors" 
             disabled={uploading}
           >
             {uploading ? (
