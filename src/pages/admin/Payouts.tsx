@@ -860,43 +860,88 @@ export default function AdminPayouts() {
                     </div> : userTransactions.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
                       No transactions yet
                     </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                      {userTransactions.map(transaction => <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                          <div className="flex items-center justify-between gap-4">
-                            {/* Transaction Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium capitalize">{transaction.type}</span>
-                                <span className={`text-xs px-2 py-0.5 rounded ${
-                                  transaction.status === 'completed' 
-                                    ? 'bg-success/10 text-success' 
-                                    : 'bg-muted text-muted-foreground'
-                                }`}>
-                                  {transaction.status}
-                                </span>
-                              </div>
-                              {transaction.description && (
-                                <p className="text-sm text-muted-foreground truncate">
-                                  {transaction.description}
+                      {userTransactions.map(transaction => {
+                        const metadata = transaction.metadata as any;
+                        const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
+                        
+                        return <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+                          <div className="space-y-3">
+                            {/* Header: Type, Status, Amount */}
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium capitalize text-sm">{transaction.type}</span>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
+                                    transaction.status === 'completed' 
+                                      ? 'bg-green-500/10 text-green-500' 
+                                      : transaction.status === 'pending'
+                                      ? 'bg-orange-500/10 text-orange-500'
+                                      : transaction.status === 'in_transit'
+                                      ? 'bg-blue-500/10 text-blue-500'
+                                      : 'bg-muted text-muted-foreground'
+                                  }`}>
+                                    {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  <Clock className="h-3 w-3 inline mr-1" />
+                                  {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
                                 </p>
-                              )}
+                              </div>
+                              
+                              <div className="text-right shrink-0">
+                                <p className={`text-lg font-semibold ${
+                                  isWithdrawal ? 'text-red-500' : 'text-green-500'
+                                }`} style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+                                  {isWithdrawal ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                                </p>
+                              </div>
                             </div>
-                            
-                            {/* Amount & Date */}
-                            <div className="text-right shrink-0">
-                              <p className={`font-semibold ${
-                                transaction.type === 'withdrawal' || transaction.type === 'deduction'
-                                  ? 'text-destructive' 
-                                  : 'text-success'
-                              }`}>
-                                {transaction.type === 'withdrawal' || transaction.type === 'deduction' ? '-' : '+'}
-                                ${Math.abs(transaction.amount).toFixed(2)}
+
+                            {/* Payment Method & Network (for withdrawals) */}
+                            {isWithdrawal && metadata && (
+                              <div className="grid grid-cols-2 gap-3 p-2 bg-muted/20 rounded-md">
+                                {metadata.payout_method && (
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Payment Method</p>
+                                    <p className="text-xs font-medium capitalize">{metadata.payout_method}</p>
+                                  </div>
+                                )}
+                                {metadata.network && (
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Network</p>
+                                    <p className="text-xs font-medium capitalize">{metadata.network}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Balance Change */}
+                            {metadata?.balance_before !== undefined && metadata?.balance_after !== undefined && (
+                              <div className="p-2 bg-muted/20 rounded-md">
+                                <div className="flex items-center justify-between text-xs">
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground">Balance Before</p>
+                                    <p className="font-medium">${Number(metadata.balance_before).toFixed(2)}</p>
+                                  </div>
+                                  <div className="text-muted-foreground">→</div>
+                                  <div className="text-right">
+                                    <p className="text-[10px] text-muted-foreground">Balance After</p>
+                                    <p className="font-medium">${Number(metadata.balance_after).toFixed(2)}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Description */}
+                            {transaction.description && (
+                              <p className="text-xs text-muted-foreground truncate pt-1 border-t">
+                                {transaction.description}
                               </p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(transaction.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
+                            )}
                           </div>
-                        </div>)}
+                        </div>
+                      })}
                     </div>}
                 </CollapsibleContent>
               </Collapsible>
