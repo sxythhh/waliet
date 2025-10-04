@@ -219,12 +219,7 @@ export default function AdminCampaigns() {
                   </div>
 
                   {/* Dates */}
-                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <Calendar className="w-3 h-3" />
-                    <span>
-                      {format(new Date(campaign.start_date), 'MMM d')} - {format(new Date(campaign.end_date), 'MMM d, yyyy')}
-                    </span>
-                  </div>
+                  
 
                   {/* Actions */}
                   <div className="mt-auto pt-2 flex gap-2">
@@ -261,17 +256,17 @@ export default function AdminCampaigns() {
               <div className="space-y-1.5">
                 <Label htmlFor="title" className="text-xs">Title *</Label>
                 <Input id="title" className="h-9 text-sm" value={editForm.title} onChange={e => setEditForm({
-              ...editForm,
-              title: e.target.value
-            })} />
+                ...editForm,
+                title: e.target.value
+              })} />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="brand" className="text-xs">Brand Name *</Label>
                 <Input id="brand" className="h-9 text-sm" value={editForm.brand_name} onChange={e => setEditForm({
-              ...editForm,
-              brand_name: e.target.value
-            })} />
+                ...editForm,
+                brand_name: e.target.value
+              })} />
               </div>
             </div>
 
