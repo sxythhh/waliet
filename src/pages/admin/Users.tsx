@@ -1021,12 +1021,17 @@ export default function AdminUsers() {
                     
                     return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
                       <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-3">
+                        <a 
+                          href={`https://${submission.social_accounts.platform}.com/${submission.social_accounts.username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 mb-3 hover:bg-muted/20 p-2 -m-2 rounded-lg transition-colors group"
+                        >
                           {getPlatformIcon(submission.social_accounts.platform)}
                           <div>
-                            <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
+                            <h3 className="font-semibold text-sm group-hover:underline">@{submission.social_accounts.username}</h3>
                           </div>
-                        </div>
+                        </a>
 
                         <div className="bg-[#0d0d0d] rounded-lg p-3 mb-3">
                           <p className="text-[10px] text-muted-foreground mb-0.5">Demographics Score</p>
