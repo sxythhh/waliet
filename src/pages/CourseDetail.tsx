@@ -165,34 +165,18 @@ export default function CourseDetail() {
 
   return (
     <div className="min-h-screen bg-[#191919]">
-      {/* Header */}
-      <div className="bg-[#202020] border-b border-white/10 px-4 md:px-8 py-4">
+      {/* Simple Header */}
+      <div className="bg-[#202020] border-b border-white/10 px-4 md:px-8 py-3">
         <div className="max-w-7xl mx-auto">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate(`/brand/${slug}/training`)}
-            className="text-white/60 hover:text-white mb-4"
+            className="text-white/60 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Courses
           </Button>
-
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{course.title}</h1>
-          {course.description && (
-            <p className="text-white/60 mb-4">{course.description}</p>
-          )}
-
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-white/60">Course Progress</span>
-              <span className="text-white font-medium">
-                {completedCount} / {totalCount} modules completed
-              </span>
-            </div>
-            <Progress value={progressPercentage} className="h-2" />
-          </div>
         </div>
       </div>
 
@@ -200,8 +184,27 @@ export default function CourseDetail() {
       <div className="flex max-w-7xl mx-auto">
         {/* Sidebar */}
         <div className="hidden lg:block w-80 border-r border-white/10 bg-[#202020] min-h-screen">
-          <div className="p-4 sticky top-0">
-            <h2 className="text-white font-semibold mb-4">Course Modules</h2>
+          <div className="p-4 sticky top-0 max-h-screen overflow-y-auto">
+            {/* Course Info */}
+            <div className="mb-6 pb-6 border-b border-white/10">
+              <h1 className="text-xl font-bold text-white mb-2">{course.title}</h1>
+              {course.description && (
+                <p className="text-white/60 text-sm mb-4">{course.description}</p>
+              )}
+              
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/60">Progress</span>
+                  <span className="text-white font-medium">
+                    {completedCount}/{totalCount}
+                  </span>
+                </div>
+                <Progress value={progressPercentage} className="h-2" />
+              </div>
+            </div>
+
+            <h2 className="text-white font-semibold mb-3 text-sm uppercase tracking-wide">Modules</h2>
             <div className="space-y-1">
               {modules.map((module, index) => {
                 const isCompleted = completions.some(c => c.module_id === module.id);
