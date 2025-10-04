@@ -89,7 +89,7 @@ export function UserDetailsDialog({
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl bg-[#0b0b0b]">
         {/* User Header */}
-        <div className="flex items-start gap-4 pb-6 border-b py-0 my-0">
+        <div className="flex items-start gap-4 pb-3 border-b py-0 my-0">
           {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-16 w-16 rounded-full object-cover" /> : <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
               <UsersIcon className="h-8 w-8 text-primary" />
             </div>}
@@ -102,7 +102,7 @@ export function UserDetailsDialog({
               </p>}
             
             {/* Wallet Stats */}
-            <div className="grid grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-3 gap-2 mt-2">
               <div className="bg-card/50 px-3 py-2 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Balance</p>
                 <p className="text-lg font-semibold text-success">
@@ -126,7 +126,7 @@ export function UserDetailsDialog({
         </div>
 
         {/* Social Accounts Section - Collapsible */}
-        <Collapsible open={socialAccountsOpen} onOpenChange={onSocialAccountsOpenChange} className="pt-6 border-t py-0">
+        <Collapsible open={socialAccountsOpen} onOpenChange={onSocialAccountsOpenChange} className="pt-3 border-t py-0">
           <CollapsibleTrigger className="w-full">
             <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
@@ -199,7 +199,7 @@ export function UserDetailsDialog({
         </Collapsible>
 
         {/* Recent Transactions Section - Collapsible */}
-        <Collapsible open={transactionsOpen} onOpenChange={onTransactionsOpenChange} className="pt-6 border-t">
+        <Collapsible open={transactionsOpen} onOpenChange={onTransactionsOpenChange} className="pt-3 border-t">
           <CollapsibleTrigger className="w-full">
             <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
