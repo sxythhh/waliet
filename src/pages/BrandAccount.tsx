@@ -110,6 +110,21 @@ export default function BrandAccount() {
     );
   }
 
+  // If account URL is configured, show the iframe embed
+  if (accountUrl) {
+    return (
+      <div className="h-screen w-full bg-[#191919]">
+        <iframe 
+          src={accountUrl} 
+          className="w-full h-full border-0" 
+          title="Account Page" 
+          sandbox="allow-scripts allow-same-origin allow-forms" 
+        />
+      </div>
+    );
+  }
+
+  // Otherwise, show the configuration page (admin only)
   return (
     <div className="min-h-screen p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto">
