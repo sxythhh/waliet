@@ -463,7 +463,7 @@ export function ProfileTab() {
                           {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
                           {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
                         </div>
-                        {submissionTimestamp && <span className="text-muted-foreground px-0 text-[[10px]] text-left font-normal">
+                        {submissionTimestamp && <span className="text-muted-foreground px-0 text-left font-normal text-xs">
                           Last submitted {submissionTimestamp}
                         </span>}
                       </div>
