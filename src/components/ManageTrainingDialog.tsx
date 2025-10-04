@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { RichTextEditor } from "@/components/RichTextEditor";
 
 interface Course {
@@ -299,71 +300,91 @@ export function ManageTrainingDialog({ onSuccess, initialExpandedCourseId, open:
                       Add Module
                     </Button>
 
-                    {modules[course.id]?.map((module, index) => {
-                      const isEditingModule = editingModule?.id === module.id;
-                      const displayModule = isEditingModule ? editingModule : module;
-                      
-                      return (
-                        <div key={module.id} className="bg-[#202020] p-4 rounded-lg space-y-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-white/60 text-sm">Module {index + 1}</span>
-                            <Input
-                              value={displayModule?.title || ""}
-                              onChange={(e) => setEditingModule({ ...module, title: e.target.value })}
-                              className="flex-1 bg-[#191919] border-white/10 text-white"
-                              placeholder="Module Title"
-                            />
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => deleteModule(module.id)}
-                              className="text-destructive/60 hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-white text-sm">Video URL (YouTube, Vimeo, etc.)</Label>
-                            <Input
-                              value={displayModule?.video_url || ""}
-                              onChange={(e) => setEditingModule({ ...module, video_url: e.target.value })}
-                              className="bg-[#191919] border-white/10 text-white"
-                              placeholder="https://www.youtube.com/embed/..."
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-white text-sm">Content</Label>
-                            <RichTextEditor
-                              content={displayModule?.content || ""}
-                              onChange={(content) => setEditingModule({ ...module, content })}
-                              placeholder="Write your course content here..."
-                            />
-                          </div>
-                          {isEditingModule && (
-                            <div className="flex gap-2">
+                    <Accordion type="single" collapsible className="space-y-2">
+                      {modules[course.id]?.map((module, index) => {
+                        const isEditingModule = editingModule?.id === module.id;
+                        const displayModule = isEditingModule ? editingModule : module;
+                        
+                        return (
+                          <AccordionItem 
+                            key={module.id} 
+                            value={module.id}
+                            className="bg-[#202020] border-white/10 rounded-lg px-4"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-white/60 text-sm whitespace-nowrap">Module {index + 1}</span>
+                              <AccordionTrigger className="flex-1 hover:no-underline py-3">
+                                <span className="text-white font-medium truncate text-left">
+                                  {displayModule?.title || "Untitled Module"}
+                                </span>
+                              </AccordionTrigger>
                               <Button
-                                size="sm"
-                                onClick={() => saveModule(module.id, {
-                                  title: displayModule?.title,
-                                  video_url: displayModule?.video_url,
-                                  content: displayModule?.content
-                                })}
-                                disabled={loading}
-                              >
-                                Save Module
-                              </Button>
-                              <Button
-                                size="sm"
+                                size="icon"
                                 variant="ghost"
-                                onClick={() => setEditingModule(null)}
+                                onClick={() => deleteModule(module.id)}
+                                className="text-destructive/60 hover:text-destructive"
                               >
-                                Cancel
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            
+                            <AccordionContent className="space-y-4 pt-2 pb-4">
+                              <div className="space-y-2">
+                                <Label className="text-white text-sm">Module Title</Label>
+                                <Input
+                                  value={displayModule?.title || ""}
+                                  onChange={(e) => setEditingModule({ ...module, title: e.target.value })}
+                                  className="bg-[#191919] border-white/10 text-white"
+                                  placeholder="Enter module title"
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label className="text-white text-sm">Video URL (YouTube, Vimeo, etc.)</Label>
+                                <Input
+                                  value={displayModule?.video_url || ""}
+                                  onChange={(e) => setEditingModule({ ...module, video_url: e.target.value })}
+                                  className="bg-[#191919] border-white/10 text-white"
+                                  placeholder="https://www.youtube.com/embed/..."
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label className="text-white text-sm">Content</Label>
+                                <RichTextEditor
+                                  content={displayModule?.content || ""}
+                                  onChange={(content) => setEditingModule({ ...module, content })}
+                                  placeholder="Write your course content here..."
+                                />
+                              </div>
+                              
+                              {isEditingModule && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => saveModule(module.id, {
+                                      title: displayModule?.title,
+                                      video_url: displayModule?.video_url,
+                                      content: displayModule?.content
+                                    })}
+                                    disabled={loading}
+                                  >
+                                    Save Module
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setEditingModule(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
                   </CardContent>
                 )}
               </Card>
