@@ -1062,7 +1062,10 @@ export default function AdminUsers() {
                         </div>
 
                         {submission.screenshot_url ? <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
-                            <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
+                            {submission.screenshot_url.endsWith('.mp4') || submission.screenshot_url.endsWith('.webm') || submission.screenshot_url.endsWith('.mov') ? 
+                              <video src={submission.screenshot_url} className="w-full h-32 object-cover" controls /> :
+                              <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
+                            }
                           </div> : <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
                             <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
                           </div>}
@@ -1186,7 +1189,10 @@ export default function AdminUsers() {
                   {selectedSubmission.screenshot_url && <div>
                       <Label className="text-xs mb-2 block">Demographics Screenshot</Label>
                       <div className="rounded-lg overflow-hidden border">
-                        <img src={selectedSubmission.screenshot_url} alt="Demographics screenshot" className="w-full" />
+                        {selectedSubmission.screenshot_url.endsWith('.mp4') || selectedSubmission.screenshot_url.endsWith('.webm') || selectedSubmission.screenshot_url.endsWith('.mov') ?
+                          <video src={selectedSubmission.screenshot_url} className="w-full" controls /> :
+                          <img src={selectedSubmission.screenshot_url} alt="Demographics screenshot" className="w-full" />
+                        }
                       </div>
                     </div>}
 
