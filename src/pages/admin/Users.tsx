@@ -17,6 +17,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
+
 interface User {
   id: string;
   username: string;
@@ -269,11 +273,11 @@ export default function AdminUsers() {
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'tiktok':
-        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="h-5 w-5" />;
+        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
       case 'instagram':
-        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="h-5 w-5" />;
+        return <img src={instagramLogo} alt="Instagram" className="h-5 w-5" />;
       case 'youtube':
-        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="h-5 w-5" />;
+        return <img src={youtubeLogo} alt="YouTube" className="h-5 w-5" />;
       default:
         return <UsersIcon className="h-5 w-5" />;
     }

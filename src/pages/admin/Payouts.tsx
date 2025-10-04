@@ -14,6 +14,10 @@ import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, Tre
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
+
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -176,11 +180,11 @@ export default function AdminPayouts() {
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'tiktok':
-        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="h-5 w-5" />;
+        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
       case 'instagram':
-        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="h-5 w-5" />;
+        return <img src={instagramLogo} alt="Instagram" className="h-5 w-5" />;
       case 'youtube':
-        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="h-5 w-5" />;
+        return <img src={youtubeLogo} alt="YouTube" className="h-5 w-5" />;
       default:
         return <UsersIcon className="h-5 w-5" />;
     }

@@ -20,6 +20,10 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
 import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
+
 interface Campaign {
   id: string;
   title: string;
@@ -611,11 +615,11 @@ export default function BrandManagement() {
                   const getPlatformIcon = (platform: string) => {
                     switch (platform.toLowerCase()) {
                       case 'tiktok':
-                        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
+                        return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
                       case 'instagram':
-                        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
+                        return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
                       case 'youtube':
-                        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
+                        return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
                       default:
                         return null;
                     }
@@ -754,11 +758,11 @@ export default function BrandManagement() {
                   const getPlatformIcon = (platform: string) => {
                     switch (platform.toLowerCase()) {
                       case 'tiktok':
-                        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />;
+                        return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
                       case 'instagram':
-                        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />;
+                        return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
                       case 'youtube':
-                        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />;
+                        return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
                       default:
                         return null;
                     }
