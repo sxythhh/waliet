@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { formatDistanceToNow, format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -432,20 +433,42 @@ export function ProfileTab() {
               return nextDate;
             };
             
-            const nextSubmissionDate = getNextSubmissionDate();
+              const nextSubmissionDate = getNextSubmissionDate();
             const daysUntilNext = nextSubmissionDate 
               ? Math.ceil((nextSubmissionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
               : null;
             
+            // Format the submission timestamp
+            const getSubmissionTimestamp = () => {
+              if (!latestDemographicSubmission?.submitted_at) return null;
+              const submittedDate = new Date(latestDemographicSubmission.submitted_at);
+              const now = new Date();
+              const hoursDiff = (now.getTime() - submittedDate.getTime()) / (1000 * 60 * 60);
+              
+              // If less than 24 hours, show relative time
+              if (hoursDiff < 24) {
+                return formatDistanceToNow(submittedDate, { addSuffix: true });
+              }
+              // Otherwise show full date and time
+              return format(submittedDate, "MMM d, yyyy 'at' h:mm a");
+            };
+            
+            const submissionTimestamp = getSubmissionTimestamp();
+            
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border bg-[#0d0d0d]">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
-                        {getPlatformIcon(account.platform)}
-                        <span className="font-medium">{account.username}</span>
-                        {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
-                        {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
-                        {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
-                        {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
+                          {getPlatformIcon(account.platform)}
+                          <span className="font-medium">{account.username}</span>
+                          {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
+                          {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
+                          {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
+                          {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
+                        </div>
+                        {submissionTimestamp && <span className="text-[10px] text-muted-foreground px-2.5">
+                          Last submitted {submissionTimestamp}
+                        </span>}
                       </div>
                       
                       {linkedCampaign && <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
