@@ -65,13 +65,17 @@ export function BrandSidebar() {
     });
   }
 
-  // Add remaining items
-  baseMenuItems.push(
-    {
+  // Add Management for non-DWY brands
+  if (currentBrand?.brand_type !== "DWY") {
+    baseMenuItems.push({
       title: "Management",
       icon: FolderOpen,
       path: "management"
-    },
+    });
+  }
+
+  // Add Roadmap/Assets based on brand type
+  baseMenuItems.push(
     currentBrand?.brand_type === "DWY" ? {
       title: "Roadmap",
       icon: Map,
@@ -80,13 +84,15 @@ export function BrandSidebar() {
       title: "Assets",
       icon: Pyramid,
       path: "assets"
-    },
-    {
-      title: "Library",
-      icon: GalleryHorizontalEnd,
-      path: "library"
     }
   );
+
+  // Add Library
+  baseMenuItems.push({
+    title: "Library",
+    icon: GalleryHorizontalEnd,
+    path: "library"
+  });
 
   // Conditionally add Account tab based on show_account_tab setting
   if (currentBrand?.show_account_tab !== false) {
