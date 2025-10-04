@@ -1142,64 +1142,92 @@ export default function AdminUsers() {
 
           {/* Review Dialog */}
           <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-            <DialogContent className="max-w-2xl bg-card border-0">
-              <DialogHeader className="pb-2">
-                <DialogTitle className="text-lg">Review Demographic Submission</DialogTitle>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Review Demographic Submission</DialogTitle>
               </DialogHeader>
 
-              {selectedSubmission && <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              {selectedSubmission && <div className="space-y-6">
+                  <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border border-border/50">
                     {getPlatformIcon(selectedSubmission.social_accounts.platform)}
                     <div>
                       <p className="font-semibold">@{selectedSubmission.social_accounts.username}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{selectedSubmission.social_accounts.platform}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{selectedSubmission.social_accounts.platform}</p>
                     </div>
                   </div>
 
-                  <div className="bg-[#0d0d0d] rounded-lg p-4">
-                    <p className="text-xs text-muted-foreground mb-2">Tier 1 Audience Percentage</p>
-                    <p className="text-4xl font-bold font-chakra text-primary">{selectedSubmission.tier1_percentage}%</p>
-                  </div>
-
-                  {selectedSubmission.screenshot_url && <div>
-                      <Label className="text-xs mb-2 block">Demographics Screenshot</Label>
-                      <div className="rounded-lg overflow-hidden border">
+                  {selectedSubmission.screenshot_url && <div className="space-y-2">
+                      <Label>Demographics Screenshot</Label>
+                      <div className="rounded-lg overflow-hidden border border-border">
                         {selectedSubmission.screenshot_url.endsWith('.mp4') || selectedSubmission.screenshot_url.endsWith('.webm') || selectedSubmission.screenshot_url.endsWith('.mov') ?
-                          <video src={selectedSubmission.screenshot_url} className="w-full" controls /> :
+                          <video src={selectedSubmission.screenshot_url} className="w-full" controls muted playsInline /> :
                           <img src={selectedSubmission.screenshot_url} alt="Demographics screenshot" className="w-full" />
                         }
                       </div>
                     </div>}
 
-                  <div className="space-y-2">
-                    <Label className="text-xs">Review Decision</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant={reviewStatus === "approved" ? "default" : "outline"} onClick={() => setReviewStatus("approved")} className="h-9 text-sm">
+                  <div className="space-y-3">
+                    <Label>Review Decision</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button 
+                        variant={reviewStatus === "approved" ? "default" : "outline"} 
+                        onClick={() => setReviewStatus("approved")} 
+                        className="h-11 border-2"
+                      >
                         <CheckCircle2 className="h-4 w-4 mr-2" />
                         Approve
                       </Button>
-                      <Button variant={reviewStatus === "rejected" ? "destructive" : "outline"} onClick={() => setReviewStatus("rejected")} className="h-9 text-sm">
+                      <Button 
+                        variant={reviewStatus === "rejected" ? "destructive" : "outline"} 
+                        onClick={() => setReviewStatus("rejected")} 
+                        className="h-11 border-2"
+                      >
                         <XCircle className="h-4 w-4 mr-2" />
                         Reject
                       </Button>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="score" className="text-xs">Score (0-100)</Label>
-                    <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm" />
+                  <div className="space-y-2">
+                    <Label htmlFor="score">Tier 1 Audience Percentage (%)</Label>
+                    <Input 
+                      id="score" 
+                      type="number" 
+                      min="0" 
+                      max="100" 
+                      value={score} 
+                      onChange={e => setScore(e.target.value)} 
+                      placeholder="Enter percentage (0-100)" 
+                      className="h-11"
+                    />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="notes" className="text-xs">Admin Notes</Label>
-                    <Textarea id="notes" value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="Optional notes about this submission..." rows={3} className="text-sm min-h-[70px]" />
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Admin Notes</Label>
+                    <Textarea 
+                      id="notes" 
+                      value={adminNotes} 
+                      onChange={e => setAdminNotes(e.target.value)} 
+                      placeholder="Optional notes about this submission..." 
+                      rows={4}
+                      className="resize-none"
+                    />
                   </div>
 
-                  <div className="flex gap-2 pt-3 border-t">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedSubmission(null)} disabled={updating} className="flex-1">
+                  <div className="flex gap-3 pt-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSelectedSubmission(null)} 
+                      disabled={updating} 
+                      className="flex-1 h-11"
+                    >
                       Cancel
                     </Button>
-                    <Button onClick={handleReview} disabled={updating} size="sm" className="flex-1">
+                    <Button 
+                      onClick={handleReview} 
+                      disabled={updating} 
+                      className="flex-1 h-11"
+                    >
                       {updating ? "Submitting..." : "Submit Review"}
                     </Button>
                   </div>
