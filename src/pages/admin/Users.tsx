@@ -501,7 +501,12 @@ export default function AdminUsers() {
       icon: Icon,
       color
     } = config[status as keyof typeof config] || config.pending;
-    return;
+    return (
+      <Badge variant={variant} className="gap-1">
+        <Icon className={`h-3 w-3 ${color}`} />
+        {status}
+      </Badge>
+    );
   };
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
   const approvedSubmissions = submissions.filter(s => s.status === "approved");
@@ -1028,43 +1033,24 @@ export default function AdminUsers() {
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {pendingSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {getPlatformIcon(submission.social_accounts.platform)}
                             <div>
-                              <h3 className="font-semibold text-base">@{submission.social_accounts.username}</h3>
-                              <p className="text-xs text-muted-foreground capitalize">{submission.social_accounts.platform}</p>
+                              <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </p>
                             </div>
                           </div>
-                          {getStatusBadge(submission.status)}
-                        </div>
-
-                        <div className="bg-[#0d0d0d] rounded-lg p-4 mb-3">
-                          <p className="text-xs text-muted-foreground mb-1">Tier 1 Audience</p>
-                          <div className="flex items-baseline gap-2">
-                            <p className="text-3xl font-bold font-chakra text-primary">{submission.tier1_percentage}%</p>
-                            <p className="text-xs text-muted-foreground">of total audience</p>
-                          </div>
-                        </div>
-
-                        {submission.screenshot_url ? <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
-                            <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
-                          </div> : <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
-                            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                          </div>}
-
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">
-                            {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                          </span>
-                          <Button size="sm" className="h-7 text-xs" onClick={e => {
-                      e.stopPropagation();
-                      openReviewDialog(submission);
-                    }}>
+                          <Button size="sm" className="h-8 text-xs" onClick={e => {
+                            e.stopPropagation();
+                            openReviewDialog(submission);
+                          }}>
                             Review
                           </Button>
                         </div>
