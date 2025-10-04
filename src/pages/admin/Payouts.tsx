@@ -566,7 +566,7 @@ export default function AdminPayouts() {
                             </>}
                           
                           {request.status === 'in_transit' && <>
-                              <Button size="sm" onClick={() => openActionDialog(request, 'complete')} className="gap-1.5">
+                              <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1.5">
                                 <DollarSign className="h-4 w-4" />
                                 Mark as Complete
                               </Button>
