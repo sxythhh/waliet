@@ -609,7 +609,12 @@ export function WalletTab() {
         letterSpacing: '-0.5px',
         fontWeight: 600
       }}>Virality Wallet</h2>
-        <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0 ml-auto">
+        <Button 
+          onClick={handleRequestPayout} 
+          size="lg" 
+          className="gap-1 py-0 my-0 ml-auto"
+          disabled={!wallet || wallet.balance === 0 || !payoutMethods || payoutMethods.length === 0}
+        >
           <ArrowDownLeft className="h-4 w-4" />
           Request Payout
         </Button>
