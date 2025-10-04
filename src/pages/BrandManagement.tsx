@@ -88,8 +88,8 @@ export default function BrandManagement() {
       fetchAnalytics();
       fetchTransactions();
 
-      // Set up real-time subscription for campaign submissions
-      const channel = supabase.channel('campaign-submissions-changes').on('postgres_changes', {
+      // Set up real-time subscription for campaign submissions and social accounts
+      const submissionsChannel = supabase.channel('campaign-submissions-changes').on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'campaign_submissions',
@@ -98,8 +98,20 @@ export default function BrandManagement() {
         console.log('Submission changed:', payload);
         fetchSubmissions();
       }).subscribe();
+
+      const accountsChannel = supabase.channel('social-accounts-changes').on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'social_accounts',
+        filter: `campaign_id=eq.${selectedCampaignId}`
+      }, payload => {
+        console.log('Social account changed:', payload);
+        fetchSubmissions();
+      }).subscribe();
+
       return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(submissionsChannel);
+        supabase.removeChannel(accountsChannel);
       };
     }
   }, [selectedCampaignId]);
