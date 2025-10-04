@@ -1295,14 +1295,14 @@ export function WalletTab() {
                   })()}
                         
                         {/* Display crypto address if available */}
-                        {selectedTransaction.metadata.payoutDetails?.address && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
-                            <span className="text-sm text-muted-foreground">Address</span>
+                        {(selectedTransaction.metadata.payoutDetails?.address || selectedTransaction.metadata.address) && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm text-muted-foreground">Wallet Address</span>
                             <div className="flex items-center gap-2 flex-1 justify-end">
                               <span className="text-sm font-mono text-right break-all max-w-[200px]">
-                                {selectedTransaction.metadata.payoutDetails.address}
+                                {selectedTransaction.metadata.payoutDetails?.address || selectedTransaction.metadata.address}
                               </span>
                               <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => {
-                        navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
+                        navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails?.address || selectedTransaction.metadata.address);
                         toast({
                           description: "Address copied to clipboard"
                         });
@@ -1312,11 +1312,19 @@ export function WalletTab() {
                             </div>
                           </div>}
                         
+                        {/* Display crypto currency if available */}
+                        {(selectedTransaction.metadata.payoutDetails?.currency || selectedTransaction.metadata.currency) && <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm text-muted-foreground">Currency</span>
+                            <span className="text-sm font-medium uppercase">
+                              {selectedTransaction.metadata.payoutDetails?.currency || selectedTransaction.metadata.currency}
+                            </span>
+                          </div>}
+                        
                         {/* Display PayPal email if available */}
-                        {selectedTransaction.metadata.payoutDetails?.email && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
-                            <span className="text-sm text-muted-foreground">Email</span>
+                        {(selectedTransaction.metadata.payoutDetails?.email || selectedTransaction.metadata.email) && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm text-muted-foreground">PayPal Email</span>
                             <span className="text-sm font-medium text-right max-w-[200px] truncate">
-                              {selectedTransaction.metadata.payoutDetails.email}
+                              {selectedTransaction.metadata.payoutDetails?.email || selectedTransaction.metadata.email}
                             </span>
                           </div>}
                         
