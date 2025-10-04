@@ -24,7 +24,6 @@ import BrandLibrary from "./pages/BrandLibrary";
 import BrandAccount from "./pages/BrandAccount";
 import Training from "./pages/Training";
 import AdminOverview from "./pages/admin/Overview";
-import AdminAnalytics from "./pages/admin/Analytics";
 import AdminBrands from "./pages/admin/Brands";
 import AdminCampaigns from "./pages/admin/Campaigns";
 import AdminUsers from "./pages/admin/Users";
@@ -123,7 +122,6 @@ const App = () => (
           <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
           <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
           <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
-          <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
           <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
           <Route path="/admin/campaigns" element={<AdminLayout><AdminCampaigns /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
