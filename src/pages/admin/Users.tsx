@@ -644,31 +644,6 @@ export default function AdminUsers() {
                       </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
                   </div>
 
-                  {/* Balance */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Balance</span>
-                      <span className="font-medium text-success">
-                        ${balance.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Earnings Stats */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Total Earned</p>
-                      <p className="text-sm font-semibold">
-                        ${totalEarned.toFixed(2)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Withdrawn</p>
-                      <p className="text-sm font-semibold">
-                        ${totalWithdrawn.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>;
           })}
