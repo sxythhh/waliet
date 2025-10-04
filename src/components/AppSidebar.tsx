@@ -1,4 +1,4 @@
-import { Airplay, Dock, Scissors, Compass, Users, ArrowUpRight } from "lucide-react";
+import { Airplay, Dock, Scissors, Compass, Users, ArrowUpRight, BellRing } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,10 @@ const menuItems = [{
   title: "Discover",
   tab: "discover",
   icon: Compass
+}, {
+  title: "Notifications",
+  tab: "notifications",
+  icon: BellRing
 }, {
   title: "Referrals",
   tab: "referrals",
