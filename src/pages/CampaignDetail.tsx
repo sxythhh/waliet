@@ -56,19 +56,29 @@ export default function CampaignDetail() {
         return;
       }
 
-      // Check if user has a submission for this campaign
+      // Check if user has an approved submission for this campaign
       const { data: submissionData } = await supabase
         .from("campaign_submissions")
         .select("id, status")
         .eq("campaign_id", id)
         .eq("creator_id", user.id)
+        .eq("status", "approved")
         .maybeSingle();
 
-      if (!submissionData || submissionData.status !== "approved") {
+      if (!submissionData) {
+        // Check if there's a pending submission
+        const { data: pendingSubmission } = await supabase
+          .from("campaign_submissions")
+          .select("status")
+          .eq("campaign_id", id)
+          .eq("creator_id", user.id)
+          .eq("status", "pending")
+          .maybeSingle();
+
         toast({
           variant: "destructive",
           title: "Access Denied",
-          description: submissionData?.status === "pending" 
+          description: pendingSubmission 
             ? "Your application is pending approval" 
             : "You must be approved to view this campaign",
         });
