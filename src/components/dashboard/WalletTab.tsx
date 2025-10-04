@@ -622,13 +622,13 @@ export function WalletTab() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" className="gap-2">
+                <Button variant="secondary" className="gap-2 bg-[#1C1C1C] hover:bg-[#1C1C1C]/80">
                   {timePeriodLabels[timePeriod]}
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-card z-50">
-                {Object.entries(timePeriodLabels).map(([value, label]) => <DropdownMenuItem key={value} onClick={() => setTimePeriod(value as TimePeriod)} className={timePeriod === value ? "bg-muted" : ""}>
+                {Object.entries(timePeriodLabels).map(([value, label]) => <DropdownMenuItem key={value} onClick={() => setTimePeriod(value as TimePeriod)} className={timePeriod === value ? "bg-muted" : "hover:bg-[#1C1C1C]"}>
                     {label}
                   </DropdownMenuItem>)}
               </DropdownMenuContent>
