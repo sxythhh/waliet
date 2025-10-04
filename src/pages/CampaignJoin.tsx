@@ -193,7 +193,7 @@ export default function CampaignJoin() {
       </div>
 
       {/* Campaign Banner with Logo */}
-      <div className="max-w-3xl mx-auto px-6 mb-12">
+      <div className="max-w-2xl mx-auto px-6 mb-12">
         {/* Banner */}
         <div className="relative rounded-2xl bg-gradient-to-br from-primary to-primary/80 h-48">
           <div className="absolute inset-0 rounded-2xl overflow-hidden">
@@ -214,7 +214,7 @@ export default function CampaignJoin() {
       </div>
 
       {/* Account Selection */}
-      <div className="max-w-3xl mx-auto px-6">
+      <div className="max-w-2xl mx-auto px-6">
         <div className="relative flex gap-6 mb-8">
             {/* Step Content */}
             <div className="flex-1 pb-8">
