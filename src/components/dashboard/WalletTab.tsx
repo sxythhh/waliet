@@ -616,7 +616,7 @@ export function WalletTab() {
               <p className="text-sm text-muted-foreground mb-1">
                 {format(new Date(), 'MMM dd, yyyy')}
               </p>
-              <p className="text-4xl font-bold tracking-tight">
+              <p className="text-4xl font-bold font-chakra" style={{ letterSpacing: '-0.3px' }}>
                 ${wallet?.balance?.toFixed(2) || "0.00"}
               </p>
             </div>
