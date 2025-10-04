@@ -122,15 +122,18 @@ export default function CampaignJoin() {
         campaign_id: campaign.id,
         creator_id: user.id,
         platform: account.platform,
-        content_url: "",
+        content_url: "pending",
         status: "pending"
       }));
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("campaign_submissions")
         .insert(submissions);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Submission error details:", error);
+        throw error;
+      }
       
       toast.success(`Application${selectedAccounts.length > 1 ? 's' : ''} submitted successfully!`);
       navigate("/dashboard");
