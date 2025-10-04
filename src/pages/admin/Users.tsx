@@ -1028,16 +1028,7 @@ export default function AdminUsers() {
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {pendingSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            {getPlatformIcon(submission.social_accounts.platform)}
-                            <div>
-                              <h3 className="font-semibold text-base">@{submission.social_accounts.username}</h3>
-                              <p className="text-xs text-muted-foreground capitalize">{submission.social_accounts.platform}</p>
-                            </div>
-                          </div>
-                          {getStatusBadge(submission.status)}
-                        </div>
+                        
 
                         <div className="bg-[#0d0d0d] rounded-lg p-4 mb-3">
                           <p className="text-xs text-muted-foreground mb-1">Tier 1 Audience</p>
