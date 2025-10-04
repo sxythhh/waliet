@@ -18,7 +18,6 @@ export function BrandSidebar() {
   const navigate = useNavigate();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [campaignCount, setCampaignCount] = useState(0);
   useEffect(() => {
     const fetchBrands = async () => {
       const {
@@ -32,28 +31,6 @@ export function BrandSidebar() {
     };
     fetchBrands();
   }, []);
-
-  useEffect(() => {
-    const fetchCampaigns = async () => {
-      if (!slug) return;
-      
-      const { data: brand } = await supabase
-        .from("brands")
-        .select("id")
-        .eq("slug", slug)
-        .single();
-      
-      if (brand) {
-        const { count } = await supabase
-          .from("campaigns")
-          .select("*", { count: 'exact', head: true })
-          .eq("brand_id", brand.id);
-        
-        setCampaignCount(count || 0);
-      }
-    };
-    fetchCampaigns();
-  }, [slug]);
 
   // Wait for brands to load before rendering
   if (loading || brands.length === 0) {
@@ -77,11 +54,11 @@ export function BrandSidebar() {
     title: "Home",
     icon: Home,
     path: ""
-  }, ...(currentBrand?.brand_type === "client" && campaignCount === 0 ? [] : [{
+  }, {
     title: "Management",
     icon: FolderOpen,
     path: "management"
-  }]), currentBrand?.brand_type === "DWY" ? {
+  }, currentBrand?.brand_type === "DWY" ? {
     title: "Roadmap",
     icon: Map,
     path: "assets"
