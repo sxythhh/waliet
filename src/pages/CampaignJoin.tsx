@@ -218,7 +218,7 @@ export default function CampaignJoin() {
       {/* Step Process */}
       <div className="max-w-3xl mx-auto px-6">
         {/* Step 1: Campaign Requirements */}
-        <div className="relative flex gap-6 mb-8">
+        <div className="relative flex gap-6 mb-4">
           {/* Step Indicator */}
           <div className="flex flex-col items-center pt-1">
             
@@ -323,7 +323,7 @@ export default function CampaignJoin() {
                                 </div>
                                 <div className="text-sm text-muted-foreground">
                                   {isLinkedToCampaign && "Already linked to a campaign"}
-                                  {!isCompatible && !isLinkedToCampaign && "Not compatible with this campaign"}
+                                  {!isCompatible && !isLinkedToCampaign && `${account.platform.charAt(0).toUpperCase() + account.platform.slice(1)} is not allowed for this campaign`}
                                 </div>
                               </div>
                             </div>
