@@ -212,10 +212,10 @@ export function CampaignsTab() {
                     </span>
                   </div>
                 </div> : <div className="mt-auto pt-2">
-                  <Button variant="ghost" size="sm" className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-muted/50" onClick={e => {
+                  <Button variant="ghost" size="sm" onClick={e => {
               e.stopPropagation();
               setDialogOpen(true);
-            }}>
+            }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-[#5966f2]">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Link Account
                   </Button>
@@ -234,14 +234,10 @@ export function CampaignsTab() {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3 py-4">
-          <Button
-            variant="ghost"
-            className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-[#121212]"
-            onClick={() => {
-              setDialogOpen(false);
-              navigate("/dashboard?tab=profile");
-            }}
-          >
+          <Button variant="ghost" className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-[#121212]" onClick={() => {
+            setDialogOpen(false);
+            navigate("/dashboard?tab=profile");
+          }}>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <Link2 className="h-5 w-5 text-primary" />
@@ -255,14 +251,10 @@ export function CampaignsTab() {
             </div>
           </Button>
           
-          <Button
-            variant="ghost"
-            className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-[#121212]"
-            onClick={() => {
-              setDialogOpen(false);
-              setAddAccountDialogOpen(true);
-            }}
-          >
+          <Button variant="ghost" className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-[#121212]" onClick={() => {
+            setDialogOpen(false);
+            setAddAccountDialogOpen(true);
+          }}>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <UserPlus className="h-5 w-5 text-primary" />
