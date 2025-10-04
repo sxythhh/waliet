@@ -1,4 +1,4 @@
-import { Airplay, DollarSign, User, Compass, Users, ArrowUpRight } from "lucide-react";
+import { Airplay, Dock, User, Compass, Users, ArrowUpRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ const menuItems = [{
 }, {
   title: "Wallet",
   tab: "wallet",
-  icon: DollarSign
+  icon: Dock
 }, {
   title: "Discover",
   tab: "discover",
