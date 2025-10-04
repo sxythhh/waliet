@@ -1026,7 +1026,7 @@ export default function AdminUsers() {
 
           {/* Review Dialog */}
           <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-            <DialogContent className="max-w-2xl bg-card border-0">
+            <DialogContent className="max-w-md bg-card border-0">
               <DialogHeader className="pb-2">
                 <DialogTitle className="text-lg">Review Demographic Submission</DialogTitle>
               </DialogHeader>
