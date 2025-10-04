@@ -613,7 +613,7 @@ export function WalletTab() {
           onClick={handleRequestPayout} 
           size="lg" 
           className="gap-1 py-0 my-0 ml-auto"
-          disabled={!wallet || wallet.balance === 0 || !payoutMethods || payoutMethods.length === 0}
+          disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}
         >
           <ArrowDownLeft className="h-4 w-4" />
           Request Payout
