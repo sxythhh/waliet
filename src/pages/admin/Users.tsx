@@ -321,6 +321,28 @@ export default function AdminUsers() {
       return;
     }
 
+    // Create transaction record
+    const {
+      error: transactionError
+    } = await supabase.from("wallet_transactions").insert({
+      user_id: selectedUser.id,
+      type: "earning",
+      amount: amount,
+      status: "completed",
+      description: paymentNotes || "Manual payment from admin",
+      created_by: session.user.id,
+      metadata: {
+        source: "admin_payment",
+        recipient: selectedUser.username,
+        notes: paymentNotes
+      }
+    });
+    
+    if (transactionError) {
+      console.error("Failed to create transaction:", transactionError);
+      // Still show success as wallet was updated, but log the error
+    }
+
     // Create audit log
     await supabase.from("security_audit_log").insert({
       user_id: session.user.id,
