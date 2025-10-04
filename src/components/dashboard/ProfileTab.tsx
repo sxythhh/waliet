@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, AlertCircle, BadgeCheck, Clock, XCircle } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, AlertCircle, BadgeCheck, Clock, XCircle, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -422,15 +422,30 @@ export function ProfileTab() {
             const linkedCampaign = account.campaigns;
             const latestDemographicSubmission = account.demographic_submissions?.[0];
             const demographicStatus = latestDemographicSubmission?.status;
+            
+            // Calculate next submission date (7 days from last submission)
+            const getNextSubmissionDate = () => {
+              if (!latestDemographicSubmission?.submitted_at) return null;
+              const submittedDate = new Date(latestDemographicSubmission.submitted_at);
+              const nextDate = new Date(submittedDate);
+              nextDate.setDate(nextDate.getDate() + 7);
+              return nextDate;
+            };
+            
+            const nextSubmissionDate = getNextSubmissionDate();
+            const daysUntilNext = nextSubmissionDate 
+              ? Math.ceil((nextSubmissionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+              : null;
+            
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border bg-[#0d0d0d]">
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
                         {getPlatformIcon(account.platform)}
                         <span className="font-medium">{account.username}</span>
-                        {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
-                        {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
-                        {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
-                        {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
+                        {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success" />}
+                        {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning" />}
+                        {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive" />}
+                        {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive" />}
                       </div>
                       
                       {linkedCampaign && <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
@@ -445,8 +460,21 @@ export function ProfileTab() {
                     </div>
                     
                     <div className="flex gap-2 w-full sm:w-auto">
-                      {latestDemographicSubmission ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
+                      {demographicStatus === 'approved' && daysUntilNext !== null ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
+                          <Calendar className="h-3.5 w-3.5" />
+                          Next in {daysUntilNext} days
+                        </Button> : demographicStatus === 'pending' ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
                           Pending Review
+                        </Button> : demographicStatus === 'rejected' ? <Button variant="secondary" size="sm" onClick={() => {
+                  setSelectedAccountForDemographics({
+                    id: account.id,
+                    platform: account.platform,
+                    username: account.username
+                  });
+                  setShowDemographicsDialog(true);
+                }} className="h-8 gap-1.5 flex-1 sm:flex-initial whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          Resubmit Demographics
                         </Button> : <Button variant="secondary" size="sm" onClick={() => {
                   setSelectedAccountForDemographics({
                     id: account.id,
