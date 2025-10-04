@@ -712,7 +712,7 @@ export function WalletTab() {
               setTransactionSheetOpen(true);
             }} style={{
               backgroundColor: '#0d0d0d'
-            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#0d0d0d] hover:bg-[#151515]">
+            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#0d0d0d] hover:bg-[#1a1a1a]">
                   <div className="flex items-center gap-4 flex-1">
                     
                     <div className="flex-1 min-w-0">
@@ -734,7 +734,21 @@ export function WalletTab() {
                         <Clock className="h-3 w-3" />
                         <span style={{
                       letterSpacing: '-0.5px'
-                    }}>{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
+                    }}>
+                          {(() => {
+                            const now = new Date();
+                            const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
+                            
+                            if (diffInHours < 24) {
+                              if (diffInHours < 1) {
+                                const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
+                                return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
+                              }
+                              return `${diffInHours}h ago`;
+                            }
+                            return format(transaction.date, 'MMM dd, yyyy / HH:mm');
+                          })()}
+                        </span>
                       </div>
                     </div>
                   </div>
