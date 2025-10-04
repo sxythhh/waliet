@@ -1,7 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users as UsersIcon, ChevronUp, ChevronDown, Clock } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -28,6 +29,11 @@ interface SocialAccount {
     brand_name: string;
     brand_logo_url?: string | null;
   } | null;
+  demographic_submissions?: Array<{
+    status: string;
+    tier1_percentage: number;
+    submitted_at: string;
+  }>;
 }
 
 interface Transaction {
@@ -162,54 +168,87 @@ export function UserDetailsDialog({
               </div>
             ) : (
               <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                {socialAccounts.map((account) => (
-                  <div 
-                    key={account.id} 
-                    className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      {/* Account Info */}
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="shrink-0">
-                          {getPlatformIcon(account.platform)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <a 
-                            href={account.account_link} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="font-medium hover:text-primary transition-colors block truncate"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            @{account.username}
-                          </a>
-                        </div>
-                      </div>
-                      
-                      {/* Campaign Link */}
-                      <div className="shrink-0">
-                        {account.campaigns ? (
-                          <div className="flex items-center gap-2">
-                            {account.campaigns.brand_logo_url && (
-                              <img 
-                                src={account.campaigns.brand_logo_url} 
-                                alt={account.campaigns.brand_name} 
-                                className="h-6 w-6 rounded object-cover" 
-                              />
-                            )}
-                            <span className="font-medium text-sm">
-                              {account.campaigns.title}
-                            </span>
+                {socialAccounts.map((account) => {
+                  const latestDemographic = account.demographic_submissions?.[0];
+                  const demographicStatus = latestDemographic?.status;
+                  
+                  return (
+                    <div 
+                      key={account.id} 
+                      className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors group"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        {/* Account Info */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="shrink-0">
+                            {getPlatformIcon(account.platform)}
                           </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">
-                            Not linked
-                          </span>
-                        )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <a 
+                                href={account.account_link} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="font-medium block truncate group-hover:underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                @{account.username}
+                              </a>
+                              
+                              {/* Demographic Status Icon */}
+                              {demographicStatus === 'approved' && (
+                                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                              )}
+                              {demographicStatus === 'rejected' && (
+                                <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                              )}
+                              {demographicStatus === 'pending' && (
+                                <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />
+                              )}
+                            </div>
+                            
+                            {/* Tier 1% and Last Submitted Date */}
+                            {latestDemographic && (
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                {latestDemographic.status === 'approved' && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                    Tier 1: {latestDemographic.tier1_percentage}%
+                                  </Badge>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {format(new Date(latestDemographic.submitted_at), 'MMM dd, yyyy')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Campaign Link */}
+                        <div className="shrink-0">
+                          {account.campaigns ? (
+                            <div className="flex items-center gap-2">
+                              {account.campaigns.brand_logo_url && (
+                                <img 
+                                  src={account.campaigns.brand_logo_url} 
+                                  alt={account.campaigns.brand_name} 
+                                  className="h-6 w-6 rounded object-cover" 
+                                />
+                              )}
+                              <span className="font-medium text-sm">
+                                {account.campaigns.title}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">
+                              Not linked
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CollapsibleContent>

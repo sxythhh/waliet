@@ -124,6 +124,11 @@ export default function AdminPayouts() {
           title,
           brand_name,
           brand_logo_url
+        ),
+        demographic_submissions (
+          status,
+          tier1_percentage,
+          submitted_at
         )
       `).eq("user_id", userId);
     if (error) {

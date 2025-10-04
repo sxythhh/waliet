@@ -58,6 +58,8 @@ interface SocialAccount {
   };
   demographic_submissions?: Array<{
     status: string;
+    tier1_percentage: number;
+    submitted_at: string;
   }>;
 }
 interface DemographicSubmission {
@@ -210,6 +212,11 @@ export default function AdminUsers() {
           title,
           brand_name,
           brand_logo_url
+        ),
+        demographic_submissions (
+          status,
+          tier1_percentage,
+          submitted_at
         )
       `).eq("user_id", userId);
     if (error) {
