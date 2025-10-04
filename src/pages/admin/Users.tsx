@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle } from "lucide-react";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -252,11 +255,11 @@ export default function AdminUsers() {
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'tiktok':
-        return <img src="/src/assets/tiktok-logo.svg" alt="TikTok" className="h-5 w-5" />;
+        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
       case 'instagram':
-        return <img src="/src/assets/instagram-logo.svg" alt="Instagram" className="h-5 w-5" />;
+        return <img src={instagramLogo} alt="Instagram" className="h-5 w-5" />;
       case 'youtube':
-        return <img src="/src/assets/youtube-logo.svg" alt="YouTube" className="h-5 w-5" />;
+        return <img src={youtubeLogo} alt="YouTube" className="h-5 w-5" />;
       default:
         return <UsersIcon className="h-5 w-5" />;
     }
