@@ -323,22 +323,20 @@ export default function AdminPayouts() {
       return;
     }
 
-    // Create a wallet transaction record
-    const { error: transactionError } = await supabase.from("wallet_transactions").insert({
-      user_id: request.user_id,
-      amount: -Number(request.amount),
-      type: 'withdrawal',
-      status: 'completed',
-      description: `Payout via ${request.payout_method}`,
-      created_by: session.user.id,
-      metadata: {
-        payout_request_id: request.id,
-        payout_method: request.payout_method
-      }
-    });
+    // Update existing transaction to completed
+    const { error: transactionError } = await supabase
+      .from("wallet_transactions")
+      .update({
+        status: 'completed',
+        updated_at: new Date().toISOString()
+      })
+      .eq("user_id", request.user_id)
+      .eq("type", "withdrawal")
+      .eq("amount", -Number(request.amount))
+      .eq("status", "pending");
 
     if (transactionError) {
-      console.error("Failed to create transaction record:", transactionError);
+      console.error("Failed to update transaction:", transactionError);
     }
 
     const updateData = {
