@@ -76,6 +76,7 @@ export function WalletTab() {
   const [transactionSheetOpen, setTransactionSheetOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
+  const [isSubmittingPayout, setIsSubmittingPayout] = useState(false);
   const {
     toast
   } = useToast();
@@ -479,6 +480,8 @@ export function WalletTab() {
     setPayoutDialogOpen(true);
   };
   const handleConfirmPayout = async () => {
+    if (isSubmittingPayout) return; // Prevent duplicate submissions
+    
     if (!wallet || !payoutAmount || Number(payoutAmount) <= 0) {
       toast({
         variant: "destructive",
@@ -512,6 +515,8 @@ export function WalletTab() {
     if (!session) return;
     const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
     if (!selectedMethod) return;
+    
+    setIsSubmittingPayout(true);
     try {
       const balance_before = wallet.balance;
       const balance_after = wallet.balance - amount;
@@ -586,6 +591,8 @@ export function WalletTab() {
         title: "Error",
         description: error.message || "Failed to submit payout request"
       });
+    } finally {
+      setIsSubmittingPayout(false);
     }
   };
   if (loading) {
@@ -1085,11 +1092,11 @@ export function WalletTab() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPayoutDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setPayoutDialogOpen(false)} disabled={isSubmittingPayout}>
               Cancel
             </Button>
-            <Button onClick={handleConfirmPayout}>
-              Confirm Payout
+            <Button onClick={handleConfirmPayout} disabled={isSubmittingPayout}>
+              {isSubmittingPayout ? "Processing..." : "Confirm Payout"}
             </Button>
           </DialogFooter>
         </DialogContent>
