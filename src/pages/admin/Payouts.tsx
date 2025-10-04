@@ -900,17 +900,31 @@ export default function AdminPayouts() {
 
                             {/* Payment Method & Network (for withdrawals) */}
                             {isWithdrawal && metadata && (
-                              <div className="grid grid-cols-2 gap-3 p-2 bg-muted/20 rounded-md">
-                                {metadata.payout_method && (
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Payment Method</p>
-                                    <p className="text-xs font-medium capitalize">{metadata.payout_method}</p>
-                                  </div>
-                                )}
-                                {metadata.network && (
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Network</p>
-                                    <p className="text-xs font-medium capitalize">{metadata.network}</p>
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-3 p-2 bg-muted/20 rounded-md">
+                                  {metadata.payout_method && (
+                                    <div>
+                                      <p className="text-[10px] text-muted-foreground mb-0.5">Payment Method</p>
+                                      <p className="text-xs font-medium capitalize">{metadata.payout_method}</p>
+                                    </div>
+                                  )}
+                                  {metadata.network && (
+                                    <div>
+                                      <p className="text-[10px] text-muted-foreground mb-0.5">Network</p>
+                                      <p className="text-xs font-medium capitalize">{metadata.network}</p>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Method Details */}
+                                {(metadata.payoutDetails?.address || metadata.payoutDetails?.email || metadata.payoutDetails?.account_number) && (
+                                  <div className="p-2 bg-muted/20 rounded-md">
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Method Details</p>
+                                    <p className="text-xs font-medium font-mono break-all">
+                                      {metadata.payoutDetails?.address || 
+                                       metadata.payoutDetails?.email || 
+                                       (metadata.payoutDetails?.account_number && `•••• ${metadata.payoutDetails.account_number.slice(-4)}`)}
+                                    </p>
                                   </div>
                                 )}
                               </div>
