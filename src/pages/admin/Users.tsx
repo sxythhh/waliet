@@ -32,6 +32,9 @@ interface User {
     platform: string;
     username: string;
     follower_count: number;
+    demographic_submissions?: Array<{
+      status: string;
+    }>;
   }>;
 }
 interface Campaign {
@@ -52,6 +55,9 @@ interface SocialAccount {
     brand_name: string;
     brand_logo_url: string;
   };
+  demographic_submissions?: Array<{
+    status: string;
+  }>;
 }
 interface DemographicSubmission {
   id: string;
@@ -128,7 +134,10 @@ export default function AdminUsers() {
           id,
           platform,
           username,
-          follower_count
+          follower_count,
+          demographic_submissions (
+            status
+          )
         )
       `).order("created_at", {
       ascending: false
@@ -618,10 +627,16 @@ export default function AdminUsers() {
                   <div className="mb-4">
                     <p className="text-xs text-muted-foreground mb-2">Connected Accounts</p>
                     {user.social_accounts && user.social_accounts.length > 0 ? <div className="flex flex-wrap gap-2">
-                        {user.social_accounts.map(account => <div key={account.id} title={`${account.username} - ${account.follower_count.toLocaleString()} followers`} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
+                        {user.social_accounts.map(account => {
+                          const demographicStatus = account.demographic_submissions?.[0]?.status;
+                          return <div key={account.id} title={`${account.username} - ${account.follower_count.toLocaleString()} followers`} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
                             {getPlatformIcon(account.platform)}
                             <span className="font-medium">{account.username}</span>
-                          </div>)}
+                            {demographicStatus === 'approved' && <CheckCircle2 className="h-3 w-3 text-success" />}
+                            {demographicStatus === 'pending' && <Clock className="h-3 w-3 text-warning" />}
+                            {demographicStatus === 'rejected' && <XCircle className="h-3 w-3 text-destructive" />}
+                          </div>
+                        })}
                       </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
                   </div>
 
