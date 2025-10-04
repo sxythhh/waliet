@@ -303,6 +303,8 @@ export function UserDetailsDialog({
                                   ? 'bg-orange-500/10 text-orange-500'
                                   : transaction.status === 'in_transit'
                                   ? 'bg-blue-500/10 text-blue-500'
+                                  : transaction.status === 'rejected'
+                                  ? 'bg-red-500/10 text-red-500'
                                   : 'bg-muted text-muted-foreground'
                               }`}>
                                 {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}

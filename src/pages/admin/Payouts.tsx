@@ -438,6 +438,86 @@ export default function AdminPayouts() {
       }
       updateData.status = 'rejected';
       updateData.rejection_reason = rejectionReason;
+      
+      // Find the pending withdrawal transaction
+      const { data: pendingTransaction, error: findError } = await supabase
+        .from("wallet_transactions")
+        .select("id")
+        .eq("user_id", selectedRequest.user_id)
+        .eq("type", "withdrawal")
+        .eq("amount", -Number(selectedRequest.amount))
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (findError) {
+        console.error("Error finding transaction:", findError);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to find pending transaction"
+        });
+        return;
+      }
+
+      if (pendingTransaction) {
+        // Update the transaction to rejected
+        const { error: transactionError } = await supabase
+          .from("wallet_transactions")
+          .update({
+            status: 'rejected',
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", pendingTransaction.id);
+
+        if (transactionError) {
+          console.error("Failed to update transaction:", transactionError);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to update transaction status"
+          });
+          return;
+        }
+
+        // Add the money back to the wallet
+        const { data: walletData, error: walletFetchError } = await supabase
+          .from("wallets")
+          .select("balance, total_withdrawn")
+          .eq("user_id", selectedRequest.user_id)
+          .single();
+
+        if (walletFetchError || !walletData) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to fetch wallet data"
+          });
+          return;
+        }
+
+        // Restore the balance and reduce total_withdrawn
+        const restoredBalance = Number(walletData.balance) + Number(selectedRequest.amount);
+        const adjustedTotalWithdrawn = Number(walletData.total_withdrawn) - Number(selectedRequest.amount);
+
+        const { error: walletError } = await supabase
+          .from("wallets")
+          .update({
+            balance: restoredBalance,
+            total_withdrawn: Math.max(0, adjustedTotalWithdrawn) // Prevent negative values
+          })
+          .eq("user_id", selectedRequest.user_id);
+
+        if (walletError) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to restore wallet balance"
+          });
+          return;
+        }
+      }
     }
     const {
       error

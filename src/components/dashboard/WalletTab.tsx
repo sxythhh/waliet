@@ -722,6 +722,7 @@ export function WalletTab() {
                         {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${
                       transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 
                       transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' :
+                      transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' :
                       'text-yellow-500 bg-yellow-500/5'
                     }`} style={{
                       letterSpacing: '-0.5px'
@@ -729,6 +730,7 @@ export function WalletTab() {
                             {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
                             {transaction.status === 'pending' && <Clock className="h-2.5 w-2.5" />}
                             {transaction.status === 'completed' && <Check className="h-2.5 w-2.5" />}
+                            {transaction.status === 'rejected' && <X className="h-2.5 w-2.5" />}
                             {transaction.status === 'in_transit' ? 'In Transit' : transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
                           </Badge>}
                       </div>
@@ -756,7 +758,9 @@ export function WalletTab() {
                     </div>
                   </div>
                   <div className={`text-lg font-bold whitespace-nowrap ml-4 ${
-                    transaction.status === 'pending' 
+                    transaction.status === 'rejected' 
+                      ? 'text-red-500' 
+                      : transaction.status === 'pending' 
                       ? 'text-yellow-500' 
                       : transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
                   }`} style={{
