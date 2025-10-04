@@ -574,14 +574,10 @@ export default function AdminPayouts() {
       {/* Main Content */}
       <div className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5 mb-6 bg-[#111111]">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6 bg-[#111111]">
             <TabsTrigger value="pending" className="gap-2 bg-[#1c1c1c]/0">
               <Clock className="h-4 w-4" />
               Pending
-            </TabsTrigger>
-            <TabsTrigger value="in_transit" className="gap-2">
-              <TrendingUp className="h-4 w-4" />
-              In Transit
             </TabsTrigger>
             <TabsTrigger value="completed" className="gap-2">
               <DollarSign className="h-4 w-4" />
