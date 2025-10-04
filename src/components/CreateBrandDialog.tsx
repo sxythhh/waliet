@@ -40,7 +40,6 @@ const brandSchema = z.object({
     .min(1, "Slug is required")
     .max(100)
     .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
-  description: z.string().trim().max(500).optional(),
   brand_type: z.enum(["Lead", "DWY", "Client"], {
     required_error: "Please select a brand type",
   }),
@@ -64,7 +63,6 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
     defaultValues: {
       name: "",
       slug: "",
-      description: "",
       brand_type: "Client",
     },
   });
@@ -117,7 +115,6 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
       const { error } = await supabase.from("brands").insert({
         name: values.name,
         slug: values.slug,
-        description: values.description || null,
         logo_url: logoUrl,
         brand_type: values.brand_type,
       });
@@ -211,7 +208,20 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
                     <FormItem>
                       <FormLabel className="text-xs">Brand Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter brand name" className="h-9 text-sm" {...field} />
+                        <Input 
+                          placeholder="Enter brand name" 
+                          className="h-9 text-sm" 
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            const slug = e.target.value
+                              .toLowerCase()
+                              .replace(/[^a-z0-9-]/g, "-")
+                              .replace(/-+/g, "-")
+                              .replace(/^-|-$/g, "");
+                            form.setValue("slug", slug);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -263,25 +273,6 @@ export function CreateBrandDialog({ onSuccess }: CreateBrandDialogProps) {
                         <SelectItem value="Client">Client</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe the brand"
-                        className="resize-none text-sm min-h-[60px]"
-                        rows={2}
-                        {...field}
-                      />
-                    </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
                 )}
