@@ -711,12 +711,6 @@ export default function AdminPayouts() {
                               </Button>
                             </>}
 
-                          {request.status === 'completed' && (
-                            <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
-                              <RotateCcw className="h-3.5 w-3.5" />
-                              Revert to In Transit
-                            </Button>
-                          )}
 
                           {request.status === 'rejected' && (
                             <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
