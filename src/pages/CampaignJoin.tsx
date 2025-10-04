@@ -213,17 +213,9 @@ export default function CampaignJoin() {
         </div>
       </div>
 
-      {/* Step Process */}
+      {/* Account Selection */}
       <div className="max-w-3xl mx-auto px-6">
-        {/* Step 1: Campaign Requirements */}
-        
-
-        {/* Step 2: Select Account */}
-        {currentStep >= 2 && <div className="relative flex gap-6 mb-8">
-            {/* Step Indicator */}
-            <div className="flex flex-col items-center pt-1">
-            </div>
-
+        <div className="relative flex gap-6 mb-8">
             {/* Step Content */}
             <div className="flex-1 pb-8">
               <h2 className="text-xl font-bold mb-4">Select An Account For This Campaign</h2>
@@ -277,9 +269,9 @@ export default function CampaignJoin() {
                   {selectedAccounts.length > 0 && <Button onClick={onSubmit} disabled={submitting} className="w-full mt-4">
                       {submitting ? "Submitting..." : `Submit Application${selectedAccounts.length > 1 ? 's' : ''} (${selectedAccounts.length})`}
                     </Button>}
-                </>}
+                 </>}
             </div>
-          </div>}
+          </div>
 
       </div>
 
