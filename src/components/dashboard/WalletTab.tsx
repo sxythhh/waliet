@@ -75,6 +75,7 @@ export function WalletTab() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [transactionSheetOpen, setTransactionSheetOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
   const {
     toast
   } = useToast();
@@ -274,6 +275,12 @@ export function WalletTab() {
     const {
       data: payoutRequests
     } = await supabase.from("payout_requests").select("*").eq("user_id", session.user.id);
+
+    // Calculate total pending withdrawals
+    const pendingAmount = payoutRequests
+      ?.filter(pr => pr.status === 'pending')
+      .reduce((sum, pr) => sum + Number(pr.amount), 0) || 0;
+    setPendingWithdrawals(pendingAmount);
     const allTransactions: Transaction[] = [];
     if (walletTransactions) {
       walletTransactions.forEach(txn => {
@@ -692,8 +699,8 @@ export function WalletTab() {
           <Separator className="my-6" />
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Available Balance</span>
-            <span className="text-lg font-semibold">${wallet?.balance?.toFixed(2) || "0.00"}</span>
+            <span className="text-sm text-muted-foreground">In Transit</span>
+            <span className="text-lg font-semibold">${pendingWithdrawals.toFixed(2)}</span>
           </div>
         </CardContent>
       </Card>
