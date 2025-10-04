@@ -110,13 +110,10 @@ export default function Auth() {
       <Card className="w-full max-w-md border">
         <CardHeader className="text-center space-y-6 pb-8">
           <div className="flex justify-center">
-            <div className="h-20 w-20 rounded-full flex items-center justify-center overflow-hidden bg-muted">
-              <img src={viralityLogo} alt="Virality Logo" className="w-full h-full object-cover" />
-            </div>
+            <img src={viralityLogo} alt="Virality Logo" className="h-20 w-auto" />
           </div>
           <div className="space-y-2">
             <CardTitle className="text-2xl font-semibold tracking-tight">Welcome to Virality</CardTitle>
-            <CardDescription className="text-sm">Join the creator economy revolution</CardDescription>
           </div>
         </CardHeader>
         
