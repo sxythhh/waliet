@@ -752,7 +752,11 @@ export function WalletTab() {
                       </div>
                     </div>
                   </div>
-                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
+                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${
+                    transaction.status === 'pending' 
+                      ? 'text-yellow-500' 
+                      : transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
+                  }`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
                 letterSpacing: '-0.5px'
               }}>
