@@ -959,57 +959,6 @@ export default function AdminUsers() {
 
         {/* Demographics Tab */}
         <TabsContent value="demographics" className="space-y-6">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pending</p>
-                    <p className="text-2xl font-bold mt-1">{pendingSubmissions.length}</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-warning" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Approved</p>
-                    <p className="text-2xl font-bold mt-1">{approvedSubmissions.length}</p>
-                  </div>
-                  <CheckCircle2 className="h-8 w-8 text-success" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Rejected</p>
-                    <p className="text-2xl font-bold mt-1">{rejectedSubmissions.length}</p>
-                  </div>
-                  <XCircle className="h-8 w-8 text-destructive" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Avg Tier 1</p>
-                    <p className="text-2xl font-bold mt-1">{avgTier1.toFixed(1)}%</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Demographics Tabs */}
           <Tabs defaultValue="pending" className="space-y-4">
             <TabsList className="bg-card border-0">
