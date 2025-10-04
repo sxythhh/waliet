@@ -291,7 +291,10 @@ export function WalletTab() {
 
         // Try to match with payout request to get full details
         if (txn.type === 'withdrawal' && payoutRequests) {
-          const matchingPayout = payoutRequests.find(pr => Math.abs(new Date(pr.requested_at).getTime() - new Date(txn.created_at).getTime()) < 5000 && Number(pr.amount) === Number(txn.amount));
+          const matchingPayout = payoutRequests.find(pr => 
+            Math.abs(new Date(pr.requested_at).getTime() - new Date(txn.created_at).getTime()) < 5000 && 
+            Number(pr.amount) === Math.abs(Number(txn.amount))
+          );
           if (matchingPayout) {
             payoutDetails = matchingPayout.payout_details;
             // Add rejection reason if available
