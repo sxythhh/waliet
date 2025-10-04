@@ -513,26 +513,24 @@ export default function AdminUsers() {
     }
     setUpdating(true);
     try {
-      const { error: updateError } = await supabase
-        .from("demographic_submissions")
-        .update({ score: scoreValue })
-        .eq("id", editingSubmission.id);
-      
+      const {
+        error: updateError
+      } = await supabase.from("demographic_submissions").update({
+        score: scoreValue
+      }).eq("id", editingSubmission.id);
       if (updateError) throw updateError;
 
       // Also update the profile's demographics score
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ demographics_score: scoreValue })
-        .eq("id", editingSubmission.social_accounts.user_id);
-      
+      const {
+        error: profileError
+      } = await supabase.from("profiles").update({
+        demographics_score: scoreValue
+      }).eq("id", editingSubmission.social_accounts.user_id);
       if (profileError) throw profileError;
-
       toast({
         title: "Success",
         description: "Demographics score updated successfully"
       });
-      
       setEditScoreDialogOpen(false);
       setEditingSubmission(null);
       setEditScore("");
@@ -570,12 +568,10 @@ export default function AdminUsers() {
       icon: Icon,
       color
     } = config[status as keyof typeof config] || config.pending;
-    return (
-      <Badge variant={variant} className="gap-1">
+    return <Badge variant={variant} className="gap-1">
         <Icon className={`h-3 w-3 ${color}`} />
         {status}
-      </Badge>
-    );
+      </Badge>;
   };
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
   const approvedSubmissions = submissions.filter(s => s.status === "approved");
@@ -612,7 +608,7 @@ export default function AdminUsers() {
         <CardContent className="pt-6 px-[10px] bg-[#080808] py-0">
           <div className="flex gap-4 items-end">
             <div className="flex-1">
-              <Label htmlFor="search">Search Users</Label>
+              
               <div className="relative mt-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input id="search" type="text" placeholder="Search by Virality username or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-[#1a1a1a] border-0 h-10" />
@@ -620,7 +616,7 @@ export default function AdminUsers() {
             </div>
             
             <div className="w-64">
-              <Label htmlFor="campaign">Filter by Campaign</Label>
+              
               <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2 border-0 bg-[#1a1a1a]">
@@ -869,19 +865,7 @@ export default function AdminUsers() {
       </Dialog>
 
       {/* User Details Dialog */}
-      <UserDetailsDialog 
-        open={userDetailsDialogOpen}
-        onOpenChange={setUserDetailsDialogOpen}
-        user={selectedUser}
-        socialAccounts={userSocialAccounts}
-        transactions={userTransactions}
-        loadingSocialAccounts={loadingSocialAccounts}
-        loadingTransactions={loadingTransactions}
-        socialAccountsOpen={socialAccountsOpen}
-        onSocialAccountsOpenChange={setSocialAccountsOpen}
-        transactionsOpen={transactionsOpen}
-        onTransactionsOpenChange={setTransactionsOpen}
-      />
+      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} transactions={userTransactions} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} />
         </TabsContent>
 
         {/* Demographics Tab */}
@@ -916,17 +900,17 @@ export default function AdminUsers() {
                               <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
                               <p className="text-xs text-muted-foreground">
                                 {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
                               </p>
                             </div>
                           </div>
                           <Button size="sm" className="h-8 text-xs" onClick={e => {
-                            e.stopPropagation();
-                            openReviewDialog(submission);
-                          }}>
+                      e.stopPropagation();
+                      openReviewDialog(submission);
+                    }}>
                             Review
                           </Button>
                         </div>
@@ -943,27 +927,18 @@ export default function AdminUsers() {
                   </CardContent>
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {approvedSubmissions.map(submission => {
-                    const submittedDate = new Date(submission.submitted_at);
-                    const nextSubmissionDate = new Date(submittedDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                    
-                    return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
+                const submittedDate = new Date(submission.submitted_at);
+                const nextSubmissionDate = new Date(submittedDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
                       <CardContent className="p-4">
-                        <a 
-                          href={`https://${submission.social_accounts.platform}.com/${submission.social_accounts.username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 mb-3 hover:bg-muted/20 p-2 -m-2 rounded-lg transition-colors group"
-                        >
+                        <a href={`https://${submission.social_accounts.platform}.com/${submission.social_accounts.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 mb-3 hover:bg-muted/20 p-2 -m-2 rounded-lg transition-colors group">
                           {getPlatformIcon(submission.social_accounts.platform)}
                           <div>
                             <h3 className="font-semibold text-sm group-hover:underline">@{submission.social_accounts.username}</h3>
                           </div>
                         </a>
 
-                        <div 
-                          className="bg-[#0d0d0d] rounded-lg p-3 mb-3 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
-                          onClick={() => openEditScoreDialog(submission)}
-                        >
+                        <div className="bg-[#0d0d0d] rounded-lg p-3 mb-3 cursor-pointer hover:bg-[#1a1a1a] transition-colors" onClick={() => openEditScoreDialog(submission)}>
                           <p className="text-[10px] text-muted-foreground mb-0.5">Demographics Score</p>
                           <p className="text-2xl font-bold font-chakra text-success">{submission.score}</p>
                         </div>
@@ -973,20 +948,20 @@ export default function AdminUsers() {
                             <span className="text-muted-foreground">Submitted</span>
                             <span className="font-medium">
                               {submittedDate.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Next Update</span>
                             <span className="font-medium">
                               {nextSubmissionDate.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
                             </span>
                           </div>
                          </div>
@@ -994,7 +969,7 @@ export default function AdminUsers() {
                         {submission.admin_notes && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{submission.admin_notes}</p>}
                       </CardContent>
                     </Card>;
-                  })}
+              })}
                 </div>}
             </TabsContent>
           </Tabs>
@@ -1007,12 +982,7 @@ export default function AdminUsers() {
               </DialogHeader>
 
               {selectedSubmission && <div className="space-y-4">
-                  <a 
-                    href={`https://${selectedSubmission.social_accounts.platform}.com/${selectedSubmission.social_accounts.username}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors group"
-                  >
+                  <a href={`https://${selectedSubmission.social_accounts.platform}.com/${selectedSubmission.social_accounts.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors group">
                     {getPlatformIcon(selectedSubmission.social_accounts.platform)}
                     <div>
                       <p className="font-semibold group-hover:underline">@{selectedSubmission.social_accounts.username}</p>
@@ -1032,28 +1002,17 @@ export default function AdminUsers() {
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t">
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={() => {
-                        setReviewStatus("rejected");
-                        handleReview();
-                      }} 
-                      disabled={updating} 
-                      className="flex-1"
-                    >
+                    <Button variant="destructive" size="sm" onClick={() => {
+                  setReviewStatus("rejected");
+                  handleReview();
+                }} disabled={updating} className="flex-1">
                       <XCircle className="h-4 w-4 mr-2" />
                       Reject
                     </Button>
-                    <Button 
-                      onClick={() => {
-                        setReviewStatus("approved");
-                        handleReview();
-                      }} 
-                      disabled={updating} 
-                      size="sm" 
-                      className="flex-1"
-                    >
+                    <Button onClick={() => {
+                  setReviewStatus("approved");
+                  handleReview();
+                }} disabled={updating} size="sm" className="flex-1">
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       {updating ? "Accepting..." : "Accept"}
                     </Button>
@@ -1077,31 +1036,14 @@ export default function AdminUsers() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="edit-score">Score (0-100)</Label>
-              <Input 
-                id="edit-score"
-                type="number" 
-                min="0" 
-                max="100" 
-                value={editScore} 
-                onChange={e => setEditScore(e.target.value)} 
-                placeholder="Enter score"
-              />
+              <Input id="edit-score" type="number" min="0" max="100" value={editScore} onChange={e => setEditScore(e.target.value)} placeholder="Enter score" />
             </div>
 
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setEditScoreDialogOpen(false)}
-                disabled={updating}
-                className="flex-1"
-              >
+              <Button variant="outline" onClick={() => setEditScoreDialogOpen(false)} disabled={updating} className="flex-1">
                 Cancel
               </Button>
-              <Button 
-                onClick={handleUpdateScore}
-                disabled={updating}
-                className="flex-1"
-              >
+              <Button onClick={handleUpdateScore} disabled={updating} className="flex-1">
                 {updating ? "Updating..." : "Update Score"}
               </Button>
             </div>
