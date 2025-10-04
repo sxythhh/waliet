@@ -656,7 +656,9 @@ export default function AdminPayouts() {
                               {request.payout_method === 'crypto' ? 'Wallet Address' : 'Account Details'}
                             </p>
                             <p className="font-medium truncate text-xs">
-                              {request.payout_details?.wallet_address || request.payout_details?.email || request.payout_details?.account_number || 'N/A'}
+                              {request.payout_method === 'crypto' 
+                                ? `${request.payout_details?.address || request.payout_details?.wallet_address || 'N/A'} (${request.payout_details?.currency?.toUpperCase() || 'CRYPTO'})`
+                                : request.payout_details?.email || request.payout_details?.account_number || 'N/A'}
                             </p>
                           </div>
 
