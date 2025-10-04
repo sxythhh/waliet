@@ -22,13 +22,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Upload, X } from "lucide-react";
 
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
-  description: z.string().trim().max(1000).optional(),
   budget: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Budget must be a positive number",
   }),
@@ -99,7 +99,6 @@ export function CreateCampaignDialog({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
       title: campaign?.title || "",
-      description: campaign?.description || "",
       budget: campaign?.budget?.toString() || "",
       rpm_rate: campaign?.rpm_rate?.toString() || "",
       guidelines: campaign?.guidelines || "",
@@ -181,7 +180,6 @@ export function CreateCampaignDialog({
 
       const campaignData = {
         title: values.title,
-        description: values.description || null,
         budget: Number(values.budget),
         rpm_rate: Number(values.rpm_rate),
         guidelines: values.guidelines || null,
@@ -318,25 +316,6 @@ export function CreateCampaignDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe your campaign"
-                      className="resize-none bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-destructive/80" />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -446,14 +425,17 @@ export function CreateCampaignDialog({
               render={() => (
                 <FormItem>
                   <FormLabel className="text-white">Allowed Platforms</FormLabel>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <FormField
                       control={form.control}
                       name="allowed_platforms"
                       render={({ field }) => (
-                        <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-3 bg-[#191919]">
+                          <FormLabel className="text-white font-normal cursor-pointer">
+                            TikTok
+                          </FormLabel>
                           <FormControl>
-                            <Checkbox
+                            <Switch
                               checked={field.value?.includes("tiktok")}
                               onCheckedChange={(checked) => {
                                 const newValue = checked
@@ -461,12 +443,8 @@ export function CreateCampaignDialog({
                                   : field.value?.filter((val) => val !== "tiktok") || [];
                                 field.onChange(newValue);
                               }}
-                              className="border-white/20 data-[state=checked]:bg-primary"
                             />
                           </FormControl>
-                          <FormLabel className="text-white font-normal cursor-pointer">
-                            TikTok
-                          </FormLabel>
                         </FormItem>
                       )}
                     />
@@ -474,9 +452,12 @@ export function CreateCampaignDialog({
                       control={form.control}
                       name="allowed_platforms"
                       render={({ field }) => (
-                        <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-3 bg-[#191919]">
+                          <FormLabel className="text-white font-normal cursor-pointer">
+                            Instagram
+                          </FormLabel>
                           <FormControl>
-                            <Checkbox
+                            <Switch
                               checked={field.value?.includes("instagram")}
                               onCheckedChange={(checked) => {
                                 const newValue = checked
@@ -484,12 +465,52 @@ export function CreateCampaignDialog({
                                   : field.value?.filter((val) => val !== "instagram") || [];
                                 field.onChange(newValue);
                               }}
-                              className="border-white/20 data-[state=checked]:bg-primary"
                             />
                           </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="allowed_platforms"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-3 bg-[#191919]">
                           <FormLabel className="text-white font-normal cursor-pointer">
-                            Instagram
+                            X (Twitter)
                           </FormLabel>
+                          <FormControl>
+                            <Switch
+                              checked={field.value?.includes("x")}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked
+                                  ? [...(field.value || []), "x"]
+                                  : field.value?.filter((val) => val !== "x") || [];
+                                field.onChange(newValue);
+                              }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="allowed_platforms"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-3 bg-[#191919]">
+                          <FormLabel className="text-white font-normal cursor-pointer">
+                            YouTube
+                          </FormLabel>
+                          <FormControl>
+                            <Switch
+                              checked={field.value?.includes("youtube")}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked
+                                  ? [...(field.value || []), "youtube"]
+                                  : field.value?.filter((val) => val !== "youtube") || [];
+                                field.onChange(newValue);
+                              }}
+                            />
+                          </FormControl>
                         </FormItem>
                       )}
                     />
