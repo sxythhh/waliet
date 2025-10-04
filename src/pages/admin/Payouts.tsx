@@ -647,7 +647,7 @@ export default function AdminPayouts() {
                                 <CheckCircle2 className="h-4 w-4" />
                                 Approve
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => handleCompleteDirectly(request)} className="gap-1.5">
+                              <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1.5 bg-green-600 hover:bg-green-700 text-white border-0">
                                 <DollarSign className="h-4 w-4" />
                                 Mark as Completed
                               </Button>
