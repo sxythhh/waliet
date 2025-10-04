@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Layers, BookOpen, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
+import { Home, FolderOpen, Layers, GalleryHorizontalEnd, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarHeader } from "@/components/ui/sidebar";
@@ -68,7 +68,7 @@ export function BrandSidebar() {
     path: "assets"
   }, {
     title: "Library",
-    icon: BookOpen,
+    icon: GalleryHorizontalEnd,
     path: "library"
   }];
 
