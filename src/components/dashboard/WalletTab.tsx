@@ -533,7 +533,7 @@ export function WalletTab() {
         error: txnError
       } = await supabase.from("wallet_transactions").insert({
         user_id: session.user.id,
-        amount: amount,
+        amount: -amount,  // Negative for withdrawals
         type: 'withdrawal',
         status: 'pending',
         description: `Withdrawal to ${selectedMethod.method === 'paypal' ? 'PayPal' : 'Crypto'}`,

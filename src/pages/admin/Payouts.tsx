@@ -323,7 +323,7 @@ export default function AdminPayouts() {
       return;
     }
 
-    // Update existing transaction to completed
+    // Update existing transaction to completed - match by user, type, amount, and pending status
     const { error: transactionError } = await supabase
       .from("wallet_transactions")
       .update({
@@ -333,7 +333,9 @@ export default function AdminPayouts() {
       .eq("user_id", request.user_id)
       .eq("type", "withdrawal")
       .eq("amount", -Number(request.amount))
-      .eq("status", "pending");
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1);
 
     if (transactionError) {
       console.error("Failed to update transaction:", transactionError);
