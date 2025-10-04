@@ -761,7 +761,7 @@ export function WalletTab() {
                 fontFamily: 'Chakra Petch, sans-serif',
                 letterSpacing: '-0.5px'
               }}>
-                    {transaction.type === 'earning' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                    {transaction.type === 'earning' ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
                   </div>
                 </div>)}
             </div>}
@@ -1136,7 +1136,7 @@ export function WalletTab() {
                 fontFamily: 'Chakra Petch, sans-serif',
                 letterSpacing: '-1px'
               }}>
-                      {selectedTransaction.type === 'earning' ? '+' : '-'}${selectedTransaction.amount.toFixed(2)}
+                      {selectedTransaction.type === 'earning' ? '+' : '-'}${Math.abs(selectedTransaction.amount).toFixed(2)}
                     </div>}
                 </div>
               </div>
@@ -1239,7 +1239,7 @@ export function WalletTab() {
                     <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                       <span className="text-sm text-muted-foreground">Amount</span>
                       <span className={`text-sm font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`}>
-                        {selectedTransaction.type === 'earning' ? '+' : '-'}${selectedTransaction.amount.toFixed(2)}
+                        {selectedTransaction.type === 'earning' ? '+' : '-'}${Math.abs(selectedTransaction.amount).toFixed(2)}
                       </span>
                     </div>
 
