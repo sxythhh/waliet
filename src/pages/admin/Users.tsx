@@ -916,7 +916,7 @@ export default function AdminUsers() {
                     No pending submissions
                   </CardContent>
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {pendingSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
+                  {pendingSubmissions.filter(submission => submission.social_accounts).map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -951,7 +951,7 @@ export default function AdminUsers() {
                     No approved submissions
                   </CardContent>
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {approvedSubmissions.map(submission => {
+                  {approvedSubmissions.filter(submission => submission.social_accounts).map(submission => {
                 const submittedDate = new Date(submission.submitted_at);
                 const nextSubmissionDate = new Date(submittedDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                 return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
