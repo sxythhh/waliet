@@ -222,12 +222,31 @@ export default function AdminPayouts() {
       newStatus = 'in_transit';
       updateData.transaction_id = null;
       
+      // Get current wallet data first
+      const { data: walletData, error: walletFetchError } = await supabase
+        .from("wallets")
+        .select("balance, total_withdrawn")
+        .eq("user_id", selectedRequest.user_id)
+        .single();
+
+      if (walletFetchError || !walletData) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch wallet data"
+        });
+        return;
+      }
+
+      const newBalance = Number(walletData.balance) + Number(selectedRequest.amount);
+      const newTotalWithdrawn = Number(walletData.total_withdrawn) - Number(selectedRequest.amount);
+      
       // Restore wallet balance
       const { error: walletError } = await supabase
         .from("wallets")
         .update({
-          balance: selectedRequest.amount,
-          total_withdrawn: 0
+          balance: newBalance,
+          total_withdrawn: newTotalWithdrawn
         })
         .eq("user_id", selectedRequest.user_id);
       
@@ -270,16 +289,29 @@ export default function AdminPayouts() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const updateData = {
-      status: 'completed' as const,
-      processed_at: new Date().toISOString(),
-      processed_by: session.user.id
-    };
+    // Get current wallet balance first
+    const { data: walletData, error: walletFetchError } = await supabase
+      .from("wallets")
+      .select("balance, total_withdrawn")
+      .eq("user_id", request.user_id)
+      .single();
+
+    if (walletFetchError || !walletData) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch wallet data"
+      });
+      return;
+    }
+
+    const newBalance = Number(walletData.balance) - Number(request.amount);
+    const newTotalWithdrawn = Number(walletData.total_withdrawn) + Number(request.amount);
 
     // Update wallet balance
     const { error: walletError } = await supabase.from("wallets").update({
-      balance: 0,
-      total_withdrawn: request.amount
+      balance: newBalance,
+      total_withdrawn: newTotalWithdrawn
     }).eq("user_id", request.user_id);
 
     if (walletError) {
@@ -290,6 +322,30 @@ export default function AdminPayouts() {
       });
       return;
     }
+
+    // Create a wallet transaction record
+    const { error: transactionError } = await supabase.from("wallet_transactions").insert({
+      user_id: request.user_id,
+      amount: -Number(request.amount),
+      type: 'withdrawal',
+      status: 'completed',
+      description: `Payout via ${request.payout_method}`,
+      created_by: session.user.id,
+      metadata: {
+        payout_request_id: request.id,
+        payout_method: request.payout_method
+      }
+    });
+
+    if (transactionError) {
+      console.error("Failed to create transaction record:", transactionError);
+    }
+
+    const updateData = {
+      status: 'completed' as const,
+      processed_at: new Date().toISOString(),
+      processed_by: session.user.id
+    };
 
     const { error } = await supabase.from("payout_requests").update(updateData).eq("id", request.id);
 
