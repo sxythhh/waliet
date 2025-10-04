@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { ChevronRight, BookOpen, ArrowLeft, Menu } from "lucide-react";
+import { ChevronRight, BookOpen, ArrowLeft, Menu, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -15,6 +15,7 @@ interface Course {
   title: string;
   description: string | null;
   order_index: number;
+  is_locked?: boolean;
 }
 
 interface Module {
@@ -34,6 +35,7 @@ export default function Training() {
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [brandId, setBrandId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTrainingData();
@@ -43,7 +45,22 @@ export default function Training() {
     if (!slug) return;
 
     try {
-      // Fetch all courses (they're now global)
+      // Fetch brand info
+      const { data: brandData, error: brandError } = await supabase
+        .from("brands")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (brandError) throw brandError;
+      if (!brandData) {
+        toast.error("Brand not found");
+        return;
+      }
+
+      setBrandId(brandData.id);
+
+      // Fetch all courses
       const { data: coursesData, error: coursesError } = await supabase
         .from("courses")
         .select("*")
@@ -51,7 +68,23 @@ export default function Training() {
 
       if (coursesError) throw coursesError;
 
-      setCourses(coursesData || []);
+      // Fetch brand access for this brand
+      const { data: accessData, error: accessError } = await supabase
+        .from("brand_course_access")
+        .select("*")
+        .eq("brand_id", brandData.id);
+
+      if (accessError) throw accessError;
+
+      // Mark courses as locked/unlocked based on access
+      const coursesWithAccess = coursesData?.map(course => {
+        const accessRecord = accessData?.find(a => a.course_id === course.id);
+        // Default to unlocked (true) if no record exists
+        const isLocked = accessRecord ? !accessRecord.has_access : false;
+        return { ...course, is_locked: isLocked };
+      }) || [];
+
+      setCourses(coursesWithAccess);
 
       // Fetch modules for each course
       if (coursesData && coursesData.length > 0) {
@@ -83,7 +116,11 @@ export default function Training() {
     }
   };
 
-  const handleModuleSelect = (moduleId: string, courseId: string) => {
+  const handleModuleSelect = (moduleId: string, courseId: string, isLocked?: boolean) => {
+    if (isLocked) {
+      toast.error("This course is locked. Contact your administrator for access.");
+      return;
+    }
     setSelectedModuleId(moduleId);
     setSelectedCourseId(courseId);
     setMobileMenuOpen(false);
@@ -142,19 +179,29 @@ export default function Training() {
       {courses.map((course) => (
         <div key={course.id} className="space-y-1">
           <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white/80">
-            <BookOpen className="h-4 w-4" />
+            {course.is_locked ? (
+              <Lock className="h-4 w-4 text-red-500" />
+            ) : (
+              <BookOpen className="h-4 w-4" />
+            )}
             <span className="truncate">{course.title}</span>
+            {course.is_locked && (
+              <span className="text-xs text-red-500 ml-auto">Locked</span>
+            )}
           </div>
           {modules[course.id]?.map((module, moduleIndex) => (
             <Button
               key={module.id}
               variant="ghost"
+              disabled={course.is_locked}
               className={`w-full justify-start text-left font-normal pl-9 ${
                 selectedModuleId === module.id
                   ? 'bg-[#5865F2] text-white hover:bg-[#5865F2] hover:text-white'
+                  : course.is_locked
+                  ? 'text-white/30 cursor-not-allowed'
                   : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
-              onClick={() => handleModuleSelect(module.id, course.id)}
+              onClick={() => handleModuleSelect(module.id, course.id, course.is_locked)}
             >
               <span className="text-xs mr-2">{moduleIndex + 1}</span>
               <span className="truncate">{module.title}</span>
@@ -201,31 +248,45 @@ export default function Training() {
           /* Course Overview */
           <div className="space-y-6">
             {courses.map((course) => (
-              <Card key={course.id} className="bg-[#202020] border-none">
+              <Card key={course.id} className={`bg-[#202020] border-none ${course.is_locked ? 'opacity-60' : ''}`}>
                 <CardContent className="p-6">
-                  <h2 className="text-2xl font-bold text-white mb-2">{course.title}</h2>
+                  <div className="flex items-center gap-3 mb-2">
+                    {course.is_locked && <Lock className="h-5 w-5 text-red-500" />}
+                    <h2 className="text-2xl font-bold text-white">{course.title}</h2>
+                    {course.is_locked && (
+                      <span className="ml-auto text-sm text-red-500 font-medium">Locked</span>
+                    )}
+                  </div>
                   {course.description && (
                     <p className="text-white/60 mb-4">{course.description}</p>
                   )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {modules[course.id]?.map((module, moduleIndex) => (
-                      <Button
-                        key={module.id}
-                        variant="outline"
-                        className="h-auto min-h-[80px] p-4 justify-start text-left border-white/10 bg-[#191919] hover:bg-white/5"
-                        onClick={() => handleModuleSelect(module.id, course.id)}
-                      >
-                        <div className="flex items-start gap-3 w-full">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white text-sm font-medium">
-                            {moduleIndex + 1}
+                  {course.is_locked ? (
+                    <div className="text-center py-8 text-white/60">
+                      <Lock className="h-12 w-12 mx-auto mb-3 text-red-500/50" />
+                      <p>This course is locked.</p>
+                      <p className="text-sm">Contact your administrator for access.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                      {modules[course.id]?.map((module, moduleIndex) => (
+                        <Button
+                          key={module.id}
+                          variant="outline"
+                          className="h-auto min-h-[80px] p-4 justify-start text-left border-white/10 bg-[#191919] hover:bg-white/5"
+                          onClick={() => handleModuleSelect(module.id, course.id, course.is_locked)}
+                        >
+                          <div className="flex items-start gap-3 w-full">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white text-sm font-medium">
+                              {moduleIndex + 1}
+                            </div>
+                            <div className="flex-1 min-w-0 pt-1">
+                              <div className="text-white font-medium leading-tight break-words">{module.title}</div>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0 pt-1">
-                            <div className="text-white font-medium leading-tight break-words">{module.title}</div>
-                          </div>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

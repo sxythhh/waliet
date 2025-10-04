@@ -10,6 +10,7 @@ import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { ManageBrandAccessDialog } from "@/components/ManageBrandAccessDialog";
 interface Course {
   id: string;
   title: string;
@@ -201,10 +202,13 @@ export function ManageTrainingDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <Button onClick={addCourse} disabled={loading} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Course
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={addCourse} disabled={loading} className="flex-1">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Course
+            </Button>
+            <ManageBrandAccessDialog />
+          </div>
 
           {courses.map(course => {
           const isEditing = editingCourse?.id === course.id;

@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_course_access: {
+        Row: {
+          brand_id: string
+          course_id: string
+          created_at: string
+          has_access: boolean
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          course_id: string
+          created_at?: string
+          has_access?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          course_id?: string
+          created_at?: string
+          has_access?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_course_access_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_course_access_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           account_url: string | null
