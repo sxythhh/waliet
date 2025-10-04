@@ -639,7 +639,7 @@ export function ProfileTab() {
                   await supabase.auth.signOut();
                   navigate('/auth');
                 }}
-                className="gap-2 border-red-500 bg-red-500/10 hover:bg-red-500/20 text-red-500"
+                className="gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500"
               >
                 <LogOut className="h-4 w-4" />
                 Sign Out
