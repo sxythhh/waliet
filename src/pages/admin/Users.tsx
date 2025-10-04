@@ -1015,70 +1015,55 @@ export default function AdminUsers() {
                     No approved submissions
                   </CardContent>
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {approvedSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
+                  {approvedSubmissions.map(submission => {
+                    const reviewedDate = submission.reviewed_at ? new Date(submission.reviewed_at) : null;
+                    const nextSubmissionDate = reviewedDate ? new Date(reviewedDate.getTime() + 30 * 24 * 60 * 60 * 1000) : null;
+                    
+                    return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            {getPlatformIcon(submission.social_accounts.platform)}
-                            <div>
-                              <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
+                        <div className="flex items-center gap-2 mb-3">
+                          {getPlatformIcon(submission.social_accounts.platform)}
+                          <div>
+                            <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
+                          </div>
+                        </div>
+
+                        <div className="bg-[#0d0d0d] rounded-lg p-3 mb-3">
+                          <p className="text-[10px] text-muted-foreground mb-0.5">Demographics Score</p>
+                          <p className="text-2xl font-bold font-chakra text-success">{submission.score}</p>
+                        </div>
+
+                        <div className="space-y-1.5 text-xs">
+                          {reviewedDate && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Approved</span>
+                              <span className="font-medium">
+                                {reviewedDate.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </span>
                             </div>
-                          </div>
-                          {getStatusBadge(submission.status)}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                          <div className="bg-[#0d0d0d] rounded-lg p-2">
-                            <p className="text-[10px] text-muted-foreground mb-0.5">Tier 1</p>
-                            <p className="text-lg font-bold font-chakra">{submission.tier1_percentage}%</p>
-                          </div>
-                          <div className="bg-[#0d0d0d] rounded-lg p-2">
-                            <p className="text-[10px] text-muted-foreground mb-0.5">Score</p>
-                            <p className="text-lg font-bold font-chakra text-success">{submission.score}</p>
-                          </div>
-                        </div>
-
-                        {submission.admin_notes && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>}
-
-                        <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => openReviewDialog(submission)}>
-                          View Details
-                        </Button>
-                      </CardContent>
-                    </Card>)}
-                </div>}
-            </TabsContent>
-
-            {/* Rejected Submissions */}
-            <TabsContent value="rejected" className="space-y-4">
-              {rejectedSubmissions.length === 0 ? <Card className="bg-card border-0">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    No rejected submissions
-                  </CardContent>
-                </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {rejectedSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-destructive/50 transition-all">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            {getPlatformIcon(submission.social_accounts.platform)}
-                            <div>
-                              <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
+                          )}
+                          {nextSubmissionDate && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Next Update</span>
+                              <span className="font-medium">
+                                {nextSubmissionDate.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </span>
                             </div>
-                          </div>
-                          {getStatusBadge(submission.status)}
+                          )}
                         </div>
 
-                        <div className="bg-[#0d0d0d] rounded-lg p-2 mb-3">
-                          <p className="text-[10px] text-muted-foreground mb-0.5">Tier 1 Percentage</p>
-                          <p className="text-lg font-bold font-chakra">{submission.tier1_percentage}%</p>
-                        </div>
-
-                        {submission.admin_notes && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>}
-
-                        <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => openReviewDialog(submission)}>
-                          View Details
-                        </Button>
+                        {submission.admin_notes && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{submission.admin_notes}</p>}
                       </CardContent>
-                    </Card>)}
+                    </Card>;
+                  })}
                 </div>}
             </TabsContent>
           </Tabs>
