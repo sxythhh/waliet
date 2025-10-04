@@ -17,7 +17,7 @@ interface PayoutRequest {
   id: string;
   user_id: string;
   amount: number;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'in_transit' | 'rejected' | 'completed';
   payout_method: string;
   payout_details: any;
   requested_at: string;
@@ -187,7 +187,7 @@ export default function AdminPayouts() {
   }, [allRequests, activeTab]);
   const stats = useMemo(() => ({
     pending: allRequests.filter(r => r.status === 'pending').length,
-    approved: allRequests.filter(r => r.status === 'approved').length,
+    in_transit: allRequests.filter(r => r.status === 'in_transit').length,
     completed: allRequests.filter(r => r.status === 'completed').length,
     rejected: allRequests.filter(r => r.status === 'rejected').length,
     totalPending: allRequests.filter(r => r.status === 'pending').reduce((sum, r) => sum + Number(r.amount), 0)
@@ -214,7 +214,7 @@ export default function AdminPayouts() {
       notes: notes || null
     };
     if (action === 'approve') {
-      updateData.status = 'approved';
+      updateData.status = 'in_transit';
     } else if (action === 'reject') {
       if (!rejectionReason) {
         toast({
@@ -276,29 +276,38 @@ export default function AdminPayouts() {
     const variants: Record<string, any> = {
       pending: {
         variant: "secondary",
-        label: "Pending"
+        label: "Pending",
+        icon: Clock
       },
-      approved: {
+      in_transit: {
         variant: "default",
-        label: "Approved"
+        label: "In Transit",
+        icon: TrendingUp
       },
       rejected: {
         variant: "destructive",
-        label: "Rejected"
+        label: "Rejected",
+        icon: XCircle
       },
       completed: {
         variant: "default",
-        label: "Completed"
+        label: "Completed",
+        icon: CheckCircle2
       }
     };
     const {
       variant,
-      label
+      label,
+      icon: Icon
     } = variants[status] || {
       variant: "secondary",
-      label: "Unknown"
+      label: "Unknown",
+      icon: Clock
     };
-    return <Badge variant={variant}>{label}</Badge>;
+    return <Badge variant={variant} className="flex items-center gap-1">
+        <Icon className="h-3 w-3" />
+        {label}
+      </Badge>;
   };
   const getPayoutMethodIcon = (method: string, details?: any) => {
     console.log('Payout method:', method, 'Details:', details);
@@ -339,9 +348,9 @@ export default function AdminPayouts() {
               <Clock className="h-4 w-4" />
               Pending
             </TabsTrigger>
-            <TabsTrigger value="approved" className="gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              Approved
+            <TabsTrigger value="in_transit" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              In Transit
             </TabsTrigger>
             <TabsTrigger value="completed" className="gap-2">
               <DollarSign className="h-4 w-4" />
@@ -453,7 +462,7 @@ export default function AdminPayouts() {
                           </div>}
 
                         {/* Action Buttons */}
-                        {(request.status === 'pending' || request.status === 'approved') && (
+                        {(request.status === 'pending' || request.status === 'in_transit') && (
                           <div className="flex gap-2 pt-3 border-t">
                             {request.status === 'pending' && <>
                                 <Button size="sm" onClick={() => openActionDialog(request, 'approve')} className="gap-1.5">
@@ -466,7 +475,7 @@ export default function AdminPayouts() {
                                 </Button>
                               </>}
                             
-                            {request.status === 'approved' && <Button size="sm" onClick={() => openActionDialog(request, 'complete')} className="gap-1.5">
+                            {request.status === 'in_transit' && <Button size="sm" onClick={() => openActionDialog(request, 'complete')} className="gap-1.5">
                                 <DollarSign className="h-4 w-4" />
                                 Mark as Complete
                               </Button>}

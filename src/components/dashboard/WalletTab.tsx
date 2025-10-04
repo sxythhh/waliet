@@ -276,9 +276,9 @@ export function WalletTab() {
       data: payoutRequests
     } = await supabase.from("payout_requests").select("*").eq("user_id", session.user.id);
 
-    // Calculate total pending withdrawals
+    // Calculate total pending and in-transit withdrawals
     const pendingAmount = payoutRequests
-      ?.filter(pr => pr.status === 'pending')
+      ?.filter(pr => pr.status === 'pending' || pr.status === 'in_transit')
       .reduce((sum, pr) => sum + Number(pr.amount), 0) || 0;
     setPendingWithdrawals(pendingAmount);
     const allTransactions: Transaction[] = [];
@@ -717,10 +717,17 @@ export function WalletTab() {
                     }}>
                           {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
                         </p>
-                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
+                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${
+                      transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 
+                      transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' :
+                      'text-yellow-500 bg-yellow-500/5'
+                    }`} style={{
                       letterSpacing: '-0.5px'
                     }}>
-                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
+                            {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
+                            {transaction.status === 'pending' && <Clock className="h-2.5 w-2.5" />}
+                            {transaction.status === 'completed' && <Check className="h-2.5 w-2.5" />}
+                            {transaction.status === 'in_transit' ? 'In Transit' : transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
                           </Badge>}
                       </div>
                       
@@ -1102,9 +1109,15 @@ export function WalletTab() {
                 <div className="text-center mb-2">
                   {selectedTransaction.type === 'withdrawal' ? <>
                       <div className="flex items-center justify-center mb-3">
-                        <div className={`w-16 h-16 rounded-full ${selectedTransaction.status === 'completed' ? 'bg-green-500/10' : 'bg-orange-500/10'} flex items-center justify-center`}>
+                      <div className={`w-16 h-16 rounded-full ${
+                        selectedTransaction.status === 'completed' ? 'bg-green-500/10' : 
+                        selectedTransaction.status === 'in_transit' ? 'bg-blue-500/10' :
+                        'bg-orange-500/10'
+                      } flex items-center justify-center`}>
                           {selectedTransaction.status === 'completed' ? (
                             <Check className="w-8 h-8 text-green-500" />
+                          ) : selectedTransaction.status === 'in_transit' ? (
+                            <TrendingUp className="w-8 h-8 text-blue-500" />
                           ) : (
                             <Hourglass className="w-8 h-8 text-orange-500" />
                           )}
@@ -1115,6 +1128,8 @@ export function WalletTab() {
                 }}>
                         {selectedTransaction.status === 'completed' 
                           ? `You have received $${selectedTransaction.amount.toFixed(2)}!`
+                          : selectedTransaction.status === 'in_transit'
+                          ? `Your $${selectedTransaction.amount.toFixed(2)} is in transit!`
                           : `Your $${selectedTransaction.amount.toFixed(2)} is on its way!`}
                       </p>
                     </> : <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
@@ -1133,8 +1148,16 @@ export function WalletTab() {
                   <span className="text-sm text-muted-foreground">
                     {format(selectedTransaction.date, 'MMMM dd yyyy, hh:mm a')}
                   </span>
-                  {selectedTransaction.status && <Badge variant={selectedTransaction.status === 'completed' ? 'default' : selectedTransaction.status === 'rejected' ? 'destructive' : 'secondary'} className="capitalize">
-                      {selectedTransaction.status}
+                  {selectedTransaction.status && <Badge variant={
+                    selectedTransaction.status === 'completed' ? 'default' : 
+                    selectedTransaction.status === 'rejected' ? 'destructive' : 
+                    selectedTransaction.status === 'in_transit' ? 'default' :
+                    'secondary'
+                  } className="capitalize flex items-center gap-1">
+                      {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3" />}
+                      {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3" />}
+                      {selectedTransaction.status === 'completed' && <Check className="h-3 w-3" />}
+                      {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
                     </Badge>}
                 </div>
 

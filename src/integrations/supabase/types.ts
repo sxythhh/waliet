@@ -459,7 +459,7 @@ export type Database = {
           processed_by: string | null
           rejection_reason: string | null
           requested_at: string
-          status: string
+          status: Database["public"]["Enums"]["payout_status_new"]
           transaction_id: string | null
           updated_at: string
           user_id: string
@@ -475,7 +475,7 @@ export type Database = {
           processed_by?: string | null
           rejection_reason?: string | null
           requested_at?: string
-          status?: string
+          status?: Database["public"]["Enums"]["payout_status_new"]
           transaction_id?: string | null
           updated_at?: string
           user_id: string
@@ -491,7 +491,7 @@ export type Database = {
           processed_by?: string | null
           rejection_reason?: string | null
           requested_at?: string
-          status?: string
+          status?: Database["public"]["Enums"]["payout_status_new"]
           transaction_id?: string | null
           updated_at?: string
           user_id?: string
@@ -916,6 +916,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      payout_status_new: "pending" | "in_transit" | "completed" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1044,6 +1045,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      payout_status_new: ["pending", "in_transit", "completed", "rejected"],
     },
   },
 } as const
