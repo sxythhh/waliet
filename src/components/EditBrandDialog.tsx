@@ -19,7 +19,7 @@ const brandSchema = z.object({
   brand_type: z.enum(["Lead", "DWY", "Client"], {
     required_error: "Please select a brand type"
   }),
-  home_url: z.string().url().optional().or(z.literal("")),
+  home_url: z.string().trim().optional().or(z.literal("")),
   account_url: z.string().url().optional().or(z.literal("")),
   assets_url: z.string().url().optional().or(z.literal("")),
   show_account_tab: z.boolean()
@@ -240,12 +240,17 @@ export function EditBrandDialog({
               <FormField control={form.control} name="home_url" render={({
               field
             }) => <FormItem>
-                    <FormLabel>Home URL</FormLabel>
+                    <FormLabel>Home Embed HTML</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://example.com/home" {...field} />
+                      <Textarea 
+                        placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />' 
+                        className="resize-none font-mono text-xs"
+                        rows={4}
+                        {...field} 
+                      />
                     </FormControl>
                     <FormDescription>
-                      URL for the brand's home page
+                      Paste the full iframe HTML code for the brand&apos;s home page embed
                     </FormDescription>
                     <FormMessage />
                   </FormItem>} />
