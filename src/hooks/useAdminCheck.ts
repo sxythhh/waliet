@@ -16,6 +16,13 @@ export const useAdminCheck = () => {
           return;
         }
 
+        // Check if user email is team@virality.cc
+        if (user.email !== "team@virality.cc") {
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from("user_roles")
           .select("role")

@@ -10,6 +10,7 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -97,6 +98,25 @@ function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const navigate = useNavigate();
+  const { isAdmin, loading } = useAdminCheck();
+
+  useEffect(() => {
+    if (!loading && !isAdmin) {
+      navigate("/dashboard");
+    }
+  }, [isAdmin, loading, navigate]);
+
+  if (loading) {
+    return <div className="flex min-h-screen items-center justify-center">
+      <p>Loading...</p>
+    </div>;
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
+
   return <div className="flex min-h-screen w-full">
       <AdminSidebar />
       <main className="flex-1">{children}</main>
