@@ -593,14 +593,14 @@ export function WalletTab() {
     '1Y': '1 Year',
     'TW': 'This Week'
   };
-  return <div className="space-y-6 max-w-6xl mx-auto">
+  return <div className="space-y-6 max-w-6xl mx-auto my-0">
       {/* Header with Main Balance */}
       <div className="flex items-center justify-between py-0">
         <h2 className="hidden sm:block text-3xl font-semibold font-sans tracking-tight" style={{
         letterSpacing: '-0.5px',
         fontWeight: 600
       }}>Virality Wallet</h2>
-        <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0">
+        <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-px px-[22px] mx-0 my-px">
           <ArrowUpRight className="h-4 w-4" />
           Request Payout
         </Button>
@@ -712,7 +712,7 @@ export function WalletTab() {
               setTransactionSheetOpen(true);
             }} style={{
               backgroundColor: '#0d0d0d'
-            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#0d0d0d] hover:bg-[#1a1a1a]">
+            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#0d0d0d] hover:bg-[#151515]">
                   <div className="flex items-center gap-4 flex-1">
                     
                     <div className="flex-1 min-w-0">
@@ -734,29 +734,11 @@ export function WalletTab() {
                         <Clock className="h-3 w-3" />
                         <span style={{
                       letterSpacing: '-0.5px'
-                    }}>
-                          {(() => {
-                            const now = new Date();
-                            const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
-                            
-                            if (diffInHours < 24) {
-                              if (diffInHours < 1) {
-                                const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
-                                return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
-                              }
-                              return `${diffInHours}h ago`;
-                            }
-                            return format(transaction.date, 'MMM dd, yyyy / HH:mm');
-                          })()}
-                        </span>
+                    }}>{format(transaction.date, 'MMM dd, yyyy / HH:mm')}</span>
                       </div>
                     </div>
                   </div>
-                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${
-                    transaction.status === 'pending' 
-                      ? 'text-yellow-500' 
-                      : transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
-                  }`} style={{
+                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
                 letterSpacing: '-0.5px'
               }}>
@@ -876,12 +858,10 @@ export function WalletTab() {
                           <p className="text-base font-semibold text-foreground">
                             {getMethodLabel()}
                           </p>
-                          {method.method.includes('crypto') && (
-                            <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-transparent text-white border-0 flex items-center gap-1.5 normal-case hover:bg-transparent">
+                          {method.method.includes('crypto') && <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-transparent text-white border-0 flex items-center gap-1.5 normal-case hover:bg-transparent">
                               {networkLogo && <img src={networkLogo} alt="Network logo" className="h-3 w-3" />}
                               {getBadgeText()}
-                            </Badge>
-                          )}
+                            </Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground font-instrument tracking-tight font-medium truncate">
                           {getMethodDetails()}

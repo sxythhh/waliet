@@ -31,85 +31,79 @@ import AdminUsers from "./pages/admin/Users";
 import AdminPayouts from "./pages/admin/Payouts";
 import AdminCourses from "./pages/admin/Courses";
 import AdminWallets from "./pages/admin/Wallets";
-
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
-
 const queryClient = new QueryClient();
-
-function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
-
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (session) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("username, avatar_url, full_name")
-          .eq("id", session.user.id)
-          .single();
+        const {
+          data
+        } = await supabase.from("profiles").select("username, avatar_url, full_name").eq("id", session.user.id).single();
         setProfile(data);
       }
     };
     fetchProfile();
   }, []);
-
-  return (
-    <SidebarProvider>
+  return <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-            <SidebarTrigger />
+            <SidebarTrigger className="text-base font-normal" />
             <div className="flex-1 flex justify-center">
               <img src={wordmarkLogo} alt="Wordmark Logo" className="h-10" />
             </div>
-            {profile && (
-              <button
-                onClick={() => navigate(`/${profile.username}`)}
-                className="md:hidden"
-              >
+            {profile && <button onClick={() => navigate(`/${profile.username}`)} className="md:hidden">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={profile.avatar_url || ""} />
                   <AvatarFallback className="text-sm bg-muted font-semibold">
                     {profile.full_name?.[0] || profile.username[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-              </button>
-            )}
+              </button>}
             <div className="w-10 hidden md:block" />
           </header>
           <main className="flex-1">{children}</main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 }
-
-function BrandLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <SidebarProvider>
+function BrandLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  return <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <BrandSidebar />
         <main className="flex-1">{children}</main>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 }
-
-function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen w-full">
+function AdminLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  return <div className="flex min-h-screen w-full">
       <AdminSidebar />
       <main className="flex-1">{children}</main>
-    </div>
-  );
+    </div>;
 }
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -142,7 +136,5 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
-);
-
+  </QueryClientProvider>;
 export default App;
