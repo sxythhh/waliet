@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -747,220 +748,18 @@ export default function AdminPayouts() {
       </Dialog>
 
       {/* User Details Dialog */}
-      <Dialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          {selectedUserProfile && <>
-              {/* User Header */}
-              <div className="flex items-start gap-4 pb-6 border-b">
-                {selectedUserProfile.avatar_url ? <img src={selectedUserProfile.avatar_url} alt={selectedUserProfile.username} className="h-16 w-16 rounded-full object-cover" /> : <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <UsersIcon className="h-8 w-8 text-primary" />
-                  </div>}
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-semibold mb-1">
-                    {selectedUserProfile.username}
-                  </h2>
-                  {selectedUserProfile.full_name && <p className="text-sm text-muted-foreground mb-3">
-                      {selectedUserProfile.full_name}
-                    </p>}
-                  
-                  {/* Wallet Stats */}
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div className="bg-card/50 px-3 py-2 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Balance</p>
-                      <p className="text-lg font-semibold text-success">
-                        ${(selectedUserProfile.wallets?.balance || 0).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="bg-card/50 px-3 py-2 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Total Earned</p>
-                      <p className="text-lg font-semibold">
-                        ${(selectedUserProfile.wallets?.total_earned || 0).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="bg-card/50 px-3 py-2 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Withdrawn</p>
-                      <p className="text-lg font-semibold">
-                        ${(selectedUserProfile.wallets?.total_withdrawn || 0).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Accounts Section - Collapsible */}
-              <Collapsible open={socialAccountsOpen} onOpenChange={setSocialAccountsOpen} className="pt-6 border-t">
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      Connected Accounts ({userSocialAccounts.length})
-                    </h3>
-                    {socialAccountsOpen ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </div>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  {loadingSocialAccounts ? <div className="text-center py-8 text-muted-foreground">
-                      Loading social accounts...
-                    </div> : userSocialAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
-                      No social accounts connected
-                    </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                      {userSocialAccounts.map(account => <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                          <div className="flex items-center justify-between gap-4">
-                            {/* Account Info */}
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="shrink-0">
-                                {getPlatformIcon(account.platform)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium hover:text-primary transition-colors block truncate" onClick={e => e.stopPropagation()}>
-                                  @{account.username}
-                                </a>
-                              </div>
-                            </div>
-                            
-                            {/* Campaign Link */}
-                            <div className="shrink-0">
-                              {account.campaigns ? <div className="flex items-center gap-2">
-                                  {account.campaigns.brand_logo_url && <img src={account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
-                                  <span className="font-medium text-sm">
-                                    {account.campaigns.title}
-                                  </span>
-                                </div> : <span className="text-xs text-muted-foreground italic">
-                                  Not linked
-                                </span>}
-                            </div>
-                          </div>
-                        </div>)}
-                    </div>}
-                </CollapsibleContent>
-              </Collapsible>
-
-              {/* Recent Transactions Section - Collapsible */}
-              <Collapsible open={transactionsOpen} onOpenChange={setTransactionsOpen} className="pt-6 border-t">
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      Recent Transactions ({userTransactions.length})
-                    </h3>
-                    {transactionsOpen ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </div>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  {loadingTransactions ? <div className="text-center py-8 text-muted-foreground">
-                      Loading transactions...
-                    </div> : userTransactions.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
-                      No transactions yet
-                    </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                      {userTransactions.map(transaction => {
-                        const metadata = transaction.metadata as any;
-                        const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
-                        
-                        return <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                          <div className="space-y-3">
-                            {/* Header: Type, Status, Amount */}
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-medium capitalize text-sm">{transaction.type}</span>
-                                  <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                                    transaction.status === 'completed' 
-                                      ? 'bg-green-500/10 text-green-500' 
-                                      : transaction.status === 'pending'
-                                      ? 'bg-orange-500/10 text-orange-500'
-                                      : transaction.status === 'in_transit'
-                                      ? 'bg-blue-500/10 text-blue-500'
-                                      : 'bg-muted text-muted-foreground'
-                                  }`}>
-                                    {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                  <Clock className="h-3 w-3 inline mr-1" />
-                                  {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
-                                </p>
-                              </div>
-                              
-                              <div className="text-right shrink-0">
-                                <p className={`text-lg font-semibold ${
-                                  isWithdrawal ? 'text-red-500' : 'text-green-500'
-                                }`} style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                                  {isWithdrawal ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Payment Method & Network (for withdrawals) */}
-                            {isWithdrawal && metadata && (
-                              <div className="space-y-2">
-                                <div className="grid grid-cols-2 gap-3 p-2 bg-muted/20 rounded-md">
-                                  {metadata.payout_method && (
-                                    <div>
-                                      <p className="text-[10px] text-muted-foreground mb-0.5">Payment Method</p>
-                                      <p className="text-xs font-medium capitalize">{metadata.payout_method}</p>
-                                    </div>
-                                  )}
-                                  {metadata.network && (
-                                    <div>
-                                      <p className="text-[10px] text-muted-foreground mb-0.5">Network</p>
-                                      <p className="text-xs font-medium capitalize">{metadata.network}</p>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {/* Method Details */}
-                                {(metadata.payoutDetails?.address || metadata.payoutDetails?.email || metadata.payoutDetails?.account_number) && (
-                                  <div className="p-2 bg-muted/20 rounded-md">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Method Details</p>
-                                    <p className="text-xs font-medium font-mono break-all">
-                                      {metadata.payoutDetails?.address || 
-                                       metadata.payoutDetails?.email || 
-                                       (metadata.payoutDetails?.account_number && `•••• ${metadata.payoutDetails.account_number.slice(-4)}`)}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Balance Change */}
-                            {metadata?.balance_before !== undefined && metadata?.balance_after !== undefined && (
-                              <div className="p-2 bg-muted/20 rounded-md">
-                                <div className="flex items-center justify-between text-xs">
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground">Balance Before</p>
-                                    <p className="font-medium">${Number(metadata.balance_before).toFixed(2)}</p>
-                                  </div>
-                                  <div className="text-muted-foreground">→</div>
-                                  <div className="text-right">
-                                    <p className="text-[10px] text-muted-foreground">Balance After</p>
-                                    <p className="font-medium">${Number(metadata.balance_after).toFixed(2)}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Description */}
-                            {transaction.description && (
-                              <p className="text-xs text-muted-foreground truncate pt-1 border-t">
-                                {transaction.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      })}
-                    </div>}
-                </CollapsibleContent>
-              </Collapsible>
-            </>}
-        </DialogContent>
-      </Dialog>
+      <UserDetailsDialog 
+        open={userDetailsDialogOpen}
+        onOpenChange={setUserDetailsDialogOpen}
+        user={selectedUserProfile}
+        socialAccounts={userSocialAccounts}
+        transactions={userTransactions}
+        loadingSocialAccounts={loadingSocialAccounts}
+        loadingTransactions={loadingTransactions}
+        socialAccountsOpen={socialAccountsOpen}
+        onSocialAccountsOpenChange={setSocialAccountsOpen}
+        transactionsOpen={transactionsOpen}
+        onTransactionsOpenChange={setTransactionsOpen}
+      />
     </div>;
 }

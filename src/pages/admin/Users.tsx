@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 interface User {
   id: string;
   username: string;
@@ -825,136 +826,19 @@ export default function AdminUsers() {
       </Dialog>
 
       {/* User Details Dialog */}
-      <Dialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          {selectedUser && <>
-              {/* User Header */}
-              <div className="flex items-start gap-4 pb-6 border-b">
-                {selectedUser.avatar_url ? <img src={selectedUser.avatar_url} alt={selectedUser.username} className="h-16 w-16 rounded-full object-cover" /> : <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <UsersIcon className="h-8 w-8 text-primary" />
-                  </div>}
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-semibold mb-1">
-                    {selectedUser.username}
-                  </h2>
-                  {selectedUser.full_name && <p className="text-sm text-muted-foreground mb-3">
-                      {selectedUser.full_name}
-                    </p>}
-                  
-                  {/* Wallet Stats */}
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div className="bg-card/50 px-3 py-2 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Balance</p>
-                      <p className="text-lg font-semibold text-success">
-                        ${(selectedUser.wallets?.balance || 0).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="bg-card/50 px-3 py-2 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Total Earned</p>
-                      <p className="text-lg font-semibold">
-                        ${(selectedUser.wallets?.total_earned || 0).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="bg-card/50 px-3 py-2 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Withdrawn</p>
-                      <p className="text-lg font-semibold">
-                        ${(selectedUser.wallets?.total_withdrawn || 0).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Accounts Section - Collapsible */}
-              <Collapsible open={socialAccountsOpen} onOpenChange={setSocialAccountsOpen} className="pt-6 border-t">
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      Connected Accounts ({userSocialAccounts.length})
-                    </h3>
-                    {socialAccountsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                  </div>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  {loadingSocialAccounts ? <div className="text-center py-8 text-muted-foreground">
-                      Loading social accounts...
-                    </div> : userSocialAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
-                      No social accounts connected
-                    </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                      {userSocialAccounts.map(account => <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                          <div className="flex items-center justify-between gap-4">
-                            {/* Account Info */}
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="shrink-0">
-                                {getPlatformIcon(account.platform)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium hover:text-primary transition-colors block truncate" onClick={e => e.stopPropagation()}>
-                                  @{account.username}
-                                </a>
-                              </div>
-                            </div>
-                            
-                            {/* Campaign Link */}
-                            <div className="shrink-0">
-                              {account.campaigns ? <div className="flex items-center gap-2">
-                                  {account.campaigns.brand_logo_url && <img src={account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
-                                  <span className="font-medium text-sm">
-                                    {account.campaigns.title}
-                                  </span>
-                                </div> : <span className="text-xs text-muted-foreground italic">
-                                  Not linked
-                                </span>}
-                            </div>
-                          </div>
-                        </div>)}
-                    </div>}
-                </CollapsibleContent>
-              </Collapsible>
-
-              {/* Recent Transactions Section - Collapsible */}
-              <Collapsible open={transactionsOpen} onOpenChange={setTransactionsOpen} className="pt-6 border-t">
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      Recent Transactions ({userTransactions.length})
-                    </h3>
-                    {transactionsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                  </div>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  {loadingTransactions ? <div className="text-center py-8 text-muted-foreground">
-                      Loading transactions...
-                    </div> : userTransactions.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
-                      No transactions yet
-                    </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                      {userTransactions.map(transaction => <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                          <div className="flex items-center justify-between gap-4">
-                            {/* Transaction Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium capitalize">{transaction.type}</span>
-                                <span className={`text-xs px-2 py-0.5 rounded ${transaction.status === 'completed' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
-                                  {transaction.status}
-                                </span>
-                              </div>
-                              {transaction.description && <p className="text-sm text-muted-foreground truncate">
-                                  {transaction.description}
-                                </p>}
-                            </div>
-                            
-                            {/* Amount & Date */}
-                            
-                          </div>
-                        </div>)}
-                    </div>}
-                </CollapsibleContent>
-              </Collapsible>
-            </>}
-        </DialogContent>
-      </Dialog>
+      <UserDetailsDialog 
+        open={userDetailsDialogOpen}
+        onOpenChange={setUserDetailsDialogOpen}
+        user={selectedUser}
+        socialAccounts={userSocialAccounts}
+        transactions={userTransactions}
+        loadingSocialAccounts={loadingSocialAccounts}
+        loadingTransactions={loadingTransactions}
+        socialAccountsOpen={socialAccountsOpen}
+        onSocialAccountsOpenChange={setSocialAccountsOpen}
+        transactionsOpen={transactionsOpen}
+        onTransactionsOpenChange={setTransactionsOpen}
+      />
         </TabsContent>
 
         {/* Demographics Tab */}
