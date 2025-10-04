@@ -1142,13 +1142,17 @@ export default function AdminUsers() {
               </DialogHeader>
 
               {selectedSubmission && <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                  <a 
+                    href={`https://${selectedSubmission.social_accounts.platform}.com/${selectedSubmission.social_accounts.username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors group"
+                  >
                     {getPlatformIcon(selectedSubmission.social_accounts.platform)}
                     <div>
-                      <p className="font-semibold">@{selectedSubmission.social_accounts.username}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{selectedSubmission.social_accounts.platform}</p>
+                      <p className="font-semibold group-hover:underline">@{selectedSubmission.social_accounts.username}</p>
                     </div>
-                  </div>
+                  </a>
 
                   <div className="bg-[#0d0d0d] rounded-lg p-4">
                     <p className="text-xs text-muted-foreground mb-2">Tier 1 Audience Percentage</p>
