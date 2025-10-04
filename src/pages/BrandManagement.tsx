@@ -145,16 +145,27 @@ export default function BrandManagement() {
       const {
         data,
         error
-      } = await supabase.from("wallet_transactions").select(`
-          *,
-          profiles:user_id(username, avatar_url)
-        `).contains('metadata', {
+      } = await supabase.from("wallet_transactions").select("*").contains('metadata', {
         campaign_id: selectedCampaignId
       }).eq('type', 'earning').order('created_at', {
         ascending: false
       });
       if (error) throw error;
-      setTransactions(data || []);
+
+      // Fetch user profiles separately
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map((t: any) => t.user_id))];
+        const {
+          data: profiles
+        } = await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds);
+        const transactionsWithProfiles = data.map((txn: any) => ({
+          ...txn,
+          profiles: profiles?.find((p: any) => p.id === txn.user_id)
+        }));
+        setTransactions(transactionsWithProfiles);
+      } else {
+        setTransactions([]);
+      }
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
