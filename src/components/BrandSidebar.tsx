@@ -1,4 +1,4 @@
-import { Pyramid, FolderOpen, Layers, GalleryHorizontalEnd, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
+import { Home, FolderOpen, Pyramid, GalleryHorizontalEnd, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarHeader } from "@/components/ui/sidebar";
@@ -52,7 +52,7 @@ export function BrandSidebar() {
   // Define menu items dynamically based on brand type
   const baseMenuItems = [{
     title: "Home",
-    icon: Pyramid,
+    icon: Home,
     path: ""
   }, {
     title: "Management",
@@ -64,7 +64,7 @@ export function BrandSidebar() {
     path: "assets"
   } : {
     title: "Assets",
-    icon: Layers,
+    icon: Pyramid,
     path: "assets"
   }, {
     title: "Library",
