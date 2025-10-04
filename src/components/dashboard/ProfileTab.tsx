@@ -455,10 +455,7 @@ export function ProfileTab() {
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border bg-[#0d0d0d]">
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="flex flex-col gap-1">
-                        <div 
-                          onClick={() => account.account_link && window.open(account.account_link, '_blank')}
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50 w-fit cursor-pointer group"
-                        >
+                        <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50 w-fit cursor-pointer group">
                           {getPlatformIcon(account.platform)}
                           <span className="font-medium group-hover:underline">{account.username}</span>
                           {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
@@ -632,15 +629,10 @@ export function ProfileTab() {
 
             {/* Save Button */}
             <div className="flex items-center justify-between pt-4 border-t py-0">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  navigate('/auth');
-                }}
-                className="gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500"
-              >
+              <Button type="button" variant="outline" onClick={async () => {
+              await supabase.auth.signOut();
+              navigate('/auth');
+            }} className="gap-2 border-red-500 bg-red-500/10 hover:bg-red-500/20 text-red-500">
                 <LogOut className="h-4 w-4" />
                 Sign Out
               </Button>
