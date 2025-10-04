@@ -1106,9 +1106,8 @@ export function WalletTab() {
                           <Check className="w-8 h-8 text-green-500" />
                         </div>
                       </div>
-                      <p className="text-muted-foreground font-semibold tracking-tight" style={{
-                  fontFamily: 'Instrument Sans, sans-serif',
-                  letterSpacing: '-0.5px'
+                      <p className="text-white font-bold font-chakra" style={{
+                  letterSpacing: '-0.3px'
                 }}>
                         Your ${selectedTransaction.amount.toFixed(2)} is on its way!
                       </p>
