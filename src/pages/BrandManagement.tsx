@@ -20,7 +20,6 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
 import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
-import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 interface Campaign {
   id: string;
   title: string;
@@ -80,7 +79,6 @@ export default function BrandManagement() {
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [deleteAnalyticsDialogOpen, setDeleteAnalyticsDialogOpen] = useState(false);
-  const [brandName, setBrandName] = useState<string>("");
   useEffect(() => {
     fetchCampaigns();
   }, [slug]);
@@ -147,11 +145,10 @@ export default function BrandManagement() {
       const {
         data: brandData,
         error: brandError
-      } = await supabase.from("brands").select("id, name, assets_url, home_url, brand_type").eq("slug", slug).maybeSingle();
+      } = await supabase.from("brands").select("id, assets_url, home_url, brand_type").eq("slug", slug).maybeSingle();
       if (brandError) throw brandError;
       if (!brandData) return;
       setBrandId(brandData.id);
-      setBrandName(brandData.name);
       setAssetsUrl(brandData.assets_url || "");
       setHomeUrl(brandData.home_url || "");
       setBrandType(brandData.brand_type || "");
@@ -334,51 +331,14 @@ export default function BrandManagement() {
       </div>;
   }
   if (campaigns.length === 0) {
-    return <div className="min-h-screen p-8 bg-[#191919]">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger />
-            <h1 className="text-white text-2xl font-bold">Campaign Management</h1>
-          </div>
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="text-white text-lg mb-6">No campaigns found</div>
-            <CreateCampaignDialog 
-              brandId={brandId}
-              brandName={brandName}
-              onSuccess={fetchCampaigns}
-            />
-          </div>
-        </div>
+    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
+        <div className="text-white">No campaigns found</div>
       </div>;
   }
   return <div className="min-h-screen p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Campaign Selector */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger />
-            <h1 className="text-white text-2xl font-bold">Campaign Management</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh} className="bg-[#202020] border-0 text-white hover:bg-white/10">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-              <SelectTrigger className="w-[200px] bg-[#202020] border-0 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-[#2a2a2a] border-0">
-                {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="text-white hover:bg-white/10 focus:bg-white/10">
-                    {campaign.title}
-                  </SelectItem>)}
-              </SelectContent>
-            </Select>
-            {selectedCampaignId && <Button variant="outline" size="icon" className="bg-[#202020] border-0 text-destructive/60 hover:text-destructive hover:bg-white/10" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="h-5 w-5" />
-              </Button>}
-          </div>
-        </div>
+        
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="w-full">
