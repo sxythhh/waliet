@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -83,6 +84,9 @@ export default function BrandManagement() {
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [deleteAnalyticsDialogOpen, setDeleteAnalyticsDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedUserForPayment, setSelectedUserForPayment] = useState<Submission | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
   useEffect(() => {
     fetchCampaigns();
   }, [slug]);
@@ -341,6 +345,74 @@ export default function BrandManagement() {
     fetchAnalytics();
     fetchTransactions();
     toast.success("Data refreshed");
+  };
+  const handlePayCreator = async () => {
+    if (!selectedUserForPayment?.creator_id) {
+      toast.error("No user selected");
+      return;
+    }
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    try {
+      // Update wallet balance
+      const {
+        data: currentWallet,
+        error: walletFetchError
+      } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", selectedUserForPayment.creator_id).single();
+      if (walletFetchError) throw walletFetchError;
+      
+      const balance_before = currentWallet.balance || 0;
+      const balance_after = balance_before + amount;
+      
+      const {
+        error: walletUpdateError
+      } = await supabase.from("wallets").update({
+        balance: balance_after,
+        total_earned: (currentWallet.total_earned || 0) + amount
+      }).eq("user_id", selectedUserForPayment.creator_id);
+      if (walletUpdateError) throw walletUpdateError;
+
+      // Create wallet transaction
+      const {
+        error: transactionError
+      } = await supabase.from("wallet_transactions").insert({
+        user_id: selectedUserForPayment.creator_id,
+        amount: amount,
+        type: "earning",
+        description: `Payment for ${selectedUserForPayment.platform} content`,
+        status: "completed",
+        metadata: {
+          campaign_id: selectedCampaignId,
+          submission_id: selectedUserForPayment.id,
+          platform: selectedUserForPayment.platform,
+          balance_before: balance_before,
+          balance_after: balance_after
+        }
+      });
+      if (transactionError) throw transactionError;
+
+      // Update campaign budget
+      const currentBudgetUsed = Number(selectedCampaign?.budget_used || 0);
+      const {
+        error: budgetError
+      } = await supabase.from("campaigns").update({
+        budget_used: currentBudgetUsed + amount
+      }).eq("id", selectedCampaignId);
+      if (budgetError) throw budgetError;
+
+      toast.success(`Successfully paid $${amount.toFixed(2)} to ${selectedUserForPayment.profiles?.username}`);
+      setPaymentDialogOpen(false);
+      setSelectedUserForPayment(null);
+      setPaymentAmount("");
+      fetchCampaigns();
+      fetchTransactions();
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      toast.error("Failed to process payment");
+    }
   };
   const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter(s => s.status === "approved");
@@ -713,7 +785,7 @@ export default function BrandManagement() {
                               </div>
 
                               {/* Social Accounts */}
-                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div>
+                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
                                   <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
                                   <div className="flex flex-wrap gap-2">
                                     {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all hover:scale-105">
@@ -727,6 +799,19 @@ export default function BrandManagement() {
                                       </a>)}
                                   </div>
                                 </div>}
+
+                              {/* Payment Button */}
+                              <Button 
+                                className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400" 
+                                onClick={() => {
+                                  setSelectedUserForPayment(submission);
+                                  setPaymentAmount("");
+                                  setPaymentDialogOpen(true);
+                                }}
+                              >
+                                <DollarSign className="h-4 w-4 mr-2" />
+                                Pay Creator
+                              </Button>
 
                             </div>
                           </CardContent>
@@ -1014,6 +1099,41 @@ export default function BrandManagement() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Payment Dialog */}
+        <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+          <DialogContent className="bg-[#202020] border-white/10">
+            <DialogHeader>
+              <DialogTitle className="text-white">Pay Creator</DialogTitle>
+              <DialogDescription className="text-white/60">
+                Enter the amount to pay to {selectedUserForPayment?.profiles?.username}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="payment-amount" className="text-white">Amount ($)</Label>
+                <Input
+                  id="payment-amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  className="bg-[#191919] border-white/10 text-white"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handlePayCreator} className="bg-green-500 hover:bg-green-600">
+                Confirm Payment
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>;
 }
