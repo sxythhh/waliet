@@ -1038,7 +1038,7 @@ export default function AdminUsers() {
 
                         {submission.screenshot_url ? <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
                             {submission.screenshot_url.endsWith('.mp4') || submission.screenshot_url.endsWith('.webm') || submission.screenshot_url.endsWith('.mov') ? 
-                              <video src={submission.screenshot_url} className="w-full h-32 object-cover" controls /> :
+                              <video src={submission.screenshot_url} className="w-full h-32 object-cover" controls muted playsInline /> :
                               <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
                             }
                           </div> : <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
