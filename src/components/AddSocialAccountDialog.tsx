@@ -139,12 +139,12 @@ export function AddSocialAccountDialog({
               {(["tiktok", "instagram", "youtube"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`
                     relative flex flex-col items-center gap-3 p-4 rounded-xl
                     transition-all duration-300 hover:scale-105
-                    ${selectedPlatform === platform ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/30 hover:bg-muted/50'}
+                    ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
                   `}>
                   <div className={`p-2 rounded-lg ${selectedPlatform === platform ? 'bg-primary/20' : 'bg-background/50'}`}>
                     {getPlatformIcon(platform)}
                   </div>
-                  <span className={`text-xs font-medium ${selectedPlatform === platform ? 'text-primary' : 'text-foreground/70'}`}>
+                  <span className={`text-xs font-medium ${selectedPlatform === platform ? 'text-white' : 'text-foreground/70'}`}>
                     {getPlatformLabel(platform)}
                   </span>
                 </button>)}
