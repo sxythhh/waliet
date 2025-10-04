@@ -1127,10 +1127,10 @@ export function WalletTab() {
                   letterSpacing: '-0.3px'
                 }}>
                         {selectedTransaction.status === 'completed' 
-                          ? `You have received $${selectedTransaction.amount.toFixed(2)}!`
+                          ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!`
                           : selectedTransaction.status === 'in_transit'
-                          ? `Your $${selectedTransaction.amount.toFixed(2)} is in transit!`
-                          : `Your $${selectedTransaction.amount.toFixed(2)} is on its way!`}
+                          ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!`
+                          : `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
                       </p>
                     </> : <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
