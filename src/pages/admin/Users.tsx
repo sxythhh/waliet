@@ -501,7 +501,12 @@ export default function AdminUsers() {
       icon: Icon,
       color
     } = config[status as keyof typeof config] || config.pending;
-    return;
+    return (
+      <Badge variant={variant} className="gap-1">
+        <Icon className={`h-3 w-3 ${color}`} />
+        {status}
+      </Badge>
+    );
   };
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
   const approvedSubmissions = submissions.filter(s => s.status === "approved");
@@ -954,57 +959,6 @@ export default function AdminUsers() {
 
         {/* Demographics Tab */}
         <TabsContent value="demographics" className="space-y-6">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pending</p>
-                    <p className="text-2xl font-bold mt-1">{pendingSubmissions.length}</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-warning" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Approved</p>
-                    <p className="text-2xl font-bold mt-1">{approvedSubmissions.length}</p>
-                  </div>
-                  <CheckCircle2 className="h-8 w-8 text-success" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Rejected</p>
-                    <p className="text-2xl font-bold mt-1">{rejectedSubmissions.length}</p>
-                  </div>
-                  <XCircle className="h-8 w-8 text-destructive" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Avg Tier 1</p>
-                    <p className="text-2xl font-bold mt-1">{avgTier1.toFixed(1)}%</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Demographics Tabs */}
           <Tabs defaultValue="pending" className="space-y-4">
             <TabsList className="bg-card border-0">
@@ -1028,34 +982,24 @@ export default function AdminUsers() {
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {pendingSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
                       <CardContent className="p-4">
-                        
-
-                        <div className="bg-[#0d0d0d] rounded-lg p-4 mb-3">
-                          <p className="text-xs text-muted-foreground mb-1">Tier 1 Audience</p>
-                          <div className="flex items-baseline gap-2">
-                            <p className="text-3xl font-bold font-chakra text-primary">{submission.tier1_percentage}%</p>
-                            <p className="text-xs text-muted-foreground">of total audience</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {getPlatformIcon(submission.social_accounts.platform)}
+                            <div>
+                              <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-
-                        {submission.screenshot_url ? <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
-                            <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
-                          </div> : <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
-                            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                          </div>}
-
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">
-                            {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                          </span>
-                          <Button size="sm" className="h-7 text-xs" onClick={e => {
-                      e.stopPropagation();
-                      openReviewDialog(submission);
-                    }}>
+                          <Button size="sm" className="h-8 text-xs" onClick={e => {
+                            e.stopPropagation();
+                            openReviewDialog(submission);
+                          }}>
                             Review
                           </Button>
                         </div>
@@ -1071,62 +1015,60 @@ export default function AdminUsers() {
                     No approved submissions
                   </CardContent>
                 </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {approvedSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
+                  {approvedSubmissions.map(submission => {
+                    const reviewedDate = submission.reviewed_at ? new Date(submission.reviewed_at) : null;
+                    const nextSubmissionDate = reviewedDate ? new Date(reviewedDate.getTime() + 30 * 24 * 60 * 60 * 1000) : null;
+                    
+                    return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
                       <CardContent className="p-4">
-                        
+                        <a 
+                          href={`https://${submission.social_accounts.platform}.com/${submission.social_accounts.username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 mb-3 hover:bg-muted/20 p-2 -m-2 rounded-lg transition-colors group"
+                        >
+                          {getPlatformIcon(submission.social_accounts.platform)}
+                          <div>
+                            <h3 className="font-semibold text-sm group-hover:underline">@{submission.social_accounts.username}</h3>
+                          </div>
+                        </a>
 
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                          <div className="bg-[#0d0d0d] rounded-lg p-2">
-                            <p className="text-[10px] text-muted-foreground mb-0.5">Tier 1</p>
-                            <p className="text-lg font-bold font-chakra">{submission.tier1_percentage}%</p>
-                          </div>
-                          <div className="bg-[#0d0d0d] rounded-lg p-2">
-                            <p className="text-[10px] text-muted-foreground mb-0.5">Score</p>
-                            <p className="text-lg font-bold font-chakra text-success">{submission.score}</p>
-                          </div>
+                        <div className="bg-[#0d0d0d] rounded-lg p-3 mb-3">
+                          <p className="text-[10px] text-muted-foreground mb-0.5">Demographics Score</p>
+                          <p className="text-2xl font-bold font-chakra text-success">{submission.score}</p>
                         </div>
 
-                        {submission.admin_notes && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>}
-
-                        <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => openReviewDialog(submission)}>
-                          View Details
-                        </Button>
-                      </CardContent>
-                    </Card>)}
-                </div>}
-            </TabsContent>
-
-            {/* Rejected Submissions */}
-            <TabsContent value="rejected" className="space-y-4">
-              {rejectedSubmissions.length === 0 ? <Card className="bg-card border-0">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    No rejected submissions
-                  </CardContent>
-                </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {rejectedSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-destructive/50 transition-all">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            {getPlatformIcon(submission.social_accounts.platform)}
-                            <div>
-                              <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
+                        <div className="space-y-1.5 text-xs">
+                          {reviewedDate && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Approved</span>
+                              <span className="font-medium">
+                                {reviewedDate.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </span>
                             </div>
-                          </div>
-                          {getStatusBadge(submission.status)}
+                          )}
+                          {nextSubmissionDate && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Next Update</span>
+                              <span className="font-medium">
+                                {nextSubmissionDate.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="bg-[#0d0d0d] rounded-lg p-2 mb-3">
-                          <p className="text-[10px] text-muted-foreground mb-0.5">Tier 1 Percentage</p>
-                          <p className="text-lg font-bold font-chakra">{submission.tier1_percentage}%</p>
-                        </div>
-
-                        {submission.admin_notes && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>}
-
-                        <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => openReviewDialog(submission)}>
-                          View Details
-                        </Button>
+                        {submission.admin_notes && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{submission.admin_notes}</p>}
                       </CardContent>
-                    </Card>)}
+                    </Card>;
+                  })}
                 </div>}
             </TabsContent>
           </Tabs>
@@ -1139,13 +1081,17 @@ export default function AdminUsers() {
               </DialogHeader>
 
               {selectedSubmission && <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                  <a 
+                    href={`https://${selectedSubmission.social_accounts.platform}.com/${selectedSubmission.social_accounts.username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors group"
+                  >
                     {getPlatformIcon(selectedSubmission.social_accounts.platform)}
                     <div>
-                      <p className="font-semibold">@{selectedSubmission.social_accounts.username}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{selectedSubmission.social_accounts.platform}</p>
+                      <p className="font-semibold group-hover:underline">@{selectedSubmission.social_accounts.username}</p>
                     </div>
-                  </div>
+                  </a>
 
                   <div className="bg-[#0d0d0d] rounded-lg p-4">
                     <p className="text-xs text-muted-foreground mb-2">Tier 1 Audience Percentage</p>
