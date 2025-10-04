@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
-
 interface UserProfile {
   id: string;
   username: string;
@@ -18,7 +17,6 @@ interface UserProfile {
     total_withdrawn: number;
   } | null;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -38,7 +36,6 @@ interface SocialAccount {
     submitted_at: string;
   }>;
 }
-
 interface Transaction {
   id: string;
   type: string;
@@ -48,7 +45,6 @@ interface Transaction {
   description?: string;
   metadata?: any;
 }
-
 interface UserDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,7 +59,6 @@ interface UserDetailsDialogProps {
   onTransactionsOpenChange: (open: boolean) => void;
   onEditScore?: (account: SocialAccount) => void;
 }
-
 const getPlatformIcon = (platform: string) => {
   switch (platform.toLowerCase()) {
     case 'tiktok':
@@ -76,7 +71,6 @@ const getPlatformIcon = (platform: string) => {
       return null;
   }
 };
-
 export function UserDetailsDialog({
   open,
   onOpenChange,
@@ -92,32 +86,20 @@ export function UserDetailsDialog({
   onEditScore
 }: UserDetailsDialogProps) {
   if (!user) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+  return <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl bg-[#0b0b0b]">
         {/* User Header */}
-        <div className="flex items-start gap-4 pb-6 border-b">
-          {user.avatar_url ? (
-            <img 
-              src={user.avatar_url} 
-              alt={user.username} 
-              className="h-16 w-16 rounded-full object-cover" 
-            />
-          ) : (
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+        <div className="flex items-start gap-4 pb-6 border-b py-0">
+          {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-16 w-16 rounded-full object-cover" /> : <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
               <UsersIcon className="h-8 w-8 text-primary" />
-            </div>
-          )}
+            </div>}
           <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-semibold mb-1">
               {user.username}
             </h2>
-            {user.full_name && (
-              <p className="text-sm text-muted-foreground mb-3">
+            {user.full_name && <p className="text-sm text-muted-foreground mb-3">
                 {user.full_name}
-              </p>
-            )}
+              </p>}
             
             {/* Wallet Stats */}
             <div className="grid grid-cols-3 gap-4 mt-4">
@@ -144,44 +126,26 @@ export function UserDetailsDialog({
         </div>
 
         {/* Social Accounts Section - Collapsible */}
-        <Collapsible 
-          open={socialAccountsOpen} 
-          onOpenChange={onSocialAccountsOpenChange} 
-          className="pt-6 border-t"
-        >
+        <Collapsible open={socialAccountsOpen} onOpenChange={onSocialAccountsOpenChange} className="pt-6 border-t py-0">
           <CollapsibleTrigger className="w-full">
             <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                 Connected Accounts ({socialAccounts.length})
               </h3>
-              {socialAccountsOpen ? (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              )}
+              {socialAccountsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </div>
           </CollapsibleTrigger>
           
           <CollapsibleContent>
-            {loadingSocialAccounts ? (
-              <div className="text-center py-8 text-muted-foreground">
+            {loadingSocialAccounts ? <div className="text-center py-8 text-muted-foreground">
                 Loading social accounts...
-              </div>
-            ) : socialAccounts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+              </div> : socialAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
                 No social accounts connected
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                {socialAccounts.map((account) => {
-                  const latestDemographic = account.demographic_submissions?.[0];
-                  const demographicStatus = latestDemographic?.status;
-                  
-                  return (
-                    <div 
-                      key={account.id} 
-                      className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors group"
-                    >
+              </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
+                {socialAccounts.map(account => {
+              const latestDemographic = account.demographic_submissions?.[0];
+              const demographicStatus = latestDemographic?.status;
+              return <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors group">
                       <div className="flex items-center justify-between gap-4">
                         {/* Account Info */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -190,188 +154,122 @@ export function UserDetailsDialog({
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <a 
-                                href={account.account_link} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="font-medium block truncate group-hover:underline"
-                                onClick={(e) => e.stopPropagation()}
-                              >
+                              <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium block truncate group-hover:underline" onClick={e => e.stopPropagation()}>
                                 @{account.username}
                               </a>
                               
                               {/* Demographic Status Icon */}
-                              {demographicStatus === 'approved' && (
-                                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                              )}
-                              {demographicStatus === 'rejected' && (
-                                <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                              )}
-                              {demographicStatus === 'pending' && (
-                                <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />
-                              )}
+                              {demographicStatus === 'approved' && <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />}
+                              {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-red-500 shrink-0" />}
+                              {demographicStatus === 'pending' && <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />}
                             </div>
                             
                             {/* Tier 1% and Last Submitted Date */}
-                            {latestDemographic && (
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                {latestDemographic.status === 'approved' && (
-                                  <Badge 
-                                    variant="secondary" 
-                                    className="text-[10px] px-1.5 py-0 cursor-pointer hover:bg-secondary/80 transition-colors"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onEditScore?.(account);
-                                    }}
-                                  >
+                            {latestDemographic && <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                {latestDemographic.status === 'approved' && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 cursor-pointer hover:bg-secondary/80 transition-colors" onClick={e => {
+                          e.stopPropagation();
+                          onEditScore?.(account);
+                        }}>
                                     Tier 1: {latestDemographic.tier1_percentage}%
-                                  </Badge>
-                                )}
+                                  </Badge>}
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   {format(new Date(latestDemographic.submitted_at), 'MMM dd, yyyy')}
                                 </span>
-                              </div>
-                            )}
+                              </div>}
                           </div>
                         </div>
                         
                         {/* Campaign Link */}
                         <div className="shrink-0">
-                          {account.campaigns ? (
-                            <div className="flex items-center gap-2">
-                              {(account.campaigns.brands?.logo_url || account.campaigns.brand_logo_url) && (
-                                <img 
-                                  src={account.campaigns.brands?.logo_url || account.campaigns.brand_logo_url} 
-                                  alt={account.campaigns.brand_name} 
-                                  className="h-6 w-6 rounded object-cover" 
-                                />
-                              )}
+                          {account.campaigns ? <div className="flex items-center gap-2">
+                              {(account.campaigns.brands?.logo_url || account.campaigns.brand_logo_url) && <img src={account.campaigns.brands?.logo_url || account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
                               <span className="font-medium text-sm">
                                 {account.campaigns.title}
                               </span>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground italic">
+                            </div> : <span className="text-xs text-muted-foreground italic">
                               Not linked
-                            </span>
-                          )}
+                            </span>}
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    </div>;
+            })}
+              </div>}
           </CollapsibleContent>
         </Collapsible>
 
         {/* Recent Transactions Section - Collapsible */}
-        <Collapsible 
-          open={transactionsOpen} 
-          onOpenChange={onTransactionsOpenChange} 
-          className="pt-6 border-t"
-        >
+        <Collapsible open={transactionsOpen} onOpenChange={onTransactionsOpenChange} className="pt-6 border-t">
           <CollapsibleTrigger className="w-full">
             <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                 Recent Transactions ({transactions.length})
               </h3>
-              {transactionsOpen ? (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              )}
+              {transactionsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </div>
           </CollapsibleTrigger>
           
           <CollapsibleContent>
-            {loadingTransactions ? (
-              <div className="text-center py-8 text-muted-foreground">
+            {loadingTransactions ? <div className="text-center py-8 text-muted-foreground">
                 Loading transactions...
-              </div>
-            ) : transactions.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+              </div> : transactions.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
                 No transactions yet
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                {transactions.map((transaction) => {
-                  const metadata = transaction.metadata as any;
-                  const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
-                  
-                  return (
-                    <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+              </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
+                {transactions.map(transaction => {
+              const metadata = transaction.metadata as any;
+              const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
+              return <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
                       <div className="space-y-3">
                         {/* Header: Type, Status, Amount */}
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium capitalize text-sm">{transaction.type}</span>
-                              <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                                transaction.status === 'completed' 
-                                  ? 'bg-green-500/10 text-green-500' 
-                                  : transaction.status === 'pending'
-                                  ? 'bg-orange-500/10 text-orange-500'
-                                  : transaction.status === 'in_transit'
-                                  ? 'bg-blue-500/10 text-blue-500'
-                                  : transaction.status === 'rejected'
-                                  ? 'bg-red-500/10 text-red-500'
-                                  : 'bg-muted text-muted-foreground'
-                              }`}>
+                              <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${transaction.status === 'completed' ? 'bg-green-500/10 text-green-500' : transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-500' : transaction.status === 'in_transit' ? 'bg-blue-500/10 text-blue-500' : transaction.status === 'rejected' ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground'}`}>
                                 {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                               </span>
                             </div>
                             <p className="text-xs text-muted-foreground">
                               <Clock className="h-3 w-3 inline mr-1" />
-                              {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
+                              {formatDistanceToNow(new Date(transaction.created_at), {
+                          addSuffix: true
+                        })}
                             </p>
                           </div>
                           
                           <div className="text-right shrink-0">
-                            <p className={`text-lg font-semibold ${
-                              isWithdrawal ? 'text-red-500' : 'text-green-500'
-                            }`} style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+                            <p className={`text-lg font-semibold ${isWithdrawal ? 'text-red-500' : 'text-green-500'}`} style={{
+                        fontFamily: 'Chakra Petch, sans-serif'
+                      }}>
                               {isWithdrawal ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                             </p>
                           </div>
                         </div>
 
                         {/* Payment Method & Network (for withdrawals) */}
-                        {isWithdrawal && metadata && (
-                          <div className="space-y-2">
+                        {isWithdrawal && metadata && <div className="space-y-2">
                             <div className="grid grid-cols-2 gap-3 p-2 bg-muted/20 rounded-md">
-                              {metadata.payout_method && (
-                                <div>
+                              {metadata.payout_method && <div>
                                   <p className="text-[10px] text-muted-foreground mb-0.5">Payment Method</p>
                                   <p className="text-xs font-medium capitalize">{metadata.payout_method}</p>
-                                </div>
-                              )}
-                              {metadata.network && (
-                                <div>
+                                </div>}
+                              {metadata.network && <div>
                                   <p className="text-[10px] text-muted-foreground mb-0.5">Network</p>
                                   <p className="text-xs font-medium capitalize">{metadata.network}</p>
-                                </div>
-                              )}
+                                </div>}
                             </div>
                             
                             {/* Method Details */}
-                            {(metadata.payoutDetails?.address || metadata.payoutDetails?.email || metadata.payoutDetails?.account_number) && (
-                              <div className="p-2 bg-muted/20 rounded-md">
+                            {(metadata.payoutDetails?.address || metadata.payoutDetails?.email || metadata.payoutDetails?.account_number) && <div className="p-2 bg-muted/20 rounded-md">
                                 <p className="text-[10px] text-muted-foreground mb-0.5">Method Details</p>
                                 <p className="text-xs font-medium font-mono break-all">
-                                  {metadata.payoutDetails?.address || 
-                                   metadata.payoutDetails?.email || 
-                                   (metadata.payoutDetails?.account_number && `•••• ${metadata.payoutDetails.account_number.slice(-4)}`)}
+                                  {metadata.payoutDetails?.address || metadata.payoutDetails?.email || metadata.payoutDetails?.account_number && `•••• ${metadata.payoutDetails.account_number.slice(-4)}`}
                                 </p>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                              </div>}
+                          </div>}
 
                         {/* Balance Change */}
-                        {metadata?.balance_before !== undefined && metadata?.balance_after !== undefined && (
-                          <div className="p-2 bg-muted/20 rounded-md">
+                        {metadata?.balance_before !== undefined && metadata?.balance_after !== undefined && <div className="p-2 bg-muted/20 rounded-md">
                             <div className="flex items-center justify-between text-xs">
                               <div>
                                 <p className="text-[10px] text-muted-foreground">Balance Before</p>
@@ -383,24 +281,18 @@ export function UserDetailsDialog({
                                 <p className="font-medium">${Number(metadata.balance_after).toFixed(2)}</p>
                               </div>
                             </div>
-                          </div>
-                        )}
+                          </div>}
 
                         {/* Description */}
-                        {transaction.description && (
-                          <p className="text-xs text-muted-foreground truncate pt-1 border-t">
+                        {transaction.description && <p className="text-xs text-muted-foreground truncate pt-1 border-t">
                             {transaction.description}
-                          </p>
-                        )}
+                          </p>}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    </div>;
+            })}
+              </div>}
           </CollapsibleContent>
         </Collapsible>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
