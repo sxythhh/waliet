@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, AlertCircle } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, AlertCircle, BadgeCheck, Clock, XCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -242,7 +242,7 @@ export function ProfileTab() {
     return joinedCampaigns.find(c => c.id === campaignId);
   };
   const getPlatformIcon = (platform: string) => {
-    const iconClass = "h-5 w-5";
+    const iconClass = "h-4 w-4";
     switch (platform.toLowerCase()) {
       case "tiktok":
         return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
@@ -421,46 +421,31 @@ export function ProfileTab() {
               {socialAccounts.map(account => {
             const linkedCampaign = account.campaigns;
             const latestDemographicSubmission = account.demographic_submissions?.[0];
-            const getStatusBadge = (status: string) => {
-              switch (status) {
-                case 'pending':
-                  return <Badge variant="secondary" className="text-xs font-medium bg-yellow-500/10 text-yellow-500 border-0 px-3 py-1">Pending Review</Badge>;
-                case 'approved':
-                  return <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-3 py-1">Approved</Badge>;
-                case 'rejected':
-                  return <Badge variant="secondary" className="text-xs font-medium bg-red-500/10 text-red-500 border-0 px-3 py-1">Rejected</Badge>;
-                default:
-                  return null;
-              }
-            };
+            const demographicStatus = latestDemographicSubmission?.status;
+            
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border bg-[#0d0d0d]">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center bg-[#1b1b1b] rounded">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
                         {getPlatformIcon(account.platform)}
+                        <span className="font-medium">{account.username}</span>
+                        {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
+                        {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
+                        {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
+                        {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
                       </div>
-                      <div>
-                        <a href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:underline cursor-pointer">
-                          {account.username}
-                        </a>
-                        {linkedCampaign && <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/campaign/${linkedCampaign.id}`);
-                              }}
-                              className="hover:underline text-xs text-muted-foreground"
-                            >
-                              Linked to {linkedCampaign.title}
-                            </button>
-                          </div>}
-                        {latestDemographicSubmission && <div className="flex items-center gap-2 mt-1">
-                            {getStatusBadge(latestDemographicSubmission.status)}
-                            {latestDemographicSubmission.score !== null && <span className="text-xs text-muted-foreground">
-                                Score: {latestDemographicSubmission.score}/100
-                              </span>}
-                          </div>}
-                      </div>
+                      
+                      {linkedCampaign && <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
+                        {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/campaign/${linkedCampaign.id}`);
+                          }}
+                          className="hover:underline font-medium"
+                        >
+                          {linkedCampaign.title}
+                        </button>
+                      </div>}
                     </div>
                     
                     <div className="flex gap-2 w-full sm:w-auto">
