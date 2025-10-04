@@ -155,14 +155,11 @@ export default function CourseDetail() {
         <div className="hidden lg:block w-80 border-r border-white/10 bg-[#202020] min-h-screen">
           <div className="p-4 sticky top-0 max-h-screen overflow-y-auto">
             {/* Course Info */}
-            <div className="mb-6 pb-6 border-b border-white/10 px-0 py-0">
-              <Button variant="ghost" size="sm" onClick={() => navigate(`/brand/${slug}/training`)} className="text-white/60 hover:text-white mb-4 -ml-2">
+            <div className="mb-4 border-b border-white/10 px-0 py-0">
+              <Button variant="ghost" size="sm" onClick={() => navigate(`/brand/${slug}/training`)} className="text-white/60 hover:text-white mb-2 -ml-2">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Return
               </Button>
-              
-              
-              {course.description}
               
               {/* Progress Bar */}
               <div className="space-y-2">
