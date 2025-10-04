@@ -57,6 +57,12 @@ interface Transaction {
   status?: string;
   rejection_reason?: string;
   metadata?: any;
+  campaign?: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+  } | null;
 }
 type TimePeriod = '3D' | '1W' | '1M' | '3M' | '1Y' | 'TW';
 export function WalletTab() {
@@ -277,6 +283,28 @@ export function WalletTab() {
       data: payoutRequests
     } = await supabase.from("payout_requests").select("*").eq("user_id", session.user.id);
 
+    // Extract unique campaign IDs from earnings transactions
+    const campaignIds = walletTransactions
+      ?.filter(txn => {
+        const metadata = txn.metadata as any;
+        return txn.type === 'earning' && metadata?.campaign_id;
+      })
+      .map(txn => (txn.metadata as any).campaign_id)
+      .filter((id, index, self) => id && self.indexOf(id) === index) || [];
+
+    // Fetch campaign details if we have campaign IDs
+    let campaignsMap = new Map();
+    if (campaignIds.length > 0) {
+      const { data: campaigns } = await supabase
+        .from("campaigns")
+        .select("id, title, brand_name, brand_logo_url")
+        .in("id", campaignIds);
+      
+      campaigns?.forEach(campaign => {
+        campaignsMap.set(campaign.id, campaign);
+      });
+    }
+
     // Calculate total pending and in-transit withdrawals
     const pendingAmount = payoutRequests
       ?.filter(pr => pr.status === 'pending' || pr.status === 'in_transit')
@@ -352,7 +380,8 @@ export function WalletTab() {
           rejection_reason: (txn.metadata as any)?.rejection_reason,
           metadata: Object.assign({}, txn.metadata as any, {
             payoutDetails
-          })
+          }),
+          campaign: metadata?.campaign_id ? campaignsMap.get(metadata.campaign_id) || null : null
         });
       });
     }
@@ -1180,8 +1209,22 @@ export function WalletTab() {
                 </div>
 
                 {/* Transaction Metadata - Account & Views */}
-                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined) && <div className="p-4 rounded-lg border border-border bg-[#1a1a1a]/30">
+                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined || selectedTransaction.campaign) && <div className="p-4 rounded-lg border border-border bg-[#1a1a1a]/30">
                     <div className="space-y-3">
+                      {/* Campaign Info */}
+                      {selectedTransaction.campaign && <div className="flex items-center gap-3">
+                          {selectedTransaction.campaign.brand_logo_url ? <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center p-1">
+                              <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-contain" />
+                            </div> : <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center">
+                              <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            </div>}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs text-muted-foreground">Campaign</div>
+                            <div className="text-sm font-semibold truncate">{selectedTransaction.campaign.title}</div>
+                            <div className="text-xs text-muted-foreground truncate">{selectedTransaction.campaign.brand_name}</div>
+                          </div>
+                        </div>}
+                      
                       {/* Platform & Account */}
                       {selectedTransaction.metadata.account_username && <div className="flex items-center gap-3">
                           {(() => {
