@@ -53,7 +53,6 @@ interface SocialAccount {
     brand_logo_url: string;
   };
 }
-
 interface DemographicSubmission {
   id: string;
   tier1_percentage: number;
@@ -93,7 +92,7 @@ export default function AdminUsers() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importResults, setImportResults] = useState<any>(null);
   const [isImporting, setIsImporting] = useState(false);
-  
+
   // Demographics state
   const [submissions, setSubmissions] = useState<DemographicSubmission[]>([]);
   const [selectedSubmission, setSelectedSubmission] = useState<DemographicSubmission | null>(null);
@@ -101,7 +100,6 @@ export default function AdminUsers() {
   const [adminNotes, setAdminNotes] = useState("");
   const [reviewStatus, setReviewStatus] = useState<"approved" | "rejected">("approved");
   const [updating, setUpdating] = useState(false);
-  
   const {
     toast
   } = useToast();
@@ -386,9 +384,10 @@ export default function AdminUsers() {
 
   // Demographics functions
   const fetchSubmissions = async () => {
-    const { data, error } = await supabase
-      .from("demographic_submissions")
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from("demographic_submissions").select(`
         *,
         social_accounts (
           id,
@@ -396,9 +395,9 @@ export default function AdminUsers() {
           username,
           user_id
         )
-      `)
-      .order("submitted_at", { ascending: false });
-
+      `).order("submitted_at", {
+      ascending: false
+    });
     if (error) {
       toast({
         variant: "destructive",
@@ -409,10 +408,8 @@ export default function AdminUsers() {
       setSubmissions(data || []);
     }
   };
-
   const handleReview = async () => {
     if (!selectedSubmission) return;
-
     const scoreValue = parseInt(score);
     if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
       toast({
@@ -422,39 +419,36 @@ export default function AdminUsers() {
       });
       return;
     }
-
     setUpdating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
-
-      const { error: updateError } = await supabase
-        .from("demographic_submissions")
-        .update({
-          status: reviewStatus,
-          score: scoreValue,
-          admin_notes: adminNotes.trim() || null,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: session.user.id
-        })
-        .eq("id", selectedSubmission.id);
-
+      const {
+        error: updateError
+      } = await supabase.from("demographic_submissions").update({
+        status: reviewStatus,
+        score: scoreValue,
+        admin_notes: adminNotes.trim() || null,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: session.user.id
+      }).eq("id", selectedSubmission.id);
       if (updateError) throw updateError;
-
       if (reviewStatus === "approved") {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ demographics_score: scoreValue })
-          .eq("id", selectedSubmission.social_accounts.user_id);
-
+        const {
+          error: profileError
+        } = await supabase.from("profiles").update({
+          demographics_score: scoreValue
+        }).eq("id", selectedSubmission.social_accounts.user_id);
         if (profileError) throw profileError;
       }
-
       toast({
         title: "Success",
         description: "Submission reviewed successfully"
       });
-
       setSelectedSubmission(null);
       setScore("");
       setAdminNotes("");
@@ -469,37 +463,44 @@ export default function AdminUsers() {
       setUpdating(false);
     }
   };
-
   const openReviewDialog = (submission: DemographicSubmission) => {
     setSelectedSubmission(submission);
     setScore(submission.score?.toString() || "");
     setAdminNotes(submission.admin_notes || "");
-    setReviewStatus((submission.status as "approved" | "rejected") || "approved");
+    setReviewStatus(submission.status as "approved" | "rejected" || "approved");
   };
-
   const getStatusBadge = (status: string) => {
     const config = {
-      pending: { variant: "secondary" as const, icon: Clock, color: "text-warning" },
-      approved: { variant: "default" as const, icon: CheckCircle2, color: "text-success" },
-      rejected: { variant: "destructive" as const, icon: XCircle, color: "text-destructive" }
+      pending: {
+        variant: "secondary" as const,
+        icon: Clock,
+        color: "text-warning"
+      },
+      approved: {
+        variant: "default" as const,
+        icon: CheckCircle2,
+        color: "text-success"
+      },
+      rejected: {
+        variant: "destructive" as const,
+        icon: XCircle,
+        color: "text-destructive"
+      }
     };
-
-    const { variant, icon: Icon, color } = config[status as keyof typeof config] || config.pending;
-
-    return (
-      <Badge variant={variant} className="flex items-center gap-1">
+    const {
+      variant,
+      icon: Icon,
+      color
+    } = config[status as keyof typeof config] || config.pending;
+    return <Badge variant={variant} className="flex items-center gap-1">
         <Icon className={`h-3 w-3 ${color}`} />
         {status}
-      </Badge>
-    );
+      </Badge>;
   };
-
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
   const approvedSubmissions = submissions.filter(s => s.status === "approved");
   const rejectedSubmissions = submissions.filter(s => s.status === "rejected");
-  const avgTier1 = submissions.length > 0 
-    ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length 
-    : 0;
+  const avgTier1 = submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0;
   const stats = {
     totalUsers: users.length,
     totalBalance: users.reduce((sum, u) => sum + (u.wallets?.balance || 0), 0),
@@ -511,7 +512,7 @@ export default function AdminUsers() {
       </div>;
   }
   return <div className="p-8 space-y-6 px-[20px] py-px">
-      <Tabs defaultValue="users" className="space-y-6">
+      <Tabs defaultValue="users" className="space-y-6 py-[7px]">
         <TabsList className="bg-card border-0">
           <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-white">
             Users ({stats.totalUsers})
@@ -554,16 +555,16 @@ export default function AdminUsers() {
                       <CommandEmpty>No campaign found.</CommandEmpty>
                       <CommandGroup>
                         <CommandItem value="all" onSelect={() => {
-                        setSelectedCampaign("all");
-                        setCampaignPopoverOpen(false);
-                      }}>
+                            setSelectedCampaign("all");
+                            setCampaignPopoverOpen(false);
+                          }}>
                           <Check className={cn("mr-2 h-4 w-4", selectedCampaign === "all" ? "opacity-100" : "opacity-0")} />
                           All Campaigns
                         </CommandItem>
                         {campaigns.map(campaign => <CommandItem key={campaign.id} value={campaign.title} onSelect={() => {
-                        setSelectedCampaign(campaign.id);
-                        setCampaignPopoverOpen(false);
-                      }}>
+                            setSelectedCampaign(campaign.id);
+                            setCampaignPopoverOpen(false);
+                          }}>
                             <Check className={cn("mr-2 h-4 w-4", selectedCampaign === campaign.id ? "opacity-100" : "opacity-0")} />
                             {campaign.title}
                           </CommandItem>)}
@@ -584,10 +585,10 @@ export default function AdminUsers() {
           </CardContent>
         </Card> : <div className="grid grid-cols-2 gap-6 w-full">
           {filteredUsers.map(user => {
-        const balance = user.wallets?.balance || 0;
-        const totalEarned = user.wallets?.total_earned || 0;
-        const totalWithdrawn = user.wallets?.total_withdrawn || 0;
-        return <Card key={user.id} className="bg-card border-0 overflow-hidden cursor-pointer transition-all hover:bg-[#1D1D1D]" onClick={() => openUserDetailsDialog(user)}>
+            const balance = user.wallets?.balance || 0;
+            const totalEarned = user.wallets?.total_earned || 0;
+            const totalWithdrawn = user.wallets?.total_withdrawn || 0;
+            return <Card key={user.id} className="bg-card border-0 overflow-hidden cursor-pointer transition-all hover:bg-[#1D1D1D]" onClick={() => openUserDetailsDialog(user)}>
                 <CardContent className="p-6">
                   {/* User Header */}
                   <div className="flex items-start justify-between mb-4">
@@ -605,9 +606,9 @@ export default function AdminUsers() {
                       </div>
                     </div>
                     <Button size="sm" onClick={e => {
-                e.stopPropagation();
-                openPayDialog(user);
-              }} className="gap-1 shrink-0">
+                    e.stopPropagation();
+                    openPayDialog(user);
+                  }} className="gap-1 shrink-0">
                       <DollarSign className="h-4 w-4" />
                       Pay
                     </Button>
@@ -651,7 +652,7 @@ export default function AdminUsers() {
                   </div>
                 </CardContent>
               </Card>;
-      })}
+          })}
         </div>}
 
       {/* Payment Dialog */}
@@ -785,10 +786,10 @@ export default function AdminUsers() {
 
             <div className="flex gap-2 justify-end pt-4">
               <Button variant="outline" onClick={() => {
-              setCsvImportDialogOpen(false);
-              setCsvFile(null);
-              setImportResults(null);
-            }} disabled={isImporting}>
+                  setCsvImportDialogOpen(false);
+                  setCsvFile(null);
+                  setImportResults(null);
+                }} disabled={isImporting}>
                 Close
               </Button>
               <Button onClick={handleCsvImport} disabled={!csvFile || isImporting} className="gap-2">
@@ -1015,20 +1016,12 @@ export default function AdminUsers() {
 
             {/* Pending Submissions */}
             <TabsContent value="pending" className="space-y-4">
-              {pendingSubmissions.length === 0 ? (
-                <Card className="bg-card border-0">
+              {pendingSubmissions.length === 0 ? <Card className="bg-card border-0">
                   <CardContent className="py-12 text-center text-muted-foreground">
                     No pending submissions
                   </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {pendingSubmissions.map((submission) => (
-                    <Card
-                      key={submission.id}
-                      className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group"
-                      onClick={() => openReviewDialog(submission)}
-                    >
+                </Card> : <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {pendingSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -1049,50 +1042,40 @@ export default function AdminUsers() {
                           </div>
                         </div>
 
-                        {submission.screenshot_url ? (
-                          <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
+                        {submission.screenshot_url ? <div className="mb-3 rounded-lg overflow-hidden border border-border/50 group-hover:border-primary/30 transition-all">
                             <img src={submission.screenshot_url} alt="Demographics screenshot" className="w-full h-32 object-cover" />
-                          </div>
-                        ) : (
-                          <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
+                          </div> : <div className="mb-3 rounded-lg overflow-hidden border border-dashed border-border/50 h-32 flex items-center justify-center bg-muted/20">
                             <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                          </div>
-                        )}
+                          </div>}
 
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">
                             {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
                           </span>
-                          <Button size="sm" className="h-7 text-xs" onClick={(e) => {
-                            e.stopPropagation();
-                            openReviewDialog(submission);
-                          }}>
+                          <Button size="sm" className="h-7 text-xs" onClick={e => {
+                      e.stopPropagation();
+                      openReviewDialog(submission);
+                    }}>
                             Review
                           </Button>
                         </div>
                       </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+                    </Card>)}
+                </div>}
             </TabsContent>
 
             {/* Approved Submissions */}
             <TabsContent value="approved" className="space-y-4">
-              {approvedSubmissions.length === 0 ? (
-                <Card className="bg-card border-0">
+              {approvedSubmissions.length === 0 ? <Card className="bg-card border-0">
                   <CardContent className="py-12 text-center text-muted-foreground">
                     No approved submissions
                   </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {approvedSubmissions.map((submission) => (
-                    <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
+                </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {approvedSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -1115,32 +1098,24 @@ export default function AdminUsers() {
                           </div>
                         </div>
 
-                        {submission.admin_notes && (
-                          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>
-                        )}
+                        {submission.admin_notes && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>}
 
                         <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => openReviewDialog(submission)}>
                           View Details
                         </Button>
                       </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+                    </Card>)}
+                </div>}
             </TabsContent>
 
             {/* Rejected Submissions */}
             <TabsContent value="rejected" className="space-y-4">
-              {rejectedSubmissions.length === 0 ? (
-                <Card className="bg-card border-0">
+              {rejectedSubmissions.length === 0 ? <Card className="bg-card border-0">
                   <CardContent className="py-12 text-center text-muted-foreground">
                     No rejected submissions
                   </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {rejectedSubmissions.map((submission) => (
-                    <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-destructive/50 transition-all">
+                </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {rejectedSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-destructive/50 transition-all">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -1157,18 +1132,14 @@ export default function AdminUsers() {
                           <p className="text-lg font-bold font-chakra">{submission.tier1_percentage}%</p>
                         </div>
 
-                        {submission.admin_notes && (
-                          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>
-                        )}
+                        {submission.admin_notes && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{submission.admin_notes}</p>}
 
                         <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => openReviewDialog(submission)}>
                           View Details
                         </Button>
                       </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+                    </Card>)}
+                </div>}
             </TabsContent>
           </Tabs>
 
@@ -1179,8 +1150,7 @@ export default function AdminUsers() {
                 <DialogTitle className="text-lg">Review Demographic Submission</DialogTitle>
               </DialogHeader>
 
-              {selectedSubmission && (
-                <div className="space-y-4">
+              {selectedSubmission && <div className="space-y-4">
                   <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                     {getPlatformIcon(selectedSubmission.social_accounts.platform)}
                     <div>
@@ -1194,31 +1164,21 @@ export default function AdminUsers() {
                     <p className="text-4xl font-bold font-chakra text-primary">{selectedSubmission.tier1_percentage}%</p>
                   </div>
 
-                  {selectedSubmission.screenshot_url && (
-                    <div>
+                  {selectedSubmission.screenshot_url && <div>
                       <Label className="text-xs mb-2 block">Demographics Screenshot</Label>
                       <div className="rounded-lg overflow-hidden border">
                         <img src={selectedSubmission.screenshot_url} alt="Demographics screenshot" className="w-full" />
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
                   <div className="space-y-2">
                     <Label className="text-xs">Review Decision</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant={reviewStatus === "approved" ? "default" : "outline"}
-                        onClick={() => setReviewStatus("approved")}
-                        className="h-9 text-sm"
-                      >
+                      <Button variant={reviewStatus === "approved" ? "default" : "outline"} onClick={() => setReviewStatus("approved")} className="h-9 text-sm">
                         <CheckCircle2 className="h-4 w-4 mr-2" />
                         Approve
                       </Button>
-                      <Button
-                        variant={reviewStatus === "rejected" ? "destructive" : "outline"}
-                        onClick={() => setReviewStatus("rejected")}
-                        className="h-9 text-sm"
-                      >
+                      <Button variant={reviewStatus === "rejected" ? "destructive" : "outline"} onClick={() => setReviewStatus("rejected")} className="h-9 text-sm">
                         <XCircle className="h-4 w-4 mr-2" />
                         Reject
                       </Button>
@@ -1227,51 +1187,23 @@ export default function AdminUsers() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="score" className="text-xs">Score (0-100)</Label>
-                    <Input
-                      id="score"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={score}
-                      onChange={(e) => setScore(e.target.value)}
-                      placeholder="Enter score"
-                      className="h-9 text-sm"
-                    />
+                    <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm" />
                   </div>
 
                   <div className="space-y-1.5">
                     <Label htmlFor="notes" className="text-xs">Admin Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={adminNotes}
-                      onChange={(e) => setAdminNotes(e.target.value)}
-                      placeholder="Optional notes about this submission..."
-                      rows={3}
-                      className="text-sm min-h-[70px]"
-                    />
+                    <Textarea id="notes" value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="Optional notes about this submission..." rows={3} className="text-sm min-h-[70px]" />
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedSubmission(null)}
-                      disabled={updating}
-                      className="flex-1"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setSelectedSubmission(null)} disabled={updating} className="flex-1">
                       Cancel
                     </Button>
-                    <Button
-                      onClick={handleReview}
-                      disabled={updating}
-                      size="sm"
-                      className="flex-1"
-                    >
+                    <Button onClick={handleReview} disabled={updating} size="sm" className="flex-1">
                       {updating ? "Submitting..." : "Submit Review"}
                     </Button>
                   </div>
-                </div>
-              )}
+                </div>}
             </DialogContent>
           </Dialog>
         </TabsContent>
