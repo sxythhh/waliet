@@ -23,6 +23,8 @@ interface Campaign {
   start_date: string | null;
   banner_url: string | null;
   platforms: string[];
+  slug: string;
+  preview_url: string | null;
   brands?: {
     logo_url: string;
   };
@@ -153,11 +155,19 @@ export function DiscoverTab() {
               const budgetUsed = campaign.budget_used || 0;
               const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
 
+              const handleCampaignClick = () => {
+                if (campaign.preview_url) {
+                  navigate(`/campaign/${campaign.slug}/preview`);
+                } else {
+                  navigate(`/campaign/${campaign.slug}/join`);
+                }
+              };
+
               return (
                 <Card
                   key={campaign.id}
                   className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 cursor-pointer"
-                  onClick={() => navigate(`/campaign/${campaign.id}`)}
+                  onClick={handleCampaignClick}
                 >
                   {/* Banner Image */}
                   {campaign.banner_url && (
