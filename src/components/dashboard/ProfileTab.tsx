@@ -294,15 +294,7 @@ export function ProfileTab() {
     const fileExt = file.name.split('.').pop();
     const fileName = `${session.user.id}/avatar.${fileExt}`;
 
-    // Delete old avatar if exists
-    if (profile.avatar_url) {
-      const oldPath = profile.avatar_url.split('/').pop();
-      if (oldPath) {
-        await supabase.storage.from('avatars').remove([`${session.user.id}/${oldPath}`]);
-      }
-    }
-
-    // Upload new avatar
+    // Upload new avatar with upsert to overwrite existing file
     const {
       error: uploadError,
       data
