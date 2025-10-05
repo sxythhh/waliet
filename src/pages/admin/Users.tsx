@@ -123,6 +123,10 @@ export default function AdminUsers() {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [sortField, setSortField] = useState<"balance" | "totalEarned" | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [addToCampaignDialogOpen, setAddToCampaignDialogOpen] = useState(false);
+  const [selectedCampaignForAdd, setSelectedCampaignForAdd] = useState<string>("");
+  const [selectedSocialAccountForAdd, setSelectedSocialAccountForAdd] = useState<string>("");
+  const [addingToCampaign, setAddingToCampaign] = useState(false);
   const {
     toast
   } = useToast();
@@ -296,6 +300,93 @@ export default function AdminUsers() {
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(user.id);
     fetchUserTransactions(user.id);
+  };
+  const openAddToCampaignDialog = (user: User) => {
+    setSelectedUser(user);
+    setSelectedCampaignForAdd("");
+    setSelectedSocialAccountForAdd("");
+    fetchUserSocialAccounts(user.id);
+    setAddToCampaignDialogOpen(true);
+  };
+  const handleAddToCampaign = async () => {
+    if (!selectedUser || !selectedCampaignForAdd || !selectedSocialAccountForAdd) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select both a campaign and a social account"
+      });
+      return;
+    }
+
+    setAddingToCampaign(true);
+
+    try {
+      // Get the selected social account details
+      const selectedAccount = userSocialAccounts.find(acc => acc.id === selectedSocialAccountForAdd);
+      if (!selectedAccount) {
+        throw new Error("Selected social account not found");
+      }
+
+      // Check if already has a submission for this campaign
+      const { data: existingSubmission } = await supabase
+        .from("campaign_submissions")
+        .select("id, status")
+        .eq("campaign_id", selectedCampaignForAdd)
+        .eq("creator_id", selectedUser.id)
+        .eq("platform", selectedAccount.platform)
+        .maybeSingle();
+
+      if (existingSubmission && existingSubmission.status !== "withdrawn") {
+        toast({
+          variant: "destructive",
+          title: "Already Applied",
+          description: "This user already has an active application for this campaign on this platform"
+        });
+        setAddingToCampaign(false);
+        return;
+      }
+
+      // Create campaign submission
+      const { error: submissionError } = await supabase
+        .from("campaign_submissions")
+        .insert({
+          campaign_id: selectedCampaignForAdd,
+          creator_id: selectedUser.id,
+          platform: selectedAccount.platform,
+          content_url: "",
+          status: "approved"
+        });
+
+      if (submissionError) throw submissionError;
+
+      // Link social account to campaign
+      const { error: linkError } = await supabase
+        .from("social_account_campaigns")
+        .insert({
+          social_account_id: selectedSocialAccountForAdd,
+          campaign_id: selectedCampaignForAdd
+        });
+
+      if (linkError) throw linkError;
+
+      const campaign = campaigns.find(c => c.id === selectedCampaignForAdd);
+      toast({
+        title: "Success",
+        description: `${selectedUser.username} has been added to ${campaign?.title || "the campaign"}`
+      });
+
+      setAddToCampaignDialogOpen(false);
+      fetchData();
+    } catch (error: any) {
+      console.error("Error adding user to campaign:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to add user to campaign"
+      });
+    } finally {
+      setAddingToCampaign(false);
+    }
   };
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -901,13 +992,21 @@ export default function AdminUsers() {
                           </p>}
                       </div>
                     </div>
-                    <Button size="sm" onClick={e => {
-                    e.stopPropagation();
-                    openPayDialog(user);
-                  }} className="gap-1 shrink-0">
-                      <DollarSign className="h-4 w-4" />
-                      Pay
-                    </Button>
+                    <div className="flex gap-2 shrink-0">
+                      <Button size="sm" onClick={e => {
+                        e.stopPropagation();
+                        openAddToCampaignDialog(user);
+                      }} variant="outline" className="gap-1">
+                        Add to Campaign
+                      </Button>
+                      <Button size="sm" onClick={e => {
+                        e.stopPropagation();
+                        openPayDialog(user);
+                      }} className="gap-1">
+                        <DollarSign className="h-4 w-4" />
+                        Pay
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Connected Accounts */}
@@ -981,13 +1080,21 @@ export default function AdminUsers() {
                       ${totalEarned.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" onClick={e => {
-                        e.stopPropagation();
-                        openPayDialog(user);
-                      }} className="gap-1">
-                        <DollarSign className="h-4 w-4" />
-                        Pay
-                      </Button>
+                      <div className="flex gap-2 justify-end">
+                        <Button size="sm" onClick={e => {
+                          e.stopPropagation();
+                          openAddToCampaignDialog(user);
+                        }} variant="outline" className="gap-1">
+                          Add to Campaign
+                        </Button>
+                        <Button size="sm" onClick={e => {
+                          e.stopPropagation();
+                          openPayDialog(user);
+                        }} className="gap-1">
+                          <DollarSign className="h-4 w-4" />
+                          Pay
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>;
                 })}
@@ -1385,6 +1492,107 @@ export default function AdminUsers() {
               </Button>
               <Button onClick={handleUpdateScore} disabled={updating} className="flex-1">
                 {updating ? "Updating..." : "Update Score"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add to Campaign Dialog */}
+      <Dialog open={addToCampaignDialogOpen} onOpenChange={setAddToCampaignDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add User to Campaign</DialogTitle>
+            <DialogDescription>
+              Assign {selectedUser?.username} to a campaign with one of their social accounts
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Select Campaign</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                  >
+                    {selectedCampaignForAdd
+                      ? campaigns.find(c => c.id === selectedCampaignForAdd)?.title
+                      : "Select campaign..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search campaigns..." />
+                    <CommandList>
+                      <CommandEmpty>No campaign found.</CommandEmpty>
+                      <CommandGroup>
+                        {campaigns.map(campaign => (
+                          <CommandItem
+                            key={campaign.id}
+                            value={campaign.title}
+                            onSelect={() => setSelectedCampaignForAdd(campaign.id)}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCampaignForAdd === campaign.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {campaign.title}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Select Social Account</Label>
+              {loadingSocialAccounts ? (
+                <div className="text-sm text-muted-foreground">Loading accounts...</div>
+              ) : userSocialAccounts.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No social accounts found</div>
+              ) : (
+                <div className="space-y-2">
+                  {userSocialAccounts.map(account => (
+                    <Button
+                      key={account.id}
+                      variant={selectedSocialAccountForAdd === account.id ? "default" : "outline"}
+                      className="w-full justify-start gap-2"
+                      onClick={() => setSelectedSocialAccountForAdd(account.id)}
+                    >
+                      {getPlatformIcon(account.platform)}
+                      <span>{account.username}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {account.follower_count.toLocaleString()} followers
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setAddToCampaignDialogOpen(false)}
+                disabled={addingToCampaign}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddToCampaign}
+                disabled={addingToCampaign || !selectedCampaignForAdd || !selectedSocialAccountForAdd}
+                className="flex-1"
+              >
+                {addingToCampaign ? "Adding..." : "Add to Campaign"}
               </Button>
             </div>
           </div>
