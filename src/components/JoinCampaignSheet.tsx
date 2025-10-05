@@ -10,15 +10,11 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import { Check } from "lucide-react";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 
 interface Campaign {
   id: string;
@@ -53,6 +49,19 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return tiktokLogo;
+      case "instagram":
+        return instagramLogo;
+      case "youtube":
+        return youtubeLogo;
+      default:
+        return null;
+    }
+  };
 
   const loadSocialAccounts = async () => {
     if (!campaign) return;
@@ -226,26 +235,50 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           </div>
 
           {/* Account Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="account">Select Social Account *</Label>
-            <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-              <SelectTrigger id="account">
-                <SelectValue placeholder="Choose an account..." />
-              </SelectTrigger>
-              <SelectContent>
-                {socialAccounts.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground">
-                    No accounts found for this campaign's platforms
-                  </div>
-                ) : (
-                  socialAccounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.username} ({account.platform})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+          <div className="space-y-3">
+            <Label>Select Social Account *</Label>
+            {socialAccounts.length === 0 ? (
+              <div className="p-4 rounded-lg bg-muted/50 text-center">
+                <p className="text-sm text-muted-foreground">
+                  No accounts found for this campaign's platforms
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                {socialAccounts.map((account) => {
+                  const platformIcon = getPlatformIcon(account.platform);
+                  const isSelected = selectedAccount === account.id;
+                  
+                  return (
+                    <button
+                      key={account.id}
+                      type="button"
+                      onClick={() => setSelectedAccount(account.id)}
+                      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? "border-blue-500 bg-blue-500/10"
+                          : "border-border hover:border-muted-foreground/50 bg-card"
+                      }`}
+                    >
+                      {platformIcon && (
+                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                          <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div className="flex-1 text-left">
+                        <p className="font-medium text-sm">{account.username}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Application Questions */}
