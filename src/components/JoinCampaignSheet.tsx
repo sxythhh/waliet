@@ -46,7 +46,7 @@ interface JoinCampaignSheetProps {
 }
 
 export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaignSheetProps) {
-  const [selectedAccount, setSelectedAccount] = useState<string>("");
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
@@ -95,9 +95,17 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
     setSocialAccounts(availableAccounts);
   };
 
+  const toggleAccountSelection = (accountId: string) => {
+    setSelectedAccounts(prev => 
+      prev.includes(accountId)
+        ? prev.filter(id => id !== accountId)
+        : [...prev, accountId]
+    );
+  };
+
   const handleSubmit = async () => {
-    if (!campaign || !selectedAccount) {
-      toast.error("Please select a social account");
+    if (!campaign || selectedAccounts.length === 0) {
+      toast.error("Please select at least one social account");
       return;
     }
 
@@ -121,37 +129,41 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
     setSubmitting(true);
 
     try {
-      const account = socialAccounts.find(a => a.id === selectedAccount);
-      
       // Determine submission status based on campaign type
       const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
       
-      // Create the campaign submission
-      const { error: submissionError } = await supabase
-        .from("campaign_submissions")
-        .insert({
-          campaign_id: campaign.id,
-          creator_id: user.id,
-          platform: account.platform,
-          content_url: account.account_link || "",
-          status: submissionStatus,
-        });
+      // Process each selected account
+      for (const accountId of selectedAccounts) {
+        const account = socialAccounts.find(a => a.id === accountId);
+        
+        // Create the campaign submission
+        const { error: submissionError } = await supabase
+          .from("campaign_submissions")
+          .insert({
+            campaign_id: campaign.id,
+            creator_id: user.id,
+            platform: account.platform,
+            content_url: account.account_link || "",
+            status: submissionStatus,
+          });
 
-      if (submissionError) throw submissionError;
+        if (submissionError) throw submissionError;
 
-      // Link the social account to the campaign
-      const { error: linkError } = await supabase
-        .from("social_account_campaigns")
-        .insert({
-          social_account_id: selectedAccount,
-          campaign_id: campaign.id,
-        });
+        // Link the social account to the campaign
+        const { error: linkError } = await supabase
+          .from("social_account_campaigns")
+          .insert({
+            social_account_id: accountId,
+            campaign_id: campaign.id,
+          });
 
-      if (linkError) throw linkError;
+        if (linkError) throw linkError;
+      }
 
+      const accountText = selectedAccounts.length === 1 ? "account is" : "accounts are";
       const successMessage = campaign.requires_application === false 
-        ? "Successfully joined the campaign! This account is now connected."
-        : "Application submitted successfully! This account is now connected to this campaign.";
+        ? `Successfully joined the campaign! ${selectedAccounts.length} ${accountText} now connected.`
+        : `Application submitted successfully! ${selectedAccounts.length} ${accountText} now connected to this campaign.`;
       
       toast.success(successMessage);
       onOpenChange(false);
@@ -281,10 +293,11 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           {/* Account Selection */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Select Social Account *</Label>
+              <Label>Select Social Accounts *</Label>
               {socialAccounts.length > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Can be reused across campaigns
+                  {selectedAccounts.length > 0 && `${selectedAccounts.length} selected • `}
+                  Can select multiple
                 </p>
               )}
             </div>
@@ -301,13 +314,13 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
               <div className="grid gap-2">
                 {socialAccounts.map((account) => {
                   const platformIcon = getPlatformIcon(account.platform);
-                  const isSelected = selectedAccount === account.id;
+                  const isSelected = selectedAccounts.includes(account.id);
                   
                   return (
                     <button
                       key={account.id}
                       type="button"
-                      onClick={() => setSelectedAccount(isSelected ? "" : account.id)}
+                      onClick={() => toggleAccountSelection(account.id)}
                       className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
                         isSelected
                           ? "border-blue-500 bg-blue-500/10"
@@ -366,7 +379,7 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
             <Button
               className="flex-1"
               onClick={handleSubmit}
-              disabled={submitting || !selectedAccount}
+              disabled={submitting || selectedAccounts.length === 0}
             >
               {submitting 
                 ? (campaign.requires_application === false ? "Joining..." : "Submitting...") 
