@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, CheckCircle2, Circle, Check, PanelLeft, PanelLeftClose } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Check, PanelLeft, PanelLeftClose, ExternalLink } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import DOMPurify from "dompurify";
 import { VideoEmbed } from "@/components/VideoEmbed";
@@ -23,6 +23,10 @@ interface Module {
   content: string | null;
   video_url: string | null;
   order_index: number;
+  assets?: Array<{
+    title: string;
+    url: string;
+  }>;
 }
 interface ModuleCompletion {
   module_id: string;
@@ -71,11 +75,20 @@ export default function CourseDetail() {
         ascending: true
       });
       if (modulesError) throw modulesError;
-      setModules(modulesData || []);
+      
+      // Type cast the data to ensure assets is properly typed
+      const typedModules = modulesData?.map(module => ({
+        ...module,
+        content: module.content || null,
+        video_url: module.video_url || null,
+        assets: Array.isArray(module.assets) ? module.assets as Array<{ title: string; url: string }> : []
+      })) || [];
+      
+      setModules(typedModules);
 
       // Set first module as selected
-      if (modulesData && modulesData.length > 0) {
-        setSelectedModuleId(modulesData[0].id);
+      if (typedModules && typedModules.length > 0) {
+        setSelectedModuleId(typedModules[0].id);
       }
 
       // Fetch completions if user is logged in
@@ -83,7 +96,7 @@ export default function CourseDetail() {
         const {
           data: completionsData,
           error: completionsError
-        } = await supabase.from("module_completions").select("module_id, completed_at").eq("user_id", user.id).in("module_id", modulesData?.map(m => m.id) || []);
+        } = await supabase.from("module_completions").select("module_id, completed_at").eq("user_id", user.id).in("module_id", typedModules?.map(m => m.id) || []);
         if (completionsError) throw completionsError;
         setCompletions(completionsData || []);
       }
@@ -239,6 +252,46 @@ export default function CourseDetail() {
                       </div>
                     </div>
                   )
+                )}
+
+                {selectedModule.assets && selectedModule.assets.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-white mb-4">Assets</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedModule.assets.map((asset, index) => {
+                        const domain = new URL(asset.url).hostname;
+                        const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+                        
+                        return (
+                          <a
+                            key={index}
+                            href={asset.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+                          >
+                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
+                              <img 
+                                src={faviconUrl} 
+                                alt={`${domain} favicon`}
+                                className="w-6 h-6"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-medium truncate group-hover:text-[#5865F2] transition-colors">
+                                {asset.title}
+                              </p>
+                              <p className="text-white/40 text-sm truncate">{domain}</p>
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-white/60 flex-shrink-0 transition-colors" />
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
 
                 {selectedModule.content && <div className="prose prose-base md:prose-lg prose-neutral dark:prose-invert max-w-none

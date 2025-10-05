@@ -335,6 +335,7 @@ export type Database = {
       }
       course_modules: {
         Row: {
+          assets: Json | null
           content: string | null
           course_id: string
           created_at: string
@@ -345,6 +346,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          assets?: Json | null
           content?: string | null
           course_id: string
           created_at?: string
@@ -355,6 +357,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          assets?: Json | null
           content?: string | null
           course_id?: string
           created_at?: string
