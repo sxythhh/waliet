@@ -199,33 +199,23 @@ export default function BrandDashboard() {
                               <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
                             </div>}
                           <CardContent className="p-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex-1">
-                                <h3 className="text-xl font-semibold text-white mb-1">
-                                  {campaign.title}
-                                </h3>
-                                {campaign.description && <p className="text-sm text-white/60 line-clamp-2">
-                                    {campaign.description}
-                                  </p>}
-                              </div>
-                              <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                                <Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10" onClick={e => {
-                            e.stopPropagation();
-                            navigate(`/join/${campaign.slug}`);
-                          }} title="Go to join page">
-                                  <ArrowRight className="h-4 w-4" />
-                                </Button>
-                                <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>} />
-                                <Button size="icon" variant="ghost" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={e => {
-                            e.stopPropagation();
-                            handleDeleteClick(campaign);
-                          }}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
+                        <div className="flex items-start justify-between mb-4">
+                          <h3 className="text-xl font-semibold text-white mb-1">
+                            {campaign.title}
+                          </h3>
+                          <div onClick={e => e.stopPropagation()}>
+                            <CreateCampaignDialog 
+                              brandId={brand.id} 
+                              brandName={brand.name} 
+                              onSuccess={fetchBrandData} 
+                              campaign={campaign}
+                              onDelete={() => handleDeleteClick(campaign)}
+                              trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>} 
+                            />
+                          </div>
+                        </div>
 
                             {/* Budget Progress Bar */}
                             <div className="space-y-2 mb-4">
@@ -281,30 +271,20 @@ export default function BrandDashboard() {
                         </div>}
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold text-white mb-1">
-                              {campaign.title}
-                            </h3>
-                            {campaign.description && <p className="text-sm text-white/60 line-clamp-2">
-                                {campaign.description}
-                              </p>}
-                          </div>
-                          <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                            <Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10" onClick={e => {
-                        e.stopPropagation();
-                        navigate(`/join/${campaign.slug}`);
-                      }} title="Go to join page">
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
+                          <h3 className="text-xl font-semibold text-white mb-1">
+                            {campaign.title}
+                          </h3>
+                          <div onClick={e => e.stopPropagation()}>
+                            <CreateCampaignDialog 
+                              brandId={brand.id} 
+                              brandName={brand.name} 
+                              onSuccess={fetchBrandData} 
+                              campaign={campaign}
+                              onDelete={() => handleDeleteClick(campaign)}
+                              trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
                                   <Pencil className="h-4 w-4" />
-                                </Button>} />
-                            <Button size="icon" variant="ghost" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={e => {
-                        e.stopPropagation();
-                        handleDeleteClick(campaign);
-                      }}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                                </Button>} 
+                            />
                           </div>
                         </div>
 

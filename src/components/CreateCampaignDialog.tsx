@@ -25,7 +25,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Upload, X } from "lucide-react";
+import { Plus, Upload, X, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
@@ -78,6 +79,7 @@ interface CreateCampaignDialogProps {
   onSuccess?: () => void;
   campaign?: Campaign;
   trigger?: React.ReactNode;
+  onDelete?: () => void;
 }
 
 export function CreateCampaignDialog({
@@ -86,6 +88,7 @@ export function CreateCampaignDialog({
   onSuccess,
   campaign,
   trigger,
+  onDelete,
 }: CreateCampaignDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,6 +96,7 @@ export function CreateCampaignDialog({
   const [bannerPreview, setBannerPreview] = useState<string | null>(
     campaign?.banner_url || null
   );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<CampaignFormValues>({
@@ -570,38 +574,81 @@ export function CreateCampaignDialog({
               )}
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setOpen(false);
-                  form.reset();
-                  setBannerFile(null);
-                  setBannerPreview(null);
-                }}
-                disabled={isSubmitting}
-                className="text-white/60 hover:text-white hover:bg-white/10"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="bg-primary hover:bg-primary/90 text-white min-w-[140px]"
-              >
-                {isSubmitting
-                  ? campaign
-                    ? "Updating..."
-                    : "Creating..."
-                  : campaign
-                  ? "Update Campaign"
-                  : "Create Campaign"}
-              </Button>
+            <div className="flex justify-between gap-3 pt-4 border-t border-white/10">
+              <div>
+                {campaign && onDelete && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    disabled={isSubmitting}
+                    className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Campaign
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setOpen(false);
+                    form.reset();
+                    setBannerFile(null);
+                    setBannerPreview(null);
+                  }}
+                  disabled={isSubmitting}
+                  className="text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="bg-primary hover:bg-primary/90 text-white min-w-[140px]"
+                >
+                  {isSubmitting
+                    ? campaign
+                      ? "Updating..."
+                      : "Creating..."
+                    : campaign
+                    ? "Update Campaign"
+                    : "Create Campaign"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
       </DialogContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-[#202020] border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              This will permanently delete <strong className="text-white">{campaign?.title}</strong>.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setOpen(false);
+                onDelete?.();
+              }} 
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
