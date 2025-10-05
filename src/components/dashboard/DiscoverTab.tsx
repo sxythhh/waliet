@@ -244,9 +244,9 @@ export function DiscoverTab() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                       {isEnded && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-white font-semibold text-lg px-4 py-2 bg-red-600 rounded-md">
-                            Campaign Ended
+                        <div className="absolute top-2 right-2">
+                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-red-500/10 rounded backdrop-blur-sm">
+                            Ended
                           </span>
                         </div>
                       )}
