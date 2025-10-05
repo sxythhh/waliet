@@ -163,7 +163,7 @@ export function SubmitDemographicsDialog({
     setVideoFile(file);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-card">
+      <DialogContent className="sm:max-w-[600px] bg-neutral-950">
         <DialogHeader>
           <DialogTitle>Submit Account Demographics</DialogTitle>
           <DialogDescription>
