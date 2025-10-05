@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -32,6 +33,8 @@ interface Campaign {
   platforms: string[];
   slug: string;
   preview_url: string | null;
+  guidelines: string | null;
+  application_questions: string[];
   brands?: {
     logo_url: string;
   };
@@ -43,6 +46,8 @@ export function DiscoverTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("popular");
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -88,7 +93,10 @@ export function DiscoverTab() {
       const campaignsWithBrandLogo = availableCampaigns.map(campaign => ({
         ...campaign,
         brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
-        platforms: campaign.allowed_platforms || []
+        platforms: campaign.allowed_platforms || [],
+        application_questions: Array.isArray(campaign.application_questions) 
+          ? campaign.application_questions as string[]
+          : []
       }));
       setCampaigns(campaignsWithBrandLogo);
     }
@@ -213,7 +221,8 @@ export function DiscoverTab() {
                 if (campaign.preview_url) {
                   window.open(campaign.preview_url, '_blank');
                 } else {
-                  navigate(`/join/${campaign.slug}`);
+                  setSelectedCampaign(campaign);
+                  setSheetOpen(true);
                 }
               };
 
@@ -288,6 +297,12 @@ export function DiscoverTab() {
           </div>
         )}
       </div>
+
+      <JoinCampaignSheet
+        campaign={selectedCampaign}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
     </div>
   );
 }
