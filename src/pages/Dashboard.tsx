@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, TrendingUp, DollarSign, Lock } from "lucide-react";
+import { Sparkles, TrendingUp, DollarSign } from "lucide-react";
 import { CampaignsTab } from "@/components/dashboard/CampaignsTab";
 import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
 import { NotificationsTab } from "@/components/dashboard/NotificationsTab";
@@ -60,7 +60,6 @@ export default function Dashboard() {
       {currentTab === "campaigns" && <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="font-bold text-2xl">Your Campaigns</h1>
           <Button onClick={() => setPrivateDialogOpen(true)} variant="secondary" className="gap-2 whitespace-nowrap bg-[#1a1a1a]">
-            <Lock className="h-4 w-4" />
             Join Private Campaign
           </Button>
         </div>}
