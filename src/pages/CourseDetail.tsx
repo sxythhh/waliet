@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, CheckCircle2, Circle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import DOMPurify from "dompurify";
+import { VideoEmbed } from "@/components/VideoEmbed";
 interface Course {
   id: string;
   title: string;
@@ -215,10 +216,7 @@ export default function CourseDetail() {
                 {selectedModule.video_url && (
                   selectedModule.video_url.includes('<') ? (
                     <div className="mb-8">
-                      <div 
-                        dangerouslySetInnerHTML={{ __html: selectedModule.video_url }}
-                        className="w-full flex justify-center"
-                      />
+                      <VideoEmbed embedCode={selectedModule.video_url} />
                     </div>
                   ) : (
                     <div className="mb-8 rounded-lg overflow-hidden">
