@@ -81,7 +81,7 @@ export function DiscoverTab() {
           logo_url
         )
       `)
-      .eq("status", "active")
+      .in("status", ["active", "ended"])
       .order("created_at", { ascending: false });
 
     if (!error && data) {
@@ -218,14 +218,20 @@ export function DiscoverTab() {
               const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
 
               const handleCampaignClick = () => {
-                setSelectedCampaign(campaign);
-                setSheetOpen(true);
+                if (campaign.status !== "ended") {
+                  setSelectedCampaign(campaign);
+                  setSheetOpen(true);
+                }
               };
+
+              const isEnded = campaign.status === "ended";
 
               return (
                 <Card
                   key={campaign.id}
-                  className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer"
+                  className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${
+                    isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                  }`}
                   onClick={handleCampaignClick}
                 >
                   {/* Banner Image */}
@@ -237,6 +243,13 @@ export function DiscoverTab() {
                         className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                      {isEnded && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white font-semibold text-lg px-4 py-2 bg-red-600 rounded-md">
+                            Campaign Ended
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
 
