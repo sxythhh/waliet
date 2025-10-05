@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -1072,6 +1073,53 @@ export default function AdminUsers() {
                          </div>
 
                         {submission.admin_notes && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{submission.admin_notes}</p>}
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-3 text-xs border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={async () => {
+                            if (!confirm(`Require new demographic submission for @${submission.social_accounts.username}? This will:\n\n• Reset their demographics score to 0\n• Archive current submission as 'rejected'\n• Require them to submit new demographics\n\nContinue?`)) return;
+                            
+                            try {
+                              // Archive current submission
+                              const { error: updateError } = await supabase
+                                .from('demographic_submissions')
+                                .update({ 
+                                  status: 'rejected',
+                                  admin_notes: 'Submission reset - new demographics required',
+                                  reviewed_at: new Date().toISOString(),
+                                  reviewed_by: (await supabase.auth.getUser()).data.user?.id
+                                })
+                                .eq('id', submission.id);
+
+                              if (updateError) throw updateError;
+
+                              // Reset demographics score on profile
+                              const { error: profileError } = await supabase
+                                .from('profiles')
+                                .update({ demographics_score: 0 })
+                                .eq('id', submission.social_accounts.user_id);
+
+                              if (profileError) throw profileError;
+
+                              toast({
+                                title: "Success",
+                                description: "Demographics reset successfully"
+                              });
+                              fetchSubmissions();
+                            } catch (error: any) {
+                              console.error('Error resetting demographics:', error);
+                              toast({
+                                title: "Error",
+                                description: "Failed to reset demographics",
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                        >
+                          Require New Submission
+                        </Button>
                       </CardContent>
                     </Card>;
               })}
