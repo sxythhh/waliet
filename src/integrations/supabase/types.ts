@@ -181,6 +181,7 @@ export type Database = {
       }
       campaign_submissions: {
         Row: {
+          application_answers: Json | null
           campaign_id: string
           content_url: string
           creator_id: string
@@ -193,6 +194,7 @@ export type Database = {
           views: number | null
         }
         Insert: {
+          application_answers?: Json | null
           campaign_id: string
           content_url: string
           creator_id: string
@@ -205,6 +207,7 @@ export type Database = {
           views?: number | null
         }
         Update: {
+          application_answers?: Json | null
           campaign_id?: string
           content_url?: string
           creator_id?: string
