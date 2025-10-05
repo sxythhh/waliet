@@ -125,8 +125,8 @@ export function DiscoverTab() {
 
   return (
     <div className="space-y-6">
-      {/* Iframe Section - No padding */}
-      <div className="w-full h-[300px] rounded-lg overflow-hidden border border-border">
+      {/* Iframe Section - No padding, hidden on mobile */}
+      <div className="hidden md:block w-full h-[300px] rounded-lg overflow-hidden border border-border">
         <iframe
           src="https://www.virality.cc/discover"
           className="w-full h-full border-0"
