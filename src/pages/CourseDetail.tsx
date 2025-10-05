@@ -268,7 +268,7 @@ export default function CourseDetail() {
                             href={asset.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+                            className="flex items-center gap-3 p-4 rounded-lg bg-white/5 border border-white/10 transition-all group"
                           >
                             <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
                               <img 
@@ -281,10 +281,10 @@ export default function CourseDetail() {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-white font-medium truncate group-hover:text-[#5865F2] transition-colors">
+                              <p className="text-white font-medium truncate transition-colors">
                                 {asset.title}
                               </p>
-                              <p className="text-white/40 text-sm truncate">{domain}</p>
+                              <p className="text-white/40 text-sm truncate group-hover:underline">{domain}</p>
                             </div>
                             <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-white/60 flex-shrink-0 transition-colors" />
                           </a>
