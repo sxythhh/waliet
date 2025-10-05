@@ -304,7 +304,7 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
                     <button
                       key={account.id}
                       type="button"
-                      onClick={() => setSelectedAccount(account.id)}
+                      onClick={() => setSelectedAccount(isSelected ? "" : account.id)}
                       className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
                         isSelected
                           ? "border-blue-500 bg-blue-500/10"
@@ -312,7 +312,9 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
                       }`}
                     >
                       {platformIcon && (
-                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                          isSelected ? "bg-blue-500" : "bg-muted"
+                        }`}>
                           <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
                         </div>
                       )}
