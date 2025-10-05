@@ -316,9 +316,14 @@ export function DiscoverTab() {
                           </div>
 
                           {/* Animated Infinite Progress Bar */}
-                          <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
-                            <div className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full animate-[slide_2s_ease-in-out_infinite]" />
-                          </div>
+                          <div 
+                            className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]"
+                            style={{
+                              background: 'linear-gradient(45deg, hsl(var(--primary)) 25%, transparent 25%, transparent 50%, hsl(var(--primary)) 50%, hsl(var(--primary)) 75%, transparent 75%, transparent)',
+                              backgroundSize: '20px 20px',
+                              animation: 'slide 1s linear infinite'
+                            }}
+                          />
 
                           <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                             <span>No budget limit</span>

@@ -114,10 +114,10 @@ export default {
         },
         slide: {
           "0%": {
-            transform: "translateX(-100%)",
+            backgroundPosition: "0 0",
           },
           "100%": {
-            transform: "translateX(300%)",
+            backgroundPosition: "20px 0",
           },
         },
       },
