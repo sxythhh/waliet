@@ -189,7 +189,7 @@ export function WalletTab() {
           const txnDate = new Date(txn.created_at);
           if (txnDate <= currentDate) {
             const amount = Number(txn.amount) || 0;
-            
+
             // Add positive amounts (earnings, bonuses, etc.)
             if (['earning', 'admin_adjustment', 'bonus', 'refund'].includes(txn.type)) {
               balanceAtDate += amount;
@@ -201,7 +201,6 @@ export function WalletTab() {
           }
         });
       }
-
       dataPoints.push({
         date: dateStr,
         amount: Number(Math.max(0, balanceAtDate).toFixed(2))
@@ -280,31 +279,24 @@ export function WalletTab() {
     } = await supabase.from("payout_requests").select("*").eq("user_id", session.user.id);
 
     // Extract unique campaign IDs from earnings transactions
-    const campaignIds = walletTransactions
-      ?.filter(txn => {
-        const metadata = txn.metadata as any;
-        return txn.type === 'earning' && metadata?.campaign_id;
-      })
-      .map(txn => (txn.metadata as any).campaign_id)
-      .filter((id, index, self) => id && self.indexOf(id) === index) || [];
+    const campaignIds = walletTransactions?.filter(txn => {
+      const metadata = txn.metadata as any;
+      return txn.type === 'earning' && metadata?.campaign_id;
+    }).map(txn => (txn.metadata as any).campaign_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
     // Fetch campaign details if we have campaign IDs
     let campaignsMap = new Map();
     if (campaignIds.length > 0) {
-      const { data: campaigns } = await supabase
-        .from("campaigns")
-        .select("id, title, brand_name, brand_logo_url")
-        .in("id", campaignIds);
-      
+      const {
+        data: campaigns
+      } = await supabase.from("campaigns").select("id, title, brand_name, brand_logo_url").in("id", campaignIds);
       campaigns?.forEach(campaign => {
         campaignsMap.set(campaign.id, campaign);
       });
     }
 
     // Calculate total pending and in-transit withdrawals
-    const pendingAmount = payoutRequests
-      ?.filter(pr => pr.status === 'pending' || pr.status === 'in_transit')
-      .reduce((sum, pr) => sum + Number(pr.amount), 0) || 0;
+    const pendingAmount = payoutRequests?.filter(pr => pr.status === 'pending' || pr.status === 'in_transit').reduce((sum, pr) => sum + Number(pr.amount), 0) || 0;
     setPendingWithdrawals(pendingAmount);
     const allTransactions: Transaction[] = [];
     if (walletTransactions) {
@@ -506,7 +498,7 @@ export function WalletTab() {
   };
   const handleConfirmPayout = async () => {
     if (isSubmittingPayout) return; // Prevent duplicate submissions
-    
+
     if (!wallet || !payoutAmount || Number(payoutAmount) <= 0) {
       toast({
         variant: "destructive",
@@ -540,7 +532,6 @@ export function WalletTab() {
     if (!session) return;
     const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
     if (!selectedMethod) return;
-    
     setIsSubmittingPayout(true);
     try {
       const balance_before = wallet.balance;
@@ -563,7 +554,8 @@ export function WalletTab() {
         error: txnError
       } = await supabase.from("wallet_transactions").insert({
         user_id: session.user.id,
-        amount: -amount,  // Negative for withdrawals
+        amount: -amount,
+        // Negative for withdrawals
         type: 'withdrawal',
         status: 'pending',
         description: `Withdrawal to ${selectedMethod.method === 'paypal' ? 'PayPal' : 'Crypto'}`,
@@ -641,12 +633,7 @@ export function WalletTab() {
         letterSpacing: '-0.5px',
         fontWeight: 600
       }}>Virality Wallet</h2>
-        <Button 
-          onClick={handleRequestPayout} 
-          size="lg" 
-          className="gap-1 py-0 my-0 ml-auto"
-          disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}
-        >
+        <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0 ml-auto" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}>
           <ArrowDownLeft className="h-4 w-4" />
           Request Payout
         </Button>
@@ -659,10 +646,12 @@ export function WalletTab() {
         <CardContent className="pt-6">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">
+              <p className="text-sm text-muted-foreground mb-1 font-semibold">
                 {format(new Date(), 'MMM dd, yyyy')}
               </p>
-              <p className="text-4xl font-bold font-chakra" style={{ letterSpacing: '-0.3px' }}>
+              <p className="text-4xl font-bold font-chakra" style={{
+                letterSpacing: '-0.3px'
+              }}>
                 ${wallet?.balance?.toFixed(2) || "0.00"}
               </p>
             </div>
@@ -725,7 +714,7 @@ export function WalletTab() {
           <Separator className="my-6" />
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">In Transit</span>
+            <span className="text-sm text-muted-foreground font-medium">In Transit</span>
             <span className="text-lg font-semibold">${pendingWithdrawals.toFixed(2)}</span>
           </div>
         </CardContent>
@@ -748,11 +737,9 @@ export function WalletTab() {
               backgroundColor: '#0d0d0d'
             }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#0d0d0d] hover:bg-[#1a1a1a]">
                   <div className="flex items-center gap-4 flex-1">
-                    {transaction.campaign?.brand_logo_url && (
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
+                    {transaction.campaign?.brand_logo_url && <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
                         <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-contain" />
-                      </div>
-                    )}
+                      </div>}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-bold" style={{
@@ -761,12 +748,7 @@ export function WalletTab() {
                     }}>
                           {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
                         </p>
-                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${
-                      transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : 
-                      transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' :
-                      transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' :
-                      'text-yellow-500 bg-yellow-500/5'
-                    }`} style={{
+                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
                       letterSpacing: '-0.5px'
                     }}>
                             {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
@@ -783,29 +765,22 @@ export function WalletTab() {
                       letterSpacing: '-0.5px'
                     }}>
                           {(() => {
-                            const now = new Date();
-                            const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
-                            
-                            if (diffInHours < 24) {
-                              if (diffInHours < 1) {
-                                const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
-                                return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
-                              }
-                              return `${diffInHours}h ago`;
-                            }
-                            return format(transaction.date, 'MMM dd, yyyy / HH:mm');
-                          })()}
+                        const now = new Date();
+                        const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
+                        if (diffInHours < 24) {
+                          if (diffInHours < 1) {
+                            const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
+                            return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
+                          }
+                          return `${diffInHours}h ago`;
+                        }
+                        return format(transaction.date, 'MMM dd, yyyy / HH:mm');
+                      })()}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${
-                    transaction.status === 'rejected' 
-                      ? 'text-red-500' 
-                      : transaction.status === 'pending' 
-                      ? 'text-yellow-500' 
-                      : transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'
-                  }`} style={{
+                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
                 letterSpacing: '-0.5px'
               }}>
@@ -925,12 +900,10 @@ export function WalletTab() {
                           <p className="text-base font-semibold text-foreground">
                             {getMethodLabel()}
                           </p>
-                          {method.method.includes('crypto') && (
-                            <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-transparent text-white border-0 flex items-center gap-1.5 normal-case hover:bg-transparent">
+                          {method.method.includes('crypto') && <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-transparent text-white border-0 flex items-center gap-1.5 normal-case hover:bg-transparent">
                               {networkLogo && <img src={networkLogo} alt="Network logo" className="h-3 w-3" />}
                               {getBadgeText()}
-                            </Badge>
-                          )}
+                            </Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground font-instrument tracking-tight font-medium truncate">
                           {getMethodDetails()}
@@ -1019,31 +992,11 @@ export function WalletTab() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="payout-amount">Amount ($)</Label>
-              <Input 
-                id="payout-amount" 
-                type="number" 
-                min="20" 
-                step="0.01" 
-                max={wallet?.balance || 0} 
-                placeholder="20.00" 
-                value={payoutAmount} 
-                onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} 
-                className="bg-[#171717] border-transparent text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50" 
-              />
+              <Input id="payout-amount" type="number" min="20" step="0.01" max={wallet?.balance || 0} placeholder="20.00" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} className="bg-[#171717] border-transparent text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50" />
               <div className="flex gap-2 flex-wrap">
-                {[20, 50, 100, 500].map(amount => (
-                  <Button
-                    key={amount}
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPayoutAmount(amount.toString())}
-                    disabled={wallet?.balance ? wallet.balance < amount : true}
-                    className="bg-[#1a1a1a] hover:bg-[#252525]"
-                  >
+                {[20, 50, 100, 500].map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-[#1a1a1a] hover:bg-[#252525]">
                     ${amount}
-                  </Button>
-                ))}
+                  </Button>)}
               </div>
               <p className="text-xs text-muted-foreground">
                 Minimum: $20.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
@@ -1157,28 +1110,14 @@ export function WalletTab() {
                 <div className="text-center mb-2">
                   {selectedTransaction.type === 'withdrawal' ? <>
                       <div className="flex items-center justify-center mb-3">
-                      <div className={`w-16 h-16 rounded-full ${
-                        selectedTransaction.status === 'completed' ? 'bg-green-500/10' : 
-                        selectedTransaction.status === 'in_transit' ? 'bg-blue-500/10' :
-                        'bg-orange-500/10'
-                      } flex items-center justify-center`}>
-                          {selectedTransaction.status === 'completed' ? (
-                            <Check className="w-8 h-8 text-green-500" />
-                          ) : selectedTransaction.status === 'in_transit' ? (
-                            <TrendingUp className="w-8 h-8 text-blue-500" />
-                          ) : (
-                            <Hourglass className="w-8 h-8 text-orange-500" />
-                          )}
+                      <div className={`w-16 h-16 rounded-full ${selectedTransaction.status === 'completed' ? 'bg-green-500/10' : selectedTransaction.status === 'in_transit' ? 'bg-blue-500/10' : 'bg-orange-500/10'} flex items-center justify-center`}>
+                          {selectedTransaction.status === 'completed' ? <Check className="w-8 h-8 text-green-500" /> : selectedTransaction.status === 'in_transit' ? <TrendingUp className="w-8 h-8 text-blue-500" /> : <Hourglass className="w-8 h-8 text-orange-500" />}
                         </div>
                       </div>
                       <p className="text-white font-bold font-chakra" style={{
                   letterSpacing: '-0.3px'
                 }}>
-                        {selectedTransaction.status === 'completed' 
-                          ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!`
-                          : selectedTransaction.status === 'in_transit'
-                          ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!`
-                          : `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
+                        {selectedTransaction.status === 'completed' ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!` : selectedTransaction.status === 'in_transit' ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!` : `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
                       </p>
                     </> : <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
@@ -1196,12 +1135,7 @@ export function WalletTab() {
                   <span className="text-sm text-muted-foreground">
                     {format(selectedTransaction.date, 'MMMM dd yyyy, hh:mm a')}
                   </span>
-                  {selectedTransaction.status && <Badge variant={
-                    selectedTransaction.status === 'completed' ? 'default' : 
-                    selectedTransaction.status === 'rejected' ? 'destructive' : 
-                    selectedTransaction.status === 'in_transit' ? 'default' :
-                    'secondary'
-                  } className="capitalize flex items-center gap-1">
+                  {selectedTransaction.status && <Badge variant={selectedTransaction.status === 'completed' ? 'default' : selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize flex items-center gap-1">
                       {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3" />}
                       {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3" />}
                       {selectedTransaction.status === 'completed' && <Check className="h-3 w-3" />}
@@ -1316,12 +1250,12 @@ export function WalletTab() {
                         <span className="text-sm text-muted-foreground">To</span>
                         <span className="text-sm font-medium text-right max-w-[200px] truncate">
                           {(() => {
-                            const details = selectedTransaction.metadata?.payoutDetails;
-                            if (details?.address) return details.address;
-                            if (details?.email) return details.email;
-                            if (details?.account_number) return `•••• ${details.account_number.slice(-4)}`;
-                            return selectedTransaction.destination;
-                          })()}
+                      const details = selectedTransaction.metadata?.payoutDetails;
+                      if (details?.address) return details.address;
+                      if (details?.email) return details.email;
+                      if (details?.account_number) return `•••• ${details.account_number.slice(-4)}`;
+                      return selectedTransaction.destination;
+                    })()}
                         </span>
                       </div>}
                   </div>
@@ -1329,9 +1263,9 @@ export function WalletTab() {
 
                 {/* Payout Method Details */}
                 {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (() => {
-                  console.log('Transaction metadata:', selectedTransaction.metadata);
-                  console.log('Payout details:', selectedTransaction.metadata.payoutDetails);
-                  return <>
+              console.log('Transaction metadata:', selectedTransaction.metadata);
+              console.log('Payout details:', selectedTransaction.metadata.payoutDetails);
+              return <>
                     <Separator />
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold mb-4">Payout Method</h3>
@@ -1344,17 +1278,17 @@ export function WalletTab() {
                           </div>}
                         
                         {selectedTransaction.metadata.network && (() => {
-                    const network = selectedTransaction.metadata.network.toLowerCase();
-                    const getNetworkLogo = () => {
-                      if (network === 'ethereum') return ethereumLogo;
-                      if (network === 'optimism') return optimismLogo;
-                      if (network === 'solana') return solanaLogo;
-                      if (network === 'polygon') return polygonLogo;
-                      return null;
-                    };
-                    const networkLogo = getNetworkLogo();
-                    const networkName = selectedTransaction.metadata.network.charAt(0).toUpperCase() + selectedTransaction.metadata.network.slice(1).toLowerCase();
-                    return <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                      const network = selectedTransaction.metadata.network.toLowerCase();
+                      const getNetworkLogo = () => {
+                        if (network === 'ethereum') return ethereumLogo;
+                        if (network === 'optimism') return optimismLogo;
+                        if (network === 'solana') return solanaLogo;
+                        if (network === 'polygon') return polygonLogo;
+                        return null;
+                      };
+                      const networkLogo = getNetworkLogo();
+                      const networkName = selectedTransaction.metadata.network.charAt(0).toUpperCase() + selectedTransaction.metadata.network.slice(1).toLowerCase();
+                      return <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                               <span className="text-sm text-muted-foreground">Network</span>
                               <div className="flex items-center gap-2">
                                 {networkLogo && <img src={networkLogo} alt="Network logo" className="h-4 w-4" />}
@@ -1363,28 +1297,28 @@ export function WalletTab() {
                                 </span>
                               </div>
                             </div>;
-                  })()}
+                    })()}
                         
                         {/* Display crypto address if available */}
-                        {(selectedTransaction.metadata.payoutDetails?.address) && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails?.address && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Wallet Address</span>
                             <div className="flex items-center gap-2 flex-1 justify-end">
                               <span className="text-sm font-mono text-right break-all max-w-[200px]">
                                 {selectedTransaction.metadata.payoutDetails.address}
                               </span>
                               <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => {
-                        navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
-                        toast({
-                          description: "Address copied to clipboard"
-                        });
-                      }}>
+                          navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
+                          toast({
+                            description: "Address copied to clipboard"
+                          });
+                        }}>
                                 <Copy className="h-3.5 w-3.5" />
                               </Button>
                             </div>
                           </div>}
                         
                         {/* Display crypto currency if available */}
-                        {(selectedTransaction.metadata.payoutDetails?.currency) && <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails?.currency && <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">Currency</span>
                             <span className="text-sm font-medium uppercase">
                               {selectedTransaction.metadata.payoutDetails.currency}
@@ -1392,7 +1326,7 @@ export function WalletTab() {
                           </div>}
                         
                         {/* Display PayPal email if available */}
-                        {(selectedTransaction.metadata.payoutDetails?.email) && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
+                        {selectedTransaction.metadata.payoutDetails?.email && <div className="flex justify-between items-start p-3 bg-muted/20 rounded-lg">
                             <span className="text-sm text-muted-foreground">PayPal Email</span>
                             <span className="text-sm font-medium text-right max-w-[200px] truncate">
                               {selectedTransaction.metadata.payoutDetails.email}
@@ -1409,7 +1343,7 @@ export function WalletTab() {
                       </div>
                     </div>
                   </>;
-                })()}
+            })()}
 
                 <Separator />
 
