@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, Grid, List } from "lucide-react";
+import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, Grid, List, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -121,6 +121,8 @@ export default function AdminUsers() {
   const [editingSubmission, setEditingSubmission] = useState<DemographicSubmission | null>(null);
   const [editScore, setEditScore] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [sortField, setSortField] = useState<"balance" | "totalEarned" | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const {
     toast
   } = useToast();
@@ -130,7 +132,7 @@ export default function AdminUsers() {
   }, []);
   useEffect(() => {
     filterUsers();
-  }, [searchQuery, selectedCampaign, users]);
+  }, [searchQuery, selectedCampaign, users, sortField, sortOrder]);
   const fetchData = async () => {
     setLoading(true);
 
@@ -204,6 +206,29 @@ export default function AdminUsers() {
         filtered = filtered.filter(user => creatorIds.includes(user.id));
       }
     }
+
+    // Sort users
+    if (sortField) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue = 0;
+        let bValue = 0;
+
+        if (sortField === "balance") {
+          aValue = a.wallets?.balance || 0;
+          bValue = b.wallets?.balance || 0;
+        } else if (sortField === "totalEarned") {
+          aValue = a.wallets?.total_earned || 0;
+          bValue = b.wallets?.total_earned || 0;
+        }
+
+        if (sortOrder === "asc") {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      });
+    }
+
     setFilteredUsers(filtered);
   };
   const openPayDialog = (user: User) => {
@@ -762,6 +787,72 @@ export default function AdminUsers() {
             </div>
 
             <div className="flex gap-1 mt-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10"
+                  >
+                    <ArrowUpDown className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2 bg-popover" align="end">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold mb-2 px-2">Sort by</p>
+                    <Button
+                      variant={sortField === "balance" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs"
+                      onClick={() => {
+                        if (sortField === "balance") {
+                          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                        } else {
+                          setSortField("balance");
+                          setSortOrder("desc");
+                        }
+                      }}
+                    >
+                      Balance
+                      {sortField === "balance" && (
+                        sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
+                      )}
+                    </Button>
+                    <Button
+                      variant={sortField === "totalEarned" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs"
+                      onClick={() => {
+                        if (sortField === "totalEarned") {
+                          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                        } else {
+                          setSortField("totalEarned");
+                          setSortOrder("desc");
+                        }
+                      }}
+                    >
+                      Total Earned
+                      {sortField === "totalEarned" && (
+                        sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
+                      )}
+                    </Button>
+                    {sortField && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-xs text-muted-foreground"
+                        onClick={() => {
+                          setSortField(null);
+                          setSortOrder("desc");
+                        }}
+                      >
+                        Clear sort
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               <Button
                 variant={viewMode === "cards" ? "default" : "outline"}
                 size="icon"
