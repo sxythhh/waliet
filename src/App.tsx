@@ -34,6 +34,8 @@ import AdminCourses from "./pages/admin/Courses";
 import AdminWallets from "./pages/admin/Wallets";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "@/contexts/AuthContext";
+
 const queryClient = new QueryClient();
 function DashboardLayout({
   children
@@ -116,10 +118,11 @@ function AdminLayout({
     </div>;
 }
 const App = () => <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
@@ -147,6 +150,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-    </TooltipProvider>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>;
 export default App;
