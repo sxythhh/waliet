@@ -643,6 +643,21 @@ export function ProfileTab() {
             }
             return null;
           })()}
+          lastSubmissionDate={(() => {
+            const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
+            return account?.demographic_submissions?.[0]?.submitted_at || null;
+          })()}
+          nextSubmissionDate={(() => {
+            const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
+            const latestSubmission = account?.demographic_submissions?.[0];
+            if (latestSubmission?.status === 'approved' && latestSubmission.submitted_at) {
+              const submittedDate = new Date(latestSubmission.submitted_at);
+              const nextSubmissionDate = new Date(submittedDate);
+              nextSubmissionDate.setDate(submittedDate.getDate() + 7);
+              return nextSubmissionDate;
+            }
+            return null;
+          })()}
           onUpdate={() => {
             fetchSocialAccounts();
           }}

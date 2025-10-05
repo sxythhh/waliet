@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { format, formatDistanceToNow } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -31,6 +32,8 @@ interface ManageAccountDialogProps {
   };
   demographicStatus: 'approved' | 'pending' | 'rejected' | null;
   daysUntilNext: number | null;
+  lastSubmissionDate: string | null;
+  nextSubmissionDate: Date | null;
   onUpdate: () => void;
   onSubmitDemographics: () => void;
   platformIcon: React.ReactNode;
@@ -42,6 +45,8 @@ export function ManageAccountDialog({
   account,
   demographicStatus,
   daysUntilNext,
+  lastSubmissionDate,
+  nextSubmissionDate,
   onUpdate,
   onSubmitDemographics,
   platformIcon
@@ -236,6 +241,21 @@ export function ManageAccountDialog({
             {/* Demographics Section */}
             <div className="space-y-3">
               <h4 className="font-semibold text-sm">Demographics</h4>
+              
+              {/* Last Submission Date */}
+              {lastSubmissionDate && (
+                <div className="text-sm text-muted-foreground">
+                  Last submitted: {formatDistanceToNow(new Date(lastSubmissionDate), { addSuffix: true })}
+                </div>
+              )}
+              
+              {/* Next Submission Date - only show if approved */}
+              {demographicStatus === 'approved' && nextSubmissionDate && (
+                <div className="text-sm text-muted-foreground">
+                  Next submission: {format(nextSubmissionDate, "MMM d, yyyy")}
+                </div>
+              )}
+              
               {demographicStatus === 'approved' && daysUntilNext !== null ? (
                 <Button variant="secondary" disabled className="w-full gap-2">
                   <Calendar className="h-4 w-4" />
