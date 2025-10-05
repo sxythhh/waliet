@@ -11,10 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, ArrowUp } from "lucide-react";
+import { Check, ArrowUp, Plus } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import emptyAccountsImage from "@/assets/empty-accounts.png";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 
 interface Campaign {
   id: string;
@@ -48,6 +50,7 @@ interface JoinCampaignSheetProps {
 
 export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaignSheetProps) {
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
@@ -319,13 +322,17 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
               )}
             </div>
             {socialAccounts.length === 0 ? (
-              <div className="p-4 rounded-lg bg-muted/50 text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  No available accounts for this campaign's platforms, or all your accounts are already connected to this campaign.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Add a new social account or check your connected accounts.
-                </p>
+              <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
+                <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
+                <p className="text-sm font-medium text-foreground">No available accounts</p>
+                <Button 
+                  onClick={() => setShowAddAccountDialog(true)} 
+                  size="sm"
+                  variant="outline"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Account
+                </Button>
               </div>
             ) : (
               <div className="grid gap-2">
@@ -407,6 +414,12 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           </div>
         </div>
       </SheetContent>
+
+      <AddSocialAccountDialog 
+        open={showAddAccountDialog}
+        onOpenChange={setShowAddAccountDialog}
+        onSuccess={loadSocialAccounts}
+      />
     </Sheet>
   );
 }
