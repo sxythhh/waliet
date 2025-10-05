@@ -59,10 +59,11 @@ export function ManageBrandAccessDialog({ open: controlledOpen, onOpenChange }: 
       if (coursesError) throw coursesError;
       setCourses(coursesData || []);
 
-      // Fetch brands
+      // Fetch brands (only DWY brands)
       const { data: brandsData, error: brandsError } = await supabase
         .from("brands")
         .select("id, name, slug")
+        .eq("slug", "dwy")
         .order("name", { ascending: true });
 
       if (brandsError) throw brandsError;
