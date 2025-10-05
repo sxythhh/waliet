@@ -344,9 +344,6 @@ export function ProfileTab() {
         title: "Success",
         description: "Profile picture updated successfully"
       });
-      
-      // Refresh the page data to get clean URL from DB
-      setTimeout(() => fetchProfile(), 1000);
     }
   };
   const handleSaveProfile = async (e: React.FormEvent) => {
