@@ -242,13 +242,14 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
             </div>
           </div>
 
-          {/* Guidelines */}
-          {campaign.guidelines && (
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Guidelines</h4>
-              <p className="text-sm text-muted-foreground">{campaign.guidelines}</p>
-            </div>
-          )}
+          {/* Campaign Preview Button */}
+          <Button
+            variant="outline"
+            className="w-full h-12 border-2 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
+            onClick={() => navigate(`/campaigns/${campaign.slug}`)}
+          >
+            <span className="font-medium">View Campaign Details</span>
+          </Button>
 
           {/* Allowed Platforms */}
           <div>
