@@ -1009,6 +1009,9 @@ export default function AdminUsers() {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric'
+                          })} • {new Date(submission.submitted_at).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
                           })}
                               </p>
                             </div>
