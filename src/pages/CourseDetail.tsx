@@ -235,13 +235,14 @@ export default function CourseDetail() {
 
                 {selectedModule.content && <div className="prose prose-base md:prose-lg prose-neutral dark:prose-invert max-w-none
                       prose-headings:text-white prose-headings:font-bold prose-headings:tracking-tight
+                      prose-h1:text-3xl md:prose-h1:text-4xl prose-h1:mt-10 md:prose-h1:mt-14 prose-h1:mb-4 md:prose-h1:mb-5
                       prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mt-8 md:prose-h2:mt-12 prose-h2:mb-3 md:prose-h2:mb-4
                       prose-h3:text-xl md:prose-h3:text-2xl prose-h3:mt-6 md:prose-h3:mt-8 prose-h3:mb-2 md:prose-h3:mb-3
                       prose-p:text-white/80 prose-p:leading-7 prose-p:mb-4
                       prose-a:text-[#5865F2] prose-a:no-underline hover:prose-a:underline
                       prose-strong:font-semibold prose-strong:text-white
                       prose-ul:my-4 prose-li:my-2 prose-li:text-white/80
-                      prose-img:rounded-lg" dangerouslySetInnerHTML={{
+                      [&_img]:!max-w-full [&_img]:h-auto [&_img]:rounded-lg" dangerouslySetInnerHTML={{
               __html: sanitizedContent
             }} />}
               </CardContent>

@@ -18,12 +18,16 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
       Image.configure({
         inline: false,
         allowBase64: true,
         HTMLAttributes: {
-          style: 'max-width: 100%; height: auto; cursor: pointer;',
+          class: 'resizable-image',
         },
       }),
     ],
