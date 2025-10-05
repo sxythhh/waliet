@@ -26,6 +26,7 @@ interface Campaign {
   start_date: string | null;
   banner_url: string | null;
   submission_status?: string;
+  is_infinite_budget?: boolean;
   connected_accounts?: Array<{
     id: string;
     platform: string;
@@ -228,21 +229,43 @@ export function CampaignsTab() {
               <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
                 <div className="flex items-baseline justify-between">
                   <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
-                    <span className="text-base font-bold tabular-nums">${budgetUsed.toLocaleString()}</span>
-                    <span className="text-xs text-muted-foreground font-medium">/ ${campaign.budget.toLocaleString()}</span>
+                    {campaign.is_infinite_budget ? (
+                      <>
+                        <Infinity className="w-5 h-5 text-primary" />
+                        <span className="text-xs text-muted-foreground font-medium">Infinite Budget</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-base font-bold tabular-nums">${budgetUsed.toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground font-medium">/ ${campaign.budget.toLocaleString()}</span>
+                      </>
+                    )}
                   </div>
                 </div>
                 
                 {/* Progress Bar */}
                 <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
-                  <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                width: `${budgetPercentage}%`
-              }} />
+                  {campaign.is_infinite_budget ? (
+                    <div 
+                      className="absolute inset-0 animate-pulse"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
+                        backgroundSize: '200% 200%',
+                        animation: 'slide 2s linear infinite'
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                      width: `${budgetPercentage}%`
+                    }} />
+                  )}
                 </div>
                 
-                <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                  <span>{budgetPercentage.toFixed(0)}% used</span>
-                </div>
+                {!campaign.is_infinite_budget && (
+                  <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                    <span>{budgetPercentage.toFixed(0)}% used</span>
+                  </div>
+                )}
               </div>
 
               {/* Connected Accounts */}
