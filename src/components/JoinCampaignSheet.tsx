@@ -184,12 +184,19 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
         }
 
         // Create the campaign submission with unique content_url
+        // Format application answers
+        const formattedAnswers = campaign.application_questions?.map((question, index) => ({
+          question,
+          answer: answers[index] || ""
+        })) || [];
+
         const submissionData = {
           campaign_id: campaign.id,
           creator_id: user.id,
           platform: account.platform,
           content_url: account.account_link || `pending-${Date.now()}-${accountId}`,
           status: submissionStatus,
+          application_answers: formattedAnswers,
         };
         console.log('Inserting submission:', submissionData);
         

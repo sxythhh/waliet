@@ -52,7 +52,7 @@ interface Submission {
   creator_id: string;
   platform: string;
   content_url: string;
-  application_answers?: { question: string; answer: string }[];
+  application_answers?: any; // JSON field from database
   profiles: {
     username: string;
     avatar_url: string | null;
