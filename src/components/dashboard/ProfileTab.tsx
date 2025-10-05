@@ -350,49 +350,77 @@ export function ProfileTab() {
     e.preventDefault();
     if (!profile) return;
     setSaving(true);
-    const {
-      data: {
-        session
-      }
-    } = await supabase.auth.getSession();
-
-    // Check for duplicate username if username changed
-    if (profile.username) {
+    
+    try {
       const {
-        data: existingProfile
-      } = await supabase.from("profiles").select("id").eq("username", profile.username).neq("id", session?.user.id).maybeSingle();
-      if (existingProfile) {
-        setSaving(false);
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
+
+      if (!session) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Username already taken"
+          description: "You must be logged in to update your profile"
         });
+        setSaving(false);
         return;
       }
-    }
-    const {
-      error
-    } = await supabase.from("profiles").update({
-      username: profile.username,
-      full_name: profile.full_name,
-      bio: profile.bio,
-      country: profile.country,
-      city: profile.city,
-      phone_number: profile.phone_number
-    }).eq("id", session?.user.id);
-    setSaving(false);
-    if (error) {
+
+      // Check for duplicate username if username changed
+      if (profile.username) {
+        const {
+          data: existingProfile
+        } = await supabase.from("profiles").select("id").eq("username", profile.username).neq("id", session.user.id).maybeSingle();
+        if (existingProfile) {
+          setSaving(false);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Username already taken"
+          });
+          return;
+        }
+      }
+      
+      // Clean avatar URL (remove timestamp parameter if exists)
+      const cleanAvatarUrl = profile.avatar_url?.split('?')[0] || profile.avatar_url;
+      
+      const {
+        error
+      } = await supabase.from("profiles").update({
+        username: profile.username,
+        full_name: profile.full_name,
+        bio: profile.bio,
+        country: profile.country,
+        city: profile.city,
+        phone_number: profile.phone_number,
+        avatar_url: cleanAvatarUrl
+      }).eq("id", session.user.id);
+      
+      if (error) {
+        console.error('Profile update error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to update profile"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Profile updated successfully"
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update profile"
+        description: "An unexpected error occurred"
       });
-    } else {
-      toast({
-        title: "Success",
-        description: "Profile updated successfully"
-      });
+    } finally {
+      setSaving(false);
     }
   };
   const profileUrl = `${window.location.origin}/${profile?.username}`;
