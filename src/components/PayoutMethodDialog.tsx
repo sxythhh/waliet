@@ -51,11 +51,12 @@ export default function PayoutMethodDialog({
   onSave,
   currentMethodCount
 }: PayoutMethodDialogProps) {
-  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise" | "revolut" | "debit">("crypto");
+  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise" | "revolut" | "debit" | "upi">("crypto");
   const [selectedCurrency, setSelectedCurrency] = useState(cryptoCurrencies[0].id);
   const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("");
+  const [upiEmail, setUpiEmail] = useState("");
 
   // Bank transfer fields
   const [bankName, setBankName] = useState("");
@@ -83,6 +84,11 @@ export default function PayoutMethodDialog({
       onSave("paypal", {
         email: paypalEmail
       });
+    } else if (selectedMethod === "upi") {
+      if (!upiEmail) return;
+      onSave("upi", {
+        email: upiEmail
+      });
     } else if (selectedMethod === "revolut") {
       if (!revolutTag) return;
       onSave("revolut", {
@@ -100,6 +106,7 @@ export default function PayoutMethodDialog({
     // Reset all fields
     setWalletAddress("");
     setPaypalEmail("");
+    setUpiEmail("");
     setRevolutTag("");
     setCardNumber("");
     setLegalName("");
@@ -131,6 +138,11 @@ export default function PayoutMethodDialog({
             iconActive: paypalLogoBlue,
             label: "PayPal",
             isLogo: true
+          }, {
+            id: "upi",
+            icon: Landmark,
+            label: "UPI",
+            isLogo: false
           }, {
             id: "revolut",
             icon: Landmark,
@@ -219,6 +231,16 @@ export default function PayoutMethodDialog({
                   <Input id="paypal-email" type="email" placeholder="your.email@example.com" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
                 </div>}
 
+              {selectedMethod === "upi" && <div className="space-y-3">
+                  <Label htmlFor="upi-email" className="font-medium text-muted-foreground" style={{
+              fontSize: '11px',
+              letterSpacing: '-0.5px'
+            }}>
+                    UPI EMAIL
+                  </Label>
+                  <Input id="upi-email" type="email" placeholder="your.email@example.com" value={upiEmail} onChange={e => setUpiEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                </div>}
+
               {selectedMethod === "revolut" && <div className="space-y-3">
                   <Label htmlFor="revolut-tag" className="font-medium text-muted-foreground" style={{
               fontSize: '11px',
@@ -265,7 +287,7 @@ export default function PayoutMethodDialog({
             <Button variant="outline" className="flex-1 h-12 bg-[#0f0f0f] border-[#2a2a2a] hover:bg-[#1a1a1a]" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "revolut" && !revolutTag || selectedMethod === "debit" && (!cardNumber || !legalName || !address)}>
+            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "upi" && !upiEmail || selectedMethod === "revolut" && !revolutTag || selectedMethod === "debit" && (!cardNumber || !legalName || !address)}>
               Add Method
             </Button>
           </div>}
