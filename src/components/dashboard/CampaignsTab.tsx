@@ -62,11 +62,11 @@ export function CampaignsTab() {
       return;
     }
 
-    // Get campaign IDs and their submission status
+    // Get campaign IDs and their submission status (exclude withdrawn and rejected)
     const {
       data: submissions,
       error: submissionsError
-    } = await supabase.from("campaign_submissions").select("campaign_id, status").eq("creator_id", user.id).neq("status", "withdrawn");
+    } = await supabase.from("campaign_submissions").select("campaign_id, status").eq("creator_id", user.id).not("status", "in", "(withdrawn,rejected)");
     console.log("All submissions:", submissions);
     if (submissionsError) {
       console.error("Submissions error:", submissionsError);
