@@ -10,6 +10,8 @@ import { ArrowLeft, CheckCircle2, Circle, Check, PanelLeft, PanelLeftClose, Exte
 import { Separator } from "@/components/ui/separator";
 import DOMPurify from "dompurify";
 import { VideoEmbed } from "@/components/VideoEmbed";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 interface Course {
   id: string;
   title: string;
@@ -45,6 +47,7 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isMobile = useIsMobile();
   useEffect(() => {
     fetchCourseData();
   }, [courseId]);
@@ -166,8 +169,8 @@ export default function CourseDetail() {
   return <div className="min-h-screen bg-[#191919]">
       {/* Content */}
       <div className="flex">
-        {/* Sidebar */}
-        <div className={`${sidebarOpen ? 'block' : 'hidden'} w-80 bg-[#202020] min-h-screen transition-all duration-300`}>
+        {/* Desktop Sidebar */}
+        <div className={`${sidebarOpen ? 'block' : 'hidden'} hidden lg:block w-80 bg-[#202020] min-h-screen transition-all duration-300`}>
           <div className="p-4 sticky top-0 max-h-screen overflow-y-auto">
             {/* Course Info */}
             <div className="mb-4 px-0 py-0">
@@ -204,6 +207,61 @@ export default function CourseDetail() {
             </div>
           </div>
         </div>
+
+        {/* Mobile Sidebar Sheet */}
+        {isMobile && (
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetContent side="left" className="w-80 bg-[#202020] border-white/10 p-0">
+              <div className="p-4 h-full overflow-y-auto">
+                <SheetHeader className="mb-4">
+                  <SheetTitle className="text-white">Course Modules</SheetTitle>
+                </SheetHeader>
+                
+                {/* Course Info */}
+                <div className="mb-4">
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setSidebarOpen(false);
+                    navigate(`/brand/${slug}/training`);
+                  }} className="text-white/60 hover:text-white mb-2 -ml-2">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Return
+                  </Button>
+                  
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-white/60">Progress</span>
+                      <span className="text-white font-medium">
+                        {completedCount}/{totalCount}
+                      </span>
+                    </div>
+                    <Progress value={progressPercentage} className="h-2" />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  {modules.map((module, index) => {
+                    const isCompleted = completions.some(c => c.module_id === module.id);
+                    const isSelected = selectedModuleId === module.id;
+                    return <div 
+                      key={module.id} 
+                      className={`group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isSelected ? 'bg-white/5' : 'hover:bg-white/[0.02]'}`} 
+                      onClick={() => {
+                        setSelectedModuleId(module.id);
+                        setSidebarOpen(false);
+                      }}
+                    >
+                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isCompleted ? 'bg-[#5865F2] text-white' : isSelected ? 'bg-white/10 text-white/80' : 'bg-white/5 text-white/40'}`}>
+                        {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
+                      </div>
+                      <span className={`flex-1 text-sm transition-colors font-chakra-petch font-semibold ${isSelected ? 'text-white font-medium' : 'text-white/60 group-hover:text-white/80'}`} style={{ letterSpacing: '-0.5px' }}>{module.title}</span>
+                    </div>;
+                  })}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 p-4 md:p-8">
