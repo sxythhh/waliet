@@ -485,13 +485,16 @@ export function ProfileTab() {
                       {connectedCampaigns.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {connectedCampaigns.map(({ campaign }) => (
-                            <Badge 
-                              key={campaign.id} 
-                              variant="secondary" 
-                              className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20"
-                            >
-                              {campaign.title}
-                            </Badge>
+                            <div key={campaign.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-card text-xs">
+                              {campaign.brand_logo_url && (
+                                <img 
+                                  src={campaign.brand_logo_url} 
+                                  alt={campaign.brand_name}
+                                  className="w-4 h-4 rounded object-cover"
+                                />
+                              )}
+                              <span className="font-medium">{campaign.title}</span>
+                            </div>
                           ))}
                         </div>
                       )}
