@@ -163,15 +163,10 @@ export function WalletTab() {
       end
     } = getDateRange();
 
-    // Get all transactions from the beginning
+    // Get all wallet transactions from the beginning
     const {
-      data: submissions
-    } = await supabase.from("campaign_submissions").select("earnings, submitted_at").eq("creator_id", session.user.id).order("submitted_at", {
-      ascending: true
-    });
-    const {
-      data: payouts
-    } = await supabase.from("payout_requests").select("amount, requested_at, status").eq("user_id", session.user.id).in("status", ["completed"]).order("requested_at", {
+      data: allTransactions
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type, status").eq("user_id", session.user.id).order("created_at", {
       ascending: true
     });
 
@@ -187,25 +182,25 @@ export function WalletTab() {
       // Calculate cumulative balance up to this date
       let balanceAtDate = 0;
 
-      // Add all earnings up to and including this date
-      if (submissions) {
-        submissions.forEach(sub => {
-          const subDate = new Date(sub.submitted_at);
-          if (subDate <= currentDate) {
-            balanceAtDate += Number(sub.earnings) || 0;
+      // Process all transactions up to and including this date
+      if (allTransactions) {
+        allTransactions.forEach(txn => {
+          const txnDate = new Date(txn.created_at);
+          if (txnDate <= currentDate) {
+            const amount = Number(txn.amount) || 0;
+            
+            // Add positive amounts (earnings, bonuses, etc.)
+            if (['earning', 'admin_adjustment', 'bonus', 'refund'].includes(txn.type)) {
+              balanceAtDate += amount;
+            }
+            // Subtract withdrawals (amount is already negative in DB)
+            else if (txn.type === 'withdrawal' && txn.status === 'completed') {
+              balanceAtDate += amount; // amount is negative, so this subtracts
+            }
           }
         });
       }
 
-      // Subtract all completed payouts up to and including this date
-      if (payouts) {
-        payouts.forEach(payout => {
-          const payoutDate = new Date(payout.requested_at);
-          if (payoutDate <= currentDate) {
-            balanceAtDate -= Number(payout.amount) || 0;
-          }
-        });
-      }
       dataPoints.push({
         date: dateStr,
         amount: Number(Math.max(0, balanceAtDate).toFixed(2))
