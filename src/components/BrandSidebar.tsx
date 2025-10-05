@@ -38,13 +38,7 @@ export function BrandSidebar() {
   if (loading || brands.length === 0) {
     return <Sidebar className="border-r border-[#272727] bg-[#202020]">
         <SidebarHeader className="border-b border-transparent p-6 bg-[#202020]">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-lg">
-              V
-            </div>
-            <span className="text-xl font-bold text-white">VIRALITY</span>
-          </div>
-          <div className="text-white/60 text-sm">Loading brands...</div>
+          <div className="h-8 w-full bg-white/5 rounded animate-pulse" />
         </SidebarHeader>
       </Sidebar>;
   }
