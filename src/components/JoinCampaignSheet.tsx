@@ -255,14 +255,22 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           <div>
             <h4 className="text-sm font-semibold mb-2">Allowed Platforms</h4>
             <div className="flex gap-2 flex-wrap">
-              {campaign.platforms.map((platform) => (
-                <span
-                  key={platform}
-                  className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium capitalize"
-                >
-                  {platform}
-                </span>
-              ))}
+              {campaign.platforms.map((platform) => {
+                const platformIcon = getPlatformIcon(platform);
+                return (
+                  <div
+                    key={platform}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-muted border border-border"
+                  >
+                    {platformIcon && (
+                      <img src={platformIcon} alt={platform} className="w-3.5 h-3.5" />
+                    )}
+                    <span className="text-xs font-medium text-foreground capitalize">
+                      {platform}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
