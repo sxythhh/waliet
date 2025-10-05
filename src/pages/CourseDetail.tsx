@@ -234,65 +234,69 @@ export default function CourseDetail() {
                   </Button>
                 </div>
 
-                {selectedModule.video_url && (
-                  selectedModule.video_url.includes('<') ? (
-                    <div className="mb-8">
-                      <VideoEmbed embedCode={selectedModule.video_url} />
+                <div className="flex flex-col md:flex-row gap-6 mb-8">
+                  {/* Video Section */}
+                  {selectedModule.video_url && (
+                    <div className="flex-1 md:w-2/3">
+                      {selectedModule.video_url.includes('<') ? (
+                        <VideoEmbed embedCode={selectedModule.video_url} />
+                      ) : (
+                        <div className="rounded-lg overflow-hidden">
+                          <div className="aspect-video bg-black">
+                            <iframe 
+                              src={selectedModule.video_url} 
+                              className="w-full h-full border-0" 
+                              title={selectedModule.title} 
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+                              allowFullScreen 
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="mb-8 rounded-lg overflow-hidden">
-                      <div className="aspect-video bg-black">
-                        <iframe 
-                          src={selectedModule.video_url} 
-                          className="w-full h-full border-0" 
-                          title={selectedModule.title} 
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
-                          allowFullScreen 
-                        />
+                  )}
+
+                  {/* Assets Section */}
+                  {selectedModule.assets && selectedModule.assets.length > 0 && (
+                    <div className={selectedModule.video_url ? "md:w-1/3" : "w-full"}>
+                      <h3 className="text-lg font-semibold text-white mb-4">Assets</h3>
+                      <div className="flex flex-col gap-3">
+                        {selectedModule.assets.map((asset, index) => {
+                          const domain = new URL(asset.url).hostname;
+                          const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+                          
+                          return (
+                            <a
+                              key={index}
+                              href={asset.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-4 rounded-lg border border-white/10 transition-all group"
+                            >
+                              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
+                                <img 
+                                  src={faviconUrl} 
+                                  alt={`${domain} favicon`}
+                                  className="w-6 h-6"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white font-medium truncate transition-colors">
+                                  {asset.title}
+                                </p>
+                                <p className="text-white/40 text-sm truncate group-hover:underline">{domain}</p>
+                              </div>
+                              <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-white/60 flex-shrink-0 transition-colors" />
+                            </a>
+                          );
+                        })}
                       </div>
                     </div>
-                  )
-                )}
-
-                {selectedModule.assets && selectedModule.assets.length > 0 && (
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-white mb-4">Assets</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {selectedModule.assets.map((asset, index) => {
-                        const domain = new URL(asset.url).hostname;
-                        const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-                        
-                        return (
-                          <a
-                            key={index}
-                            href={asset.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-4 rounded-lg border border-white/10 transition-all group"
-                          >
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
-                              <img 
-                                src={faviconUrl} 
-                                alt={`${domain} favicon`}
-                                className="w-6 h-6"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white font-medium truncate transition-colors">
-                                {asset.title}
-                              </p>
-                              <p className="text-white/40 text-sm truncate group-hover:underline">{domain}</p>
-                            </div>
-                            <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-white/60 flex-shrink-0 transition-colors" />
-                          </a>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {selectedModule.content && <div className="prose prose-base md:prose-lg prose-neutral dark:prose-invert max-w-none
                       prose-headings:text-white prose-headings:font-bold prose-headings:tracking-tight
