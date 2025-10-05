@@ -152,7 +152,7 @@ export default function CourseDetail() {
       {/* Content */}
       <div className="flex">
         {/* Sidebar */}
-        <div className="hidden lg:block w-80 border-r border-white/10 bg-[#202020] min-h-screen">
+        <div className="hidden lg:block w-80 bg-[#202020] min-h-screen">
           <div className="p-4 sticky top-0 max-h-screen overflow-y-auto">
             {/* Course Info */}
             <div className="mb-4 px-0 py-0">
@@ -178,13 +178,12 @@ export default function CourseDetail() {
               {modules.map((module, index) => {
               const isCompleted = completions.some(c => c.module_id === module.id);
               const isSelected = selectedModuleId === module.id;
-              return <div key={module.id} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-[#5865F2] text-white' : 'hover:bg-white/5 text-white/80'}`} onClick={() => setSelectedModuleId(module.id)}>
-                    <Checkbox checked={isCompleted} onCheckedChange={() => toggleCompletion(module.id, isCompleted)} onClick={e => e.stopPropagation()} className="border-white/20" />
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-medium">
-                      {index + 1}
+              return <div key={module.id} className={`group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isSelected ? 'bg-white/5' : 'hover:bg-white/[0.02]'}`} onClick={() => setSelectedModuleId(module.id)}>
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isCompleted ? 'bg-green-500/10 text-green-400' : isSelected ? 'bg-white/10 text-white/80' : 'bg-white/5 text-white/40'}`}>
+                      {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
                     </div>
-                    <span className="flex-1 text-sm truncate">{module.title}</span>
-                    {isCompleted && <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />}
+                    <span className={`flex-1 text-sm transition-colors ${isSelected ? 'text-white font-medium' : 'text-white/60 group-hover:text-white/80'}`}>{module.title}</span>
+                    {isSelected && <div className="flex-shrink-0 w-1 h-4 bg-white/60 rounded-full" />}
                   </div>;
             })}
             </div>
