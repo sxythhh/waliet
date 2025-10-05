@@ -510,11 +510,11 @@ export function CreateCampaignDialog({
                           </FormLabel>
                           <FormControl>
                             <Switch
-                              checked={field.value?.includes("YouTube")}
+                              checked={field.value?.includes("youtube")}
                               onCheckedChange={(checked) => {
                                 const newValue = checked
-                                  ? [...(field.value || []), "YouTube"]
-                                  : field.value?.filter((val) => val !== "YouTube") || [];
+                                  ? [...(field.value || []), "youtube"]
+                                  : field.value?.filter((val) => val !== "youtube") || [];
                                 field.onChange(newValue);
                               }}
                             />
