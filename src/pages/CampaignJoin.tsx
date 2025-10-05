@@ -218,6 +218,21 @@ export default function CampaignJoin() {
         <div className="relative flex gap-6 mb-8">
             {/* Step Content */}
             <div className="flex-1 pb-8">
+              {/* Campaign Info */}
+              <div className="flex items-center gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
+                {campaign.brand_logo_url && (
+                  <img 
+                    src={campaign.brand_logo_url} 
+                    alt={campaign.brand_name} 
+                    className="w-12 h-12 rounded-lg object-cover"
+                  />
+                )}
+                <div>
+                  <h3 className="font-bold text-lg">{campaign.title}</h3>
+                  <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
+                </div>
+              </div>
+
               <h2 className="text-xl font-bold mb-4">Select An Account For This Campaign</h2>
               
               {socialAccounts.length === 0 ? <div className="text-center py-8">
