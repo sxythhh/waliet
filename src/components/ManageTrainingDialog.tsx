@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { RichTextEditor } from "@/components/RichTextEditor";
@@ -27,6 +27,10 @@ interface Module {
   content: string | null;
   video_url: string | null;
   order_index: number;
+  assets?: Array<{
+    title: string;
+    url: string;
+  }>;
 }
 interface ManageTrainingDialogProps {
   onSuccess?: () => void;
@@ -82,7 +86,14 @@ export function ManageTrainingDialog({
           if (!modulesByCourse[module.course_id]) {
             modulesByCourse[module.course_id] = [];
           }
-          modulesByCourse[module.course_id].push(module);
+          // Type cast the assets properly
+          const typedModule: Module = {
+            ...module,
+            content: module.content || null,
+            video_url: module.video_url || null,
+            assets: Array.isArray(module.assets) ? module.assets as Array<{ title: string; url: string }> : []
+          };
+          modulesByCourse[module.course_id].push(typedModule);
         });
         setModules(modulesByCourse);
       }
@@ -362,6 +373,72 @@ export function ManageTrainingDialog({
                               </div>
                               
                               <div className="space-y-2">
+                                <Label className="text-white text-sm flex items-center gap-2">
+                                  <LinkIcon className="h-4 w-4" />
+                                  Assets
+                                </Label>
+                                {(displayModule?.assets || []).map((asset, assetIndex) => (
+                                  <div key={assetIndex} className="flex gap-2">
+                                    <Input
+                                      value={asset.title}
+                                      onChange={(e) => {
+                                        const newAssets = [...(displayModule?.assets || [])];
+                                        newAssets[assetIndex] = { ...asset, title: e.target.value };
+                                        setEditingModule({
+                                          ...module,
+                                          assets: newAssets
+                                        });
+                                      }}
+                                      className="bg-[#191919] border-white/10 text-white"
+                                      placeholder="Asset title"
+                                    />
+                                    <Input
+                                      value={asset.url}
+                                      onChange={(e) => {
+                                        const newAssets = [...(displayModule?.assets || [])];
+                                        newAssets[assetIndex] = { ...asset, url: e.target.value };
+                                        setEditingModule({
+                                          ...module,
+                                          assets: newAssets
+                                        });
+                                      }}
+                                      className="bg-[#191919] border-white/10 text-white"
+                                      placeholder="https://..."
+                                    />
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const newAssets = (displayModule?.assets || []).filter((_, i) => i !== assetIndex);
+                                        setEditingModule({
+                                          ...module,
+                                          assets: newAssets
+                                        });
+                                      }}
+                                      className="text-destructive/60 hover:text-destructive flex-shrink-0"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    const newAssets = [...(displayModule?.assets || []), { title: "", url: "" }];
+                                    setEditingModule({
+                                      ...module,
+                                      assets: newAssets
+                                    });
+                                  }}
+                                  className="w-full border-white/10 text-white/60 hover:text-white"
+                                >
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Add Asset Link
+                                </Button>
+                              </div>
+                              
+                              <div className="space-y-2">
                                 <Label className="text-white text-sm">Content</Label>
                                 <RichTextEditor content={displayModule?.content || ""} onChange={content => setEditingModule({
                           ...module,
@@ -373,7 +450,8 @@ export function ManageTrainingDialog({
                                   <Button size="sm" onClick={() => saveModule(module.id, {
                           title: displayModule?.title,
                           video_url: displayModule?.video_url,
-                          content: displayModule?.content
+                          content: displayModule?.content,
+                          assets: displayModule?.assets || []
                         })} disabled={loading}>
                                     Save Module
                                   </Button>
