@@ -60,9 +60,7 @@ export function AppSidebar() {
             Launch Campaign
           </a>
         </Button>
-        <p className="text-xs text-center mt-1 text-gray-100 font-medium">
-          Are you a brand? Work with us
-        </p>
+        
       </SidebarFooter>
     </Sidebar>;
 }
