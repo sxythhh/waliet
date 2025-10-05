@@ -330,7 +330,7 @@ export function WalletTab() {
         }
         switch (txn.type) {
           case 'admin_adjustment':
-            source = 'Admin Payment';
+            source = 'Virality Admin';
             destination = 'Wallet';
             break;
           case 'earning':
