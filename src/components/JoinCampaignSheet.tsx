@@ -133,18 +133,32 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       // Determine submission status based on campaign type
       const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
       
+      // Check for existing submissions first
+      const { data: existingData } = await supabase
+        .from("campaign_submissions")
+        .select("platform")
+        .eq("campaign_id", campaign.id)
+        .eq("creator_id", user.id);
+
+      const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
+
       // Process each selected account
       for (const accountId of selectedAccounts) {
         const account = socialAccounts.find(a => a.id === accountId);
         
-        // Create the campaign submission
+        // Skip if already submitted for this platform
+        if (existingPlatforms.has(account.platform)) {
+          continue;
+        }
+
+        // Create the campaign submission with unique content_url
         const { error: submissionError } = await supabase
           .from("campaign_submissions")
           .insert({
             campaign_id: campaign.id,
             creator_id: user.id,
             platform: account.platform,
-            content_url: account.account_link || "",
+            content_url: account.account_link || `pending-${Date.now()}-${accountId}`,
             status: submissionStatus,
           });
 

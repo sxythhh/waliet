@@ -151,18 +151,35 @@ export default function CampaignJoin() {
         return;
       }
 
-      // Submit application for each selected account
-      const submissions = selectedAccounts.map(account => ({
-        campaign_id: campaign.id,
-        creator_id: user.id,
-        platform: account.platform,
-        content_url: "pending",
-        status: "pending"
-      }));
+      // Check for existing submissions first
+      const { data: existingData } = await supabase
+        .from("campaign_submissions")
+        .select("platform")
+        .eq("campaign_id", campaign.id)
+        .eq("creator_id", user.id);
+
+      const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
+      
+      // Filter out accounts that already have submissions
+      const newSubmissions = selectedAccounts
+        .filter(account => !existingPlatforms.has(account.platform))
+        .map(account => ({
+          campaign_id: campaign.id,
+          creator_id: user.id,
+          platform: account.platform,
+          content_url: `pending-${Date.now()}-${account.id}`,
+          status: "pending"
+        }));
+
+      if (newSubmissions.length === 0) {
+        toast.error("You've already applied with these accounts");
+        return;
+      }
+
       const {
         data,
         error
-      } = await supabase.from("campaign_submissions").insert(submissions);
+      } = await supabase.from("campaign_submissions").insert(newSubmissions);
       if (error) {
         console.error("Submission error details:", error);
         throw error;
