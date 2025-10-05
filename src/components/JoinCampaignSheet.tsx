@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Check } from "lucide-react";
+import { Check, ArrowUp } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -245,9 +245,10 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           {/* Campaign Preview Button */}
           <Button
             variant="outline"
-            className="w-full h-12 border-2 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
+            className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors"
             onClick={() => navigate(`/campaigns/${campaign.slug}`)}
           >
+            <ArrowUp className="w-4 h-4 mr-2" />
             <span className="font-medium">View Campaign Details</span>
           </Button>
 
