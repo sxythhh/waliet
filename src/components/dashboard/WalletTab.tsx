@@ -25,6 +25,7 @@ import usdcLogo from "@/assets/usdc-logo.png";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import emptyTransactionsImage from '@/assets/empty-transactions.png';
 interface WalletData {
   id: string;
   balance: number;
@@ -736,7 +737,8 @@ export function WalletTab() {
           <CardTitle className="text-lg font-semibold py-[10px]">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          {transactions.length === 0 ? <div className="text-center py-8">
+          {transactions.length === 0 ? <div className="text-center py-8 flex flex-col items-center gap-4">
+              <img src={emptyTransactionsImage} alt="No transactions" className="w-64 h-64 object-contain opacity-80" />
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <div className="space-y-3 max-h-[400px] overflow-y-auto">
               {transactions.map(transaction => <div key={transaction.id} onClick={() => {
