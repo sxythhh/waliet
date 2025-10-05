@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
+import { ArrowLeft, ChevronRight, Plus, CheckCircle2 } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -252,60 +252,81 @@ export default function CampaignJoin() {
         <div className="relative flex gap-6 mb-8">
             {/* Step Content */}
             <div className="flex-1 pb-8">
-              <h2 className="text-xl font-bold mb-4">Select An Account For This Campaign</h2>
-              
-              {socialAccounts.length === 0 ? <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">You don't have any connected accounts yet</p>
-                  <Button onClick={handleAddAccount} variant="outline" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Connect Your First Account
+              {existingSubmissions.size > 0 ? (
+                // Already Applied Message
+                <div className="text-center py-12">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <CheckCircle2 className="h-8 w-8 text-primary" />
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">Already Applied</h2>
+                  <p className="text-muted-foreground mb-6">
+                    You've already submitted an application for this campaign
+                  </p>
+                  <Button onClick={() => navigate("/dashboard?tab=campaigns")} variant="outline">
+                    View My Campaigns
                   </Button>
-                </div> : <>
-                  <div className="space-y-3 mb-4">
-                    {socialAccounts.map(account => {
-                const isLinkedToCampaign = account.campaign_id !== null;
-                const isCompatible = campaign.allowed_platforms.includes(account.platform);
-                const hasAlreadyApplied = existingSubmissions.has(account.platform);
-                const isDisabled = isLinkedToCampaign || !isCompatible || hasAlreadyApplied;
-                const isSelected = selectedAccounts.some(acc => acc.id === account.id);
-                return <div key={account.id} onClick={() => {
-                  if (isDisabled) return;
+                </div>
+              ) : (
+                // Account Selection (existing code)
+                <>
+                  <h2 className="text-xl font-bold mb-4">Select An Account For This Campaign</h2>
+                  
+                  {socialAccounts.length === 0 ? <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-4">You don't have any connected accounts yet</p>
+                      <Button onClick={handleAddAccount} variant="outline" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Connect Your First Account
+                      </Button>
+                    </div> : <>
+                      <div className="space-y-3 mb-4">
+                        {socialAccounts.map(account => {
+                    const isLinkedToCampaign = account.campaign_id !== null;
+                    const isCompatible = campaign.allowed_platforms.includes(account.platform);
+                    const hasAlreadyApplied = existingSubmissions.has(account.platform);
+                    const isDisabled = isLinkedToCampaign || !isCompatible || hasAlreadyApplied;
+                    const isSelected = selectedAccounts.some(acc => acc.id === account.id);
+                    return <div key={account.id} onClick={() => {
+                      if (isDisabled) return;
 
-                  // Toggle selection
-                  if (isSelected) {
-                    setSelectedAccounts(selectedAccounts.filter(acc => acc.id !== account.id));
-                  } else {
-                    setSelectedAccounts([...selectedAccounts, account]);
-                  }
-                }} className={`p-4 rounded-xl border transition-all ${isDisabled ? 'bg-muted/50 cursor-not-allowed opacity-60' : isSelected ? 'bg-primary/10 ring-2 ring-primary cursor-pointer' : 'bg-card hover:bg-card/80 cursor-pointer'}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              {getPlatformIcon(account.platform)}
-                              <div>
-                                <div className="font-medium flex items-center gap-2">
-                                  @{account.username}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  {hasAlreadyApplied && "Already applied to this campaign"}
-                                  {isLinkedToCampaign && !hasAlreadyApplied && "Already linked to a campaign"}
-                                  {!isCompatible && !isLinkedToCampaign && !hasAlreadyApplied && `${account.platform.charAt(0).toUpperCase() + account.platform.slice(1)} is not allowed for this campaign`}
+                      // Toggle selection
+                      if (isSelected) {
+                        setSelectedAccounts(selectedAccounts.filter(acc => acc.id !== account.id));
+                      } else {
+                        setSelectedAccounts([...selectedAccounts, account]);
+                      }
+                    }} className={`p-4 rounded-xl border transition-all ${isDisabled ? 'bg-muted/50 cursor-not-allowed opacity-60' : isSelected ? 'bg-primary/10 ring-2 ring-primary cursor-pointer' : 'bg-card hover:bg-card/80 cursor-pointer'}`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {getPlatformIcon(account.platform)}
+                                  <div>
+                                    <div className="font-medium flex items-center gap-2">
+                                      @{account.username}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {hasAlreadyApplied && "Already applied to this campaign"}
+                                      {isLinkedToCampaign && !hasAlreadyApplied && "Already linked to a campaign"}
+                                      {!isCompatible && !isLinkedToCampaign && !hasAlreadyApplied && `${account.platform.charAt(0).toUpperCase() + account.platform.slice(1)} is not allowed for this campaign`}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                        </div>;
-              })}
-                  </div>
+                            </div>;
+                  })}
+                      </div>
 
-                  <Button onClick={handleAddAccount} variant="outline" className="w-full gap-2">
-                    <Plus className="h-4 w-4" />
-                    Connect Another Account
-                  </Button>
+                      <Button onClick={handleAddAccount} variant="outline" className="w-full gap-2">
+                        <Plus className="h-4 w-4" />
+                        Connect Another Account
+                      </Button>
 
-                  {selectedAccounts.length > 0 && <Button onClick={onSubmit} disabled={submitting} className="w-full mt-4">
-                      {submitting ? "Submitting..." : `Submit Application${selectedAccounts.length > 1 ? 's' : ''} (${selectedAccounts.length})`}
-                    </Button>}
-                 </>}
+                      {selectedAccounts.length > 0 && <Button onClick={onSubmit} disabled={submitting} className="w-full mt-4">
+                          {submitting ? "Submitting..." : `Submit Application${selectedAccounts.length > 1 ? 's' : ''} (${selectedAccounts.length})`}
+                        </Button>}
+                     </>}
+                </>
+              )}
             </div>
           </div>
 
