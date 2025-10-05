@@ -88,16 +88,18 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       .eq("user_id", user.id)
       .in("platform", campaign.platforms.map(p => p.toLowerCase()));
 
-    // Get accounts already connected to this campaign
-    const { data: connectedAccounts } = await supabase
-      .from("social_account_campaigns")
-      .select("social_account_id")
-      .eq("campaign_id", campaign.id);
+    // Get active (non-withdrawn) submissions to filter out platforms
+    const { data: activeSubmissions } = await supabase
+      .from("campaign_submissions")
+      .select("platform")
+      .eq("campaign_id", campaign.id)
+      .eq("creator_id", user.id)
+      .neq("status", "withdrawn");
 
-    const connectedIds = new Set(connectedAccounts?.map(c => c.social_account_id) || []);
+    const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
     
-    // Filter out already connected accounts
-    const availableAccounts = accounts?.filter(acc => !connectedIds.has(acc.id)) || [];
+    // Filter out accounts with active submissions for this campaign
+    const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
     
     setSocialAccounts(availableAccounts);
   };
