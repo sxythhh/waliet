@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
+import { ManageCampaignsDialog } from "@/components/ManageCampaignsDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -40,13 +41,15 @@ interface SocialAccount {
   follower_count: number;
   is_verified: boolean;
   connected_at: string;
-  campaign_id: string | null;
-  campaigns?: {
-    id: string;
-    title: string;
-    brand_name: string;
-    brand_logo_url: string | null;
-  } | null;
+  connected_campaigns?: Array<{
+    connection_id: string;
+    campaign: {
+      id: string;
+      title: string;
+      brand_name: string;
+      brand_logo_url: string | null;
+    };
+  }>;
   demographic_submissions?: Array<{
     id: string;
     tier1_percentage: number;
@@ -73,8 +76,12 @@ export function ProfileTab() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-  const [showLinkCampaignDialog, setShowLinkCampaignDialog] = useState(false);
-  const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<string | null>(null);
+  const [showManageCampaignsDialog, setShowManageCampaignsDialog] = useState(false);
+  const [selectedAccountForManaging, setSelectedAccountForManaging] = useState<{
+    id: string;
+    username: string;
+    platform: string;
+  } | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
   const [showDemographicsDialog, setShowDemographicsDialog] = useState(false);
@@ -175,52 +182,7 @@ export function ProfileTab() {
       setJoinedCampaigns(Array.from(uniqueCampaignsMap.values()));
     }
   };
-  const handleLinkCampaign = async (accountId: string, campaignId: string) => {
-    try {
-      const {
-        error
-      } = await supabase.from('social_accounts').update({
-        campaign_id: campaignId
-      }).eq('id', accountId);
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Account linked to campaign"
-      });
-      fetchSocialAccounts();
-      setShowLinkCampaignDialog(false);
-      setSelectedAccountForLinking(null);
-    } catch (error) {
-      console.error('Error linking campaign:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to link campaign"
-      });
-    }
-  };
-  const handleUnlinkCampaign = async (accountId: string) => {
-    try {
-      const {
-        error
-      } = await supabase.from('social_accounts').update({
-        campaign_id: null
-      }).eq('id', accountId);
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Account unlinked from campaign"
-      });
-      fetchSocialAccounts();
-    } catch (error) {
-      console.error('Error unlinking campaign:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to unlink campaign"
-      });
-    }
-  };
+  // Remove the old link/unlink functions - now handled by ManageCampaignsDialog
   const handleDeleteAccount = async () => {
     if (!accountToDelete) return;
     try {
@@ -450,7 +412,7 @@ export function ProfileTab() {
               <p className="text-sm mt-2">Add and verify your social media accounts to start earning</p>
             </div> : <div className="space-y-3">
               {socialAccounts.map(account => {
-            const linkedCampaign = account.campaigns;
+            const connectedCampaigns = account.connected_campaigns || [];
             const latestDemographicSubmission = account.demographic_submissions?.[0];
             const demographicStatus = latestDemographicSubmission?.status;
 
@@ -498,15 +460,7 @@ export function ProfileTab() {
                         </span>}
                       </div>
                       
-                      {linkedCampaign && <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
-                        {linkedCampaign.brand_logo_url && <img src={linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-4 w-4 rounded object-cover" />}
-                        <button onClick={e => {
-                    e.stopPropagation();
-                    navigate(`/campaign/${linkedCampaign.id}`);
-                  }} className="hover:underline font-medium">
-                          {linkedCampaign.title}
-                        </button>
-                      </div>}
+                      {/* Removed old linkedCampaign display - now showing multiple campaigns above */}
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -534,17 +488,23 @@ export function ProfileTab() {
                 }} className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
                           Submit Demographics
                         </Button>}
-                      
-                      {linkedCampaign ? <Button variant="ghost" size="sm" onClick={() => handleUnlinkCampaign(account.id)} className="h-8 gap-1 w-full sm:w-auto">
-                          <X className="h-3 w-3" />
-                          Unlink
-                        </Button> : <Button variant="default" size="sm" onClick={() => {
-                  setSelectedAccountForLinking(account.id);
-                  setShowLinkCampaignDialog(true);
-                }} disabled={joinedCampaigns.length === 0} className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap">
-                          <Link2 className="h-3 w-3" />
-                          Link Campaign
-                        </Button>}
+                       
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedAccountForManaging({
+                            id: account.id,
+                            username: account.username,
+                            platform: account.platform,
+                          });
+                          setShowManageCampaignsDialog(true);
+                        }}
+                        className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap"
+                      >
+                        <Settings className="h-3 w-3" />
+                        Manage Campaigns
+                      </Button>
                       
                       <Button variant="ghost" size="sm" onClick={() => {
                   setAccountToDelete(account.id);
@@ -707,43 +667,16 @@ export function ProfileTab() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Link Campaign Dialog */}
-      <Dialog open={showLinkCampaignDialog} onOpenChange={setShowLinkCampaignDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Link to Campaign</DialogTitle>
-            <DialogDescription>
-              Choose which campaign you want to link this account to
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-3 mt-4">
-            {joinedCampaigns.map(campaign => <div key={campaign.id} onClick={() => selectedAccountForLinking && handleLinkCampaign(selectedAccountForLinking, campaign.id)} className="group relative overflow-hidden rounded-lg border border-border bg-card hover:bg-muted/50 transition-all duration-200 cursor-pointer p-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-shrink-0">
-                    {campaign.brands?.logo_url || campaign.brand_logo_url ? <img src={campaign.brands?.logo_url || campaign.brand_logo_url} alt={campaign.brand_name} className="h-16 w-16 rounded-lg object-cover ring-2 ring-border transition-all" /> : <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center ring-2 ring-border transition-all">
-                        <span className="text-2xl font-bold text-muted-foreground">
-                          {campaign.brand_name.charAt(0)}
-                        </span>
-                      </div>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base text-foreground mb-1 truncate">
-                      {campaign.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {campaign.brand_name}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>)}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Manage Campaigns Dialog */}
+      {selectedAccountForManaging && (
+        <ManageCampaignsDialog
+          open={showManageCampaignsDialog}
+          onOpenChange={setShowManageCampaignsDialog}
+          accountId={selectedAccountForManaging.id}
+          accountUsername={selectedAccountForManaging.username}
+          accountPlatform={selectedAccountForManaging.platform}
+          onUpdate={fetchSocialAccounts}
+        />
+      )}
     </div>;
 }
