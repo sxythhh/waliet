@@ -111,19 +111,29 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
   };
 
   const handleSubmit = async () => {
+    console.log('=== SUBMIT STARTED ===');
+    console.log('Campaign:', campaign);
+    console.log('Selected Accounts:', selectedAccounts);
+    console.log('Answers:', answers);
+    
     if (!campaign || selectedAccounts.length === 0) {
+      console.log('Validation failed: No campaign or accounts');
       toast.error("Please select at least one social account");
       return;
     }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
+      console.log('Validation failed: No user');
       toast.error("Please sign in to join campaigns");
       return;
     }
 
     // Validate application questions only if campaign requires application
     const questions = Array.isArray(campaign.application_questions) ? campaign.application_questions : [];
+    console.log('Application questions:', questions);
+    console.log('Requires application:', campaign.requires_application);
+    
     if (campaign.requires_application !== false && questions.length > 0) {
       const unansweredQuestions = questions.filter(
         (q, idx) => {
@@ -131,17 +141,21 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           return !answer || answer.trim().length === 0;
         }
       );
+      console.log('Unanswered questions:', unansweredQuestions);
       if (unansweredQuestions.length > 0) {
+        console.log('Validation failed: Unanswered questions');
         toast.error("Please answer all application questions");
         return;
       }
     }
 
+    console.log('All validations passed, starting submission...');
     setSubmitting(true);
 
     try {
       // Determine submission status based on campaign type
       const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
+      console.log('Submission status:', submissionStatus);
       
       // Check for existing submissions first
       const { data: existingData } = await supabase
@@ -150,41 +164,61 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
         .eq("campaign_id", campaign.id)
         .eq("creator_id", user.id);
 
+      console.log('Existing submissions:', existingData);
       const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
 
       // Process each selected account
       for (const accountId of selectedAccounts) {
         const account = socialAccounts.find(a => a.id === accountId);
+        console.log('Processing account:', account);
         
         // Skip if already submitted for this platform
         if (existingPlatforms.has(account.platform)) {
+          console.log('Skipping - already submitted for platform:', account.platform);
           continue;
         }
 
         // Create the campaign submission with unique content_url
-        const { error: submissionError } = await supabase
+        const submissionData = {
+          campaign_id: campaign.id,
+          creator_id: user.id,
+          platform: account.platform,
+          content_url: account.account_link || `pending-${Date.now()}-${accountId}`,
+          status: submissionStatus,
+        };
+        console.log('Inserting submission:', submissionData);
+        
+        const { data: submissionResult, error: submissionError } = await supabase
           .from("campaign_submissions")
-          .insert({
-            campaign_id: campaign.id,
-            creator_id: user.id,
-            platform: account.platform,
-            content_url: account.account_link || `pending-${Date.now()}-${accountId}`,
-            status: submissionStatus,
-          });
+          .insert(submissionData)
+          .select();
 
-        if (submissionError) throw submissionError;
+        console.log('Submission result:', submissionResult);
+        if (submissionError) {
+          console.error('Submission error:', submissionError);
+          throw submissionError;
+        }
 
         // Link the social account to the campaign
-        const { error: linkError } = await supabase
+        const linkData = {
+          social_account_id: accountId,
+          campaign_id: campaign.id,
+        };
+        console.log('Linking account:', linkData);
+        
+        const { data: linkResult, error: linkError } = await supabase
           .from("social_account_campaigns")
-          .insert({
-            social_account_id: accountId,
-            campaign_id: campaign.id,
-          });
+          .insert(linkData)
+          .select();
 
-        if (linkError) throw linkError;
+        console.log('Link result:', linkResult);
+        if (linkError) {
+          console.error('Link error:', linkError);
+          throw linkError;
+        }
       }
 
+      console.log('=== SUBMISSION SUCCESSFUL ===');
       const accountText = selectedAccounts.length === 1 ? "account is" : "accounts are";
       const successMessage = campaign.requires_application === false 
         ? `Successfully joined the campaign! ${selectedAccounts.length} ${accountText} now connected.`
@@ -194,6 +228,8 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       onOpenChange(false);
       navigate("/dashboard?tab=campaigns");
     } catch (error: any) {
+      console.error('=== SUBMISSION FAILED ===');
+      console.error('Error details:', error);
       toast.error(error.message || "Failed to submit application");
     } finally {
       setSubmitting(false);
