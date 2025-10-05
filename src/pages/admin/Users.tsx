@@ -518,7 +518,9 @@ export default function AdminUsers() {
   const handleReview = async () => {
     if (!selectedSubmission) return;
     const scoreValue = parseInt(score);
-    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
+    
+    // Only validate score if approving
+    if (reviewStatus === "approved" && (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100)) {
       toast({
         variant: "destructive",
         title: "Invalid Score",
@@ -526,6 +528,7 @@ export default function AdminUsers() {
       });
       return;
     }
+    
     setUpdating(true);
     try {
       const {
@@ -538,7 +541,7 @@ export default function AdminUsers() {
         error: updateError
       } = await supabase.from("demographic_submissions").update({
         status: reviewStatus,
-        score: scoreValue,
+        score: reviewStatus === "approved" ? scoreValue : null,
         admin_notes: adminNotes.trim() || null,
         reviewed_at: new Date().toISOString(),
         reviewed_by: session.user.id
