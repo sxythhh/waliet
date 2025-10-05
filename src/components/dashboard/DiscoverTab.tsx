@@ -157,7 +157,7 @@ export function DiscoverTab() {
 
               const handleCampaignClick = () => {
                 if (campaign.preview_url) {
-                  navigate(`/campaign/${campaign.slug}/preview`);
+                  window.open(campaign.preview_url, '_blank');
                 } else {
                   navigate(`/campaign/${campaign.slug}/join`);
                 }
@@ -166,7 +166,7 @@ export function DiscoverTab() {
               return (
                 <Card
                   key={campaign.id}
-                  className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 cursor-pointer"
+                  className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer"
                   onClick={handleCampaignClick}
                 >
                   {/* Banner Image */}
@@ -227,30 +227,6 @@ export function DiscoverTab() {
                         <span>{budgetPercentage.toFixed(0)}% used</span>
                       </div>
                     </div>
-
-                    {/* Platforms */}
-                    {campaign.platforms && campaign.platforms.length > 0 && (
-                      <div className="pt-1">
-                        <div className="flex flex-wrap gap-1.5">
-                          {campaign.platforms.map((platform, idx) => (
-                            <div key={idx} className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1">
-                              <div className="w-3 h-3">
-                                {platform.toLowerCase() === 'tiktok' && (
-                                  <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />
-                                )}
-                                {platform.toLowerCase() === 'instagram' && (
-                                  <img src={instagramLogo} alt="Instagram" className="w-full h-full" />
-                                )}
-                                {platform.toLowerCase() === 'youtube' && (
-                                  <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />
-                                )}
-                              </div>
-                              <span className="text-[11px] font-semibold">{platform}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               );
