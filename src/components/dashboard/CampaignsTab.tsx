@@ -186,10 +186,7 @@ export function CampaignsTab() {
     return <div className="text-center py-12 flex flex-col items-center gap-4">
         <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
         <p className="text-slate-50 font-medium">You haven't joined any campaigns yet</p>
-        <Button 
-          onClick={() => navigate("/dashboard?tab=discover")}
-          className="mt-2 bg-primary hover:bg-primary/90"
-        >
+        <Button onClick={() => navigate("/dashboard?tab=discover")} className="mt-2 bg-primary hover:bg-primary/90">
           Discover Campaigns
         </Button>
       </div>;
@@ -217,7 +214,7 @@ export function CampaignsTab() {
                   <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
                     {campaign.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
                 </div>
               </div>
 
@@ -268,7 +265,7 @@ export function CampaignsTab() {
               {/* Application Status */}
               {isPending ? <div className="mt-auto pt-2 space-y-2">
                   <div className="bg-muted/30 rounded-md px-2.5 py-1.5 flex items-center justify-center">
-                    <span className="text-[11px] font-instrument tracking-tight text-muted-foreground font-medium">
+                    <span className="text-[11px] font-instrument tracking-tight text-muted-foreground font-semibold">
                       Pending Review
                     </span>
                   </div>
@@ -276,7 +273,7 @@ export function CampaignsTab() {
               e.stopPropagation();
               setSelectedCampaignId(campaign.id);
               setWithdrawDialogOpen(true);
-            }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive">
+            }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
                     <X className="w-3.5 h-3.5 mr-1.5" />
                     Withdraw Application
                   </Button>
@@ -284,7 +281,7 @@ export function CampaignsTab() {
                   <Button variant="ghost" size="sm" onClick={e => {
               e.stopPropagation();
               setDialogOpen(true);
-            }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-[#5966f2]">
+            }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-[#5966f2] font-semibold">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Link Account
                   </Button>
