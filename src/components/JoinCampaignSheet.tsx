@@ -34,6 +34,7 @@ interface Campaign {
   application_questions: string[];
   requires_application?: boolean;
   preview_url?: string | null;
+  is_infinite_budget?: boolean;
   brands?: {
     logo_url: string;
   };
@@ -230,30 +231,32 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           )}
 
           {/* Budget & RPM */}
-          <div className="rounded-lg p-4 space-y-3 bg-muted/50">
-            <div className="flex justify-between items-baseline">
-              <span className="text-sm font-medium">Budget Progress</span>
-              <span className="text-xs text-muted-foreground">
-                ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
-              </span>
-            </div>
-            <div className="h-2 rounded-full overflow-hidden bg-background">
-              <div
-                className="h-full bg-primary transition-all duration-700"
-                style={{ width: `${budgetPercentage}%` }}
-              />
-            </div>
-            <div className="flex justify-between items-center pt-2">
-              <div>
-                <p className="text-xs text-muted-foreground">RPM Rate</p>
-                <p className="text-lg font-bold">${campaign.rpm_rate}</p>
+          {!campaign.is_infinite_budget && (
+            <div className="rounded-lg p-4 space-y-3 bg-muted/50">
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm font-medium">Budget Progress</span>
+                <span className="text-xs text-muted-foreground">
+                  ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
+                </span>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Remaining</p>
-                <p className="text-lg font-bold">${budgetRemaining.toLocaleString()}</p>
+              <div className="h-2 rounded-full overflow-hidden bg-background">
+                <div
+                  className="h-full bg-primary transition-all duration-700"
+                  style={{ width: `${budgetPercentage}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">RPM Rate</p>
+                  <p className="text-lg font-bold">${campaign.rpm_rate}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <p className="text-lg font-bold">${budgetRemaining.toLocaleString()}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Campaign Preview Button - only show if preview_url exists */}
           {campaign.preview_url && (
