@@ -35,7 +35,6 @@ import AdminWallets from "./pages/admin/Wallets";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/contexts/AuthContext";
-
 const queryClient = new QueryClient();
 function DashboardLayout({
   children
@@ -64,9 +63,9 @@ function DashboardLayout({
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-[26px]">
             <SidebarTrigger />
-            <div className="flex-1 flex justify-center">
+            <div className="flex-1 flex justify-center px-0 mx-0">
               <img src={wordmarkLogo} alt="Wordmark Logo" className="h-10" />
             </div>
             <div className="w-10 hidden md:block" />
@@ -94,24 +93,23 @@ function AdminLayout({
   children: React.ReactNode;
 }) {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAdminCheck();
-
+  const {
+    isAdmin,
+    loading
+  } = useAdminCheck();
   useEffect(() => {
     if (!loading && !isAdmin) {
       navigate("/dashboard");
     }
   }, [isAdmin, loading, navigate]);
-
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">
       <p>Loading...</p>
     </div>;
   }
-
   if (!isAdmin) {
     return null;
   }
-
   return <div className="flex min-h-screen w-full">
       <AdminSidebar />
       <main className="flex-1">{children}</main>
