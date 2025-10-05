@@ -406,7 +406,7 @@ export function ProfileTab() {
         </CardHeader>
         <CardContent>
             {socialAccounts.length === 0 ? <div className="text-center py-12">
-              <img src={emptyAccountsImage} alt="No accounts" className="w-24 h-24 mx-auto mb-4 opacity-80" />
+              <img src={emptyAccountsImage} alt="No accounts" className="w-24 h-24 mx-auto mb-4 opacity-80 object-cover" />
               <p className="text-base font-medium text-foreground">No connected accounts yet</p>
               <p className="text-sm mt-2 text-muted-foreground">Add your accounts to link them to a campaign</p>
             </div> : <div className="space-y-3">
