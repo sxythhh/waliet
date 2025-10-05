@@ -351,7 +351,7 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           <div className="flex gap-2 pt-4">
             <Button
               variant="outline"
-              className="flex-1"
+              className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors"
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
