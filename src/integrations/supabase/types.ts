@@ -264,6 +264,7 @@ export type Database = {
           end_date: string | null
           guidelines: string | null
           id: string
+          is_infinite_budget: boolean | null
           is_private: boolean | null
           preview_url: string | null
           requires_application: boolean
@@ -290,6 +291,7 @@ export type Database = {
           end_date?: string | null
           guidelines?: string | null
           id?: string
+          is_infinite_budget?: boolean | null
           is_private?: boolean | null
           preview_url?: string | null
           requires_application?: boolean
@@ -316,6 +318,7 @@ export type Database = {
           end_date?: string | null
           guidelines?: string | null
           id?: string
+          is_infinite_budget?: boolean | null
           is_private?: boolean | null
           preview_url?: string | null
           requires_application?: boolean
@@ -923,6 +926,7 @@ export type Database = {
           end_date: string | null
           guidelines: string | null
           id: string | null
+          is_infinite_budget: boolean | null
           is_private: boolean | null
           preview_url: string | null
           slug: string | null
@@ -943,6 +947,7 @@ export type Database = {
           end_date?: string | null
           guidelines?: string | null
           id?: string | null
+          is_infinite_budget?: boolean | null
           is_private?: boolean | null
           preview_url?: string | null
           slug?: string | null
@@ -963,6 +968,7 @@ export type Database = {
           end_date?: string | null
           guidelines?: string | null
           id?: string | null
+          is_infinite_budget?: boolean | null
           is_private?: boolean | null
           preview_url?: string | null
           slug?: string | null

@@ -35,6 +35,7 @@ interface Campaign {
   preview_url: string | null;
   guidelines: string | null;
   application_questions: string[];
+  is_infinite_budget?: boolean;
   brands?: {
     logo_url: string;
   };
@@ -304,28 +305,51 @@ export function DiscoverTab() {
 
                     {/* Budget Section */}
                     <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
-                      <div className="flex items-baseline justify-between">
-                        <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
-                          <span className="text-base font-bold tabular-nums">
-                            ${budgetUsed.toLocaleString()}
-                          </span>
-                          <span className="text-xs text-muted-foreground font-medium">
-                            / ${campaign.budget.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
+                      {campaign.is_infinite_budget ? (
+                        <>
+                          <div className="flex items-baseline justify-between">
+                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                              <span className="text-base font-bold">
+                                ∞ Unlimited Budget
+                              </span>
+                            </div>
+                          </div>
 
-                      {/* Progress Bar */}
-                      <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
-                        <div
-                          className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700"
-                          style={{ width: `${budgetPercentage}%` }}
-                        />
-                      </div>
+                          {/* Animated Infinite Progress Bar */}
+                          <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                            <div className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full animate-[slide_2s_ease-in-out_infinite]" />
+                          </div>
 
-                      <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                        <span>{budgetPercentage.toFixed(0)}% used</span>
-                      </div>
+                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                            <span>No budget limit</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-baseline justify-between">
+                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                              <span className="text-base font-bold tabular-nums">
+                                ${budgetUsed.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-muted-foreground font-medium">
+                                / ${campaign.budget.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                            <div
+                              className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700"
+                              style={{ width: `${budgetPercentage}%` }}
+                            />
+                          </div>
+
+                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                            <span>{budgetPercentage.toFixed(0)}% used</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
