@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import viralityLogo from "@/assets/virality-logo.webp";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +17,8 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -108,6 +111,29 @@ export default function Auth() {
       });
     }
   };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth`
+    });
+    setLoading(false);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    } else {
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link."
+      });
+      setShowResetDialog(false);
+      setResetEmail("");
+    }
+  };
   return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md border bg-[#0b0b0b]">
         <CardHeader className="text-center space-y-3 pb-8 bg-[#0b0b0b] py-[3px]">
@@ -150,6 +176,40 @@ export default function Auth() {
                 <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
+
+                <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+                  <DialogTrigger asChild>
+                    <button type="button" className="w-full text-center text-sm text-primary hover:underline mt-3">
+                      Forgot password?
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#0b0b0b] border">
+                    <DialogHeader>
+                      <DialogTitle>Reset Password</DialogTitle>
+                      <DialogDescription>
+                        Enter your email address and we'll send you a link to reset your password.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handlePasswordReset} className="space-y-4 mt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-email">Email</Label>
+                        <Input
+                          id="reset-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          required
+                          disabled={loading}
+                          className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary"
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Sending..." : "Send Reset Link"}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </form>
             </TabsContent>
             
