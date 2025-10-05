@@ -7,12 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 import viralityLogo from "@/assets/virality-logo.webp";
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -132,7 +135,16 @@ export default function Auth() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
-                  <Input id="signin-password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none" />
+                  <div className="relative">
+                    <Input id="signin-password" type={showSignInPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none pr-10" />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignInPassword(!showSignInPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 
                 <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
@@ -155,7 +167,16 @@ export default function Auth() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
-                  <Input id="signup-password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none" />
+                  <div className="relative">
+                    <Input id="signup-password" type={showSignUpPassword ? "text" : "password"} placeholder="Create secure password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none pr-10" />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showSignUpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 
                 <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
