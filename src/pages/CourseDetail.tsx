@@ -277,7 +277,7 @@ export default function CourseDetail() {
                     >
                       {sidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
                     </Button>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white">
+                    <h2 className="hidden md:block text-2xl md:text-3xl font-bold text-white">
                       {selectedModule.title}
                     </h2>
                   </div>
