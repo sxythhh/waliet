@@ -129,14 +129,14 @@ export function DiscoverTab() {
             <Button
               variant={selectedPlatform === null ? "default" : "outline"}
               onClick={() => setSelectedPlatform(null)}
-              className="h-11 px-4 bg-[#0F0F0F] border-0 hover:bg-[#0F0F0F]/80"
+              className={`h-11 px-4 border-0 ${selectedPlatform === null ? 'bg-blue-500 hover:bg-blue-600' : 'bg-[#0F0F0F] hover:bg-[#0F0F0F]/80'}`}
             >
               All
             </Button>
             <Button
               variant={selectedPlatform === "TikTok" ? "default" : "outline"}
               onClick={() => setSelectedPlatform(selectedPlatform === "TikTok" ? null : "TikTok")}
-              className="h-11 w-11 p-0 bg-[#0F0F0F] border-0 hover:bg-[#0F0F0F]/80"
+              className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "TikTok" ? 'bg-blue-500 hover:bg-blue-600' : 'bg-[#0F0F0F] hover:bg-[#0F0F0F]/80'}`}
               title="TikTok"
             >
               <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />
@@ -144,7 +144,7 @@ export function DiscoverTab() {
             <Button
               variant={selectedPlatform === "Instagram" ? "default" : "outline"}
               onClick={() => setSelectedPlatform(selectedPlatform === "Instagram" ? null : "Instagram")}
-              className="h-11 w-11 p-0 bg-[#0F0F0F] border-0 hover:bg-[#0F0F0F]/80"
+              className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "Instagram" ? 'bg-blue-500 hover:bg-blue-600' : 'bg-[#0F0F0F] hover:bg-[#0F0F0F]/80'}`}
               title="Instagram"
             >
               <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />
@@ -152,7 +152,7 @@ export function DiscoverTab() {
             <Button
               variant={selectedPlatform === "YouTube" ? "default" : "outline"}
               onClick={() => setSelectedPlatform(selectedPlatform === "YouTube" ? null : "YouTube")}
-              className="h-11 w-11 p-0 bg-[#0F0F0F] border-0 hover:bg-[#0F0F0F]/80"
+              className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "YouTube" ? 'bg-blue-500 hover:bg-blue-600' : 'bg-[#0F0F0F] hover:bg-[#0F0F0F]/80'}`}
               title="YouTube"
             >
               <img src={youtubeLogo} alt="YouTube" className="w-5 h-5" />
