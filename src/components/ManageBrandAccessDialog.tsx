@@ -63,7 +63,7 @@ export function ManageBrandAccessDialog({ open: controlledOpen, onOpenChange }: 
       const { data: brandsData, error: brandsError } = await supabase
         .from("brands")
         .select("id, name, slug")
-        .eq("slug", "dwy")
+        .eq("brand_type", "DWY")
         .order("name", { ascending: true });
 
       if (brandsError) throw brandsError;
