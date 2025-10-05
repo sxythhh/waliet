@@ -474,7 +474,7 @@ export function ProfileTab() {
                     </div>
                     
                     <Button 
-                      variant="default" 
+                      variant="secondary" 
                       size="sm" 
                       onClick={() => {
                         setSelectedAccountForManaging({
@@ -485,7 +485,7 @@ export function ProfileTab() {
                         });
                         setShowManageAccountDialog(true);
                       }}
-                      className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap"
+                      className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap bg-muted border-0"
                     >
                       <Settings className="h-3 w-3" />
                       Manage Account
