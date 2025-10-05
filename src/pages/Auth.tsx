@@ -173,7 +173,7 @@ export default function Auth() {
                   </div>
                   <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
                     <DialogTrigger asChild>
-                      <button type="button" className="text-sm text-primary hover:underline">
+                      <button type="button" className="text-sm text-primary hover:underline text-right w-full">
                         Forgot password?
                       </button>
                     </DialogTrigger>
