@@ -186,7 +186,7 @@ export default function CampaignJoin() {
   return <div className="min-h-full bg-background">
       {/* Header */}
       <div className="p-6 border-b bg-background">
-        <Button variant="ghost" onClick={() => navigate("/dashboard?tab=campaigns")} className="gap-2">
+        <Button variant="ghost" onClick={() => navigate("/dashboard?tab=discover")} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back to Campaigns
         </Button>
