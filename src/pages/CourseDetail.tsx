@@ -268,7 +268,7 @@ export default function CourseDetail() {
                             href={asset.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-4 rounded-lg bg-white/5 border border-white/10 transition-all group"
+                            className="flex items-center gap-3 p-4 rounded-lg border border-white/10 transition-all group"
                           >
                             <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
                               <img 
