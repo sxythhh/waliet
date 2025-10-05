@@ -183,7 +183,7 @@ export default function CourseDetail() {
                       {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
                     </div>
                     <span className={`flex-1 text-sm transition-colors ${isSelected ? 'text-white font-medium' : 'text-white/60 group-hover:text-white/80'}`}>{module.title}</span>
-                    {isSelected && <div className="flex-shrink-0 w-1 h-4 bg-white/60 rounded-full" />}
+                    {isSelected}
                   </div>;
             })}
             </div>
