@@ -86,7 +86,7 @@ export function CampaignsTab() {
       return;
     }
 
-    // Fetch campaigns user has joined with brand logos
+    // Fetch campaigns user has joined with brand logos (including ended campaigns)
     const {
       data,
       error
