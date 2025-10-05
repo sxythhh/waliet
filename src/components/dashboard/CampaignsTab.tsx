@@ -66,9 +66,7 @@ export function CampaignsTab() {
       data: submissions,
       error: submissionsError
     } = await supabase.from("campaign_submissions").select("campaign_id, status").eq("creator_id", user.id).neq("status", "withdrawn");
-    
     console.log("All submissions:", submissions);
-    
     if (submissionsError) {
       console.error("Submissions error:", submissionsError);
       toast({
@@ -81,9 +79,7 @@ export function CampaignsTab() {
     }
     const campaignIds = submissions?.map(s => s.campaign_id) || [];
     const submissionStatusMap = new Map(submissions?.map(s => [s.campaign_id, s.status]) || []);
-    
     console.log("Campaign IDs from submissions:", campaignIds);
-    
     if (campaignIds.length === 0) {
       setCampaigns([]);
       setLoading(false);
@@ -104,18 +100,16 @@ export function CampaignsTab() {
     });
 
     // Fetch user's social accounts connected to these campaigns via junction table
-    const { data: accountCampaigns } = await supabase
-      .from("social_account_campaigns")
-      .select(`
+    const {
+      data: accountCampaigns
+    } = await supabase.from("social_account_campaigns").select(`
         campaign_id,
         social_accounts (
           id,
           platform,
           username
         )
-      `)
-      .in("campaign_id", campaignIds)
-      .eq("social_accounts.user_id", user.id);
+      `).in("campaign_id", campaignIds).eq("social_accounts.user_id", user.id);
 
     // Group social accounts by campaign_id
     const accountsByCampaign = new Map<string, Array<{
@@ -123,7 +117,6 @@ export function CampaignsTab() {
       platform: string;
       username: string;
     }>>();
-    
     accountCampaigns?.forEach((connection: any) => {
       if (connection.campaign_id && connection.social_accounts) {
         if (!accountsByCampaign.has(connection.campaign_id)) {
@@ -150,23 +143,21 @@ export function CampaignsTab() {
     }
     setLoading(false);
   };
-
   const handleWithdrawApplication = async () => {
     if (!selectedCampaignId) return;
-
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { error } = await supabase
-        .from("campaign_submissions")
-        .update({ status: 'withdrawn' })
-        .eq("campaign_id", selectedCampaignId)
-        .eq("creator_id", user.id)
-        .eq("status", "pending");
-
+      const {
+        error
+      } = await supabase.from("campaign_submissions").update({
+        status: 'withdrawn'
+      }).eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).eq("status", "pending");
       if (error) throw error;
-
       toast({
         title: "Application withdrawn",
         description: "Your application has been successfully withdrawn"
@@ -186,7 +177,6 @@ export function CampaignsTab() {
       setSelectedCampaignId(null);
     }
   };
-
   if (loading) {
     return <div className="text-center py-12">
         <p className="text-muted-foreground">Loading campaigns...</p>
@@ -229,43 +219,30 @@ export function CampaignsTab() {
               <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
                 <div className="flex items-baseline justify-between">
                   <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
-                    {campaign.is_infinite_budget ? (
-                      <>
-                        <Infinity className="w-5 h-5 text-primary" />
+                    {campaign.is_infinite_budget ? <>
+                        
                         <span className="text-xs text-muted-foreground font-medium">Infinite Budget</span>
-                      </>
-                    ) : (
-                      <>
+                      </> : <>
                         <span className="text-base font-bold tabular-nums">${budgetUsed.toLocaleString()}</span>
                         <span className="text-xs text-muted-foreground font-medium">/ ${campaign.budget.toLocaleString()}</span>
-                      </>
-                    )}
+                      </>}
                   </div>
                 </div>
                 
                 {/* Progress Bar */}
                 <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
-                  {campaign.is_infinite_budget ? (
-                    <div 
-                      className="absolute inset-0 animate-pulse"
-                      style={{
-                        background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
-                        backgroundSize: '200% 200%',
-                        animation: 'slide 2s linear infinite'
-                      }}
-                    />
-                  ) : (
-                    <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                      width: `${budgetPercentage}%`
-                    }} />
-                  )}
+                  {campaign.is_infinite_budget ? <div className="absolute inset-0 animate-pulse" style={{
+                background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
+                backgroundSize: '200% 200%',
+                animation: 'slide 2s linear infinite'
+              }} /> : <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                width: `${budgetPercentage}%`
+              }} />}
                 </div>
                 
-                {!campaign.is_infinite_budget && (
-                  <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                {!campaign.is_infinite_budget && <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                     <span>{budgetPercentage.toFixed(0)}% used</span>
-                  </div>
-                )}
+                  </div>}
               </div>
 
               {/* Connected Accounts */}
@@ -289,16 +266,11 @@ export function CampaignsTab() {
                       Pending Review
                     </span>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={e => {
-                      e.stopPropagation();
-                      setSelectedCampaignId(campaign.id);
-                      setWithdrawDialogOpen(true);
-                    }} 
-                    className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive"
-                  >
+                  <Button variant="ghost" size="sm" onClick={e => {
+              e.stopPropagation();
+              setSelectedCampaignId(campaign.id);
+              setWithdrawDialogOpen(true);
+            }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive">
                     <X className="w-3.5 h-3.5 mr-1.5" />
                     Withdraw Application
                   </Button>
