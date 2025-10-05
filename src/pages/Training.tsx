@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Lock } from "lucide-react";
+import { BookOpen } from "lucide-react";
+import lockIcon from "@/assets/lock-icon.png";
 interface Course {
   id: string;
   title: string;
@@ -134,8 +135,8 @@ export default function Training() {
                 {course.banner_url ? <img src={course.banner_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center">
                     <BookOpen className="h-16 w-16 text-white/20" />
                   </div>}
-                {course.is_locked && <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <Lock className="h-12 w-12 text-blue-500" />
+                {course.is_locked && <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/80 flex items-center justify-center backdrop-blur-[2px] transition-all duration-300">
+                    <img src={lockIcon} alt="Locked" className="h-16 w-16 drop-shadow-2xl" />
                   </div>}
               </div>
 
