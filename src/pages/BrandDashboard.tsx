@@ -5,7 +5,7 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid, Menu, XCircle } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -122,23 +122,6 @@ export default function BrandDashboard() {
       setCampaignToDelete(null);
     }
   };
-
-  const handleMarkAsEnded = async (campaignId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      const { error } = await supabase
-        .from("campaigns")
-        .update({ status: "ended" })
-        .eq("id", campaignId);
-      
-      if (error) throw error;
-      toast.success("Campaign marked as ended");
-      fetchBrandData();
-    } catch (error) {
-      console.error("Error marking campaign as ended:", error);
-      toast.error("Failed to mark campaign as ended");
-    }
-  };
   if (loading) {
     return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
         <div className="text-white">Loading...</div>
@@ -220,18 +203,7 @@ export default function BrandDashboard() {
                           <h3 className="text-xl font-semibold text-white mb-1">
                             {campaign.title}
                           </h3>
-                          <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                            {campaign.status === "active" && (
-                              <Button 
-                                size="icon" 
-                                variant="ghost" 
-                                className="text-white/60 hover:text-white hover:bg-white/10"
-                                onClick={(e) => handleMarkAsEnded(campaign.id, e)}
-                                title="Mark as ended"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            )}
+                          <div onClick={e => e.stopPropagation()}>
                             <CreateCampaignDialog 
                               brandId={brand.id} 
                               brandName={brand.name} 
@@ -302,18 +274,7 @@ export default function BrandDashboard() {
                           <h3 className="text-xl font-semibold text-white mb-1">
                             {campaign.title}
                           </h3>
-                          <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                            {campaign.status === "active" && (
-                              <Button 
-                                size="icon" 
-                                variant="ghost" 
-                                className="text-white/60 hover:text-white hover:bg-white/10"
-                                onClick={(e) => handleMarkAsEnded(campaign.id, e)}
-                                title="Mark as ended"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            )}
+                          <div onClick={e => e.stopPropagation()}>
                             <CreateCampaignDialog 
                               brandId={brand.id} 
                               brandName={brand.name} 

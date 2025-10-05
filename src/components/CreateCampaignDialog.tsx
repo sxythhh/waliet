@@ -74,6 +74,7 @@ interface Campaign {
   is_private?: boolean;
   access_code?: string | null;
   requires_application?: boolean;
+  status?: string;
 }
 
 interface CreateCampaignDialogProps {
@@ -100,6 +101,7 @@ export function CreateCampaignDialog({
     campaign?.banner_url || null
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isCampaignEnded, setIsCampaignEnded] = useState(campaign?.status === "ended");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<CampaignFormValues>({
@@ -198,7 +200,7 @@ export function CreateCampaignDialog({
         brand_id: brandId,
         brand_name: brandName,
         banner_url: bannerUrl,
-        status: "active",
+        status: isCampaignEnded ? "ended" : "active",
         allowed_platforms: values.allowed_platforms,
         application_questions: values.application_questions,
         slug: generateSlug(values.title, campaign?.id),
@@ -677,6 +679,22 @@ export function CreateCampaignDialog({
                 />
               )}
             </div>
+
+            {/* Mark as Ended Toggle */}
+            {campaign && (
+              <div className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-[#191919]">
+                <div>
+                  <p className="text-white font-medium">Mark Campaign as Ended</p>
+                  <p className="text-xs text-white/40 mt-1">
+                    Ended campaigns will be visible but not joinable
+                  </p>
+                </div>
+                <Switch
+                  checked={isCampaignEnded}
+                  onCheckedChange={setIsCampaignEnded}
+                />
+              </div>
+            )}
 
             <div className="flex justify-between gap-3 pt-4 border-t border-white/10">
               <div>
