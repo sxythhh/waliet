@@ -218,12 +218,8 @@ export function DiscoverTab() {
               const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
 
               const handleCampaignClick = () => {
-                if (campaign.preview_url) {
-                  window.open(campaign.preview_url, '_blank');
-                } else {
-                  setSelectedCampaign(campaign);
-                  setSheetOpen(true);
-                }
+                setSelectedCampaign(campaign);
+                setSheetOpen(true);
               };
 
               return (
