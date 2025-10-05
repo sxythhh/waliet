@@ -228,7 +228,7 @@ export function CampaignsTab() {
                         <span className="text-xs text-muted-foreground font-medium">Infinite Budget</span>
                       </> : <>
                         <span className="text-base font-bold tabular-nums">${budgetUsed.toLocaleString()}</span>
-                        <span className="text-xs text-muted-foreground font-medium">/ ${campaign.budget.toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground font-bold">/ ${campaign.budget.toLocaleString()}</span>
                       </>}
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export function CampaignsTab() {
                 </div>
                 
                 {!campaign.is_infinite_budget && <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                    <span>{budgetPercentage.toFixed(0)}% used</span>
+                    <span className="font-medium">{budgetPercentage.toFixed(0)}% used</span>
                   </div>}
               </div>
 
@@ -264,9 +264,9 @@ export function CampaignsTab() {
                 </div>}
 
               {/* No Connected Accounts Alert */}
-              {!isPending && (!campaign.connected_accounts || campaign.connected_accounts.length === 0) && <Alert variant="destructive" className="py-2 px-3 border-0 bg-red-500/10">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  <AlertDescription className="text-[11px] font-inter font-semibold tracking-tight ml-6">
+              {!isPending && (!campaign.connected_accounts || campaign.connected_accounts.length === 0) && <Alert variant="destructive" className="border-0 bg-red-500/10 px-0 py-[11px]">
+                  
+                  <AlertDescription className="text-[11px] font-inter font-semibold tracking-tight ml-6 mx-[25px] py-[5px]">
                     You need to link an account to this campaign
                   </AlertDescription>
                 </Alert>}
