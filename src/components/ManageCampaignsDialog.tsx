@@ -59,7 +59,7 @@ export function ManageCampaignsDialog({
     // Fetch campaigns the user has joined
     const { data: submissions } = await supabase
       .from("campaign_submissions")
-      .select("campaign_id, campaigns(id, title, brand_name, brand_logo_url)")
+      .select("campaign_id, campaigns(id, title, brand_name, brand_logo_url, allowed_platforms)")
       .eq("creator_id", user.id);
 
     const joinedCampaignIds = submissions?.map(s => s.campaign_id) || [];
@@ -75,7 +75,8 @@ export function ManageCampaignsDialog({
           id,
           title,
           brand_name,
-          brand_logo_url
+          brand_logo_url,
+          allowed_platforms
         )
       `)
       .eq("social_account_id", accountId);
@@ -89,9 +90,16 @@ export function ManageCampaignsDialog({
     setConnectedCampaigns(connected);
 
     // Get available campaigns (joined but not connected to this account)
+    // AND that allow this account's platform
     const connectedIds = new Set(connected.map(c => c.id));
     const available = submissions
-      ?.filter(s => s.campaigns && !connectedIds.has(s.campaign_id))
+      ?.filter(s => {
+        if (!s.campaigns || connectedIds.has(s.campaign_id)) return false;
+        
+        // Check if the campaign allows this account's platform
+        const allowedPlatforms = s.campaigns.allowed_platforms || [];
+        return allowedPlatforms.includes(accountPlatform.toLowerCase());
+      })
       .map(s => s.campaigns)
       .filter((c, index, self) => 
         c && self.findIndex(t => t.id === c.id) === index
