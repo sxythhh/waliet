@@ -123,7 +123,7 @@ export function AddSocialAccountDialog({
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-card backdrop-blur-xl border-0">
+      <DialogContent className="sm:max-w-[500px] backdrop-blur-xl border-0 bg-[#0b0b0b]">
         <DialogHeader className="space-y-3">
           <DialogTitle className="text-2xl font-bold text-white">
             Connect Your Account
