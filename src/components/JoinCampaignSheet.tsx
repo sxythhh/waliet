@@ -33,6 +33,7 @@ interface Campaign {
   guidelines: string | null;
   application_questions: string[];
   requires_application?: boolean;
+  preview_url?: string | null;
   brands?: {
     logo_url: string;
   };
@@ -242,15 +243,17 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
             </div>
           </div>
 
-          {/* Campaign Preview Button */}
-          <Button
-            variant="outline"
-            className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors"
-            onClick={() => navigate(`/campaigns/${campaign.slug}`)}
-          >
-            <ArrowUp className="w-4 h-4 mr-2" />
-            <span className="font-medium">View Campaign Details</span>
-          </Button>
+          {/* Campaign Preview Button - only show if preview_url exists */}
+          {campaign.preview_url && (
+            <Button
+              variant="outline"
+              className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors"
+              onClick={() => window.open(campaign.preview_url!, '_blank')}
+            >
+              <ArrowUp className="w-4 h-4 mr-2" />
+              <span className="font-medium">View Campaign Details</span>
+            </Button>
+          )}
 
           {/* Allowed Platforms */}
           <div>
