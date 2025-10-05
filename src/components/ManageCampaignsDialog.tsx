@@ -56,11 +56,12 @@ export function ManageCampaignsDialog({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Fetch campaigns the user has joined
+    // Fetch campaigns the user has joined (approved only)
     const { data: submissions } = await supabase
       .from("campaign_submissions")
       .select("campaign_id, campaigns(id, title, brand_name, brand_logo_url, allowed_platforms)")
-      .eq("creator_id", user.id);
+      .eq("creator_id", user.id)
+      .eq("status", "approved");
 
     const joinedCampaignIds = submissions?.map(s => s.campaign_id) || [];
 
