@@ -215,9 +215,10 @@ export default function CampaignDetail() {
         </Button>
         
         <Button
-          variant="destructive"
+          variant="ghost"
           onClick={() => setShowLeaveDialog(true)}
           disabled={leavingCampaign}
+          className="bg-destructive/10 text-destructive hover:bg-destructive/20"
         >
           <LogOut className="mr-2 h-4 w-4" />
           Leave Campaign
