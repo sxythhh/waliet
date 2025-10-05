@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Check } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import DOMPurify from "dompurify";
 import { VideoEmbed } from "@/components/VideoEmbed";
@@ -180,10 +180,10 @@ export default function CourseDetail() {
               const isCompleted = completions.some(c => c.module_id === module.id);
               const isSelected = selectedModuleId === module.id;
               return <div key={module.id} className={`group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isSelected ? 'bg-white/5' : 'hover:bg-white/[0.02]'}`} onClick={() => setSelectedModuleId(module.id)}>
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isCompleted ? 'bg-green-500/10 text-green-400' : isSelected ? 'bg-white/10 text-white/80' : 'bg-white/5 text-white/40'}`}>
-                      {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isCompleted ? 'bg-[#5865F2] text-white' : isSelected ? 'bg-white/10 text-white/80' : 'bg-white/5 text-white/40'}`}>
+                      {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
                     </div>
-                    <span className={`flex-1 text-sm transition-colors ${isSelected ? 'text-white font-medium' : 'text-white/60 group-hover:text-white/80'}`}>{module.title}</span>
+                    <span className={`flex-1 text-sm transition-colors font-chakra-petch font-semibold ${isSelected ? 'text-white font-medium' : 'text-white/60 group-hover:text-white/80'}`} style={{ letterSpacing: '-0.5px' }}>{module.title}</span>
                     {isSelected}
                   </div>;
             })}
