@@ -14,8 +14,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw } from "lucide-react";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -87,6 +88,8 @@ export default function BrandManagement() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedUserForPayment, setSelectedUserForPayment] = useState<Submission | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const sidebar = useSidebar();
+  const isMobile = useIsMobile();
   useEffect(() => {
     fetchCampaigns();
   }, [slug]);
@@ -448,8 +451,19 @@ export default function BrandManagement() {
         <div className="text-white">No campaigns found</div>
       </div>;
   }
-  return <div className="min-h-screen p-8 bg-[#191919]">
+  return <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Mobile Menu Button */}
+        <div className="md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => isMobile ? sidebar.setOpenMobile(true) : sidebar.toggleSidebar()}
+            className="text-white/60 hover:text-white hover:bg-white/10"
+          >
+            {isMobile ? <Menu className="h-6 w-6" /> : <PanelLeft className="h-6 w-6" />}
+          </Button>
+        </div>
         {/* Campaign Selector */}
         
 

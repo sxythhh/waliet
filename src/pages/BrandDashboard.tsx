@@ -5,9 +5,10 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 interface Brand {
@@ -49,6 +50,7 @@ export default function BrandDashboard() {
   const [activeView, setActiveView] = useState<"campaigns" | "home">("home");
   
   const sidebar = useSidebar();
+  const isMobile = useIsMobile();
   
   const handleViewChange = (value: string) => {
     const newView = value as "campaigns" | "home";
@@ -143,11 +145,16 @@ export default function BrandDashboard() {
   
   return <div className="min-h-screen bg-[#191919]">
       {/* Header */}
-      <div className="max-w-7xl mx-auto px-8 pt-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="text-white/60 hover:text-white hover:bg-white/10">
-              <PanelLeft className="h-5 w-5" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} 
+              className="text-white/60 hover:text-white hover:bg-white/10"
+            >
+              {isMobile ? <Menu className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
             </Button>
             <h1 className="text-2xl font-bold text-white font-['Instrument_Sans'] tracking-[-0.5px]">
               {brand.name}

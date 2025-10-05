@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function BrandAccount() {
   const { slug } = useParams();
@@ -21,6 +23,8 @@ export default function BrandAccount() {
   const [saving, setSaving] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userFullName, setUserFullName] = useState("");
+  const sidebar = useSidebar();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -113,10 +117,21 @@ export default function BrandAccount() {
   // If account URL is configured, show the iframe embed
   if (accountUrl) {
     return (
-      <div className="h-screen w-full bg-[#191919]">
+      <div className="h-screen w-full bg-[#191919] flex flex-col">
+        {/* Mobile Menu Button */}
+        <div className="md:hidden p-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => sidebar.setOpenMobile(true)}
+            className="text-white/60 hover:text-white hover:bg-white/10"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </div>
         <iframe 
           src={accountUrl} 
-          className="w-full h-full border-0" 
+          className="w-full flex-1 border-0" 
           title="Account Page" 
           sandbox="allow-scripts allow-same-origin allow-forms" 
         />
@@ -126,8 +141,19 @@ export default function BrandAccount() {
 
   // Otherwise, show the configuration page (admin only)
   return (
-    <div className="min-h-screen p-8 bg-[#191919]">
+    <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto">
+        {/* Mobile Menu Button */}
+        <div className="mb-6 md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => sidebar.setOpenMobile(true)}
+            className="text-white/60 hover:text-white hover:bg-white/10"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </div>
         <h1 className="text-3xl font-bold text-white mb-6">Account Settings</h1>
         
         <div className="space-y-6">

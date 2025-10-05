@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
 import lockIcon from "@/assets/lock-icon.png";
 interface Course {
   id: string;
@@ -29,6 +31,7 @@ export default function Training() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [modules, setModules] = useState<Record<string, Module[]>>({});
   const [loading, setLoading] = useState(true);
+  const sidebar = useSidebar();
   useEffect(() => {
     fetchTrainingData();
   }, [slug]);
@@ -119,6 +122,17 @@ export default function Training() {
   }
   return <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto">
+        {/* Mobile Menu Button */}
+        <div className="mb-6 md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => sidebar.setOpenMobile(true)}
+            className="text-white/60 hover:text-white hover:bg-white/10"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </div>
         
 
         {/* Course Grid */}

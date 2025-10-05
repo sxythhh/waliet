@@ -2,11 +2,17 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function BrandAssets() {
   const { slug } = useParams();
   const [assetsUrl, setAssetsUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const sidebar = useSidebar();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchBrand = async () => {
@@ -54,10 +60,21 @@ export default function BrandAssets() {
   }
 
   return (
-    <div className="h-screen w-full bg-[#191919]">
+    <div className="h-screen w-full bg-[#191919] flex flex-col">
+      {/* Mobile Menu Button */}
+      <div className="md:hidden p-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => sidebar.setOpenMobile(true)}
+          className="text-white/60 hover:text-white hover:bg-white/10"
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
+      </div>
       <iframe
         src={assetsUrl}
-        className="w-full h-full border-0"
+        className="w-full flex-1 border-0"
         title="Brand Assets"
         allow="clipboard-read; clipboard-write"
       />
