@@ -58,7 +58,7 @@ export function AppSidebar() {
       </SidebarContent>
       
       <SidebarFooter className="p-4 border-t bg-[#0c0c0c]">
-        <Button asChild className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-medium">
+        <Button asChild className="w-full gap-2 bg-muted hover:bg-muted/80 text-white font-medium">
           <a href="https://forms.virality.gg/launch" target="_blank" rel="noopener noreferrer">
             <ArrowUpRight className="h-4 w-4" />
             Launch Campaign
