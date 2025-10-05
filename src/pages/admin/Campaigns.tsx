@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign, Copy } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -223,6 +223,17 @@ export default function AdminCampaigns() {
 
                   {/* Actions */}
                   <div className="mt-auto pt-2 flex gap-2">
+                    <Button variant="ghost" size="sm" className="h-8 px-2" onClick={e => {
+                e.stopPropagation();
+                const joinUrl = `${window.location.origin}/campaign/join/${campaign.id}`;
+                navigator.clipboard.writeText(joinUrl);
+                toast({
+                  title: "Copied!",
+                  description: "Campaign join URL copied to clipboard"
+                });
+              }}>
+                      <Copy className="w-3.5 h-3.5" />
+                    </Button>
                     <Button variant="ghost" size="sm" className="flex-1 h-8 text-[11px] font-instrument tracking-tight hover:bg-muted/50" onClick={e => {
                 e.stopPropagation();
                 openEditDialog(campaign);
