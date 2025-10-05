@@ -229,11 +229,15 @@ export function DiscoverTab() {
               return (
                 <Card
                   key={campaign.id}
-                  className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${
+                  className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative ${
                     isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
                   }`}
                   onClick={handleCampaignClick}
                 >
+                  {/* Gradient overlay for ended campaigns */}
+                  {isEnded && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />
+                  )}
                   {/* Banner Image */}
                   {campaign.banner_url && (
                     <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
@@ -244,8 +248,8 @@ export function DiscoverTab() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                       {isEnded && (
-                        <div className="absolute top-2 right-2">
-                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-red-500/10 rounded backdrop-blur-sm">
+                        <div className="absolute top-2 right-2 z-20">
+                          <span className="text-white text-xs font-medium px-2 py-1 bg-gray-600 rounded">
                             Ended
                           </span>
                         </div>
