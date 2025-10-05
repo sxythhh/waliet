@@ -365,6 +365,7 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
                 onChange={(e) => setAnswers({ ...answers, [index]: e.target.value })}
                 placeholder="Your answer..."
                 rows={3}
+                className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none"
               />
             </div>
           ))}
