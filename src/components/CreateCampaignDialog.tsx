@@ -31,6 +31,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   description: z.string().trim().max(500).optional(),
+  is_infinite_budget: z.boolean().default(false),
   budget: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Budget must be a positive number",
   }),
@@ -54,6 +55,15 @@ const campaignSchema = z.object({
 }, {
   message: "Access code must be at least 6 characters for private campaigns",
   path: ["access_code"],
+}).refine((data) => {
+  // If not infinite budget, budget is required
+  if (!data.is_infinite_budget) {
+    return data.budget && !isNaN(Number(data.budget)) && Number(data.budget) > 0;
+  }
+  return true;
+}, {
+  message: "Budget is required unless infinite budget is enabled",
+  path: ["budget"],
 });
 
 type CampaignFormValues = z.infer<typeof campaignSchema>;
@@ -75,6 +85,7 @@ interface Campaign {
   access_code?: string | null;
   requires_application?: boolean;
   status?: string;
+  is_infinite_budget?: boolean;
 }
 
 interface CreateCampaignDialogProps {
@@ -109,6 +120,7 @@ export function CreateCampaignDialog({
     defaultValues: {
       title: campaign?.title || "",
       description: campaign?.description || "",
+      is_infinite_budget: campaign?.is_infinite_budget || false,
       budget: campaign?.budget?.toString() || "",
       rpm_rate: campaign?.rpm_rate?.toString() || "",
       guidelines: campaign?.guidelines || "",
@@ -192,7 +204,8 @@ export function CreateCampaignDialog({
       const campaignData = {
         title: values.title,
         description: values.description || null,
-        budget: Number(values.budget),
+        is_infinite_budget: values.is_infinite_budget,
+        budget: values.is_infinite_budget ? 0 : Number(values.budget),
         rpm_rate: Number(values.rpm_rate),
         guidelines: values.guidelines || null,
         embed_url: values.embed_url || null,
@@ -348,6 +361,30 @@ export function CreateCampaignDialog({
               )}
             />
 
+            {/* Infinite Budget Toggle */}
+            <FormField
+              control={form.control}
+              name="is_infinite_budget"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-4 bg-[#191919]">
+                  <div className="space-y-1">
+                    <FormLabel className="text-white font-medium cursor-pointer">
+                      Infinite Budget
+                    </FormLabel>
+                    <p className="text-xs text-white/40">
+                      Campaign has unlimited budget and will never run out
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -360,7 +397,8 @@ export function CreateCampaignDialog({
                         type="number"
                         placeholder="0.00"
                         step="0.01"
-                        className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                        disabled={form.watch("is_infinite_budget")}
+                        className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary disabled:opacity-50"
                         {...field}
                       />
                     </FormControl>
