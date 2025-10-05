@@ -44,6 +44,22 @@ export function DiscoverTab() {
   const fetchCampaigns = async () => {
     setLoading(true);
 
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    let joinedCampaignIds: string[] = [];
+    
+    if (user) {
+      // Get campaigns user has already joined
+      const { data: submissions } = await supabase
+        .from("campaign_submissions")
+        .select("campaign_id")
+        .eq("creator_id", user.id)
+        .neq("status", "withdrawn");
+      
+      joinedCampaignIds = submissions?.map(s => s.campaign_id) || [];
+    }
+
     const { data, error } = await supabase
       .from("campaigns")
       .select(`
@@ -56,7 +72,12 @@ export function DiscoverTab() {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      const campaignsWithBrandLogo = data.map(campaign => ({
+      // Filter out campaigns the user has already joined
+      const availableCampaigns = data.filter(campaign => 
+        !joinedCampaignIds.includes(campaign.id)
+      );
+      
+      const campaignsWithBrandLogo = availableCampaigns.map(campaign => ({
         ...campaign,
         brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
         platforms: campaign.allowed_platforms || []
