@@ -8,6 +8,7 @@ import { Sparkles, TrendingUp, DollarSign } from "lucide-react";
 import { CampaignsTab } from "@/components/dashboard/CampaignsTab";
 import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
 import { NotificationsTab } from "@/components/dashboard/NotificationsTab";
+import { TrainingTab } from "@/components/dashboard/TrainingTab";
 import { ReferralsTab } from "@/components/dashboard/ReferralsTab";
 import { WalletTab } from "@/components/dashboard/WalletTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
@@ -55,7 +56,7 @@ export default function Dashboard() {
       tab: value
     });
   };
-  return <div className={currentTab === "discover" || currentTab === "referrals" || currentTab === "notifications" ? "" : "px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-4 sm:space-y-6 md:space-y-8"}>
+  return <div className={currentTab === "discover" || currentTab === "referrals" || currentTab === "notifications" || currentTab === "training" ? "" : "px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-4 sm:space-y-6 md:space-y-8"}>
       {/* Header - Only show on campaigns tab */}
       {currentTab === "campaigns" && <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="font-bold text-2xl">Your Campaigns</h1>
@@ -64,8 +65,8 @@ export default function Dashboard() {
           </Button>
         </div>}
 
-      {/* Sign Out button for other tabs (except discover, referrals, notifications and wallet) */}
-      {currentTab !== "campaigns" && currentTab !== "discover" && currentTab !== "referrals" && currentTab !== "notifications" && currentTab !== "wallet"}
+      {/* Sign Out button for other tabs (except discover, referrals, notifications, training and wallet) */}
+      {currentTab !== "campaigns" && currentTab !== "discover" && currentTab !== "referrals" && currentTab !== "notifications" && currentTab !== "training" && currentTab !== "wallet"}
 
       {/* Main Tabs */}
       <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
@@ -81,6 +82,10 @@ export default function Dashboard() {
         
         <TabsContent value="notifications" className="mt-0">
           <NotificationsTab />
+        </TabsContent>
+        
+        <TabsContent value="training" className="mt-0">
+          <TrainingTab />
         </TabsContent>
         
         <TabsContent value="referrals" className="mt-0">
