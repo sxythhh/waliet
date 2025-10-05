@@ -17,7 +17,6 @@ import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
-
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -42,7 +41,6 @@ interface PayoutRequest {
     };
   };
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -58,7 +56,6 @@ interface SocialAccount {
     brand_logo_url: string;
   };
 }
-
 export default function AdminPayouts() {
   const [allRequests, setAllRequests] = useState<PayoutRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +112,6 @@ export default function AdminPayouts() {
     }
     setLoading(false);
   };
-
   const fetchUserSocialAccounts = async (userId: string) => {
     setLoadingSocialAccounts(true);
     const {
@@ -147,16 +143,14 @@ export default function AdminPayouts() {
     }
     setLoadingSocialAccounts(false);
   };
-
   const fetchUserTransactions = async (userId: string) => {
     setLoadingTransactions(true);
-    const { data, error } = await supabase
-      .from("wallet_transactions")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
+    const {
+      data,
+      error
+    } = await supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", {
+      ascending: false
+    }).limit(10);
     if (error) {
       toast({
         variant: "destructive",
@@ -169,14 +163,12 @@ export default function AdminPayouts() {
     }
     setLoadingTransactions(false);
   };
-
   const openUserDetailsDialog = (profile: PayoutRequest['profiles']) => {
     setSelectedUserProfile(profile);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(profile.id);
     fetchUserTransactions(profile.id);
   };
-
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'tiktok':
@@ -210,13 +202,14 @@ export default function AdminPayouts() {
     setNotes('');
     setDialogOpen(true);
   };
-
   const handleRevertStatus = async () => {
     if (!selectedRequest) return;
-    
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-
     let newStatus: 'pending' | 'in_transit' | 'completed' | 'rejected' = 'pending';
     let updateData: any = {
       processed_at: new Date().toISOString(),
@@ -231,14 +224,12 @@ export default function AdminPayouts() {
     } else if (selectedRequest.status === 'completed') {
       newStatus = 'in_transit';
       updateData.transaction_id = null;
-      
-      // Get current wallet data first
-      const { data: walletData, error: walletFetchError } = await supabase
-        .from("wallets")
-        .select("balance, total_withdrawn")
-        .eq("user_id", selectedRequest.user_id)
-        .single();
 
+      // Get current wallet data first
+      const {
+        data: walletData,
+        error: walletFetchError
+      } = await supabase.from("wallets").select("balance, total_withdrawn").eq("user_id", selectedRequest.user_id).single();
       if (walletFetchError || !walletData) {
         toast({
           variant: "destructive",
@@ -247,19 +238,16 @@ export default function AdminPayouts() {
         });
         return;
       }
-
       const newBalance = Number(walletData.balance) + Number(selectedRequest.amount);
       const newTotalWithdrawn = Number(walletData.total_withdrawn) - Number(selectedRequest.amount);
-      
+
       // Restore wallet balance
-      const { error: walletError } = await supabase
-        .from("wallets")
-        .update({
-          balance: newBalance,
-          total_withdrawn: newTotalWithdrawn
-        })
-        .eq("user_id", selectedRequest.user_id);
-      
+      const {
+        error: walletError
+      } = await supabase.from("wallets").update({
+        balance: newBalance,
+        total_withdrawn: newTotalWithdrawn
+      }).eq("user_id", selectedRequest.user_id);
       if (walletError) {
         toast({
           variant: "destructive",
@@ -272,14 +260,10 @@ export default function AdminPayouts() {
       newStatus = 'pending';
       updateData.rejection_reason = null;
     }
-
     updateData.status = newStatus;
-
-    const { error } = await supabase
-      .from("payout_requests")
-      .update(updateData)
-      .eq("id", selectedRequest.id);
-
+    const {
+      error
+    } = await supabase.from("payout_requests").update(updateData).eq("id", selectedRequest.id);
     if (error) {
       toast({
         variant: "destructive",
@@ -296,21 +280,20 @@ export default function AdminPayouts() {
     }
   };
   const handleCompleteDirectly = async (request: PayoutRequest) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     // Find the matching pending transaction
-    const { data: pendingTransaction, error: findError } = await supabase
-      .from("wallet_transactions")
-      .select("id")
-      .eq("user_id", request.user_id)
-      .eq("type", "withdrawal")
-      .eq("amount", -Number(request.amount))
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
+    const {
+      data: pendingTransaction,
+      error: findError
+    } = await supabase.from("wallet_transactions").select("id").eq("user_id", request.user_id).eq("type", "withdrawal").eq("amount", -Number(request.amount)).eq("status", "pending").order("created_at", {
+      ascending: false
+    }).limit(1).maybeSingle();
     if (findError) {
       console.error("Error finding transaction:", findError);
       toast({
@@ -320,7 +303,6 @@ export default function AdminPayouts() {
       });
       return;
     }
-
     if (!pendingTransaction) {
       toast({
         variant: "destructive",
@@ -331,14 +313,12 @@ export default function AdminPayouts() {
     }
 
     // Update the specific transaction to completed
-    const { error: transactionError } = await supabase
-      .from("wallet_transactions")
-      .update({
-        status: 'completed',
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", pendingTransaction.id);
-
+    const {
+      error: transactionError
+    } = await supabase.from("wallet_transactions").update({
+      status: 'completed',
+      updated_at: new Date().toISOString()
+    }).eq("id", pendingTransaction.id);
     if (transactionError) {
       console.error("Failed to update transaction:", transactionError);
       toast({
@@ -348,19 +328,17 @@ export default function AdminPayouts() {
       });
       return;
     }
-
     if (transactionError) {
       console.error("Failed to update transaction:", transactionError);
     }
-
     const updateData = {
       status: 'completed' as const,
       processed_at: new Date().toISOString(),
       processed_by: session.user.id
     };
-
-    const { error } = await supabase.from("payout_requests").update(updateData).eq("id", request.id);
-
+    const {
+      error
+    } = await supabase.from("payout_requests").update(updateData).eq("id", request.id);
     if (error) {
       toast({
         variant: "destructive",
@@ -375,15 +353,12 @@ export default function AdminPayouts() {
       fetchPayoutRequests();
     }
   };
-
   const handleProcessRequest = async () => {
     if (!selectedRequest || !action) return;
-
     if (action === 'revert') {
       await handleRevertStatus();
       return;
     }
-
     const {
       data: {
         session
@@ -408,19 +383,14 @@ export default function AdminPayouts() {
       }
       updateData.status = 'rejected';
       updateData.rejection_reason = rejectionReason;
-      
-      // Find the pending withdrawal transaction
-      const { data: pendingTransaction, error: findError } = await supabase
-        .from("wallet_transactions")
-        .select("id")
-        .eq("user_id", selectedRequest.user_id)
-        .eq("type", "withdrawal")
-        .eq("amount", -Number(selectedRequest.amount))
-        .eq("status", "pending")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
 
+      // Find the pending withdrawal transaction
+      const {
+        data: pendingTransaction,
+        error: findError
+      } = await supabase.from("wallet_transactions").select("id").eq("user_id", selectedRequest.user_id).eq("type", "withdrawal").eq("amount", -Number(selectedRequest.amount)).eq("status", "pending").order("created_at", {
+        ascending: false
+      }).limit(1).maybeSingle();
       if (findError) {
         console.error("Error finding transaction:", findError);
         toast({
@@ -430,17 +400,14 @@ export default function AdminPayouts() {
         });
         return;
       }
-
       if (pendingTransaction) {
         // Update the transaction to rejected
-        const { error: transactionError } = await supabase
-          .from("wallet_transactions")
-          .update({
-            status: 'rejected',
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", pendingTransaction.id);
-
+        const {
+          error: transactionError
+        } = await supabase.from("wallet_transactions").update({
+          status: 'rejected',
+          updated_at: new Date().toISOString()
+        }).eq("id", pendingTransaction.id);
         if (transactionError) {
           console.error("Failed to update transaction:", transactionError);
           toast({
@@ -452,12 +419,10 @@ export default function AdminPayouts() {
         }
 
         // Add the money back to the wallet
-        const { data: walletData, error: walletFetchError } = await supabase
-          .from("wallets")
-          .select("balance, total_withdrawn")
-          .eq("user_id", selectedRequest.user_id)
-          .single();
-
+        const {
+          data: walletData,
+          error: walletFetchError
+        } = await supabase.from("wallets").select("balance, total_withdrawn").eq("user_id", selectedRequest.user_id).single();
         if (walletFetchError || !walletData) {
           toast({
             variant: "destructive",
@@ -470,15 +435,12 @@ export default function AdminPayouts() {
         // Restore the balance and reduce total_withdrawn
         const restoredBalance = Number(walletData.balance) + Number(selectedRequest.amount);
         const adjustedTotalWithdrawn = Number(walletData.total_withdrawn) - Number(selectedRequest.amount);
-
-        const { error: walletError } = await supabase
-          .from("wallets")
-          .update({
-            balance: restoredBalance,
-            total_withdrawn: Math.max(0, adjustedTotalWithdrawn) // Prevent negative values
-          })
-          .eq("user_id", selectedRequest.user_id);
-
+        const {
+          error: walletError
+        } = await supabase.from("wallets").update({
+          balance: restoredBalance,
+          total_withdrawn: Math.max(0, adjustedTotalWithdrawn) // Prevent negative values
+        }).eq("user_id", selectedRequest.user_id);
         if (walletError) {
           toast({
             variant: "destructive",
@@ -613,21 +575,20 @@ export default function AdminPayouts() {
                         {/* Header Row: Name, Date, Status */}
                         <div className="flex items-start justify-between gap-3 pb-2 border-b">
                           <div className="flex-1 min-w-0">
-                            <h3 
-                              className="text-base font-semibold mb-1 cursor-pointer hover:underline transition-all truncate" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (request.profiles) {
-                                  openUserDetailsDialog(request.profiles);
-                                }
-                              }}
-                            >
+                            <h3 className="text-base font-semibold mb-1 cursor-pointer hover:underline transition-all truncate" onClick={e => {
+                        e.stopPropagation();
+                        if (request.profiles) {
+                          openUserDetailsDialog(request.profiles);
+                        }
+                      }}>
                               {request.profiles?.full_name || request.profiles?.username}
                             </h3>
                             <div className="flex items-center gap-2 text-xs">
                               <span className="flex items-center gap-1 text-muted-foreground">
                                 <Clock className="h-3 w-3" />
-                                {formatDistanceToNow(new Date(request.requested_at), { addSuffix: true })}
+                                {formatDistanceToNow(new Date(request.requested_at), {
+                            addSuffix: true
+                          })}
                               </span>
                             </div>
                           </div>
@@ -636,8 +597,8 @@ export default function AdminPayouts() {
                           <div className="text-right shrink-0">
                             <p className="text-[10px] text-muted-foreground mb-0.5">Amount</p>
                             <p className="text-xl font-semibold text-success" style={{
-                              fontFamily: 'Chakra Petch, sans-serif'
-                            }}>
+                        fontFamily: 'Chakra Petch, sans-serif'
+                      }}>
                               ${Number(request.amount).toFixed(2)}
                             </p>
                           </div>
@@ -660,26 +621,19 @@ export default function AdminPayouts() {
                               {request.payout_method === 'crypto' ? 'Wallet Address' : 'Account Details'}
                             </p>
                             <p className="font-medium truncate text-xs">
-                              {request.payout_method === 'crypto' 
-                                ? `${request.payout_details?.address || request.payout_details?.wallet_address || 'N/A'} (${request.payout_details?.currency?.toUpperCase() || 'CRYPTO'})`
-                                : request.payout_details?.email || request.payout_details?.account_number || 'N/A'}
+                              {request.payout_method === 'crypto' ? `${request.payout_details?.address || request.payout_details?.wallet_address || 'N/A'} (${request.payout_details?.currency?.toUpperCase() || 'CRYPTO'})` : request.payout_details?.email || request.payout_details?.account_number || 'N/A'}
                             </p>
                           </div>
 
-                          {request.profiles?.wallets && (
-                            <>
-                              <div>
-                                <p className="text-[10px] text-muted-foreground mb-0.5">Current Balance</p>
-                                <p className="font-medium text-xs">${Number(request.profiles.wallets.balance).toFixed(2)}</p>
-                              </div>
+                          {request.profiles?.wallets && <>
+                              
                               <div>
                                 <p className="text-[10px] text-muted-foreground mb-0.5">Balance After Payout</p>
                                 <p className="font-medium text-xs">
                                   ${(Number(request.profiles.wallets.balance) + (request.status === 'rejected' ? Number(request.amount) : 0)).toFixed(2)}
                                 </p>
                               </div>
-                            </>
-                          )}
+                            </>}
 
                           {request.processed_at && <div className="col-span-2">
                               <p className="text-[10px] text-muted-foreground mb-0.5">Processed Date</p>
@@ -733,12 +687,10 @@ export default function AdminPayouts() {
                             </>}
 
 
-                          {request.status === 'rejected' && (
-                            <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
+                          {request.status === 'rejected' && <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
                               <RotateCcw className="h-3.5 w-3.5" />
                               Revert to Pending
-                            </Button>
-                          )}
+                            </Button>}
                         </div>
                       </div>
                     </CardContent>
@@ -776,16 +728,12 @@ export default function AdminPayouts() {
                   <p className="text-sm text-muted-foreground mb-2">
                     This will revert the status from <span className="font-semibold text-foreground">{selectedRequest.status}</span> to{' '}
                     <span className="font-semibold text-foreground">
-                      {selectedRequest.status === 'in_transit' ? 'pending' : 
-                       selectedRequest.status === 'completed' ? 'in transit' : 
-                       'pending'}
+                      {selectedRequest.status === 'in_transit' ? 'pending' : selectedRequest.status === 'completed' ? 'in transit' : 'pending'}
                     </span>.
                   </p>
-                  {selectedRequest.status === 'completed' && (
-                    <p className="text-sm text-warning">
+                  {selectedRequest.status === 'completed' && <p className="text-sm text-warning">
                       ⚠️ This will restore the funds to the user's wallet balance.
-                    </p>
-                  )}
+                    </p>}
                 </div>}
 
               <div className="space-y-2">
@@ -806,18 +754,6 @@ export default function AdminPayouts() {
       </Dialog>
 
       {/* User Details Dialog */}
-      <UserDetailsDialog 
-        open={userDetailsDialogOpen}
-        onOpenChange={setUserDetailsDialogOpen}
-        user={selectedUserProfile}
-        socialAccounts={userSocialAccounts}
-        transactions={userTransactions}
-        loadingSocialAccounts={loadingSocialAccounts}
-        loadingTransactions={loadingTransactions}
-        socialAccountsOpen={socialAccountsOpen}
-        onSocialAccountsOpenChange={setSocialAccountsOpen}
-        transactionsOpen={transactionsOpen}
-        onTransactionsOpenChange={setTransactionsOpen}
-      />
+      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUserProfile} socialAccounts={userSocialAccounts} transactions={userTransactions} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} />
     </div>;
 }
