@@ -170,7 +170,7 @@ export default function CourseDetail() {
       {/* Content */}
       <div className="flex">
         {/* Desktop Sidebar */}
-        <div className={`${sidebarOpen ? 'block' : 'hidden'} hidden lg:block w-80 bg-[#202020] min-h-screen transition-all duration-300`}>
+        <div className={`${sidebarOpen ? 'hidden lg:block' : 'hidden'} w-80 bg-[#202020] min-h-screen transition-all duration-300`}>
           <div className="p-4 sticky top-0 max-h-screen overflow-y-auto">
             {/* Course Info */}
             <div className="mb-4 px-0 py-0">
