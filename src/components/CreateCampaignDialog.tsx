@@ -30,6 +30,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
+  description: z.string().trim().max(500).optional(),
   budget: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Budget must be a positive number",
   }),
@@ -105,6 +106,7 @@ export function CreateCampaignDialog({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
       title: campaign?.title || "",
+      description: campaign?.description || "",
       budget: campaign?.budget?.toString() || "",
       rpm_rate: campaign?.rpm_rate?.toString() || "",
       guidelines: campaign?.guidelines || "",
@@ -187,6 +189,7 @@ export function CreateCampaignDialog({
 
       const campaignData = {
         title: values.title,
+        description: values.description || null,
         budget: Number(values.budget),
         rpm_rate: Number(values.rpm_rate),
         guidelines: values.guidelines || null,
@@ -317,6 +320,25 @@ export function CreateCampaignDialog({
                       placeholder="Enter campaign title" 
                       className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
                       {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage className="text-destructive/80" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Campaign Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Brief description of the campaign"
+                      className="resize-none bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                      rows={3}
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
@@ -523,6 +545,60 @@ export function CreateCampaignDialog({
                       )}
                     />
                   </div>
+                  <FormMessage className="text-destructive/80" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="application_questions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Application Questions (Optional, max 3)</FormLabel>
+                  <div className="space-y-2">
+                    {field.value?.map((question, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          value={question}
+                          onChange={(e) => {
+                            const newQuestions = [...(field.value || [])];
+                            newQuestions[index] = e.target.value;
+                            field.onChange(newQuestions);
+                          }}
+                          placeholder={`Question ${index + 1}`}
+                          className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newQuestions = field.value?.filter((_, i) => i !== index) || [];
+                            field.onChange(newQuestions);
+                          }}
+                          className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {(!field.value || field.value.length < 3) && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => field.onChange([...(field.value || []), ""])}
+                        className="w-full bg-[#191919] border-white/10 text-white hover:bg-white/5"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Question
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-white/40 mt-1">
+                    Custom questions for creators to answer when applying to this campaign
+                  </p>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>
               )}
