@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { ExternalLink, Package, Trash2 } from "lucide-react";
@@ -117,36 +118,42 @@ export default function AdminBrands() {
               <p className="text-lg font-medium text-muted-foreground mb-1">No brands yet</p>
               <p className="text-sm text-muted-foreground">Create your first brand to get started</p>
             </CardContent>
-          </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {brands.map(brand => <Card key={brand.id} className="group transition-all duration-200 border">
-                <CardContent className="p-6">
-                  {/* Logo & Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-12 h-12 rounded-lg object-cover border" /> : <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center border">
-                          <Package className="h-6 w-6 text-muted-foreground" />
+          </Card> : <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[80px]">Logo</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {brands.map(brand => <TableRow key={brand.id}>
+                    <TableCell>
+                      {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-10 h-10 rounded-lg object-cover border" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center border">
+                          <Package className="h-5 w-5 text-muted-foreground" />
                         </div>}
-                      <div>
-                        <h3 className="font-semibold text-lg leading-none mb-1">{brand.name}</h3>
-                        {brand.brand_type && <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
-                            {brand.brand_type}
-                          </Badge>}
+                    </TableCell>
+                    <TableCell className="font-medium">{brand.name}</TableCell>
+                    <TableCell>
+                      {brand.brand_type ? <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
+                          {brand.brand_type}
+                        </Badge> : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{brand.slug}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
+                        <Button size="sm" variant="outline" onClick={() => window.open(`/brand/${brand.slug}`, '_blank')}>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                    </div>
-                  </div>
-
-
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
-                    <Button size="sm" variant="outline" onClick={() => window.open(`/brand/${brand.slug}`, '_blank')} className="flex-1 border-0 bg-[#1a1b1a]">
-                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                      View
-                    </Button>
-
-                  </div>
-                </CardContent>
-              </Card>)}
+                    </TableCell>
+                  </TableRow>)}
+              </TableBody>
+            </Table>
           </div>}
       </div>
 
