@@ -48,10 +48,44 @@ export default function CampaignJoin() {
   const [selectedAccounts, setSelectedAccounts] = useState<SocialAccount[]>([]);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
+  const [existingSubmissions, setExistingSubmissions] = useState<Set<string>>(new Set());
   useEffect(() => {
     fetchCampaign();
     fetchSocialAccounts();
+    fetchExistingSubmissions();
   }, [slug]);
+  const fetchExistingSubmissions = async () => {
+    if (!slug) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get the campaign first
+      const { data: campaignData } = await supabase
+        .from('campaigns')
+        .select('id')
+        .eq('slug', slug)
+        .maybeSingle();
+
+      if (!campaignData) return;
+
+      // Check for existing submissions
+      const { data, error } = await supabase
+        .from('campaign_submissions')
+        .select('platform')
+        .eq('campaign_id', campaignData.id)
+        .eq('creator_id', user.id);
+
+      if (error) throw error;
+      
+      // Create a set of platforms that have already been submitted
+      const submittedPlatforms = new Set(data?.map(s => s.platform) || []);
+      setExistingSubmissions(submittedPlatforms);
+    } catch (error) {
+      console.error('Error fetching existing submissions:', error);
+    }
+  };
+
   const fetchSocialAccounts = async () => {
     try {
       const {
@@ -231,7 +265,8 @@ export default function CampaignJoin() {
                     {socialAccounts.map(account => {
                 const isLinkedToCampaign = account.campaign_id !== null;
                 const isCompatible = campaign.allowed_platforms.includes(account.platform);
-                const isDisabled = isLinkedToCampaign || !isCompatible;
+                const hasAlreadyApplied = existingSubmissions.has(account.platform);
+                const isDisabled = isLinkedToCampaign || !isCompatible || hasAlreadyApplied;
                 const isSelected = selectedAccounts.some(acc => acc.id === account.id);
                 return <div key={account.id} onClick={() => {
                   if (isDisabled) return;
@@ -251,8 +286,9 @@ export default function CampaignJoin() {
                                   @{account.username}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  {isLinkedToCampaign && "Already linked to a campaign"}
-                                  {!isCompatible && !isLinkedToCampaign && `${account.platform.charAt(0).toUpperCase() + account.platform.slice(1)} is not allowed for this campaign`}
+                                  {hasAlreadyApplied && "Already applied to this campaign"}
+                                  {isLinkedToCampaign && !hasAlreadyApplied && "Already linked to a campaign"}
+                                  {!isCompatible && !isLinkedToCampaign && !hasAlreadyApplied && `${account.platform.charAt(0).toUpperCase() + account.platform.slice(1)} is not allowed for this campaign`}
                                 </div>
                               </div>
                             </div>
