@@ -317,9 +317,9 @@ export function DiscoverTab() {
 
                           {/* Animated Infinite Progress Bar */}
                           <div 
-                            className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]"
+                            className="relative h-1.5 rounded-full overflow-hidden"
                             style={{
-                              background: 'linear-gradient(45deg, hsl(var(--primary)) 25%, transparent 25%, transparent 50%, hsl(var(--primary)) 50%, hsl(var(--primary)) 75%, transparent 75%, transparent)',
+                              background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
                               backgroundSize: '20px 20px',
                               animation: 'slide 1s linear infinite'
                             }}
