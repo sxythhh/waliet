@@ -311,18 +311,21 @@ export function ProfileTab() {
       return;
     }
 
-    // Get public URL
+    // Get public URL with cache-busting timestamp
     const {
       data: {
         publicUrl
       }
     } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    
+    // Add timestamp to prevent browser caching
+    const publicUrlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
 
     // Update profile with new avatar URL
     const {
       error: updateError
     } = await supabase.from('profiles').update({
-      avatar_url: publicUrl
+      avatar_url: publicUrl  // Store without timestamp in DB
     }).eq('id', session.user.id);
     setUploading(false);
     if (updateError) {
@@ -332,14 +335,18 @@ export function ProfileTab() {
         description: "Failed to update profile picture"
       });
     } else {
+      // Update local state with timestamp for immediate display
       setProfile({
         ...profile,
-        avatar_url: publicUrl
+        avatar_url: publicUrlWithTimestamp
       });
       toast({
         title: "Success",
         description: "Profile picture updated successfully"
       });
+      
+      // Refresh the page data to get clean URL from DB
+      setTimeout(() => fetchProfile(), 1000);
     }
   };
   const handleSaveProfile = async (e: React.FormEvent) => {
