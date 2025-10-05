@@ -122,7 +122,7 @@ export function DiscoverTab() {
               placeholder="Search campaigns..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 focus-visible:border-blue-500 focus-visible:border-2"
+              className="pl-10 placeholder:tracking-tight border-transparent focus-visible:border-blue-500 focus-visible:border-2 transition-none"
             />
           </div>
           <div className="flex gap-2">
