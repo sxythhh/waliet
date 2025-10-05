@@ -56,10 +56,11 @@ export function DiscoverTab() {
     } = await supabase.auth.getUser();
     let joinedCampaignIds: string[] = [];
     if (user) {
-      // Get campaigns user has already joined
+      // Get campaigns user has already joined or has pending applications for
+      // Allow reapplication if previously rejected
       const {
         data: submissions
-      } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id).neq("status", "withdrawn");
+      } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id).in("status", ["approved", "pending"]);
       joinedCampaignIds = submissions?.map(s => s.campaign_id) || [];
     }
     const {
