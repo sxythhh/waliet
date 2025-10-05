@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle } from "lucide-react";
+import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, Grid, List } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -120,6 +120,7 @@ export default function AdminUsers() {
   const [editScoreDialogOpen, setEditScoreDialogOpen] = useState(false);
   const [editingSubmission, setEditingSubmission] = useState<DemographicSubmission | null>(null);
   const [editScore, setEditScore] = useState("");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const {
     toast
   } = useToast();
@@ -759,16 +760,35 @@ export default function AdminUsers() {
                 </PopoverContent>
               </Popover>
             </div>
+
+            <div className="flex gap-1 mt-2">
+              <Button
+                variant={viewMode === "cards" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("cards")}
+                className="h-10 w-10"
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("table")}
+                className="h-10 w-10"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Users Gallery */}
+      {/* Users Display */}
       {filteredUsers.length === 0 ? <Card className="bg-card border-0">
           <CardContent className="text-center py-12 text-muted-foreground">
             No users found
           </CardContent>
-        </Card> : <div className="grid grid-cols-2 gap-6 w-full">
+        </Card> : viewMode === "cards" ? <div className="grid grid-cols-2 gap-6 w-full">
           {filteredUsers.map(user => {
             const balance = user.wallets?.balance || 0;
             const totalEarned = user.wallets?.total_earned || 0;
@@ -820,7 +840,70 @@ export default function AdminUsers() {
                 </CardContent>
               </Card>;
           })}
-        </div>}
+        </div> : <Card className="bg-card border-0">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border hover:bg-transparent">
+                  <TableHead>User</TableHead>
+                  <TableHead>Connected Accounts</TableHead>
+                  <TableHead className="text-right">Balance</TableHead>
+                  <TableHead className="text-right">Total Earned</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map(user => {
+                  const balance = user.wallets?.balance || 0;
+                  const totalEarned = user.wallets?.total_earned || 0;
+                  return <TableRow key={user.id} className="border-b border-border hover:bg-[#1D1D1D] cursor-pointer" onClick={() => openUserDetailsDialog(user)}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-8 w-8 rounded-full object-cover" /> : <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <UsersIcon className="h-4 w-4 text-primary" />
+                          </div>}
+                        <div>
+                          <p className="font-semibold">{user.username}</p>
+                          {user.full_name && <p className="text-xs text-muted-foreground">{user.full_name}</p>}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {user.social_accounts && user.social_accounts.length > 0 ? <div className="flex flex-wrap gap-1.5">
+                          {user.social_accounts.map(account => {
+                            const demographicStatus = account.demographic_submissions?.[0]?.status;
+                            return <div key={account.id} title={`${account.username} - ${account.follower_count.toLocaleString()} followers`} className="flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-[#282828]/50">
+                              {getPlatformIcon(account.platform)}
+                              <span className="font-medium">{account.username}</span>
+                              {demographicStatus === 'approved' && <BadgeCheck className="h-3 w-3 text-success fill-success/20" />}
+                              {demographicStatus === 'pending' && <Clock className="h-3 w-3 text-warning fill-warning/20" />}
+                              {demographicStatus === 'rejected' && <XCircle className="h-3 w-3 text-destructive fill-destructive/20" />}
+                              {!demographicStatus && <AlertCircle className="h-3 w-3 text-destructive fill-destructive/20" />}
+                            </div>;
+                          })}
+                        </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      ${balance.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold text-success">
+                      ${totalEarned.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" onClick={e => {
+                        e.stopPropagation();
+                        openPayDialog(user);
+                      }} className="gap-1">
+                        <DollarSign className="h-4 w-4" />
+                        Pay
+                      </Button>
+                    </TableCell>
+                  </TableRow>;
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>}
 
       {/* Payment Dialog */}
       <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
