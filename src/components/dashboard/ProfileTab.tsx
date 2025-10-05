@@ -122,17 +122,12 @@ export function ProfileTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-    const {
-      data
-    } = await supabase.from("social_accounts").select(`
+    
+    // Fetch social accounts with their connected campaigns through the junction table
+    const { data: accounts } = await supabase
+      .from("social_accounts")
+      .select(`
         *,
-        campaigns(
-          id,
-          title,
-          brand_name,
-          brand_logo_url,
-          brands(logo_url)
-        ),
         demographic_submissions(
           id,
           tier1_percentage,
@@ -140,19 +135,45 @@ export function ProfileTab() {
           score,
           submitted_at
         )
-      `).eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
-      ascending: false
-    });
-    if (data) {
-      // Map the data to include brand logo from brands table if campaign brand_logo_url is null
-      const accountsWithBrandLogos = data.map(account => ({
-        ...account,
-        campaigns: account.campaigns ? {
-          ...account.campaigns,
-          brand_logo_url: account.campaigns.brand_logo_url || (account.campaigns as any).brands?.logo_url
-        } : null
-      }));
-      setSocialAccounts(accountsWithBrandLogos);
+      `)
+      .eq("user_id", session.user.id)
+      .eq("is_verified", true)
+      .order("connected_at", { ascending: false });
+    
+    if (accounts) {
+      // Fetch connected campaigns for each account
+      const accountsWithCampaigns = await Promise.all(
+        accounts.map(async (account) => {
+          const { data: connections } = await supabase
+            .from("social_account_campaigns")
+            .select(`
+              id,
+              campaigns(
+                id,
+                title,
+                brand_name,
+                brand_logo_url,
+                brands(logo_url)
+              )
+            `)
+            .eq("social_account_id", account.id);
+          
+          return {
+            ...account,
+            connected_campaigns: connections?.map(conn => ({
+              connection_id: conn.id,
+              campaign: {
+                id: conn.campaigns.id,
+                title: conn.campaigns.title,
+                brand_name: conn.campaigns.brand_name,
+                brand_logo_url: conn.campaigns.brand_logo_url || conn.campaigns.brands?.logo_url
+              }
+            })) || []
+          };
+        })
+      );
+      
+      setSocialAccounts(accountsWithCampaigns);
     }
   };
   const fetchJoinedCampaigns = async () => {
@@ -460,7 +481,20 @@ export function ProfileTab() {
                         </span>}
                       </div>
                       
-                      {/* Removed old linkedCampaign display - now showing multiple campaigns above */}
+                      {/* Display connected campaigns */}
+                      {connectedCampaigns.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {connectedCampaigns.map(({ campaign }) => (
+                            <Badge 
+                              key={campaign.id} 
+                              variant="secondary" 
+                              className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20"
+                            >
+                              {campaign.title}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
