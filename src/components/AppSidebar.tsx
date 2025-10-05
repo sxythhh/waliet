@@ -46,7 +46,7 @@ export function AppSidebar() {
               {menuItems.map(item => {
               const isActive = currentTab === item.tab;
               return <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton onClick={() => handleTabClick(item.tab)} isActive={isActive} className="h-10 py-[6px] pl-3 text-[14.4px] font-semibold font-['Chakra_Petch'] tracking-[-0.5px] data-[active=true]:bg-transparent data-[active=true]:text-white data-[active=true]:font-bold hover:bg-sidebar-accent text-[#8A8A8A]">
+                    <SidebarMenuButton onClick={() => handleTabClick(item.tab)} isActive={isActive} className="h-10 py-[6px] pl-3 text-[14.4px] font-semibold font-['Chakra_Petch'] tracking-[-0.5px] data-[active=true]:bg-primary data-[active=true]:text-white data-[active=true]:font-bold hover:bg-sidebar-accent text-[#8A8A8A]">
                       <item.icon className={`h-[22px] w-[22px] ${isActive ? 'text-white' : 'text-[#6A6A6A]'}`} />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
