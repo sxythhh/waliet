@@ -65,7 +65,11 @@ export function CampaignsTab() {
       data: submissions,
       error: submissionsError
     } = await supabase.from("campaign_submissions").select("campaign_id, status").eq("creator_id", user.id).neq("status", "withdrawn");
+    
+    console.log("All submissions:", submissions);
+    
     if (submissionsError) {
+      console.error("Submissions error:", submissionsError);
       toast({
         variant: "destructive",
         title: "Error",
@@ -76,6 +80,9 @@ export function CampaignsTab() {
     }
     const campaignIds = submissions?.map(s => s.campaign_id) || [];
     const submissionStatusMap = new Map(submissions?.map(s => [s.campaign_id, s.status]) || []);
+    
+    console.log("Campaign IDs from submissions:", campaignIds);
+    
     if (campaignIds.length === 0) {
       setCampaigns([]);
       setLoading(false);
