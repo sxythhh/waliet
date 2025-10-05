@@ -72,13 +72,25 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       return;
     }
 
+    // Get all user's social accounts that match the campaign's platforms
     const { data: accounts } = await supabase
       .from("social_accounts")
       .select("*")
       .eq("user_id", user.id)
       .in("platform", campaign.platforms.map(p => p.toLowerCase()));
 
-    setSocialAccounts(accounts || []);
+    // Get accounts already connected to this campaign
+    const { data: connectedAccounts } = await supabase
+      .from("social_account_campaigns")
+      .select("social_account_id")
+      .eq("campaign_id", campaign.id);
+
+    const connectedIds = new Set(connectedAccounts?.map(c => c.social_account_id) || []);
+    
+    // Filter out already connected accounts
+    const availableAccounts = accounts?.filter(acc => !connectedIds.has(acc.id)) || [];
+    
+    setSocialAccounts(availableAccounts);
   };
 
   const handleSubmit = async () => {
@@ -109,7 +121,8 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
     try {
       const account = socialAccounts.find(a => a.id === selectedAccount);
       
-      const { error } = await supabase
+      // Create the campaign submission
+      const { error: submissionError } = await supabase
         .from("campaign_submissions")
         .insert({
           campaign_id: campaign.id,
@@ -119,9 +132,19 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           status: "pending",
         });
 
-      if (error) throw error;
+      if (submissionError) throw submissionError;
 
-      toast.success("Application submitted successfully!");
+      // Link the social account to the campaign
+      const { error: linkError } = await supabase
+        .from("social_account_campaigns")
+        .insert({
+          social_account_id: selectedAccount,
+          campaign_id: campaign.id,
+        });
+
+      if (linkError) throw linkError;
+
+      toast.success("Application submitted successfully! This account is now connected to this campaign.");
       onOpenChange(false);
       navigate("/dashboard?tab=campaigns");
     } catch (error: any) {
@@ -236,11 +259,21 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
 
           {/* Account Selection */}
           <div className="space-y-3">
-            <Label>Select Social Account *</Label>
+            <div className="flex items-center justify-between">
+              <Label>Select Social Account *</Label>
+              {socialAccounts.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Can be reused across campaigns
+                </p>
+              )}
+            </div>
             {socialAccounts.length === 0 ? (
-              <div className="p-4 rounded-lg bg-muted/50 text-center">
+              <div className="p-4 rounded-lg bg-muted/50 text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  No accounts found for this campaign's platforms
+                  No available accounts for this campaign's platforms, or all your accounts are already connected to this campaign.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Add a new social account or check your connected accounts.
                 </p>
               </div>
             ) : (

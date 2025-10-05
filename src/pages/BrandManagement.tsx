@@ -244,16 +244,30 @@ export default function BrandManagement() {
         return false;
       });
 
-      // Fetch social accounts separately - match by platform and campaign
+      // Fetch social accounts via junction table
       const submissionsWithAccounts = await Promise.all(filteredData.map(async submission => {
-        const {
-          data: accounts
-        } = await supabase.from("social_accounts").select("id, platform, username, follower_count, account_link").eq("user_id", submission.creator_id).eq("campaign_id", selectedCampaignId).eq("platform", submission.platform);
+        const { data: accountLinks } = await supabase
+          .from("social_account_campaigns")
+          .select(`
+            social_accounts (
+              id,
+              platform,
+              username,
+              follower_count,
+              account_link
+            )
+          `)
+          .eq("campaign_id", selectedCampaignId)
+          .eq("social_accounts.user_id", submission.creator_id)
+          .eq("social_accounts.platform", submission.platform);
+
+        const accounts = accountLinks?.map((link: any) => link.social_accounts).filter(Boolean) || [];
+        
         return {
           ...submission,
           profiles: {
             ...submission.profiles,
-            social_accounts: accounts || []
+            social_accounts: accounts
           }
         };
       }));

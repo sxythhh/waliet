@@ -102,10 +102,19 @@ export function CampaignsTab() {
       ascending: false
     });
 
-    // Fetch user's social accounts connected to these campaigns
-    const {
-      data: socialAccounts
-    } = await supabase.from("social_accounts").select("id, platform, username, campaign_id").eq("user_id", user.id).in("campaign_id", campaignIds);
+    // Fetch user's social accounts connected to these campaigns via junction table
+    const { data: accountCampaigns } = await supabase
+      .from("social_account_campaigns")
+      .select(`
+        campaign_id,
+        social_accounts (
+          id,
+          platform,
+          username
+        )
+      `)
+      .in("campaign_id", campaignIds)
+      .eq("social_accounts.user_id", user.id);
 
     // Group social accounts by campaign_id
     const accountsByCampaign = new Map<string, Array<{
@@ -113,16 +122,13 @@ export function CampaignsTab() {
       platform: string;
       username: string;
     }>>();
-    socialAccounts?.forEach(account => {
-      if (account.campaign_id) {
-        if (!accountsByCampaign.has(account.campaign_id)) {
-          accountsByCampaign.set(account.campaign_id, []);
+    
+    accountCampaigns?.forEach((connection: any) => {
+      if (connection.campaign_id && connection.social_accounts) {
+        if (!accountsByCampaign.has(connection.campaign_id)) {
+          accountsByCampaign.set(connection.campaign_id, []);
         }
-        accountsByCampaign.get(account.campaign_id)?.push({
-          id: account.id,
-          platform: account.platform,
-          username: account.username
-        });
+        accountsByCampaign.get(connection.campaign_id)?.push(connection.social_accounts);
       }
     });
     if (error) {

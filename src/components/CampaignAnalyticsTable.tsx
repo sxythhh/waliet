@@ -159,24 +159,29 @@ export function CampaignAnalyticsTable({
             data: profile
           } = await supabase.from("profiles").select("username, avatar_url").eq("id", item.user_id).single();
 
-          // Fetch social account for this platform (check campaign-specific first, then any)
-          let {
-            data: socialAccount
-          } = await supabase.from("social_accounts").select("id, platform, username").eq("user_id", item.user_id).eq("platform", item.platform).eq("campaign_id", campaignId).maybeSingle();
+          // Fetch social account for this platform connected to this campaign
+          let { data: socialAccount } = await supabase
+            .from("social_account_campaigns")
+            .select(`
+              social_accounts (
+                id,
+                platform,
+                username
+              )
+            `)
+            .eq("campaign_id", campaignId)
+            .eq("social_accounts.user_id", item.user_id)
+            .eq("social_accounts.platform", item.platform)
+            .maybeSingle();
 
-          // If no campaign-specific account found, try to find any social account for this user/platform
-          if (!socialAccount) {
-            const {
-              data: generalAccount
-            } = await supabase.from("social_accounts").select("id, platform, username").eq("user_id", item.user_id).eq("platform", item.platform).ilike("username", item.account_username.replace('@', '')).maybeSingle();
-            socialAccount = generalAccount;
-          }
+          // Extract the social account from the nested structure
+          const account = (socialAccount as any)?.social_accounts;
           let demographicSubmission = null;
-          if (socialAccount) {
+          if (account) {
             // Fetch most recent demographic submission for this social account
             const {
               data: submission
-            } = await supabase.from("demographic_submissions").select("id, status, submitted_at, tier1_percentage, score").eq("social_account_id", socialAccount.id).order("submitted_at", {
+            } = await supabase.from("demographic_submissions").select("id, status, submitted_at, tier1_percentage, score").eq("social_account_id", account.id).order("submitted_at", {
               ascending: false
             }).limit(1).maybeSingle();
             demographicSubmission = submission;
@@ -184,7 +189,7 @@ export function CampaignAnalyticsTable({
           return {
             ...item,
             profiles: profile,
-            social_account: socialAccount,
+            social_account: account,
             demographic_submission: demographicSubmission
           };
         }
@@ -241,37 +246,50 @@ export function CampaignAnalyticsTable({
       if (analyticsError) throw analyticsError;
 
       // Find if there's a matching social account for this user
-      const {
-        data: socialAccount,
-        error: socialError
-      } = await supabase.from('social_accounts').select('id').eq('user_id', userId).eq('campaign_id', campaignId).eq('platform', selectedAnalyticsAccount.platform).ilike('username', selectedAnalyticsAccount.account_username).maybeSingle();
-      if (socialError && socialError.code !== 'PGRST116') throw socialError;
+      const { data: existingAccount, error: accountCheckError } = await supabase
+        .from('social_accounts')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('platform', selectedAnalyticsAccount.platform)
+        .ilike('username', selectedAnalyticsAccount.account_username)
+        .maybeSingle();
+      
+      if (accountCheckError && accountCheckError.code !== 'PGRST116') throw accountCheckError;
+
+      let socialAccountId = existingAccount?.id;
 
       // If no matching social account exists, create one
-      if (!socialAccount) {
+      if (!existingAccount) {
         console.log('Creating social account for user:', userId, 'platform:', selectedAnalyticsAccount.platform);
         const insertData = {
           user_id: userId,
-          campaign_id: campaignId,
           platform: selectedAnalyticsAccount.platform,
-          username: selectedAnalyticsAccount.account_username.replace('@', ''),
-          account_link: selectedAnalyticsAccount.account_link,
-          is_verified: true,
-          follower_count: 0
+          username: selectedAnalyticsAccount.account_username,
+          account_link: selectedAnalyticsAccount.account_link || '',
         };
-        console.log('Insert data:', insertData);
+
+        const { data: newAccount, error: createError } = await supabase
+          .from('social_accounts')
+          .insert(insertData)
+          .select('id')
+          .single();
         
-        const {
-          data: newAccount,
-          error: createError
-        } = await supabase.from('social_accounts').insert(insertData).select();
-        
-        if (createError) {
-          console.error('Error creating social account:', createError);
-          throw createError;
-        }
-        console.log('Successfully created social account:', newAccount);
+        if (createError) throw createError;
+        socialAccountId = newAccount.id;
       }
+
+      // Link the social account to the campaign if not already linked
+      const { error: linkError } = await supabase
+        .from('social_account_campaigns')
+        .upsert({
+          social_account_id: socialAccountId,
+          campaign_id: campaignId,
+        }, {
+          onConflict: 'social_account_id,campaign_id'
+        });
+      
+      if (linkError) throw linkError;
+
       toast.success("Account successfully linked to user");
       setLinkAccountDialogOpen(false);
       setSelectedAnalyticsAccount(null);

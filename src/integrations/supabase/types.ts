@@ -680,6 +680,52 @@ export type Database = {
         }
         Relationships: []
       }
+      social_account_campaigns: {
+        Row: {
+          campaign_id: string
+          connected_at: string
+          created_at: string
+          id: string
+          social_account_id: string
+        }
+        Insert: {
+          campaign_id: string
+          connected_at?: string
+          created_at?: string
+          id?: string
+          social_account_id: string
+        }
+        Update: {
+          campaign_id?: string
+          connected_at?: string
+          created_at?: string
+          id?: string
+          social_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_account_campaigns_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_account_campaigns_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_account_campaigns_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_accounts: {
         Row: {
           account_link: string | null
