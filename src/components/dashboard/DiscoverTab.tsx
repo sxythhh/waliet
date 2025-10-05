@@ -42,7 +42,7 @@ export function DiscoverTab() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<string>("default");
+  const [sortBy, setSortBy] = useState<string>("popular");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export function DiscoverTab() {
               placeholder="Search campaigns..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 placeholder:tracking-tight border-transparent focus-visible:border-blue-500 focus-visible:border-2 transition-none"
+              className="h-11 pl-10 placeholder:tracking-tight border-transparent focus-visible:border-blue-500 focus-visible:border-2 transition-none"
             />
           </div>
           <Select value={sortBy} onValueChange={setSortBy}>
@@ -153,10 +153,9 @@ export function DiscoverTab() {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="popular">Most Popular</SelectItem>
               <SelectItem value="budget">Budget Remaining</SelectItem>
               <SelectItem value="rpm">Highest RPM</SelectItem>
-              <SelectItem value="popular">Most Popular</SelectItem>
             </SelectContent>
           </Select>
           <div className="flex gap-2">
