@@ -52,6 +52,7 @@ interface Submission {
   creator_id: string;
   platform: string;
   content_url: string;
+  application_answers?: { question: string; answer: string }[];
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -260,6 +261,7 @@ export default function BrandManagement() {
           creator_id,
           platform,
           content_url,
+          application_answers,
           profiles!campaign_submissions_creator_id_fkey (
             username, 
             avatar_url, 
@@ -947,6 +949,18 @@ export default function BrandManagement() {
                   return <Card key={submission.id} className="bg-[#1a1a1a] overflow-hidden rounded-xl transition-all">
                           <CardContent className="p-0">
                             <div className="p-5">
+                              {/* Application Q&A Section */}
+                              {submission.application_answers && submission.application_answers.length > 0 && (
+                                <div className="mb-4 space-y-3">
+                                  {submission.application_answers.map((qa, index) => (
+                                    <div key={index} className="bg-white/5 rounded-lg p-3">
+                                      <p className="text-xs font-medium text-white/80 mb-1.5">{qa.question}</p>
+                                      <p className="text-sm text-white/90">{qa.answer}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
                               {/* Header Section */}
                               <div className="flex items-start justify-between gap-4 mb-4">
                                 <div className="flex items-start gap-3 flex-1">
