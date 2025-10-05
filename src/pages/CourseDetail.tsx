@@ -214,7 +214,20 @@ export default function CourseDetail() {
 
                 {selectedModule.video_url && <div className="mb-8 rounded-lg overflow-hidden">
                     <div className="aspect-video bg-black">
-                      <iframe src={selectedModule.video_url} className="w-full h-full border-0" title={selectedModule.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen />
+                      {selectedModule.video_url.includes('<') ? (
+                        <div 
+                          dangerouslySetInnerHTML={{ __html: selectedModule.video_url }}
+                          className="w-full h-full"
+                        />
+                      ) : (
+                        <iframe 
+                          src={selectedModule.video_url} 
+                          className="w-full h-full border-0" 
+                          title={selectedModule.title} 
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+                          allowFullScreen 
+                        />
+                      )}
                     </div>
                   </div>}
 

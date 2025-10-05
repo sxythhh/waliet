@@ -345,11 +345,20 @@ export function ManageTrainingDialog({
                               </div>
                               
                               <div className="space-y-2">
-                                <Label className="text-white text-sm">Video URL (YouTube, Vimeo, etc.)</Label>
-                                <Input value={displayModule?.video_url || ""} onChange={e => setEditingModule({
-                          ...module,
-                          video_url: e.target.value
-                        })} className="bg-[#191919] border-white/10 text-white" placeholder="https://www.youtube.com/embed/..." />
+                                <Label className="text-white text-sm">Video Embed (YouTube, Vimeo, Wistia, etc.)</Label>
+                                <Textarea 
+                                  value={displayModule?.video_url || ""} 
+                                  onChange={e => setEditingModule({
+                                    ...module,
+                                    video_url: e.target.value
+                                  })} 
+                                  className="bg-[#191919] border-white/10 text-white font-mono text-xs" 
+                                  placeholder="Paste embed code or URL here..."
+                                  rows={4}
+                                />
+                                <p className="text-xs text-white/40">
+                                  You can paste a URL (YouTube, Vimeo) or full embed code (Wistia, etc.)
+                                </p>
                               </div>
                               
                               <div className="space-y-2">
