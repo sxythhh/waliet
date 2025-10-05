@@ -186,6 +186,12 @@ export function CampaignsTab() {
     return <div className="text-center py-12 flex flex-col items-center gap-4">
         <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
         <p className="text-slate-50 font-medium">You haven't joined any campaigns yet</p>
+        <Button 
+          onClick={() => navigate("/dashboard?tab=discover")}
+          className="mt-2 bg-primary hover:bg-primary/90"
+        >
+          Discover Campaigns
+        </Button>
       </div>;
   }
   return <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
