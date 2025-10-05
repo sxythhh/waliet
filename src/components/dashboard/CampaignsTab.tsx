@@ -197,7 +197,7 @@ export function CampaignsTab() {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
       const isPending = campaign.submission_status === 'pending';
-      return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => !isPending && navigate(`/campaign/${campaign.id}`)}>
+      return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => !isPending && navigate(`/campaign/${campaign.id}`)}>
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
