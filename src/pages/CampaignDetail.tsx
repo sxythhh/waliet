@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Campaign {
   id: string;
@@ -33,6 +34,8 @@ export default function CampaignDetail() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
+  const [leavingCampaign, setLeavingCampaign] = useState(false);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -120,6 +123,61 @@ export default function CampaignDetail() {
     }
   };
 
+  const handleLeaveCampaign = async () => {
+    if (!id) return;
+    
+    setLeavingCampaign(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please sign in to leave campaign",
+        });
+        return;
+      }
+
+      // 1. Update all campaign submissions to 'withdrawn'
+      const { error: submissionError } = await supabase
+        .from("campaign_submissions")
+        .update({ status: 'withdrawn' })
+        .eq("campaign_id", id)
+        .eq("creator_id", user.id)
+        .neq("status", "withdrawn");
+
+      if (submissionError) throw submissionError;
+
+      // 2. Unlink all social accounts from this campaign
+      const { error: accountError } = await supabase
+        .from("social_accounts")
+        .update({ campaign_id: null })
+        .eq("campaign_id", id)
+        .eq("user_id", user.id);
+
+      if (accountError) throw accountError;
+
+      toast({
+        title: "Left Campaign",
+        description: "You have successfully left this campaign",
+      });
+
+      // Redirect back to campaigns
+      navigate("/dashboard?tab=campaigns");
+    } catch (error) {
+      console.error("Error leaving campaign:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to leave campaign. Please try again.",
+      });
+    } finally {
+      setLeavingCampaign(false);
+      setShowLeaveDialog(false);
+    }
+  };
+
   if (loading || !campaign) {
     return (
       <div className="p-8">
@@ -147,13 +205,22 @@ export default function CampaignDetail() {
 
   return (
     <div className="h-screen w-full flex flex-col">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex items-center justify-between">
         <Button
           variant="ghost"
           onClick={() => navigate("/dashboard?tab=campaigns")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Campaigns
+        </Button>
+        
+        <Button
+          variant="destructive"
+          onClick={() => setShowLeaveDialog(true)}
+          disabled={leavingCampaign}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Leave Campaign
         </Button>
       </div>
       <div className="flex-1">
@@ -164,6 +231,33 @@ export default function CampaignDetail() {
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
         />
       </div>
+      
+      {/* Leave Campaign Confirmation Dialog */}
+      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Campaign?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to leave this campaign? This will:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Withdraw your application</li>
+                <li>Unlink all connected social accounts</li>
+                <li>Remove your access to campaign resources</li>
+              </ul>
+              <p className="mt-2">You can always reapply later if the campaign is still active.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleLeaveCampaign}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {leavingCampaign ? "Leaving..." : "Leave Campaign"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
