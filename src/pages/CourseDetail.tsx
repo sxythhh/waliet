@@ -196,9 +196,7 @@ export default function CourseDetail() {
               <CardContent className="p-6 md:p-8">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <div className="text-sm text-white/60 mb-2">
-                      Module {modules.findIndex(m => m.id === selectedModuleId) + 1}
-                    </div>
+                    
                     <h2 className="text-2xl md:text-3xl font-bold text-white">
                       {selectedModule.title}
                     </h2>
