@@ -168,7 +168,7 @@ export default function Training() {
               </div>
 
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-white mb-2">{course.title}</h2>
+                <h2 className="text-xl font-chakra-petch font-semibold text-white mb-2" style={{ letterSpacing: '-0.5px' }}>{course.title}</h2>
                 {course.description && (
                   <p className="text-white/60 text-sm line-clamp-3">{course.description}</p>
                 )}
