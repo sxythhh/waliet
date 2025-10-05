@@ -456,7 +456,7 @@ export function ProfileTab() {
                       
                       {/* Display connected campaigns */}
                       {connectedCampaigns.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2">
+                        <div className="flex flex-wrap gap-1.5 mt-2 justify-center">
                           {connectedCampaigns.map(({ campaign }) => (
                             <div key={campaign.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-card text-xs">
                               {campaign.brand_logo_url && (
