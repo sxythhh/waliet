@@ -19,6 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import emptyAccountsImage from "@/assets/empty-accounts.png";
 interface Profile {
   id: string;
   username: string;
@@ -404,9 +405,10 @@ export function ProfileTab() {
           </div>
         </CardHeader>
         <CardContent>
-            {socialAccounts.length === 0 ? <div className="text-center py-12 text-muted-foreground">
-              <p className="text-base font-medium">No verified accounts yet</p>
-              <p className="text-sm mt-2">Add and verify your social media accounts to start earning</p>
+            {socialAccounts.length === 0 ? <div className="text-center py-12">
+              <img src={emptyAccountsImage} alt="No accounts" className="w-24 h-24 mx-auto mb-4 opacity-80" />
+              <p className="text-base font-medium text-foreground">No connected accounts yet</p>
+              <p className="text-sm mt-2 text-muted-foreground">Add your accounts to link them to a campaign</p>
             </div> : <div className="space-y-3">
               {socialAccounts.map(account => {
             const connectedCampaigns = account.connected_campaigns || [];
