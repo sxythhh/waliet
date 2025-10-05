@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Link2, Unlink, BadgeCheck, Clock, XCircle, AlertCircle, Calendar } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-
 interface Campaign {
   id: string;
   title: string;
@@ -18,12 +17,10 @@ interface Campaign {
     logo_url: string;
   } | null;
 }
-
 interface ConnectedCampaign extends Campaign {
   connection_id: string;
   connected_at: string;
 }
-
 interface ManageAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,7 +38,6 @@ interface ManageAccountDialogProps {
   onSubmitDemographics: () => void;
   platformIcon: React.ReactNode;
 }
-
 export function ManageAccountDialog({
   open,
   onOpenChange,
@@ -54,53 +50,50 @@ export function ManageAccountDialog({
   onSubmitDemographics,
   platformIcon
 }: ManageAccountDialogProps) {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [connectedCampaigns, setConnectedCampaigns] = useState<ConnectedCampaign[]>([]);
   const [availableCampaigns, setAvailableCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
   const fetchCampaigns = async () => {
     if (!account) return;
-    
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Fetch campaigns the user has approved submissions for
-      const { data: submissions } = await supabase
-        .from('campaign_submissions')
-        .select('campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))')
-        .eq('creator_id', user.id)
-        .eq('status', 'approved');
-
+      const {
+        data: submissions
+      } = await supabase.from('campaign_submissions').select('campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))').eq('creator_id', user.id).eq('status', 'approved');
       const approvedCampaigns = submissions?.map(s => s.campaigns).filter(Boolean) as Campaign[] || [];
 
       // Fetch campaigns already connected to this social account
-      const { data: connections } = await supabase
-        .from('social_account_campaigns')
-        .select(`
+      const {
+        data: connections
+      } = await supabase.from('social_account_campaigns').select(`
           id,
           connected_at,
           campaign_id,
           campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))
-        `)
-        .eq('social_account_id', account.id);
-
+        `).eq('social_account_id', account.id);
       const connected = connections?.map(conn => ({
         ...(conn.campaigns as Campaign),
         connection_id: conn.id,
         connected_at: conn.connected_at
       })) || [];
-
       setConnectedCampaigns(connected);
 
       // Filter out already connected campaigns from available list
       const connectedIds = connected.map(c => c.id);
       const available = approvedCampaigns.filter(c => !connectedIds.includes(c.id));
       setAvailableCampaigns(available);
-
     } catch (error) {
       console.error('Error fetching campaigns:', error);
       toast({
@@ -112,23 +105,19 @@ export function ManageAccountDialog({
       setLoading(false);
     }
   };
-
   const handleLink = async (campaignId: string) => {
     try {
-      const { error } = await supabase
-        .from('social_account_campaigns')
-        .insert({
-          social_account_id: account.id,
-          campaign_id: campaignId
-        });
-
+      const {
+        error
+      } = await supabase.from('social_account_campaigns').insert({
+        social_account_id: account.id,
+        campaign_id: campaignId
+      });
       if (error) throw error;
-
       toast({
         title: "Success",
         description: "Campaign linked successfully"
       });
-
       await fetchCampaigns();
       onUpdate();
     } catch (error) {
@@ -140,21 +129,16 @@ export function ManageAccountDialog({
       });
     }
   };
-
   const handleUnlink = async (connectionId: string) => {
     try {
-      const { error } = await supabase
-        .from('social_account_campaigns')
-        .delete()
-        .eq('id', connectionId);
-
+      const {
+        error
+      } = await supabase.from('social_account_campaigns').delete().eq('id', connectionId);
       if (error) throw error;
-
       toast({
         title: "Success",
         description: "Campaign unlinked successfully"
       });
-
       await fetchCampaigns();
       onUpdate();
     } catch (error) {
@@ -166,21 +150,16 @@ export function ManageAccountDialog({
       });
     }
   };
-
   const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from('social_accounts')
-        .delete()
-        .eq('id', account.id);
-
+      const {
+        error
+      } = await supabase.from('social_accounts').delete().eq('id', account.id);
       if (error) throw error;
-
       toast({
         title: "Success",
         description: "Social account deleted successfully"
       });
-
       onUpdate();
       onOpenChange(false);
     } catch (error) {
@@ -199,9 +178,7 @@ export function ManageAccountDialog({
       fetchCampaigns();
     }
   }, [open]);
-
-  return (
-    <>
+  return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -227,16 +204,9 @@ export function ManageAccountDialog({
                 </div>
                 <p className="text-sm text-muted-foreground capitalize">{account.platform}</p>
               </div>
-              {account.account_link && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => window.open(account.account_link!, '_blank')}
-                  className="bg-muted border-0"
-                >
+              {account.account_link && <Button variant="secondary" size="sm" onClick={() => window.open(account.account_link!, '_blank')} className="bg-muted border-0">
                   View Profile
-                </Button>
-              )}
+                </Button>}
             </div>
 
             <Separator />
@@ -246,40 +216,28 @@ export function ManageAccountDialog({
               <h4 className="font-semibold text-sm">Demographics</h4>
               
               {/* Last Submission Date */}
-              {lastSubmissionDate && (
-                <div className="text-sm text-muted-foreground">
-                  Last submitted: {formatDistanceToNow(new Date(lastSubmissionDate), { addSuffix: true })}
-                </div>
-              )}
+              {lastSubmissionDate && <div className="text-sm text-muted-foreground">
+                  Last submitted: {formatDistanceToNow(new Date(lastSubmissionDate), {
+                addSuffix: true
+              })}
+                </div>}
               
               {/* Next Submission Date - only show if approved */}
-              {demographicStatus === 'approved' && nextSubmissionDate && (
-                <div className="text-sm text-muted-foreground">
+              {demographicStatus === 'approved' && nextSubmissionDate && <div className="text-sm text-muted-foreground">
                   Next submission: {format(nextSubmissionDate, "MMM d, yyyy")}
-                </div>
-              )}
+                </div>}
               
-              {demographicStatus === 'approved' && daysUntilNext !== null ? (
-                <Button variant="secondary" disabled className="w-full gap-2">
+              {demographicStatus === 'approved' && daysUntilNext !== null ? <Button variant="secondary" disabled className="w-full gap-2">
                   <Calendar className="h-4 w-4" />
                   Next submission in {daysUntilNext} days
-                </Button>
-              ) : demographicStatus === 'pending' ? (
-                <Button variant="secondary" disabled className="w-full">
+                </Button> : demographicStatus === 'pending' ? <Button variant="secondary" disabled className="w-full">
                   Pending Review
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => {
-                    onSubmitDemographics();
-                    onOpenChange(false);
-                  }}
-                  className="w-full"
-                  variant={demographicStatus === 'rejected' ? 'destructive' : 'default'}
-                >
+                </Button> : <Button onClick={() => {
+              onSubmitDemographics();
+              onOpenChange(false);
+            }} className="w-full" variant={demographicStatus === 'rejected' ? 'destructive' : 'default'}>
                   {demographicStatus === 'rejected' ? 'Resubmit Demographics' : 'Submit Demographics'}
-                </Button>
-              )}
+                </Button>}
             </div>
 
             <Separator />
@@ -287,89 +245,51 @@ export function ManageAccountDialog({
             {/* Connected Campaigns */}
             <div className="space-y-3">
               <h4 className="font-semibold text-sm">Connected Campaigns</h4>
-              {loading ? (
-                <p className="text-sm text-muted-foreground">Loading campaigns...</p>
-              ) : connectedCampaigns.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No campaigns connected yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {connectedCampaigns.map((campaign) => (
-                    <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+              {loading ? <p className="text-sm text-muted-foreground">Loading campaigns...</p> : connectedCampaigns.length === 0 ? <p className="text-sm text-muted-foreground">No campaigns connected yet</p> : <div className="space-y-2">
+                  {connectedCampaigns.map(campaign => <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                       <div className="flex items-center gap-3">
-                        {(campaign.brand_logo_url || campaign.brands?.logo_url) && (
-                          <img 
-                            src={campaign.brand_logo_url || campaign.brands?.logo_url} 
-                            alt={campaign.brand_name}
-                            className="w-8 h-8 rounded object-cover"
-                          />
-                        )}
+                        {(campaign.brand_logo_url || campaign.brands?.logo_url) && <img src={campaign.brand_logo_url || campaign.brands?.logo_url} alt={campaign.brand_name} className="w-8 h-8 rounded object-cover" />}
                         <div>
                           <p className="font-medium text-sm">{campaign.title}</p>
                           <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleUnlink(campaign.connection_id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => handleUnlink(campaign.connection_id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
                         <Unlink className="h-4 w-4" />
                       </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </div>
 
             {/* Available Campaigns */}
-            {availableCampaigns.length > 0 && (
-              <>
+            {availableCampaigns.length > 0 && <>
                 <Separator />
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm">Available to Link</h4>
                   <div className="space-y-2">
-                    {availableCampaigns.map((campaign) => (
-                      <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                    {availableCampaigns.map(campaign => <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                         <div className="flex items-center gap-3">
-                          {(campaign.brand_logo_url || campaign.brands?.logo_url) && (
-                            <img 
-                              src={campaign.brand_logo_url || campaign.brands?.logo_url} 
-                              alt={campaign.brand_name}
-                              className="w-8 h-8 rounded object-cover"
-                            />
-                          )}
+                          {(campaign.brand_logo_url || campaign.brands?.logo_url) && <img src={campaign.brand_logo_url || campaign.brands?.logo_url} alt={campaign.brand_name} className="w-8 h-8 rounded object-cover" />}
                           <div>
                             <p className="font-medium text-sm">{campaign.title}</p>
                             <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
                           </div>
                         </div>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleLink(campaign.id)}
-                          className="bg-muted border-0"
-                        >
+                        <Button variant="secondary" size="sm" onClick={() => handleLink(campaign.id)} className="bg-muted border-0">
                           <Link2 className="h-4 w-4 mr-1" />
                           Link
                         </Button>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
-              </>
-            )}
+              </>}
 
             <Separator />
 
             {/* Danger Zone */}
             <div className="space-y-3">
-              <h4 className="font-semibold text-sm text-destructive">Danger Zone</h4>
-              <Button
-                variant="destructive"
-                onClick={() => setShowDeleteDialog(true)}
-                className="w-full gap-2"
-              >
+              
+              <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="w-full gap-2">
                 <Trash2 className="h-4 w-4" />
                 Delete Account
               </Button>
@@ -395,6 +315,5 @@ export function ManageAccountDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 }
