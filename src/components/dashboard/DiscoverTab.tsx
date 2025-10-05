@@ -113,21 +113,46 @@ export function DiscoverTab() {
                                p.toLowerCase() === selectedPlatform.toLowerCase()
                              ));
       return matchesSearch && matchesPlatform;
-    })
-    .sort((a, b) => {
-      if (sortBy === "budget") {
-        const budgetRemainingA = a.budget - (a.budget_used || 0);
-        const budgetRemainingB = b.budget - (b.budget_used || 0);
-        return budgetRemainingB - budgetRemainingA;
-      }
-      if (sortBy === "rpm") {
-        return b.rpm_rate - a.rpm_rate;
-      }
-      if (sortBy === "popular") {
-        return (b.budget_used || 0) - (a.budget_used || 0);
-      }
-      return 0;
     });
+
+  // Separate active and ended campaigns
+  const activeCampaigns = filteredCampaigns.filter(c => c.status !== "ended");
+  const endedCampaigns = filteredCampaigns.filter(c => c.status === "ended");
+
+  // Sort active campaigns
+  const sortedActiveCampaigns = [...activeCampaigns].sort((a, b) => {
+    if (sortBy === "budget") {
+      const budgetRemainingA = a.budget - (a.budget_used || 0);
+      const budgetRemainingB = b.budget - (b.budget_used || 0);
+      return budgetRemainingB - budgetRemainingA;
+    }
+    if (sortBy === "rpm") {
+      return b.rpm_rate - a.rpm_rate;
+    }
+    if (sortBy === "popular") {
+      return (b.budget_used || 0) - (a.budget_used || 0);
+    }
+    return 0;
+  });
+
+  // Sort ended campaigns using the same logic
+  const sortedEndedCampaigns = [...endedCampaigns].sort((a, b) => {
+    if (sortBy === "budget") {
+      const budgetRemainingA = a.budget - (a.budget_used || 0);
+      const budgetRemainingB = b.budget - (b.budget_used || 0);
+      return budgetRemainingB - budgetRemainingA;
+    }
+    if (sortBy === "rpm") {
+      return b.rpm_rate - a.rpm_rate;
+    }
+    if (sortBy === "popular") {
+      return (b.budget_used || 0) - (a.budget_used || 0);
+    }
+    return 0;
+  });
+
+  // Combine: active campaigns first, ended campaigns last
+  const sortedCampaigns = [...sortedActiveCampaigns, ...sortedEndedCampaigns];
 
   const platforms = ["TikTok", "Instagram", "YouTube"];
 
@@ -206,14 +231,14 @@ export function DiscoverTab() {
           <div className="text-center py-12">
             <p className="text-muted-foreground">Loading campaigns...</p>
           </div>
-        ) : filteredCampaigns.length === 0 ? (
+        ) : sortedCampaigns.length === 0 ? (
           <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-slate-50 font-medium">No campaigns found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
-            {filteredCampaigns.map((campaign) => {
+            {sortedCampaigns.map((campaign) => {
               const budgetUsed = campaign.budget_used || 0;
               const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
 
