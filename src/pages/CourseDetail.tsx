@@ -150,7 +150,7 @@ export default function CourseDetail() {
   }
   return <div className="min-h-screen bg-[#191919]">
       {/* Content */}
-      <div className="flex max-w-7xl mx-auto">
+      <div className="flex">
         {/* Sidebar */}
         <div className="hidden lg:block w-80 border-r border-white/10 bg-[#202020] min-h-screen">
           <div className="p-4 sticky top-0 max-h-screen overflow-y-auto">
