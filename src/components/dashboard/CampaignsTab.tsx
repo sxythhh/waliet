@@ -264,10 +264,10 @@ export function CampaignsTab() {
                 </div>}
 
               {/* No Connected Accounts Alert */}
-              {!isPending && (!campaign.connected_accounts || campaign.connected_accounts.length === 0) && <Alert variant="destructive" className="py-2 px-3">
+              {!isPending && (!campaign.connected_accounts || campaign.connected_accounts.length === 0) && <Alert variant="destructive" className="py-2 px-3 border-0 bg-red-500/10">
                   <AlertTriangle className="h-3.5 w-3.5" />
-                  <AlertDescription className="text-[11px] font-instrument tracking-tight ml-6">
-                    Link an account to receive payment
+                  <AlertDescription className="text-[11px] font-inter font-semibold tracking-tight ml-6">
+                    You need to link an account to this campaign
                   </AlertDescription>
                 </Alert>}
 
