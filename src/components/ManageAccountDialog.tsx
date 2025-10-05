@@ -221,9 +221,10 @@ export function ManageAccountDialog({
               </div>
               {account.account_link && (
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={() => window.open(account.account_link!, '_blank')}
+                  className="bg-muted border-0"
                 >
                   View Profile
                 </Button>
@@ -321,9 +322,10 @@ export function ManageAccountDialog({
                           </div>
                         </div>
                         <Button
-                          variant="outline"
+                          variant="secondary"
                           size="sm"
                           onClick={() => handleLink(campaign.id)}
+                          className="bg-muted border-0"
                         >
                           <Link2 className="h-4 w-4 mr-1" />
                           Link
