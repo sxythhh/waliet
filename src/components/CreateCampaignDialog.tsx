@@ -43,6 +43,7 @@ const campaignSchema = z.object({
   application_questions: z.array(z.string().trim().min(1)).max(3, "Maximum 3 questions allowed"),
   is_private: z.boolean().default(false),
   access_code: z.string().trim().optional(),
+  requires_application: z.boolean().default(true),
 }).refine((data) => {
   // If campaign is private, access code is required
   if (data.is_private) {
@@ -71,6 +72,7 @@ interface Campaign {
   preview_url?: string | null;
   is_private?: boolean;
   access_code?: string | null;
+  requires_application?: boolean;
 }
 
 interface CreateCampaignDialogProps {
@@ -112,6 +114,7 @@ export function CreateCampaignDialog({
       application_questions: campaign?.application_questions || [],
       is_private: campaign?.is_private || false,
       access_code: campaign?.access_code || "",
+      requires_application: campaign?.requires_application !== false,
     },
   });
 
@@ -198,6 +201,7 @@ export function CreateCampaignDialog({
         slug: generateSlug(values.title, campaign?.id),
         is_private: values.is_private,
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
+        requires_application: values.requires_application,
       };
 
       if (campaign) {
@@ -525,6 +529,30 @@ export function CreateCampaignDialog({
             />
 
             <div className="space-y-4 p-4 bg-[#191919]/50 rounded-lg border border-white/10">
+              <FormField
+                control={form.control}
+                name="requires_application"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={!field.value}
+                        onCheckedChange={(checked) => field.onChange(!checked)}
+                        className="border-white/20 data-[state=checked]:bg-primary"
+                      />
+                    </FormControl>
+                    <div className="space-y-1">
+                      <FormLabel className="text-white font-normal cursor-pointer">
+                        Make this campaign public (instant join)
+                      </FormLabel>
+                      <p className="text-xs text-white/40">
+                        Users can join instantly without submitting an application
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="is_private"

@@ -32,6 +32,7 @@ interface Campaign {
   slug: string;
   guidelines: string | null;
   application_questions: string[];
+  requires_application?: boolean;
   brands?: {
     logo_url: string;
   };
@@ -105,8 +106,8 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       return;
     }
 
-    // Validate application questions
-    if (campaign.application_questions?.length > 0) {
+    // Validate application questions only if campaign requires application
+    if (campaign.requires_application !== false && campaign.application_questions?.length > 0) {
       const unansweredQuestions = campaign.application_questions.filter(
         (q, idx) => !answers[idx]?.trim()
       );
@@ -121,6 +122,9 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
     try {
       const account = socialAccounts.find(a => a.id === selectedAccount);
       
+      // Determine submission status based on campaign type
+      const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
+      
       // Create the campaign submission
       const { error: submissionError } = await supabase
         .from("campaign_submissions")
@@ -129,7 +133,7 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           creator_id: user.id,
           platform: account.platform,
           content_url: account.account_link || "",
-          status: "pending",
+          status: submissionStatus,
         });
 
       if (submissionError) throw submissionError;
@@ -144,7 +148,11 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
 
       if (linkError) throw linkError;
 
-      toast.success("Application submitted successfully! This account is now connected to this campaign.");
+      const successMessage = campaign.requires_application === false 
+        ? "Successfully joined the campaign! This account is now connected."
+        : "Application submitted successfully! This account is now connected to this campaign.";
+      
+      toast.success(successMessage);
       onOpenChange(false);
       navigate("/dashboard?tab=campaigns");
     } catch (error: any) {
@@ -314,8 +322,8 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
             )}
           </div>
 
-          {/* Application Questions */}
-          {campaign.application_questions?.map((question, index) => (
+          {/* Application Questions - only show if campaign requires application */}
+          {campaign.requires_application !== false && campaign.application_questions?.map((question, index) => (
             <div key={index} className="space-y-2">
               <Label htmlFor={`question-${index}`}>
                 {question} *
@@ -345,7 +353,10 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
               onClick={handleSubmit}
               disabled={submitting || !selectedAccount}
             >
-              {submitting ? "Submitting..." : "Submit Application"}
+              {submitting 
+                ? (campaign.requires_application === false ? "Joining..." : "Submitting...") 
+                : (campaign.requires_application === false ? "Join Campaign" : "Submit Application")
+              }
             </Button>
           </div>
         </div>

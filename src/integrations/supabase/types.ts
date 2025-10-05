@@ -266,6 +266,7 @@ export type Database = {
           id: string
           is_private: boolean | null
           preview_url: string | null
+          requires_application: boolean
           rpm_rate: number
           slug: string
           start_date: string | null
@@ -291,6 +292,7 @@ export type Database = {
           id?: string
           is_private?: boolean | null
           preview_url?: string | null
+          requires_application?: boolean
           rpm_rate: number
           slug: string
           start_date?: string | null
@@ -316,6 +318,7 @@ export type Database = {
           id?: string
           is_private?: boolean | null
           preview_url?: string | null
+          requires_application?: boolean
           rpm_rate?: number
           slug?: string
           start_date?: string | null
