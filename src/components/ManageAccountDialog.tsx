@@ -14,6 +14,9 @@ interface Campaign {
   title: string;
   brand_name: string;
   brand_logo_url: string | null;
+  brands?: {
+    logo_url: string;
+  } | null;
 }
 
 interface ConnectedCampaign extends Campaign {
@@ -68,7 +71,7 @@ export function ManageAccountDialog({
       // Fetch campaigns the user has approved submissions for
       const { data: submissions } = await supabase
         .from('campaign_submissions')
-        .select('campaign_id, campaigns(id, title, brand_name, brand_logo_url)')
+        .select('campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))')
         .eq('creator_id', user.id)
         .eq('status', 'approved');
 
@@ -81,7 +84,7 @@ export function ManageAccountDialog({
           id,
           connected_at,
           campaign_id,
-          campaigns(id, title, brand_name, brand_logo_url)
+          campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))
         `)
         .eq('social_account_id', account.id);
 
@@ -293,9 +296,9 @@ export function ManageAccountDialog({
                   {connectedCampaigns.map((campaign) => (
                     <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                       <div className="flex items-center gap-3">
-                        {campaign.brand_logo_url && (
+                        {(campaign.brand_logo_url || campaign.brands?.logo_url) && (
                           <img 
-                            src={campaign.brand_logo_url} 
+                            src={campaign.brand_logo_url || campaign.brands?.logo_url} 
                             alt={campaign.brand_name}
                             className="w-8 h-8 rounded object-cover"
                           />
@@ -329,9 +332,9 @@ export function ManageAccountDialog({
                     {availableCampaigns.map((campaign) => (
                       <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                         <div className="flex items-center gap-3">
-                          {campaign.brand_logo_url && (
+                          {(campaign.brand_logo_url || campaign.brands?.logo_url) && (
                             <img 
-                              src={campaign.brand_logo_url} 
+                              src={campaign.brand_logo_url || campaign.brands?.logo_url} 
                               alt={campaign.brand_name}
                               className="w-8 h-8 rounded object-cover"
                             />
