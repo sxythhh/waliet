@@ -72,6 +72,9 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
   const loadSocialAccounts = async () => {
     if (!campaign) return;
 
+    // Reset answers when loading accounts for a new campaign
+    setAnswers({});
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please sign in to join campaigns");
@@ -120,9 +123,13 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
     }
 
     // Validate application questions only if campaign requires application
-    if (campaign.requires_application !== false && campaign.application_questions?.length > 0) {
-      const unansweredQuestions = campaign.application_questions.filter(
-        (q, idx) => !answers[idx]?.trim()
+    const questions = Array.isArray(campaign.application_questions) ? campaign.application_questions : [];
+    if (campaign.requires_application !== false && questions.length > 0) {
+      const unansweredQuestions = questions.filter(
+        (q, idx) => {
+          const answer = answers[idx];
+          return !answer || answer.trim().length === 0;
+        }
       );
       if (unansweredQuestions.length > 0) {
         toast.error("Please answer all application questions");
@@ -376,7 +383,7 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           </div>
 
           {/* Application Questions - only show if campaign requires application */}
-          {campaign.requires_application !== false && campaign.application_questions?.map((question, index) => (
+          {campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => (
             <div key={index} className="space-y-2">
               <Label htmlFor={`question-${index}`}>
                 {question} *
