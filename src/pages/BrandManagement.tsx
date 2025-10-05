@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -90,6 +90,48 @@ export default function BrandManagement() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
+
+  const exportToCSV = () => {
+    const csvData = approvedSubmissions.map(submission => {
+      const linkedAccounts = submission.profiles?.social_accounts
+        ?.map(acc => `${acc.platform}:@${acc.username}`)
+        .join('; ') || 'None';
+      
+      const accountUrls = submission.profiles?.social_accounts
+        ?.map(acc => acc.account_link || '')
+        .filter(url => url)
+        .join('; ') || 'None';
+
+      const demographicStatus = submission.profiles?.social_accounts
+        ?.map(acc => `${acc.platform}:${submission.profiles.demographics_score || 0}`)
+        .join('; ') || 'None';
+
+      return {
+        'Virality Username': submission.profiles?.username || 'Unknown',
+        'Linked Accounts': linkedAccounts,
+        'Demographic Status': demographicStatus,
+        'Account URLs': accountUrls
+      };
+    });
+
+    const headers = Object.keys(csvData[0] || {});
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `active-creators-${selectedCampaign?.title || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('CSV exported successfully');
+  };
   useEffect(() => {
     fetchCampaigns();
   }, [slug]);
@@ -709,12 +751,23 @@ export default function BrandManagement() {
           <TabsContent value="creators">
             <Card className="bg-[#202020] border-0">
               <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2">
-                  
-                  Active Creators
-                  <Badge variant="secondary" className="ml-2">
-                    {approvedSubmissions.length}
-                  </Badge>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    Active Creators
+                    <Badge variant="secondary" className="ml-2">
+                      {approvedSubmissions.length}
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={exportToCSV}
+                    disabled={approvedSubmissions.length === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export CSV
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
