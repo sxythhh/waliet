@@ -328,7 +328,8 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
                 <Button 
                   onClick={() => setShowAddAccountDialog(true)} 
                   size="sm"
-                  variant="outline"
+                  className="border-0"
+                  style={{ backgroundColor: '#1F1F1F' }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Account
