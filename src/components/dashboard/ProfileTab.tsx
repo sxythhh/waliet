@@ -122,11 +122,11 @@ export function ProfileTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-
+    
     // Fetch social accounts with their connected campaigns through the junction table
-    const {
-      data: accounts
-    } = await supabase.from("social_accounts").select(`
+    const { data: accounts } = await supabase
+      .from("social_accounts")
+      .select(`
         *,
         demographic_submissions(
           id,
@@ -135,15 +135,18 @@ export function ProfileTab() {
           score,
           submitted_at
         )
-      `).eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
-      ascending: false
-    });
+      `)
+      .eq("user_id", session.user.id)
+      .eq("is_verified", true)
+      .order("connected_at", { ascending: false });
+    
     if (accounts) {
       // Fetch connected campaigns for each account
-      const accountsWithCampaigns = await Promise.all(accounts.map(async account => {
-        const {
-          data: connections
-        } = await supabase.from("social_account_campaigns").select(`
+      const accountsWithCampaigns = await Promise.all(
+        accounts.map(async (account) => {
+          const { data: connections } = await supabase
+            .from("social_account_campaigns")
+            .select(`
               id,
               campaigns(
                 id,
@@ -152,20 +155,24 @@ export function ProfileTab() {
                 brand_logo_url,
                 brands(logo_url)
               )
-            `).eq("social_account_id", account.id);
-        return {
-          ...account,
-          connected_campaigns: connections?.map(conn => ({
-            connection_id: conn.id,
-            campaign: {
-              id: conn.campaigns.id,
-              title: conn.campaigns.title,
-              brand_name: conn.campaigns.brand_name,
-              brand_logo_url: conn.campaigns.brand_logo_url || conn.campaigns.brands?.logo_url
-            }
-          })) || []
-        };
-      }));
+            `)
+            .eq("social_account_id", account.id);
+          
+          return {
+            ...account,
+            connected_campaigns: connections?.map(conn => ({
+              connection_id: conn.id,
+              campaign: {
+                id: conn.campaigns.id,
+                title: conn.campaigns.title,
+                brand_name: conn.campaigns.brand_name,
+                brand_logo_url: conn.campaigns.brand_logo_url || conn.campaigns.brands?.logo_url
+              }
+            })) || []
+          };
+        })
+      );
+      
       setSocialAccounts(accountsWithCampaigns);
     }
   };
@@ -293,7 +300,7 @@ export function ProfileTab() {
         publicUrl
       }
     } = supabase.storage.from('avatars').getPublicUrl(fileName);
-
+    
     // Add timestamp to prevent browser caching
     const publicUrlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
 
@@ -301,7 +308,7 @@ export function ProfileTab() {
     const {
       error: updateError
     } = await supabase.from('profiles').update({
-      avatar_url: publicUrl // Store without timestamp in DB
+      avatar_url: publicUrl  // Store without timestamp in DB
     }).eq('id', session.user.id);
     setUploading(false);
     if (updateError) {
@@ -326,12 +333,14 @@ export function ProfileTab() {
     e.preventDefault();
     if (!profile) return;
     setSaving(true);
+    
     try {
       const {
         data: {
           session
         }
       } = await supabase.auth.getSession();
+
       if (!session) {
         toast({
           variant: "destructive",
@@ -357,9 +366,10 @@ export function ProfileTab() {
           return;
         }
       }
-
+      
       // Clean avatar URL (remove timestamp parameter if exists)
       const cleanAvatarUrl = profile.avatar_url?.split('?')[0] || profile.avatar_url;
+      
       const {
         error
       } = await supabase.from("profiles").update({
@@ -371,6 +381,7 @@ export function ProfileTab() {
         phone_number: profile.phone_number,
         avatar_url: cleanAvatarUrl
       }).eq("id", session.user.id);
+      
       if (error) {
         console.error('Profile update error:', error);
         toast({
@@ -465,18 +476,28 @@ export function ProfileTab() {
                           {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
                           {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
                         </div>
-                        {submissionTimestamp}
+                        {submissionTimestamp && <span className="text-muted-foreground px-0 text-left font-normal text-xs">
+                          Last submitted {submissionTimestamp}
+                        </span>}
                       </div>
                       
                       {/* Display connected campaigns */}
-                      {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">
-                          {connectedCampaigns.map(({
-                    campaign
-                  }) => <div key={campaign.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-card text-xs">
-                              {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-4 h-4 rounded object-cover" />}
+                      {connectedCampaigns.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {connectedCampaigns.map(({ campaign }) => (
+                            <div key={campaign.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-card text-xs">
+                              {campaign.brand_logo_url && (
+                                <img 
+                                  src={campaign.brand_logo_url} 
+                                  alt={campaign.brand_name}
+                                  className="w-4 h-4 rounded object-cover"
+                                />
+                              )}
                               <span className="font-medium">{campaign.title}</span>
-                            </div>)}
-                        </div>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -505,14 +526,19 @@ export function ProfileTab() {
                           Submit Demographics
                         </Button>}
                        
-                      <Button variant="default" size="sm" onClick={() => {
-                  setSelectedAccountForManaging({
-                    id: account.id,
-                    username: account.username,
-                    platform: account.platform
-                  });
-                  setShowManageCampaignsDialog(true);
-                }} className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap">
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedAccountForManaging({
+                            id: account.id,
+                            username: account.username,
+                            platform: account.platform,
+                          });
+                          setShowManageCampaignsDialog(true);
+                        }}
+                        className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap"
+                      >
                         <Settings className="h-3 w-3" />
                         Manage Campaigns
                       </Button>
@@ -679,6 +705,15 @@ export function ProfileTab() {
       </AlertDialog>
 
       {/* Manage Campaigns Dialog */}
-      {selectedAccountForManaging && <ManageCampaignsDialog open={showManageCampaignsDialog} onOpenChange={setShowManageCampaignsDialog} accountId={selectedAccountForManaging.id} accountUsername={selectedAccountForManaging.username} accountPlatform={selectedAccountForManaging.platform} onUpdate={fetchSocialAccounts} />}
+      {selectedAccountForManaging && (
+        <ManageCampaignsDialog
+          open={showManageCampaignsDialog}
+          onOpenChange={setShowManageCampaignsDialog}
+          accountId={selectedAccountForManaging.id}
+          accountUsername={selectedAccountForManaging.username}
+          accountPlatform={selectedAccountForManaging.platform}
+          onUpdate={fetchSocialAccounts}
+        />
+      )}
     </div>;
 }
