@@ -5,6 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -35,6 +42,7 @@ export function DiscoverTab() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>("default");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -88,15 +96,30 @@ export function DiscoverTab() {
     setLoading(false);
   };
 
-  const filteredCampaigns = campaigns.filter(campaign => {
-    const matchesSearch = campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         campaign.brand_name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPlatform = !selectedPlatform || 
-                           (campaign.platforms && campaign.platforms.some(p => 
-                             p.toLowerCase() === selectedPlatform.toLowerCase()
-                           ));
-    return matchesSearch && matchesPlatform;
-  });
+  const filteredCampaigns = campaigns
+    .filter(campaign => {
+      const matchesSearch = campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           campaign.brand_name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPlatform = !selectedPlatform || 
+                             (campaign.platforms && campaign.platforms.some(p => 
+                               p.toLowerCase() === selectedPlatform.toLowerCase()
+                             ));
+      return matchesSearch && matchesPlatform;
+    })
+    .sort((a, b) => {
+      if (sortBy === "budget") {
+        const budgetRemainingA = a.budget - (a.budget_used || 0);
+        const budgetRemainingB = b.budget - (b.budget_used || 0);
+        return budgetRemainingB - budgetRemainingA;
+      }
+      if (sortBy === "rpm") {
+        return b.rpm_rate - a.rpm_rate;
+      }
+      if (sortBy === "popular") {
+        return (b.budget_used || 0) - (a.budget_used || 0);
+      }
+      return 0;
+    });
 
   const platforms = ["TikTok", "Instagram", "YouTube"];
 
@@ -116,7 +139,7 @@ export function DiscoverTab() {
       <div className="px-6 space-y-4">
         {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative sm:max-w-xs">
+          <div className="relative sm:max-w-xs flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search campaigns..."
@@ -125,6 +148,17 @@ export function DiscoverTab() {
               className="pl-10 placeholder:tracking-tight border-transparent focus-visible:border-blue-500 focus-visible:border-2 transition-none"
             />
           </div>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[200px] h-11 border-transparent bg-[#0F0F0F]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="budget">Budget Remaining</SelectItem>
+              <SelectItem value="rpm">Highest RPM</SelectItem>
+              <SelectItem value="popular">Most Popular</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="flex gap-2">
             <Button
               variant={selectedPlatform === null ? "default" : "outline"}
