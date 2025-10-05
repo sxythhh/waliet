@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, CheckCircle2, Circle, Check, Menu, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Check, PanelLeft, PanelLeftClose } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import DOMPurify from "dompurify";
 import { VideoEmbed } from "@/components/VideoEmbed";
@@ -151,16 +151,6 @@ export default function CourseDetail() {
       </div>;
   }
   return <div className="min-h-screen bg-[#191919]">
-      {/* Toggle Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed top-4 left-4 z-50 text-white hover:bg-white/10"
-      >
-        {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
-
       {/* Content */}
       <div className="flex">
         {/* Sidebar */}
@@ -203,12 +193,19 @@ export default function CourseDetail() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-4 md:p-8 pt-16">
+        <div className="flex-1 p-4 md:p-8">
           {selectedModule ? <Card className="bg-[#202020] border-none">
               <CardContent className="p-6 md:p-8">
                 <div className="flex items-center justify-between mb-6">
-                  <div>
-                    
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSidebarOpen(!sidebarOpen)}
+                      className="text-white hover:bg-white/10"
+                    >
+                      {sidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
+                    </Button>
                     <h2 className="text-2xl md:text-3xl font-bold text-white">
                       {selectedModule.title}
                     </h2>
