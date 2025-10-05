@@ -159,7 +159,7 @@ export function DiscoverTab() {
                 if (campaign.preview_url) {
                   window.open(campaign.preview_url, '_blank');
                 } else {
-                  navigate(`/campaign/${campaign.slug}/join`);
+                  navigate(`/join/${campaign.slug}`);
                 }
               };
 
