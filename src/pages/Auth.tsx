@@ -135,7 +135,7 @@ export default function Auth() {
                   <Input id="signin-password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none" />
                 </div>
                 
-                <Button type="submit" className="w-full h-11 mt-6" disabled={loading}>
+                <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
@@ -158,7 +158,7 @@ export default function Auth() {
                   <Input id="signup-password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-11 bg-muted border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent transition-none" />
                 </div>
                 
-                <Button type="submit" className="w-full h-11 mt-6" disabled={loading}>
+                <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
                   {loading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
