@@ -167,6 +167,9 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       console.log('Existing submissions:', existingData);
       const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
 
+      // Track if any submissions were actually created
+      let submissionsCreated = 0;
+
       // Process each selected account
       for (const accountId of selectedAccounts) {
         const account = socialAccounts.find(a => a.id === accountId);
@@ -216,13 +219,24 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           console.error('Link error:', linkError);
           throw linkError;
         }
+
+        submissionsCreated++;
       }
 
-      console.log('=== SUBMISSION SUCCESSFUL ===');
-      const accountText = selectedAccounts.length === 1 ? "account is" : "accounts are";
+      console.log('=== SUBMISSION COMPLETE ===');
+      console.log('Submissions created:', submissionsCreated);
+
+      // Show appropriate message based on what happened
+      if (submissionsCreated === 0) {
+        toast.info("You've already applied to this campaign with the selected account(s)");
+        onOpenChange(false);
+        return;
+      }
+
+      const accountText = submissionsCreated === 1 ? "account is" : "accounts are";
       const successMessage = campaign.requires_application === false 
-        ? `Successfully joined the campaign! ${selectedAccounts.length} ${accountText} now connected.`
-        : `Application submitted successfully! ${selectedAccounts.length} ${accountText} now connected to this campaign.`;
+        ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.`
+        : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
       
       toast.success(successMessage);
       onOpenChange(false);
