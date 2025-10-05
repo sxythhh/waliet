@@ -390,20 +390,18 @@ export function CreateCampaignDialog({
 
             <FormField
               control={form.control}
-              name="embed_url"
+              name="guidelines"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Campaign Brief URL</FormLabel>
+                  <FormLabel className="text-white">Campaign Guidelines</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="https://example.com/campaign-brief"
-                      className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                    <Textarea
+                      placeholder="Enter campaign guidelines and requirements"
+                      className="resize-none bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                      rows={4}
                       {...field}
                     />
                   </FormControl>
-                  <p className="text-xs text-white/40 mt-1">
-                    Enter a URL to your campaign brief or guidelines document
-                  </p>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>
               )}
