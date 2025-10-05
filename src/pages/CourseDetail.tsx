@@ -212,14 +212,17 @@ export default function CourseDetail() {
                   </Button>
                 </div>
 
-                {selectedModule.video_url && <div className="mb-8 rounded-lg overflow-hidden">
-                    <div className="aspect-video bg-black">
-                      {selectedModule.video_url.includes('<') ? (
-                        <div 
-                          dangerouslySetInnerHTML={{ __html: selectedModule.video_url }}
-                          className="w-full h-full"
-                        />
-                      ) : (
+                {selectedModule.video_url && (
+                  selectedModule.video_url.includes('<') ? (
+                    <div className="mb-8">
+                      <div 
+                        dangerouslySetInnerHTML={{ __html: selectedModule.video_url }}
+                        className="w-full flex justify-center"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mb-8 rounded-lg overflow-hidden">
+                      <div className="aspect-video bg-black">
                         <iframe 
                           src={selectedModule.video_url} 
                           className="w-full h-full border-0" 
@@ -227,9 +230,10 @@ export default function CourseDetail() {
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
                           allowFullScreen 
                         />
-                      )}
+                      </div>
                     </div>
-                  </div>}
+                  )
+                )}
 
                 {selectedModule.content && <div className="prose prose-base md:prose-lg prose-neutral dark:prose-invert max-w-none
                       prose-headings:text-white prose-headings:font-bold prose-headings:tracking-tight
