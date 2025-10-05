@@ -171,45 +171,44 @@ export default function Auth() {
                       {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+                    <DialogTrigger asChild>
+                      <button type="button" className="text-sm text-primary hover:underline">
+                        Forgot password?
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#0b0b0b] border">
+                      <DialogHeader>
+                        <DialogTitle>Reset Password</DialogTitle>
+                        <DialogDescription>
+                          Enter your email address and we'll send you a link to reset your password.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handlePasswordReset} className="space-y-4 mt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="reset-email">Email</Label>
+                          <Input
+                            id="reset-email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            required
+                            disabled={loading}
+                            className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary"
+                          />
+                        </div>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                          {loading ? "Sending..." : "Send Reset Link"}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 
                 <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
-
-                <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-                  <DialogTrigger asChild>
-                    <button type="button" className="w-full text-center text-sm text-primary hover:underline mt-3">
-                      Forgot password?
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-[#0b0b0b] border">
-                    <DialogHeader>
-                      <DialogTitle>Reset Password</DialogTitle>
-                      <DialogDescription>
-                        Enter your email address and we'll send you a link to reset your password.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handlePasswordReset} className="space-y-4 mt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-email">Email</Label>
-                        <Input
-                          id="reset-email"
-                          type="email"
-                          placeholder="you@example.com"
-                          value={resetEmail}
-                          onChange={(e) => setResetEmail(e.target.value)}
-                          required
-                          disabled={loading}
-                          className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary"
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Sending..." : "Send Reset Link"}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
               </form>
             </TabsContent>
             
