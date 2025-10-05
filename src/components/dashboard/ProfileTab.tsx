@@ -8,12 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Trash2, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
-import { ManageCampaignsDialog } from "@/components/ManageCampaignsDialog";
+import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -76,14 +76,13 @@ export function ProfileTab() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-  const [showManageCampaignsDialog, setShowManageCampaignsDialog] = useState(false);
+  const [showManageAccountDialog, setShowManageAccountDialog] = useState(false);
   const [selectedAccountForManaging, setSelectedAccountForManaging] = useState<{
     id: string;
     username: string;
     platform: string;
+    account_link?: string | null;
   } | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
   const [showDemographicsDialog, setShowDemographicsDialog] = useState(false);
   const [selectedAccountForDemographics, setSelectedAccountForDemographics] = useState<{
     id: string;
@@ -203,30 +202,7 @@ export function ProfileTab() {
       setJoinedCampaigns(Array.from(uniqueCampaignsMap.values()));
     }
   };
-  // Remove the old link/unlink functions - now handled by ManageCampaignsDialog
-  const handleDeleteAccount = async () => {
-    if (!accountToDelete) return;
-    try {
-      const {
-        error
-      } = await supabase.from('social_accounts').delete().eq('id', accountToDelete);
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Account deleted successfully"
-      });
-      fetchSocialAccounts();
-      setShowDeleteDialog(false);
-      setAccountToDelete(null);
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete account"
-      });
-    }
-  };
+  // Remove the old delete and link/unlink functions - now handled by ManageAccountDialog
   const getLinkedCampaign = (campaignId: string | null) => {
     if (!campaignId) return null;
     return joinedCampaigns.find(c => c.id === campaignId);
@@ -497,57 +473,23 @@ export function ProfileTab() {
                       )}
                     </div>
                     
-                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                      {demographicStatus === 'approved' && daysUntilNext !== null ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
-                          <Calendar className="h-3.5 w-3.5" />
-                          Next in {daysUntilNext} days
-                        </Button> : demographicStatus === 'pending' ? <Button variant="secondary" size="sm" disabled className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-muted/50 text-muted-foreground border-0 cursor-not-allowed">
-                          Pending Review
-                        </Button> : demographicStatus === 'rejected' ? <Button variant="secondary" size="sm" onClick={() => {
-                  setSelectedAccountForDemographics({
-                    id: account.id,
-                    platform: account.platform,
-                    username: account.username
-                  });
-                  setShowDemographicsDialog(true);
-                }} className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
-                          Resubmit Demographics
-                        </Button> : <Button variant="secondary" size="sm" onClick={() => {
-                  setSelectedAccountForDemographics({
-                    id: account.id,
-                    platform: account.platform,
-                    username: account.username
-                  });
-                  setShowDemographicsDialog(true);
-                }} className="h-8 gap-1.5 w-full sm:w-auto whitespace-nowrap bg-red-500 hover:bg-red-600 text-white border-0">
-                          Submit Demographics
-                        </Button>}
-                       
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedAccountForManaging({
-                            id: account.id,
-                            username: account.username,
-                            platform: account.platform,
-                          });
-                          setShowManageCampaignsDialog(true);
-                        }}
-                        className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap"
-                      >
-                        <Settings className="h-3 w-3" />
-                        Manage Campaigns
-                      </Button>
-                      
-                      <Button variant="ghost" size="sm" onClick={() => {
-                  setAccountToDelete(account.id);
-                  setShowDeleteDialog(true);
-                }} className="h-8 gap-1 w-full sm:w-auto text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <Trash2 className="h-3 w-3" />
-                        <span className="sm:hidden">Delete</span>
-                      </Button>
-                    </div>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={() => {
+                        setSelectedAccountForManaging({
+                          id: account.id,
+                          username: account.username,
+                          platform: account.platform,
+                          account_link: account.account_link,
+                        });
+                        setShowManageAccountDialog(true);
+                      }}
+                      className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap"
+                    >
+                      <Settings className="h-3 w-3" />
+                      Manage Account
+                    </Button>
                   </div>;
           })}
             </div>}
@@ -678,38 +620,41 @@ export function ProfileTab() {
       {/* Demographics Dialog */}
       {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
 
-      {/* Delete Account Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this account? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-            setShowDeleteDialog(false);
-            setAccountToDelete(null);
-          }}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Manage Campaigns Dialog */}
+      {/* Manage Account Dialog */}
       {selectedAccountForManaging && (
-        <ManageCampaignsDialog
-          open={showManageCampaignsDialog}
-          onOpenChange={setShowManageCampaignsDialog}
-          accountId={selectedAccountForManaging.id}
-          accountUsername={selectedAccountForManaging.username}
-          accountPlatform={selectedAccountForManaging.platform}
-          onUpdate={fetchSocialAccounts}
+        <ManageAccountDialog
+          open={showManageAccountDialog}
+          onOpenChange={setShowManageAccountDialog}
+          account={selectedAccountForManaging}
+          demographicStatus={
+            socialAccounts
+              .find(acc => acc.id === selectedAccountForManaging.id)
+              ?.demographic_submissions?.[0]?.status as 'approved' | 'pending' | 'rejected' | null || null
+          }
+          daysUntilNext={(() => {
+            const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
+            const latestSubmission = account?.demographic_submissions?.[0];
+            if (latestSubmission?.status === 'approved' && latestSubmission.submitted_at) {
+              const submittedDate = new Date(latestSubmission.submitted_at);
+              const nextSubmissionDate = new Date(submittedDate);
+              nextSubmissionDate.setDate(submittedDate.getDate() + 7);
+              const daysLeft = Math.ceil((nextSubmissionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+              return daysLeft > 0 ? daysLeft : null;
+            }
+            return null;
+          })()}
+          onUpdate={() => {
+            fetchSocialAccounts();
+          }}
+          onSubmitDemographics={() => {
+            setSelectedAccountForDemographics({
+              id: selectedAccountForManaging.id,
+              platform: selectedAccountForManaging.platform,
+              username: selectedAccountForManaging.username
+            });
+            setShowDemographicsDialog(true);
+          }}
+          platformIcon={getPlatformIcon(selectedAccountForManaging.platform)}
         />
       )}
     </div>;
