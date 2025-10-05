@@ -307,7 +307,10 @@ export default function CourseDetail() {
                       prose-a:text-[#5865F2] prose-a:no-underline hover:prose-a:underline
                       prose-strong:font-semibold prose-strong:text-white
                       prose-ul:my-4 prose-li:my-2 prose-li:text-white/80
-                      [&_img]:!max-w-full [&_img]:h-auto [&_img]:rounded-lg" dangerouslySetInnerHTML={{
+                      [&_img]:max-w-full [&_img]:md:max-w-[600px] [&_img]:h-auto [&_img]:rounded-lg [&_img]:my-4
+                      [&_h1]:text-white [&_h1]:text-3xl [&_h1]:md:text-4xl [&_h1]:font-bold [&_h1]:my-6
+                      [&_h2]:text-white [&_h2]:text-2xl [&_h2]:md:text-3xl [&_h2]:font-bold [&_h2]:my-5
+                      [&_h3]:text-white [&_h3]:text-xl [&_h3]:md:text-2xl [&_h3]:font-bold [&_h3]:my-4" dangerouslySetInnerHTML={{
               __html: sanitizedContent
             }} />}
               </CardContent>
