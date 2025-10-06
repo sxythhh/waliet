@@ -1113,6 +1113,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_view_profile: {
+        Args: { _profile_id: string; _viewer_id: string }
+        Returns: boolean
+      }
       decrypt_payout_details: {
         Args: { encrypted_details: string; wallet_user_id: string }
         Returns: Json
