@@ -201,9 +201,9 @@ export function WarmapTab() {
     return (
       <Card
         key={dayOffset}
-        className={`p-4 min-h-[200px] transition-all duration-200 ${
+        className={`p-4 min-h-[600px] transition-all duration-200 ${
           dragOverDay === dayOffset 
-            ? 'bg-primary/10 border-primary/50 shadow-lg scale-[1.02]' 
+            ? 'bg-muted/50' 
             : ''
         }`}
         onDragOver={(e) => handleDragOver(e, dayOffset)}
