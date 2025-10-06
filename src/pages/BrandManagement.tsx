@@ -296,17 +296,17 @@ export default function BrandManagement() {
         const { data: accountLinks } = await supabase
           .from("social_account_campaigns")
           .select(`
-            social_accounts (
+            social_accounts!inner (
               id,
               platform,
               username,
               follower_count,
-              account_link
+              account_link,
+              user_id
             )
           `)
           .eq("campaign_id", selectedCampaignId)
-          .eq("social_accounts.user_id", submission.creator_id)
-          .eq("social_accounts.platform", submission.platform);
+          .eq("social_accounts.user_id", submission.creator_id);
 
         const accounts = accountLinks?.map((link: any) => link.social_accounts).filter(Boolean) || [];
         
