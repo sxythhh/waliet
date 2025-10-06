@@ -1,1 +1,19 @@
 project_id = "upiypxzjaagithghxayv"
+
+[functions.notify-demographic-submission]
+verify_jwt = false
+
+[functions.send-application-approval]
+verify_jwt = false
+
+[functions.notify-withdrawal]
+verify_jwt = false
+
+[functions.import-transactions]
+verify_jwt = false
+
+[functions.send-brand-invitation]
+verify_jwt = false
+
+[functions.notify-campaign-application]
+verify_jwt = false
