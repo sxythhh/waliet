@@ -122,11 +122,11 @@ export function ProfileTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-    
+
     // Fetch social accounts with their connected campaigns through the junction table
-    const { data: accounts } = await supabase
-      .from("social_accounts")
-      .select(`
+    const {
+      data: accounts
+    } = await supabase.from("social_accounts").select(`
         *,
         demographic_submissions(
           id,
@@ -135,18 +135,15 @@ export function ProfileTab() {
           score,
           submitted_at
         )
-      `)
-      .eq("user_id", session.user.id)
-      .eq("is_verified", true)
-      .order("connected_at", { ascending: false });
-    
+      `).eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
+      ascending: false
+    });
     if (accounts) {
       // Fetch connected campaigns for each account
-      const accountsWithCampaigns = await Promise.all(
-        accounts.map(async (account) => {
-          const { data: connections } = await supabase
-            .from("social_account_campaigns")
-            .select(`
+      const accountsWithCampaigns = await Promise.all(accounts.map(async account => {
+        const {
+          data: connections
+        } = await supabase.from("social_account_campaigns").select(`
               id,
               campaigns(
                 id,
@@ -155,24 +152,20 @@ export function ProfileTab() {
                 brand_logo_url,
                 brands(logo_url)
               )
-            `)
-            .eq("social_account_id", account.id);
-          
-          return {
-            ...account,
-            connected_campaigns: connections?.map(conn => ({
-              connection_id: conn.id,
-              campaign: {
-                id: conn.campaigns.id,
-                title: conn.campaigns.title,
-                brand_name: conn.campaigns.brand_name,
-                brand_logo_url: conn.campaigns.brand_logo_url || conn.campaigns.brands?.logo_url
-              }
-            })) || []
-          };
-        })
-      );
-      
+            `).eq("social_account_id", account.id);
+        return {
+          ...account,
+          connected_campaigns: connections?.map(conn => ({
+            connection_id: conn.id,
+            campaign: {
+              id: conn.campaigns.id,
+              title: conn.campaigns.title,
+              brand_name: conn.campaigns.brand_name,
+              brand_logo_url: conn.campaigns.brand_logo_url || conn.campaigns.brands?.logo_url
+            }
+          })) || []
+        };
+      }));
       setSocialAccounts(accountsWithCampaigns);
     }
   };
@@ -277,7 +270,7 @@ export function ProfileTab() {
         publicUrl
       }
     } = supabase.storage.from('avatars').getPublicUrl(fileName);
-    
+
     // Add timestamp to prevent browser caching
     const publicUrlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
 
@@ -285,7 +278,7 @@ export function ProfileTab() {
     const {
       error: updateError
     } = await supabase.from('profiles').update({
-      avatar_url: publicUrl  // Store without timestamp in DB
+      avatar_url: publicUrl // Store without timestamp in DB
     }).eq('id', session.user.id);
     setUploading(false);
     if (updateError) {
@@ -310,14 +303,12 @@ export function ProfileTab() {
     e.preventDefault();
     if (!profile) return;
     setSaving(true);
-    
     try {
       const {
         data: {
           session
         }
       } = await supabase.auth.getSession();
-
       if (!session) {
         toast({
           variant: "destructive",
@@ -343,10 +334,9 @@ export function ProfileTab() {
           return;
         }
       }
-      
+
       // Clean avatar URL (remove timestamp parameter if exists)
       const cleanAvatarUrl = profile.avatar_url?.split('?')[0] || profile.avatar_url;
-      
       const {
         error
       } = await supabase.from("profiles").update({
@@ -358,7 +348,6 @@ export function ProfileTab() {
         phone_number: profile.phone_number,
         avatar_url: cleanAvatarUrl
       }).eq("id", session.user.id);
-      
       if (error) {
         console.error('Profile update error:', error);
         toast({
@@ -396,7 +385,7 @@ export function ProfileTab() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
             <div>
               <CardTitle className="text-lg">Connected Accounts</CardTitle>
-              <CardDescription>Link your verified accounts to campaigns</CardDescription>
+              
             </div>
             <Button onClick={() => setShowAddAccountDialog(true)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
@@ -457,38 +446,25 @@ export function ProfileTab() {
                       </div>
                       
                       {/* Display connected campaigns */}
-                      {connectedCampaigns.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2 justify-center">
-                          {connectedCampaigns.map(({ campaign }) => (
-                            <div key={campaign.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-card text-xs">
-                              {campaign.brand_logo_url && (
-                                <img 
-                                  src={campaign.brand_logo_url} 
-                                  alt={campaign.brand_name}
-                                  className="w-4 h-4 rounded object-cover"
-                                />
-                              )}
+                      {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2 justify-center">
+                          {connectedCampaigns.map(({
+                    campaign
+                  }) => <div key={campaign.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-card text-xs">
+                              {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-4 h-4 rounded object-cover" />}
                               <span className="font-medium">{campaign.title}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                            </div>)}
+                        </div>}
                     </div>
                     
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      onClick={() => {
-                        setSelectedAccountForManaging({
-                          id: account.id,
-                          username: account.username,
-                          platform: account.platform,
-                          account_link: account.account_link,
-                        });
-                        setShowManageAccountDialog(true);
-                      }}
-                      className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap bg-muted border-0"
-                    >
+                    <Button variant="secondary" size="sm" onClick={() => {
+                setSelectedAccountForManaging({
+                  id: account.id,
+                  username: account.username,
+                  platform: account.platform,
+                  account_link: account.account_link
+                });
+                setShowManageAccountDialog(true);
+              }} className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap bg-muted border-0">
                       <Settings className="h-3 w-3" />
                       Manage Account
                     </Button>
@@ -623,56 +599,39 @@ export function ProfileTab() {
       {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
 
       {/* Manage Account Dialog */}
-      {selectedAccountForManaging && (
-        <ManageAccountDialog
-          open={showManageAccountDialog}
-          onOpenChange={setShowManageAccountDialog}
-          account={selectedAccountForManaging}
-          demographicStatus={
-            socialAccounts
-              .find(acc => acc.id === selectedAccountForManaging.id)
-              ?.demographic_submissions?.[0]?.status as 'approved' | 'pending' | 'rejected' | null || null
-          }
-          daysUntilNext={(() => {
-            const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
-            const latestSubmission = account?.demographic_submissions?.[0];
-            if (latestSubmission?.status === 'approved' && latestSubmission.submitted_at) {
-              const submittedDate = new Date(latestSubmission.submitted_at);
-              const nextSubmissionDate = new Date(submittedDate);
-              nextSubmissionDate.setDate(submittedDate.getDate() + 7);
-              const daysLeft = Math.ceil((nextSubmissionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-              return daysLeft > 0 ? daysLeft : null;
-            }
-            return null;
-          })()}
-          lastSubmissionDate={(() => {
-            const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
-            return account?.demographic_submissions?.[0]?.submitted_at || null;
-          })()}
-          nextSubmissionDate={(() => {
-            const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
-            const latestSubmission = account?.demographic_submissions?.[0];
-            if (latestSubmission?.status === 'approved' && latestSubmission.submitted_at) {
-              const submittedDate = new Date(latestSubmission.submitted_at);
-              const nextSubmissionDate = new Date(submittedDate);
-              nextSubmissionDate.setDate(submittedDate.getDate() + 7);
-              return nextSubmissionDate;
-            }
-            return null;
-          })()}
-          onUpdate={() => {
-            fetchSocialAccounts();
-          }}
-          onSubmitDemographics={() => {
-            setSelectedAccountForDemographics({
-              id: selectedAccountForManaging.id,
-              platform: selectedAccountForManaging.platform,
-              username: selectedAccountForManaging.username
-            });
-            setShowDemographicsDialog(true);
-          }}
-          platformIcon={getPlatformIcon(selectedAccountForManaging.platform)}
-        />
-      )}
+      {selectedAccountForManaging && <ManageAccountDialog open={showManageAccountDialog} onOpenChange={setShowManageAccountDialog} account={selectedAccountForManaging} demographicStatus={socialAccounts.find(acc => acc.id === selectedAccountForManaging.id)?.demographic_submissions?.[0]?.status as 'approved' | 'pending' | 'rejected' | null || null} daysUntilNext={(() => {
+      const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
+      const latestSubmission = account?.demographic_submissions?.[0];
+      if (latestSubmission?.status === 'approved' && latestSubmission.submitted_at) {
+        const submittedDate = new Date(latestSubmission.submitted_at);
+        const nextSubmissionDate = new Date(submittedDate);
+        nextSubmissionDate.setDate(submittedDate.getDate() + 7);
+        const daysLeft = Math.ceil((nextSubmissionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        return daysLeft > 0 ? daysLeft : null;
+      }
+      return null;
+    })()} lastSubmissionDate={(() => {
+      const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
+      return account?.demographic_submissions?.[0]?.submitted_at || null;
+    })()} nextSubmissionDate={(() => {
+      const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
+      const latestSubmission = account?.demographic_submissions?.[0];
+      if (latestSubmission?.status === 'approved' && latestSubmission.submitted_at) {
+        const submittedDate = new Date(latestSubmission.submitted_at);
+        const nextSubmissionDate = new Date(submittedDate);
+        nextSubmissionDate.setDate(submittedDate.getDate() + 7);
+        return nextSubmissionDate;
+      }
+      return null;
+    })()} onUpdate={() => {
+      fetchSocialAccounts();
+    }} onSubmitDemographics={() => {
+      setSelectedAccountForDemographics({
+        id: selectedAccountForManaging.id,
+        platform: selectedAccountForManaging.platform,
+        username: selectedAccountForManaging.username
+      });
+      setShowDemographicsDialog(true);
+    }} platformIcon={getPlatformIcon(selectedAccountForManaging.platform)} />}
     </div>;
 }
