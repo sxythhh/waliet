@@ -116,8 +116,8 @@ export function ImportCampaignStatsDialog({
         for (const line of batch) {
           const values = parseCSVLine(line);
           
-          if (values.length < 13) {
-            console.warn("Skipping invalid line (expected 13 columns, got " + values.length + "):", line);
+          if (values.length < 11) {
+            console.warn("Skipping invalid line (expected at least 11 columns, got " + values.length + "):", line);
             continue;
           }
 
@@ -132,7 +132,7 @@ export function ImportCampaignStatsDialog({
               }
             }
 
-            // CSV columns: account, account_link, platform, total_videos, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked, amount_of_videos_tracked, first_video_posted, last_video_posted
+            // CSV columns: account, account_link, platform, total_videos, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked, amount_of_videos_tracked
             const record = {
               campaign_id: campaignId,
               account_username: values[0] || '',
@@ -294,7 +294,7 @@ export function ImportCampaignStatsDialog({
               className="bg-[#191919] border-white/10 text-white mt-2"
             />
             <p className="text-xs text-white/40 mt-2">
-              Expected format: account, account_link, platform, total_videos, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked, amount_of_videos_tracked, first_video_posted, last_video_posted
+              Expected format: account, account_link, platform, total_videos, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked, amount_of_videos_tracked
             </p>
           </div>
           
