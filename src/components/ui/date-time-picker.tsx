@@ -28,6 +28,9 @@ export function DateTimePicker({ date, onDateChange, placeholder = "Pick a date 
     if (date) {
       setSelectedDate(date);
       setTime(format(date, "HH:mm"));
+    } else {
+      setSelectedDate(undefined);
+      setTime("12:00");
     }
   }, [date]);
 
