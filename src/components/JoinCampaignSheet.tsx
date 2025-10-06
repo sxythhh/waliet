@@ -427,31 +427,27 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
 
           {/* Budget & RPM */}
           {!campaign.is_infinite_budget && (
-            <div className="rounded-lg p-5 space-y-4 bg-gradient-to-br from-muted/80 to-muted/40 border border-border/50">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-muted-foreground mb-1.5">RPM Rate</p>
-                  <p className="text-2xl font-bold text-foreground">${campaign.rpm_rate}</p>
-                </div>
-                <div className="h-10 w-px bg-border/50" />
-                <div className="flex-1 text-right">
-                  <p className="text-xs font-medium text-muted-foreground mb-1.5">Budget Remaining</p>
-                  <p className="text-2xl font-bold text-foreground">${budgetRemaining.toLocaleString()}</p>
-                </div>
+            <div className="rounded-lg p-4 space-y-3 bg-muted/50">
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm font-medium">Budget Progress</span>
+                <span className="text-xs text-muted-foreground">
+                  ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
+                </span>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-xs font-medium text-muted-foreground">Campaign Progress</span>
-                  <span className="text-xs font-semibold text-foreground">
-                    ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
-                  </span>
+              <div className="h-2 rounded-full overflow-hidden bg-background">
+                <div
+                  className="h-full bg-primary transition-all duration-700"
+                  style={{ width: `${budgetPercentage}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">RPM Rate</p>
+                  <p className="text-lg font-bold">${campaign.rpm_rate}</p>
                 </div>
-                <div className="h-2 rounded-full overflow-hidden bg-background/80 ring-1 ring-border/30">
-                  <div
-                    className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-700"
-                    style={{ width: `${budgetPercentage}%` }}
-                  />
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <p className="text-lg font-bold">${budgetRemaining.toLocaleString()}</p>
                 </div>
               </div>
             </div>
