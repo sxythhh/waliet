@@ -87,12 +87,12 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-border space-y-2">
+      <div className="p-4 border-t border-border flex gap-2">
         <Button
           onClick={handleSignOut}
           variant="ghost"
           className={cn(
-            "w-full justify-start hover:bg-destructive/10 hover:text-destructive",
+            "flex-1 justify-start hover:bg-destructive/10 hover:text-destructive",
             isCollapsed && "justify-center px-2"
           )}
           title={isCollapsed ? "Sign Out" : undefined}
@@ -105,10 +105,7 @@ export function AdminSidebar() {
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            "w-full justify-center h-8",
-            isCollapsed && "px-2"
-          )}
+          className="h-10 w-10 p-0 bg-muted/50 hover:bg-muted"
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
