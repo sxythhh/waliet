@@ -452,7 +452,9 @@ export function ProfileTab() {
                     campaign
                   }) => <div key={campaign.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border bg-card/50 text-xs">
                               {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-3.5 h-3.5 rounded object-cover" />}
-                              <span className="font-medium text-white/80" style={{ letterSpacing: '-0.3px' }}>{campaign.title}</span>
+                              <span style={{
+                      letterSpacing: '-0.3px'
+                    }} className="font-medium text-slate-50">{campaign.title}</span>
                             </div>)}
                         </div>}
                     </div>
