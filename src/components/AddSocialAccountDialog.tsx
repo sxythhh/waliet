@@ -30,7 +30,8 @@ const extractUsernameFromUrl = (url: string, platform: Platform): string | null 
     // Extract username based on platform
     if (platform === "tiktok" || platform === "youtube") {
       // Format: https://www.tiktok.com/@username or https://www.youtube.com/@username
-      const match = urlObj.pathname.match(/@([^/?]+)/);
+      // Handle with/without trailing slash and query params
+      const match = urlObj.pathname.match(/@([^/?#]+)/);
       return match ? match[1].toLowerCase() : null;
     }
     
