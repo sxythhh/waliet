@@ -91,6 +91,7 @@ export function InviteMemberDialog({
           brandSlug: brandResult.data.slug,
           role,
           inviterName: profileResult.data?.full_name || "A team member",
+          appUrl: window.location.origin,
         },
       });
 

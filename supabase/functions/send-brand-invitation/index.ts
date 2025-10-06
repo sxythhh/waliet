@@ -14,6 +14,7 @@ interface BrandInvitationRequest {
   brandSlug: string;
   role: string;
   inviterName: string;
+  appUrl: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -22,11 +23,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, brandName, brandSlug, role, inviterName }: BrandInvitationRequest = await req.json();
+    const { email, brandName, brandSlug, role, inviterName, appUrl }: BrandInvitationRequest = await req.json();
 
     console.log("Sending brand invitation email to:", email);
 
-    const inviteUrl = `${Deno.env.get("SUPABASE_URL")?.replace('/rest/v1', '')}/brand/${brandSlug}/account`;
+    const inviteUrl = `${appUrl}/brand/${brandSlug}/account`;
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
