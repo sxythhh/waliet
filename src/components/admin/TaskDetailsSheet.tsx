@@ -50,6 +50,7 @@ export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDet
     toast.success("Task details saved");
     setIsSaving(false);
     onUpdate();
+    onOpenChange(false);
   };
 
   if (!task) return null;
