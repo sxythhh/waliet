@@ -153,12 +153,42 @@ export function CampaignsTab() {
         }
       } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Get the submission to find the platform
+      const { data: submission } = await supabase
+        .from("campaign_submissions")
+        .select("platform")
+        .eq("campaign_id", selectedCampaignId)
+        .eq("creator_id", user.id)
+        .eq("status", "pending")
+        .single();
+
+      // Update submission status to withdrawn
       const {
         error
       } = await supabase.from("campaign_submissions").update({
         status: 'withdrawn'
       }).eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).eq("status", "pending");
       if (error) throw error;
+
+      // Also remove the social account campaign link
+      if (submission?.platform) {
+        const { data: socialAccount } = await supabase
+          .from("social_accounts")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("platform", submission.platform)
+          .single();
+
+        if (socialAccount) {
+          await supabase
+            .from("social_account_campaigns")
+            .delete()
+            .eq("social_account_id", socialAccount.id)
+            .eq("campaign_id", selectedCampaignId);
+        }
+      }
+
       toast({
         title: "Application withdrawn",
         description: "Your application has been successfully withdrawn"
