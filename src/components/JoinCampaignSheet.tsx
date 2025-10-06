@@ -160,12 +160,13 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
       console.log('Submission status:', submissionStatus);
       
-      // Check for existing submissions first
+      // Check for existing submissions first (excluding withdrawn)
       const { data: existingData } = await supabase
         .from("campaign_submissions")
         .select("platform")
         .eq("campaign_id", campaign.id)
-        .eq("creator_id", user.id);
+        .eq("creator_id", user.id)
+        .neq("status", "withdrawn");
 
       console.log('Existing submissions:', existingData);
       const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
