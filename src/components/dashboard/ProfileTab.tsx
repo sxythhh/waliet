@@ -432,7 +432,7 @@ export function ProfileTab() {
               return format(submittedDate, "MMM d, yyyy 'at' h:mm a");
             };
             const submissionTimestamp = getSubmissionTimestamp();
-            return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#0d0d0d]">
+            return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#131313]">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
                       <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent w-fit">
                         {getPlatformIcon(account.platform)}
