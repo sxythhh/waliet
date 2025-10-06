@@ -1,30 +1,41 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WarmapTab } from "@/components/admin/WarmapTab";
+import { WorkTab } from "@/components/admin/WorkTab";
+import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 
 export default function AdminOverview() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
-  };
+  const [activeTab, setActiveTab] = useState("warmap");
 
   return (
-    <div className="w-full h-full">
-      <iframe
-        src="https://virality-growth-hub.lovable.app/"
-        className="w-full h-screen border-0"
-        title="Virality Growth Hub"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
+    <div className="w-full h-full p-6">
+      <div className="max-w-7xl mx-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-fit mx-auto mb-6 bg-card rounded-full p-1 shadow-lg">
+            <TabsTrigger value="warmap" className="rounded-full px-6">
+              Warmap
+            </TabsTrigger>
+            <TabsTrigger value="work" className="rounded-full px-6">
+              Work
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-full px-6">
+              Analytics
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="warmap" className="mt-0">
+            <WarmapTab />
+          </TabsContent>
+
+          <TabsContent value="work" className="mt-0">
+            <WorkTab />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="mt-0">
+            <AnalyticsTab />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
