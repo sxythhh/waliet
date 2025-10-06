@@ -46,6 +46,7 @@ const campaignSchema = z.object({
   is_private: z.boolean().default(false),
   access_code: z.string().trim().optional(),
   requires_application: z.boolean().default(true),
+  is_featured: z.boolean().default(false),
 }).refine((data) => {
   // If campaign is private, access code is required
   if (data.is_private) {
@@ -86,6 +87,7 @@ interface Campaign {
   requires_application?: boolean;
   status?: string;
   is_infinite_budget?: boolean;
+  is_featured?: boolean;
 }
 
 interface CreateCampaignDialogProps {
@@ -131,6 +133,7 @@ export function CreateCampaignDialog({
       is_private: campaign?.is_private || false,
       access_code: campaign?.access_code || "",
       requires_application: campaign?.requires_application !== false,
+      is_featured: campaign?.is_featured || false,
     },
   });
 
@@ -220,6 +223,7 @@ export function CreateCampaignDialog({
         is_private: values.is_private,
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
+        is_featured: values.is_featured,
       };
 
       if (campaign) {
@@ -687,6 +691,30 @@ export function CreateCampaignDialog({
                       </FormLabel>
                       <p className="text-xs text-white/40">
                         Private campaigns require an access code to join and won't appear in public listings
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="is_featured"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="border-white/20 data-[state=checked]:bg-primary"
+                      />
+                    </FormControl>
+                    <div className="space-y-1">
+                      <FormLabel className="text-white font-normal cursor-pointer">
+                        Feature this campaign
+                      </FormLabel>
+                      <p className="text-xs text-white/40">
+                        Featured campaigns appear first on the discover page with a special badge
                       </p>
                     </div>
                   </FormItem>

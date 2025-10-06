@@ -30,6 +30,7 @@ interface Campaign {
   guidelines: string | null;
   application_questions: string[];
   is_infinite_budget?: boolean;
+  is_featured?: boolean;
   brands?: {
     logo_url: string;
   };
@@ -98,8 +99,13 @@ export function DiscoverTab() {
   const activeCampaigns = filteredCampaigns.filter(c => c.status !== "ended");
   const endedCampaigns = filteredCampaigns.filter(c => c.status === "ended");
 
-  // Sort active campaigns
+  // Sort active campaigns - featured campaigns always appear first
   const sortedActiveCampaigns = [...activeCampaigns].sort((a, b) => {
+    // Featured campaigns always come first
+    if (a.is_featured && !b.is_featured) return -1;
+    if (!a.is_featured && b.is_featured) return 1;
+    
+    // Then apply the selected sorting
     if (sortBy === "budget") {
       const budgetRemainingA = a.budget - (a.budget_used || 0);
       const budgetRemainingB = b.budget - (b.budget_used || 0);
@@ -203,6 +209,11 @@ export function DiscoverTab() {
                       {isEnded && <div className="absolute top-2 right-2 z-20">
                           <span className="text-red-500 text-xs font-medium px-2 py-1 bg-[#1a1a1a] rounded">
                             Ended
+                          </span>
+                        </div>}
+                      {!isEnded && campaign.is_featured && <div className="absolute top-2 right-2 z-20">
+                          <span className="text-primary text-xs font-medium px-2 py-1 bg-[#1a1a1a]/90 backdrop-blur-sm rounded border border-primary/20">
+                            Featured
                           </span>
                         </div>}
                     </div>}

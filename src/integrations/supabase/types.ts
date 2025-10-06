@@ -267,6 +267,7 @@ export type Database = {
           end_date: string | null
           guidelines: string | null
           id: string
+          is_featured: boolean
           is_infinite_budget: boolean | null
           is_private: boolean | null
           preview_url: string | null
@@ -294,6 +295,7 @@ export type Database = {
           end_date?: string | null
           guidelines?: string | null
           id?: string
+          is_featured?: boolean
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
           preview_url?: string | null
@@ -321,6 +323,7 @@ export type Database = {
           end_date?: string | null
           guidelines?: string | null
           id?: string
+          is_featured?: boolean
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
           preview_url?: string | null
