@@ -282,21 +282,46 @@ export default function CampaignJoin() {
       // Send Discord notification if submissions were created
       if (submissionsCreated > 0) {
         try {
+          console.log('Preparing to send Discord notification...');
+          
           // Get user profile
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('username, email')
             .eq('id', user.id)
             .single();
 
-          const brandSlug = campaign.brands?.slug || '';
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+          }
+
+          // Get brand slug
+          const { data: brandData, error: brandError } = await supabase
+            .from('brands')
+            .select('slug')
+            .eq('id', campaign.brand_id)
+            .single();
+
+          if (brandError) {
+            console.error('Brand fetch error:', brandError);
+          }
+
+          const brandSlug = brandData?.slug || '';
+          console.log('Brand slug:', brandSlug);
 
           const formattedAnswers = campaign.application_questions?.map((question, index) => ({
             question,
             answer: answers[index] || ""
           })) || [];
 
-          await supabase.functions.invoke('notify-campaign-application', {
+          console.log('Invoking edge function with data:', {
+            username: profile?.username,
+            campaign_name: campaign.title,
+            brand_slug: brandSlug,
+            accounts_count: submittedAccountsData.length
+          });
+
+          const { data: functionData, error: functionError } = await supabase.functions.invoke('notify-campaign-application', {
             body: {
               username: profile?.username || 'Unknown',
               email: profile?.email || 'Unknown',
@@ -309,6 +334,12 @@ export default function CampaignJoin() {
               submitted_at: new Date().toISOString()
             }
           });
+
+          if (functionError) {
+            console.error('Edge function error:', functionError);
+          } else {
+            console.log('Discord notification sent successfully:', functionData);
+          }
         } catch (webhookError) {
           console.error('Failed to send Discord notification:', webhookError);
           // Don't fail the submission if webhook fails
