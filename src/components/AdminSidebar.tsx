@@ -60,17 +60,6 @@ export function AdminSidebar() {
       "h-screen border-r border-border bg-card flex flex-col sticky top-0 transition-all duration-300",
       isCollapsed ? "w-16" : "w-64"
     )}>
-      <div className="flex justify-end p-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-8 w-8 p-0"
-        >
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      </div>
-
       <nav className="flex-1 p-4 space-y-1">
         {menuItems.map((item) => {
           const active = isActive(item.path);
@@ -83,11 +72,11 @@ export function AdminSidebar() {
                 active
                   ? "bg-blue-500 text-white"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                isCollapsed && "justify-center"
+                isCollapsed && "justify-center px-2"
               )}
               title={isCollapsed ? item.title : undefined}
             >
-              <item.icon className={cn("h-5 w-5", active && "text-white")} />
+              <item.icon className="h-5 w-5 shrink-0" />
               {!isCollapsed && (
                 <span className={cn("text-sm font-sans tracking-tight", active && "font-semibold")}>
                   {item.title}
@@ -98,7 +87,7 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-2">
         <Button
           onClick={handleSignOut}
           variant="ghost"
@@ -108,8 +97,21 @@ export function AdminSidebar() {
           )}
           title={isCollapsed ? "Sign Out" : undefined}
         >
-          <LogOut className="h-5 w-5 mr-3" />
-          {!isCollapsed && "Sign Out"}
+          <LogOut className="h-5 w-5 shrink-0" />
+          {!isCollapsed && <span className="ml-3">Sign Out</span>}
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={cn(
+            "w-full justify-center h-8",
+            isCollapsed && "px-2"
+          )}
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
     </aside>
