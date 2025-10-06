@@ -76,7 +76,7 @@ export default function BrandInvite() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -84,7 +84,16 @@ export default function BrandInvite() {
           },
         });
         if (error) throw error;
-        toast.success("Account created! Please check your email to verify.");
+        
+        // If signup is successful and user is created, accept invitation automatically
+        if (data.user) {
+          setUser(data.user);
+          toast.success("Account created successfully!");
+          // Accept invitation automatically after account creation
+          await acceptInvitation(data.user);
+        } else {
+          toast.success("Account created! Please check your email to verify.");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -102,15 +111,13 @@ export default function BrandInvite() {
     }
   };
 
-  const handleAcceptInvitation = async () => {
-    if (!user || !invitation) return;
+  const acceptInvitation = async (currentUser: any) => {
+    if (!currentUser || !invitation) return;
 
-    setProcessing(true);
     try {
       // Check if user email matches invitation
-      if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+      if (currentUser.email?.toLowerCase() !== invitation.email.toLowerCase()) {
         toast.error("This invitation was sent to a different email address");
-        setProcessing(false);
         return;
       }
 
@@ -119,12 +126,12 @@ export default function BrandInvite() {
         .from("brand_members")
         .select("id")
         .eq("brand_id", invitation.brand_id)
-        .eq("user_id", user.id)
+        .eq("user_id", currentUser.id)
         .maybeSingle();
 
       if (existingMember) {
         toast.error("You are already a member of this brand");
-        setProcessing(false);
+        navigate(`/brand/${brandSlug}/account`);
         return;
       }
 
@@ -133,7 +140,7 @@ export default function BrandInvite() {
         .from("brand_members")
         .insert({
           brand_id: invitation.brand_id,
-          user_id: user.id,
+          user_id: currentUser.id,
           role: invitation.role,
         });
 
@@ -158,9 +165,14 @@ export default function BrandInvite() {
     } catch (error: any) {
       console.error("Error accepting invitation:", error);
       toast.error(error.message || "Failed to accept invitation");
-    } finally {
-      setProcessing(false);
     }
+  };
+
+  const handleAcceptInvitation = async () => {
+    if (!user || !invitation) return;
+    setProcessing(true);
+    await acceptInvitation(user);
+    setProcessing(false);
   };
 
   if (loading) {
