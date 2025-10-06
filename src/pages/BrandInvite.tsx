@@ -110,6 +110,21 @@ export default function BrandInvite() {
       // Check if user email matches invitation
       if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
         toast.error("This invitation was sent to a different email address");
+        setProcessing(false);
+        return;
+      }
+
+      // Check if user is already a member
+      const { data: existingMember } = await supabase
+        .from("brand_members")
+        .select("id")
+        .eq("brand_id", invitation.brand_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existingMember) {
+        toast.error("You are already a member of this brand");
+        setProcessing(false);
         return;
       }
 
@@ -122,7 +137,10 @@ export default function BrandInvite() {
           role: invitation.role,
         });
 
-      if (memberError) throw memberError;
+      if (memberError) {
+        console.error("Member insert error:", memberError);
+        throw memberError;
+      }
 
       // Update invitation status
       const { error: updateError } = await supabase
@@ -130,7 +148,10 @@ export default function BrandInvite() {
         .update({ status: "accepted" })
         .eq("id", invitationId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Invitation update error:", updateError);
+        throw updateError;
+      }
 
       toast.success(`Welcome to ${brand?.name}!`);
       navigate(`/brand/${brandSlug}/account`);
