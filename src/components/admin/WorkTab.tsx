@@ -125,9 +125,9 @@ export function WorkTab() {
             <button
               key={task.id}
               onClick={() => handleToggleStatus(task)}
-              className="flex items-start gap-2 w-full text-left group hover:bg-accent/50 p-2 rounded-md transition-colors"
+              className="flex items-start gap-2 w-full text-left group hover:bg-muted/20 p-2 rounded-md transition-colors"
             >
-              <Circle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5 transition-all duration-300 hover:scale-110" />
+              <Circle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5 transition-all duration-100 hover:scale-110" />
               <span className="text-sm">{task.title}</span>
             </button>
           ))}
@@ -144,9 +144,9 @@ export function WorkTab() {
                 <button
                   key={task.id}
                   onClick={() => handleToggleStatus(task)}
-                  className="flex items-start gap-2 w-full text-left group hover:bg-accent/50 p-2 rounded-md transition-colors"
+                  className="flex items-start gap-2 w-full text-left group hover:bg-muted/20 p-2 rounded-md transition-colors"
                 >
-                  <CircleCheck className="h-5 w-5 text-primary shrink-0 mt-0.5 animate-scale-in transition-all duration-300 hover:scale-110" />
+                  <CircleCheck className="h-5 w-5 text-primary shrink-0 mt-0.5 animate-scale-in transition-all duration-100 hover:scale-110" />
                   <span className="text-sm line-through text-muted-foreground">{task.title}</span>
                 </button>
               ))}
