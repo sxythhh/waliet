@@ -107,17 +107,49 @@ export function SubmitDemographicsDialog({
 
       // Insert demographic submission (with tier1_percentage set to 0 as placeholder)
       const {
-        error: insertError
+        error: insertError,
+        data: submissionData
       } = await supabase.from('demographic_submissions').insert({
         social_account_id: socialAccountId,
         tier1_percentage: 0,
         // Placeholder value since we removed the input
         screenshot_url: publicUrl,
         status: 'pending'
-      });
+      }).select().single();
       if (insertError) {
         throw insertError;
       }
+
+      // Get user profile and social account details
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, email')
+        .eq('id', session.user.id)
+        .single();
+
+      const { data: account } = await supabase
+        .from('social_accounts')
+        .select('platform, username')
+        .eq('id', socialAccountId)
+        .single();
+
+      // Notify Discord webhook
+      try {
+        await supabase.functions.invoke('notify-demographic-submission', {
+          body: {
+            username: profile?.username || 'Unknown',
+            email: profile?.email || 'Unknown',
+            platform: account?.platform || platform,
+            social_account_username: account?.username || username,
+            video_url: publicUrl,
+            submitted_at: submissionData?.submitted_at || new Date().toISOString()
+          }
+        });
+      } catch (webhookError) {
+        console.error('Failed to send Discord notification:', webhookError);
+        // Don't fail the submission if webhook fails
+      }
+
       toast({
         title: "Success",
         description: "Demographics submitted successfully. Admin will review your submission."
