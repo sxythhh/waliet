@@ -12,7 +12,7 @@ export default function AdminOverview() {
       <div className="max-w-7xl mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-fit mx-auto mb-6 bg-card rounded-full p-1 shadow-lg">
-            <TabsTrigger value="warmap" className="rounded-full px-6">
+            <TabsTrigger value="warmap" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Warmap
             </TabsTrigger>
             <TabsTrigger value="work" className="rounded-full px-6">
