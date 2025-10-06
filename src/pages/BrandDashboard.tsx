@@ -50,14 +50,12 @@ export default function BrandDashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
   const [activeView, setActiveView] = useState<"campaigns" | "home">("home");
-  
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
-  
   const handleViewChange = (value: string) => {
     const newView = value as "campaigns" | "home";
     setActiveView(newView);
-    
+
     // Auto-hide sidebar when switching to Home view
     if (newView === "home" && sidebar.state !== "collapsed") {
       toggleSidebar();
@@ -144,26 +142,20 @@ export default function BrandDashboard() {
   }
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
-  
+
   // Determine which views are available
   const hasHomeEmbed = !!brand.home_url;
   const hasCampaigns = campaigns.length > 0;
   const showToggle = hasHomeEmbed && hasCampaigns;
-  
+
   // If only one view is available, set it as active
   const effectiveView = !hasHomeEmbed ? "campaigns" : !hasCampaigns ? "home" : activeView;
-  
   return <div className="min-h-screen bg-[#191919]">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} 
-              className="text-white/60 hover:text-white hover:bg-white/10"
-            >
+            <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} className="text-white/60 hover:text-white hover:bg-white/10">
               {isMobile ? <Menu className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
             </Button>
             <h1 className="text-2xl font-bold text-white font-['Instrument_Sans'] tracking-[-0.5px]">
@@ -193,8 +185,8 @@ export default function BrandDashboard() {
           {/* Home Embed View - Full Width */}
           {effectiveView === "home" && <div className="w-full h-[calc(100vh-180px)] bg-[#202020]">
               <div dangerouslySetInnerHTML={{
-            __html: brand.home_url
-          }} className="w-full h-full" />
+          __html: brand.home_url
+        }} className="w-full h-full" />
             </div>}
 
           {/* Campaigns View - With Padding */}
@@ -202,9 +194,9 @@ export default function BrandDashboard() {
               {campaigns.length > 0 ? <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {campaigns.map(campaign => {
-                  const usedBudget = Number(campaign.budget_used || 0);
-                  const budgetPercentage = Number(campaign.budget) > 0 ? (usedBudget / Number(campaign.budget)) * 100 : 0;
-                  return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+              const usedBudget = Number(campaign.budget_used || 0);
+              const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
+              return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
                           {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
                               <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
                             </div>}
@@ -214,16 +206,9 @@ export default function BrandDashboard() {
                             {campaign.title}
                           </h3>
                           <div onClick={e => e.stopPropagation()}>
-                            <CreateCampaignDialog 
-                              brandId={brand.id} 
-                              brandName={brand.name} 
-                              onSuccess={fetchBrandData} 
-                              campaign={campaign}
-                              onDelete={() => handleDeleteClick(campaign)}
-                              trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
+                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
                                   <Pencil className="h-4 w-4" />
-                                </Button>} 
-                            />
+                                </Button>} />
                           </div>
                         </div>
 
@@ -237,8 +222,8 @@ export default function BrandDashboard() {
                               </div>
                               <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
                                 <div className="absolute inset-0 bg-primary rounded-full transition-all duration-500" style={{
-                            width: `${budgetPercentage}%`
-                          }} />
+                        width: `${budgetPercentage}%`
+                      }} />
                               </div>
                             </div>
 
@@ -251,44 +236,37 @@ export default function BrandDashboard() {
                             </div>
                           </CardContent>
                         </Card>;
-                })}
+            })}
                   </div>
                 </div> : <div className="flex flex-col items-center justify-center py-12 text-center">
                   <p className="text-white/60 mb-4">No campaigns yet</p>
                   <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
                 </div>}
             </div>}
-        </> : 
-        // Single view - no toggle needed
-        effectiveView === "home" ? <div className="w-full h-[calc(100vh-180px)] bg-[#202020]">
+        </> :
+    // Single view - no toggle needed
+    effectiveView === "home" ? <div className="w-full h-[calc(100vh-180px)] bg-[#202020]">
             <div dangerouslySetInnerHTML={{
-          __html: brand.home_url || ""
-        }} className="w-full h-full" />
+        __html: brand.home_url || ""
+      }} className="w-full h-full" />
           </div> : <div className="max-w-7xl mx-auto px-8 pb-8">
             {campaigns.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {campaigns.map(campaign => {
-              const usedBudget = Number(campaign.budget_used || 0);
-              const budgetPercentage = Number(campaign.budget) > 0 ? (usedBudget / Number(campaign.budget)) * 100 : 0;
-              return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+          const usedBudget = Number(campaign.budget_used || 0);
+          const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
+          return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
                       {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
                           <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
                         </div>}
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-xl font-semibold text-white mb-1">
+                      <CardContent className="p-6 py-[7px]">
+                        <div className="flex items-start justify-between mb-4 py-0">
+                          <h3 className="font-semibold text-white mb-1 text-xl">
                             {campaign.title}
                           </h3>
                           <div onClick={e => e.stopPropagation()}>
-                            <CreateCampaignDialog 
-                              brandId={brand.id} 
-                              brandName={brand.name} 
-                              onSuccess={fetchBrandData} 
-                              campaign={campaign}
-                              onDelete={() => handleDeleteClick(campaign)}
-                              trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
+                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
                                   <Pencil className="h-4 w-4" />
-                                </Button>} 
-                            />
+                                </Button>} />
                           </div>
                         </div>
 
@@ -302,21 +280,16 @@ export default function BrandDashboard() {
                           </div>
                           <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
                             <div className="absolute inset-0 bg-primary rounded-full transition-all duration-500" style={{
-                        width: `${budgetPercentage}%`
-                      }} />
+                    width: `${budgetPercentage}%`
+                  }} />
                           </div>
                         </div>
 
                         {/* RPM Display */}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-white/60">RPM:</span>
-                          <span className="text-white font-semibold">
-                            ${Number(campaign.rpm_rate).toFixed(2)}
-                          </span>
-                        </div>
+                        
                       </CardContent>
                     </Card>;
-            })}
+        })}
               </div> : <div className="flex flex-col items-center justify-center py-12 text-center">
                 <p className="text-white/60 mb-4">No campaigns yet</p>
                 <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
