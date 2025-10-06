@@ -634,12 +634,14 @@ export default function AdminUsers() {
       setSubmissions(data || []);
     }
   };
-  const handleReview = async () => {
+  const handleReview = async (status?: "approved" | "rejected") => {
     if (!selectedSubmission) return;
+    
+    const finalStatus = status || reviewStatus;
     const scoreValue = parseInt(score);
     
     // Only validate score if approving
-    if (reviewStatus === "approved" && (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100)) {
+    if (finalStatus === "approved" && (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100)) {
       toast({
         variant: "destructive",
         title: "Invalid Score",
@@ -659,14 +661,14 @@ export default function AdminUsers() {
       const {
         error: updateError
       } = await supabase.from("demographic_submissions").update({
-        status: reviewStatus,
-        score: reviewStatus === "approved" ? scoreValue : null,
+        status: finalStatus,
+        score: finalStatus === "approved" ? scoreValue : null,
         admin_notes: adminNotes.trim() || null,
         reviewed_at: new Date().toISOString(),
         reviewed_by: session.user.id
       }).eq("id", selectedSubmission.id);
       if (updateError) throw updateError;
-      if (reviewStatus === "approved") {
+      if (finalStatus === "approved") {
         const {
           error: profileError
         } = await supabase.from("profiles").update({
@@ -1451,17 +1453,11 @@ export default function AdminUsers() {
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t">
-                    <Button variant="destructive" size="sm" onClick={() => {
-                  setReviewStatus("rejected");
-                  handleReview();
-                }} disabled={updating} className="flex-1">
+                    <Button variant="destructive" size="sm" onClick={() => handleReview("rejected")} disabled={updating} className="flex-1">
                       <XCircle className="h-4 w-4 mr-2" />
                       Reject
                     </Button>
-                    <Button onClick={() => {
-                  setReviewStatus("approved");
-                  handleReview();
-                }} disabled={updating} size="sm" className="flex-1">
+                    <Button onClick={() => handleReview("approved")} disabled={updating} size="sm" className="flex-1">
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       {updating ? "Accepting..." : "Accept"}
                     </Button>
