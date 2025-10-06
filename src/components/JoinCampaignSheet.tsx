@@ -2,12 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +13,6 @@ import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-
 interface Campaign {
   id: string;
   title: string;
@@ -42,21 +36,24 @@ interface Campaign {
     logo_url: string;
   };
 }
-
 interface JoinCampaignSheetProps {
   campaign: Campaign | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaignSheetProps) {
+export function JoinCampaignSheet({
+  campaign,
+  open,
+  onOpenChange
+}: JoinCampaignSheetProps) {
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
-  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [answers, setAnswers] = useState<{
+    [key: string]: string;
+  }>({});
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case "tiktok":
@@ -69,63 +66,54 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
         return null;
     }
   };
-
   const loadSocialAccounts = async () => {
     if (!campaign) return;
 
     // Reset answers when loading accounts for a new campaign
     setAnswers({});
-
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please sign in to join campaigns");
       return;
     }
 
     // Get all user's social accounts that match the campaign's platforms
-    const { data: accounts } = await supabase
-      .from("social_accounts")
-      .select("*")
-      .eq("user_id", user.id)
-      .in("platform", campaign.platforms.map(p => p.toLowerCase()));
+    const {
+      data: accounts
+    } = await supabase.from("social_accounts").select("*").eq("user_id", user.id).in("platform", campaign.platforms.map(p => p.toLowerCase()));
 
     // Get active (non-withdrawn) submissions to filter out platforms
-    const { data: activeSubmissions } = await supabase
-      .from("campaign_submissions")
-      .select("platform")
-      .eq("campaign_id", campaign.id)
-      .eq("creator_id", user.id)
-      .neq("status", "withdrawn");
-
+    const {
+      data: activeSubmissions
+    } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaign.id).eq("creator_id", user.id).neq("status", "withdrawn");
     const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
-    
+
     // Filter out accounts with active submissions for this campaign
     const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
-    
     setSocialAccounts(availableAccounts);
   };
-
   const toggleAccountSelection = (accountId: string) => {
-    setSelectedAccounts(prev => 
-      prev.includes(accountId)
-        ? prev.filter(id => id !== accountId)
-        : [...prev, accountId]
-    );
+    setSelectedAccounts(prev => prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]);
   };
-
   const handleSubmit = async () => {
     console.log('=== SUBMIT STARTED ===');
     console.log('Campaign:', campaign);
     console.log('Selected Accounts:', selectedAccounts);
     console.log('Answers:', answers);
-    
     if (!campaign || selectedAccounts.length === 0) {
       console.log('Validation failed: No campaign or accounts');
       toast.error("Please select at least one social account");
       return;
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) {
       console.log('Validation failed: No user');
       toast.error("Please sign in to join campaigns");
@@ -136,14 +124,11 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
     const questions = Array.isArray(campaign.application_questions) ? campaign.application_questions : [];
     console.log('Application questions:', questions);
     console.log('Requires application:', campaign.requires_application);
-    
     if (campaign.requires_application !== false && questions.length > 0) {
-      const unansweredQuestions = questions.filter(
-        (q, idx) => {
-          const answer = answers[idx];
-          return !answer || answer.trim().length === 0;
-        }
-      );
+      const unansweredQuestions = questions.filter((q, idx) => {
+        const answer = answers[idx];
+        return !answer || answer.trim().length === 0;
+      });
       console.log('Unanswered questions:', unansweredQuestions);
       if (unansweredQuestions.length > 0) {
         console.log('Validation failed: Unanswered questions');
@@ -151,35 +136,33 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
         return;
       }
     }
-
     console.log('All validations passed, starting submission...');
     setSubmitting(true);
-
     try {
       // Determine submission status based on campaign type
       const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
       console.log('Submission status:', submissionStatus);
-      
-      // Check for existing submissions first (excluding withdrawn)
-      const { data: existingData } = await supabase
-        .from("campaign_submissions")
-        .select("platform")
-        .eq("campaign_id", campaign.id)
-        .eq("creator_id", user.id)
-        .neq("status", "withdrawn");
 
+      // Check for existing submissions first (excluding withdrawn)
+      const {
+        data: existingData
+      } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaign.id).eq("creator_id", user.id).neq("status", "withdrawn");
       console.log('Existing submissions:', existingData);
       const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
 
       // Track if any submissions were actually created
       let submissionsCreated = 0;
-      const submittedAccountsData: Array<{ platform: string; username: string; account_link: string }> = [];
+      const submittedAccountsData: Array<{
+        platform: string;
+        username: string;
+        account_link: string;
+      }> = [];
 
       // Process each selected account
       for (const accountId of selectedAccounts) {
         const account = socialAccounts.find(a => a.id === accountId);
         console.log('Processing account:', account);
-        
+
         // Skip if already submitted for this platform
         if (existingPlatforms.has(account.platform)) {
           console.log('Skipping - already submitted for platform:', account.platform);
@@ -191,32 +174,23 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           question,
           answer: answers[index] || ""
         })) || [];
-
         const contentUrl = account.account_link || `pending-${Date.now()}-${accountId}`;
 
         // Check if there's a withdrawn submission we can reuse (match by content_url to avoid unique constraint)
-        const { data: withdrawnSubmission } = await supabase
-          .from("campaign_submissions")
-          .select("id")
-          .eq("campaign_id", campaign.id)
-          .eq("creator_id", user.id)
-          .eq("content_url", contentUrl)
-          .eq("status", "withdrawn")
-          .maybeSingle();
-
+        const {
+          data: withdrawnSubmission
+        } = await supabase.from("campaign_submissions").select("id").eq("campaign_id", campaign.id).eq("creator_id", user.id).eq("content_url", contentUrl).eq("status", "withdrawn").maybeSingle();
         if (withdrawnSubmission) {
           // Update the withdrawn submission instead of creating new one
           console.log('Updating withdrawn submission:', withdrawnSubmission.id);
-          const { error: updateError } = await supabase
-            .from("campaign_submissions")
-            .update({
-              status: submissionStatus,
-              application_answers: formattedAnswers,
-              content_url: contentUrl,
-              submitted_at: new Date().toISOString(),
-            })
-            .eq("id", withdrawnSubmission.id);
-
+          const {
+            error: updateError
+          } = await supabase.from("campaign_submissions").update({
+            status: submissionStatus,
+            application_answers: formattedAnswers,
+            content_url: contentUrl,
+            submitted_at: new Date().toISOString()
+          }).eq("id", withdrawnSubmission.id);
           if (updateError) {
             console.error('Update error:', updateError);
             throw updateError;
@@ -229,14 +203,12 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
             platform: account.platform,
             content_url: contentUrl,
             status: submissionStatus,
-            application_answers: formattedAnswers,
+            application_answers: formattedAnswers
           };
           console.log('Inserting submission:', submissionData);
-          
-          const { error: submissionError } = await supabase
-            .from("campaign_submissions")
-            .insert(submissionData);
-
+          const {
+            error: submissionError
+          } = await supabase.from("campaign_submissions").insert(submissionData);
           if (submissionError) {
             console.error('Submission error:', submissionError);
             throw submissionError;
@@ -244,30 +216,23 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
         }
 
         // Link the social account to the campaign (check if link exists first)
-        const { data: existingLink } = await supabase
-          .from("social_account_campaigns")
-          .select("id")
-          .eq("social_account_id", accountId)
-          .eq("campaign_id", campaign.id)
-          .maybeSingle();
-
+        const {
+          data: existingLink
+        } = await supabase.from("social_account_campaigns").select("id").eq("social_account_id", accountId).eq("campaign_id", campaign.id).maybeSingle();
         if (!existingLink) {
           const linkData = {
             social_account_id: accountId,
-            campaign_id: campaign.id,
+            campaign_id: campaign.id
           };
           console.log('Linking account:', linkData);
-          
-          const { error: linkError } = await supabase
-            .from("social_account_campaigns")
-            .insert(linkData);
-
+          const {
+            error: linkError
+          } = await supabase.from("social_account_campaigns").insert(linkData);
           if (linkError) {
             console.error('Link error:', linkError);
             throw linkError;
           }
         }
-
         submissionsCreated++;
         submittedAccountsData.push({
           platform: account.platform,
@@ -280,45 +245,40 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       if (submissionsCreated > 0) {
         try {
           console.log('Preparing to send Discord notification...');
-          
-          // Get user profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('username, email')
-            .eq('id', user.id)
-            .single();
 
+          // Get user profile
+          const {
+            data: profile,
+            error: profileError
+          } = await supabase.from('profiles').select('username, email').eq('id', user.id).single();
           if (profileError) {
             console.error('Profile fetch error:', profileError);
           }
 
           // Get brand data including slug and logo
-          const { data: brandData, error: brandError } = await supabase
-            .from('brands')
-            .select('slug')
-            .eq('name', campaign.brand_name)
-            .single();
-
+          const {
+            data: brandData,
+            error: brandError
+          } = await supabase.from('brands').select('slug').eq('name', campaign.brand_name).single();
           if (brandError) {
             console.error('Brand fetch error:', brandError);
           }
-
           const brandSlug = brandData?.slug || '';
           console.log('Brand slug:', brandSlug);
-
           const formattedAnswers = campaign.application_questions?.map((question, index) => ({
             question,
             answer: answers[index] || ""
           })) || [];
-
           console.log('Invoking edge function with data:', {
             username: profile?.username,
             campaign_name: campaign.title,
             brand_slug: brandSlug,
             accounts_count: submittedAccountsData.length
           });
-
-          const { data: functionData, error: functionError } = await supabase.functions.invoke('notify-campaign-application', {
+          const {
+            data: functionData,
+            error: functionError
+          } = await supabase.functions.invoke('notify-campaign-application', {
             body: {
               username: profile?.username || 'Unknown',
               email: profile?.email || 'Unknown',
@@ -332,7 +292,6 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
               submitted_at: new Date().toISOString()
             }
           });
-
           if (functionError) {
             console.error('Edge function error:', functionError);
           } else {
@@ -343,7 +302,6 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           // Don't fail the submission if webhook fails
         }
       }
-
       console.log('=== SUBMISSION COMPLETE ===');
       console.log('Submissions created:', submissionsCreated);
 
@@ -353,12 +311,8 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
         onOpenChange(false);
         return;
       }
-
       const accountText = submissionsCreated === 1 ? "account is" : "accounts are";
-      const successMessage = campaign.requires_application === false 
-        ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.`
-        : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
-      
+      const successMessage = campaign.requires_application === false ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.` : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
       toast.success(successMessage);
       onOpenChange(false);
       navigate("/dashboard?tab=campaigns");
@@ -370,48 +324,29 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
       setSubmitting(false);
     }
   };
-
   if (!campaign) return null;
-
   const budgetRemaining = campaign.budget - (campaign.budget_used || 0);
-  const budgetPercentage = campaign.budget > 0 ? ((campaign.budget_used || 0) / campaign.budget) * 100 : 0;
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        className="w-full sm:max-w-lg overflow-y-auto"
-        onOpenAutoFocus={(e) => {
-          e.preventDefault();
-          loadSocialAccounts();
-        }}
-      >
+  const budgetPercentage = campaign.budget > 0 ? (campaign.budget_used || 0) / campaign.budget * 100 : 0;
+  return <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto" onOpenAutoFocus={e => {
+      e.preventDefault();
+      loadSocialAccounts();
+    }}>
         <SheetHeader>
           <SheetTitle className="text-xl font-semibold">Join Campaign</SheetTitle>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
           {/* Campaign Banner */}
-          {campaign.banner_url && (
-            <div className="relative w-full h-40 rounded-lg overflow-hidden">
-              <OptimizedImage
-                src={campaign.banner_url}
-                alt={campaign.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
+          {campaign.banner_url && <div className="relative w-full h-40 rounded-lg overflow-hidden">
+              <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
+            </div>}
 
           {/* Brand Info */}
           <div className="flex items-start gap-3">
-            {campaign.brand_logo_url && (
-              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border">
-                <img
-                  src={campaign.brand_logo_url}
-                  alt={campaign.brand_name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+            {campaign.brand_logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border">
+                <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+              </div>}
             <div className="flex-1">
               <h3 className="text-lg font-semibold">{campaign.title}</h3>
               <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
@@ -419,15 +354,12 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           </div>
 
           {/* Description */}
-          {campaign.description && (
-            <div>
-              <p className="text-sm text-muted-foreground">{campaign.description}</p>
-            </div>
-          )}
+          {campaign.description && <div>
+              <p className="text-sm text-slate-50 font-medium">{campaign.description}</p>
+            </div>}
 
           {/* Budget & RPM */}
-          {!campaign.is_infinite_budget && (
-            <div className="rounded-lg p-4 space-y-3 bg-muted/50">
+          {!campaign.is_infinite_budget && <div className="rounded-lg p-4 space-y-3 bg-muted/50">
               <div className="flex justify-between items-baseline">
                 <span className="text-sm font-medium">Budget Progress</span>
                 <span className="text-xs text-muted-foreground">
@@ -435,10 +367,9 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
                 </span>
               </div>
               <div className="h-2 rounded-full overflow-hidden bg-background">
-                <div
-                  className="h-full bg-primary transition-all duration-700"
-                  style={{ width: `${budgetPercentage}%` }}
-                />
+                <div className="h-full bg-primary transition-all duration-700" style={{
+              width: `${budgetPercentage}%`
+            }} />
               </div>
               <div className="flex justify-between items-center pt-2">
                 <div>
@@ -450,41 +381,27 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
                   <p className="text-lg font-bold">${budgetRemaining.toLocaleString()}</p>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Campaign Preview Button - only show if preview_url exists */}
-          {campaign.preview_url && (
-            <Button
-              variant="outline"
-              className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors"
-              onClick={() => window.open(campaign.preview_url!, '_blank')}
-            >
+          {campaign.preview_url && <Button variant="outline" className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors" onClick={() => window.open(campaign.preview_url!, '_blank')}>
               <ArrowUp className="w-4 h-4 mr-2" />
               <span className="font-medium">View Campaign Details</span>
-            </Button>
-          )}
+            </Button>}
 
           {/* Allowed Platforms */}
           <div>
             <h4 className="text-sm font-semibold mb-2">Allowed Platforms</h4>
             <div className="flex gap-2 flex-wrap">
-              {campaign.platforms.map((platform) => {
-                const platformIcon = getPlatformIcon(platform);
-                return (
-                  <div
-                    key={platform}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-muted border border-border"
-                  >
-                    {platformIcon && (
-                      <img src={platformIcon} alt={platform} className="w-3.5 h-3.5" />
-                    )}
+              {campaign.platforms.map(platform => {
+              const platformIcon = getPlatformIcon(platform);
+              return <div key={platform} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-muted border border-border">
+                    {platformIcon && <img src={platformIcon} alt={platform} className="w-3.5 h-3.5" />}
                     <span className="text-xs font-medium text-foreground capitalize">
                       {platform}
                     </span>
-                  </div>
-                );
-              })}
+                  </div>;
+            })}
             </div>
           </div>
 
@@ -492,113 +409,63 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Select Social Accounts *</Label>
-              {socialAccounts.length > 0 && (
-                <p className="text-xs text-muted-foreground">
+              {socialAccounts.length > 0 && <p className="text-xs text-muted-foreground">
                   {selectedAccounts.length > 0 && `${selectedAccounts.length} selected • `}
                   Can select multiple
-                </p>
-              )}
+                </p>}
             </div>
-            {socialAccounts.length === 0 ? (
-              <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
+            {socialAccounts.length === 0 ? <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
                 <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
                 <p className="text-sm font-medium text-foreground">No available accounts</p>
-                <Button 
-                  onClick={() => setShowAddAccountDialog(true)} 
-                  size="sm"
-                  className="border-0"
-                  style={{ backgroundColor: '#1F1F1F' }}
-                >
+                <Button onClick={() => setShowAddAccountDialog(true)} size="sm" className="border-0" style={{
+              backgroundColor: '#1F1F1F'
+            }}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Account
                 </Button>
-              </div>
-            ) : (
-              <div className="grid gap-2">
-                {socialAccounts.map((account) => {
-                  const platformIcon = getPlatformIcon(account.platform);
-                  const isSelected = selectedAccounts.includes(account.id);
-                  
-                  return (
-                    <button
-                      key={account.id}
-                      type="button"
-                      onClick={() => toggleAccountSelection(account.id)}
-                      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-500/10"
-                          : "border-border hover:border-muted-foreground/50 bg-card"
-                      }`}
-                    >
-                      {platformIcon && (
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isSelected ? "bg-blue-500" : "bg-muted"
-                        }`}>
+              </div> : <div className="grid gap-2">
+                {socialAccounts.map(account => {
+              const platformIcon = getPlatformIcon(account.platform);
+              const isSelected = selectedAccounts.includes(account.id);
+              return <button key={account.id} type="button" onClick={() => toggleAccountSelection(account.id)} className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? "border-blue-500 bg-blue-500/10" : "border-border hover:border-muted-foreground/50 bg-card"}`}>
+                      {platformIcon && <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-blue-500" : "bg-muted"}`}>
                           <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
-                        </div>
-                      )}
+                        </div>}
                       <div className="flex-1 text-left">
                         <p className="font-medium text-sm">{account.username}</p>
                         <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
                       </div>
-                      {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                      {isSelected && <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
                           <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                        </div>}
+                    </button>;
+            })}
+              </div>}
           </div>
 
           {/* Application Questions - only show if campaign requires application */}
-          {campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => (
-            <div key={index} className="space-y-2">
+          {campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
               <Label htmlFor={`question-${index}`}>
                 {question} *
               </Label>
-              <Textarea
-                id={`question-${index}`}
-                value={answers[index] || ""}
-                onChange={(e) => setAnswers({ ...answers, [index]: e.target.value })}
-                placeholder="Your answer..."
-                rows={3}
-                className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none"
-              />
-            </div>
-          ))}
+              <Textarea id={`question-${index}`} value={answers[index] || ""} onChange={e => setAnswers({
+            ...answers,
+            [index]: e.target.value
+          })} placeholder="Your answer..." rows={3} className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none" />
+            </div>)}
 
           {/* Submit Button */}
           <div className="flex gap-2 pt-4">
-            <Button
-              variant="outline"
-              className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors"
-              onClick={() => onOpenChange(false)}
-              disabled={submitting}
-            >
+            <Button variant="outline" className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => onOpenChange(false)} disabled={submitting}>
               Cancel
             </Button>
-            <Button
-              className="flex-1"
-              onClick={handleSubmit}
-              disabled={submitting || selectedAccounts.length === 0}
-            >
-              {submitting 
-                ? (campaign.requires_application === false ? "Joining..." : "Submitting...") 
-                : (campaign.requires_application === false ? "Join Campaign" : "Submit Application")
-              }
+            <Button className="flex-1" onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
+              {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
             </Button>
           </div>
         </div>
       </SheetContent>
 
-      <AddSocialAccountDialog 
-        open={showAddAccountDialog}
-        onOpenChange={setShowAddAccountDialog}
-        onSuccess={loadSocialAccounts}
-      />
-    </Sheet>
-  );
+      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={loadSocialAccounts} />
+    </Sheet>;
 }
