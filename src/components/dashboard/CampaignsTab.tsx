@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 interface Campaign {
   id: string;
   title: string;
@@ -42,6 +43,12 @@ export function CampaignsTab() {
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [manageAccountDialogOpen, setManageAccountDialogOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<{
+    id: string;
+    platform: string;
+    username: string;
+  } | null>(null);
   const navigate = useNavigate();
   const {
     toast
@@ -290,13 +297,21 @@ export function CampaignsTab() {
               {/* Connected Accounts */}
               {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div className="pt-1">
                   <div className="flex flex-wrap gap-1.5">
-                    {campaign.connected_accounts.map(account => <div key={account.id} className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1">
-                        <div className="w-3 h-3">
+                    {campaign.connected_accounts.map(account => <div 
+                        key={account.id} 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAccount(account);
+                          setManageAccountDialogOpen(true);
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent"
+                      >
+                        <div className="w-4 h-4">
                           {account.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
                           {account.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
                           {account.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
                         </div>
-                        <span className="text-[11px] font-semibold">@{account.username}</span>
+                        <span className="font-medium">{account.username}</span>
                       </div>)}
                   </div>
                 </div>}
@@ -403,6 +418,32 @@ export function CampaignsTab() {
     </AlertDialog>
     
     <AddSocialAccountDialog open={addAccountDialogOpen} onOpenChange={setAddAccountDialogOpen} onSuccess={fetchCampaigns} />
+    
+    {selectedAccount && (
+      <ManageAccountDialog
+        open={manageAccountDialogOpen}
+        onOpenChange={setManageAccountDialogOpen}
+        account={{
+          id: selectedAccount.id,
+          username: selectedAccount.username,
+          platform: selectedAccount.platform,
+          account_link: null
+        }}
+        demographicStatus={null}
+        daysUntilNext={null}
+        lastSubmissionDate={null}
+        nextSubmissionDate={null}
+        onUpdate={fetchCampaigns}
+        onSubmitDemographics={() => {}}
+        platformIcon={
+          <div className="w-4 h-4">
+            {selectedAccount.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
+            {selectedAccount.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
+            {selectedAccount.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
+          </div>
+        }
+      />
+    )}
     
     </div>;
 }
