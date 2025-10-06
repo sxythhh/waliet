@@ -35,6 +35,8 @@ const handler = async (req: Request): Promise<Response> => {
         campaigns:campaign_id (
           title,
           brand_name,
+          brand_logo_url,
+          banner_url,
           slug,
           guidelines,
           allowed_platforms
@@ -72,43 +74,57 @@ const handler = async (req: Request): Promise<Response> => {
         to: [profile.email],
         subject: `Your application for "${campaign.title}" has been approved! 🎉`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #8B5CF6;">Congratulations!</h1>
-            <p>Hi ${profile.full_name || profile.username},</p>
-            <p>Great news! Your application for the <strong>${campaign.title}</strong> campaign by <strong>${campaign.brand_name}</strong> has been approved.</p>
-            
-            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #333; margin-top: 0;">Next Steps</h2>
-              <ol style="color: #666; line-height: 1.8;">
-                <li>Review the campaign guidelines carefully</li>
-                <li>Create your content following the brand's requirements</li>
-                <li>Link your social account to start tracking your performance</li>
-                <li>Your earnings will be tracked automatically based on views</li>
-              </ol>
-            </div>
-
-            ${campaign.guidelines ? `
-              <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #92400e; margin-top: 0;">Campaign Guidelines</h3>
-                <p style="color: #78350f; white-space: pre-wrap;">${campaign.guidelines}</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb;">
+            ${campaign.banner_url ? `
+              <div style="width: 100%; height: 200px; overflow: hidden; border-radius: 8px 8px 0 0;">
+                <img src="${campaign.banner_url}" alt="${campaign.title}" style="width: 100%; height: 100%; object-fit: cover;" />
               </div>
             ` : ''}
+            
+            <div style="padding: 30px; background-color: white; border-radius: 0 0 8px 8px;">
+              ${campaign.brand_logo_url ? `
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <img src="${campaign.brand_logo_url}" alt="${campaign.brand_name}" style="width: 80px; height: 80px; object-fit: contain; border-radius: 8px;" />
+                </div>
+              ` : ''}
+              
+              <h1 style="color: #8B5CF6; text-align: center; margin-bottom: 10px;">Congratulations!</h1>
+              <p style="text-align: center; color: #666; font-size: 16px;">Hi ${profile.full_name || profile.username},</p>
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">Great news! Your application for the <strong>${campaign.title}</strong> campaign by <strong>${campaign.brand_name}</strong> has been approved.</p>
+              
+              <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h2 style="color: #333; margin-top: 0; font-size: 18px;">Next Steps</h2>
+                <ol style="color: #666; line-height: 1.8; margin: 0; padding-left: 20px;">
+                  <li>Review the campaign guidelines carefully</li>
+                  <li>Create your content following the brand's requirements</li>
+                  <li>Link your social account to start tracking your performance</li>
+                  <li>Your earnings will be tracked automatically based on views</li>
+                </ol>
+              </div>
 
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${campaignUrl}" 
-                 style="background-color: #8B5CF6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;">
-                View Campaign Details
-              </a>
+              ${campaign.guidelines ? `
+                <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                  <h3 style="color: #92400e; margin-top: 0; font-size: 16px;">Campaign Guidelines</h3>
+                  <p style="color: #78350f; white-space: pre-wrap; margin: 0; font-size: 14px;">${campaign.guidelines}</p>
+                </div>
+              ` : ''}
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${campaignUrl}" 
+                   style="background-color: #8B5CF6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px;">
+                  View Campaign Details
+                </a>
+              </div>
+
+              <p style="color: #666; font-size: 14px; margin-top: 30px; text-align: center;">
+                If you have any questions, feel free to reach out to the brand team or check the campaign page for more details.
+              </p>
+
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              <p style="color: #999; font-size: 12px; text-align: center;">
+                Virality - Creator Marketing Platform
+              </p>
             </div>
-
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">
-              If you have any questions, feel free to reach out to the brand team or check the campaign page for more details.
-            </p>
-
-            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-            <p style="color: #999; font-size: 12px; text-align: center;">
-              Virality - Creator Marketing Platform
-            </p>
           </div>
         `,
       }),
