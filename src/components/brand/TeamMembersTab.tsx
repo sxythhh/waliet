@@ -63,38 +63,34 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
         setCurrentUserRole(memberData?.role || null);
       }
 
-      // Fetch members with profiles (including email from profiles table)
+      // Fetch brand members
       const { data: membersData, error: membersError } = await supabase
         .from("brand_members")
-        .select(`
-          id,
-          user_id,
-          role,
-          created_at
-        `)
+        .select("id, user_id, role, created_at")
         .eq("brand_id", brandId);
 
       if (membersError) throw membersError;
 
-      // Fetch profile details for each member
-      const membersWithProfiles = await Promise.all(
-        (membersData || []).map(async (member) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name, email, avatar_url")
-            .eq("id", member.user_id)
-            .maybeSingle();
+      // Fetch all profiles in one query
+      const userIds = (membersData || []).map(m => m.user_id);
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .in("id", userIds);
 
-          return {
-            ...member,
-            profiles: {
-              full_name: profile?.full_name || "Unknown",
-              email: profile?.email || "Unknown",
-              avatar_url: profile?.avatar_url || null,
-            },
-          };
-        })
+      // Map profiles to members
+      const profileMap = new Map(
+        (profilesData || []).map(p => [p.id, p])
       );
+
+      const membersWithProfiles = (membersData || []).map(member => ({
+        ...member,
+        profiles: {
+          full_name: profileMap.get(member.user_id)?.full_name || "Unknown",
+          email: profileMap.get(member.user_id)?.email || "Unknown",
+          avatar_url: profileMap.get(member.user_id)?.avatar_url || null,
+        },
+      }));
 
       setMembers(membersWithProfiles);
 
