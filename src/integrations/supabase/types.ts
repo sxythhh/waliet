@@ -692,6 +692,7 @@ export type Database = {
           country: string | null
           created_at: string | null
           demographics_score: number | null
+          email: string | null
           full_name: string | null
           id: string
           phone_number: string | null
@@ -708,6 +709,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           demographics_score?: number | null
+          email?: string | null
           full_name?: string | null
           id: string
           phone_number?: string | null
@@ -724,6 +726,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           demographics_score?: number | null
+          email?: string | null
           full_name?: string | null
           id?: string
           phone_number?: string | null

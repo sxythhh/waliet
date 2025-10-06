@@ -63,7 +63,7 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
         setCurrentUserRole(memberData?.role || null);
       }
 
-      // Fetch members with profiles
+      // Fetch members with profiles (including email from profiles table)
       const { data: membersData, error: membersError } = await supabase
         .from("brand_members")
         .select(`
@@ -76,30 +76,27 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
 
       if (membersError) throw membersError;
 
-      // Fetch user profiles and emails separately
-      const membersWithDetails = await Promise.all(
-        (membersData || []).map(async (member: any) => {
-          // Get profile data
+      // Fetch profile details for each member
+      const membersWithProfiles = await Promise.all(
+        (membersData || []).map(async (member) => {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("full_name")
+            .select("full_name, email, avatar_url")
             .eq("id", member.user_id)
             .maybeSingle();
 
-          // Get user email from auth
-          const { data: { user } } = await supabase.auth.admin.getUserById(member.user_id);
-          
           return {
             ...member,
             profiles: {
               full_name: profile?.full_name || "Unknown",
-              email: user?.email || "Unknown"
-            }
+              email: profile?.email || "Unknown",
+              avatar_url: profile?.avatar_url || null,
+            },
           };
         })
       );
 
-      setMembers(membersWithDetails as Member[]);
+      setMembers(membersWithProfiles);
 
       // Fetch pending invitations
       const { data: invitationsData, error: invitationsError } = await supabase
