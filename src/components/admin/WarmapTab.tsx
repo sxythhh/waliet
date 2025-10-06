@@ -35,6 +35,7 @@ export function WarmapTab() {
     link: "" 
   });
   const [draggedEvent, setDraggedEvent] = useState<WarmapEvent | null>(null);
+  const [dragOverDay, setDragOverDay] = useState<number | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -138,8 +139,13 @@ export function WarmapTab() {
     setDraggedEvent(event);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, dayOffset: number) => {
     e.preventDefault();
+    setDragOverDay(dayOffset);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverDay(null);
   };
 
   const handleDrop = async (targetDate: Date) => {
@@ -157,6 +163,7 @@ export function WarmapTab() {
 
     toast.success("Event moved successfully");
     setDraggedEvent(null);
+    setDragOverDay(null);
     fetchEvents();
   };
 
@@ -177,8 +184,13 @@ export function WarmapTab() {
     return (
       <Card
         key={dayOffset}
-        className="p-4 min-h-[200px]"
-        onDragOver={handleDragOver}
+        className={`p-4 min-h-[200px] transition-all duration-200 ${
+          dragOverDay === dayOffset 
+            ? 'bg-primary/10 border-primary/50 shadow-lg scale-[1.02]' 
+            : ''
+        }`}
+        onDragOver={(e) => handleDragOver(e, dayOffset)}
+        onDragLeave={handleDragLeave}
         onDrop={() => handleDrop(date)}
       >
         <div className="flex justify-between items-center mb-4">
