@@ -36,27 +36,17 @@ Deno.serve(async (req) => {
     // Send Discord notifications for each task
     const notifications = await Promise.allSettled(
       tasks.map(async (task) => {
-        const embed = {
+        const embed: {
+          title: string;
+          description: string;
+          color: number;
+          fields: Array<{ name: string; value: string; inline: boolean }>;
+          timestamp: string;
+        } = {
           title: '⏰ Task Reminder',
           description: task.title,
           color: 5814783, // Blurple color
-          fields: [
-            {
-              name: 'Status',
-              value: task.status,
-              inline: true,
-            },
-            {
-              name: 'Assigned To',
-              value: task.assigned_to || 'Unassigned',
-              inline: true,
-            },
-            {
-              name: 'Priority',
-              value: task.priority || 'Not set',
-              inline: true,
-            },
-          ],
+          fields: [],
           timestamp: new Date().toISOString(),
         };
 
@@ -72,10 +62,25 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Map assignee names to Discord user IDs
+        const discordMentions: Record<string, string> = {
+          'ivelin': '<@575313257410068481>',
+          // Add more mappings here as needed
+          // 'matt': '<@MATT_DISCORD_ID>',
+          // 'alex': '<@ALEX_DISCORD_ID>',
+        };
+
+        // Get mention string if task is assigned
+        let mentionText = '';
+        if (task.assigned_to && discordMentions[task.assigned_to.toLowerCase()]) {
+          mentionText = discordMentions[task.assigned_to.toLowerCase()] + ' ';
+        }
+
         const response = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            content: mentionText,
             embeds: [embed],
           }),
         });
