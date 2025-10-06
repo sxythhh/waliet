@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CircleCheck, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableTask } from "./SortableTask";
 import { TaskDetailsSheet } from "./TaskDetailsSheet";
 
@@ -116,68 +114,10 @@ export function WorkTab() {
     fetchTasks();
   };
 
-  const handleDragEnd = async (event: DragEndEvent, assignee: string | null) => {
-    const { active, over } = event;
-
-    if (!over || active.id === over.id) {
-      return;
-    }
-
-    // Get only active tasks for this specific assignee/column
-    const columnTasks = tasks.filter((task) => 
-      task.assigned_to === assignee && task.status !== "done"
-    ).sort((a, b) => a.order_index - b.order_index);
-
-    const oldIndex = columnTasks.findIndex((task) => task.id === active.id);
-    const newIndex = columnTasks.findIndex((task) => task.id === over.id);
-
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const reorderedTasks = arrayMove(columnTasks, oldIndex, newIndex);
-
-    // Update all tasks in this column with new sequential order_index
-    try {
-      const updatePromises = reorderedTasks.map((task, index) =>
-        supabase
-          .from("work_tasks")
-          .update({ order_index: index })
-          .eq("id", task.id)
-      );
-
-      const results = await Promise.all(updatePromises);
-      
-      const hasError = results.some(({ error }) => error);
-      if (hasError) {
-        console.error("Error updating order:", results.find(r => r.error)?.error);
-        toast.error("Failed to reorder tasks");
-        await fetchTasks();
-        return;
-      }
-      
-      // Refresh to show updated order
-      await fetchTasks();
-    } catch (error) {
-      console.error("Error in handleDragEnd:", error);
-      toast.error("Failed to reorder tasks");
-      await fetchTasks();
-    }
-  };
-
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setSheetOpen(true);
   };
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const renderTaskColumn = (title: string, assignee: string | null) => {
     const key = assignee || "all";
@@ -214,24 +154,16 @@ export function WorkTab() {
           </Button>
         </form>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={(event) => handleDragEnd(event, assignee)}
-        >
-          <SortableContext items={activeTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-2">
-              {activeTasks.map((task) => (
-                <SortableTask 
-                  key={task.id} 
-                  task={task} 
-                  onToggle={handleToggleStatus}
-                  onClick={handleTaskClick}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div className="space-y-2">
+          {activeTasks.map((task) => (
+            <SortableTask 
+              key={task.id} 
+              task={task} 
+              onToggle={handleToggleStatus}
+              onClick={handleTaskClick}
+            />
+          ))}
+        </div>
 
         {completedTasks.length > 0 && (
           <Collapsible>
