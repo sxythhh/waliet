@@ -180,11 +180,11 @@ export function CampaignAnalyticsTable({
             data: profile
           } = await supabase.from("profiles").select("username, avatar_url").eq("id", item.user_id).single();
 
-          // Fetch social account for this platform connected to this campaign
+          // Fetch social account for this platform connected to this campaign that matches the username
           let { data: socialAccount } = await supabase
             .from("social_account_campaigns")
             .select(`
-              social_accounts (
+              social_accounts!inner (
                 id,
                 platform,
                 username
@@ -193,6 +193,7 @@ export function CampaignAnalyticsTable({
             .eq("campaign_id", campaignId)
             .eq("social_accounts.user_id", item.user_id)
             .eq("social_accounts.platform", item.platform)
+            .ilike("social_accounts.username", item.account_username)
             .maybeSingle();
 
           // Extract the social account from the nested structure
