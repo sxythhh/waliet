@@ -1,21 +1,24 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ChevronRight, Plus, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowUp, Plus } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { OptimizedImage } from "@/components/OptimizedImage";
+
 interface Campaign {
   id: string;
   title: string;
   description: string | null;
   budget: number;
+  budget_used?: number;
   rpm_rate: number;
   status: string;
   banner_url: string | null;
@@ -24,99 +27,93 @@ interface Campaign {
   brand_logo_url: string | null;
   allowed_platforms: string[];
   slug: string;
+  application_questions: string[];
+  requires_application?: boolean;
+  preview_url?: string | null;
+  is_infinite_budget?: boolean;
+  brands?: {
+    logo_url: string;
+  };
 }
-interface ApplicationForm {
-  platform: string;
-}
+
 interface SocialAccount {
   id: string;
   platform: string;
   username: string;
   follower_count: number;
   is_verified: boolean;
-  campaign_id: string | null;
+  account_link: string | null;
 }
+
 export default function CampaignJoin() {
-  const {
-    slug
-  } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedAccounts, setSelectedAccounts] = useState<SocialAccount[]>([]);
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-  const [existingSubmissions, setExistingSubmissions] = useState<Set<string>>(new Set());
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+
   useEffect(() => {
     fetchCampaign();
-    fetchSocialAccounts();
-    fetchExistingSubmissions();
   }, [slug]);
-  const fetchExistingSubmissions = async () => {
-    if (!slug) return;
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
 
-      // Get the campaign first
-      const { data: campaignData } = await supabase
-        .from('campaigns')
-        .select('id')
-        .eq('slug', slug)
-        .maybeSingle();
-
-      if (!campaignData) return;
-
-      // Check for existing submissions
-      const { data, error } = await supabase
-        .from('campaign_submissions')
-        .select('platform')
-        .eq('campaign_id', campaignData.id)
-        .eq('creator_id', user.id);
-
-      if (error) throw error;
-      
-      // Create a set of platforms that have already been submitted
-      const submittedPlatforms = new Set(data?.map(s => s.platform) || []);
-      setExistingSubmissions(submittedPlatforms);
-    } catch (error) {
-      console.error('Error fetching existing submissions:', error);
+  useEffect(() => {
+    if (campaign) {
+      loadSocialAccounts();
     }
+  }, [campaign]);
+
+  const loadSocialAccounts = async () => {
+    if (!campaign) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to join campaigns");
+      navigate("/auth");
+      return;
+    }
+
+    // Get all user's social accounts that match the campaign's platforms
+    const { data: accounts } = await supabase
+      .from("social_accounts")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("platform", campaign.allowed_platforms.map(p => p.toLowerCase()));
+
+    // Get active (non-withdrawn) submissions to filter out platforms
+    const { data: activeSubmissions } = await supabase
+      .from("campaign_submissions")
+      .select("platform")
+      .eq("campaign_id", campaign.id)
+      .eq("creator_id", user.id)
+      .neq("status", "withdrawn");
+
+    const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
+    
+    // Filter out accounts with active submissions for this campaign
+    const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
+    
+    setSocialAccounts(availableAccounts);
   };
 
-  const fetchSocialAccounts = async () => {
-    try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const {
-        data,
-        error
-      } = await supabase.from('social_accounts').select('*').eq('user_id', user.id); // Show all accounts
-
-      if (error) throw error;
-      setSocialAccounts(data || []);
-    } catch (error) {
-      console.error('Error fetching social accounts:', error);
-    }
-  };
   const fetchCampaign = async () => {
     if (!slug) return;
     try {
-      const {
-        data,
-        error
-      } = await supabase.from("campaigns").select(`
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select(`
           *,
           brands (
             logo_url
           )
-        `).eq("slug", slug).in("status", ["active", "ended"]).maybeSingle();
+        `)
+        .eq("slug", slug)
+        .in("status", ["active", "ended"])
+        .maybeSingle();
+
       if (error) throw error;
       if (!data) {
         toast.error("Campaign not found");
@@ -126,7 +123,8 @@ export default function CampaignJoin() {
       // Add brand logo
       const parsedData = {
         ...data,
-        brand_logo_url: data.brands?.logo_url || data.brand_logo_url
+        brand_logo_url: data.brands?.logo_url || data.brand_logo_url,
+        application_questions: Array.isArray(data.application_questions) ? data.application_questions : []
       };
       setCampaign(parsedData as Campaign);
     } catch (error) {
@@ -136,222 +134,435 @@ export default function CampaignJoin() {
       setLoading(false);
     }
   };
-  const onSubmit = async () => {
-    if (!campaign || selectedAccounts.length === 0) return;
-    setSubmitting(true);
-    try {
-      const {
-        data: {
-          user
+
+  const toggleAccountSelection = (accountId: string) => {
+    setSelectedAccounts(prev => 
+      prev.includes(accountId)
+        ? prev.filter(id => id !== accountId)
+        : [...prev, accountId]
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (!campaign || selectedAccounts.length === 0) {
+      toast.error("Please select at least one social account");
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to join campaigns");
+      navigate("/auth");
+      return;
+    }
+
+    // Validate application questions only if campaign requires application
+    const questions = campaign.application_questions || [];
+    
+    if (campaign.requires_application !== false && questions.length > 0) {
+      const unansweredQuestions = questions.filter(
+        (q, idx) => {
+          const answer = answers[idx];
+          return !answer || answer.trim().length === 0;
         }
-      } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please sign in to apply");
-        navigate("/auth");
+      );
+      if (unansweredQuestions.length > 0) {
+        toast.error("Please answer all application questions");
         return;
       }
+    }
 
-      // Check for existing submissions first
+    setSubmitting(true);
+
+    try {
+      // Determine submission status based on campaign type
+      const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
+      
+      // Check for existing submissions first (excluding withdrawn)
       const { data: existingData } = await supabase
         .from("campaign_submissions")
         .select("platform")
         .eq("campaign_id", campaign.id)
-        .eq("creator_id", user.id);
+        .eq("creator_id", user.id)
+        .neq("status", "withdrawn");
 
       const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
-      
-      // Filter out accounts that already have submissions
-      const newSubmissions = selectedAccounts
-        .filter(account => !existingPlatforms.has(account.platform))
-        .map(account => ({
-          campaign_id: campaign.id,
-          creator_id: user.id,
-          platform: account.platform,
-          content_url: `pending-${Date.now()}-${account.id}`,
-          status: "pending"
-        }));
 
-      if (newSubmissions.length === 0) {
-        toast.error("You've already applied with these accounts");
+      // Track if any submissions were actually created
+      let submissionsCreated = 0;
+
+      // Process each selected account
+      for (const accountId of selectedAccounts) {
+        const account = socialAccounts.find(a => a.id === accountId);
+        if (!account) continue;
+        
+        // Skip if already submitted for this platform
+        if (existingPlatforms.has(account.platform)) {
+          continue;
+        }
+
+        // Format application answers
+        const formattedAnswers = campaign.application_questions?.map((question, index) => ({
+          question,
+          answer: answers[index] || ""
+        })) || [];
+
+        const contentUrl = account.account_link || `pending-${Date.now()}-${accountId}`;
+
+        // Check if there's a withdrawn submission we can reuse
+        const { data: withdrawnSubmission } = await supabase
+          .from("campaign_submissions")
+          .select("id")
+          .eq("campaign_id", campaign.id)
+          .eq("creator_id", user.id)
+          .eq("content_url", contentUrl)
+          .eq("status", "withdrawn")
+          .maybeSingle();
+
+        if (withdrawnSubmission) {
+          // Update the withdrawn submission
+          const { error: updateError } = await supabase
+            .from("campaign_submissions")
+            .update({
+              status: submissionStatus,
+              application_answers: formattedAnswers,
+              content_url: contentUrl,
+              submitted_at: new Date().toISOString(),
+            })
+            .eq("id", withdrawnSubmission.id);
+
+          if (updateError) throw updateError;
+        } else {
+          // Create new submission
+          const { error: submissionError } = await supabase
+            .from("campaign_submissions")
+            .insert({
+              campaign_id: campaign.id,
+              creator_id: user.id,
+              platform: account.platform,
+              content_url: contentUrl,
+              status: submissionStatus,
+              application_answers: formattedAnswers,
+            });
+
+          if (submissionError) throw submissionError;
+        }
+
+        // Link the social account to the campaign
+        const { data: existingLink } = await supabase
+          .from("social_account_campaigns")
+          .select("id")
+          .eq("social_account_id", accountId)
+          .eq("campaign_id", campaign.id)
+          .maybeSingle();
+
+        if (!existingLink) {
+          const { error: linkError } = await supabase
+            .from("social_account_campaigns")
+            .insert({
+              social_account_id: accountId,
+              campaign_id: campaign.id,
+            });
+
+          if (linkError) throw linkError;
+        }
+
+        submissionsCreated++;
+      }
+
+      // Show appropriate message based on what happened
+      if (submissionsCreated === 0) {
+        toast.info("You've already applied to this campaign with the selected account(s)");
         return;
       }
 
-      const {
-        data,
-        error
-      } = await supabase.from("campaign_submissions").insert(newSubmissions);
-      if (error) {
-        console.error("Submission error details:", error);
-        throw error;
-      }
-      toast.success(`Application${selectedAccounts.length > 1 ? 's' : ''} submitted successfully!`);
-      navigate("/dashboard");
-    } catch (error) {
+      const accountText = submissionsCreated === 1 ? "account is" : "accounts are";
+      const successMessage = campaign.requires_application === false 
+        ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.`
+        : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
+      
+      toast.success(successMessage);
+      navigate("/dashboard?tab=campaigns");
+    } catch (error: any) {
       console.error("Error submitting application:", error);
-      toast.error("Failed to submit application");
+      toast.error(error.message || "Failed to submit application");
     } finally {
       setSubmitting(false);
     }
   };
-  const handleAddAccount = async () => {
-    const {
-      data: {
-        user
-      }
-    } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("Please sign in to connect an account");
-      navigate("/auth");
-      return;
-    }
+
+  const handleAddAccount = () => {
     setShowAddAccountDialog(true);
   };
+
   const getPlatformIcon = (platform: string) => {
-    const iconClass = "h-5 w-5";
-    switch (platform) {
-      case 'tiktok':
-        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
-      case 'instagram':
-        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
-      case 'youtube':
-        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return tiktokLogo;
+      case "instagram":
+        return instagramLogo;
+      case "youtube":
+        return youtubeLogo;
       default:
         return null;
     }
   };
+
   if (loading) {
-    return <div className="p-8 flex items-center justify-center">
+    return (
+      <div className="p-8 flex items-center justify-center">
         <div className="text-muted-foreground">Loading campaign...</div>
-      </div>;
+      </div>
+    );
   }
+
   if (!campaign) {
-    return <div className="p-8 flex items-center justify-center">
+    return (
+      <div className="p-8 flex items-center justify-center">
         <div className="text-center">
           <div className="text-xl mb-4">Campaign not found</div>
           <Button onClick={() => navigate("/dashboard?tab=discover")}>
             Browse Campaigns
           </Button>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-full bg-background">
+
+  const budgetRemaining = campaign.budget - (campaign.budget_used || 0);
+  const budgetPercentage = campaign.budget > 0 ? ((campaign.budget_used || 0) / campaign.budget) * 100 : 0;
+  const questions = campaign.application_questions || [];
+
+  return (
+    <div className="min-h-full bg-background">
       {/* Header */}
       <div className="p-6 border-b bg-background">
-        <Button variant="ghost" onClick={() => navigate("/dashboard?tab=discover")} className="gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dashboard?tab=discover")}
+          className="gap-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to Campaigns
         </Button>
       </div>
 
-      {/* Campaign Banner with Logo */}
-      <div className="max-w-2xl mx-auto px-6 mb-12">
-        {/* Banner */}
-        <div className="relative rounded-2xl bg-gradient-to-br from-primary to-primary/80 h-48">
-          <div className="absolute inset-0 rounded-2xl overflow-hidden">
-            {campaign.banner_url ? <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-4xl font-bold text-primary-foreground">{campaign.brand_name}</div>
-                </div>}
-          </div>
-          
-          {/* Logo Badge - Overlapping bottom left */}
-          <div className="absolute -bottom-10 left-8 z-10">
-            <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center border-4 border-background overflow-hidden shadow-xl">
-              {campaign.brand_logo_url ? <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" /> : <div className="text-2xl font-bold text-primary-foreground">
-                  {campaign.brand_name.charAt(0)}
-                </div>}
+      {/* Content */}
+      <div className="max-w-2xl mx-auto px-6 py-8">
+        <div className="space-y-6">
+          {/* Campaign Banner */}
+          {campaign.banner_url && (
+            <div className="relative w-full h-48 rounded-2xl overflow-hidden">
+              <OptimizedImage
+                src={campaign.banner_url}
+                alt={campaign.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Brand Info */}
+          <div className="flex items-start gap-3">
+            {campaign.brand_logo_url && (
+              <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-border">
+                <img
+                  src={campaign.brand_logo_url}
+                  alt={campaign.brand_name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{campaign.title}</h1>
+              <p className="text-muted-foreground">{campaign.brand_name}</p>
             </div>
           </div>
+
+          {/* Description */}
+          {campaign.description && (
+            <div>
+              <p className="text-muted-foreground">{campaign.description}</p>
+            </div>
+          )}
+
+          {/* Budget & RPM */}
+          {!campaign.is_infinite_budget && (
+            <div className="rounded-lg p-4 space-y-3 bg-muted/50">
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm font-medium">Budget Progress</span>
+                <span className="text-xs text-muted-foreground">
+                  ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
+                </span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden bg-background">
+                <div
+                  className="h-full bg-primary transition-all duration-700"
+                  style={{ width: `${budgetPercentage}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">RPM Rate</p>
+                  <p className="text-lg font-bold">${campaign.rpm_rate}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <p className="text-lg font-bold">${budgetRemaining.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Campaign Preview Button */}
+          {campaign.preview_url && (
+            <Button
+              variant="outline"
+              className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors"
+              onClick={() => window.open(campaign.preview_url!, '_blank')}
+            >
+              <ArrowUp className="w-4 h-4 mr-2" />
+              <span className="font-medium">View Campaign Details</span>
+            </Button>
+          )}
+
+          {/* Allowed Platforms */}
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Allowed Platforms</h4>
+            <div className="flex gap-2 flex-wrap">
+              {campaign.allowed_platforms.map((platform) => {
+                const platformIcon = getPlatformIcon(platform);
+                return (
+                  <div
+                    key={platform}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-muted border border-border"
+                  >
+                    {platformIcon && (
+                      <img src={platformIcon} alt={platform} className="w-3.5 h-3.5" />
+                    )}
+                    <span className="text-xs font-medium text-foreground capitalize">
+                      {platform}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Account Selection */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Select Social Accounts *</Label>
+              {socialAccounts.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedAccounts.length > 0 && `${selectedAccounts.length} selected • `}
+                  Can select multiple
+                </p>
+              )}
+            </div>
+            {socialAccounts.length === 0 ? (
+              <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
+                <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
+                <p className="text-sm font-medium text-foreground">No available accounts</p>
+                <Button 
+                  onClick={handleAddAccount} 
+                  size="sm"
+                  className="border-0"
+                  style={{ backgroundColor: '#1F1F1F' }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Account
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                {socialAccounts.map((account) => {
+                  const platformIcon = getPlatformIcon(account.platform);
+                  const isSelected = selectedAccounts.includes(account.id);
+                  
+                  return (
+                    <button
+                      key={account.id}
+                      type="button"
+                      onClick={() => toggleAccountSelection(account.id)}
+                      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? "border-blue-500 bg-blue-500/10"
+                          : "border-border hover:border-muted-foreground/50 bg-card"
+                      }`}
+                    >
+                      {platformIcon && (
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                          isSelected ? "bg-blue-500" : "bg-muted"
+                        }`}>
+                          <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div className="flex-1 text-left">
+                        <p className="font-medium text-sm">{account.username}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+                <Button 
+                  onClick={handleAddAccount} 
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Another Account
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Application Questions */}
+          {campaign.requires_application !== false && questions.length > 0 && (
+            <div className="space-y-4">
+              <Label>Application Questions *</Label>
+              {questions.map((question, index) => (
+                <div key={index} className="space-y-2">
+                  <Label className="text-sm font-normal">
+                    {index + 1}. {question}
+                  </Label>
+                  <Textarea
+                    value={answers[index] || ""}
+                    onChange={(e) => setAnswers({ ...answers, [index]: e.target.value })}
+                    placeholder="Type your answer here..."
+                    className="min-h-[100px] resize-none"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting || selectedAccounts.length === 0}
+            className="w-full h-12"
+            size="lg"
+          >
+            {submitting ? "Submitting..." : `Submit Application${selectedAccounts.length > 1 ? 's' : ''} (${selectedAccounts.length})`}
+          </Button>
         </div>
       </div>
 
-      {/* Account Selection */}
-      <div className="max-w-2xl mx-auto px-6">
-        <div className="relative flex gap-6 mb-8">
-            {/* Step Content */}
-            <div className="flex-1 pb-8">
-              {existingSubmissions.size > 0 ? (
-                // Already Applied Message
-                <div className="text-center py-12">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <CheckCircle2 className="h-8 w-8 text-primary" />
-                    </div>
-                  </div>
-                  <h2 className="text-2xl font-bold mb-2">Already Applied</h2>
-                  <p className="text-muted-foreground mb-6">
-                    You've already submitted an application for this campaign
-                  </p>
-                  <Button onClick={() => navigate("/dashboard?tab=campaigns")} variant="outline">
-                    View My Campaigns
-                  </Button>
-                </div>
-              ) : (
-                // Account Selection (existing code)
-                <>
-                  <h2 className="text-xl font-bold mb-4">Select An Account For This Campaign</h2>
-                  
-                  {socialAccounts.length === 0 ? <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-4">You don't have any connected accounts yet</p>
-                      <Button onClick={handleAddAccount} variant="outline" className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Connect Your First Account
-                      </Button>
-                    </div> : <>
-                      <div className="space-y-3 mb-4">
-                        {socialAccounts.map(account => {
-                    const isLinkedToCampaign = account.campaign_id !== null;
-                    const isCompatible = campaign.allowed_platforms.includes(account.platform);
-                    const hasAlreadyApplied = existingSubmissions.has(account.platform);
-                    const isDisabled = isLinkedToCampaign || !isCompatible || hasAlreadyApplied;
-                    const isSelected = selectedAccounts.some(acc => acc.id === account.id);
-                    return <div key={account.id} onClick={() => {
-                      if (isDisabled) return;
-
-                      // Toggle selection
-                      if (isSelected) {
-                        setSelectedAccounts(selectedAccounts.filter(acc => acc.id !== account.id));
-                      } else {
-                        setSelectedAccounts([...selectedAccounts, account]);
-                      }
-                    }} className={`p-4 rounded-xl border transition-all ${isDisabled ? 'bg-muted/50 cursor-not-allowed opacity-60' : isSelected ? 'bg-primary/10 ring-2 ring-primary cursor-pointer' : 'bg-card hover:bg-card/80 cursor-pointer'}`}>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  {getPlatformIcon(account.platform)}
-                                  <div>
-                                    <div className="font-medium flex items-center gap-2">
-                                      @{account.username}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">
-                                      {hasAlreadyApplied && "Already applied to this campaign"}
-                                      {isLinkedToCampaign && !hasAlreadyApplied && "Already linked to a campaign"}
-                                      {!isCompatible && !isLinkedToCampaign && !hasAlreadyApplied && `${account.platform.charAt(0).toUpperCase() + account.platform.slice(1)} is not allowed for this campaign`}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>;
-                  })}
-                      </div>
-
-                      <Button onClick={handleAddAccount} variant="outline" className="w-full gap-2">
-                        <Plus className="h-4 w-4" />
-                        Connect Another Account
-                      </Button>
-
-                      {selectedAccounts.length > 0 && <Button onClick={onSubmit} disabled={submitting} className="w-full mt-4">
-                          {submitting ? "Submitting..." : `Submit Application${selectedAccounts.length > 1 ? 's' : ''} (${selectedAccounts.length})`}
-                        </Button>}
-                     </>}
-                </>
-              )}
-            </div>
-          </div>
-
-      </div>
-
-      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={() => {
-      fetchSocialAccounts();
-      setShowAddAccountDialog(false);
-    }} />
-    </div>;
+      <AddSocialAccountDialog
+        open={showAddAccountDialog}
+        onOpenChange={setShowAddAccountDialog}
+        onSuccess={() => {
+          loadSocialAccounts();
+          setShowAddAccountDialog(false);
+        }}
+      />
+    </div>
+  );
 }
