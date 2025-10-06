@@ -109,7 +109,7 @@ export function WorkTab() {
             placeholder="Add a task..."
             value={newTaskInputs[key]}
             onChange={(e) => setNewTaskInputs({ ...newTaskInputs, [key]: e.target.value })}
-            className="pr-10 transition-all duration-200 border focus:border-2 focus:ring-2 focus:ring-primary"
+            className="pr-10 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0"
           />
           <Button
             type="submit"
