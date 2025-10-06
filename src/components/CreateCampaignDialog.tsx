@@ -25,7 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Upload, X, Trash2 } from "lucide-react";
+import { Plus, Upload, X, Trash2, Copy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const campaignSchema = z.object({
@@ -350,10 +350,25 @@ export function CreateCampaignDialog({
               )}
             />
 
+
             {campaign?.slug && (
               <div className="p-3 rounded-lg bg-[#191919] border border-white/10">
                 <p className="text-xs text-white/40 mb-1">Campaign Slug</p>
-                <p className="text-sm text-white/80 font-mono">{campaign.slug}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-white/80 font-mono flex-1">{campaign.slug}</p>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
+                    onClick={() => {
+                      navigator.clipboard.writeText(campaign.slug!);
+                      toast.success("Slug copied to clipboard!");
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
 
