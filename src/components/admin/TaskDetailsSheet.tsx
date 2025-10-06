@@ -63,7 +63,6 @@ export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDet
         
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">Task Details</label>
             <RichTextEditor
               content={description}
               onChange={setDescription}

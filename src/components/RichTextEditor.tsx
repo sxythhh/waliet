@@ -1,6 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
 import { Button } from '@/components/ui/button';
 import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Heading3, Image as ImageIcon, Undo, Redo } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +29,12 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
         allowBase64: true,
         HTMLAttributes: {
           class: 'resizable-image',
+        },
+      }),
+      Link.configure({
+        openOnClick: true,
+        HTMLAttributes: {
+          class: 'text-primary underline cursor-pointer',
         },
       }),
     ],
@@ -93,8 +100,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
   if (!editor) return null;
 
   return (
-    <div className="border border-white/10 rounded-lg bg-[#191919]">
-      <div className="border-b border-white/10 p-2 flex gap-1 flex-wrap">
+    <div className="rounded-lg bg-black/60">
+      <div className="p-2 flex gap-1 flex-wrap">
         <Button
           type="button"
           size="sm"
