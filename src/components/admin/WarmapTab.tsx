@@ -160,14 +160,14 @@ export function WarmapTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={handlePrevious}>
+        <Button className="bg-gray-800 hover:bg-gray-700 border-0" onClick={handlePrevious}>
           <ChevronLeft className="h-4 w-4" />
           Previous
         </Button>
         <div className="text-lg font-semibold">
           {format(currentStartDate, "MMM d")} - {format(addDays(currentStartDate, 3), "MMM d, yyyy")}
         </div>
-        <Button variant="outline" onClick={handleNext}>
+        <Button className="bg-gray-800 hover:bg-gray-700 border-0" onClick={handleNext}>
           Next
           <ChevronRight className="h-4 w-4" />
         </Button>
