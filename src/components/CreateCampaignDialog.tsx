@@ -216,6 +216,7 @@ export function CreateCampaignDialog({
         guidelines: values.guidelines || null,
         embed_url: values.embed_url || null,
         preview_url: values.preview_url || null,
+        analytics_url: values.analytics_url || null,
         brand_id: brandId,
         brand_name: brandName,
         banner_url: bannerUrl,
