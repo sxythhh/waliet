@@ -747,7 +747,8 @@ export default function AdminUsers() {
       const {
         error: updateError
       } = await supabase.from("demographic_submissions").update({
-        score: scoreValue
+        score: scoreValue,
+        tier1_percentage: scoreValue
       }).eq("id", editingSubmission.id);
       if (updateError) throw updateError;
 
