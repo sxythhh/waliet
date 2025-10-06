@@ -45,8 +45,14 @@ export default function BrandInvite() {
         return;
       }
 
+      // Check if invitation has expired
+      if (inviteData.expires_at && new Date(inviteData.expires_at) < new Date()) {
+        toast.error("This invitation has expired");
+        return;
+      }
+
       if (inviteData.status !== "pending") {
-        toast.error("This invitation has already been used or expired");
+        toast.error("This invitation has already been used");
         return;
       }
 
