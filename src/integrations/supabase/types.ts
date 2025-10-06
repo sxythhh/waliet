@@ -333,6 +333,7 @@ export type Database = {
         Row: {
           access_code: string | null
           allowed_platforms: string[] | null
+          analytics_url: string | null
           application_questions: Json | null
           banner_url: string | null
           brand_id: string | null
@@ -361,6 +362,7 @@ export type Database = {
         Insert: {
           access_code?: string | null
           allowed_platforms?: string[] | null
+          analytics_url?: string | null
           application_questions?: Json | null
           banner_url?: string | null
           brand_id?: string | null
@@ -389,6 +391,7 @@ export type Database = {
         Update: {
           access_code?: string | null
           allowed_platforms?: string[] | null
+          analytics_url?: string | null
           application_questions?: Json | null
           banner_url?: string | null
           brand_id?: string | null

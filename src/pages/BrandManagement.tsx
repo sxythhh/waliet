@@ -35,6 +35,7 @@ interface Campaign {
   status: string;
   banner_url: string | null;
   preview_url: string | null;
+  analytics_url: string | null;
 }
 interface SocialAccount {
   id: string;
@@ -233,7 +234,7 @@ export default function BrandManagement() {
       const {
         data,
         error
-      } = await supabase.from("campaigns").select("id, title, budget, budget_used, rpm_rate, status, banner_url, preview_url").eq("brand_id", brandData.id).order("created_at", {
+      } = await supabase.from("campaigns").select("id, title, budget, budget_used, rpm_rate, status, banner_url, preview_url, analytics_url").eq("brand_id", brandData.id).order("created_at", {
         ascending: false
       });
       if (error) throw error;
@@ -564,8 +565,18 @@ export default function BrandManagement() {
           <TabsContent value="analytics" className="space-y-4">
             {/* Campaign Performance Overview */}
             <Card className="bg-[#202020] border-transparent">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-white text-sm">Performance Overview</CardTitle>
+                {selectedCampaign?.analytics_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')}
+                    className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/30"
+                  >
+                    View Analytics
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

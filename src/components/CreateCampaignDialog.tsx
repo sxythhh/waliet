@@ -41,6 +41,7 @@ const campaignSchema = z.object({
   guidelines: z.string().trim().max(2000).optional(),
   embed_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   preview_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
+  analytics_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
   application_questions: z.array(z.string().trim().min(1)).max(3, "Maximum 3 questions allowed"),
   is_private: z.boolean().default(false),
@@ -82,6 +83,7 @@ interface Campaign {
   slug?: string;
   embed_url?: string | null;
   preview_url?: string | null;
+  analytics_url?: string | null;
   is_private?: boolean;
   access_code?: string | null;
   requires_application?: boolean;
@@ -128,6 +130,7 @@ export function CreateCampaignDialog({
       guidelines: campaign?.guidelines || "",
       embed_url: campaign?.embed_url || "",
       preview_url: campaign?.preview_url || "",
+      analytics_url: campaign?.analytics_url || "",
       allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
       application_questions: campaign?.application_questions || [],
       is_private: campaign?.is_private || false,
@@ -487,6 +490,27 @@ export function CreateCampaignDialog({
                   </FormControl>
                   <p className="text-xs text-white/40 mt-1">
                     Enter a URL to display as preview for non-members viewing this campaign
+                  </p>
+                  <FormMessage className="text-destructive/80" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="analytics_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Analytics URL (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://example.com/analytics"
+                      className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-white/40 mt-1">
+                    Enter a URL to external analytics dashboard
                   </p>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>
