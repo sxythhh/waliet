@@ -14,7 +14,6 @@ interface BrandInvitationRequest {
   brandSlug: string;
   role: string;
   inviterName: string;
-  appUrl: string;
   invitationId: string;
 }
 
@@ -24,11 +23,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, brandName, brandSlug, role, inviterName, appUrl, invitationId }: BrandInvitationRequest = await req.json();
+    const { email, brandName, brandSlug, role, inviterName, invitationId }: BrandInvitationRequest = await req.json();
 
     console.log("Sending brand invitation email to:", email);
 
-    const inviteUrl = `${appUrl}/brand/${brandSlug}/invite/${invitationId}`;
+    const inviteUrl = `https://virality.gg/brand/${brandSlug}/invite/${invitationId}`;
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",

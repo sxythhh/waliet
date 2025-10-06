@@ -59,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("User email not found");
     }
 
-    const campaignUrl = `${Deno.env.get("SUPABASE_URL")?.replace("upiypxzjaagithghxayv.supabase.co", "virality.gg")}/campaign/${campaign.slug}`;
+    const campaignUrl = `https://virality.gg/campaign/${campaign.slug}`;
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
