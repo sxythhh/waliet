@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck } from "lucide-react";
+import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck, ChevronDown } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, BarChart, CartesianGrid } from "recharts";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { format, subDays, subMonths, startOfWeek } from "date-fns";
 
 interface AnalyticsData {
   totalUsers: number;
@@ -15,6 +18,8 @@ interface AnalyticsData {
   pendingApplications: number;
   pendingDemographicReviews: number;
 }
+
+type TimePeriod = '3D' | '1W' | '1M' | '3M' | 'ALL';
 
 export function AnalyticsTab() {
   const [analytics, setAnalytics] = useState<AnalyticsData>({
@@ -30,12 +35,42 @@ export function AnalyticsTab() {
   });
   const [userGrowthData, setUserGrowthData] = useState<any[]>([]);
   const [campaignData, setCampaignData] = useState<any[]>([]);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1M');
+
+  const getTimePeriodLabel = () => {
+    switch (timePeriod) {
+      case '3D': return 'Last 3 Days';
+      case '1W': return 'Last Week';
+      case '1M': return 'Last Month';
+      case '3M': return 'Last 3 Months';
+      case 'ALL': return 'All Time';
+      default: return 'Last Month';
+    }
+  };
+
+  const getDateRange = () => {
+    const now = new Date();
+    switch (timePeriod) {
+      case '3D':
+        return { start: subDays(now, 3), end: now };
+      case '1W':
+        return { start: subDays(now, 7), end: now };
+      case '1M':
+        return { start: subMonths(now, 1), end: now };
+      case '3M':
+        return { start: subMonths(now, 3), end: now };
+      case 'ALL':
+        return { start: new Date(0), end: now };
+      default:
+        return { start: subMonths(now, 1), end: now };
+    }
+  };
 
   useEffect(() => {
     fetchAnalytics();
     fetchUserGrowthData();
     fetchCampaignData();
-  }, []);
+  }, [timePeriod]);
 
   const fetchAnalytics = async () => {
     // Fetch total users
@@ -100,25 +135,34 @@ export function AnalyticsTab() {
   };
 
   const fetchUserGrowthData = async () => {
+    const { start, end } = getDateRange();
+    
     const { data } = await supabase
       .from("profiles")
       .select("created_at")
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString())
       .order("created_at", { ascending: true });
 
     if (!data) return;
 
-    // Group by month
-    const monthlyData: { [key: string]: number } = {};
+    // Determine grouping based on time period
+    const groupBy = timePeriod === '3D' || timePeriod === '1W' ? 'day' : 'month';
+    
+    // Group by day or month
+    const groupedData: { [key: string]: number } = {};
     data.forEach((profile) => {
-      const month = new Date(profile.created_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-      });
-      monthlyData[month] = (monthlyData[month] || 0) + 1;
+      const key = groupBy === 'day' 
+        ? format(new Date(profile.created_at), 'MMM dd')
+        : new Date(profile.created_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+          });
+      groupedData[key] = (groupedData[key] || 0) + 1;
     });
 
-    const chartData = Object.entries(monthlyData).map(([month, count]) => ({
-      month,
+    const chartData = Object.entries(groupedData).map(([key, count]) => ({
+      month: key,
       users: count,
     }));
 
@@ -245,8 +289,33 @@ export function AnalyticsTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card border-0">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-semibold">User Growth</CardTitle>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 bg-background">
+                  {getTimePeriodLabel()}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-background z-50">
+                <DropdownMenuItem onClick={() => setTimePeriod('3D')}>
+                  Last 3 Days
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTimePeriod('1W')}>
+                  Last Week
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTimePeriod('1M')}>
+                  Last Month
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTimePeriod('3M')}>
+                  Last 3 Months
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTimePeriod('ALL')}>
+                  All Time
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
