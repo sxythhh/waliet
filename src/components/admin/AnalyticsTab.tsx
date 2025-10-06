@@ -35,7 +35,7 @@ export function AnalyticsTab() {
   });
   const [userGrowthData, setUserGrowthData] = useState<any[]>([]);
   const [campaignData, setCampaignData] = useState<any[]>([]);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1M');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('3D');
 
   const getTimePeriodLabel = () => {
     switch (timePeriod) {
@@ -293,7 +293,7 @@ export function AnalyticsTab() {
             <CardTitle className="text-lg font-semibold">User Growth</CardTitle>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 bg-background">
+                <Button variant="outline" size="sm" className="gap-2 bg-background border-0">
                   {getTimePeriodLabel()}
                   <ChevronDown className="h-4 w-4" />
                 </Button>
