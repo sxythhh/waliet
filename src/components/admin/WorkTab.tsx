@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,13 +28,7 @@ const STATUS_MAP = {
 export function WorkTab() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newTask, setNewTask] = useState({
-    title: "",
-    description: "",
-    assigned_to: "",
-    priority: "medium" as Task["priority"],
-  });
+  const [newTaskTitle, setNewTaskTitle] = useState("");
 
   useEffect(() => {
     fetchTasks();
@@ -53,17 +47,21 @@ export function WorkTab() {
     setTasks((data as Task[]) || []);
   };
 
-  const handleAddTask = async () => {
-    if (!newTask.title) {
+  const handleAddTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newTaskTitle.trim()) {
       toast.error("Please enter a task title");
       return;
     }
 
+    const assignedTo = activeFilter === "all" ? null : activeFilter;
+
     const { error } = await supabase.from("work_tasks").insert({
-      title: newTask.title,
-      description: newTask.description || null,
-      assigned_to: newTask.assigned_to || null,
-      priority: newTask.priority,
+      title: newTaskTitle.trim(),
+      description: null,
+      assigned_to: assignedTo,
+      priority: null,
       status: "todo",
     });
 
@@ -72,9 +70,8 @@ export function WorkTab() {
       return;
     }
 
-    toast.success("Task added successfully");
-    setIsDialogOpen(false);
-    setNewTask({ title: "", description: "", assigned_to: "", priority: "medium" });
+    toast.success("Task added");
+    setNewTaskTitle("");
     fetchTasks();
   };
 
@@ -176,63 +173,21 @@ export function WorkTab() {
             </Button>
           ))}
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Task
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Task</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Task title"
-                value={newTask.title}
-                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-              />
-              <Textarea
-                placeholder="Description (optional)"
-                value={newTask.description}
-                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-              />
-              <Select
-                value={newTask.assigned_to || "unassigned"}
-                onValueChange={(value) => setNewTask({ ...newTask, assigned_to: value === "unassigned" ? "" : value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Assign to..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {ASSIGNEES.map((assignee) => (
-                    <SelectItem key={assignee} value={assignee}>
-                      {assignee}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={newTask.priority || "medium"}
-                onValueChange={(value) => setNewTask({ ...newTask, priority: value as Task["priority"] })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAddTask} className="w-full">
-                Add Task
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <form onSubmit={handleAddTask} className="relative">
+          <Input
+            placeholder="Add a new task..."
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            className="pr-10 transition-all duration-200 focus:ring-2 focus:ring-primary"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </form>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
