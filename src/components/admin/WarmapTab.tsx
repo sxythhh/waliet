@@ -18,9 +18,17 @@ interface WarmapEvent {
   event_date: string;
   assigned_to: string[];
   link: string | null;
+  category: string | null;
 }
 
 const TEAM_MEMBERS = ["matt", "ivelin", "alex"];
+
+const CATEGORIES = [
+  { value: "sales", label: "Sales", color: "bg-[#10b981]" },
+  { value: "attention", label: "Attention", color: "bg-[#f59e0b]" },
+  { value: "product", label: "Product", color: "bg-[#3b82f6]" },
+  { value: "other", label: "Other", color: "bg-[#8b5cf6]" },
+];
 
 export function WarmapTab() {
   const [events, setEvents] = useState<WarmapEvent[]>([]);
@@ -32,7 +40,8 @@ export function WarmapTab() {
     title: "", 
     description: "", 
     assigned_to: [] as string[], 
-    link: "" 
+    link: "",
+    category: "other"
   });
   const [draggedEvent, setDraggedEvent] = useState<WarmapEvent | null>(null);
   const [dragOverDay, setDragOverDay] = useState<number | null>(null);
@@ -79,6 +88,7 @@ export function WarmapTab() {
           description: newEvent.description || null,
           assigned_to: newEvent.assigned_to,
           link: newEvent.link || null,
+          category: newEvent.category || null,
         })
         .eq("id", editingEvent.id);
 
@@ -94,6 +104,7 @@ export function WarmapTab() {
         event_date: format(selectedDate, "yyyy-MM-dd"),
         assigned_to: newEvent.assigned_to,
         link: newEvent.link || null,
+        category: newEvent.category || null,
       });
 
       if (error) {
@@ -104,7 +115,7 @@ export function WarmapTab() {
     }
 
     setIsDialogOpen(false);
-    setNewEvent({ title: "", description: "", assigned_to: [], link: "" });
+    setNewEvent({ title: "", description: "", assigned_to: [], link: "", category: "other" });
     setSelectedDate(null);
     setEditingEvent(null);
     fetchEvents();
@@ -130,6 +141,7 @@ export function WarmapTab() {
       description: event.description || "",
       assigned_to: event.assigned_to || [],
       link: event.link || "",
+      category: event.category || "other",
     });
     setSelectedDate(new Date(event.event_date));
     setIsDialogOpen(true);
@@ -181,6 +193,11 @@ export function WarmapTab() {
     const dateStr = format(date, "yyyy-MM-dd");
     const dayEvents = events.filter((e) => e.event_date === dateStr);
 
+    const getCategoryColor = (category: string | null) => {
+      const cat = CATEGORIES.find(c => c.value === category);
+      return cat?.color || "bg-[#8b5cf6]";
+    };
+
     return (
       <Card
         key={dayOffset}
@@ -204,7 +221,7 @@ export function WarmapTab() {
             onClick={() => {
               setSelectedDate(date);
               setEditingEvent(null);
-              setNewEvent({ title: "", description: "", assigned_to: [], link: "" });
+              setNewEvent({ title: "", description: "", assigned_to: [], link: "", category: "other" });
               setIsDialogOpen(true);
             }}
           >
@@ -216,21 +233,21 @@ export function WarmapTab() {
           {dayEvents.map((event) => (
             <div
               key={event.id}
-              className="p-2 bg-primary/10 rounded-md group relative cursor-move hover:bg-primary/15 transition-colors"
+              className={`p-2 ${getCategoryColor(event.category)} rounded-md group relative cursor-grab active:cursor-grabbing hover:opacity-90 transition-opacity text-white`}
               draggable
               onDragStart={() => handleDragStart(event)}
               onClick={() => handleEditEvent(event)}
             >
               <div className="font-medium text-sm pr-6">{event.title}</div>
               {event.description && (
-                <div className="text-xs text-muted-foreground">{event.description}</div>
+                <div className="text-xs text-white/80">{event.description}</div>
               )}
               {event.assigned_to && event.assigned_to.length > 0 && (
                 <div className="flex gap-1 mt-1">
                   {event.assigned_to.map((member) => (
                     <span
                       key={member}
-                      className="text-xs px-1.5 py-0.5 bg-background rounded"
+                      className="text-xs px-1.5 py-0.5 bg-white/20 rounded text-white"
                     >
                       @{member}
                     </span>
@@ -311,6 +328,25 @@ export function WarmapTab() {
               value={newEvent.link}
               onChange={(e) => setNewEvent({ ...newEvent, link: e.target.value })}
             />
+            <div className="space-y-2">
+              <Label>Category:</Label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((category) => (
+                  <button
+                    key={category.value}
+                    type="button"
+                    onClick={() => setNewEvent({ ...newEvent, category: category.value })}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      newEvent.category === category.value
+                        ? `${category.color} text-white ring-2 ring-offset-2 ring-offset-background ring-primary`
+                        : `${category.color} text-white opacity-50 hover:opacity-75`
+                    }`}
+                  >
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Assign to:</Label>
               <div className="flex flex-col gap-2">
