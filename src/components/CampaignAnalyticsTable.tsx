@@ -231,7 +231,26 @@ export function CampaignAnalyticsTable({
   };
   const fetchAvailableUsers = async (accountPlatform: string) => {
     try {
-      // Get all users who have joined this campaign through the junction table
+      // Get all users who have APPROVED submissions for this campaign
+      const {
+        data: approvedSubmissions,
+        error: submissionsError
+      } = await supabase
+        .from('campaign_submissions')
+        .select('creator_id')
+        .eq('campaign_id', campaignId)
+        .eq('status', 'approved');
+      
+      if (submissionsError) throw submissionsError;
+      
+      const approvedUserIds = approvedSubmissions?.map(s => s.creator_id) || [];
+      
+      if (approvedUserIds.length === 0) {
+        setAvailableUsers([]);
+        return;
+      }
+      
+      // Get social accounts for approved users that are connected to this campaign
       const {
         data: campaignAccounts,
         error
@@ -244,7 +263,9 @@ export function CampaignAnalyticsTable({
             follower_count,
             account_link
           )
-        `).eq('campaign_id', campaignId);
+        `).eq('campaign_id', campaignId)
+        .in('social_accounts.user_id', approvedUserIds);
+      
       if (error) throw error;
       
       // Fetch profile data for each unique user
