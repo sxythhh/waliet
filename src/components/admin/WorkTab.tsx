@@ -20,12 +20,12 @@ interface Task {
   reminder_at: string | null;
 }
 
-const ASSIGNEES = ["ivelin", "matt", "alex"];
+const ASSIGNEES = ["team", "ivelin", "matt", "alex"];
 
 export function WorkTab() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({
-    all: "",
+    team: "",
     ivelin: "",
     matt: "",
     alex: "",
@@ -51,8 +51,8 @@ export function WorkTab() {
     setTasks((data as Task[]) || []);
   };
 
-  const handleAddTask = async (assignee: string | null) => {
-    const key = assignee || "all";
+  const handleAddTask = async (assignee: string) => {
+    const key = assignee;
     const title = newTaskInputs[key];
     
     if (!title?.trim()) {
@@ -120,11 +120,9 @@ export function WorkTab() {
     setSheetOpen(true);
   };
 
-  const renderTaskColumn = (title: string, assignee: string | null) => {
-    const key = assignee || "all";
-    const columnTasks = assignee === null 
-      ? tasks 
-      : tasks.filter((task) => task.assigned_to === assignee);
+  const renderTaskColumn = (title: string, assignee: string) => {
+    const key = assignee;
+    const columnTasks = tasks.filter((task) => task.assigned_to === assignee);
     
     const activeTasks = columnTasks.filter((task) => task.status !== "done");
     const completedTasks = columnTasks.filter((task) => task.status === "done");
@@ -203,9 +201,8 @@ export function WorkTab() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4 overflow-x-auto pb-4 w-full">
-        {renderTaskColumn("All Tasks", null)}
         {ASSIGNEES.map((assignee) => 
-          renderTaskColumn(assignee.charAt(0).toUpperCase() + assignee.slice(1), assignee)
+          renderTaskColumn(assignee === "team" ? "Team" : assignee.charAt(0).toUpperCase() + assignee.slice(1), assignee)
         )}
       </div>
 

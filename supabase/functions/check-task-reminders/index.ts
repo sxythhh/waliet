@@ -65,13 +65,16 @@ Deno.serve(async (req) => {
         // Map assignee names to Discord user IDs
         const discordMentions: Record<string, string> = {
           'ivelin': '<@575313257410068481>',
-          'alex': '<@877077541813358614>',
+          'alex': '<@963115792730300536>',
           'matt': '<@877077541813358614>',
         };
 
         // Get mention string if task is assigned
         let mentionText = '';
-        if (task.assigned_to && discordMentions[task.assigned_to.toLowerCase()]) {
+        if (task.assigned_to === 'team') {
+          // Mention all three users for team tasks
+          mentionText = '<@575313257410068481> <@963115792730300536> <@877077541813358614> ';
+        } else if (task.assigned_to && discordMentions[task.assigned_to.toLowerCase()]) {
           mentionText = discordMentions[task.assigned_to.toLowerCase()] + ' ';
         }
 
