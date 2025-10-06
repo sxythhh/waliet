@@ -16,6 +16,7 @@ import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
+import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 interface Campaign {
   id: string;
   title: string;
@@ -44,6 +45,7 @@ export function CampaignsTab() {
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [manageAccountDialogOpen, setManageAccountDialogOpen] = useState(false);
+  const [submitDemographicsDialogOpen, setSubmitDemographicsDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<{
     id: string;
     platform: string;
@@ -420,29 +422,43 @@ export function CampaignsTab() {
     <AddSocialAccountDialog open={addAccountDialogOpen} onOpenChange={setAddAccountDialogOpen} onSuccess={fetchCampaigns} />
     
     {selectedAccount && (
-      <ManageAccountDialog
-        open={manageAccountDialogOpen}
-        onOpenChange={setManageAccountDialogOpen}
-        account={{
-          id: selectedAccount.id,
-          username: selectedAccount.username,
-          platform: selectedAccount.platform,
-          account_link: null
-        }}
-        demographicStatus={null}
-        daysUntilNext={null}
-        lastSubmissionDate={null}
-        nextSubmissionDate={null}
-        onUpdate={fetchCampaigns}
-        onSubmitDemographics={() => {}}
-        platformIcon={
-          <div className="w-4 h-4">
-            {selectedAccount.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
-            {selectedAccount.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
-            {selectedAccount.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
-          </div>
-        }
-      />
+      <>
+        <ManageAccountDialog
+          open={manageAccountDialogOpen}
+          onOpenChange={setManageAccountDialogOpen}
+          account={{
+            id: selectedAccount.id,
+            username: selectedAccount.username,
+            platform: selectedAccount.platform,
+            account_link: null
+          }}
+          demographicStatus={null}
+          daysUntilNext={null}
+          lastSubmissionDate={null}
+          nextSubmissionDate={null}
+          onUpdate={fetchCampaigns}
+          onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)}
+          platformIcon={
+            <div className="w-4 h-4">
+              {selectedAccount.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
+              {selectedAccount.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
+              {selectedAccount.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
+            </div>
+          }
+        />
+        
+        <SubmitDemographicsDialog
+          open={submitDemographicsDialogOpen}
+          onOpenChange={setSubmitDemographicsDialogOpen}
+          socialAccountId={selectedAccount.id}
+          platform={selectedAccount.platform}
+          username={selectedAccount.username}
+          onSuccess={() => {
+            setSubmitDemographicsDialogOpen(false);
+            fetchCampaigns();
+          }}
+        />
+      </>
     )}
     
     </div>;

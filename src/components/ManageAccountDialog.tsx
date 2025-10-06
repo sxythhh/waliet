@@ -230,10 +230,7 @@ export function ManageAccountDialog({
                   Next submission in {daysUntilNext} days
                 </Button> : demographicStatus === 'pending' ? <Button variant="secondary" disabled className="w-full">
                   Pending Review
-                </Button> : <Button onClick={() => {
-              onSubmitDemographics();
-              onOpenChange(false);
-            }} className="w-full" variant={demographicStatus === 'rejected' ? 'destructive' : 'default'}>
+                </Button> : <Button onClick={onSubmitDemographics} className="w-full" variant={demographicStatus === 'rejected' ? 'destructive' : 'default'}>
                   {demographicStatus === 'rejected' ? 'Resubmit Demographics' : 'Submit Demographics'}
                 </Button>}
             </div>
