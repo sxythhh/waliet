@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { Skeleton } from "@/components/ui/skeleton";
 interface Brand {
   id: string;
   name: string;
@@ -124,8 +125,16 @@ export default function BrandDashboard() {
     }
   };
   if (loading) {
-    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+    return <div className="min-h-screen p-8 bg-[#191919]">
+        <div className="max-w-7xl mx-auto">
+          <Skeleton className="h-8 w-48 mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-48 rounded-lg" />
+            <Skeleton className="h-48 rounded-lg" />
+            <Skeleton className="h-48 rounded-lg" />
+            <Skeleton className="h-48 rounded-lg" />
+          </div>
+        </div>
       </div>;
   }
   if (!brand) {

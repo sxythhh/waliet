@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function BrandAssets() {
   const { slug } = useParams();
@@ -40,8 +41,11 @@ export default function BrandAssets() {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen p-8 bg-[#191919]">
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-[calc(100vh-200px)] w-full rounded-lg" />
+        </div>
       </div>
     );
   }

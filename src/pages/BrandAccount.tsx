@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamMembersTab } from "@/components/brand/TeamMembersTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function BrandAccount() {
   const { slug } = useParams();
@@ -111,8 +112,16 @@ export default function BrandAccount() {
 
   if (loading || adminLoading) {
     return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen p-8 bg-[#191919]">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-12 w-full max-w-md" />
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full rounded-lg" />
+            <Skeleton className="h-32 w-full rounded-lg" />
+            <Skeleton className="h-32 w-full rounded-lg" />
+          </div>
+        </div>
       </div>
     );
   }
