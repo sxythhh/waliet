@@ -31,8 +31,10 @@ interface Campaign {
   requires_application?: boolean;
   preview_url?: string | null;
   is_infinite_budget?: boolean;
+  brand_id?: string;
   brands?: {
     logo_url: string;
+    slug: string;
   };
 }
 
@@ -107,7 +109,8 @@ export default function CampaignJoin() {
         .select(`
           *,
           brands (
-            logo_url
+            logo_url,
+            slug
           )
         `)
         .eq("slug", slug)
@@ -190,6 +193,7 @@ export default function CampaignJoin() {
 
       // Track if any submissions were actually created
       let submissionsCreated = 0;
+      const submittedAccountsData: Array<{ platform: string; username: string; account_link: string }> = [];
 
       // Process each selected account
       for (const accountId of selectedAccounts) {
@@ -268,6 +272,47 @@ export default function CampaignJoin() {
         }
 
         submissionsCreated++;
+        submittedAccountsData.push({
+          platform: account.platform,
+          username: account.username,
+          account_link: account.account_link || contentUrl
+        });
+      }
+
+      // Send Discord notification if submissions were created
+      if (submissionsCreated > 0) {
+        try {
+          // Get user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, email')
+            .eq('id', user.id)
+            .single();
+
+          const brandSlug = campaign.brands?.slug || '';
+
+          const formattedAnswers = campaign.application_questions?.map((question, index) => ({
+            question,
+            answer: answers[index] || ""
+          })) || [];
+
+          await supabase.functions.invoke('notify-campaign-application', {
+            body: {
+              username: profile?.username || 'Unknown',
+              email: profile?.email || 'Unknown',
+              campaign_name: campaign.title,
+              campaign_slug: campaign.slug,
+              brand_name: campaign.brand_name,
+              brand_slug: brandSlug,
+              social_accounts: submittedAccountsData,
+              application_answers: formattedAnswers,
+              submitted_at: new Date().toISOString()
+            }
+          });
+        } catch (webhookError) {
+          console.error('Failed to send Discord notification:', webhookError);
+          // Don't fail the submission if webhook fails
+        }
       }
 
       // Show appropriate message based on what happened
