@@ -116,10 +116,10 @@ export default function CampaignJoin() {
           brands (
             logo_url
           )
-        `).eq("slug", slug).eq("status", "active").maybeSingle();
+        `).eq("slug", slug).in("status", ["active", "ended"]).maybeSingle();
       if (error) throw error;
       if (!data) {
-        toast.error("Campaign not found or inactive");
+        toast.error("Campaign not found");
         return;
       }
 
