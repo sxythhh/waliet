@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, BadgeCheck, Clock, XCircle, AlertCircle } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -34,7 +34,6 @@ interface Campaign {
     id: string;
     platform: string;
     username: string;
-    demographic_status?: 'approved' | 'pending' | 'rejected' | null;
   }>;
 }
 export function CampaignsTab() {
@@ -121,41 +120,18 @@ export function CampaignsTab() {
         )
       `).in("campaign_id", campaignIds).eq("social_accounts.user_id", user.id);
 
-    // Get all social account IDs
-    const socialAccountIds = accountCampaigns?.map((ac: any) => ac.social_accounts?.id).filter(Boolean) || [];
-
-    // Fetch demographic submissions for these accounts
-    const { data: demographicData } = await supabase
-      .from("demographic_submissions")
-      .select("social_account_id, status")
-      .in("social_account_id", socialAccountIds)
-      .order("created_at", { ascending: false });
-
-    // Create a map of social account ID to demographic status (most recent)
-    const demographicStatusMap = new Map<string, 'approved' | 'pending' | 'rejected'>();
-    demographicData?.forEach((demo) => {
-      if (!demographicStatusMap.has(demo.social_account_id)) {
-        demographicStatusMap.set(demo.social_account_id, demo.status as 'approved' | 'pending' | 'rejected');
-      }
-    });
-
     // Group social accounts by campaign_id
     const accountsByCampaign = new Map<string, Array<{
       id: string;
       platform: string;
       username: string;
-      demographic_status?: 'approved' | 'pending' | 'rejected' | null;
     }>>();
     accountCampaigns?.forEach((connection: any) => {
       if (connection.campaign_id && connection.social_accounts) {
         if (!accountsByCampaign.has(connection.campaign_id)) {
           accountsByCampaign.set(connection.campaign_id, []);
         }
-        const account = {
-          ...connection.social_accounts,
-          demographic_status: demographicStatusMap.get(connection.social_accounts.id) || null
-        };
-        accountsByCampaign.get(connection.campaign_id)?.push(account);
+        accountsByCampaign.get(connection.campaign_id)?.push(connection.social_accounts);
       }
     });
     if (error) {
@@ -336,10 +312,6 @@ export function CampaignsTab() {
                           {account.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
                         </div>
                         <span className="font-medium">{account.username}</span>
-                        {account.demographic_status === 'approved' && <BadgeCheck className="h-4 w-4 text-success" />}
-                        {account.demographic_status === 'pending' && <Clock className="h-4 w-4 text-warning" />}
-                        {account.demographic_status === 'rejected' && <XCircle className="h-4 w-4 text-destructive" />}
-                        {!account.demographic_status && <AlertCircle className="h-4 w-4 text-destructive" />}
                       </div>)}
                   </div>
                 </div>}
