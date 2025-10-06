@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, DollarSign, Activity } from "lucide-react";
+import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface AnalyticsData {
@@ -11,6 +11,9 @@ interface AnalyticsData {
   activeCampaigns: number;
   totalEarnings: number;
   totalWithdrawals: number;
+  totalAccounts: number;
+  pendingApplications: number;
+  pendingDemographicReviews: number;
 }
 
 export function AnalyticsTab() {
@@ -21,6 +24,9 @@ export function AnalyticsTab() {
     activeCampaigns: 0,
     totalEarnings: 0,
     totalWithdrawals: 0,
+    totalAccounts: 0,
+    pendingApplications: 0,
+    pendingDemographicReviews: 0,
   });
   const [userGrowthData, setUserGrowthData] = useState<any[]>([]);
   const [campaignData, setCampaignData] = useState<any[]>([]);
@@ -63,6 +69,23 @@ export function AnalyticsTab() {
     const totalEarnings = walletData?.reduce((sum, w) => sum + (Number(w.total_earned) || 0), 0) || 0;
     const totalWithdrawals = walletData?.reduce((sum, w) => sum + (Number(w.total_withdrawn) || 0), 0) || 0;
 
+    // Fetch total accounts
+    const { count: totalAccounts } = await supabase
+      .from("social_accounts")
+      .select("*", { count: "exact", head: true });
+
+    // Fetch pending applications
+    const { count: pendingApplications } = await supabase
+      .from("campaign_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+
+    // Fetch pending demographic reviews
+    const { count: pendingDemographicReviews } = await supabase
+      .from("demographic_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+
     setAnalytics({
       totalUsers: totalUsers || 0,
       newUsersThisMonth: newUsersThisMonth || 0,
@@ -70,6 +93,9 @@ export function AnalyticsTab() {
       activeCampaigns: activeCampaigns || 0,
       totalEarnings,
       totalWithdrawals,
+      totalAccounts: totalAccounts || 0,
+      pendingApplications: pendingApplications || 0,
+      pendingDemographicReviews: pendingDemographicReviews || 0,
     });
   };
 
@@ -122,6 +148,47 @@ export function AnalyticsTab() {
 
   return (
     <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Accounts</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.totalAccounts}</div>
+            <p className="text-xs text-muted-foreground">
+              Social accounts
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Applications</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.pendingApplications}</div>
+            <p className="text-xs text-muted-foreground">
+              Awaiting review
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Demographics</CardTitle>
+            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.pendingDemographicReviews}</div>
+            <p className="text-xs text-muted-foreground">
+              Awaiting verification
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
