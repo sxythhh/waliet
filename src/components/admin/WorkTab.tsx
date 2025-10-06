@@ -50,7 +50,7 @@ export function WorkTab() {
       toast.error("Failed to fetch tasks");
       return;
     }
-    setTasks(data || []);
+    setTasks((data as Task[]) || []);
   };
 
   const handleAddTask = async () => {
@@ -199,14 +199,14 @@ export function WorkTab() {
                 onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
               />
               <Select
-                value={newTask.assigned_to}
-                onValueChange={(value) => setNewTask({ ...newTask, assigned_to: value })}
+                value={newTask.assigned_to || "unassigned"}
+                onValueChange={(value) => setNewTask({ ...newTask, assigned_to: value === "unassigned" ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Assign to..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {ASSIGNEES.map((assignee) => (
                     <SelectItem key={assignee} value={assignee}>
                       {assignee}
