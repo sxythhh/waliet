@@ -232,13 +232,13 @@ export default function PayoutMethodDialog({
                 </div>}
 
               {selectedMethod === "upi" && <div className="space-y-3">
-                  <Label htmlFor="upi-email" className="font-medium text-muted-foreground" style={{
+                  <Label htmlFor="upi-id" className="font-medium text-muted-foreground" style={{
               fontSize: '11px',
               letterSpacing: '-0.5px'
             }}>
-                    UPI EMAIL
+                    UPI ID
                   </Label>
-                  <Input id="upi-email" type="email" placeholder="your.email@example.com" value={upiEmail} onChange={e => setUpiEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                  <Input id="upi-id" type="text" placeholder="yourname@axl" value={upiEmail} onChange={e => setUpiEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
                 </div>}
 
               {selectedMethod === "revolut" && <div className="space-y-3">
