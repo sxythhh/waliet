@@ -12,6 +12,7 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
+import { Skeleton } from "@/components/ui/skeleton";
 interface Campaign {
   id: string;
   title: string;
@@ -180,8 +181,13 @@ export function DiscoverTab() {
         </div>
 
         {/* Campaigns Grid */}
-        {loading ? <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading campaigns...</p>
+        {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
+            <Skeleton className="h-[350px] rounded-lg" />
+            <Skeleton className="h-[350px] rounded-lg" />
+            <Skeleton className="h-[350px] rounded-lg" />
+            <Skeleton className="h-[350px] rounded-lg" />
+            <Skeleton className="h-[350px] rounded-lg" />
+            <Skeleton className="h-[350px] rounded-lg" />
           </div> : sortedCampaigns.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-slate-50 font-medium">No campaigns found</p>

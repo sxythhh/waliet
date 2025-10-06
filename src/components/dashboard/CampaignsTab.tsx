@@ -14,6 +14,7 @@ import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 interface Campaign {
   id: string;
   title: string;
@@ -209,9 +210,16 @@ export function CampaignsTab() {
     }
   };
   if (loading) {
-    return <div className="text-center py-12">
-        <p className="text-muted-foreground">Loading campaigns...</p>
-      </div>;
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
+        <Skeleton className="h-[350px] rounded-lg" />
+        <Skeleton className="h-[350px] rounded-lg" />
+        <Skeleton className="h-[350px] rounded-lg" />
+        <Skeleton className="h-[350px] rounded-lg" />
+        <Skeleton className="h-[350px] rounded-lg" />
+        <Skeleton className="h-[350px] rounded-lg" />
+      </div>
+    );
   }
   if (campaigns.length === 0) {
     return <div className="text-center py-12 flex flex-col items-center gap-4">
