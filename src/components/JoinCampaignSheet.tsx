@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, ArrowUp, Plus } from "lucide-react";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -281,7 +282,7 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
           {/* Campaign Banner */}
           {campaign.banner_url && (
             <div className="relative w-full h-40 rounded-lg overflow-hidden">
-              <img
+              <OptimizedImage
                 src={campaign.banner_url}
                 alt={campaign.title}
                 className="w-full h-full object-cover"

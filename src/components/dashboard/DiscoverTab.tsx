@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -194,7 +195,11 @@ export function DiscoverTab() {
                   {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                   {/* Banner Image */}
                   {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                      <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                      <OptimizedImage 
+                        src={campaign.banner_url} 
+                        alt={campaign.title} 
+                        className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
+                      />
                       {isEnded && <div className="absolute top-2 right-2 z-20">
                           <span className="text-red-500 text-xs font-medium px-2 py-1 bg-[#1a1a1a] rounded">
                             Ended
@@ -207,7 +212,7 @@ export function DiscoverTab() {
                     {/* Brand Logo + Title */}
                     <div className="flex items-start gap-2.5">
                       {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
-                          <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+                          <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                         </div>}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
