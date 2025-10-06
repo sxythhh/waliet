@@ -136,7 +136,7 @@ export default function BrandInvite() {
         .maybeSingle();
 
       if (existingMember) {
-        toast.error("You are already a member of this brand");
+        toast.success("You are already a member of this brand!");
         navigate(`/brand/${brandSlug}/account`);
         return;
       }
@@ -153,17 +153,6 @@ export default function BrandInvite() {
       if (memberError) {
         console.error("Member insert error:", memberError);
         throw memberError;
-      }
-
-      // Update invitation status
-      const { error: updateError } = await supabase
-        .from("brand_invitations")
-        .update({ status: "accepted" })
-        .eq("id", invitationId);
-
-      if (updateError) {
-        console.error("Invitation update error:", updateError);
-        throw updateError;
       }
 
       toast.success(`Welcome to ${brand?.name}!`);
