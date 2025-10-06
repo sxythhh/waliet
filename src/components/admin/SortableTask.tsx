@@ -56,19 +56,16 @@ export function SortableTask({ task, onToggle, onClick }: SortableTaskProps) {
         <GripVertical className="h-5 w-5 text-muted-foreground/50 hover:text-muted-foreground shrink-0 mt-0.5" />
       </div>
       <button
-        onClick={handleToggle}
-        className="flex items-start gap-2 flex-1 text-left group/check"
-      >
-        {isCompleting ? (
-          <CircleCheck className="h-5 w-5 text-primary shrink-0 mt-0.5 animate-scale-in" />
-        ) : (
-          <Circle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5 transition-all duration-100 group-hover/check:scale-110" />
-        )}
-      </button>
-      <button
         onClick={() => onClick(task)}
-        className="flex-1 text-left"
+        className="flex items-start gap-2 flex-1 text-left"
       >
+        <div onClick={(e) => { e.stopPropagation(); handleToggle(); }}>
+          {isCompleting ? (
+            <CircleCheck className="h-5 w-5 text-primary shrink-0 mt-0.5 animate-scale-in" />
+          ) : (
+            <Circle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5 transition-all duration-100 hover:scale-110" />
+          )}
+        </div>
         <span className={`text-sm transition-all duration-300 ${
           isCompleting ? 'line-through opacity-50' : ''
         }`}>
