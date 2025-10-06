@@ -17,6 +17,7 @@ interface Task {
   status: "todo" | "in_progress" | "done";
   priority: "low" | "medium" | "high" | null;
   order_index: number;
+  reminder_at: string | null;
 }
 
 const ASSIGNEES = ["ivelin", "matt", "alex"];

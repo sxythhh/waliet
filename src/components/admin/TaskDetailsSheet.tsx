@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Bell } from "lucide-react";
 
 interface Task {
   id: string;
@@ -13,6 +16,7 @@ interface Task {
   status: "todo" | "in_progress" | "done";
   priority: "low" | "medium" | "high" | null;
   order_index: number;
+  reminder_at: string | null;
 }
 
 interface TaskDetailsSheetProps {
@@ -24,11 +28,22 @@ interface TaskDetailsSheetProps {
 
 export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDetailsSheetProps) {
   const [description, setDescription] = useState("");
+  const [reminderDateTime, setReminderDateTime] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (task) {
       setDescription(task.description || "");
+      if (task.reminder_at) {
+        // Convert to local datetime-local format
+        const date = new Date(task.reminder_at);
+        const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16);
+        setReminderDateTime(localDateTime);
+      } else {
+        setReminderDateTime("");
+      }
     }
   }, [task]);
 
@@ -36,9 +51,19 @@ export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDet
     if (!task) return;
 
     setIsSaving(true);
+    
+    const updateData: any = { description };
+    
+    if (reminderDateTime) {
+      // Convert local datetime to UTC
+      updateData.reminder_at = new Date(reminderDateTime).toISOString();
+    } else {
+      updateData.reminder_at = null;
+    }
+    
     const { error } = await supabase
       .from("work_tasks")
-      .update({ description })
+      .update(updateData)
       .eq("id", task.id);
 
     if (error) {
@@ -69,6 +94,25 @@ export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDet
               onChange={setDescription}
               placeholder="Add task details, notes, or instructions..."
             />
+          </div>
+          
+          <div>
+            <Label htmlFor="reminder" className="flex items-center gap-2 mb-2">
+              <Bell className="h-4 w-4" />
+              Set Reminder
+            </Label>
+            <Input
+              id="reminder"
+              type="datetime-local"
+              value={reminderDateTime}
+              onChange={(e) => setReminderDateTime(e.target.value)}
+              className="bg-background"
+            />
+            {task.reminder_at && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Reminder set for {new Date(task.reminder_at).toLocaleString()}
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2 justify-end pt-4">
