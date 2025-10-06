@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
-import { ExternalLink, Package, Trash2 } from "lucide-react";
+import { ExternalLink, Package, Trash2, Calendar, Link as LinkIcon } from "lucide-react";
 interface Brand {
   id: string;
   name: string;
@@ -111,49 +111,73 @@ export default function AdminBrands() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto p-8 py-0">
+      <div className="max-w-7xl mx-auto p-8 py-6">
         {brands.length === 0 ? <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Package className="h-16 w-16 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-muted-foreground mb-1">No brands yet</p>
               <p className="text-sm text-muted-foreground">Create your first brand to get started</p>
             </CardContent>
-          </Card> : <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[80px]">Logo</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {brands.map(brand => <TableRow key={brand.id}>
-                    <TableCell>
-                      {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-10 h-10 rounded-lg object-cover border" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center border">
-                          <Package className="h-5 w-5 text-muted-foreground" />
+          </Card> : <div className="space-y-3">
+            {brands.map(brand => <Card key={brand.id} className="bg-card border-0 hover:bg-muted/50 transition-colors">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between gap-6">
+                    {/* Left: Logo & Main Info */}
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" /> : <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                          <Package className="h-7 w-7 text-muted-foreground" />
                         </div>}
-                    </TableCell>
-                    <TableCell className="font-medium">{brand.name}</TableCell>
-                    <TableCell>
-                      {brand.brand_type ? <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} rounded`}>
-                          {brand.brand_type}
-                        </Badge> : <span className="text-muted-foreground">—</span>}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{brand.slug}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
-                        <Button size="sm" variant="outline" onClick={() => window.open(`/brand/${brand.slug}`, '_blank')}>
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </Button>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-lg font-semibold truncate">{brand.name}</h3>
+                          {brand.brand_type && <Badge className={`${getBrandTypeBadgeColor(brand.brand_type)} text-xs px-2 py-0.5`}>
+                              {brand.brand_type}
+                            </Badge>}
+                        </div>
+                        
+                        {brand.description && <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {brand.description}
+                          </p>}
+                        
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <LinkIcon className="h-3.5 w-3.5" />
+                            <span className="font-mono">{brand.slug}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>{new Date(brand.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </div>
+                          
+                          {brand.home_url && <div className="flex items-center gap-1.5">
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              <a href={brand.home_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                                Home URL
+                              </a>
+                            </div>}
+                          
+                          {brand.account_url && <div className="flex items-center gap-1.5">
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              <a href={brand.account_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                                Account URL
+                              </a>
+                            </div>}
+                        </div>
                       </div>
-                    </TableCell>
-                  </TableRow>)}
-              </TableBody>
-            </Table>
+                    </div>
+                    
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
+                      <Button size="sm" variant="ghost" onClick={() => window.open(`/brand/${brand.slug}`, '_blank')} className="h-9 w-9 p-0">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>)}
           </div>}
       </div>
 
