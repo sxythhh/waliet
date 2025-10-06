@@ -13,6 +13,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamMembersTab } from "@/components/brand/TeamMembersTab";
+import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 
 export default function BrandAccount() {
   const { slug } = useParams();
@@ -138,6 +139,9 @@ export default function BrandAccount() {
             <TabsTrigger value="team" className="data-[state=active]:bg-[#191919]">
               Team
             </TabsTrigger>
+            <TabsTrigger value="user" className="data-[state=active]:bg-[#191919]">
+              User
+            </TabsTrigger>
             <TabsTrigger value="invoices" className="data-[state=active]:bg-[#191919]">
               Invoices
             </TabsTrigger>
@@ -145,6 +149,10 @@ export default function BrandAccount() {
 
           <TabsContent value="team" className="mt-6">
             <TeamMembersTab brandId={brandId} />
+          </TabsContent>
+
+          <TabsContent value="user" className="mt-6">
+            <UserSettingsTab />
           </TabsContent>
 
           <TabsContent value="invoices" className="mt-6">
