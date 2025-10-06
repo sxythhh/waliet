@@ -1045,6 +1045,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          order_index: number | null
           priority: string | null
           status: string
           title: string
@@ -1056,6 +1057,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          order_index?: number | null
           priority?: string | null
           status?: string
           title: string
@@ -1067,6 +1069,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          order_index?: number | null
           priority?: string | null
           status?: string
           title?: string
