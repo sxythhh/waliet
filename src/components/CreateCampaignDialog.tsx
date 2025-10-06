@@ -350,6 +350,13 @@ export function CreateCampaignDialog({
               )}
             />
 
+            {campaign?.slug && (
+              <div className="p-3 rounded-lg bg-[#191919] border border-white/10">
+                <p className="text-xs text-white/40 mb-1">Campaign Slug</p>
+                <p className="text-sm text-white/80 font-mono">{campaign.slug}</p>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="description"
