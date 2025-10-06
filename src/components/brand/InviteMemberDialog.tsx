@@ -72,14 +72,16 @@ export function InviteMemberDialog({
       if (!brandResult.data) throw new Error("Brand not found");
 
       // Create invitation
-      const { error } = await supabase
+      const { data: invitationData, error } = await supabase
         .from("brand_invitations")
         .insert({
           brand_id: brandId,
           email: email.toLowerCase(),
           role,
           invited_by: user.id,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -92,6 +94,7 @@ export function InviteMemberDialog({
           role,
           inviterName: profileResult.data?.full_name || "A team member",
           appUrl: window.location.origin,
+          invitationId: invitationData.id,
         },
       });
 
