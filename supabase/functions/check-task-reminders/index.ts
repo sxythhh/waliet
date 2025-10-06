@@ -65,9 +65,8 @@ Deno.serve(async (req) => {
         // Map assignee names to Discord user IDs
         const discordMentions: Record<string, string> = {
           'ivelin': '<@575313257410068481>',
-          // Add more mappings here as needed
-          // 'matt': '<@MATT_DISCORD_ID>',
-          // 'alex': '<@ALEX_DISCORD_ID>',
+          'alex': '<@877077541813358614>',
+          'matt': '<@877077541813358614>',
         };
 
         // Get mention string if task is assigned
