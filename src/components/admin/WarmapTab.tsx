@@ -18,7 +18,7 @@ interface WarmapEvent {
   event_date: string;
   assigned_to: string[];
   link: string | null;
-  category: string | null;
+  category?: string | null;
 }
 
 const TEAM_MEMBERS = ["matt", "ivelin", "alex"];

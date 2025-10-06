@@ -1005,6 +1005,7 @@ export type Database = {
       warmap_events: {
         Row: {
           assigned_to: string[] | null
+          category: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -1016,6 +1017,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string[] | null
+          category?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1027,6 +1029,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string[] | null
+          category?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
