@@ -569,12 +569,15 @@ export default function BrandManagement() {
                 <CardTitle className="text-white text-sm">Performance Overview</CardTitle>
                 {selectedCampaign?.analytics_url && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')}
-                    className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/30"
+                    className="bg-[#202020] text-white hover:bg-[#121212] group"
                   >
-                    View Analytics
+                    <span className="relative">
+                      View Analytics
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                    </span>
                   </Button>
                 )}
               </CardHeader>
