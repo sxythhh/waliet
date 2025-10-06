@@ -9,12 +9,67 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { z } from "zod";
+
+// Helper function to extract username from URL based on platform
+const extractUsernameFromUrl = (url: string, platform: Platform): string | null => {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    
+    // Validate domain matches platform
+    if (platform === "tiktok" && !hostname.includes("tiktok.com")) {
+      return null;
+    }
+    if (platform === "instagram" && !hostname.includes("instagram.com")) {
+      return null;
+    }
+    if (platform === "youtube" && !hostname.includes("youtube.com")) {
+      return null;
+    }
+    
+    // Extract username based on platform
+    if (platform === "tiktok" || platform === "youtube") {
+      // Format: https://www.tiktok.com/@username or https://www.youtube.com/@username
+      const match = urlObj.pathname.match(/@([^/?]+)/);
+      return match ? match[1].toLowerCase() : null;
+    }
+    
+    if (platform === "instagram") {
+      // Format: https://www.instagram.com/username/
+      const pathParts = urlObj.pathname.split('/').filter(p => p);
+      return pathParts.length > 0 ? pathParts[0].toLowerCase() : null;
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const socialAccountSchema = z.object({
   platform: z.enum(["tiktok", "instagram", "youtube"], {
     required_error: "Please select a platform"
   }),
-  username: z.string().trim().min(1, "Username is required").max(100, "Username must be less than 100 characters"),
-  accountLink: z.string().trim().url("Please enter a valid URL").max(500, "URL must be less than 500 characters")
+  username: z.string()
+    .trim()
+    .min(1, "Username is required")
+    .max(100, "Username must be less than 100 characters")
+    .refine((val) => !val.includes("@"), {
+      message: "Username should not include @ symbol"
+    }),
+  accountLink: z.string()
+    .trim()
+    .url("Please enter a valid URL")
+    .max(500, "URL must be less than 500 characters")
+}).refine((data) => {
+  const extractedUsername = extractUsernameFromUrl(data.accountLink, data.platform);
+  if (!extractedUsername) {
+    return false;
+  }
+  return extractedUsername === data.username.toLowerCase();
+}, {
+  message: "Username doesn't match the profile link. Please ensure they match.",
+  path: ["accountLink"]
 });
 interface AddSocialAccountDialogProps {
   open: boolean;
@@ -158,7 +213,18 @@ export function AddSocialAccountDialog({
               Username
             </Label>
             <div className="relative">
-              <Input id="username" placeholder="mrbeast" value={username} onChange={e => setUsername(e.target.value)} required className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4" />
+              <Input 
+                id="username" 
+                placeholder="mrbeast" 
+                value={username} 
+                onChange={e => {
+                  // Strip @ symbols from input
+                  const cleanedValue = e.target.value.replace(/@/g, "");
+                  setUsername(cleanedValue);
+                }} 
+                required 
+                className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4" 
+              />
             </div>
             <p className="text-xs text-muted-foreground">Don't include the @ symbol</p>
           </div>
