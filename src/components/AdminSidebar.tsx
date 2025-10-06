@@ -68,11 +68,11 @@ export function AdminSidebar() {
               key={item.title}
               to={item.path}
               className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-md transition-colors font-medium",
+                "flex items-center rounded-md transition-colors font-medium",
                 active
                   ? "bg-blue-500 text-white"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                isCollapsed && "justify-center px-2"
+                isCollapsed ? "justify-center p-3" : "gap-2 px-3 py-2"
               )}
               title={isCollapsed ? item.title : undefined}
             >
@@ -87,25 +87,30 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-border flex gap-2">
-        <Button
-          onClick={handleSignOut}
-          variant="ghost"
-          className={cn(
-            "flex-1 justify-start hover:bg-destructive/10 hover:text-destructive",
-            isCollapsed && "justify-center px-2"
-          )}
-          title={isCollapsed ? "Sign Out" : undefined}
-        >
-          <LogOut className="h-5 w-5 shrink-0" />
-          {!isCollapsed && <span className="ml-3">Sign Out</span>}
-        </Button>
+      <div className={cn(
+        "p-4 border-t border-border",
+        isCollapsed ? "flex justify-center" : "flex gap-2"
+      )}>
+        {!isCollapsed && (
+          <Button
+            onClick={handleSignOut}
+            variant="ghost"
+            className="flex-1 justify-start hover:bg-destructive/10 hover:text-destructive"
+            title="Sign Out"
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            <span className="ml-3">Sign Out</span>
+          </Button>
+        )}
         
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-10 w-10 p-0 bg-muted/50 hover:bg-muted"
+          className={cn(
+            "bg-muted/50 hover:bg-muted",
+            isCollapsed ? "h-10 w-10 p-0" : "h-10 w-10 p-0"
+          )}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
