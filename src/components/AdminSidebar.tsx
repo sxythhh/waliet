@@ -47,7 +47,7 @@ export function AdminSidebar() {
       <nav className="flex-1 p-4 space-y-1 px-[10px]">
         {menuItems.map(item => {
         const active = isActive(item.path);
-        return <NavLink key={item.title} to={item.path} className={cn("flex items-center rounded-md transition-colors font-medium", active ? "bg-blue-500 text-white" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground", isCollapsed ? "justify-center py-3 px-4" : "gap-2 px-3 py-2")} title={isCollapsed ? item.title : undefined}>
+        return <NavLink key={item.title} to={item.path} className={cn("flex items-center rounded-md transition-colors font-medium", active ? "text-white" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground", isCollapsed ? "justify-center py-3 px-4" : "gap-2 px-3 py-2")} title={isCollapsed ? item.title : undefined}>
               <item.icon className="h-5 w-5 shrink-0" />
               {!isCollapsed && <span className={cn("text-sm font-sans tracking-tight", active && "font-semibold")}>
                   {item.title}
