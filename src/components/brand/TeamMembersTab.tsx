@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Trash2, Shield, User, Crown } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { InviteMemberDialog } from "./InviteMemberDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Member {
   id: string;
@@ -160,7 +161,15 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
   const canManageTeam = isAdmin || currentUserRole === "owner" || currentUserRole === "admin";
 
   if (loading) {
-    return <div className="text-white">Loading team...</div>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="space-y-4">
+          <Skeleton className="h-48 rounded-lg" />
+          <Skeleton className="h-48 rounded-lg" />
+        </div>
+      </div>
+    );
   }
 
   return (
