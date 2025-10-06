@@ -178,7 +178,7 @@ export function WorkTab() {
             placeholder="Add a new task..."
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
-            className="pr-10 transition-all duration-200 focus:ring-2 focus:ring-primary"
+            className="pr-10 transition-all duration-200 focus:ring-2 focus:ring-primary focus:border-2"
           />
           <Button
             type="submit"
