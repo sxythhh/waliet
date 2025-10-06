@@ -543,8 +543,8 @@ export default function BrandManagement() {
           <TabsContent value="analytics" className="space-y-4">
             {/* Campaign Performance Overview */}
             <Card className="bg-[#202020] border-transparent">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-white text-sm">Performance Overview</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between py-[9px]">
+                <CardTitle className="text-white text-2xl">Performance Overview</CardTitle>
                 {selectedCampaign?.analytics_url && <Button variant="ghost" size="sm" onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')} className="text-white group bg-[#1a1a1a]">
                     <span className="relative">
                       View Analytics
