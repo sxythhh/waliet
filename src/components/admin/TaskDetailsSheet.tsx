@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Bell } from "lucide-react";
@@ -28,21 +28,16 @@ interface TaskDetailsSheetProps {
 
 export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDetailsSheetProps) {
   const [description, setDescription] = useState("");
-  const [reminderDateTime, setReminderDateTime] = useState("");
+  const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (task) {
       setDescription(task.description || "");
       if (task.reminder_at) {
-        // Convert to local datetime-local format
-        const date = new Date(task.reminder_at);
-        const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 16);
-        setReminderDateTime(localDateTime);
+        setReminderDate(new Date(task.reminder_at));
       } else {
-        setReminderDateTime("");
+        setReminderDate(undefined);
       }
     }
   }, [task]);
@@ -54,9 +49,8 @@ export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDet
     
     const updateData: any = { description };
     
-    if (reminderDateTime) {
-      // Convert local datetime to UTC
-      updateData.reminder_at = new Date(reminderDateTime).toISOString();
+    if (reminderDate) {
+      updateData.reminder_at = reminderDate.toISOString();
     } else {
       updateData.reminder_at = null;
     }
@@ -97,22 +91,15 @@ export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDet
           </div>
           
           <div>
-            <Label htmlFor="reminder" className="flex items-center gap-2 mb-2">
+            <Label className="flex items-center gap-2 mb-2">
               <Bell className="h-4 w-4" />
               Set Reminder
             </Label>
-            <Input
-              id="reminder"
-              type="datetime-local"
-              value={reminderDateTime}
-              onChange={(e) => setReminderDateTime(e.target.value)}
-              className="bg-background"
+            <DateTimePicker
+              date={reminderDate}
+              onDateChange={setReminderDate}
+              placeholder="Pick a date and time"
             />
-            {task.reminder_at && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Reminder set for {new Date(task.reminder_at).toLocaleString()}
-              </p>
-            )}
           </div>
 
           <div className="flex gap-2 justify-end pt-4">
