@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CircleCheck, ChevronRight, Circle, Plus } from "lucide-react";
+import { CircleCheck, ChevronRight, Circle, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Task {
@@ -85,6 +85,20 @@ export function WorkTab() {
     fetchTasks();
   };
 
+  const handleDeleteTask = async (taskId: string) => {
+    const { error } = await supabase
+      .from("work_tasks")
+      .delete()
+      .eq("id", taskId);
+
+    if (error) {
+      toast.error("Failed to delete task");
+      return;
+    }
+
+    fetchTasks();
+  };
+
   const renderTaskColumn = (title: string, assignee: string | null) => {
     const key = assignee || "all";
     const columnTasks = assignee === null 
@@ -141,14 +155,24 @@ export function WorkTab() {
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-2 mt-2">
               {completedTasks.map((task) => (
-                <button
-                  key={task.id}
-                  onClick={() => handleToggleStatus(task)}
-                  className="flex items-start gap-2 w-full text-left group hover:bg-muted/20 p-2 rounded-md transition-colors"
-                >
-                  <CircleCheck className="h-5 w-5 text-primary shrink-0 mt-0.5 animate-scale-in transition-all duration-100 hover:scale-110" />
-                  <span className="text-sm line-through text-muted-foreground">{task.title}</span>
-                </button>
+                <div key={task.id} className="flex items-start gap-2 group hover:bg-muted/20 p-2 rounded-md transition-colors">
+                  <button
+                    onClick={() => handleToggleStatus(task)}
+                    className="flex items-start gap-2 flex-1 text-left"
+                  >
+                    <CircleCheck className="h-5 w-5 text-primary shrink-0 mt-0.5 animate-scale-in transition-all duration-100 hover:scale-110" />
+                    <span className="text-sm line-through text-muted-foreground">{task.title}</span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteTask(task.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               ))}
             </CollapsibleContent>
           </Collapsible>
