@@ -3,11 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Trash2, Shield, User, Crown, Copy } from "lucide-react";
+import { UserPlus, Trash2, Shield, User, Crown } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useParams } from "react-router-dom";
 
 interface Member {
   id: string;
@@ -35,7 +34,6 @@ interface TeamMembersTabProps {
 }
 
 export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
-  const { brandSlug } = useParams();
   const { isAdmin } = useAdminCheck();
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -149,21 +147,6 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
     }
   };
 
-  const handleCopyInviteLink = (invitationId: string) => {
-    // Detect if we're in production (virality.gg) or development
-    const baseUrl = window.location.hostname === 'virality.gg' 
-      ? 'https://virality.gg'
-      : window.location.origin;
-    
-    const inviteLink = `${baseUrl}/brand/${brandSlug}/invite/${invitationId}`;
-    
-    navigator.clipboard.writeText(inviteLink).then(() => {
-      toast.success("Invite link copied to clipboard!");
-    }).catch(() => {
-      toast.error("Failed to copy link");
-    });
-  };
-
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "owner":
@@ -271,15 +254,6 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
                     <span className="text-xs text-white/60 capitalize px-2 py-1 bg-white/5 rounded">
                       {invitation.role}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleCopyInviteLink(invitation.id)}
-                      className="text-primary hover:text-primary/80"
-                    >
-                      <Copy className="h-4 w-4 mr-1" />
-                      Copy Link
-                    </Button>
                     {canManageTeam && (
                       <Button
                         variant="ghost"

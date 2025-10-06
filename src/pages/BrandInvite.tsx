@@ -107,7 +107,12 @@ export default function BrandInvite() {
 
     setProcessing(true);
     try {
-      // No longer require email match - allow anyone with the link to accept
+      // Check if user email matches invitation
+      if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+        toast.error("This invitation was sent to a different email address");
+        return;
+      }
+
       // Add user to brand members
       const { error: memberError } = await supabase
         .from("brand_members")
@@ -163,6 +168,8 @@ export default function BrandInvite() {
     );
   }
 
+  const emailMatches = user?.email?.toLowerCase() === invitation.email.toLowerCase();
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
       <Card className="max-w-md w-full">
@@ -207,6 +214,7 @@ export default function BrandInvite() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={!isSignUp}
                 />
               </div>
               <div className="space-y-2">
@@ -233,15 +241,38 @@ export default function BrandInvite() {
                 {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
               </Button>
             </form>
-          ) : (
+          ) : emailMatches ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
-                <p className="text-sm">You're logged in and ready to join!</p>
+                <p className="text-sm">You're logged in with the invited email!</p>
               </div>
               <Button onClick={handleAcceptInvitation} className="w-full" disabled={processing}>
                 {processing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Accept Invitation
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <XCircle className="h-5 w-5 text-destructive" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Email Mismatch</p>
+                  <p className="text-xs text-muted-foreground">
+                    You're logged in as {user.email}, but this invitation is for {invitation.email}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  setUser(null);
+                  toast.info("Signed out. Please sign in with the invited email.");
+                }}
+              >
+                Sign Out & Try Again
               </Button>
             </div>
           )}
