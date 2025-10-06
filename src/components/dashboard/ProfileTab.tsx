@@ -434,7 +434,7 @@ export function ProfileTab() {
             const submissionTimestamp = getSubmissionTimestamp();
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#0d0d0d]">
                     <div className="flex items-center gap-3 flex-1">
-                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-white/5">
+                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent">
                         {getPlatformIcon(account.platform)}
                         <span className="font-medium">{account.username}</span>
                         {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-success" />}
@@ -443,13 +443,16 @@ export function ProfileTab() {
                         {!demographicStatus && <AlertCircle className="h-4 w-4 text-destructive" />}
                       </div>
                       
+                      {/* Link icon separator */}
+                      {connectedCampaigns.length > 0 && <Link2 className="h-3.5 w-3.5 text-white/40" />}
+                      
                       {/* Display connected campaigns */}
                       {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-2">
                           {connectedCampaigns.map(({
                     campaign
                   }) => <div key={campaign.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border bg-card/50 text-xs">
                               {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-3.5 h-3.5 rounded object-cover" />}
-                              <span className="font-medium text-white/80">{campaign.title}</span>
+                              <span className="font-medium text-white/80" style={{ letterSpacing: '-0.3px' }}>{campaign.title}</span>
                             </div>)}
                         </div>}
                     </div>
