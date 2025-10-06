@@ -11,6 +11,8 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { LogOut, Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TeamMembersTab } from "@/components/brand/TeamMembersTab";
 
 export default function BrandAccount() {
   const { slug } = useParams();
@@ -114,32 +116,6 @@ export default function BrandAccount() {
     );
   }
 
-  // If account URL is configured, show the iframe embed
-  if (accountUrl) {
-    return (
-      <div className="h-screen w-full bg-[#191919] flex flex-col">
-        {/* Mobile Menu Button */}
-        <div className="md:hidden p-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => sidebar.setOpenMobile(true)}
-            className="text-white/60 hover:text-white hover:bg-white/10"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </div>
-        <iframe 
-          src={accountUrl} 
-          className="w-full flex-1 border-0" 
-          title="Account Page" 
-          sandbox="allow-scripts allow-same-origin allow-forms" 
-        />
-      </div>
-    );
-  }
-
-  // Otherwise, show the configuration page (admin only)
   return (
     <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto">
@@ -154,91 +130,77 @@ export default function BrandAccount() {
             <Menu className="h-6 w-6" />
           </Button>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-6">Account Settings</h1>
         
-        <div className="space-y-6">
-          <Card className="bg-[#202020] border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white">User Account</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-white/60">Full Name</Label>
-                <p className="text-white">{userFullName || "Not set"}</p>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-white/60">Email</Label>
-                <p className="text-white">{userEmail}</p>
-              </div>
-              <Button
-                onClick={handleSignOut}
-                variant="outline"
-                className="mt-4"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
+        <h1 className="text-3xl font-bold text-white mb-6">Account</h1>
+        
+        <Tabs defaultValue="team" className="w-full">
+          <TabsList className="bg-[#202020] border-white/10">
+            <TabsTrigger value="team" className="data-[state=active]:bg-[#191919]">
+              Team
+            </TabsTrigger>
+            <TabsTrigger value="invoices" className="data-[state=active]:bg-[#191919]">
+              Invoices
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="bg-[#202020] border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Account Page Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {!isAdmin && (
-              <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                <p className="text-yellow-500 text-sm">
-                  Only administrators can edit these settings
-                </p>
+          <TabsContent value="team" className="mt-6">
+            <TeamMembersTab brandId={brandId} />
+          </TabsContent>
+
+          <TabsContent value="invoices" className="mt-6">
+            {accountUrl ? (
+              <div className="w-full bg-[#191919] rounded-lg overflow-hidden" style={{ height: '600px' }}>
+                <iframe 
+                  src={accountUrl} 
+                  className="w-full h-full border-0" 
+                  title="Invoices" 
+                  sandbox="allow-scripts allow-same-origin allow-forms" 
+                />
               </div>
+            ) : (
+              <Card className="bg-[#202020] border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white">Invoice Configuration</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {!isAdmin && (
+                    <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                      <p className="text-yellow-500 text-sm">
+                        Only administrators can edit these settings
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="account-url" className="text-white">
+                      Invoice Page URL
+                    </Label>
+                    <Input
+                      id="account-url"
+                      type="url"
+                      placeholder="https://example.com/invoices"
+                      value={accountUrl}
+                      onChange={(e) => setAccountUrl(e.target.value)}
+                      className="bg-[#191919] border-white/10 text-white"
+                      disabled={!isAdmin}
+                    />
+                    <p className="text-sm text-white/60">
+                      This URL will be embedded in the Invoices tab
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving || !isAdmin}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    {saving ? "Saving..." : "Save Settings"}
+                  </Button>
+                </CardContent>
+              </Card>
             )}
-
-            <div className="flex items-center justify-between p-4 bg-[#191919] rounded-lg">
-              <div className="space-y-1">
-                <Label htmlFor="show-account-tab" className="text-white font-medium">
-                  Show Account Tab
-                </Label>
-                <p className="text-sm text-white/60">
-                  Display the Account tab in the sidebar navigation
-                </p>
-              </div>
-              <Switch
-                id="show-account-tab"
-                checked={showAccountTab}
-                onCheckedChange={setShowAccountTab}
-                disabled={!isAdmin}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="account-url" className="text-white">
-                Account Page URL
-              </Label>
-              <Input
-                id="account-url"
-                type="url"
-                placeholder="https://example.com/account"
-                value={accountUrl}
-                onChange={(e) => setAccountUrl(e.target.value)}
-                className="bg-[#191919] border-white/10 text-white"
-                disabled={!isAdmin}
-              />
-              <p className="text-sm text-white/60">
-                This URL will be embedded when users visit the Account page
-              </p>
-            </div>
-
-            <Button
-              onClick={handleSave}
-              disabled={saving || !isAdmin}
-              className="bg-primary hover:bg-primary/90"
-            >
-              {saving ? "Saving..." : "Save Settings"}
-            </Button>
-          </CardContent>
-          </Card>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
