@@ -26,7 +26,6 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Skeleton } from "@/components/ui/skeleton";
-
 interface Campaign {
   id: string;
   title: string;
@@ -94,22 +93,11 @@ export default function BrandManagement() {
   const [processingSubmissionId, setProcessingSubmissionId] = useState<string | null>(null);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
-
   const exportToCSV = () => {
     const csvData = approvedSubmissions.map(submission => {
-      const linkedAccounts = submission.profiles?.social_accounts
-        ?.map(acc => `${acc.platform}:@${acc.username}`)
-        .join('; ') || 'None';
-      
-      const accountUrls = submission.profiles?.social_accounts
-        ?.map(acc => acc.account_link || '')
-        .filter(url => url)
-        .join('; ') || 'None';
-
-      const demographicStatus = submission.profiles?.social_accounts
-        ?.map(acc => `${acc.platform}:${submission.profiles.demographics_score || 0}`)
-        .join('; ') || 'None';
-
+      const linkedAccounts = submission.profiles?.social_accounts?.map(acc => `${acc.platform}:@${acc.username}`).join('; ') || 'None';
+      const accountUrls = submission.profiles?.social_accounts?.map(acc => acc.account_link || '').filter(url => url).join('; ') || 'None';
+      const demographicStatus = submission.profiles?.social_accounts?.map(acc => `${acc.platform}:${submission.profiles.demographics_score || 0}`).join('; ') || 'None';
       return {
         'Virality Username': submission.profiles?.username || 'Unknown',
         'Linked Accounts': linkedAccounts,
@@ -117,14 +105,11 @@ export default function BrandManagement() {
         'Account URLs': accountUrls
       };
     });
-
     const headers = Object.keys(csvData[0] || {});
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const csvContent = [headers.join(','), ...csvData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;'
+    });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -133,7 +118,6 @@ export default function BrandManagement() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
     toast.success('CSV exported successfully');
   };
   useEffect(() => {
@@ -155,7 +139,6 @@ export default function BrandManagement() {
         console.log('Submission changed:', payload);
         fetchSubmissions();
       }).subscribe();
-
       const accountConnectionsChannel = supabase.channel('social-account-campaigns-changes').on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -165,7 +148,6 @@ export default function BrandManagement() {
         console.log('Social account connection changed:', payload);
         fetchSubmissions();
       }).subscribe();
-
       return () => {
         supabase.removeChannel(submissionsChannel);
         supabase.removeChannel(accountConnectionsChannel);
@@ -278,10 +260,7 @@ export default function BrandManagement() {
       if (error) throw error;
 
       // Filter out pending applications from users who already have approved submissions
-      const approvedCreatorIds = new Set(
-        (data || []).filter(s => s.status === 'approved').map(s => s.creator_id)
-      );
-      
+      const approvedCreatorIds = new Set((data || []).filter(s => s.status === 'approved').map(s => s.creator_id));
       const filteredData = (data || []).filter(submission => {
         // Keep approved submissions
         if (submission.status === 'approved') return true;
@@ -293,9 +272,9 @@ export default function BrandManagement() {
 
       // Fetch social accounts via junction table
       const submissionsWithAccounts = await Promise.all(filteredData.map(async submission => {
-        const { data: accountLinks } = await supabase
-          .from("social_account_campaigns")
-          .select(`
+        const {
+          data: accountLinks
+        } = await supabase.from("social_account_campaigns").select(`
             social_accounts!inner (
               id,
               platform,
@@ -304,12 +283,8 @@ export default function BrandManagement() {
               account_link,
               user_id
             )
-          `)
-          .eq("campaign_id", selectedCampaignId)
-          .eq("social_accounts.user_id", submission.creator_id);
-
+          `).eq("campaign_id", selectedCampaignId).eq("social_accounts.user_id", submission.creator_id);
         const accounts = accountLinks?.map((link: any) => link.social_accounts).filter(Boolean) || [];
-        
         return {
           ...submission,
           profiles: {
@@ -338,14 +313,15 @@ export default function BrandManagement() {
       if (action === "approved") {
         try {
           await supabase.functions.invoke("send-application-approval", {
-            body: { submissionId }
+            body: {
+              submissionId
+            }
           });
         } catch (emailError) {
           console.error("Error sending approval email:", emailError);
           // Don't fail the whole operation if email fails
         }
       }
-
       toast.success(`Application ${action}`);
       fetchSubmissions();
     } catch (error) {
@@ -454,10 +430,8 @@ export default function BrandManagement() {
         error: walletFetchError
       } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", selectedUserForPayment.creator_id).single();
       if (walletFetchError) throw walletFetchError;
-      
       const balance_before = currentWallet.balance || 0;
       const balance_after = balance_before + amount;
-      
       const {
         error: walletUpdateError
       } = await supabase.from("wallets").update({
@@ -493,7 +467,6 @@ export default function BrandManagement() {
         budget_used: currentBudgetUsed + amount
       }).eq("id", selectedCampaignId);
       if (budgetError) throw budgetError;
-
       toast.success(`Successfully paid $${amount.toFixed(2)} to ${selectedUserForPayment.profiles?.username}`);
       setPaymentDialogOpen(false);
       setSelectedUserForPayment(null);
@@ -541,12 +514,7 @@ export default function BrandManagement() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Mobile Menu Button */}
         <div className="md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => isMobile ? sidebar.setOpenMobile(true) : sidebar.toggleSidebar()}
-            className="text-white/60 hover:text-white hover:bg-white/10"
-          >
+          <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : sidebar.toggleSidebar()} className="text-white/60 hover:text-white hover:bg-white/10">
             {isMobile ? <Menu className="h-6 w-6" /> : <PanelLeft className="h-6 w-6" />}
           </Button>
         </div>
@@ -577,19 +545,12 @@ export default function BrandManagement() {
             <Card className="bg-[#202020] border-transparent">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-white text-sm">Performance Overview</CardTitle>
-                {selectedCampaign?.analytics_url && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')}
-                    className="bg-[#202020] text-white hover:bg-[#121212] group"
-                  >
+                {selectedCampaign?.analytics_url && <Button variant="ghost" size="sm" onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')} className="text-white group bg-[#1a1a1a]">
                     <span className="relative">
                       View Analytics
                       <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                     </span>
-                  </Button>
-                )}
+                  </Button>}
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -801,13 +762,7 @@ export default function BrandManagement() {
                       {approvedSubmissions.length}
                     </Badge>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={exportToCSV}
-                    disabled={approvedSubmissions.length === 0}
-                    className="flex items-center gap-2"
-                  >
+                  <Button variant="outline" size="sm" onClick={exportToCSV} disabled={approvedSubmissions.length === 0} className="flex items-center gap-2">
                     <Download className="h-4 w-4" />
                     Export CSV
                   </Button>
@@ -891,14 +846,11 @@ export default function BrandManagement() {
                                 </div>}
 
                               {/* Payment Button */}
-                              <Button 
-                                className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400" 
-                                onClick={() => {
-                                  setSelectedUserForPayment(submission);
-                                  setPaymentAmount("");
-                                  setPaymentDialogOpen(true);
-                                }}
-                              >
+                              <Button className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400" onClick={() => {
+                          setSelectedUserForPayment(submission);
+                          setPaymentAmount("");
+                          setPaymentDialogOpen(true);
+                        }}>
                                 <DollarSign className="h-4 w-4 mr-2" />
                                 Pay Creator
                               </Button>
@@ -946,16 +898,12 @@ export default function BrandManagement() {
                           <CardContent className="p-0">
                             <div className="p-5">
                               {/* Application Q&A Section */}
-                              {submission.application_answers && submission.application_answers.length > 0 && (
-                                <div className="mb-4 space-y-3">
-                                  {submission.application_answers.map((qa, index) => (
-                                    <div key={index} className="bg-white/5 rounded-lg p-3">
+                              {submission.application_answers && submission.application_answers.length > 0 && <div className="mb-4 space-y-3">
+                                  {submission.application_answers.map((qa, index) => <div key={index} className="bg-white/5 rounded-lg p-3">
                                       <p className="text-xs font-medium text-white/80 mb-1.5">{qa.question}</p>
                                       <p className="text-sm text-white/90">{qa.answer}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                                    </div>)}
+                                </div>}
 
                               {/* Header Section */}
                               <div className="flex items-start justify-between gap-4 mb-4">
@@ -986,31 +934,16 @@ export default function BrandManagement() {
 
                                 {/* Action Buttons */}
                                 <div className="flex gap-2 flex-shrink-0">
-                                  <Button 
-                                    size="sm" 
-                                    onClick={() => handleApplicationAction(submission.id, "approved")} 
-                                    className="bg-green-500/20 hover:bg-green-500/30 text-green-400 h-9 px-4"
-                                    disabled={processingSubmissionId === submission.id}
-                                  >
-                                    {processingSubmissionId === submission.id ? (
-                                      <>
+                                  <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-green-500/20 hover:bg-green-500/30 text-green-400 h-9 px-4" disabled={processingSubmissionId === submission.id}>
+                                    {processingSubmissionId === submission.id ? <>
                                         <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
                                         Processing...
-                                      </>
-                                    ) : (
-                                      <>
+                                      </> : <>
                                         <Check className="h-4 w-4 mr-1.5" />
                                         Approve
-                                      </>
-                                    )}
+                                      </>}
                                   </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    onClick={() => handleApplicationAction(submission.id, "rejected")} 
-                                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-0 h-9 px-4"
-                                    disabled={processingSubmissionId === submission.id}
-                                  >
+                                  <Button size="sm" variant="outline" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-0 h-9 px-4" disabled={processingSubmissionId === submission.id}>
                                     <X className="h-4 w-4 mr-1.5" />
                                     Reject
                                   </Button>
@@ -1189,16 +1122,7 @@ export default function BrandManagement() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="payment-amount" className="text-white">Amount ($)</Label>
-                <Input
-                  id="payment-amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="bg-[#191919] border-white/10 text-white"
-                />
+                <Input id="payment-amount" type="number" step="0.01" min="0" placeholder="0.00" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} className="bg-[#191919] border-white/10 text-white" />
               </div>
             </div>
             <DialogFooter>
