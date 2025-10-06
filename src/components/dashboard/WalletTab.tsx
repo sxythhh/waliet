@@ -629,10 +629,7 @@ export function WalletTab() {
   return <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header with Main Balance */}
       <div className="flex items-center justify-between py-0">
-        <h2 className="hidden sm:block text-3xl font-semibold font-sans tracking-tight" style={{
-        letterSpacing: '-0.5px',
-        fontWeight: 600
-      }}>Virality Wallet</h2>
+        <h2 className="hidden sm:block text-3xl font-semibold font-sans tracking-[-0.5px]">Virality Wallet</h2>
         <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0 ml-auto" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}>
           <ArrowDownLeft className="h-4 w-4" />
           Request Payout
