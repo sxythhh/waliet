@@ -1062,51 +1062,6 @@ export default function BrandManagement() {
                                 </div>
                               </div>
 
-                              {/* Scores Section */}
-                              <div className="grid grid-cols-3 gap-3 mb-4">
-                                <div className="bg-white/5 rounded-lg p-3">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-white/60">Trust</span>
-                                    <span className="text-sm font-semibold text-white">
-                                      {submission.profiles?.trust_score || 0}
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{
-                                width: `${(submission.profiles?.trust_score || 0) / 100 * 100}%`
-                              }} />
-                                  </div>
-                                </div>
-
-                                <div className="bg-white/5 rounded-lg p-3">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-white/60">Demographics</span>
-                                    <span className="text-sm font-semibold text-white">
-                                      {submission.profiles?.demographics_score || 0}
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div className="bg-purple-500 h-1.5 rounded-full transition-all" style={{
-                                width: `${(submission.profiles?.demographics_score || 0) / 100 * 100}%`
-                              }} />
-                                  </div>
-                                </div>
-
-                                <div className="bg-white/5 rounded-lg p-3">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-white/60">Views</span>
-                                    <span className="text-sm font-semibold text-white">
-                                      {submission.profiles?.views_score || 0}
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-white/10 rounded-full h-1.5">
-                                    <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{
-                                width: `${(submission.profiles?.views_score || 0) / 100 * 100}%`
-                              }} />
-                                  </div>
-                                </div>
-                              </div>
-
                               {/* Social Accounts */}
                               {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
                                   <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
