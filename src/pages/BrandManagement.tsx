@@ -305,7 +305,8 @@ export default function BrandManagement() {
       const {
         error
       } = await supabase.from("campaign_submissions").update({
-        status: action
+        status: action,
+        reviewed_at: new Date().toISOString()
       }).eq("id", submissionId);
       if (error) throw error;
 
