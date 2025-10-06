@@ -32,9 +32,7 @@ const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   description: z.string().trim().max(500).optional(),
   is_infinite_budget: z.boolean().default(false),
-  budget: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Budget must be a positive number",
-  }),
+  budget: z.string().optional(),
   rpm_rate: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "RPM rate must be a positive number",
   }),
@@ -58,13 +56,13 @@ const campaignSchema = z.object({
   message: "Access code must be at least 6 characters for private campaigns",
   path: ["access_code"],
 }).refine((data) => {
-  // If not infinite budget, budget is required
+  // If not infinite budget, budget is required and must be positive
   if (!data.is_infinite_budget) {
     return data.budget && !isNaN(Number(data.budget)) && Number(data.budget) > 0;
   }
   return true;
 }, {
-  message: "Budget is required unless infinite budget is enabled",
+  message: "Budget must be a positive number",
   path: ["budget"],
 });
 
