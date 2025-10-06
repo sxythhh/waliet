@@ -39,6 +39,7 @@ export function WorkTab() {
     const { data, error } = await supabase
       .from("work_tasks")
       .select("*")
+      .order("assigned_to", { ascending: true, nullsFirst: true })
       .order("order_index", { ascending: true });
 
     if (error) {
@@ -56,8 +57,10 @@ export function WorkTab() {
       return;
     }
 
-    // Get max order_index for this assignee
-    const tasksForAssignee = tasks.filter(t => t.assigned_to === assignee);
+    // Get max order_index for this assignee's active tasks only
+    const tasksForAssignee = tasks.filter(t => 
+      t.assigned_to === assignee && t.status !== "done"
+    );
     const maxOrder = tasksForAssignee.length > 0 
       ? Math.max(...tasksForAssignee.map(t => t.order_index)) 
       : -1;
@@ -117,9 +120,10 @@ export function WorkTab() {
       return;
     }
 
-    const columnTasks = assignee === null 
-      ? tasks.filter((task) => task.assigned_to === assignee && task.status !== "done")
-      : tasks.filter((task) => task.assigned_to === assignee && task.status !== "done");
+    // Get only active tasks for this specific assignee/column
+    const columnTasks = tasks.filter((task) => 
+      task.assigned_to === assignee && task.status !== "done"
+    ).sort((a, b) => a.order_index - b.order_index);
 
     const oldIndex = columnTasks.findIndex((task) => task.id === active.id);
     const newIndex = columnTasks.findIndex((task) => task.id === over.id);
@@ -128,20 +132,23 @@ export function WorkTab() {
 
     const reorderedTasks = arrayMove(columnTasks, oldIndex, newIndex);
 
-    // Update all tasks in this column with new order_index
+    // Update all tasks in this column with new sequential order_index
     try {
-      for (let i = 0; i < reorderedTasks.length; i++) {
-        const { error } = await supabase
+      const updatePromises = reorderedTasks.map((task, index) =>
+        supabase
           .from("work_tasks")
-          .update({ order_index: i })
-          .eq("id", reorderedTasks[i].id);
+          .update({ order_index: index })
+          .eq("id", task.id)
+      );
 
-        if (error) {
-          console.error("Error updating order:", error);
-          toast.error("Failed to reorder tasks");
-          fetchTasks();
-          return;
-        }
+      const results = await Promise.all(updatePromises);
+      
+      const hasError = results.some(({ error }) => error);
+      if (hasError) {
+        console.error("Error updating order:", results.find(r => r.error)?.error);
+        toast.error("Failed to reorder tasks");
+        await fetchTasks();
+        return;
       }
       
       // Refresh to show updated order
@@ -149,7 +156,7 @@ export function WorkTab() {
     } catch (error) {
       console.error("Error in handleDragEnd:", error);
       toast.error("Failed to reorder tasks");
-      fetchTasks();
+      await fetchTasks();
     }
   };
 
