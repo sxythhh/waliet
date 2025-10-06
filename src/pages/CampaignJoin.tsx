@@ -338,6 +338,7 @@ export default function CampaignJoin() {
               campaign_slug: campaign.slug,
               brand_name: campaign.brand_name,
               brand_slug: brandSlug,
+              brand_logo_url: campaign.brand_logo_url || '',
               social_accounts: submittedAccountsData,
               application_answers: formattedAnswers,
               submitted_at: new Date().toISOString()

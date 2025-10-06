@@ -10,6 +10,7 @@ interface CampaignApplicationNotification {
   campaign_slug: string;
   brand_name: string;
   brand_slug: string;
+  brand_logo_url: string;
   social_accounts: Array<{
     platform: string;
     username: string;
@@ -88,7 +89,7 @@ Deno.serve(async (req) => {
             }
           ],
           footer: {
-            icon_url: "https://media.discordapp.net/attachments/1391444835545649345/1420268993817870437/Untitled_design_30.png?ex=68e49a13&is=68e34893&hm=899e73daa7cdae0eecae6bbd3cb482b3ff24b3d7e522ae41cca3e4658140b085&=&format=webp&quality=lossless&width=1000&height=1000",
+            icon_url: notification.brand_logo_url,
             text: `${notification.campaign_name} | ${notification.brand_name}`
           },
           timestamp: new Date(notification.submitted_at).toISOString()
@@ -97,7 +98,7 @@ Deno.serve(async (req) => {
       components: [],
       actions: {},
       flags: 0,
-      avatar_url: "https://media.discordapp.net/attachments/1394602748816658432/1424694312846757971/5q8mfJos_400x400_1.jpg?ex=68e4e179&is=68e38ff9&hm=f71ac885068a2e1fb4772fa2a64b8cce095633b559cad417b258d56942153819&=&format=webp&width=800&height=800"
+      avatar_url: notification.brand_logo_url
     };
 
     const webhookResponse = await fetch(webhookUrl, {
