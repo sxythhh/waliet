@@ -89,6 +89,7 @@ export default function BrandManagement() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedUserForPayment, setSelectedUserForPayment] = useState<Submission | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [processingSubmissionId, setProcessingSubmissionId] = useState<string | null>(null);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
 
@@ -322,6 +323,7 @@ export default function BrandManagement() {
     }
   };
   const handleApplicationAction = async (submissionId: string, action: "approved" | "rejected") => {
+    setProcessingSubmissionId(submissionId);
     try {
       const {
         error
@@ -347,6 +349,8 @@ export default function BrandManagement() {
     } catch (error) {
       console.error("Error updating application:", error);
       toast.error("Failed to update application");
+    } finally {
+      setProcessingSubmissionId(null);
     }
   };
   const handleDeleteCampaign = async () => {
@@ -1003,11 +1007,31 @@ export default function BrandManagement() {
 
                                 {/* Action Buttons */}
                                 <div className="flex gap-2 flex-shrink-0">
-                                  <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-green-500/20 hover:bg-green-500/30 text-green-400 h-9 px-4">
-                                    <Check className="h-4 w-4 mr-1.5" />
-                                    Approve
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => handleApplicationAction(submission.id, "approved")} 
+                                    className="bg-green-500/20 hover:bg-green-500/30 text-green-400 h-9 px-4"
+                                    disabled={processingSubmissionId === submission.id}
+                                  >
+                                    {processingSubmissionId === submission.id ? (
+                                      <>
+                                        <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
+                                        Processing...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Check className="h-4 w-4 mr-1.5" />
+                                        Approve
+                                      </>
+                                    )}
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-0 h-9 px-4">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => handleApplicationAction(submission.id, "rejected")} 
+                                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-0 h-9 px-4"
+                                    disabled={processingSubmissionId === submission.id}
+                                  >
                                     <X className="h-4 w-4 mr-1.5" />
                                     Reject
                                   </Button>
