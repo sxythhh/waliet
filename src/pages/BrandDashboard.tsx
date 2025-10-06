@@ -35,6 +35,7 @@ interface Campaign {
   allowed_platforms: string[];
   application_questions: any[];
   slug: string;
+  created_at: string;
 }
 export default function BrandDashboard() {
   const {
@@ -258,8 +259,8 @@ export default function BrandDashboard() {
                       {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
                           <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
                         </div>}
-                      <CardContent className="p-6 py-[7px]">
-                        <div className="flex items-start justify-between mb-4 py-0">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
                           <h3 className="font-semibold text-white mb-1 text-xl">
                             {campaign.title}
                           </h3>
@@ -268,6 +269,28 @@ export default function BrandDashboard() {
                                   <Pencil className="h-4 w-4" />
                                 </Button>} />
                           </div>
+                        </div>
+
+                        {/* Allowed Platforms */}
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="text-white/60 text-sm">Platforms:</span>
+                          <div className="flex items-center gap-2">
+                            {campaign.allowed_platforms?.includes('tiktok') && (
+                              <OptimizedImage src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />
+                            )}
+                            {campaign.allowed_platforms?.includes('instagram') && (
+                              <OptimizedImage src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />
+                            )}
+                            {campaign.allowed_platforms?.includes('youtube') && (
+                              <OptimizedImage src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Created Date */}
+                        <div className="flex items-center gap-2 mb-4 text-sm text-white/60">
+                          <span>Created:</span>
+                          <span>{new Date(campaign.created_at).toLocaleDateString()}</span>
                         </div>
 
                         {/* Budget Progress Bar */}
@@ -286,7 +309,12 @@ export default function BrandDashboard() {
                         </div>
 
                         {/* RPM Display */}
-                        
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-white/60">RPM:</span>
+                          <span className="text-white font-semibold">
+                            ${Number(campaign.rpm_rate).toFixed(2)}
+                          </span>
+                        </div>
                       </CardContent>
                     </Card>;
         })}
