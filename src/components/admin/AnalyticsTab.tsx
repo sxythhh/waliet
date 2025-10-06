@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck } from "lucide-react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, BarChart, CartesianGrid } from "recharts";
 
 interface AnalyticsData {
   totalUsers: number;
@@ -244,37 +244,144 @@ export function AnalyticsTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-card border-0">
           <CardHeader>
-            <CardTitle>User Growth</CardTitle>
+            <CardTitle className="text-lg font-semibold">User Growth</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={userGrowthData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="users" stroke="hsl(var(--primary))" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={userGrowthData}>
+                  <defs>
+                    <linearGradient id="userGrowthGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis 
+                    dataKey="month" 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false}
+                    style={{ opacity: 0.6 }}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false}
+                    style={{ opacity: 0.6 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0C0C0C",
+                      border: "none",
+                      borderRadius: "12px",
+                      padding: "12px 16px",
+                      fontFamily: "Instrument Sans, sans-serif",
+                      letterSpacing: "-0.5px"
+                    }}
+                    labelStyle={{
+                      color: "#666666",
+                      fontWeight: 500,
+                      marginBottom: "4px",
+                      fontFamily: "Instrument Sans, sans-serif",
+                      letterSpacing: "-0.5px",
+                      fontSize: "12px"
+                    }}
+                    formatter={(value: number) => [`${value}`, 'Users']}
+                    itemStyle={{
+                      color: "#ffffff",
+                      fontFamily: "Instrument Sans, sans-serif",
+                      letterSpacing: "-0.5px",
+                      fontWeight: 600
+                    }}
+                    cursor={{
+                      stroke: "#333333",
+                      strokeWidth: 2
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="users" 
+                    stroke="#3b82f6" 
+                    strokeWidth={3} 
+                    fill="url(#userGrowthGradient)" 
+                    dot={false}
+                    activeDot={{
+                      r: 6,
+                      fill: "#3b82f6",
+                      stroke: "#1a1a1a",
+                      strokeWidth: 2
+                    }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card border-0">
           <CardHeader>
-            <CardTitle>Campaign Status</CardTitle>
+            <CardTitle className="text-lg font-semibold">Campaign Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={campaignData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="status" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="hsl(var(--primary))" />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={campaignData}>
+                  <XAxis 
+                    dataKey="status" 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false}
+                    style={{ opacity: 0.6 }}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false}
+                    style={{ opacity: 0.6 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0C0C0C",
+                      border: "none",
+                      borderRadius: "12px",
+                      padding: "12px 16px",
+                      fontFamily: "Instrument Sans, sans-serif",
+                      letterSpacing: "-0.5px"
+                    }}
+                    labelStyle={{
+                      color: "#666666",
+                      fontWeight: 500,
+                      marginBottom: "4px",
+                      fontFamily: "Instrument Sans, sans-serif",
+                      letterSpacing: "-0.5px",
+                      fontSize: "12px"
+                    }}
+                    formatter={(value: number) => [`${value}`, 'Count']}
+                    itemStyle={{
+                      color: "#ffffff",
+                      fontFamily: "Instrument Sans, sans-serif",
+                      letterSpacing: "-0.5px",
+                      fontWeight: 600
+                    }}
+                    cursor={{
+                      fill: "rgba(255, 255, 255, 0.05)"
+                    }}
+                  />
+                  <Bar 
+                    dataKey="count" 
+                    fill="#3b82f6" 
+                    radius={[8, 8, 0, 0]} 
+                    name="Campaigns"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
