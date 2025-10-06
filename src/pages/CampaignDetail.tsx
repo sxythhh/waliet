@@ -60,10 +60,10 @@ export default function CampaignDetail() {
       }
 
       // Check if user has an approved submission for this campaign
-      // Add a small retry mechanism for cases where approval just happened
+      // Add a retry mechanism for cases where approval just happened
       let submissionData = null;
       let retries = 0;
-      const maxRetries = 3;
+      const maxRetries = 5;
       
       while (!submissionData && retries < maxRetries) {
         const { data } = await supabase
@@ -77,8 +77,8 @@ export default function CampaignDetail() {
         submissionData = data;
         
         if (!submissionData && retries < maxRetries - 1) {
-          // Wait 500ms before retry
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Wait 1 second before retry
+          await new Promise(resolve => setTimeout(resolve, 1000));
           retries++;
         } else {
           break;
