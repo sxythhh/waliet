@@ -62,6 +62,15 @@ export function InviteMemberDialog({
         return;
       }
 
+      // Get brand and inviter details
+      const [brandResult, profileResult] = await Promise.all([
+        supabase.from("brands").select("name, slug").eq("id", brandId).single(),
+        supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+      ]);
+
+      if (brandResult.error) throw brandResult.error;
+      if (!brandResult.data) throw new Error("Brand not found");
+
       // Create invitation
       const { error } = await supabase
         .from("brand_invitations")
@@ -74,7 +83,24 @@ export function InviteMemberDialog({
 
       if (error) throw error;
 
-      toast.success("Invitation sent successfully");
+      // Send invitation email
+      const { error: emailError } = await supabase.functions.invoke('send-brand-invitation', {
+        body: {
+          email: email.toLowerCase(),
+          brandName: brandResult.data.name,
+          brandSlug: brandResult.data.slug,
+          role,
+          inviterName: profileResult.data?.full_name || "A team member",
+        },
+      });
+
+      if (emailError) {
+        console.error("Error sending invitation email:", emailError);
+        toast.warning("Invitation created but email failed to send");
+      } else {
+        toast.success("Invitation sent successfully");
+      }
+
       setEmail("");
       setRole("member");
       onOpenChange(false);
