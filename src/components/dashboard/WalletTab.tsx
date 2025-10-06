@@ -614,8 +614,7 @@ export function WalletTab() {
     }
   };
   if (loading) {
-    return (
-      <div className="space-y-6 max-w-6xl mx-auto">
+    return <div className="space-y-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-10 w-40" />
@@ -629,8 +628,7 @@ export function WalletTab() {
           <Skeleton className="h-32 rounded-lg" />
           <Skeleton className="h-32 rounded-lg" />
         </div>
-      </div>
-    );
+      </div>;
   }
   const totalEarnings = earningsData.reduce((sum, point) => sum + point.amount, 0);
   const timePeriodLabels: Record<TimePeriod, string> = {
@@ -747,7 +745,7 @@ export function WalletTab() {
               setTransactionSheetOpen(true);
             }} style={{
               backgroundColor: '#0d0d0d'
-            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#0d0d0d] hover:bg-[#1a1a1a]">
+            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#141414]">
                   <div className="flex items-center gap-4 flex-1">
                     {transaction.campaign?.brand_logo_url && <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
                         <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-contain" />
