@@ -242,8 +242,12 @@ export default function BrandInvite() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={!isSignUp}
+                  readOnly
+                  className="bg-muted"
                 />
+                <p className="text-xs text-muted-foreground">
+                  This invitation is for {email}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
