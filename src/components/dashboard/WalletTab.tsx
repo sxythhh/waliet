@@ -754,8 +754,7 @@ export function WalletTab() {
                       </div>}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-bold" style={{
-                      fontFamily: 'Chakra Petch, sans-serif',
+                        <p className="text-sm font-bold font-instrument" style={{
                       letterSpacing: '-0.5px'
                     }}>
                           {transaction.type === 'earning' ? 'Earnings' : 'Withdrawal'}
