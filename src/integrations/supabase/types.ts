@@ -1125,6 +1125,10 @@ export type Database = {
         Args: { details: Json }
         Returns: string
       }
+      get_current_user_email: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_email: {
         Args: { _user_id: string }
         Returns: string
