@@ -3,21 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign, Copy, Package } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 interface Campaign {
   id: string;
   title: string;
   brand_name: string;
   brand_logo_url: string | null;
-  description: string;
+  brand_id: string;
+  description: string | null;
   budget: number;
   budget_used: number;
   rpm_rate: number;
@@ -26,25 +24,26 @@ interface Campaign {
   end_date: string;
   created_at: string;
   preview_url: string | null;
+  banner_url: string | null;
+  guidelines: string | null;
+  allowed_platforms: string[];
+  application_questions: any[];
+  slug: string;
+  embed_url: string | null;
+  analytics_url: string | null;
+  is_private: boolean;
+  access_code: string | null;
+  requires_application: boolean;
+  is_infinite_budget: boolean;
+  is_featured: boolean;
 }
 export default function AdminCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [filteredCampaigns, setFilteredCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
-  const [editForm, setEditForm] = useState({
-    title: "",
-    brand_name: "",
-    description: "",
-    budget: "",
-    budget_used: "",
-    rpm_rate: "",
-    status: "active",
-    preview_url: ""
-  });
+  const [editDialogKey, setEditDialogKey] = useState(0);
   const {
     toast
   } = useToast();
@@ -69,8 +68,16 @@ export default function AdminCampaigns() {
         description: "Failed to fetch campaigns"
       });
     } else {
-      setCampaigns(data || []);
-      setFilteredCampaigns(data || []);
+      // Parse application_questions from JSON to array
+      const parsedCampaigns = (data || []).map(campaign => ({
+        ...campaign,
+        application_questions: Array.isArray(campaign.application_questions) 
+          ? campaign.application_questions 
+          : []
+      })) as Campaign[];
+      
+      setCampaigns(parsedCampaigns);
+      setFilteredCampaigns(parsedCampaigns);
     }
     setLoading(false);
   };
@@ -84,51 +91,9 @@ export default function AdminCampaigns() {
   };
   const openEditDialog = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
-    setEditForm({
-      title: campaign.title,
-      brand_name: campaign.brand_name,
-      description: campaign.description || "",
-      budget: campaign.budget.toString(),
-      budget_used: (campaign.budget_used || 0).toString(),
-      rpm_rate: campaign.rpm_rate.toString(),
-      status: campaign.status,
-      preview_url: campaign.preview_url || ""
-    });
-    setEditDialogOpen(true);
+    setEditDialogKey(prev => prev + 1); // Force remount of dialog
   };
-  const handleUpdateCampaign = async () => {
-    if (!selectedCampaign) return;
-    const {
-      error
-    } = await supabase.from("campaigns").update({
-      title: editForm.title,
-      brand_name: editForm.brand_name,
-      description: editForm.description,
-      budget: parseFloat(editForm.budget),
-      budget_used: parseFloat(editForm.budget_used),
-      rpm_rate: parseFloat(editForm.rpm_rate),
-      status: editForm.status,
-      preview_url: editForm.preview_url || null
-    }).eq("id", selectedCampaign.id);
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update campaign"
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Campaign updated successfully"
-      });
-      setEditDialogOpen(false);
-      fetchCampaigns();
-    }
-  };
-  const openDeleteDialog = (campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    setDeleteDialogOpen(true);
-  };
+  
   const handleDeleteCampaign = async () => {
     if (!selectedCampaign) return;
     const {
@@ -145,7 +110,7 @@ export default function AdminCampaigns() {
         title: "Success",
         description: "Campaign deleted successfully"
       });
-      setDeleteDialogOpen(false);
+      setSelectedCampaign(null);
       fetchCampaigns();
     }
   };
@@ -248,13 +213,6 @@ export default function AdminCampaigns() {
                       <Pencil className="w-3.5 h-3.5 mr-1.5" />
                       Edit
                     </Button>
-                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive" onClick={e => {
-                e.stopPropagation();
-                openDeleteDialog(campaign);
-              }}>
-                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                      Delete
-                    </Button>
                   </div>
                 </CardContent>
               </Card>)}
@@ -262,115 +220,19 @@ export default function AdminCampaigns() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl bg-card border-0">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg">Edit Campaign</DialogTitle>
-            <DialogDescription className="text-xs">Update campaign details</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="title" className="text-xs">Title *</Label>
-                <Input id="title" className="h-9 text-sm" value={editForm.title} onChange={e => setEditForm({
-                ...editForm,
-                title: e.target.value
-              })} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="brand" className="text-xs">Brand Name *</Label>
-                <Input id="brand" className="h-9 text-sm" value={editForm.brand_name} onChange={e => setEditForm({
-                ...editForm,
-                brand_name: e.target.value
-              })} />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-xs">Description</Label>
-              <Textarea id="description" className="text-sm min-h-[60px]" value={editForm.description} onChange={e => setEditForm({
-              ...editForm,
-              description: e.target.value
-            })} rows={2} />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="budget" className="text-xs">Total Budget *</Label>
-                <Input id="budget" type="number" step="0.01" className="h-9 text-sm" value={editForm.budget} onChange={e => setEditForm({
-                ...editForm,
-                budget: e.target.value
-              })} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="budget_used" className="text-xs">Used Budget *</Label>
-                <Input id="budget_used" type="number" step="0.01" className="h-9 text-sm" value={editForm.budget_used} onChange={e => setEditForm({
-                ...editForm,
-                budget_used: e.target.value
-              })} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="rpm" className="text-xs">RPM Rate *</Label>
-                <Input id="rpm" type="number" step="0.01" className="h-9 text-sm" value={editForm.rpm_rate} onChange={e => setEditForm({
-                ...editForm,
-                rpm_rate: e.target.value
-              })} />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="status" className="text-xs">Status *</Label>
-              <select id="status" value={editForm.status} onChange={e => setEditForm({
-              ...editForm,
-              status: e.target.value
-            })} className="w-full h-9 px-3 rounded-md border border-input bg-muted/50 text-sm">
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="preview_url" className="text-xs">Preview URL</Label>
-              <Input id="preview_url" type="url" placeholder="https://..." className="h-9 text-sm" value={editForm.preview_url} onChange={e => setEditForm({
-              ...editForm,
-              preview_url: e.target.value
-            })} />
-              <p className="text-[10px] text-muted-foreground">URL to embed for non-members viewing this campaign</p>
-            </div>
-          </div>
-
-          <div className="flex gap-2 justify-end pt-3 border-t">
-            <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={handleUpdateCampaign}>
-              Save Changes
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{selectedCampaign?.title}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCampaign} className="bg-destructive text-destructive-foreground">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {selectedCampaign && (
+        <CreateCampaignDialog
+          key={editDialogKey}
+          brandId={selectedCampaign.brand_id}
+          brandName={selectedCampaign.brand_name}
+          campaign={selectedCampaign}
+          onSuccess={() => {
+            setSelectedCampaign(null);
+            fetchCampaigns();
+          }}
+          onDelete={handleDeleteCampaign}
+          trigger={null}
+        />
+      )}
     </div>;
 }
