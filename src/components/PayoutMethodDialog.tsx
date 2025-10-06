@@ -176,7 +176,7 @@ export default function PayoutMethodDialog({
                       SELECT CURRENCY
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
-                      {cryptoCurrencies.map(currency => <button key={currency.id} type="button" onClick={() => setSelectedCurrency(currency.id)} className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 justify-center ${selectedCurrency === currency.id ? "bg-primary/10 text-primary border-primary/30" : "bg-[#1a1a1a] text-muted-foreground border-[#2a2a2a] hover:border-[#3a3a3a]"}`}>
+                      {cryptoCurrencies.map(currency => <button key={currency.id} type="button" onClick={() => setSelectedCurrency(currency.id)} className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 justify-center ${selectedCurrency === currency.id ? "bg-primary/10 text-primary border-primary/30" : "bg-[#1a1a1a] text-muted-foreground border-transparent hover:border-transparent"}`}>
                           <img src={currency.logo} alt={currency.name} className="h-5 w-5" />
                           {currency.name}
                         </button>)}
@@ -191,7 +191,7 @@ export default function PayoutMethodDialog({
                       SELECT NETWORK
                     </Label>
                     <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
-                      <SelectTrigger className="h-12 bg-[#1a1a1a] border-[#2a2a2a]">
+                      <SelectTrigger className="h-12 bg-[#1a1a1a] border-transparent">
                         <SelectValue>
                           {selectedNetwork && <div className="flex items-center gap-3">
                               <img src={cryptoNetworks.find(n => n.id === selectedNetwork)?.logo} alt={cryptoNetworks.find(n => n.id === selectedNetwork)?.name} className="h-5 w-5" />
@@ -199,7 +199,7 @@ export default function PayoutMethodDialog({
                             </div>}
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                      <SelectContent className="bg-[#1a1a1a] border-transparent">
                         {cryptoNetworks.map(network => <SelectItem key={network.id} value={network.id} className="focus:bg-[#2a2a2a]">
                             <div className="flex items-center gap-3">
                               <img src={network.logo} alt={network.name} className="h-5 w-5" />
@@ -217,7 +217,7 @@ export default function PayoutMethodDialog({
               }}>
                       WALLET ADDRESS
                     </Label>
-                    <Input id="wallet-address" placeholder="Enter your wallet address" value={walletAddress} onChange={e => setWalletAddress(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                    <Input id="wallet-address" placeholder="Enter your wallet address" value={walletAddress} onChange={e => setWalletAddress(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                   </div>
                 </div>}
 
@@ -228,7 +228,7 @@ export default function PayoutMethodDialog({
             }}>
                     PAYPAL EMAIL
                   </Label>
-                  <Input id="paypal-email" type="email" placeholder="your.email@example.com" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                  <Input id="paypal-email" type="email" placeholder="your.email@example.com" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                 </div>}
 
               {selectedMethod === "upi" && <div className="space-y-3">
@@ -238,7 +238,7 @@ export default function PayoutMethodDialog({
             }}>
                     UPI ID
                   </Label>
-                  <Input id="upi-id" type="text" placeholder="yourname@axl" value={upiEmail} onChange={e => setUpiEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                  <Input id="upi-id" type="text" placeholder="yourname@axl" value={upiEmail} onChange={e => setUpiEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                 </div>}
 
               {selectedMethod === "revolut" && <div className="space-y-3">
@@ -248,7 +248,7 @@ export default function PayoutMethodDialog({
             }}>
                     REVTAG
                   </Label>
-                  <Input id="revolut-tag" placeholder="@yourtag" value={revolutTag} onChange={e => setRevolutTag(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                  <Input id="revolut-tag" placeholder="@yourtag" value={revolutTag} onChange={e => setRevolutTag(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                 </div>}
 
               {selectedMethod === "debit" && <div className="space-y-4">
@@ -259,7 +259,7 @@ export default function PayoutMethodDialog({
               }}>
                       CARD NUMBER
                     </Label>
-                    <Input id="card-number" placeholder="Enter your debit card number" value={cardNumber} onChange={e => setCardNumber(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                    <Input id="card-number" placeholder="Enter your debit card number" value={cardNumber} onChange={e => setCardNumber(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                   </div>
                   <div className="space-y-3">
                     <Label htmlFor="legal-name" className="font-medium text-muted-foreground" style={{
@@ -268,7 +268,7 @@ export default function PayoutMethodDialog({
               }}>
                       LEGAL NAME
                     </Label>
-                    <Input id="legal-name" placeholder="Full name as it appears on card" value={legalName} onChange={e => setLegalName(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                    <Input id="legal-name" placeholder="Full name as it appears on card" value={legalName} onChange={e => setLegalName(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                   </div>
                   <div className="space-y-3">
                     <Label htmlFor="address" className="font-medium text-muted-foreground" style={{
@@ -277,7 +277,7 @@ export default function PayoutMethodDialog({
               }}>
                       ADDRESS
                     </Label>
-                    <Input id="address" placeholder="Your full billing address" value={address} onChange={e => setAddress(e.target.value)} className="h-12 bg-[#1a1a1a] border-[#2a2a2a] focus:bg-[#0f0f0f] focus:border-[#3a3a3a]" />
+                    <Input id="address" placeholder="Your full billing address" value={address} onChange={e => setAddress(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                   </div>
                 </div>}
             </div>
