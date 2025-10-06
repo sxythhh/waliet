@@ -193,13 +193,13 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
 
         const contentUrl = account.account_link || `pending-${Date.now()}-${accountId}`;
 
-        // Check if there's a withdrawn submission we can reuse
+        // Check if there's a withdrawn submission we can reuse (match by content_url to avoid unique constraint)
         const { data: withdrawnSubmission } = await supabase
           .from("campaign_submissions")
           .select("id")
           .eq("campaign_id", campaign.id)
           .eq("creator_id", user.id)
-          .eq("platform", account.platform)
+          .eq("content_url", contentUrl)
           .eq("status", "withdrawn")
           .maybeSingle();
 
