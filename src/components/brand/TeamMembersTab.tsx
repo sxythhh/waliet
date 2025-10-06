@@ -225,12 +225,14 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
       </Card>
 
       {/* Pending Invitations */}
-      {invitations.length > 0 && (
-        <Card className="bg-[#202020] border-white/10">
+      <Card className="bg-[#202020] border-white/10">
           <CardHeader>
             <CardTitle className="text-white">Pending Invitations ({invitations.length})</CardTitle>
           </CardHeader>
-          <CardContent>
+        <CardContent>
+          {invitations.length === 0 ? (
+            <p className="text-white/60 text-center py-4">No pending invitations</p>
+          ) : (
             <div className="space-y-3">
               {invitations.map((invitation) => (
                 <div
@@ -261,9 +263,9 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       <InviteMemberDialog
         open={inviteDialogOpen}
