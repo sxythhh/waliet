@@ -60,13 +60,30 @@ export default function CampaignDetail() {
       }
 
       // Check if user has an approved submission for this campaign
-      const { data: submissionData } = await supabase
-        .from("campaign_submissions")
-        .select("id, status")
-        .eq("campaign_id", id)
-        .eq("creator_id", user.id)
-        .eq("status", "approved")
-        .maybeSingle();
+      // Add a small retry mechanism for cases where approval just happened
+      let submissionData = null;
+      let retries = 0;
+      const maxRetries = 3;
+      
+      while (!submissionData && retries < maxRetries) {
+        const { data } = await supabase
+          .from("campaign_submissions")
+          .select("id, status")
+          .eq("campaign_id", id)
+          .eq("creator_id", user.id)
+          .eq("status", "approved")
+          .maybeSingle();
+        
+        submissionData = data;
+        
+        if (!submissionData && retries < maxRetries - 1) {
+          // Wait 500ms before retry
+          await new Promise(resolve => setTimeout(resolve, 500));
+          retries++;
+        } else {
+          break;
+        }
+      }
 
       if (!submissionData) {
         // Check if there's a pending submission
