@@ -26,6 +26,7 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import emptyTransactionsImage from '@/assets/empty-transactions.png';
+import { Skeleton } from "@/components/ui/skeleton";
 interface WalletData {
   id: string;
   balance: number;
@@ -613,9 +614,23 @@ export function WalletTab() {
     }
   };
   if (loading) {
-    return <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading wallet...</p>
-      </div>;
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-96 rounded-lg" />
+          <Skeleton className="h-96 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+        </div>
+      </div>
+    );
   }
   const totalEarnings = earningsData.reduce((sum, point) => sum + point.amount, 0);
   const timePeriodLabels: Record<TimePeriod, string> = {
