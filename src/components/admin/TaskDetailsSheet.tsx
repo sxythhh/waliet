@@ -71,7 +71,7 @@ export function TaskDetailsSheet({ task, open, onOpenChange, onUpdate }: TaskDet
           </div>
 
           <div className="flex gap-2 justify-end pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="ghost" className="bg-muted/50" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>

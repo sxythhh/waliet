@@ -100,7 +100,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
   if (!editor) return null;
 
   return (
-    <div className="rounded-lg bg-black/60">
+    <div className="rounded-lg bg-transparent">
       <div className="p-2 flex gap-1 flex-wrap">
         <Button
           type="button"
