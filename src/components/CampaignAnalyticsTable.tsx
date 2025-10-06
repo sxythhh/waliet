@@ -118,6 +118,27 @@ export function CampaignAnalyticsTable({
     fetchAnalytics();
     fetchCampaignRPM();
     fetchTransactions();
+
+    // Set up real-time subscription for demographic submissions
+    const demographicChannel = supabase
+      .channel('demographic-submissions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'demographic_submissions'
+        },
+        (payload) => {
+          console.log('Demographic submission changed:', payload);
+          fetchAnalytics(); // Refresh analytics when demographics change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(demographicChannel);
+    };
   }, [campaignId]);
   const fetchCampaignRPM = async () => {
     try {
