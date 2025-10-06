@@ -95,7 +95,7 @@ export function WorkTab() {
     const completedTasks = columnTasks.filter((task) => task.status === "done");
 
     return (
-      <Card key={key} className="p-4 space-y-3 w-[350px] flex-shrink-0">
+      <Card key={key} className="p-4 space-y-3 w-[280px] flex-shrink-0">
         <h3 className="font-semibold text-lg">{title}</h3>
         
         <form 
