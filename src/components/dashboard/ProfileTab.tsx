@@ -433,8 +433,8 @@ export function ProfileTab() {
             };
             const submissionTimestamp = getSubmissionTimestamp();
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#0d0d0d]">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
+                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent w-fit">
                         {getPlatformIcon(account.platform)}
                         <span className="font-medium">{account.username}</span>
                         {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-success" />}
@@ -443,8 +443,8 @@ export function ProfileTab() {
                         {!demographicStatus && <AlertCircle className="h-4 w-4 text-destructive" />}
                       </div>
                       
-                      {/* Link icon separator */}
-                      {connectedCampaigns.length > 0 && <Link2 className="h-3.5 w-3.5 text-white/40" />}
+                      {/* Link icon separator - hidden on mobile */}
+                      {connectedCampaigns.length > 0 && <Link2 className="hidden sm:block h-3.5 w-3.5 text-white/40 flex-shrink-0" />}
                       
                       {/* Display connected campaigns */}
                       {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-2">
