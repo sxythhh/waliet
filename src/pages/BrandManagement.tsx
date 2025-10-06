@@ -329,6 +329,19 @@ export default function BrandManagement() {
         status: action
       }).eq("id", submissionId);
       if (error) throw error;
+
+      // Send approval email if approved
+      if (action === "approved") {
+        try {
+          await supabase.functions.invoke("send-application-approval", {
+            body: { submissionId }
+          });
+        } catch (emailError) {
+          console.error("Error sending approval email:", emailError);
+          // Don't fail the whole operation if email fails
+        }
+      }
+
       toast.success(`Application ${action}`);
       fetchSubmissions();
     } catch (error) {
