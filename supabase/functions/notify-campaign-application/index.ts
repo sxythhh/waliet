@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       : 'No application questions';
 
     // Build brand management URL
-    const brandManagementUrl = `https://viralitymarketplace.lovable.app/brand/${notification.brand_slug}/management`;
+    const brandManagementUrl = `https://virality.gg/brand/${notification.brand_slug}/management`;
 
     const embed = {
       content: "",

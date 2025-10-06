@@ -173,6 +173,7 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
 
       // Track if any submissions were actually created
       let submissionsCreated = 0;
+      const submittedAccountsData: Array<{ platform: string; username: string; account_link: string }> = [];
 
       // Process each selected account
       for (const accountId of selectedAccounts) {
@@ -268,6 +269,79 @@ export function JoinCampaignSheet({ campaign, open, onOpenChange }: JoinCampaign
         }
 
         submissionsCreated++;
+        submittedAccountsData.push({
+          platform: account.platform,
+          username: account.username,
+          account_link: account.account_link || contentUrl
+        });
+      }
+
+      // Send Discord notification if submissions were created
+      if (submissionsCreated > 0) {
+        try {
+          console.log('Preparing to send Discord notification...');
+          
+          // Get user profile
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('username, email')
+            .eq('id', user.id)
+            .single();
+
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+          }
+
+          // Get brand data including slug and logo
+          const { data: brandData, error: brandError } = await supabase
+            .from('brands')
+            .select('slug')
+            .eq('name', campaign.brand_name)
+            .single();
+
+          if (brandError) {
+            console.error('Brand fetch error:', brandError);
+          }
+
+          const brandSlug = brandData?.slug || '';
+          console.log('Brand slug:', brandSlug);
+
+          const formattedAnswers = campaign.application_questions?.map((question, index) => ({
+            question,
+            answer: answers[index] || ""
+          })) || [];
+
+          console.log('Invoking edge function with data:', {
+            username: profile?.username,
+            campaign_name: campaign.title,
+            brand_slug: brandSlug,
+            accounts_count: submittedAccountsData.length
+          });
+
+          const { data: functionData, error: functionError } = await supabase.functions.invoke('notify-campaign-application', {
+            body: {
+              username: profile?.username || 'Unknown',
+              email: profile?.email || 'Unknown',
+              campaign_name: campaign.title,
+              campaign_slug: campaign.slug,
+              brand_name: campaign.brand_name,
+              brand_slug: brandSlug,
+              brand_logo_url: campaign.brand_logo_url || '',
+              social_accounts: submittedAccountsData,
+              application_answers: formattedAnswers,
+              submitted_at: new Date().toISOString()
+            }
+          });
+
+          if (functionError) {
+            console.error('Edge function error:', functionError);
+          } else {
+            console.log('Discord notification sent successfully:', functionData);
+          }
+        } catch (webhookError) {
+          console.error('Failed to send Discord notification:', webhookError);
+          // Don't fail the submission if webhook fails
+        }
       }
 
       console.log('=== SUBMISSION COMPLETE ===');
