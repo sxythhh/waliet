@@ -72,7 +72,7 @@ export function AdminSidebar() {
                 active
                   ? "bg-blue-500 text-white"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                isCollapsed ? "justify-center p-3" : "gap-2 px-3 py-2"
+                isCollapsed ? "justify-center py-3 px-4" : "gap-2 px-3 py-2"
               )}
               title={isCollapsed ? item.title : undefined}
             >
