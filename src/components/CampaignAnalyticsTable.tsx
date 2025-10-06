@@ -231,25 +231,43 @@ export function CampaignAnalyticsTable({
   };
   const fetchAvailableUsers = async (accountPlatform: string) => {
     try {
-      // Get all users who have joined this campaign with any social accounts
+      // Get all users who have joined this campaign through the junction table
       const {
-        data: socialAccounts,
+        data: campaignAccounts,
         error
-      } = await supabase.from('social_accounts').select(`
-          id,
-          user_id,
-          platform,
-          username,
-          profiles!inner(username, avatar_url)
+      } = await supabase.from('social_account_campaigns').select(`
+          social_accounts!inner (
+            id,
+            user_id,
+            platform,
+            username,
+            follower_count,
+            account_link
+          )
         `).eq('campaign_id', campaignId);
       if (error) throw error;
-      const users = socialAccounts?.map((account: any) => ({
-        user_id: account.user_id,
-        username: account.profiles.username,
-        avatar_url: account.profiles.avatar_url,
-        platform: account.platform,
-        account_username: account.username
-      })) || [];
+      
+      // Fetch profile data for each unique user
+      const uniqueUserIds = [...new Set(campaignAccounts?.map((ca: any) => ca.social_accounts.user_id))];
+      const profilesPromises = uniqueUserIds.map(userId => 
+        supabase.from('profiles').select('username, avatar_url').eq('id', userId).single()
+      );
+      const profilesResults = await Promise.all(profilesPromises);
+      const profilesMap = new Map(
+        profilesResults.map((result, index) => [uniqueUserIds[index], result.data])
+      );
+      
+      const users = campaignAccounts?.map((ca: any) => {
+        const account = ca.social_accounts;
+        const profile = profilesMap.get(account.user_id);
+        return {
+          user_id: account.user_id,
+          username: profile?.username || 'Unknown',
+          avatar_url: profile?.avatar_url,
+          platform: account.platform,
+          account_username: account.username
+        };
+      }) || [];
       setAvailableUsers(users);
     } catch (error) {
       console.error("Error fetching available users:", error);
