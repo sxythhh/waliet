@@ -109,7 +109,7 @@ export function BrandSidebar() {
     <div className="p-4 bg-[#202020] px-[5px] py-[5px]">
       {isAdmin ? (
         <Select value={currentSlug} onValueChange={value => navigate(`/brand/${value}`)}>
-          <SelectTrigger className="w-full bg-white/5 border-none text-white hover:bg-white/10 font-instrument">
+          <SelectTrigger className="w-full bg-white/5 border-none text-white hover:bg-white/10 font-chakra font-semibold tracking-tight focus:ring-0 focus:ring-offset-0">
             <SelectValue>
               <div className="flex items-center gap-2">
                 {currentBrand?.logo_url ? <img src={currentBrand.logo_url} alt={currentBrand.name} className="h-5 w-5 rounded object-cover" /> : <div className="h-5 w-5 rounded bg-white/10" />}
@@ -118,7 +118,7 @@ export function BrandSidebar() {
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-[#2a2a2a] border-white/10">
-            {brands.map(brand => <SelectItem key={brand.slug} value={brand.slug} className="text-white hover:bg-white/10 focus:bg-white/10">
+            {brands.map(brand => <SelectItem key={brand.slug} value={brand.slug} className="text-white hover:bg-white/10 focus:bg-white/10 font-chakra font-semibold tracking-tight">
                 <div className="flex items-center gap-2">
                   {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 rounded object-cover" /> : <div className="h-5 w-5 rounded bg-white/10" />}
                   <span>{brand.name}</span>
@@ -127,7 +127,7 @@ export function BrandSidebar() {
           </SelectContent>
         </Select>
       ) : (
-        <div className="w-full bg-white/5 border-none text-white px-3 py-2 rounded-md font-instrument">
+        <div className="w-full bg-white/5 border-none text-white px-3 py-2 rounded-md font-chakra font-semibold tracking-tight">
           <div className="flex items-center gap-2">
             {currentBrand?.logo_url ? <img src={currentBrand.logo_url} alt={currentBrand.name} className="h-5 w-5 rounded object-cover" /> : <div className="h-5 w-5 rounded bg-white/10" />}
             <span>{currentBrand?.name || "Select Brand"}</span>
