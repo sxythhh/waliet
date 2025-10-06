@@ -15,10 +15,10 @@ export default function AdminOverview() {
             <TabsTrigger value="warmap" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Warmap
             </TabsTrigger>
-            <TabsTrigger value="work" className="rounded-full px-6">
+            <TabsTrigger value="work" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Work
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-full px-6">
+            <TabsTrigger value="analytics" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Analytics
             </TabsTrigger>
           </TabsList>
