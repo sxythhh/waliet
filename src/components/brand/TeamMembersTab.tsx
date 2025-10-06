@@ -63,38 +63,43 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
         setCurrentUserRole(memberData?.role || null);
       }
 
-      // Fetch members
+      // Fetch members with profiles
       const { data: membersData, error: membersError } = await supabase
         .from("brand_members")
         .select(`
           id,
           user_id,
           role,
-          created_at,
-          profiles:user_id (
-            full_name,
-            email:id
-          )
+          created_at
         `)
         .eq("brand_id", brandId);
 
       if (membersError) throw membersError;
 
-      // Fetch email addresses from auth.users
-      const membersWithEmails = await Promise.all(
+      // Fetch user profiles and emails separately
+      const membersWithDetails = await Promise.all(
         (membersData || []).map(async (member: any) => {
+          // Get profile data
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", member.user_id)
+            .maybeSingle();
+
+          // Get user email from auth
           const { data: { user } } = await supabase.auth.admin.getUserById(member.user_id);
+          
           return {
             ...member,
             profiles: {
-              ...member.profiles,
+              full_name: profile?.full_name || "Unknown",
               email: user?.email || "Unknown"
             }
           };
         })
       );
 
-      setMembers(membersWithEmails as Member[]);
+      setMembers(membersWithDetails as Member[]);
 
       // Fetch pending invitations
       const { data: invitationsData, error: invitationsError } = await supabase

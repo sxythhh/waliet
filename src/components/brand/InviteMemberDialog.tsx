@@ -48,19 +48,6 @@ export function InviteMemberDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Check if user is already a member
-      const { data: existingMember } = await supabase
-        .from("brand_members")
-        .select("id")
-        .eq("brand_id", brandId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (existingMember) {
-        toast.error("This user is already a member");
-        return;
-      }
-
       // Check if there's already a pending invitation
       const { data: existingInvitation } = await supabase
         .from("brand_invitations")

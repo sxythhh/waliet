@@ -1125,6 +1125,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_brand_admin: {
+        Args: { _brand_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_brand_member: {
+        Args: { _brand_id: string; _user_id: string }
+        Returns: boolean
+      }
       match_analytics_to_users: {
         Args: { p_campaign_id: string }
         Returns: {
