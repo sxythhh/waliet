@@ -35,7 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Virality <onboarding@resend.dev>",
+        from: "Virality <invitations@notifications.virality.gg>",
         to: [email],
         subject: `You've been invited to join ${brandName} on Virality`,
         html: `
