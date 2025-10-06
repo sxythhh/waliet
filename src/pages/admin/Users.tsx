@@ -663,6 +663,7 @@ export default function AdminUsers() {
       } = await supabase.from("demographic_submissions").update({
         status: finalStatus,
         score: finalStatus === "approved" ? scoreValue : null,
+        tier1_percentage: finalStatus === "approved" ? scoreValue : null,
         admin_notes: adminNotes.trim() || null,
         reviewed_at: new Date().toISOString(),
         reviewed_by: session.user.id
