@@ -199,7 +199,7 @@ export default function BrandInvite() {
   const emailMatches = user?.email?.toLowerCase() === invitation.email.toLowerCase();
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[hsl(0,0%,3.1%)]">
       <Card className="max-w-md w-full">
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
