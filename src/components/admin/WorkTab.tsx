@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableTask } from "./SortableTask";
+import { TaskDetailsSheet } from "./TaskDetailsSheet";
 
 interface Task {
   id: string;
@@ -30,6 +31,8 @@ export function WorkTab() {
     matt: "",
     alex: "",
   });
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -160,6 +163,11 @@ export function WorkTab() {
     }
   };
 
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setSheetOpen(true);
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -210,7 +218,12 @@ export function WorkTab() {
           <SortableContext items={activeTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2">
               {activeTasks.map((task) => (
-                <SortableTask key={task.id} task={task} onToggle={handleToggleStatus} />
+                <SortableTask 
+                  key={task.id} 
+                  task={task} 
+                  onToggle={handleToggleStatus}
+                  onClick={handleTaskClick}
+                />
               ))}
             </div>
           </SortableContext>
@@ -264,6 +277,13 @@ export function WorkTab() {
           No tasks found. Add your first task to get started!
         </div>
       )}
+
+      <TaskDetailsSheet
+        task={selectedTask}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onUpdate={fetchTasks}
+      />
     </div>
   );
 }
