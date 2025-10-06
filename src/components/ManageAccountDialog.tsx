@@ -183,9 +183,7 @@ export function ManageAccountDialog({
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Manage Account</DialogTitle>
-            <DialogDescription>
-              Manage campaigns, demographics, and settings for this account
-            </DialogDescription>
+            
           </DialogHeader>
 
           <div className="space-y-6">
