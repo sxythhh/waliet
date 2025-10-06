@@ -248,13 +248,15 @@ export default function AdminUsers() {
       error
     } = await supabase.from("social_accounts").select(`
         *,
-        campaigns:campaign_id (
-          id,
-          title,
-          brand_name,
-          brand_logo_url,
-          brands:brand_id (
-            logo_url
+        social_account_campaigns (
+          campaigns (
+            id,
+            title,
+            brand_name,
+            brand_logo_url,
+            brands:brand_id (
+              logo_url
+            )
           )
         ),
         demographic_submissions (

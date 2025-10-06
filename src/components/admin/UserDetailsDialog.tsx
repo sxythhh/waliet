@@ -22,14 +22,16 @@ interface SocialAccount {
   platform: string;
   username: string;
   account_link: string;
-  campaigns?: {
-    title: string;
-    brand_name: string;
-    brand_logo_url?: string | null;
-    brands?: {
-      logo_url?: string | null;
-    } | null;
-  } | null;
+  social_account_campaigns?: Array<{
+    campaigns: {
+      title: string;
+      brand_name: string;
+      brand_logo_url?: string | null;
+      brands?: {
+        logo_url?: string | null;
+      } | null;
+    };
+  }>;
   demographic_submissions?: Array<{
     status: string;
     tier1_percentage: number;
@@ -145,6 +147,7 @@ export function UserDetailsDialog({
                 {socialAccounts.map(account => {
               const latestDemographic = account.demographic_submissions?.[0];
               const demographicStatus = latestDemographic?.status;
+              const linkedCampaign = account.social_account_campaigns?.[0]?.campaigns;
               return <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors group">
                       <div className="flex items-center justify-between gap-4">
                         {/* Account Info */}
@@ -182,10 +185,10 @@ export function UserDetailsDialog({
                         
                         {/* Campaign Link */}
                         <div className="shrink-0">
-                          {account.campaigns ? <div className="flex items-center gap-2">
-                              {(account.campaigns.brands?.logo_url || account.campaigns.brand_logo_url) && <img src={account.campaigns.brands?.logo_url || account.campaigns.brand_logo_url} alt={account.campaigns.brand_name} className="h-6 w-6 rounded object-cover" />}
+                          {linkedCampaign ? <div className="flex items-center gap-2">
+                              {(linkedCampaign.brands?.logo_url || linkedCampaign.brand_logo_url) && <img src={linkedCampaign.brands?.logo_url || linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-6 w-6 rounded object-cover" />}
                               <span className="font-medium text-sm">
-                                {account.campaigns.title}
+                                {linkedCampaign.title}
                               </span>
                             </div> : <span className="text-xs text-muted-foreground italic">
                               Not linked
