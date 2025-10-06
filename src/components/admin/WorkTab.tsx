@@ -118,7 +118,7 @@ export function WorkTab() {
     }
 
     const columnTasks = assignee === null 
-      ? tasks.filter((task) => task.status !== "done")
+      ? tasks.filter((task) => task.assigned_to === assignee && task.status !== "done")
       : tasks.filter((task) => task.assigned_to === assignee && task.status !== "done");
 
     const oldIndex = columnTasks.findIndex((task) => task.id === active.id);
@@ -128,36 +128,28 @@ export function WorkTab() {
 
     const reorderedTasks = arrayMove(columnTasks, oldIndex, newIndex);
 
-    // Update order_index for all affected tasks
-    const updates = reorderedTasks.map((task, index) => ({
-      id: task.id,
-      order_index: index,
-    }));
+    // Update all tasks in this column with new order_index
+    try {
+      for (let i = 0; i < reorderedTasks.length; i++) {
+        const { error } = await supabase
+          .from("work_tasks")
+          .update({ order_index: i })
+          .eq("id", reorderedTasks[i].id);
 
-    // Optimistically update UI
-    setTasks(prevTasks => {
-      const newTasks = [...prevTasks];
-      updates.forEach(update => {
-        const taskIndex = newTasks.findIndex(t => t.id === update.id);
-        if (taskIndex !== -1) {
-          newTasks[taskIndex] = { ...newTasks[taskIndex], order_index: update.order_index };
+        if (error) {
+          console.error("Error updating order:", error);
+          toast.error("Failed to reorder tasks");
+          fetchTasks();
+          return;
         }
-      });
-      return newTasks;
-    });
-
-    // Update database
-    for (const update of updates) {
-      const { error } = await supabase
-        .from("work_tasks")
-        .update({ order_index: update.order_index })
-        .eq("id", update.id);
-
-      if (error) {
-        toast.error("Failed to reorder tasks");
-        fetchTasks(); // Revert on error
-        return;
       }
+      
+      // Refresh to show updated order
+      await fetchTasks();
+    } catch (error) {
+      console.error("Error in handleDragEnd:", error);
+      toast.error("Failed to reorder tasks");
+      fetchTasks();
     }
   };
 
