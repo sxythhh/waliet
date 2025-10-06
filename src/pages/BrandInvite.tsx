@@ -37,7 +37,7 @@ export default function BrandInvite() {
         .from("brand_invitations")
         .select("*")
         .eq("id", invitationId)
-        .single();
+        .maybeSingle();
 
       if (inviteError) throw inviteError;
       if (!inviteData) {
@@ -58,7 +58,7 @@ export default function BrandInvite() {
         .from("brands")
         .select("*")
         .eq("id", inviteData.brand_id)
-        .single();
+        .maybeSingle();
 
       if (brandError) throw brandError;
       setBrand(brandData);
