@@ -133,9 +133,13 @@ export function SubmitDemographicsDialog({
         .eq('id', socialAccountId)
         .single();
 
-      // Notify Discord webhook
+      // Notify Discord webhook (non-blocking - don't fail if it fails)
       try {
-        await supabase.functions.invoke('notify-demographic-submission', {
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Webhook timeout')), 5000)
+        );
+        
+        const webhookPromise = supabase.functions.invoke('notify-demographic-submission', {
           body: {
             username: profile?.username || 'Unknown',
             email: profile?.email || 'Unknown',
@@ -145,9 +149,11 @@ export function SubmitDemographicsDialog({
             submitted_at: submissionData?.submitted_at || new Date().toISOString()
           }
         });
+
+        await Promise.race([webhookPromise, timeoutPromise]);
       } catch (webhookError) {
-        console.error('Failed to send Discord notification:', webhookError);
-        // Don't fail the submission if webhook fails
+        console.error('Failed to send Discord notification (non-critical):', webhookError);
+        // Don't fail the submission if webhook fails - it's non-critical
       }
 
       toast({
