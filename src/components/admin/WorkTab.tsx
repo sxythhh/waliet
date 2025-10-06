@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CircleCheck, ChevronRight, Circle } from "lucide-react";
+import { CircleCheck, ChevronRight, Circle, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 interface Task {
@@ -94,7 +95,7 @@ export function WorkTab() {
     const completedTasks = columnTasks.filter((task) => task.status === "done");
 
     return (
-      <Card key={key} className="p-4 space-y-3 min-w-[300px] flex-1">
+      <Card key={key} className="p-4 space-y-3 w-[350px] flex-shrink-0">
         <h3 className="font-semibold text-lg">{title}</h3>
         
         <form 
@@ -102,15 +103,21 @@ export function WorkTab() {
             e.preventDefault();
             handleAddTask(assignee);
           }}
-          className="flex items-center gap-2"
+          className="relative"
         >
-          <CircleCheck className="h-5 w-5 text-muted-foreground shrink-0" />
           <Input
-            placeholder="Add a task"
+            placeholder="Add a task..."
             value={newTaskInputs[key]}
             onChange={(e) => setNewTaskInputs({ ...newTaskInputs, [key]: e.target.value })}
-            className="border-0 bg-transparent px-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="pr-10 transition-all duration-200 focus:ring-2 focus:ring-primary focus:border-2"
           />
+          <Button
+            type="submit"
+            size="icon"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </form>
 
         <div className="space-y-2">
@@ -152,7 +159,7 @@ export function WorkTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 w-full">
         {renderTaskColumn("All Tasks", null)}
         {ASSIGNEES.map((assignee) => 
           renderTaskColumn(assignee.charAt(0).toUpperCase() + assignee.slice(1), assignee)
