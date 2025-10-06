@@ -156,7 +156,7 @@ export default function Auth() {
   };
   return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md border bg-[#0b0b0b]">
-        <CardHeader className="text-center space-y-1 pb-8 bg-[#0b0b0b] mt-2">
+        <CardHeader className="text-center space-y-1 pb-0 bg-[#0b0b0b] mt-2">
           <div className="flex justify-center">
             <img src={viralityLogo} alt="Virality Logo" className="h-12 w-auto" />
           </div>
