@@ -151,7 +151,7 @@ export function BrandSidebar() {
               }}
               className={({
                 isActive
-              }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${isActive ? 'bg-[#5865F2] text-white hover:bg-[#5865F2]' : 'text-white hover:bg-[#2C2C2C]'}`}>
+              }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${isActive ? 'bg-[#5865F2] text-white hover:bg-[#5865F2]' : 'text-white/60 hover:bg-[#2C2C2C]'}`}>
               {({
                 isActive
               }) => <>
