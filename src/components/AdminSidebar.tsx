@@ -56,7 +56,7 @@ export function AdminSidebar() {
       })}
       </nav>
 
-      <div className={cn("p-4 border-t border-border", isCollapsed ? "flex justify-center" : "flex gap-2")}>
+      <div className={cn("p-[10px] border-t border-border", isCollapsed ? "flex justify-center" : "flex gap-2")}>
         {!isCollapsed && <Button onClick={handleSignOut} variant="ghost" className="flex-1 justify-start hover:bg-destructive/10 hover:text-destructive" title="Sign Out">
             <LogOut className="h-5 w-5 shrink-0" />
             <span className="ml-3">Sign Out</span>
