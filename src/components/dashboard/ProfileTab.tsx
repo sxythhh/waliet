@@ -432,26 +432,24 @@ export function ProfileTab() {
               return format(submittedDate, "MMM d, yyyy 'at' h:mm a");
             };
             const submissionTimestamp = getSubmissionTimestamp();
-            return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border bg-[#0d0d0d]">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <div className="flex flex-col gap-1 items-center">
-                        <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50 w-fit cursor-pointer group">
-                          {getPlatformIcon(account.platform)}
-                          <span className="font-medium group-hover:underline">{account.username}</span>
-                          {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
-                          {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
-                          {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
-                          {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
-                        </div>
+            return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#0d0d0d]">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-white/5">
+                        {getPlatformIcon(account.platform)}
+                        <span className="font-medium">{account.username}</span>
+                        {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-success" />}
+                        {demographicStatus === 'pending' && <Clock className="h-4 w-4 text-warning" />}
+                        {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-destructive" />}
+                        {!demographicStatus && <AlertCircle className="h-4 w-4 text-destructive" />}
                       </div>
                       
                       {/* Display connected campaigns */}
-                      {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2 justify-center">
+                      {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-2">
                           {connectedCampaigns.map(({
                     campaign
-                  }) => <div key={campaign.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-card text-xs">
-                              {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-4 h-4 rounded object-cover" />}
-                              <span className="font-medium">{campaign.title}</span>
+                  }) => <div key={campaign.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border bg-card/50 text-xs">
+                              {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-3.5 h-3.5 rounded object-cover" />}
+                              <span className="font-medium text-white/80">{campaign.title}</span>
                             </div>)}
                         </div>}
                     </div>
