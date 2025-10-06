@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign, Copy } from "lucide-react";
+import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign, Copy, Package } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -16,6 +16,7 @@ interface Campaign {
   id: string;
   title: string;
   brand_name: string;
+  brand_logo_url: string | null;
   description: string;
   budget: number;
   budget_used: number;
@@ -177,15 +178,21 @@ export default function AdminCampaigns() {
               No campaigns found
             </CardContent>
           </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
-            {filteredCampaigns.map(campaign => <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:border-primary/50 cursor-pointer" onClick={() => openEditDialog(campaign)}>
+            {filteredCampaigns.map(campaign => <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:bg-muted/50 cursor-pointer" onClick={() => openEditDialog(campaign)}>
                 {/* Content Section */}
                 <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
-                  {/* Title + Brand */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
-                      {campaign.title}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                  {/* Brand Logo + Title */}
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {campaign.brand_logo_url ? <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <Package className="h-5 w-5 text-muted-foreground" />
+                      </div>}
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
+                        {campaign.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                    </div>
                   </div>
 
                   {/* Budget Section */}
