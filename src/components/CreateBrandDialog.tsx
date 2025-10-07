@@ -122,7 +122,7 @@ export function CreateBrandDialog({
 
       // Send webhook notification
       try {
-        await fetch("https://ivelinivnv.app.n8n.cloud/webhook-test/fbb95851-05f5-4ada-a0b6-383b8e96591c", {
+        await fetch("https://ivelinivnv.app.n8n.cloud/webhook/fbb95851-05f5-4ada-a0b6-383b8e96591c", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
