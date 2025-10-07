@@ -21,6 +21,9 @@ export default function Auth() {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -32,7 +35,7 @@ export default function Auth() {
         session
       }
     }) => {
-      if (session) {
+      if (session && !isRecoveryMode) {
         navigate("/dashboard");
       }
     });
@@ -41,12 +44,14 @@ export default function Auth() {
         subscription
       }
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveryMode(true);
+      } else if (session && !isRecoveryMode) {
         navigate("/dashboard");
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isRecoveryMode]);
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -156,6 +161,74 @@ export default function Auth() {
       setResetEmail("");
     }
   };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    setLoading(false);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    } else {
+      toast({
+        title: "Password updated",
+        description: "Your password has been successfully updated."
+      });
+      setIsRecoveryMode(false);
+      setNewPassword("");
+      navigate("/dashboard");
+    }
+  };
+  if (isRecoveryMode) {
+    return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <Card className="w-full max-w-md border bg-[#0b0b0b]">
+          <CardHeader className="text-center space-y-1 bg-[#0b0b0b]">
+            <div className="flex justify-center">
+              <img src={viralityLogo} alt="Virality Logo" className="h-12 w-auto" />
+            </div>
+            <CardTitle className="text-2xl font-semibold tracking-tight">Reset Password</CardTitle>
+            <CardDescription>Enter your new password below</CardDescription>
+          </CardHeader>
+          <CardContent className="bg-[#0b0b0b]">
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password" className="text-sm font-medium">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                    minLength={6}
+                    className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <Button type="submit" className="w-full h-11 font-chakra font-semibold" disabled={loading}>
+                {loading ? "Updating..." : "Update Password"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>;
+  }
+
   return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md border bg-[#0b0b0b]">
         <CardHeader className="text-center space-y-1 pb-0 bg-[#0b0b0b] mt-2">
