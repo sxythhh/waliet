@@ -611,10 +611,25 @@ export function ProfileTab() {
               </div>
             </div>
 
-            {/* About */}
-            <div className="space-y-4">
-              
-              
+            {/* Bio */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
+                <Textarea 
+                  id="bio" 
+                  value={profile.bio || ""} 
+                  onChange={e => setProfile({
+                    ...profile,
+                    bio: e.target.value
+                  })} 
+                  placeholder="Tell us about yourself..."
+                  className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm min-h-[100px] resize-none"
+                  maxLength={500}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {profile.bio?.length || 0}/500 characters
+                </p>
+              </div>
             </div>
 
             {/* Save Button */}
