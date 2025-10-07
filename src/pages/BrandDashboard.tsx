@@ -153,7 +153,8 @@ export default function BrandDashboard() {
   const effectiveView = !hasHomeEmbed ? "campaigns" : !hasCampaigns ? "home" : activeView;
   return <div className="min-h-screen bg-[#191919]">
       {/* Header - Hide when showing home embed */}
-      {effectiveView !== "home" && <>
+      {effectiveView !== "home" && (
+        <>
           <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -181,15 +182,21 @@ export default function BrandDashboard() {
               </TabsList>
             </Tabs>}
           </div>
-        </>}
+        </>
+      )}
 
       {/* Floating toggle button when on home view */}
-      {effectiveView === "home" && showToggle && <div className="fixed top-4 right-4 z-50">
-          <Button onClick={() => setActiveView("campaigns")} className="bg-[#5865F2] hover:bg-[#4752C4]">
+      {effectiveView === "home" && showToggle && (
+        <div className="fixed top-4 right-4 z-50">
+          <Button
+            onClick={() => setActiveView("campaigns")}
+            className="bg-[#5865F2] hover:bg-[#4752C4]"
+          >
             <LayoutGrid className="h-4 w-4 mr-2" />
             View Campaigns
           </Button>
-        </div>}
+        </div>
+      )}
 
       {/* Content Area */}
       {showToggle ? <>
@@ -282,10 +289,26 @@ export default function BrandDashboard() {
                         </div>
 
                         {/* Allowed Platforms */}
-                        
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="text-white/60 text-sm">Platforms:</span>
+                          <div className="flex items-center gap-2">
+                            {campaign.allowed_platforms?.includes('tiktok') && (
+                              <OptimizedImage src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />
+                            )}
+                            {campaign.allowed_platforms?.includes('instagram') && (
+                              <OptimizedImage src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />
+                            )}
+                            {campaign.allowed_platforms?.includes('youtube') && (
+                              <OptimizedImage src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />
+                            )}
+                          </div>
+                        </div>
 
                         {/* Created Date */}
-                        
+                        <div className="flex items-center gap-2 mb-4 text-sm text-white/60">
+                          <span>Created:</span>
+                          <span>{new Date(campaign.created_at).toLocaleDateString()}</span>
+                        </div>
 
                         {/* Budget Progress Bar */}
                         <div className="space-y-2 mb-4">
