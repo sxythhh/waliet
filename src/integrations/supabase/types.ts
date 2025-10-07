@@ -144,6 +144,7 @@ export type Database = {
           description: string | null
           home_url: string | null
           id: string
+          is_active: boolean
           logo_url: string | null
           name: string
           show_account_tab: boolean
@@ -158,6 +159,7 @@ export type Database = {
           description?: string | null
           home_url?: string | null
           id?: string
+          is_active?: boolean
           logo_url?: string | null
           name: string
           show_account_tab?: boolean
@@ -172,6 +174,7 @@ export type Database = {
           description?: string | null
           home_url?: string | null
           id?: string
+          is_active?: boolean
           logo_url?: string | null
           name?: string
           show_account_tab?: boolean

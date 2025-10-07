@@ -21,6 +21,7 @@ interface Brand {
   account_url: string | null;
   assets_url: string | null;
   show_account_tab: boolean;
+  is_active: boolean;
   created_at: string;
 }
 export default function AdminBrands() {
@@ -48,7 +49,9 @@ export default function AdminBrands() {
       const {
         data,
         error
-      } = await supabase.from("brands").select("*").order("created_at", {
+      } = await supabase.from("brands").select("*").order("is_active", {
+        ascending: false
+      }).order("created_at", {
         ascending: false
       });
       if (error) throw error;
@@ -81,6 +84,22 @@ export default function AdminBrands() {
       setBrandToDelete(null);
     }
   };
+  const toggleBrandActive = async (brand: Brand) => {
+    try {
+      const { error } = await supabase
+        .from("brands")
+        .update({ is_active: !brand.is_active })
+        .eq("id", brand.id);
+      
+      if (error) throw error;
+      toast.success(`Brand ${!brand.is_active ? 'activated' : 'deactivated'}`);
+      fetchBrands();
+    } catch (error) {
+      console.error("Error updating brand status:", error);
+      toast.error("Failed to update brand status");
+    }
+  };
+
   const getBrandTypeBadgeColor = (type: string | null) => {
     switch (type) {
       case "Standard":
@@ -170,6 +189,14 @@ export default function AdminBrands() {
                     
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button 
+                        size="sm" 
+                        variant={brand.is_active ? "outline" : "default"}
+                        onClick={() => toggleBrandActive(brand)}
+                        className="h-9 px-3"
+                      >
+                        {brand.is_active ? 'Deactivate' : 'Activate'}
+                      </Button>
                       <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
                       <Button size="sm" variant="ghost" onClick={() => window.open(`/brand/${brand.slug}`, '_blank')} className="h-9 w-9 p-0">
                         <ExternalLink className="h-4 w-4" />
