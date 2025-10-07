@@ -13,6 +13,7 @@ interface Brand {
   logo_url: string | null;
   brand_type: string | null;
   show_account_tab: boolean | null;
+  is_active: boolean;
 }
 export function BrandSidebar() {
   const {
@@ -29,7 +30,7 @@ export function BrandSidebar() {
       const {
         data,
         error
-      } = await supabase.from("brands").select("name, slug, logo_url, brand_type, show_account_tab").order("name");
+      } = await supabase.from("brands").select("name, slug, logo_url, brand_type, show_account_tab, is_active").order("name");
       if (!error && data) {
         setBrands(data);
       }
@@ -118,7 +119,7 @@ export function BrandSidebar() {
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-[#2a2a2a] border-white/10">
-            {brands.map(brand => <SelectItem key={brand.slug} value={brand.slug} className="text-white hover:bg-white/10 focus:bg-white/10 font-chakra font-semibold tracking-tight">
+            {brands.filter(brand => brand.is_active).map(brand => <SelectItem key={brand.slug} value={brand.slug} className="text-white hover:bg-white/10 focus:bg-white/10 font-chakra font-semibold tracking-tight">
                 <div className="flex items-center gap-2">
                   {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 rounded object-cover" /> : <div className="h-5 w-5 rounded bg-white/10" />}
                   <span>{brand.name}</span>
