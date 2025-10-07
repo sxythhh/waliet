@@ -405,7 +405,7 @@ export function ProfileTab() {
                 variant="outline"
                 size="icon"
                 onClick={handleCopyProfileUrl}
-                className="h-9 w-9"
+                className="h-9 w-9 bg-[#131313] border-0 hover:bg-[#1a1a1a]"
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -413,7 +413,7 @@ export function ProfileTab() {
                 variant="outline"
                 size="icon"
                 onClick={handleOpenProfile}
-                className="h-9 w-9"
+                className="h-9 w-9 bg-[#131313] border-0 hover:bg-[#1a1a1a]"
               >
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
