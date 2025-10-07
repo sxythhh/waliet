@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -372,13 +372,56 @@ export function ProfileTab() {
       setSaving(false);
     }
   };
-  const profileUrl = `${window.location.origin}/${profile?.username}`;
+  const profileUrl = `${window.location.origin}/@${profile?.username}`;
+  
+  const handleCopyProfileUrl = () => {
+    navigator.clipboard.writeText(profileUrl);
+    toast({
+      title: "Copied!",
+      description: "Profile URL copied to clipboard",
+    });
+  };
+
+  const handleOpenProfile = () => {
+    window.open(profileUrl, '_blank');
+  };
+
   if (loading || !profile) {
     return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading profile...</p>
       </div>;
   }
   return <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
+      {/* Profile Header */}
+      <Card className="bg-card border-0">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h2 className="text-xl font-semibold">Your Profile</h2>
+              <p className="text-sm text-muted-foreground">virality.gg/@{profile.username}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleCopyProfileUrl}
+                className="h-9 w-9"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleOpenProfile}
+                className="h-9 w-9"
+              >
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Connected Accounts */}
       <Card className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
