@@ -203,53 +203,41 @@ export function RoadmapView({ brandId }: { brandId: string }) {
 
             return (
               <div key={currentPhase.id} className="relative">
-                {/* Timeline Circle */}
-                <div className="absolute left-0 md:left-8 top-0 z-10">
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                {/* Timeline Dot */}
+                <div className="absolute left-0 md:left-8 top-2 z-10">
+                  <div className={`h-3 w-3 rounded-full ${
                     isActive 
                       ? 'bg-[#5865F2]' 
-                      : 'bg-white/10'
-                  }`}>
-                    {isActive ? (
-                      <CheckCircle2 className="h-6 w-6 text-white" />
-                    ) : (
-                      <div className="h-3 w-3 rounded-full bg-white/40" />
-                    )}
-                  </div>
+                      : 'bg-white/20'
+                  }`} />
                 </div>
 
                 {/* Timeline Line */}
                 {!isLastPhase && (
-                  <div className={`absolute left-6 md:left-14 top-12 bottom-0 w-0.5 ${
+                  <div className={`absolute left-[5px] md:left-[41px] top-5 bottom-0 w-[2px] ${
                     isActive ? 'bg-[#5865F2]' : 'bg-white/10'
                   }`} />
                 )}
 
                 {/* Phase Content */}
-                <div className={`pl-20 md:pl-28 pb-12 ${
+                <div className={`pl-16 md:pl-24 pb-12 ${
                   !isActive ? 'opacity-40 blur-[2px] pointer-events-none' : ''
                 }`}>
                   {/* Phase Header */}
-                  <div className={`mb-8 p-6 rounded-lg ${
-                    isActive 
-                      ? 'bg-[#5865F2]/20 border border-[#5865F2]/30' 
-                      : 'bg-white/5'
-                  }`}>
-                    <div className="flex items-center gap-3 mb-4">
-                      <h1 className="text-2xl md:text-3xl font-bold text-white font-chakra-petch tracking-tight">
-                        {currentPhase.title}
-                      </h1>
-                    </div>
+                  <div className="mb-6">
+                    <h1 className="text-2xl md:text-3xl font-bold text-white font-chakra-petch tracking-tight mb-2">
+                      {currentPhase.title}
+                    </h1>
 
                     {currentPhase.description && (
                       <p className="text-white/60 mb-4">{currentPhase.description}</p>
                     )}
 
                     {/* Progress Bar */}
-                    {isActive && (
-                      <div className="space-y-2">
-                        <Progress value={progress.percentage} className="h-2" />
-                        <p className="text-sm text-white/60">
+                    {isActive && progress.total > 0 && (
+                      <div className="space-y-1 max-w-md">
+                        <Progress value={progress.percentage} className="h-1.5" />
+                        <p className="text-xs text-white/40">
                           {progress.completed}/{progress.total} complete · {Math.round(progress.percentage)}%
                         </p>
                       </div>
@@ -275,9 +263,9 @@ export function RoadmapView({ brandId }: { brandId: string }) {
                                 key={task.id}
                                 className={`border-none transition-all ${
                                   task.is_locked
-                                    ? 'bg-[#202020]/50 opacity-60'
+                                    ? 'bg-[#202020]/30'
                                     : isCompleted
-                                    ? 'bg-[#5865F2]/20 border border-[#5865F2]/30'
+                                    ? 'bg-[#5865F2]/10'
                                     : 'bg-[#202020] hover:bg-[#252525]'
                                 }`}
                               >
