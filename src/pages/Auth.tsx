@@ -169,13 +169,13 @@ export default function Auth() {
         
         <CardContent className="bg-[#0b0b0b]">
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/50">
+            <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50">
               <TabsTrigger value="signin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sign In</TabsTrigger>
               <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sign Up</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-5">
+              <form onSubmit={handleSignIn} className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
                   <Input id="signin-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
@@ -260,7 +260,7 @@ export default function Auth() {
             </TabsContent>
             
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-5">
+              <form onSubmit={handleSignUp} className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="signup-username" className="text-sm font-medium">Username</Label>
                   <Input id="signup-username" type="text" placeholder="creator123" value={username} onChange={e => setUsername(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
