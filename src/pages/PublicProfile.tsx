@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,6 +46,8 @@ interface SocialAccount {
 
 export default function PublicProfile() {
   const { username } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,16 +57,54 @@ export default function PublicProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, [username]);
+  }, [username, user]);
 
   const fetchProfile = async () => {
-    if (!username) return;
+    // Handle empty username
+    if (!username) {
+      if (!user) {
+        navigate("/");
+        return;
+      }
+      // Fetch current user's profile
+      const { data: currentUserProfile } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, bio, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      
+      if (currentUserProfile?.username) {
+        navigate(`/${currentUserProfile.username}`, { replace: true });
+        return;
+      }
+    }
 
     const { data: profileData } = await supabase
       .from("profiles")
       .select("id, username, full_name, bio, avatar_url")
       .eq("username", username)
       .maybeSingle();
+
+    if (!profileData) {
+      // Profile not found
+      if (!user) {
+        navigate("/");
+        return;
+      }
+      // Fetch current user's profile instead
+      const { data: currentUserProfile } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, bio, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      
+      if (currentUserProfile?.username) {
+        navigate(`/${currentUserProfile.username}`, { replace: true });
+        return;
+      }
+      setLoading(false);
+      return;
+    }
 
     if (profileData) {
       setProfile(profileData);
@@ -207,14 +248,7 @@ export default function PublicProfile() {
   }
 
   if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold">Profile Not Found</h1>
-          <p className="text-muted-foreground">This profile doesn't exist</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const handleCampaignClick = async (campaignId: string) => {
