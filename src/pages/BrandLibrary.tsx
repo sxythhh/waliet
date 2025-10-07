@@ -1,66 +1,59 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Upload, Trash2, Download, TrendingUp, Eye, Heart, MessageCircle, BarChart3 } from "lucide-react";
+import { Menu, Plus, GripVertical, Trash2, Pencil } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-interface VideoAnalytic {
+interface ContentStyle {
   id: string;
   brand_id: string;
-  account: string;
-  platform: string;
-  video_link: string;
-  video_title: string;
-  views: number;
-  likes: number;
-  comments: number;
-  engagement_rate: number;
-  views_performance: number;
-  upload_date: string;
-  imported_at: string;
+  title: string;
+  description: string | null;
+  phase: string;
+  order_index: number;
+  color: string;
 }
 
-interface AnalyticsSummary {
-  totalViews: number;
-  totalLikes: number;
-  totalComments: number;
-  avgEngagementRate: number;
-  totalVideos: number;
-}
+const PHASES = [
+  { id: "testing", title: "Testing", color: "#F59E0B" },
+  { id: "active", title: "Active", color: "#10B981" },
+  { id: "archive", title: "Archive", color: "#6B7280" },
+];
+
+const COLORS = ["#8B5CF6", "#EC4899", "#F59E0B", "#10B981", "#3B82F6", "#EF4444"];
 
 export default function BrandLibrary() {
   const { slug } = useParams();
   const sidebar = useSidebar();
   const [loading, setLoading] = useState(true);
   const [brandId, setBrandId] = useState<string | null>(null);
-  const [videos, setVideos] = useState<VideoAnalytic[]>([]);
-  const [analytics, setAnalytics] = useState<AnalyticsSummary>({
-    totalViews: 0,
-    totalLikes: 0,
-    totalComments: 0,
-    avgEngagementRate: 0,
-    totalVideos: 0,
+  const [contentStyles, setContentStyles] = useState<ContentStyle[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingContent, setEditingContent] = useState<ContentStyle | null>(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    color: COLORS[0],
+    phase: "testing",
   });
-  const [uploading, setUploading] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<ContentStyle | null>(null);
 
   useEffect(() => {
-    if (slug) {
-      fetchBrandData();
-    }
+    if (slug) fetchBrandData();
   }, [slug]);
 
   const fetchBrandData = async () => {
@@ -74,182 +67,141 @@ export default function BrandLibrary() {
 
       if (brandData) {
         setBrandId(brandData.id);
-        await fetchVideos(brandData.id);
+        await fetchContentStyles(brandData.id);
       }
     } catch (error) {
-      console.error("Error fetching brand:", error);
+      console.error("Error:", error);
       toast.error("Failed to load brand data");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchVideos = async (brandId: string) => {
+  const fetchContentStyles = async (brandId: string) => {
     try {
       const { data, error } = await supabase
-        .from("video_analytics")
+        .from("content_styles")
         .select("*")
         .eq("brand_id", brandId)
-        .order("upload_date", { ascending: false });
+        .order("order_index");
 
       if (error) throw error;
-
-      const videoData = (data || []) as VideoAnalytic[];
-      setVideos(videoData);
-
-      // Calculate analytics
-      const summary = videoData.reduce(
-        (acc, video) => ({
-          totalViews: acc.totalViews + (video.views || 0),
-          totalLikes: acc.totalLikes + (video.likes || 0),
-          totalComments: acc.totalComments + (video.comments || 0),
-          avgEngagementRate: acc.avgEngagementRate + (video.engagement_rate || 0),
-          totalVideos: acc.totalVideos + 1,
-        }),
-        { totalViews: 0, totalLikes: 0, totalComments: 0, avgEngagementRate: 0, totalVideos: 0 }
-      );
-
-      if (summary.totalVideos > 0) {
-        summary.avgEngagementRate = summary.avgEngagementRate / summary.totalVideos;
-      }
-
-      setAnalytics(summary);
+      setContentStyles(data || []);
     } catch (error) {
-      console.error("Error fetching videos:", error);
-      toast.error("Failed to load video analytics");
+      console.error("Error:", error);
+      toast.error("Failed to load content styles");
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !brandId) return;
+  const handleDragStart = (e: React.DragEvent, content: ContentStyle) => {
+    setDraggedItem(content);
+    e.dataTransfer.effectAllowed = "move";
+  };
 
-    if (!file.name.endsWith(".csv")) {
-      toast.error("Please upload a CSV file");
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, newPhase: string) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem.phase === newPhase) {
+      setDraggedItem(null);
       return;
     }
 
-    setUploading(true);
+    try {
+      const { error } = await supabase
+        .from("content_styles")
+        .update({ phase: newPhase })
+        .eq("id", draggedItem.id);
+
+      if (error) throw error;
+
+      setContentStyles((prev) =>
+        prev.map((c) => (c.id === draggedItem.id ? { ...c, phase: newPhase } : c))
+      );
+      toast.success(`Moved to ${PHASES.find((p) => p.id === newPhase)?.title}`);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to update");
+    }
+    setDraggedItem(null);
+  };
+
+  const handleCreateOrUpdate = async () => {
+    if (!brandId || !formData.title.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
 
     try {
-      const text = await file.text();
-      const lines = text.split("\n").filter(line => line.trim());
-      const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
+      if (editingContent) {
+        const { error } = await supabase
+          .from("content_styles")
+          .update({
+            title: formData.title,
+            description: formData.description,
+            color: formData.color,
+          })
+          .eq("id", editingContent.id);
 
-      const videoData: Array<{
-        brand_id: string;
-        account: string;
-        platform: string;
-        video_link: string;
-        video_title?: string;
-        views?: number;
-        likes?: number;
-        comments?: number;
-        engagement_rate?: number;
-        views_performance?: number;
-        upload_date?: string;
-      }> = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(",").map(v => v.replace(/"/g, "").trim());
-        const row: any = {};
-
-        headers.forEach((header, index) => {
-          row[header] = values[index] || "";
+        if (error) throw error;
+        toast.success("Updated");
+      } else {
+        const { error } = await supabase.from("content_styles").insert({
+          brand_id: brandId,
+          title: formData.title,
+          description: formData.description,
+          color: formData.color,
+          phase: formData.phase,
+          order_index: contentStyles.filter((c) => c.phase === formData.phase).length,
         });
 
-        // Validate required fields and skip invalid rows
-        if (row.account && row.platform && row.video_link) {
-          // Parse date properly - expect format YYYY-MM-DD
-          let uploadDate = row.upload_date;
-          if (uploadDate && uploadDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            // Valid date format
-          } else {
-            // Default to today if invalid
-            uploadDate = new Date().toISOString().split('T')[0];
-          }
-
-          videoData.push({
-            brand_id: brandId,
-            account: row.account,
-            platform: row.platform,
-            video_link: row.video_link,
-            video_title: row.video_title || "",
-            views: parseInt(row.views) || 0,
-            likes: parseInt(row.likes) || 0,
-            comments: parseInt(row.comments) || 0,
-            engagement_rate: parseFloat(row.engagement_rate) || 0,
-            views_performance: parseFloat(row.views_performance) || 0,
-            upload_date: uploadDate,
-          });
-        }
+        if (error) throw error;
+        toast.success("Created");
       }
 
-      const { error } = await supabase.from("video_analytics").insert(videoData);
-
-      if (error) throw error;
-
-      toast.success(`Successfully imported ${videoData.length} videos`);
-      await fetchVideos(brandId);
+      await fetchContentStyles(brandId);
+      setDialogOpen(false);
+      setEditingContent(null);
+      setFormData({ title: "", description: "", color: COLORS[0], phase: "testing" });
     } catch (error) {
-      console.error("Error uploading CSV:", error);
-      toast.error("Failed to import CSV file");
-    } finally {
-      setUploading(false);
-      event.target.value = "";
+      console.error("Error:", error);
+      toast.error("Failed to save");
     }
   };
 
-  const handleClearAll = async () => {
-    if (!brandId) return;
-
-    if (!confirm("Are you sure you want to delete all video analytics? This action cannot be undone.")) {
-      return;
-    }
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this content style?")) return;
 
     try {
-      const { error } = await supabase.from("video_analytics").delete().eq("brand_id", brandId);
-
+      const { error } = await supabase.from("content_styles").delete().eq("id", id);
       if (error) throw error;
 
-      toast.success("All video analytics deleted");
-      setVideos([]);
-      setAnalytics({
-        totalViews: 0,
-        totalLikes: 0,
-        totalComments: 0,
-        avgEngagementRate: 0,
-        totalVideos: 0,
-      });
+      setContentStyles((prev) => prev.filter((c) => c.id !== id));
+      toast.success("Deleted");
     } catch (error) {
-      console.error("Error clearing analytics:", error);
-      toast.error("Failed to clear analytics");
+      console.error("Error:", error);
+      toast.error("Failed to delete");
     }
-  };
-
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toString();
   };
 
   if (loading) {
     return (
       <div className="h-screen w-full bg-[#191919] flex flex-col p-6">
         <Skeleton className="h-10 w-64 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          {[1, 2, 3, 4].map(i => (
-            <Skeleton key={i} className="h-32 rounded-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-96 rounded-lg" />
           ))}
         </div>
-        <Skeleton className="flex-1 rounded-lg" />
       </div>
     );
   }
 
   return (
     <div className="h-screen w-full bg-[#191919] flex flex-col">
-      {/* Mobile Menu Button */}
       <div className="md:hidden p-4">
         <Button
           variant="ghost"
@@ -261,168 +213,173 @@ export default function BrandLibrary() {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Video Library & Analytics</h1>
-            <p className="text-sm text-white/60 mt-1">Track and analyze your video performance</p>
-          </div>
-          <div className="flex gap-2">
-            <Input
-              type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="csv-upload"
-              disabled={uploading}
-            />
-            <label htmlFor="csv-upload">
-              <Button variant="default" disabled={uploading} asChild>
-                <span>
-                  <Upload className="mr-2 h-4 w-4" />
-                  {uploading ? "Uploading..." : "Import CSV"}
-                </span>
-              </Button>
-            </label>
-            {videos.length > 0 && (
-              <Button variant="destructive" onClick={handleClearAll}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Clear All
-              </Button>
-            )}
-          </div>
+      <div className="flex-1 overflow-auto p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white">Content Planner</h1>
+          <p className="text-sm text-white/60 mt-1">Drag cards between phases to organize your content</p>
         </div>
 
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-[#202020] border-white/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white/60">Total Views</CardTitle>
-              <Eye className="h-4 w-4 text-white/60" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{formatNumber(analytics.totalViews)}</div>
-              <p className="text-xs text-white/60 mt-1">{analytics.totalVideos} videos</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {PHASES.map((phase) => {
+            const phaseContent = contentStyles.filter((c) => c.phase === phase.id);
 
-          <Card className="bg-[#202020] border-white/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white/60">Total Likes</CardTitle>
-              <Heart className="h-4 w-4 text-white/60" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{formatNumber(analytics.totalLikes)}</div>
-              <p className="text-xs text-white/60 mt-1">Across all videos</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#202020] border-white/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white/60">Total Comments</CardTitle>
-              <MessageCircle className="h-4 w-4 text-white/60" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{formatNumber(analytics.totalComments)}</div>
-              <p className="text-xs text-white/60 mt-1">Engagement count</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#202020] border-white/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white/60">Avg Engagement</CardTitle>
-              <BarChart3 className="h-4 w-4 text-white/60" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{analytics.avgEngagementRate.toFixed(2)}%</div>
-              <p className="text-xs text-white/60 mt-1">Average rate</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Videos Table */}
-        {videos.length === 0 ? (
-          <Card className="bg-[#202020] border-white/10">
-            <CardContent className="py-16 text-center">
-              <Upload className="h-12 w-12 text-white/60 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No videos imported yet</h3>
-              <p className="text-sm text-white/60 mb-6">Upload a CSV file to start tracking your video analytics</p>
-              <label htmlFor="csv-upload">
-                <Button asChild>
-                  <span>Import CSV</span>
-                </Button>
-              </label>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="bg-[#202020] border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white">Video Performance</CardTitle>
-              <CardDescription className="text-white/60">Detailed analytics for all imported videos</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Account</TableHead>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead className="text-right">Views</TableHead>
-                      <TableHead className="text-right">Likes</TableHead>
-                      <TableHead className="text-right">Comments</TableHead>
-                      <TableHead className="text-right">Engagement</TableHead>
-                      <TableHead>Upload Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {videos.map((video) => (
-                      <TableRow key={video.id}>
-                        <TableCell className="font-medium">
-                          <a
-                            href={video.video_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-white hover:text-primary transition-colors"
-                          >
-                            {video.account}
-                          </a>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {video.platform}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-xs truncate text-white/60">
-                          {video.video_title}
-                        </TableCell>
-                        <TableCell className="text-right text-white">
-                          {formatNumber(video.views)}
-                        </TableCell>
-                        <TableCell className="text-right text-white">
-                          {formatNumber(video.likes)}
-                        </TableCell>
-                        <TableCell className="text-right text-white">
-                          {formatNumber(video.comments)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant={video.engagement_rate > 5 ? "default" : "secondary"}>
-                            {video.engagement_rate.toFixed(2)}%
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-white/60">
-                          {new Date(video.upload_date).toLocaleDateString()}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+            return (
+              <div
+                key={phase.id}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, phase.id)}
+              >
+                <Card className="bg-[#202020] border-white/10">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: phase.color }} />
+                        <CardTitle className="text-white text-lg">
+                          {phase.title}
+                          <span className="ml-2 text-sm text-white/60">({phaseContent.length})</span>
+                        </CardTitle>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
+                        onClick={() => {
+                          setEditingContent(null);
+                          setFormData({ title: "", description: "", color: COLORS[0], phase: phase.id });
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2 min-h-[400px]">
+                    {phaseContent.length === 0 ? (
+                      <div className="text-center py-8 text-white/40 text-sm">Drop cards here</div>
+                    ) : (
+                      phaseContent.map((content) => (
+                        <div
+                          key={content.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, content)}
+                          className="group bg-[#191919] border border-white/10 rounded-lg p-3 hover:border-white/20 transition-colors cursor-move"
+                        >
+                          <div className="flex items-start gap-2">
+                            <GripVertical className="h-4 w-4 mt-1 text-white/40" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: content.color }}
+                                />
+                                <h4 className="text-white font-medium text-sm truncate">
+                                  {content.title}
+                                </h4>
+                              </div>
+                              {content.description && (
+                                <p className="text-white/60 text-xs line-clamp-2">
+                                  {content.description}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10"
+                                onClick={() => {
+                                  setEditingContent(content);
+                                  setFormData({
+                                    title: content.title,
+                                    description: content.description || "",
+                                    color: content.color,
+                                    phase: content.phase,
+                                  });
+                                  setDialogOpen(true);
+                                }}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-white/60 hover:text-red-400 hover:bg-red-400/10"
+                                onClick={() => handleDelete(content.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            );
+          })}
+        </div>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-[#202020] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>{editingContent ? "Edit" : "New"} Content Style</DialogTitle>
+            <DialogDescription className="text-white/60">
+              {editingContent ? "Update" : "Create"} a content style
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-white/80 mb-1 block">Title</label>
+              <Input
+                placeholder="e.g., Product Showcase"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="bg-[#191919] border-white/10 text-white"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-white/80 mb-1 block">Description (optional)</label>
+              <Textarea
+                placeholder="Brief description..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="bg-[#191919] border-white/10 text-white resize-none"
+                rows={3}
+              />
+            </div>
+            <div>
+              <label className="text-sm text-white/80 mb-2 block">Color</label>
+              <div className="flex gap-2">
+                {COLORS.map((color) => (
+                  <button
+                    key={color}
+                    className={`w-8 h-8 rounded-full transition-transform ${
+                      formData.color === color ? "scale-110 ring-2 ring-white/60" : ""
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setFormData({ ...formData, color })}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDialogOpen(false);
+                setEditingContent(null);
+              }}
+              className="text-white/60 hover:text-white hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateOrUpdate}>{editingContent ? "Update" : "Create"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

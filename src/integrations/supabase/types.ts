@@ -436,6 +436,42 @@ export type Database = {
           },
         ]
       }
+      content_styles: {
+        Row: {
+          brand_id: string
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          order_index: number
+          phase: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          brand_id: string
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          phase?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          brand_id?: string
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          phase?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       course_modules: {
         Row: {
           assets: Json | null
