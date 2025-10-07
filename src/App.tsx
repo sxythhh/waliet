@@ -146,7 +146,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
           <Route path="/brand/:slug/training/:courseId" element={<CourseDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="/:slug" element={<PublicProfile />} />
+          <Route path="/@:username" element={<PublicProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

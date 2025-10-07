@@ -29,22 +29,22 @@ interface SocialAccount {
 }
 
 export default function PublicProfile() {
-  const { slug } = useParams();
+  const { username } = useParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchProfile();
-  }, [slug]);
+  }, [username]);
 
   const fetchProfile = async () => {
-    if (!slug) return;
+    if (!username) return;
 
     const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
-      .eq("username", slug)
+      .eq("username", username)
       .maybeSingle();
 
     if (profileData) {
