@@ -12,6 +12,7 @@ import DOMPurify from "dompurify";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Skeleton } from "@/components/ui/skeleton";
 interface Course {
   id: string;
   title: string;
@@ -157,8 +158,46 @@ export default function CourseDetail() {
     });
   }, [selectedModule?.content]);
   if (loading) {
-    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+    return <div className="min-h-screen bg-[#191919]">
+        <div className="flex">
+          {/* Sidebar Skeleton */}
+          <div className="hidden lg:block w-80 bg-[#202020] min-h-screen">
+            <div className="p-4">
+              <Skeleton className="h-8 w-20 mb-4" />
+              <div className="space-y-2 mb-6">
+                <Skeleton className="h-2 w-full" />
+                <Skeleton className="h-4 w-16 ml-auto" />
+              </div>
+              <div className="space-y-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-3">
+                    <Skeleton className="h-6 w-6 rounded-full" />
+                    <Skeleton className="h-4 flex-1" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Main Content Skeleton */}
+          <div className="flex-1 p-4 md:p-8">
+            <Card className="bg-[#202020] border-none">
+              <CardContent className="p-6 md:p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <Skeleton className="h-8 w-64" />
+                  <Skeleton className="h-9 w-32" />
+                </div>
+                <Skeleton className="aspect-video w-full mb-6" />
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-4/5" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>;
   }
   if (!course) {
