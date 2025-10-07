@@ -1,7 +1,7 @@
 import { Home, FolderOpen, Pyramid, GalleryHorizontalEnd, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,28 +141,26 @@ export function BrandSidebar() {
   const menuContent = (
     <SidebarMenu>
       {dynamicMenuItems.map(item => <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton asChild>
-            <NavLink 
-              to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`} 
-              end 
-              onClick={() => {
-                if (isMobile) {
-                  setTimeout(() => sidebar.setOpenMobile(false), 100);
-                }
-              }}
-              className={({
-                isActive
-              }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${isActive ? '!bg-[#5865F2] hover:!bg-[#5865F2]' : 'hover:bg-[#2C2C2C]'}`}>
-              {({
-                isActive
-              }) => <>
-                  <item.icon className="h-5 w-5" style={{
-                    color: isActive ? '#FFFFFF' : '#A0A1A7'
-                  }} />
-                  <span style={{ color: isActive ? '#FFFFFF' : '#A0A1A7' }}>{item.title}</span>
-                </>}
-            </NavLink>
-          </SidebarMenuButton>
+          <NavLink 
+            to={`/brand/${currentSlug}${item.path ? `/${item.path}` : ''}`} 
+            end 
+            onClick={() => {
+              if (isMobile) {
+                setTimeout(() => sidebar.setOpenMobile(false), 100);
+              }
+            }}
+            className={({
+              isActive
+            }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${isActive ? 'bg-[#5865F2] hover:bg-[#5865F2]' : 'hover:bg-[#2C2C2C]'}`}>
+            {({
+              isActive
+            }) => <>
+                <item.icon className="h-5 w-5" style={{
+                  color: isActive ? '#FFFFFF' : '#A0A1A7'
+                }} />
+                <span style={{ color: isActive ? '#FFFFFF' : '#A0A1A7' }}>{item.title}</span>
+              </>}
+          </NavLink>
         </SidebarMenuItem>)}
     </SidebarMenu>
   );
