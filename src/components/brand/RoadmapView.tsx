@@ -191,7 +191,7 @@ export function RoadmapView({ brandId }: { brandId: string }) {
 
   return (
     <div className="p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {/* Phases with Timeline */}
         <div className="space-y-0">
           {phases.map((currentPhase, phaseIndex) => {
@@ -214,7 +214,7 @@ export function RoadmapView({ brandId }: { brandId: string }) {
 
                 {/* Timeline Line */}
                 {!isLastPhase && (
-                  <div className={`absolute left-[13px] md:left-[45px] top-5 bottom-0 w-[2px] ${
+                  <div className={`absolute left-[11.5px] md:left-[43.5px] top-5 bottom-0 w-[3px] ${
                     isActive ? 'bg-[#5865F2]' : 'bg-white/10'
                   }`} />
                 )}
