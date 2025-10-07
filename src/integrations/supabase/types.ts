@@ -447,6 +447,7 @@ export type Database = {
           phase: string
           title: string
           updated_at: string | null
+          video_url: string | null
         }
         Insert: {
           brand_id: string
@@ -458,6 +459,7 @@ export type Database = {
           phase?: string
           title: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Update: {
           brand_id?: string
@@ -469,6 +471,7 @@ export type Database = {
           phase?: string
           title?: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }

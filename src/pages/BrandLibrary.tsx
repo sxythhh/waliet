@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Plus, GripVertical, Trash2, Pencil } from "lucide-react";
+import { Menu, Plus, GripVertical, Trash2, Pencil, Upload, Link as LinkIcon, X } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ContentVideoPlayer } from "@/components/ContentVideoPlayer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface ContentStyle {
   id: string;
   brand_id: string;
@@ -18,6 +20,7 @@ interface ContentStyle {
   phase: string;
   order_index: number;
   color: string;
+  video_url: string | null;
 }
 const PHASES = [{
   id: "testing",
@@ -47,9 +50,12 @@ export default function BrandLibrary() {
     title: "",
     description: "",
     color: COLORS[0],
-    phase: "testing"
+    phase: "testing",
+    video_url: ""
   });
   const [draggedItem, setDraggedItem] = useState<ContentStyle | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (slug) fetchBrandData();
   }, [slug]);
@@ -115,6 +121,40 @@ export default function BrandLibrary() {
     }
     setDraggedItem(null);
   };
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !brandId) return;
+
+    if (!file.type.startsWith('video/')) {
+      toast.error("Please upload a video file");
+      return;
+    }
+
+    setUploadingVideo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${brandId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('content-videos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('content-videos')
+        .getPublicUrl(fileName);
+
+      setFormData({ ...formData, video_url: publicUrl });
+      toast.success("Video uploaded");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to upload video");
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
   const handleCreateOrUpdate = async () => {
     if (!brandId || !formData.title.trim()) {
       toast.error("Please enter a title");
@@ -127,7 +167,8 @@ export default function BrandLibrary() {
         } = await supabase.from("content_styles").update({
           title: formData.title,
           description: formData.description,
-          color: formData.color
+          color: formData.color,
+          video_url: formData.video_url || null
         }).eq("id", editingContent.id);
         if (error) throw error;
         toast.success("Updated");
@@ -140,6 +181,7 @@ export default function BrandLibrary() {
           description: formData.description,
           color: formData.color,
           phase: formData.phase,
+          video_url: formData.video_url || null,
           order_index: contentStyles.filter(c => c.phase === formData.phase).length
         });
         if (error) throw error;
@@ -152,7 +194,8 @@ export default function BrandLibrary() {
         title: "",
         description: "",
         color: COLORS[0],
-        phase: "testing"
+        phase: "testing",
+        video_url: ""
       });
     } catch (error) {
       console.error("Error:", error);
@@ -216,7 +259,8 @@ export default function BrandLibrary() {
                       title: "",
                       description: "",
                       color: COLORS[0],
-                      phase: phase.id
+                      phase: phase.id,
+                      video_url: ""
                     });
                     setDialogOpen(true);
                   }}>
@@ -228,8 +272,8 @@ export default function BrandLibrary() {
                     {phaseContent.length === 0 ? <div className="text-center py-8 text-white/40 text-sm">Drop cards here</div> : phaseContent.map(content => <div key={content.id} draggable onDragStart={e => handleDragStart(e, content)} className="group bg-[#191919] border border-white/10 rounded-lg p-3 hover:border-white/20 transition-colors cursor-move">
                           <div className="flex items-start gap-2">
                             <GripVertical className="h-4 w-4 mt-1 text-white/40" />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
+                            <div className="flex-1 min-w-0 space-y-2">
+                              <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full" style={{
                           backgroundColor: content.color
                         }} />
@@ -240,6 +284,12 @@ export default function BrandLibrary() {
                               {content.description && <p className="text-white/60 text-xs line-clamp-2">
                                   {content.description}
                                 </p>}
+                              {content.video_url && (
+                                <ContentVideoPlayer 
+                                  videoUrl={content.video_url}
+                                  className="h-32"
+                                />
+                              )}
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100">
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10" onClick={() => {
@@ -248,7 +298,8 @@ export default function BrandLibrary() {
                           title: content.title,
                           description: content.description || "",
                           color: content.color,
-                          phase: content.phase
+                          phase: content.phase,
+                          video_url: content.video_url || ""
                         });
                         setDialogOpen(true);
                       }}>
@@ -289,6 +340,61 @@ export default function BrandLibrary() {
               ...formData,
               description: e.target.value
             })} className="bg-[#191919] border-white/10 text-white resize-none" rows={3} />
+            </div>
+            <div>
+              <label className="text-sm text-white/80 mb-2 block">Video (optional)</label>
+              <Tabs defaultValue="upload" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-[#191919]">
+                  <TabsTrigger value="upload" className="data-[state=active]:bg-white/10">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload
+                  </TabsTrigger>
+                  <TabsTrigger value="url" className="data-[state=active]:bg-white/10">
+                    <LinkIcon className="h-4 w-4 mr-2" />
+                    URL
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="upload" className="mt-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingVideo}
+                    className="w-full bg-[#191919] border-white/10 text-white hover:bg-white/10"
+                  >
+                    {uploadingVideo ? "Uploading..." : "Choose Video File"}
+                  </Button>
+                </TabsContent>
+                <TabsContent value="url" className="mt-3">
+                  <Input
+                    placeholder="Enter video URL"
+                    value={formData.video_url}
+                    onChange={e => setFormData({ ...formData, video_url: e.target.value })}
+                    className="bg-[#191919] border-white/10 text-white"
+                  />
+                </TabsContent>
+              </Tabs>
+              {formData.video_url && (
+                <div className="mt-3 relative">
+                  <ContentVideoPlayer videoUrl={formData.video_url} className="h-40" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setFormData({ ...formData, video_url: "" })}
+                    className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
             <div>
               <label className="text-sm text-white/80 mb-2 block">Color</label>
