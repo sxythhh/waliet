@@ -569,7 +569,7 @@ export default function AdminPayouts() {
                   <p className="text-sm text-muted-foreground mt-1">Payout requests will appear here</p>
                 </CardContent>
               </Card> : <div className="grid grid-cols-1 gap-4">
-                {filteredRequests.map(request => <Card key={request.id} className="hover:shadow-md transition-shadow border-border/50">
+                {filteredRequests.map(request => <Card key={request.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-5">
                       <div className="space-y-4">
                         {/* Header: User and Amount */}
@@ -603,7 +603,7 @@ export default function AdminPayouts() {
                         </div>
 
                         {/* Payment Details Grid */}
-                        <div className="grid gap-4 pt-3 border-t border-border/50">
+                        <div className="grid gap-4 pt-3">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <p className="text-xs font-medium text-muted-foreground mb-1.5">Payment Method</p>
@@ -649,7 +649,7 @@ export default function AdminPayouts() {
 
                         {/* Additional Info Sections */}
                         {(request.transaction_id || request.rejection_reason || request.notes) && (
-                          <div className="space-y-3 pt-3 border-t border-border/50">
+                          <div className="space-y-3 pt-3">
                             {request.transaction_id && (
                               <div className="p-3 bg-muted/40 rounded-lg">
                                 <p className="text-xs font-medium text-muted-foreground mb-1.5">Transaction ID</p>
@@ -674,7 +674,7 @@ export default function AdminPayouts() {
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex gap-2 pt-4 border-t border-border/50">
+                        <div className="flex gap-2 pt-4">
                           {request.status === 'pending' && (
                             <>
                               <Button 
