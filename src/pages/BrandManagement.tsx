@@ -981,7 +981,7 @@ export default function BrandManagement() {
 
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <Card className="bg-[#202020] border-white/10">
+            <Card className="bg-[#202020] ">
               <CardHeader>
                 <CardTitle className="text-white">Brand Settings</CardTitle>
               </CardHeader>
@@ -1038,15 +1038,7 @@ export default function BrandManagement() {
                   <Label htmlFor="account-url" className="text-white">
                     Invoice Page URL
                   </Label>
-                  <Input 
-                    id="account-url" 
-                    type="url" 
-                    placeholder="https://example.com/invoices" 
-                    value={accountUrl} 
-                    onChange={e => setAccountUrl(e.target.value)} 
-                    className="bg-[#191919] border-white/10 text-white" 
-                    disabled={!isAdmin} 
-                  />
+                  <Input id="account-url" type="url" placeholder="https://example.com/invoices" value={accountUrl} onChange={e => setAccountUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white" disabled={!isAdmin} />
                   <p className="text-sm text-white/60">
                     This URL will be embedded in the Invoices tab
                   </p>
