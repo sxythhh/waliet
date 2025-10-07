@@ -140,6 +140,7 @@ export type Database = {
           account_url: string | null
           assets_url: string | null
           brand_type: string | null
+          business_details: Json | null
           created_at: string
           description: string | null
           home_url: string | null
@@ -147,6 +148,7 @@ export type Database = {
           is_active: boolean
           logo_url: string | null
           name: string
+          renewal_date: string | null
           show_account_tab: boolean
           slug: string
           updated_at: string
@@ -155,6 +157,7 @@ export type Database = {
           account_url?: string | null
           assets_url?: string | null
           brand_type?: string | null
+          business_details?: Json | null
           created_at?: string
           description?: string | null
           home_url?: string | null
@@ -162,6 +165,7 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           name: string
+          renewal_date?: string | null
           show_account_tab?: boolean
           slug: string
           updated_at?: string
@@ -170,6 +174,7 @@ export type Database = {
           account_url?: string | null
           assets_url?: string | null
           brand_type?: string | null
+          business_details?: Json | null
           created_at?: string
           description?: string | null
           home_url?: string | null
@@ -177,6 +182,7 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           name?: string
+          renewal_date?: string | null
           show_account_tab?: boolean
           slug?: string
           updated_at?: string

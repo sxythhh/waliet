@@ -16,7 +16,11 @@ const brandSchema = z.object({
   slug: z.string().trim().min(1, "Slug is required").max(100).regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
   brand_type: z.enum(["Lead", "DWY", "Client"], {
     required_error: "Please select a brand type"
-  })
+  }),
+  email: z.string().trim().email("Valid email is required"),
+  legal_name: z.string().trim().min(1, "Legal name is required").max(200),
+  business_address: z.string().trim().min(1, "Business address is required").max(500),
+  renewal_date: z.string().min(1, "Renewal date is required")
 });
 type BrandFormValues = z.infer<typeof brandSchema>;
 interface CreateBrandDialogProps {
@@ -35,7 +39,11 @@ export function CreateBrandDialog({
     defaultValues: {
       name: "",
       slug: "",
-      brand_type: "Client"
+      brand_type: "Client",
+      email: "",
+      legal_name: "",
+      business_address: "",
+      renewal_date: ""
     }
   });
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,15 +84,66 @@ export function CreateBrandDialog({
     setIsSubmitting(true);
     try {
       const logoUrl = await uploadLogo();
-      const {
-        error
-      } = await supabase.from("brands").insert({
-        name: values.name,
-        slug: values.slug,
-        logo_url: logoUrl,
-        brand_type: values.brand_type
-      });
-      if (error) throw error;
+      
+      // Insert brand
+      const { data: brandData, error: brandError } = await supabase
+        .from("brands")
+        .insert({
+          name: values.name,
+          slug: values.slug,
+          logo_url: logoUrl,
+          brand_type: values.brand_type,
+          business_details: {
+            legal_name: values.legal_name,
+            business_address: values.business_address
+          },
+          renewal_date: values.renewal_date
+        })
+        .select()
+        .single();
+
+      if (brandError) throw brandError;
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      // Create brand invitation
+      const { error: inviteError } = await supabase
+        .from("brand_invitations")
+        .insert({
+          brand_id: brandData.id,
+          email: values.email,
+          role: "owner",
+          invited_by: user.id
+        });
+
+      if (inviteError) throw inviteError;
+
+      // Send webhook notification
+      try {
+        await fetch("https://ivelinivnv.app.n8n.cloud/webhook-test/fbb95851-05f5-4ada-a0b6-383b8e96591c", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            brand_name: values.name,
+            slug: values.slug,
+            brand_type: values.brand_type,
+            email: values.email,
+            legal_name: values.legal_name,
+            business_address: values.business_address,
+            renewal_date: values.renewal_date,
+            logo_url: logoUrl,
+            created_at: new Date().toISOString()
+          })
+        });
+      } catch (webhookError) {
+        console.error("Webhook error:", webhookError);
+        // Don't fail the whole operation if webhook fails
+      }
+
       toast.success("Brand created successfully!");
       setOpen(false);
       form.reset();
@@ -186,6 +245,53 @@ export function CreateBrandDialog({
                     </Select>
                     <FormMessage className="text-xs" />
                   </FormItem>} />
+
+              {/* Team Member Email */}
+              <FormField control={form.control} name="email" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel className="text-xs">Team Member Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="email@example.com" className="h-9 text-sm" {...field} />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>} />
+
+              {/* Business Details */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium">Business Details</h4>
+                
+                <FormField control={form.control} name="legal_name" render={({
+                  field
+                }) => <FormItem>
+                        <FormLabel className="text-xs">Legal Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Company Legal Name" className="h-9 text-sm" {...field} />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>} />
+
+                <FormField control={form.control} name="business_address" render={({
+                  field
+                }) => <FormItem>
+                        <FormLabel className="text-xs">Business Address</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Full business address" className="text-sm min-h-[60px]" {...field} />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>} />
+              </div>
+
+              {/* Renewal Date */}
+              <FormField control={form.control} name="renewal_date" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel className="text-xs">Renewal Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" className="h-9 text-sm" {...field} />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>} />
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t">
