@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
+import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw, Copy } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -618,11 +618,27 @@ export default function AdminPayouts() {
                               <p className="text-xs font-medium text-muted-foreground mb-1.5">
                                 {request.payout_method === 'crypto' ? 'Wallet Address' : 'Account'}
                               </p>
-                              <p className="text-sm font-mono truncate">
-                                {request.payout_method === 'crypto' 
-                                  ? (request.payout_details?.address || request.payout_details?.wallet_address || 'N/A')
-                                  : (request.payout_details?.email || request.payout_details?.account_number || 'N/A')}
-                              </p>
+                              <div 
+                                className="flex items-center gap-2 cursor-pointer hover:bg-muted/20 rounded px-2 py-1 -ml-2 transition-colors group"
+                                onClick={() => {
+                                  const textToCopy = request.payout_method === 'crypto' 
+                                    ? (request.payout_details?.address || request.payout_details?.wallet_address || '')
+                                    : (request.payout_details?.email || request.payout_details?.account_number || '');
+                                  
+                                  navigator.clipboard.writeText(textToCopy);
+                                  toast({
+                                    title: "Copied!",
+                                    description: "Payment details copied to clipboard"
+                                  });
+                                }}
+                              >
+                                <p className="text-sm font-mono truncate flex-1">
+                                  {request.payout_method === 'crypto' 
+                                    ? (request.payout_details?.address || request.payout_details?.wallet_address || 'N/A')
+                                    : (request.payout_details?.email || request.payout_details?.account_number || 'N/A')}
+                                </p>
+                                <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
+                              </div>
                             </div>
                           </div>
 
