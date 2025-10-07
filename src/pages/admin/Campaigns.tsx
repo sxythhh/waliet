@@ -43,7 +43,7 @@ export default function AdminCampaigns() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
-  const [editDialogKey, setEditDialogKey] = useState(0);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const {
     toast
   } = useToast();
@@ -91,7 +91,7 @@ export default function AdminCampaigns() {
   };
   const openEditDialog = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
-    setEditDialogKey(prev => prev + 1); // Force remount of dialog
+    setEditDialogOpen(true);
   };
   
   const handleDeleteCampaign = async () => {
@@ -222,11 +222,16 @@ export default function AdminCampaigns() {
       {/* Edit Dialog */}
       {selectedCampaign && (
         <CreateCampaignDialog
-          key={editDialogKey}
           brandId={selectedCampaign.brand_id}
           brandName={selectedCampaign.brand_name}
           campaign={selectedCampaign}
+          open={editDialogOpen}
+          onOpenChange={(open) => {
+            setEditDialogOpen(open);
+            if (!open) setSelectedCampaign(null);
+          }}
           onSuccess={() => {
+            setEditDialogOpen(false);
             setSelectedCampaign(null);
             fetchCampaigns();
           }}

@@ -97,6 +97,8 @@ interface CreateCampaignDialogProps {
   campaign?: Campaign;
   trigger?: React.ReactNode;
   onDelete?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function CreateCampaignDialog({
@@ -106,8 +108,12 @@ export function CreateCampaignDialog({
   campaign,
   trigger,
   onDelete,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: CreateCampaignDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(
