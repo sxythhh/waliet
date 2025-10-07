@@ -114,7 +114,7 @@ export function CreateBrandDialog({
         .insert({
           brand_id: brandData.id,
           email: values.email,
-          role: "owner",
+          role: "admin",
           invited_by: user.id
         });
 
