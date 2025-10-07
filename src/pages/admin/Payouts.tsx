@@ -569,13 +569,13 @@ export default function AdminPayouts() {
                   <p className="text-sm text-muted-foreground mt-1">Payout requests will appear here</p>
                 </CardContent>
               </Card> : <div className="grid grid-cols-1 gap-4">
-                {filteredRequests.map(request => <Card key={request.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="space-y-3">
-                        {/* Header Row: Name, Date, Status */}
-                        <div className="flex items-start justify-between gap-3 pb-2 border-b">
+                {filteredRequests.map(request => <Card key={request.id} className="hover:shadow-md transition-shadow border-border/50">
+                    <CardContent className="p-5">
+                      <div className="space-y-4">
+                        {/* Header: User and Amount */}
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-semibold mb-1 cursor-pointer hover:underline transition-all truncate" onClick={e => {
+                            <h3 className="text-lg font-semibold mb-1.5 cursor-pointer hover:text-primary transition-colors truncate" onClick={e => {
                         e.stopPropagation();
                         if (request.profiles) {
                           openUserDetailsDialog(request.profiles);
@@ -583,114 +583,153 @@ export default function AdminPayouts() {
                       }}>
                               {request.profiles?.full_name || request.profiles?.username}
                             </h3>
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className="flex items-center gap-1 text-muted-foreground">
-                                <Clock className="h-3 w-3" />
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5" />
                                 {formatDistanceToNow(new Date(request.requested_at), {
                             addSuffix: true
                           })}
                               </span>
+                              {getStatusBadge(request.status)}
                             </div>
                           </div>
                           
-                          {/* Amount Display */}
                           <div className="text-right shrink-0">
-                            <p className="text-[10px] text-muted-foreground mb-0.5">Amount</p>
-                            <p className="text-xl font-semibold text-success" style={{
-                        fontFamily: 'Chakra Petch, sans-serif'
-                      }}>
+                            <p className="text-xs text-muted-foreground mb-1">Amount</p>
+                            <p className="text-2xl font-bold text-success">
                               ${Number(request.amount).toFixed(2)}
                             </p>
                           </div>
                         </div>
 
-                        {/* Payment Details */}
-                        <div className="grid grid-cols-2 gap-3 py-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            {getPayoutMethodIcon(request.payout_method, request.payout_details)}
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[10px] text-muted-foreground">Payment Method</p>
-                              <p className="font-medium capitalize text-xs truncate">
-                                {request.payout_method === 'crypto' && request.payout_details?.network ? request.payout_details.network : request.payout_method}
+                        {/* Payment Details Grid */}
+                        <div className="grid gap-4 pt-3 border-t border-border/50">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-1.5">Payment Method</p>
+                              <p className="text-sm font-semibold capitalize">
+                                {request.payout_method === 'crypto' && request.payout_details?.network 
+                                  ? `${request.payout_details.network} (${request.payout_details?.currency?.toUpperCase() || 'Crypto'})`
+                                  : request.payout_method}
+                              </p>
+                            </div>
+
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-muted-foreground mb-1.5">
+                                {request.payout_method === 'crypto' ? 'Wallet Address' : 'Account'}
+                              </p>
+                              <p className="text-sm font-mono truncate">
+                                {request.payout_method === 'crypto' 
+                                  ? (request.payout_details?.address || request.payout_details?.wallet_address || 'N/A')
+                                  : (request.payout_details?.email || request.payout_details?.account_number || 'N/A')}
                               </p>
                             </div>
                           </div>
 
-                          <div className="min-w-0">
-                            <p className="text-[10px] text-muted-foreground mb-0.5">
-                              {request.payout_method === 'crypto' ? 'Wallet Address' : 'Account Details'}
-                            </p>
-                            <p className="font-medium truncate text-xs">
-                              {request.payout_method === 'crypto' ? `${request.payout_details?.address || request.payout_details?.wallet_address || 'N/A'} (${request.payout_details?.currency?.toUpperCase() || 'CRYPTO'})` : request.payout_details?.email || request.payout_details?.account_number || 'N/A'}
-                            </p>
-                          </div>
-
-                          {request.profiles?.wallets && <>
-                              
+                          {request.profiles?.wallets && (
+                            <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <p className="text-[10px] text-muted-foreground mb-0.5">Balance After Payout</p>
-                                <p className="font-medium text-xs">
+                                <p className="text-xs font-medium text-muted-foreground mb-1.5">Balance After</p>
+                                <p className="text-sm font-semibold">
                                   ${(Number(request.profiles.wallets.balance) + (request.status === 'rejected' ? Number(request.amount) : 0)).toFixed(2)}
                                 </p>
                               </div>
-                            </>}
-
-                          {request.processed_at && <div className="col-span-2">
-                              <p className="text-[10px] text-muted-foreground mb-0.5">Processed Date</p>
-                              <p className="font-medium text-xs flex items-center gap-1">
-                                <CheckCircle2 className="h-3 w-3" />
-                                {format(new Date(request.processed_at), 'MMM dd, yyyy')}
-                              </p>
-                            </div>}
+                              
+                              {request.processed_at && (
+                                <div>
+                                  <p className="text-xs font-medium text-muted-foreground mb-1.5">Processed</p>
+                                  <p className="text-sm font-semibold">
+                                    {format(new Date(request.processed_at), 'MMM dd, yyyy')}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {/* Additional Info Sections */}
-                        {(request.transaction_id || request.rejection_reason || request.notes) && <div className="space-y-2 pt-2 border-t">
-                            {request.transaction_id && <div className="p-2 bg-muted/30 rounded-md">
-                                <p className="text-[10px] text-muted-foreground mb-0.5">Transaction ID</p>
-                                <p className="font-mono font-medium text-xs">{request.transaction_id}</p>
-                              </div>}
+                        {(request.transaction_id || request.rejection_reason || request.notes) && (
+                          <div className="space-y-3 pt-3 border-t border-border/50">
+                            {request.transaction_id && (
+                              <div className="p-3 bg-muted/40 rounded-lg">
+                                <p className="text-xs font-medium text-muted-foreground mb-1.5">Transaction ID</p>
+                                <p className="font-mono text-sm font-semibold">{request.transaction_id}</p>
+                              </div>
+                            )}
 
-                            {request.rejection_reason && <div className="p-2 bg-destructive/10 rounded-md border border-destructive/20">
-                                <p className="text-[10px] text-destructive font-medium mb-0.5">Rejection Reason</p>
-                                <p className="text-destructive text-xs">{request.rejection_reason}</p>
-                              </div>}
+                            {request.rejection_reason && (
+                              <div className="p-3 bg-destructive/5 rounded-lg border border-destructive/20">
+                                <p className="text-xs font-medium text-destructive mb-1.5">Rejection Reason</p>
+                                <p className="text-destructive text-sm">{request.rejection_reason}</p>
+                              </div>
+                            )}
 
-                            {request.notes && <div className="p-2 bg-muted/30 rounded-md">
-                                <p className="text-[10px] text-muted-foreground mb-0.5">Admin Notes</p>
-                                <p className="text-xs">{request.notes}</p>
-                              </div>}
-                          </div>}
+                            {request.notes && (
+                              <div className="p-3 bg-muted/40 rounded-lg">
+                                <p className="text-xs font-medium text-muted-foreground mb-1.5">Admin Notes</p>
+                                <p className="text-sm">{request.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         {/* Action Buttons */}
-                        <div className="flex gap-1.5 pt-2 border-t">
-                        {request.status === 'pending' && <>
-                              <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1 bg-green-600 hover:bg-green-700 text-white border-0 h-8 text-xs px-2.5">
-                                <DollarSign className="h-3.5 w-3.5" />
+                        <div className="flex gap-2 pt-4 border-t border-border/50">
+                          {request.status === 'pending' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleCompleteDirectly(request)} 
+                                className="gap-2 bg-green-600 hover:bg-green-700 text-white h-9"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
                                 Mark as Completed
                               </Button>
-                              <Button size="sm" variant="destructive" onClick={() => openActionDialog(request, 'reject')} className="gap-1 h-8 text-xs px-2.5">
-                                <XCircle className="h-3.5 w-3.5" />
+                              <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                onClick={() => openActionDialog(request, 'reject')} 
+                                className="gap-2 h-9"
+                              >
+                                <XCircle className="h-4 w-4" />
                                 Reject
                               </Button>
-                            </>}
+                            </>
+                          )}
                           
-                          {request.status === 'in_transit' && <>
-                              <Button size="sm" onClick={() => handleCompleteDirectly(request)} className="gap-1 h-8 text-xs px-2.5">
-                                <DollarSign className="h-3.5 w-3.5" />
+                          {request.status === 'in_transit' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleCompleteDirectly(request)} 
+                                className="gap-2 h-9"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
                                 Mark as Complete
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
-                                <RotateCcw className="h-3.5 w-3.5" />
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => openActionDialog(request, 'revert')} 
+                                className="gap-2 h-9"
+                              >
+                                <RotateCcw className="h-4 w-4" />
                                 Revert to Pending
                               </Button>
-                            </>}
+                            </>
+                          )}
 
-
-                          {request.status === 'rejected' && <Button size="sm" variant="outline" onClick={() => openActionDialog(request, 'revert')} className="gap-1 h-8 text-xs px-2.5">
-                              <RotateCcw className="h-3.5 w-3.5" />
+                          {request.status === 'rejected' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => openActionDialog(request, 'revert')} 
+                              className="gap-2 h-9"
+                            >
+                              <RotateCcw className="h-4 w-4" />
                               Revert to Pending
-                            </Button>}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
