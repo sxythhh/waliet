@@ -58,7 +58,7 @@ export function ContentVideoPlayer({ videoUrl, className }: ContentVideoPlayerPr
   };
 
   return (
-    <div className={cn("group relative rounded-lg overflow-hidden bg-black/90", className)}>
+    <div className={cn("group relative rounded-lg overflow-hidden bg-black/90 aspect-[9/16]", className)}>
       <video
         ref={videoRef}
         src={videoUrl}
@@ -115,7 +115,7 @@ export function ContentVideoPlayer({ videoUrl, className }: ContentVideoPlayerPr
             onClick={togglePlay}
             className="w-16 h-16 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all hover:scale-110"
           >
-            <Play className="h-8 w-8 text-white ml-1" />
+            <Play className="h-8 w-8 text-white ml-1" fill="white" />
           </button>
         </div>
       )}
