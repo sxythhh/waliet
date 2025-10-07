@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { LogIn, UserPlus } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -39,16 +38,16 @@ const Index = () => {
         <Button
           onClick={() => navigate("/auth")}
           variant="outline"
-          className="backdrop-blur-xl bg-card/80 border-primary/20 hover:bg-card/90 hover:border-primary/40 shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-card/80 border-0 hover:bg-card/90 transition-all duration-300"
+          style={{ letterSpacing: '-0.5px' }}
         >
-          <LogIn className="mr-2 h-4 w-4" />
           Login
         </Button>
         <Button
           onClick={() => navigate("/auth")}
-          className="backdrop-blur-xl bg-primary hover:bg-primary-glow shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all duration-300"
+          className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-primary hover:bg-primary-glow transition-all duration-300"
+          style={{ letterSpacing: '-0.5px' }}
         >
-          <UserPlus className="mr-2 h-4 w-4" />
           Sign Up
         </Button>
       </div>
