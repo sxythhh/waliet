@@ -66,11 +66,11 @@ Deno.serve(async (req) => {
     }
 
     const queryString = params.toString();
-    const url = `https://api.shortimize.com/accounts${queryString ? `?${queryString}` : ''}`;
+    const url = `https://api.shortimize.com/analytics/collections${queryString ? `?${queryString}` : ''}`;
 
-    console.log('Fetching accounts from Shortimize:', url);
+    console.log('Fetching collection analytics from Shortimize:', url);
 
-    // Fetch accounts from Shortimize
+    // Fetch collection-specific analytics from Shortimize
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -91,8 +91,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const accounts: ShortimizeAccount[] = await response.json();
-    console.log(`Fetched ${accounts.length} accounts from Shortimize`);
+    const data = await response.json();
+    const accounts: ShortimizeAccount[] = data.accounts || data;
+    console.log(`Fetched ${accounts.length} accounts with collection-specific analytics from Shortimize`);
 
     let syncedCount = 0;
     let errorCount = 0;
