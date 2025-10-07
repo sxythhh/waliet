@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Plus, Trash2, Pencil, Upload, Link as LinkIcon, X, Move } from "lucide-react";
+import { Menu, Plus, Trash2, Pencil, Upload, Link as LinkIcon, X } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -282,9 +282,8 @@ export default function BrandLibrary() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2 min-h-[400px]">
-                    {phaseContent.map(content => <div key={content.id} draggable onDragStart={e => handleDragStart(e, content)} className="group bg-[#191919] rounded-lg p-3 transition-colors cursor-move hover:bg-[#222222]">
-                          <div className="flex items-start gap-2">
-                            <Move className="h-4 w-4 mt-1 text-white/20 group-hover:text-white/40 transition-colors" />
+                    {phaseContent.map(content => <div key={content.id} draggable onDragStart={e => handleDragStart(e, content)} className="group bg-[#191919] rounded-lg p-3 transition-colors cursor-grab active:cursor-grabbing hover:bg-[#222222]">
+                          <div className="flex items-start">
                             <div className="flex-1 min-w-0 space-y-2">
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full" style={{
