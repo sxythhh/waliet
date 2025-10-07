@@ -372,7 +372,7 @@ export function ProfileTab() {
       setSaving(false);
     }
   };
-  const profileUrl = `${window.location.origin}/@${profile?.username}`;
+  const profileUrl = `${window.location.origin}/${profile?.username}`;
   
   const handleCopyProfileUrl = () => {
     navigator.clipboard.writeText(profileUrl);
@@ -383,7 +383,7 @@ export function ProfileTab() {
   };
 
   const handleOpenProfile = () => {
-    window.open(profileUrl, '_blank');
+    window.open(`/${profile?.username}`, '_blank');
   };
 
   if (loading || !profile) {
@@ -396,9 +396,9 @@ export function ProfileTab() {
       <Card className="bg-card border-0">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
+          <div className="space-y-1">
               <h2 className="text-xl font-semibold">Your Profile</h2>
-              <p className="text-sm text-muted-foreground">virality.gg/@{profile.username}</p>
+              <p className="text-sm text-muted-foreground">virality.gg/{profile.username}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button
