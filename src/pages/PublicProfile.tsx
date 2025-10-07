@@ -3,29 +3,42 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ExternalLink, Star } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Link2, BadgeCheck, Clock, XCircle, AlertCircle } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 
 interface Profile {
+  id: string;
   username: string;
   full_name: string | null;
   bio: string | null;
   avatar_url: string | null;
-  total_earnings: number;
-  trust_score: number;
-  demographics_score: number;
-  views_score: number;
 }
 
 interface SocialAccount {
+  id: string;
   platform: string;
   username: string;
-  follower_count: number;
   is_verified: boolean;
   account_link: string | null;
+  connected_campaigns?: Array<{
+    connection_id: string;
+    campaign: {
+      id: string;
+      title: string;
+      brand_name: string;
+      brand_logo_url: string | null;
+      brands?: {
+        logo_url: string;
+      } | null;
+    };
+  }>;
+  demographic_submissions?: Array<{
+    status: string;
+  }>;
 }
 
 export default function PublicProfile() {
@@ -43,20 +56,64 @@ export default function PublicProfile() {
 
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, username, full_name, bio, avatar_url")
       .eq("username", username)
       .maybeSingle();
 
     if (profileData) {
       setProfile(profileData);
 
+      // Fetch social accounts with their connected campaigns and demographic status
       const { data: socialData } = await supabase
         .from("social_accounts")
-        .select("*")
+        .select(`
+          id,
+          platform,
+          username,
+          is_verified,
+          account_link
+        `)
         .eq("user_id", profileData.id);
 
       if (socialData) {
-        setSocialAccounts(socialData);
+        // Fetch connected campaigns for each social account
+        const accountsWithCampaigns = await Promise.all(
+          socialData.map(async (account) => {
+            const { data: campaignConnections } = await supabase
+              .from("social_account_campaigns")
+              .select(`
+                id,
+                campaigns (
+                  id,
+                  title,
+                  brand_name,
+                  brand_logo_url,
+                  brands (
+                    logo_url
+                  )
+                )
+              `)
+              .eq("social_account_id", account.id);
+
+            const { data: demographics } = await supabase
+              .from("demographic_submissions")
+              .select("status")
+              .eq("social_account_id", account.id)
+              .order("submitted_at", { ascending: false })
+              .limit(1);
+
+            return {
+              ...account,
+              connected_campaigns: campaignConnections?.map(conn => ({
+                connection_id: conn.id,
+                campaign: conn.campaigns as any
+              })) || [],
+              demographic_submissions: demographics || []
+            };
+          })
+        );
+
+        setSocialAccounts(accountsWithCampaigns);
       }
     }
 
@@ -64,7 +121,7 @@ export default function PublicProfile() {
   };
 
   const getPlatformIcon = (platform: string) => {
-    const iconClass = "h-5 w-5";
+    const iconClass = "h-4 w-4";
     switch (platform) {
       case "instagram":
         return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
@@ -77,197 +134,121 @@ export default function PublicProfile() {
     }
   };
 
-  const trustScore = profile?.trust_score || 0;
-  const demographicsScore = profile?.demographics_score || 0;
-  const viewsScore = profile?.views_score || 0;
-  const overallRating = Math.round((trustScore + demographicsScore + viewsScore) / 3);
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="text-center space-y-4">
-          <div className="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading profile...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading profile...</p>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">Profile Not Found</h1>
-          <p className="text-muted-foreground">This Virality profile doesn&apos;t exist</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold">Profile Not Found</h1>
+          <p className="text-muted-foreground">This profile doesn't exist</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-          <div className="flex flex-col items-center text-center space-y-6">
-            {/* Avatar with glow effect */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-              <Avatar className="relative h-32 w-32 sm:h-40 sm:w-40 border-4 border-background shadow-2xl">
-                <AvatarImage src={profile.avatar_url || ""} />
-                <AvatarFallback className="text-4xl sm:text-5xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground font-bold">
-                  {profile.full_name?.[0] || profile.username[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <Avatar className="h-20 w-20 border-2 border-border">
+              <AvatarImage src={profile.avatar_url || ""} />
+              <AvatarFallback className="text-2xl font-bold">
+                {profile.full_name?.[0] || profile.username[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
 
-            {/* Name and Username */}
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                {profile.full_name || profile.username}
-              </h1>
-              <p className="text-lg text-muted-foreground">@{profile.username}</p>
-            </div>
-
-            {/* Bio */}
-            {profile.bio && (
-              <p className="text-foreground/80 max-w-2xl text-base sm:text-lg leading-relaxed">
-                {profile.bio}
-              </p>
-            )}
-
-            {/* Overall Rating Badge */}
-            <div className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-full border border-primary/20">
-              <Star className="h-5 w-5 text-primary fill-primary" />
-              <span className="text-xl font-bold text-primary">{overallRating}</span>
-              <span className="text-sm text-muted-foreground">/100 Overall Rating</span>
+            <div className="flex-1 text-center sm:text-left space-y-2">
+              <h1 className="text-2xl font-bold">{profile.full_name || profile.username}</h1>
+              <p className="text-muted-foreground">@{profile.username}</p>
+              {profile.bio && (
+                <p className="text-sm text-foreground/80 max-w-2xl">{profile.bio}</p>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Left Column - Stats */}
-          <div className="md:col-span-1 space-y-6">
-            {/* Earnings Card */}
-            <div className="bg-card/50 backdrop-blur-sm border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        {/* Connected Accounts */}
+        <Card className="bg-card border-0">
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Connected Accounts</h2>
+            
+            {socialAccounts.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground">No accounts connected</p>
+            ) : (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Earnings</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
-                  ${profile.total_earnings?.toFixed(2) || "0.00"}
-                </p>
-              </div>
-            </div>
+                {socialAccounts.map((account) => {
+                  const connectedCampaigns = account.connected_campaigns || [];
+                  const latestDemographicSubmission = account.demographic_submissions?.[0];
+                  const demographicStatus = latestDemographicSubmission?.status;
 
-            {/* Scores Card */}
-            <div className="bg-card/50 backdrop-blur-sm border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Performance Scores</h3>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground/80">Trust Score</span>
-                    <span className="font-bold text-foreground">{trustScore}</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all"
-                      style={{ width: `${trustScore}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground/80">Demographics</span>
-                    <span className="font-bold text-foreground">{demographicsScore}</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all"
-                      style={{ width: `${demographicsScore}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground/80">Views Performance</span>
-                    <span className="font-bold text-foreground">{viewsScore}</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all"
-                      style={{ width: `${viewsScore}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Social Accounts */}
-          <div className="md:col-span-2">
-            <div className="bg-card/50 backdrop-blur-sm border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-6">
-                Connected Accounts
-              </h3>
-
-              {socialAccounts.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>No social accounts connected yet</p>
-                </div>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {socialAccounts.map((account) => (
-                    <a
-                      key={account.platform}
-                      href={account.account_link || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group relative bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-5 hover:from-primary/10 hover:to-primary/5 border border-border/50 hover:border-primary/30 transition-all hover:shadow-lg"
+                  return (
+                    <div
+                      key={account.id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#131313]"
                     >
-                      {/* Platform Icon */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="h-12 w-12 rounded-xl bg-background flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
+                        <div
+                          onClick={() => account.account_link && window.open(account.account_link, '_blank')}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent w-fit"
+                        >
                           {getPlatformIcon(account.platform)}
+                          <span className="font-medium">{account.username}</span>
+                          {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-success" />}
+                          {demographicStatus === 'pending' && <Clock className="h-4 w-4 text-warning" />}
+                          {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-destructive" />}
+                          {!demographicStatus && <AlertCircle className="h-4 w-4 text-destructive" />}
                         </div>
-                        {account.account_link && (
-                          <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+
+                        {connectedCampaigns.length > 0 && (
+                          <Link2 className="hidden sm:block h-3.5 w-3.5 text-white/40 flex-shrink-0" />
+                        )}
+
+                        {connectedCampaigns.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {connectedCampaigns.map((connection) => {
+                              const logoUrl = connection.campaign.brands?.logo_url || connection.campaign.brand_logo_url;
+                              return (
+                                <div
+                                  key={connection.connection_id}
+                                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:border-white/20 transition-colors"
+                                >
+                                  {logoUrl && (
+                                    <img
+                                      src={logoUrl}
+                                      alt={connection.campaign.brand_name}
+                                      className="h-4 w-4 object-contain"
+                                    />
+                                  )}
+                                  <span className="text-xs font-medium">{connection.campaign.title}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
-
-                      {/* Account Info */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold capitalize text-foreground">
-                            {account.platform}
-                          </p>
-                          {account.is_verified && (
-                            <Badge variant="secondary" className="text-xs px-2 py-0 bg-primary/20 text-primary border-primary/30">
-                              Verified
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">@{account.username}</p>
-                        <p className="text-2xl font-bold text-foreground mt-2">
-                          {account.follower_count.toLocaleString()}
-                          <span className="text-sm font-normal text-muted-foreground ml-1">followers</span>
-                        </p>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Footer */}
-        <div className="text-center pt-16 pb-8 space-y-3">
-          <p className="text-sm text-muted-foreground">Powered by</p>
-          <img src={wordmarkLogo} alt="Virality" className="h-8 mx-auto opacity-70 hover:opacity-100 transition-opacity" />
+        <div className="text-center pt-8 pb-4">
+          <img src={wordmarkLogo} alt="Virality" className="h-6 mx-auto opacity-50" />
         </div>
       </div>
     </div>
