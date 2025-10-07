@@ -523,7 +523,37 @@ export default function BrandManagement() {
           </Button>
         </div>
         {/* Campaign Selector */}
-        
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">{selectedCampaign?.title}</h1>
+            {campaigns.length > 1 && (
+              <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+                <SelectTrigger className="w-[280px] bg-[#202020] border-white/10 text-white">
+                  <SelectValue placeholder="Select campaign" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#202020] border-white/10">
+                  {campaigns.map(campaign => (
+                    <SelectItem key={campaign.id} value={campaign.id} className="text-white hover:bg-white/10">
+                      {campaign.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleRefresh} className="text-white border-white/10 hover:bg-white/10">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            {isAdmin && (
+              <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Campaign
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="w-full">
