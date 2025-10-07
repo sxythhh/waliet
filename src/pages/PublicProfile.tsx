@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link2, BadgeCheck, Clock, XCircle, AlertCircle } from "lucide-react";
+import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -46,6 +47,8 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -153,24 +156,52 @@ export default function PublicProfile() {
     );
   }
 
+  const handleCampaignClick = async (campaignId: string) => {
+    const { data } = await supabase
+      .from("campaigns")
+      .select(`
+        *,
+        brands (
+          logo_url
+        )
+      `)
+      .eq("id", campaignId)
+      .single();
+
+    if (data) {
+      setSelectedCampaign({
+        ...data,
+        brand_logo_url: data.brand_logo_url || (data.brands as any)?.logo_url,
+        platforms: data.allowed_platforms || [],
+        application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : []
+      });
+      setSheetOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <Avatar className="h-20 w-20 border-2 border-border">
-              <AvatarImage src={profile.avatar_url || ""} />
-              <AvatarFallback className="text-2xl font-bold">
-                {profile.full_name?.[0] || profile.username[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+      {/* Header with Large Avatar */}
+      <div className="border-b bg-gradient-to-b from-muted/20 to-background">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+          <div className="flex flex-col items-center text-center space-y-6">
+            {/* Large Avatar with Glow Effect */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+              <Avatar className="relative h-32 w-32 border-4 border-background shadow-2xl">
+                <AvatarImage src={profile.avatar_url || ""} />
+                <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+                  {profile.full_name?.[0] || profile.username[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
 
-            <div className="flex-1 text-center sm:text-left space-y-2">
-              <h1 className="text-2xl font-bold">{profile.full_name || profile.username}</h1>
+            {/* Name and Username */}
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold">{profile.full_name || profile.username}</h1>
               <p className="text-muted-foreground">@{profile.username}</p>
               {profile.bio && (
-                <p className="text-sm text-foreground/80 max-w-2xl">{profile.bio}</p>
+                <p className="text-sm text-foreground/80 max-w-2xl mt-3">{profile.bio}</p>
               )}
             </div>
           </div>
@@ -222,7 +253,8 @@ export default function PublicProfile() {
                               return (
                                 <div
                                   key={connection.connection_id}
-                                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:border-white/20 transition-colors"
+                                  onClick={() => handleCampaignClick(connection.campaign.id)}
+                                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:border-white/20 transition-colors cursor-pointer hover:bg-[#222]"
                                 >
                                   {logoUrl && (
                                     <img
@@ -251,6 +283,13 @@ export default function PublicProfile() {
           <img src={wordmarkLogo} alt="Virality" className="h-6 mx-auto opacity-50" />
         </div>
       </div>
+
+      {/* Campaign Sheet */}
+      <JoinCampaignSheet
+        campaign={selectedCampaign}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
     </div>
   );
 }
