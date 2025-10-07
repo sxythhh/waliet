@@ -38,17 +38,17 @@ const Index = () => {
         <Button
           onClick={() => navigate("/auth")}
           variant="outline"
-          className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-card/80 border-0 hover:bg-card/90 transition-all duration-300"
+          className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-card/80 border-0 hover:bg-card/90 transition-all duration-300 px-8 shadow-[0_4px_0_0_hsl(var(--muted))] hover:shadow-[0_2px_0_0_hsl(var(--muted))] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none"
           style={{ letterSpacing: '-0.5px' }}
         >
           Login
         </Button>
         <Button
           onClick={() => navigate("/auth")}
-          className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-primary hover:bg-primary-glow transition-all duration-300"
+          className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-primary hover:bg-primary-glow transition-all duration-300 px-8 shadow-[0_4px_0_0_hsl(var(--primary-glow))] hover:shadow-[0_2px_0_0_hsl(var(--primary-glow)),0_0_20px_hsl(var(--primary)/0.5)] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-[0_0_20px_hsl(var(--primary)/0.5)] animate-pulse"
           style={{ letterSpacing: '-0.5px' }}
         >
-          Sign Up
+          Create Account
         </Button>
       </div>
     </div>
