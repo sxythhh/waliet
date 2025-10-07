@@ -30,6 +30,18 @@ interface Task {
   link_url: string | null;
 }
 
+interface EditState {
+  phaseId?: string;
+  taskId?: string;
+  phaseTitle?: string;
+  phaseDescription?: string;
+  taskTitle?: string;
+  taskDescription?: string;
+  taskLinkUrl?: string;
+  taskIsLocked?: boolean;
+  taskIsSectionHeader?: boolean;
+}
+
 interface ManageRoadmapDialogProps {
   brandId: string;
   brandName: string;
@@ -39,8 +51,7 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
   const [open, setOpen] = useState(false);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [tasks, setTasks] = useState<Record<string, Task[]>>({});
-  const [editingPhase, setEditingPhase] = useState<string | null>(null);
-  const [editingTask, setEditingTask] = useState<string | null>(null);
+  const [editState, setEditState] = useState<EditState>({});
 
   useEffect(() => {
     if (open) {
@@ -112,12 +123,22 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
 
       if (error) throw error;
       await fetchData();
-      setEditingPhase(null);
       toast.success("Phase updated");
     } catch (error) {
       console.error("Error updating phase:", error);
       toast.error("Failed to update phase");
     }
+  };
+
+  const savePhaseEdits = async (phaseId: string) => {
+    const updates: Partial<Phase> = {};
+    if (editState.phaseTitle !== undefined) updates.title = editState.phaseTitle;
+    if (editState.phaseDescription !== undefined) updates.description = editState.phaseDescription;
+    
+    if (Object.keys(updates).length > 0) {
+      await updatePhase(phaseId, updates);
+    }
+    setEditState({});
   };
 
   const deletePhase = async (phaseId: string) => {
@@ -166,12 +187,25 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
 
       if (error) throw error;
       await fetchData();
-      setEditingTask(null);
       toast.success("Task updated");
     } catch (error) {
       console.error("Error updating task:", error);
       toast.error("Failed to update task");
     }
+  };
+
+  const saveTaskEdits = async (taskId: string) => {
+    const updates: Partial<Task> = {};
+    if (editState.taskTitle !== undefined) updates.title = editState.taskTitle;
+    if (editState.taskDescription !== undefined) updates.description = editState.taskDescription;
+    if (editState.taskLinkUrl !== undefined) updates.link_url = editState.taskLinkUrl;
+    if (editState.taskIsLocked !== undefined) updates.is_locked = editState.taskIsLocked;
+    if (editState.taskIsSectionHeader !== undefined) updates.is_section_header = editState.taskIsSectionHeader;
+    
+    if (Object.keys(updates).length > 0) {
+      await updateTask(taskId, updates);
+    }
+    setEditState({});
   };
 
   const deleteTask = async (taskId: string) => {
@@ -216,17 +250,31 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
               <AccordionItem key={phase.id} value={phase.id} className="border border-white/10 rounded-lg bg-[#252525]">
                 <AccordionTrigger className="px-4 hover:no-underline">
                   <div className="flex items-center justify-between w-full pr-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-1">
                       <GripVertical className="h-5 w-5 text-white/40" />
-                      {editingPhase === phase.id ? (
-                        <Input
-                          defaultValue={phase.title}
-                          onBlur={(e) => updatePhase(phase.id, { title: e.target.value })}
-                          className="bg-white/5 border-white/10"
-                          onClick={(e) => e.stopPropagation()}
-                        />
+                      {editState.phaseId === phase.id ? (
+                        <div className="flex-1 space-y-2" onClick={(e) => e.stopPropagation()}>
+                          <Input
+                            value={editState.phaseTitle !== undefined ? editState.phaseTitle : phase.title}
+                            onChange={(e) => setEditState({ ...editState, phaseTitle: e.target.value })}
+                            className="bg-white/5 border-white/10"
+                            placeholder="Phase title"
+                          />
+                          <Textarea
+                            value={editState.phaseDescription !== undefined ? editState.phaseDescription : (phase.description || "")}
+                            onChange={(e) => setEditState({ ...editState, phaseDescription: e.target.value })}
+                            className="bg-white/5 border-white/10"
+                            placeholder="Phase description (optional)"
+                            rows={2}
+                          />
+                        </div>
                       ) : (
-                        <span className="font-semibold">{phase.title}</span>
+                        <div className="flex-1">
+                          <span className="font-semibold">{phase.title}</span>
+                          {phase.description && (
+                            <p className="text-sm text-white/60 mt-1">{phase.description}</p>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -237,13 +285,38 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
                         }
                       />
                       <span className="text-sm text-white/60">Active</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setEditingPhase(phase.id)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
+                      {editState.phaseId === phase.id ? (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              savePhaseEdits(phase.id);
+                            }}
+                          >
+                            <Check className="h-4 w-4 text-green-400" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditState({})}
+                          >
+                            <X className="h-4 w-4 text-red-400" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditState({ 
+                            phaseId: phase.id,
+                            phaseTitle: phase.title,
+                            phaseDescription: phase.description || ""
+                          })}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -267,78 +340,87 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
                         <Plus className="h-4 w-4 mr-2" />
                         Add Section
                       </Button>
-                      <Button
-                        onClick={() => addTask(phase.id, false)}
-                        variant="outline"
-                        size="sm"
-                        className="bg-white/5 border-white/10"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Task
-                      </Button>
                     </div>
 
                     <div className="space-y-2">
                       {tasks[phase.id]?.map(task => (
-                        <Card key={task.id} className="bg-[#202020] border-white/10">
+                        <Card key={task.id} className={`bg-[#202020] border-white/10 ${
+                          task.is_section_header ? 'border-l-4 border-l-[#5865F2]' : 'ml-6'
+                        }`}>
                           <CardContent className="p-3">
-                            {editingTask === task.id ? (
+                            {editState.taskId === task.id ? (
                               <div className="space-y-2">
-                                <Input
-                                  defaultValue={task.title}
-                                  placeholder="Title"
-                                  className="bg-white/5 border-white/10"
-                                  onBlur={(e) => updateTask(task.id, { title: e.target.value })}
-                                />
-                                <Textarea
-                                  defaultValue={task.description || ""}
-                                  placeholder="Description"
-                                  className="bg-white/5 border-white/10"
-                                  onBlur={(e) => updateTask(task.id, { description: e.target.value })}
-                                />
-                                <Input
-                                  defaultValue={task.link_url || ""}
-                                  placeholder="Link URL (optional)"
-                                  className="bg-white/5 border-white/10"
-                                  onBlur={(e) => updateTask(task.id, { link_url: e.target.value })}
-                                />
-                                <div className="flex items-center gap-4">
-                                  <label className="flex items-center gap-2">
-                                    <Checkbox
-                                      checked={task.is_locked}
-                                      onCheckedChange={(checked) => 
-                                        updateTask(task.id, { is_locked: checked as boolean })
-                                      }
-                                    />
-                                    <span className="text-sm">Locked</span>
-                                  </label>
-                                  <label className="flex items-center gap-2">
-                                    <Checkbox
-                                      checked={task.is_section_header}
-                                      onCheckedChange={(checked) => 
-                                        updateTask(task.id, { is_section_header: checked as boolean })
-                                      }
-                                    />
-                                    <span className="text-sm">Section Header</span>
-                                  </label>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    value={editState.taskTitle !== undefined ? editState.taskTitle : task.title}
+                                    onChange={(e) => setEditState({ ...editState, taskTitle: e.target.value })}
+                                    placeholder="Title"
+                                    className="bg-white/5 border-white/10 flex-1"
+                                  />
+                                  {task.is_section_header && (
+                                    <Button
+                                      onClick={() => addTask(phase.id, false)}
+                                      variant="outline"
+                                      size="sm"
+                                      className="bg-white/5 border-white/10"
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Add Task
+                                    </Button>
+                                  )}
                                 </div>
-                                <Button
-                                  size="sm"
-                                  onClick={() => setEditingTask(null)}
-                                  className="bg-[#5865F2] hover:bg-[#4752C4]"
-                                >
-                                  <Check className="h-4 w-4 mr-2" />
-                                  Done
-                                </Button>
+                                {!task.is_section_header && (
+                                  <>
+                                    <Textarea
+                                      value={editState.taskDescription !== undefined ? editState.taskDescription : (task.description || "")}
+                                      onChange={(e) => setEditState({ ...editState, taskDescription: e.target.value })}
+                                      placeholder="Description"
+                                      className="bg-white/5 border-white/10"
+                                    />
+                                    <Input
+                                      value={editState.taskLinkUrl !== undefined ? editState.taskLinkUrl : (task.link_url || "")}
+                                      onChange={(e) => setEditState({ ...editState, taskLinkUrl: e.target.value })}
+                                      placeholder="Link URL (optional)"
+                                      className="bg-white/5 border-white/10"
+                                    />
+                                    <label className="flex items-center gap-2">
+                                      <Checkbox
+                                        checked={editState.taskIsLocked !== undefined ? editState.taskIsLocked : task.is_locked}
+                                        onCheckedChange={(checked) => 
+                                          setEditState({ ...editState, taskIsLocked: checked as boolean })
+                                        }
+                                      />
+                                      <span className="text-sm">Locked</span>
+                                    </label>
+                                  </>
+                                )}
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => saveTaskEdits(task.id)}
+                                    className="bg-[#5865F2] hover:bg-[#4752C4]"
+                                  >
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Save
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setEditState({})}
+                                  >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Cancel
+                                  </Button>
+                                </div>
                               </div>
                             ) : (
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
-                                  <p className={`font-medium ${task.is_section_header ? 'text-lg' : ''}`}>
+                                  <p className={`font-medium ${task.is_section_header ? 'text-lg text-[#5865F2]' : ''}`}>
                                     {task.title}
                                     {task.is_locked && " 🔒"}
                                   </p>
-                                  {task.description && (
+                                  {task.description && !task.is_section_header && (
                                     <p className="text-sm text-white/60 mt-1">{task.description}</p>
                                   )}
                                 </div>
@@ -346,7 +428,14 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => setEditingTask(task.id)}
+                                    onClick={() => setEditState({ 
+                                      taskId: task.id,
+                                      taskTitle: task.title,
+                                      taskDescription: task.description || "",
+                                      taskLinkUrl: task.link_url || "",
+                                      taskIsLocked: task.is_locked,
+                                      taskIsSectionHeader: task.is_section_header
+                                    })}
                                   >
                                     <Edit2 className="h-4 w-4" />
                                   </Button>
