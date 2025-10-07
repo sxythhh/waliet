@@ -99,7 +99,6 @@ export default function BrandLibrary() {
     e.dataTransfer.dropEffect = "move";
     setDragOverPhase(phase);
   };
-  
   const handleDragLeave = () => {
     setDragOverPhase(null);
   };
@@ -131,28 +130,28 @@ export default function BrandLibrary() {
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !brandId) return;
-
     if (!file.type.startsWith('video/')) {
       toast.error("Please upload a video file");
       return;
     }
-
     setUploadingVideo(true);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${brandId}/${Date.now()}.${fileExt}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('content-videos')
-        .upload(fileName, file);
-
+      const {
+        error: uploadError,
+        data
+      } = await supabase.storage.from('content-videos').upload(fileName, file);
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('content-videos')
-        .getPublicUrl(fileName);
-
-      setFormData({ ...formData, video_url: publicUrl });
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('content-videos').getPublicUrl(fileName);
+      setFormData({
+        ...formData,
+        video_url: publicUrl
+      });
       toast.success("Video uploaded");
     } catch (error) {
       console.error("Error:", error);
@@ -161,7 +160,6 @@ export default function BrandLibrary() {
       setUploadingVideo(false);
     }
   };
-
   const handleCreateOrUpdate = async () => {
     if (!brandId || !formData.title.trim()) {
       toast.error("Please enter a title");
@@ -239,21 +237,13 @@ export default function BrandLibrary() {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white">Content Planner</h1>
-          <p className="text-sm text-white/60 mt-1">Drag cards between phases to organize your content</p>
-        </div>
+        
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {PHASES.map(phase => {
           const phaseContent = contentStyles.filter(c => c.phase === phase.id);
           const isDragOver = dragOverPhase === phase.id;
-          return <div 
-                key={phase.id} 
-                onDragOver={e => handleDragOver(e, phase.id)} 
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, phase.id)}
-              >
+          return <div key={phase.id} onDragOver={e => handleDragOver(e, phase.id)} onDragLeave={handleDragLeave} onDrop={e => handleDrop(e, phase.id)}>
                 <Card className={`transition-colors duration-200 ${isDragOver ? 'bg-[#2a2a2a] ring-2 ring-white/20' : 'bg-[#202020]'}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -296,11 +286,7 @@ export default function BrandLibrary() {
                               {content.description && <p className="text-white/60 text-xs line-clamp-2">
                                   {content.description}
                                 </p>}
-                              {content.video_url && (
-                                <ContentVideoPlayer 
-                                  videoUrl={content.video_url}
-                                />
-                              )}
+                              {content.video_url && <ContentVideoPlayer videoUrl={content.video_url} />}
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100">
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10" onClick={() => {
@@ -366,46 +352,27 @@ export default function BrandLibrary() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="upload" className="mt-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="video/*"
-                    onChange={handleVideoUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingVideo}
-                    className="w-full bg-[#191919] border-white/10 text-white hover:bg-white/10"
-                  >
+                  <input ref={fileInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
+                  <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploadingVideo} className="w-full bg-[#191919] border-white/10 text-white hover:bg-white/10">
                     {uploadingVideo ? "Uploading..." : "Choose Video File"}
                   </Button>
                 </TabsContent>
                 <TabsContent value="url" className="mt-3">
-                  <Input
-                    placeholder="Enter video URL"
-                    value={formData.video_url}
-                    onChange={e => setFormData({ ...formData, video_url: e.target.value })}
-                    className="bg-[#191919] border-white/10 text-white"
-                  />
+                  <Input placeholder="Enter video URL" value={formData.video_url} onChange={e => setFormData({
+                  ...formData,
+                  video_url: e.target.value
+                })} className="bg-[#191919] border-white/10 text-white" />
                 </TabsContent>
               </Tabs>
-              {formData.video_url && (
-                <div className="mt-3 relative max-h-48 overflow-hidden rounded-lg">
+              {formData.video_url && <div className="mt-3 relative max-h-48 overflow-hidden rounded-lg">
                   <ContentVideoPlayer videoUrl={formData.video_url} />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setFormData({ ...formData, video_url: "" })}
-                    className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white z-10"
-                  >
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setFormData({
+                ...formData,
+                video_url: ""
+              })} className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white z-10">
                     <X className="h-4 w-4" />
                   </Button>
-                </div>
-              )}
+                </div>}
             </div>
             <div>
               <label className="text-sm text-white/80 mb-2 block">Color</label>
