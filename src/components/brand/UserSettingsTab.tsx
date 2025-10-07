@@ -144,7 +144,7 @@ export function UserSettingsTab() {
   return <div className="space-y-6">
       <h2 className="text-2xl font-bold text-white">User Settings</h2>
 
-      <Card className="bg-[#202020] border-white/10">
+      <Card className="bg-[#202020] ">
         <CardHeader>
           <CardTitle className="text-white">Profile Information</CardTitle>
         </CardHeader>
