@@ -304,10 +304,6 @@ export default function PublicProfile() {
                         >
                           {getPlatformIcon(account.platform)}
                           <span className="font-medium">{account.username}</span>
-                          {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-success" />}
-                          {demographicStatus === 'pending' && <Clock className="h-4 w-4 text-warning" />}
-                          {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-destructive" />}
-                          {!demographicStatus && <AlertCircle className="h-4 w-4 text-destructive" />}
                         </div>
 
                         {connectedCampaigns.length > 0 && (
@@ -348,7 +344,7 @@ export default function PublicProfile() {
 
         {/* Footer */}
         <div className="text-center pt-8 pb-4">
-          <img src={wordmarkLogo} alt="Virality" className="h-6 mx-auto opacity-50" />
+          <img src={wordmarkLogo} alt="Virality" className="h-10 mx-auto opacity-50" />
         </div>
       </div>
 

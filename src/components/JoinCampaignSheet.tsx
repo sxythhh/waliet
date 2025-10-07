@@ -53,6 +53,7 @@ export function JoinCampaignSheet({
     [key: string]: string;
   }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -77,7 +78,6 @@ export function JoinCampaignSheet({
       }
     } = await supabase.auth.getUser();
     if (!user) {
-      toast.error("Please sign in to join campaigns");
       return;
     }
 
@@ -328,8 +328,10 @@ export function JoinCampaignSheet({
   const budgetRemaining = campaign.budget - (campaign.budget_used || 0);
   const budgetPercentage = campaign.budget > 0 ? (campaign.budget_used || 0) / campaign.budget * 100 : 0;
   return <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto" onOpenAutoFocus={e => {
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto" onOpenAutoFocus={async (e) => {
       e.preventDefault();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
       loadSocialAccounts();
     }}>
         <SheetHeader>
@@ -405,15 +407,32 @@ export function JoinCampaignSheet({
             </div>
           </div>
 
-          {/* Account Selection */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Select Social Accounts *</Label>
-              {socialAccounts.length > 0 && <p className="text-xs text-muted-foreground">
-                  {selectedAccounts.length > 0 && `${selectedAccounts.length} selected • `}
-                  Can select multiple
-                </p>}
+          {/* Account Selection or Create Account */}
+          {!isLoggedIn ? (
+            <div className="space-y-3">
+              <div className="p-6 rounded-lg bg-muted/50 text-center space-y-4">
+                <p className="text-sm font-medium text-foreground">Join this campaign</p>
+                <p className="text-xs text-muted-foreground">Create an account to start earning from your content</p>
+                <Button 
+                  onClick={() => {
+                    onOpenChange(false);
+                    navigate('/auth');
+                  }}
+                  className="w-full"
+                >
+                  Create Account
+                </Button>
+              </div>
             </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Select Social Accounts *</Label>
+                {socialAccounts.length > 0 && <p className="text-xs text-muted-foreground">
+                    {selectedAccounts.length > 0 && `${selectedAccounts.length} selected • `}
+                    Can select multiple
+                  </p>}
+              </div>
             {socialAccounts.length === 0 ? <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
                 <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
                 <p className="text-sm font-medium text-foreground">No available accounts</p>
@@ -441,10 +460,11 @@ export function JoinCampaignSheet({
                     </button>;
             })}
               </div>}
-          </div>
+            </div>
+          )}
 
-          {/* Application Questions - only show if campaign requires application */}
-          {campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
+          {/* Application Questions - only show if logged in and campaign requires application */}
+          {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
               <Label htmlFor={`question-${index}`}>
                 {question} *
               </Label>
@@ -454,15 +474,17 @@ export function JoinCampaignSheet({
           })} placeholder="Your answer..." rows={3} className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none" />
             </div>)}
 
-          {/* Submit Button */}
-          <div className="flex gap-2 pt-4">
-            <Button variant="outline" className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => onOpenChange(false)} disabled={submitting}>
-              Cancel
-            </Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
-              {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
-            </Button>
-          </div>
+          {/* Submit Button - only show if logged in */}
+          {isLoggedIn && (
+            <div className="flex gap-2 pt-4">
+              <Button variant="outline" className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => onOpenChange(false)} disabled={submitting}>
+                Cancel
+              </Button>
+              <Button className="flex-1" onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
+                {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
+              </Button>
+            </div>
+          )}
         </div>
       </SheetContent>
 
