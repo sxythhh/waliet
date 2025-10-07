@@ -58,7 +58,10 @@ export default function AdminCampaigns() {
     const {
       data,
       error
-    } = await supabase.from("campaigns").select("*").order("created_at", {
+    } = await supabase.from("campaigns").select(`
+      *,
+      brands!inner(logo_url)
+    `).order("created_at", {
       ascending: false
     });
     if (error) {
@@ -68,9 +71,10 @@ export default function AdminCampaigns() {
         description: "Failed to fetch campaigns"
       });
     } else {
-      // Parse application_questions from JSON to array
+      // Parse application_questions from JSON to array and add brand logo
       const parsedCampaigns = (data || []).map(campaign => ({
         ...campaign,
+        brand_logo_url: campaign.brands?.logo_url || null,
         application_questions: Array.isArray(campaign.application_questions) 
           ? campaign.application_questions 
           : []
