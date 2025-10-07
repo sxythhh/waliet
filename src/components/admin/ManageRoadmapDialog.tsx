@@ -159,13 +159,31 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
     }
   };
 
-  const addTask = async (phaseId: string, isSectionHeader = false) => {
+  const addTask = async (phaseId: string, isSectionHeader = false, afterTaskId?: string) => {
     try {
       const phaseTasks = tasks[phaseId] || [];
+      let orderIndex = phaseTasks.length;
+
+      // If adding after a specific task (section), calculate the correct order
+      if (afterTaskId) {
+        const afterTaskIndex = phaseTasks.findIndex(t => t.id === afterTaskId);
+        if (afterTaskIndex !== -1) {
+          orderIndex = phaseTasks[afterTaskIndex].order_index + 1;
+          
+          // Update order_index for all tasks after this position
+          for (let i = afterTaskIndex + 1; i < phaseTasks.length; i++) {
+            await supabase
+              .from("roadmap_tasks")
+              .update({ order_index: phaseTasks[i].order_index + 1 })
+              .eq("id", phaseTasks[i].id);
+          }
+        }
+      }
+
       const { error } = await supabase.from("roadmap_tasks").insert({
         phase_id: phaseId,
         title: isSectionHeader ? "New Section" : "New Task",
-        order_index: phaseTasks.length,
+        order_index: orderIndex,
         is_section_header: isSectionHeader,
       });
 
@@ -359,7 +377,7 @@ export function ManageRoadmapDialog({ brandId, brandName }: ManageRoadmapDialogP
                                   />
                                   {task.is_section_header && (
                                     <Button
-                                      onClick={() => addTask(phase.id, false)}
+                                      onClick={() => addTask(phase.id, false, task.id)}
                                       variant="outline"
                                       size="sm"
                                       className="bg-white/5 border-white/10"
