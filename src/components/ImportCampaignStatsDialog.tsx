@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, CalendarIcon, RefreshCw, Loader2 } from "lucide-react";
+import { Upload, CalendarIcon, RefreshCw, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -33,6 +33,7 @@ export function ImportCampaignStatsDialog({
   const [syncing, setSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{ total: number; synced: number } | null>(null);
   const [shortimizeCollectionName, setShortimizeCollectionName] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const parseCSVLine = (line: string): string[] => {
     const result: string[] = [];
@@ -250,6 +251,27 @@ export function ImportCampaignStatsDialog({
     }
   };
 
+  const handleDeleteAllAnalytics = async () => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('campaign_account_analytics')
+        .delete()
+        .eq('campaign_id', campaignId);
+
+      if (error) throw error;
+
+      toast.success("All analytics data deleted successfully");
+      onImportComplete();
+      setOpen(false);
+    } catch (error: any) {
+      console.error("Error deleting analytics:", error);
+      toast.error(error.message || "Failed to delete analytics");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -432,22 +454,43 @@ export function ImportCampaignStatsDialog({
           </TabsContent>
         </Tabs>
         
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-4 flex justify-between">
           <Button
-            variant="ghost"
-            onClick={() => setOpen(false)}
-            disabled={importing}
-            className="text-white hover:bg-white/10"
+            variant="destructive"
+            onClick={handleDeleteAllAnalytics}
+            disabled={deleting || importing || syncing}
+            className="mr-auto"
           >
-            Cancel
+            {deleting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete All Analytics
+              </>
+            )}
           </Button>
-          <Button
-            onClick={handleImport}
-            disabled={!file || !startDate || !endDate || importing}
-            className="bg-primary hover:bg-primary/90"
-          >
-            {importing ? "Importing..." : "Import Analytics"}
-          </Button>
+          
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              disabled={importing || syncing || deleting}
+              className="text-white hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleImport}
+              disabled={!file || !startDate || !endDate || importing || deleting}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {importing ? "Importing..." : "Import Analytics"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
