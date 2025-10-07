@@ -287,7 +287,6 @@ export default function BrandLibrary() {
                               {content.video_url && (
                                 <ContentVideoPlayer 
                                   videoUrl={content.video_url}
-                                  className="h-32"
                                 />
                               )}
                             </div>
@@ -383,13 +382,13 @@ export default function BrandLibrary() {
               </Tabs>
               {formData.video_url && (
                 <div className="mt-3 relative">
-                  <ContentVideoPlayer videoUrl={formData.video_url} className="h-40" />
+                  <ContentVideoPlayer videoUrl={formData.video_url} />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => setFormData({ ...formData, video_url: "" })}
-                    className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white"
+                    className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white z-10"
                   >
                     <X className="h-4 w-4" />
                   </Button>

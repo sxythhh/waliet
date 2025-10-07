@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ContentVideoPlayerProps {
@@ -10,7 +10,6 @@ interface ContentVideoPlayerProps {
 export function ContentVideoPlayer({ videoUrl, className }: ContentVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const togglePlay = () => {
@@ -21,23 +20,6 @@ export function ContentVideoPlayer({ videoUrl, className }: ContentVideoPlayerPr
         videoRef.current.play();
       }
       setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoRef.current.requestFullscreen();
-      }
     }
   };
 
@@ -58,7 +40,7 @@ export function ContentVideoPlayer({ videoUrl, className }: ContentVideoPlayerPr
   };
 
   return (
-    <div className={cn("group relative rounded-lg overflow-hidden bg-black/90 aspect-[9/16]", className)}>
+    <div className={cn("group relative rounded-xl overflow-hidden bg-black aspect-[9/16] w-full max-w-md mx-auto shadow-lg", className)}>
       <video
         ref={videoRef}
         src={videoUrl}
@@ -68,57 +50,37 @@ export function ContentVideoPlayer({ videoUrl, className }: ContentVideoPlayerPr
         onClick={togglePlay}
       />
       
-      {/* Controls overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
-          {/* Progress bar */}
+      {/* Minimalist progress bar - always visible at bottom */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <div
+          className="h-1 bg-white/10 cursor-pointer hover:h-1.5 transition-all"
+          onClick={handleProgressClick}
+        >
           <div
-            className="h-1 bg-white/20 rounded-full cursor-pointer"
-            onClick={handleProgressClick}
-          >
-            <div
-              className="h-full bg-primary rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          
-          {/* Control buttons */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={togglePlay}
-                className="text-white hover:text-primary transition-colors"
-              >
-                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-              </button>
-              <button
-                onClick={toggleMute}
-                className="text-white hover:text-primary transition-colors"
-              >
-                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </button>
-            </div>
-            <button
-              onClick={toggleFullscreen}
-              className="text-white hover:text-primary transition-colors"
-            >
-              <Maximize className="h-4 w-4" />
-            </button>
-          </div>
+            className="h-full bg-white transition-all"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
 
-      {/* Play button overlay when not playing */}
-      {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-          <button
-            onClick={togglePlay}
-            className="w-16 h-16 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all hover:scale-110"
-          >
-            <Play className="h-8 w-8 text-white ml-1" fill="white" />
-          </button>
-        </div>
-      )}
+      {/* Play/Pause button - shows on hover or when paused */}
+      <div 
+        className={cn(
+          "absolute inset-0 flex items-center justify-center transition-opacity duration-200",
+          isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"
+        )}
+      >
+        <button
+          onClick={togglePlay}
+          className="w-14 h-14 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-all hover:scale-105 backdrop-blur-sm"
+        >
+          {isPlaying ? (
+            <Pause className="h-6 w-6 text-black" fill="black" />
+          ) : (
+            <Play className="h-6 w-6 text-black ml-0.5" fill="black" />
+          )}
+        </button>
+      </div>
     </div>
   );
 }
