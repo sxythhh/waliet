@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, CalendarIcon } from "lucide-react";
+import { Upload, CalendarIcon, RefreshCw, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ImportCampaignStatsDialogProps {
   campaignId: string;
@@ -29,6 +30,8 @@ export function ImportCampaignStatsDialog({
   const [progress, setProgress] = useState(0);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [syncing, setSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<{ total: number; synced: number } | null>(null);
 
   const parseCSVLine = (line: string): string[] => {
     const result: string[] = [];
@@ -199,6 +202,41 @@ export function ImportCampaignStatsDialog({
     }
   };
 
+  const handleShortimizeSync = async () => {
+    setSyncing(true);
+    setSyncProgress(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-shortimize-analytics', {
+        body: {
+          campaignId,
+          collectionNames: [`campaign_${campaignId}`],
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setSyncProgress({ total: data.total, synced: data.synced });
+        toast.success(`Synced ${data.synced} of ${data.total} accounts from Shortimize`);
+        
+        if (data.errors > 0) {
+          toast.warning(`${data.errors} accounts had errors`);
+        }
+        
+        onImportComplete();
+        onMatchingRequired();
+      } else {
+        toast.error(data.error || "Failed to sync from Shortimize");
+      }
+    } catch (error: any) {
+      console.error("Error syncing from Shortimize:", error);
+      toast.error(error.message || "Failed to sync from Shortimize");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -211,9 +249,64 @@ export function ImportCampaignStatsDialog({
         <DialogHeader>
           <DialogTitle>Import Campaign Analytics</DialogTitle>
           <DialogDescription className="text-white/60">
-            Upload a CSV file with account analytics for a specific time period. Accounts can have multiple records for different date ranges.
+            Import analytics from Shortimize or upload a CSV file
           </DialogDescription>
         </DialogHeader>
+        
+        <Tabs defaultValue="shortimize" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-[#191919]">
+            <TabsTrigger value="shortimize" className="data-[state=active]:bg-primary">
+              Shortimize Sync
+            </TabsTrigger>
+            <TabsTrigger value="csv" className="data-[state=active]:bg-primary">
+              CSV Upload
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="shortimize" className="space-y-4 mt-4">
+            <div className="bg-[#191919] border border-white/10 rounded-lg p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <RefreshCw className="h-5 w-5 text-primary mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-white mb-1">Sync from Shortimize</h4>
+                  <p className="text-xs text-white/60">
+                    Automatically fetch the latest analytics data from your Shortimize tracked accounts
+                  </p>
+                </div>
+              </div>
+              
+              {syncProgress && (
+                <div className="bg-black/30 rounded p-3 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Last sync:</span>
+                    <span className="text-primary font-medium">
+                      {syncProgress.synced} / {syncProgress.total} accounts
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={handleShortimizeSync}
+                disabled={syncing}
+                className="w-full bg-primary hover:bg-primary/90"
+              >
+                {syncing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Sync Now
+                  </>
+                )}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="csv" className="space-y-4 mt-4">
         <div className="space-y-4">
           {/* Date Range Selection */}
           <div className="space-y-3">
@@ -308,7 +401,10 @@ export function ImportCampaignStatsDialog({
             </div>
           )}
         </div>
-        <DialogFooter>
+          </TabsContent>
+        </Tabs>
+        
+        <DialogFooter className="mt-4">
           <Button
             variant="ghost"
             onClick={() => setOpen(false)}

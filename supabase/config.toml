@@ -17,3 +17,12 @@ verify_jwt = false
 
 [functions.notify-campaign-application]
 verify_jwt = false
+
+[functions.sync-shortimize-analytics]
+verify_jwt = true
+
+[functions.track-shortimize-account]
+verify_jwt = true
+
+[functions.check-task-reminders]
+verify_jwt = false

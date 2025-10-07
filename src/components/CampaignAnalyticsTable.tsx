@@ -9,12 +9,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
+import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -113,6 +114,7 @@ export function CampaignAnalyticsTable({
     start: string;
     end: string;
   }>>([]);
+  const [trackAccountDialogOpen, setTrackAccountDialogOpen] = useState(false);
   const itemsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
@@ -676,6 +678,15 @@ export function CampaignAnalyticsTable({
             <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
               <CardTitle className="text-white text-sm">Account Analytics</CardTitle>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTrackAccountDialogOpen(true)}
+                  className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
+                >
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Track Account
+                </Button>
                 <div className="relative flex-1 sm:w-40">
                   <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-white/40" />
                   <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-7 h-8 bg-[#191919] border-white/10 text-white text-xs" />
@@ -1254,5 +1265,16 @@ export function CampaignAnalyticsTable({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    
+    {/* Shortimize Track Account Dialog */}
+    <ShortimizeTrackAccountDialog
+      campaignId={campaignId}
+      open={trackAccountDialogOpen}
+      onOpenChange={setTrackAccountDialogOpen}
+      onSuccess={() => {
+        fetchAnalytics();
+        toast.success("Account will be tracked in Shortimize");
+      }}
+    />
   </>;
 }

@@ -196,6 +196,7 @@ export type Database = {
           amount_of_videos_tracked: string | null
           average_engagement_rate: number | null
           average_video_views: number | null
+          bio: string | null
           campaign_id: string
           created_at: string
           end_date: string | null
@@ -203,15 +204,25 @@ export type Database = {
           last_payment_amount: number | null
           last_payment_date: string | null
           last_tracked: string | null
+          last_uploaded_at: string | null
+          latest_followers_count: number | null
+          latest_following_count: number | null
+          median_views_non_zero: number | null
           outperforming_video_rate: number | null
           paid_views: number | null
+          percent_outperform_10x: number | null
+          percent_outperform_25x: number | null
           platform: string
           posts_last_7_days: Json | null
+          shortimize_account_id: string | null
           start_date: string | null
+          total_bookmarks: number | null
           total_comments: number | null
           total_likes: number | null
+          total_shares: number | null
           total_videos: number | null
           total_views: number | null
+          tracking_type: string | null
           updated_at: string
           user_id: string | null
         }
@@ -221,6 +232,7 @@ export type Database = {
           amount_of_videos_tracked?: string | null
           average_engagement_rate?: number | null
           average_video_views?: number | null
+          bio?: string | null
           campaign_id: string
           created_at?: string
           end_date?: string | null
@@ -228,15 +240,25 @@ export type Database = {
           last_payment_amount?: number | null
           last_payment_date?: string | null
           last_tracked?: string | null
+          last_uploaded_at?: string | null
+          latest_followers_count?: number | null
+          latest_following_count?: number | null
+          median_views_non_zero?: number | null
           outperforming_video_rate?: number | null
           paid_views?: number | null
+          percent_outperform_10x?: number | null
+          percent_outperform_25x?: number | null
           platform: string
           posts_last_7_days?: Json | null
+          shortimize_account_id?: string | null
           start_date?: string | null
+          total_bookmarks?: number | null
           total_comments?: number | null
           total_likes?: number | null
+          total_shares?: number | null
           total_videos?: number | null
           total_views?: number | null
+          tracking_type?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -246,6 +268,7 @@ export type Database = {
           amount_of_videos_tracked?: string | null
           average_engagement_rate?: number | null
           average_video_views?: number | null
+          bio?: string | null
           campaign_id?: string
           created_at?: string
           end_date?: string | null
@@ -253,15 +276,25 @@ export type Database = {
           last_payment_amount?: number | null
           last_payment_date?: string | null
           last_tracked?: string | null
+          last_uploaded_at?: string | null
+          latest_followers_count?: number | null
+          latest_following_count?: number | null
+          median_views_non_zero?: number | null
           outperforming_video_rate?: number | null
           paid_views?: number | null
+          percent_outperform_10x?: number | null
+          percent_outperform_25x?: number | null
           platform?: string
           posts_last_7_days?: Json | null
+          shortimize_account_id?: string | null
           start_date?: string | null
+          total_bookmarks?: number | null
           total_comments?: number | null
           total_likes?: number | null
+          total_shares?: number | null
           total_videos?: number | null
           total_views?: number | null
+          tracking_type?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -951,6 +984,60 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      shortimize_tracking: {
+        Row: {
+          accounts_synced: number | null
+          campaign_id: string
+          collection_id: string | null
+          collection_name: string | null
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          sync_error: string | null
+          sync_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          accounts_synced?: number | null
+          campaign_id: string
+          collection_id?: string | null
+          collection_name?: string | null
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accounts_synced?: number | null
+          campaign_id?: string
+          collection_id?: string | null
+          collection_name?: string | null
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shortimize_tracking_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shortimize_tracking_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       social_account_campaigns: {
         Row: {
