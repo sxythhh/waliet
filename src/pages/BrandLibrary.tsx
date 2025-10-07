@@ -337,7 +337,7 @@ export default function BrandLibrary() {
               {editingContent ? "Update" : "Create"} a content style
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div>
               <label className="text-sm text-white/80 mb-1 block">Title</label>
               <Input placeholder="e.g., Product Showcase" value={formData.title} onChange={e => setFormData({
@@ -393,7 +393,7 @@ export default function BrandLibrary() {
                 </TabsContent>
               </Tabs>
               {formData.video_url && (
-                <div className="mt-3 relative max-h-64 overflow-hidden">
+                <div className="mt-3 relative max-h-48 overflow-hidden rounded-lg">
                   <ContentVideoPlayer videoUrl={formData.video_url} />
                   <Button
                     type="button"
