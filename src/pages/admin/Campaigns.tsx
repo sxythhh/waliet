@@ -86,12 +86,26 @@ export default function AdminCampaigns() {
     setLoading(false);
   };
   const filterCampaigns = () => {
-    if (!searchQuery) {
-      setFilteredCampaigns(campaigns);
-      return;
-    }
-    const filtered = campaigns.filter(campaign => campaign.title?.toLowerCase().includes(searchQuery.toLowerCase()) || campaign.brand_name?.toLowerCase().includes(searchQuery.toLowerCase()));
-    setFilteredCampaigns(filtered);
+    let filtered = searchQuery 
+      ? campaigns.filter(campaign => 
+          campaign.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          campaign.brand_name?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : campaigns;
+    
+    // Sort by remaining budget (largest first), with ended campaigns always last
+    const sorted = [...filtered].sort((a, b) => {
+      // Ended campaigns go to the end
+      if (a.status === 'ended' && b.status !== 'ended') return 1;
+      if (a.status !== 'ended' && b.status === 'ended') return -1;
+      
+      // Sort by remaining budget (descending)
+      const remainingA = Number(a.budget) - Number(a.budget_used || 0);
+      const remainingB = Number(b.budget) - Number(b.budget_used || 0);
+      return remainingB - remainingA;
+    });
+    
+    setFilteredCampaigns(sorted);
   };
   const openEditDialog = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
