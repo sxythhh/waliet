@@ -164,11 +164,12 @@ export function ImportCampaignStatsDialog({
         }
 
         if (records.length > 0) {
+          // Match existing accounts by username and platform, update with CSV data
           const { data, error } = await supabase
             .from("campaign_account_analytics")
             .upsert(records, { 
-              onConflict: 'campaign_id,account_username,platform,start_date,end_date',
-              ignoreDuplicates: false 
+              onConflict: 'campaign_id,account_username,platform',
+              ignoreDuplicates: false // Update existing records with new metrics
             });
 
           if (error) {
