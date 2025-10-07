@@ -32,6 +32,7 @@ export function ImportCampaignStatsDialog({
   const [endDate, setEndDate] = useState<Date>();
   const [syncing, setSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{ total: number; synced: number } | null>(null);
+  const [shortimizeCollectionName, setShortimizeCollectionName] = useState("");
 
   const parseCSVLine = (line: string): string[] => {
     const result: string[] = [];
@@ -203,6 +204,11 @@ export function ImportCampaignStatsDialog({
   };
 
   const handleShortimizeSync = async () => {
+    if (!shortimizeCollectionName.trim()) {
+      toast.error("Please enter a Shortimize collection name");
+      return;
+    }
+
     setSyncing(true);
     setSyncProgress(null);
     
@@ -210,7 +216,7 @@ export function ImportCampaignStatsDialog({
       const { data, error } = await supabase.functions.invoke('sync-shortimize-analytics', {
         body: {
           campaignId,
-          collectionNames: [`campaign_${campaignId}`],
+          collectionNames: [shortimizeCollectionName.trim()],
         },
       });
 
@@ -275,6 +281,21 @@ export function ImportCampaignStatsDialog({
                 </div>
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="collectionName" className="text-white text-sm">Collection Name</Label>
+                <Input
+                  id="collectionName"
+                  type="text"
+                  placeholder="e.g., my-campaign-collection"
+                  value={shortimizeCollectionName}
+                  onChange={(e) => setShortimizeCollectionName(e.target.value)}
+                  className="bg-black/30 border-white/10 text-white placeholder:text-white/40"
+                />
+                <p className="text-xs text-white/50">
+                  Enter the exact collection name from your Shortimize dashboard
+                </p>
+              </div>
+              
               {syncProgress && (
                 <div className="bg-black/30 rounded p-3 space-y-2">
                   <div className="flex justify-between text-sm">
@@ -288,7 +309,7 @@ export function ImportCampaignStatsDialog({
 
               <Button
                 onClick={handleShortimizeSync}
-                disabled={syncing}
+                disabled={syncing || !shortimizeCollectionName.trim()}
                 className="w-full bg-primary hover:bg-primary/90"
               >
                 {syncing ? (
