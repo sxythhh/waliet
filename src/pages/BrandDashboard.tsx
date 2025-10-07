@@ -152,39 +152,56 @@ export default function BrandDashboard() {
   // If only one view is available, set it as active
   const effectiveView = !hasHomeEmbed ? "campaigns" : !hasCampaigns ? "home" : activeView;
   return <div className="min-h-screen bg-[#191919]">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} className="text-white/60 hover:text-white hover:bg-white/10">
-              {isMobile ? <Menu className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
-            </Button>
-            <h1 className="text-2xl font-bold text-white font-['Instrument_Sans'] tracking-[-0.5px]">
-              {brand.name}
-            </h1>
-          </div>
-          {effectiveView === "campaigns" && <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />}
-        </div>
+      {/* Header - Hide when showing home embed */}
+      {effectiveView !== "home" && (
+        <>
+          <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} className="text-white/60 hover:text-white hover:bg-white/10">
+                  {isMobile ? <Menu className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
+                </Button>
+                <h1 className="text-2xl font-bold text-white font-['Instrument_Sans'] tracking-[-0.5px]">
+                  {brand.name}
+                </h1>
+              </div>
+              {effectiveView === "campaigns" && <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />}
+            </div>
 
-        {/* View Toggle - Only show if both views are available */}
-        {showToggle && <Tabs value={effectiveView} onValueChange={handleViewChange} className="w-full mb-6">
-          <TabsList className="bg-[#202020] border-white/10">
-            <TabsTrigger value="home" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
-              <Home className="h-4 w-4" />
-              Home
-            </TabsTrigger>
-            <TabsTrigger value="campaigns" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
-              <LayoutGrid className="h-4 w-4" />
-              Campaigns
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>}
-      </div>
+            {/* View Toggle - Only show if both views are available */}
+            {showToggle && <Tabs value={effectiveView} onValueChange={handleViewChange} className="w-full mb-6">
+              <TabsList className="bg-[#202020] border-white/10">
+                <TabsTrigger value="home" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
+                  <Home className="h-4 w-4" />
+                  Home
+                </TabsTrigger>
+                <TabsTrigger value="campaigns" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
+                  <LayoutGrid className="h-4 w-4" />
+                  Campaigns
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>}
+          </div>
+        </>
+      )}
+
+      {/* Floating toggle button when on home view */}
+      {effectiveView === "home" && showToggle && (
+        <div className="fixed top-4 right-4 z-50">
+          <Button
+            onClick={() => setActiveView("campaigns")}
+            className="bg-[#5865F2] hover:bg-[#4752C4]"
+          >
+            <LayoutGrid className="h-4 w-4 mr-2" />
+            View Campaigns
+          </Button>
+        </div>
+      )}
 
       {/* Content Area */}
       {showToggle ? <>
           {/* Home Embed View - Full Width */}
-          {effectiveView === "home" && <div className="w-full h-[calc(100vh-180px)] bg-[#202020]">
+          {effectiveView === "home" && <div className="w-full h-screen">
               <div dangerouslySetInnerHTML={{
           __html: brand.home_url
         }} className="w-full h-full" />
@@ -246,7 +263,7 @@ export default function BrandDashboard() {
             </div>}
         </> :
     // Single view - no toggle needed
-    effectiveView === "home" ? <div className="w-full h-[calc(100vh-180px)] bg-[#202020]">
+    effectiveView === "home" ? <div className="w-full h-screen">
             <div dangerouslySetInnerHTML={{
         __html: brand.home_url || ""
       }} className="w-full h-full" />
