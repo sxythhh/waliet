@@ -198,8 +198,21 @@ export default function AdminBrands() {
                         {brand.is_active ? 'Deactivate' : 'Activate'}
                       </Button>
                       <EditBrandDialog brand={brand} onSuccess={fetchBrands} />
-                      <Button size="sm" variant="ghost" onClick={() => window.open(`/brand/${brand.slug}`, '_blank')} className="h-9 w-9 p-0">
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => window.open(`/brand/${brand.slug}`, '_blank')} 
+                        className="h-9 w-9 p-0"
+                      >
                         <ExternalLink className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleDeleteClick(brand)}
+                        className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
