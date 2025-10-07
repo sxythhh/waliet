@@ -921,6 +921,60 @@ export type Database = {
         }
         Relationships: []
       }
+      video_analytics: {
+        Row: {
+          account: string
+          brand_id: string
+          comments: number | null
+          created_at: string | null
+          engagement_rate: number | null
+          id: string
+          imported_at: string | null
+          likes: number | null
+          platform: string
+          updated_at: string | null
+          upload_date: string | null
+          video_link: string
+          video_title: string | null
+          views: number | null
+          views_performance: number | null
+        }
+        Insert: {
+          account: string
+          brand_id: string
+          comments?: number | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          id?: string
+          imported_at?: string | null
+          likes?: number | null
+          platform: string
+          updated_at?: string | null
+          upload_date?: string | null
+          video_link: string
+          video_title?: string | null
+          views?: number | null
+          views_performance?: number | null
+        }
+        Update: {
+          account?: string
+          brand_id?: string
+          comments?: number | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          id?: string
+          imported_at?: string | null
+          likes?: number | null
+          platform?: string
+          updated_at?: string | null
+          upload_date?: string | null
+          video_link?: string
+          video_title?: string | null
+          views?: number | null
+          views_performance?: number | null
+        }
+        Relationships: []
+      }
       wallet_transactions: {
         Row: {
           amount: number
