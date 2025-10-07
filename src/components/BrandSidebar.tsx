@@ -165,7 +165,7 @@ export function BrandSidebar() {
     </SidebarMenu>
   );
 
-  const bookCallButton = (
+  const bookCallButton = currentBrand?.brand_type === "lead" ? (
     <div className="p-4 bg-[#202020]">
       <a href="https://partners.virality.cc/book" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all active:scale-95" style={{
         backgroundColor: '#5865F2',
@@ -176,7 +176,7 @@ export function BrandSidebar() {
         <ArrowUpRight className="h-5 w-5" />
       </a>
     </div>
-  );
+  ) : null;
 
   // Mobile Sheet
   if (isMobile) {
