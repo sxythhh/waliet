@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
+import { ManageRoadmapDialog } from "@/components/admin/ManageRoadmapDialog";
 import { ExternalLink, Package, Trash2, Calendar, Link as LinkIcon } from "lucide-react";
 interface Brand {
   id: string;
@@ -189,6 +190,9 @@ export default function AdminBrands() {
                     
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {brand.brand_type === "DWY" && (
+                        <ManageRoadmapDialog brandId={brand.id} brandName={brand.name} />
+                      )}
                       <Button 
                         size="sm" 
                         variant={brand.is_active ? "outline" : "default"}

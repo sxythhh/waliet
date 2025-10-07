@@ -786,6 +786,133 @@ export type Database = {
         }
         Relationships: []
       }
+      roadmap_phases: {
+        Row: {
+          brand_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_phases_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_task_completions: {
+        Row: {
+          brand_id: string
+          completed_at: string
+          completed_by: string | null
+          id: string
+          task_id: string
+        }
+        Insert: {
+          brand_id: string
+          completed_at?: string
+          completed_by?: string | null
+          id?: string
+          task_id: string
+        }
+        Update: {
+          brand_id?: string
+          completed_at?: string
+          completed_by?: string | null
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_task_completions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadmap_task_completions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_locked: boolean
+          is_section_header: boolean
+          link_url: string | null
+          order_index: number
+          phase_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_locked?: boolean
+          is_section_header?: boolean
+          link_url?: string | null
+          order_index?: number
+          phase_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_locked?: boolean
+          is_section_header?: boolean
+          link_url?: string | null
+          order_index?: number
+          phase_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_tasks_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_audit_log: {
         Row: {
           action: string
