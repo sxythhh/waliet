@@ -182,19 +182,16 @@ export default function PublicProfile() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header with Large Avatar */}
-      <div className="border-b bg-gradient-to-b from-muted/20 to-background">
+      <div className="bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
           <div className="flex flex-col items-center text-center space-y-6">
-            {/* Large Avatar with Glow Effect */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
-              <Avatar className="relative h-32 w-32 border-4 border-background shadow-2xl">
-                <AvatarImage src={profile.avatar_url || ""} />
-                <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
-                  {profile.full_name?.[0] || profile.username[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+            {/* Large Avatar without Glow Effect */}
+            <Avatar className="h-32 w-32 border-4 border-background shadow-2xl">
+              <AvatarImage src={profile.avatar_url || ""} />
+              <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+                {profile.full_name?.[0] || profile.username[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
 
             {/* Name and Username */}
             <div className="space-y-2">
