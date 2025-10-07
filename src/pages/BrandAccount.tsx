@@ -15,29 +15,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamMembersTab } from "@/components/brand/TeamMembersTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { Skeleton } from "@/components/ui/skeleton";
-
 export default function BrandAccount() {
-  const { slug } = useParams();
+  const {
+    slug
+  } = useParams();
   const navigate = useNavigate();
-  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const {
+    isAdmin,
+    loading: adminLoading
+  } = useAdminCheck();
   const [brandId, setBrandId] = useState("");
   const [accountUrl, setAccountUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
-
   useEffect(() => {
     const fetchData = async () => {
       if (!slug) return;
-
       try {
         // Fetch brand data
-        const { data: brandData, error: brandError } = await supabase
-          .from("brands")
-          .select("id, account_url")
-          .eq("slug", slug)
-          .maybeSingle() as any;
-
+        const {
+          data: brandData,
+          error: brandError
+        } = (await supabase.from("brands").select("id, account_url").eq("slug", slug).maybeSingle()) as any;
         if (brandError) throw brandError;
         if (brandData) {
           setBrandId(brandData.id);
@@ -50,14 +50,10 @@ export default function BrandAccount() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [slug]);
-
-
   if (loading || adminLoading) {
-    return (
-      <div className="min-h-screen p-8 bg-[#191919]">
+    return <div className="min-h-screen p-8 bg-[#191919]">
         <div className="max-w-7xl mx-auto space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-12 w-full max-w-md" />
@@ -67,21 +63,13 @@ export default function BrandAccount() {
             <Skeleton className="h-32 w-full rounded-lg" />
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
+  return <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
       <div className="max-w-7xl mx-auto">
         {/* Mobile Menu Button */}
         <div className="mb-6 md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => sidebar.setOpenMobile(true)}
-            className="text-white/60 hover:text-white hover:bg-white/10"
-          >
+          <Button variant="ghost" size="icon" onClick={() => sidebar.setOpenMobile(true)} className="text-white/60 hover:text-white hover:bg-white/10">
             <Menu className="h-6 w-6" />
           </Button>
         </div>
@@ -102,17 +90,11 @@ export default function BrandAccount() {
           </TabsList>
 
           <TabsContent value="invoices" className="mt-6">
-            {accountUrl ? (
-              <div className="w-full bg-[#191919] rounded-lg overflow-hidden" style={{ height: '600px' }}>
-                <iframe 
-                  src={accountUrl} 
-                  className="w-full h-full border-0" 
-                  title="Invoices" 
-                  sandbox="allow-scripts allow-same-origin allow-forms" 
-                />
-              </div>
-            ) : (
-              <Card className="bg-[#202020] border-white/10">
+            {accountUrl ? <div className="w-full bg-[#191919] rounded-lg overflow-hidden" style={{
+            height: '600px'
+          }}>
+                <iframe src={accountUrl} className="w-full h-full border-0" title="Invoices" sandbox="allow-scripts allow-same-origin allow-forms" />
+              </div> : <Card className="bg-[#202020]">
                 <CardHeader>
                   <CardTitle className="text-white">No Invoice Page Configured</CardTitle>
                 </CardHeader>
@@ -121,8 +103,7 @@ export default function BrandAccount() {
                     An administrator needs to configure the invoice page URL in the brand settings.
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </TabsContent>
 
           <TabsContent value="team" className="mt-6">
@@ -134,6 +115,5 @@ export default function BrandAccount() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 }
