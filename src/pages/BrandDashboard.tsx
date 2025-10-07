@@ -208,9 +208,9 @@ export default function BrandDashboard() {
             </div>}
 
           {/* Campaigns View - With Padding */}
-          {effectiveView === "campaigns" && <div className="max-w-7xl mx-auto px-8 pb-8">
+          {effectiveView === "campaigns" && <div className="max-w-5xl mx-auto px-8 pb-8">
               {campaigns.length > 0 ? <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                     {campaigns.map(campaign => {
               const usedBudget = Number(campaign.budget_used || 0);
               const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
@@ -267,8 +267,8 @@ export default function BrandDashboard() {
             <div dangerouslySetInnerHTML={{
         __html: brand.home_url || ""
       }} className="w-full h-full" />
-          </div> : <div className="max-w-7xl mx-auto px-8 pb-8">
-            {campaigns.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          </div> : <div className="max-w-5xl mx-auto px-8 pb-8">
+            {campaigns.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 {campaigns.map(campaign => {
           const usedBudget = Number(campaign.budget_used || 0);
           const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
@@ -286,28 +286,6 @@ export default function BrandDashboard() {
                                   <Pencil className="h-4 w-4" />
                                 </Button>} />
                           </div>
-                        </div>
-
-                        {/* Allowed Platforms */}
-                        <div className="flex items-center gap-2 mb-4">
-                          <span className="text-white/60 text-sm">Platforms:</span>
-                          <div className="flex items-center gap-2">
-                            {campaign.allowed_platforms?.includes('tiktok') && (
-                              <OptimizedImage src="/src/assets/tiktok-logo.svg" alt="TikTok" className="w-4 h-4" />
-                            )}
-                            {campaign.allowed_platforms?.includes('instagram') && (
-                              <OptimizedImage src="/src/assets/instagram-logo.svg" alt="Instagram" className="w-4 h-4" />
-                            )}
-                            {campaign.allowed_platforms?.includes('youtube') && (
-                              <OptimizedImage src="/src/assets/youtube-logo.svg" alt="YouTube" className="w-4 h-4" />
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Created Date */}
-                        <div className="flex items-center gap-2 mb-4 text-sm text-white/60">
-                          <span>Created:</span>
-                          <span>{new Date(campaign.created_at).toLocaleDateString()}</span>
                         </div>
 
                         {/* Budget Progress Bar */}
