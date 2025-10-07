@@ -67,6 +67,9 @@ export function EditBrandDialog({
   });
   useEffect(() => {
     if (open) {
+      const defaultAssetsUrl = brand.assets_url || 
+        (brand.brand_type === "DWY" ? "https://partners.virality.cc/template/assets" : "");
+      
       form.reset({
         name: brand.name,
         slug: brand.slug,
@@ -74,7 +77,7 @@ export function EditBrandDialog({
         brand_type: brand.brand_type as "Lead" | "DWY" | "Client" || "Client",
         home_url: brand.home_url || "",
         account_url: brand.account_url || "",
-        assets_url: brand.assets_url || "",
+        assets_url: defaultAssetsUrl,
         show_account_tab: brand.show_account_tab ?? true
       });
       setLogoPreview(brand.logo_url);
