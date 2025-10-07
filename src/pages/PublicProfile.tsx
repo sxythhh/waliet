@@ -12,7 +12,6 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
-
 interface Profile {
   id: string;
   username: string;
@@ -20,7 +19,6 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -43,22 +41,23 @@ interface SocialAccount {
     status: string;
   }>;
 }
-
 export default function PublicProfile() {
-  const { username } = useParams();
+  const {
+    username
+  } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [campaignCache, setCampaignCache] = useState<Record<string, any>>({});
-
   useEffect(() => {
     fetchProfile();
   }, [username, user]);
-
   const fetchProfile = async () => {
     // Handle empty username
     if (!username) {
@@ -67,24 +66,19 @@ export default function PublicProfile() {
         return;
       }
       // Fetch current user's profile
-      const { data: currentUserProfile } = await supabase
-        .from("profiles")
-        .select("id, username, full_name, bio, avatar_url")
-        .eq("id", user.id)
-        .maybeSingle();
-      
+      const {
+        data: currentUserProfile
+      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url").eq("id", user.id).maybeSingle();
       if (currentUserProfile?.username) {
-        navigate(`/${currentUserProfile.username}`, { replace: true });
+        navigate(`/${currentUserProfile.username}`, {
+          replace: true
+        });
         return;
       }
     }
-
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("id, username, full_name, bio, avatar_url")
-      .eq("username", username)
-      .maybeSingle();
-
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url").eq("username", username).maybeSingle();
     if (!profileData) {
       // Profile not found
       if (!user) {
@@ -92,43 +86,38 @@ export default function PublicProfile() {
         return;
       }
       // Fetch current user's profile instead
-      const { data: currentUserProfile } = await supabase
-        .from("profiles")
-        .select("id, username, full_name, bio, avatar_url")
-        .eq("id", user.id)
-        .maybeSingle();
-      
+      const {
+        data: currentUserProfile
+      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url").eq("id", user.id).maybeSingle();
       if (currentUserProfile?.username) {
-        navigate(`/${currentUserProfile.username}`, { replace: true });
+        navigate(`/${currentUserProfile.username}`, {
+          replace: true
+        });
         return;
       }
       setLoading(false);
       return;
     }
-
     if (profileData) {
       setProfile(profileData);
 
       // Fetch social accounts with their connected campaigns and demographic status
-      const { data: socialData } = await supabase
-        .from("social_accounts")
-        .select(`
+      const {
+        data: socialData
+      } = await supabase.from("social_accounts").select(`
           id,
           platform,
           username,
           is_verified,
           account_link
-        `)
-        .eq("user_id", profileData.id);
-
+        `).eq("user_id", profileData.id);
       if (socialData) {
         // Fetch connected campaigns for each social account
         const campaignsToFetch = new Set<string>();
-        const accountsWithCampaigns = await Promise.all(
-          socialData.map(async (account) => {
-            const { data: campaignConnections } = await supabase
-              .from("social_account_campaigns")
-              .select(`
+        const accountsWithCampaigns = await Promise.all(socialData.map(async account => {
+          const {
+            data: campaignConnections
+          } = await supabase.from("social_account_campaigns").select(`
                 id,
                 campaigns (
                   id,
@@ -139,46 +128,39 @@ export default function PublicProfile() {
                     logo_url
                   )
                 )
-              `)
-              .eq("social_account_id", account.id);
+              `).eq("social_account_id", account.id);
 
-            // Track campaign IDs to pre-fetch
-            campaignConnections?.forEach(conn => {
-              if (conn.campaigns) {
-                campaignsToFetch.add((conn.campaigns as any).id);
-              }
-            });
-
-            const { data: demographics } = await supabase
-              .from("demographic_submissions")
-              .select("status")
-              .eq("social_account_id", account.id)
-              .order("submitted_at", { ascending: false })
-              .limit(1);
-
-            return {
-              ...account,
-              connected_campaigns: campaignConnections?.map(conn => ({
-                connection_id: conn.id,
-                campaign: conn.campaigns as any
-              })) || [],
-              demographic_submissions: demographics || []
-            };
-          })
-        );
+          // Track campaign IDs to pre-fetch
+          campaignConnections?.forEach(conn => {
+            if (conn.campaigns) {
+              campaignsToFetch.add((conn.campaigns as any).id);
+            }
+          });
+          const {
+            data: demographics
+          } = await supabase.from("demographic_submissions").select("status").eq("social_account_id", account.id).order("submitted_at", {
+            ascending: false
+          }).limit(1);
+          return {
+            ...account,
+            connected_campaigns: campaignConnections?.map(conn => ({
+              connection_id: conn.id,
+              campaign: conn.campaigns as any
+            })) || [],
+            demographic_submissions: demographics || []
+          };
+        }));
 
         // Pre-fetch full campaign data for instant loading
         if (campaignsToFetch.size > 0) {
-          const { data: fullCampaigns } = await supabase
-            .from("campaigns")
-            .select(`
+          const {
+            data: fullCampaigns
+          } = await supabase.from("campaigns").select(`
               *,
               brands (
                 logo_url
               )
-            `)
-            .in("id", Array.from(campaignsToFetch));
-
+            `).in("id", Array.from(campaignsToFetch));
           if (fullCampaigns) {
             const cache: Record<string, any> = {};
             fullCampaigns.forEach(campaign => {
@@ -192,14 +174,11 @@ export default function PublicProfile() {
             setCampaignCache(cache);
           }
         }
-
         setSocialAccounts(accountsWithCampaigns);
       }
     }
-
     setLoading(false);
   };
-
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-4 w-4";
     switch (platform) {
@@ -213,10 +192,8 @@ export default function PublicProfile() {
         return null;
     }
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         {/* Header Skeleton */}
         <div className="bg-background">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -243,14 +220,11 @@ export default function PublicProfile() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!profile) {
     return null;
   }
-
   const handleCampaignClick = async (campaignId: string) => {
     // Check if campaign is already cached
     if (campaignCache[campaignId]) {
@@ -260,17 +234,14 @@ export default function PublicProfile() {
     }
 
     // Fallback: fetch if not cached
-    const { data } = await supabase
-      .from("campaigns")
-      .select(`
+    const {
+      data
+    } = await supabase.from("campaigns").select(`
         *,
         brands (
           logo_url
         )
-      `)
-      .eq("id", campaignId)
-      .single();
-
+      `).eq("id", campaignId).single();
     if (data) {
       const campaignData = {
         ...data,
@@ -279,13 +250,14 @@ export default function PublicProfile() {
         application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : []
       };
       setSelectedCampaign(campaignData);
-      setCampaignCache(prev => ({ ...prev, [campaignId]: campaignData }));
+      setCampaignCache(prev => ({
+        ...prev,
+        [campaignId]: campaignData
+      }));
       setSheetOpen(true);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header with Large Avatar */}
       <div className="bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -302,92 +274,56 @@ export default function PublicProfile() {
             <div className="space-y-2">
               <h1 className="text-3xl font-bold">{profile.full_name || profile.username}</h1>
               <p className="text-muted-foreground">@{profile.username}</p>
-              {profile.bio && (
-                <p className="text-sm text-foreground/80 max-w-2xl mt-3">{profile.bio}</p>
-              )}
+              {profile.bio && <p className="text-sm text-foreground/80 max-w-2xl mt-3 font-medium">{profile.bio}</p>}
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 space-y-6 sm:px-[23px] py-0">
         {/* Connected Accounts */}
         <Card className="bg-card border-0">
-          <CardContent className="p-6">
+          <CardContent className="p-6 py-[13px]">
             <h2 className="text-lg font-semibold mb-4">Connected Accounts</h2>
             
-            {socialAccounts.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No accounts connected</p>
-            ) : (
-              <div className="space-y-3">
-                {socialAccounts.map((account) => {
-                  const connectedCampaigns = account.connected_campaigns || [];
-                  const latestDemographicSubmission = account.demographic_submissions?.[0];
-                  const demographicStatus = latestDemographicSubmission?.status;
-
-                  return (
-                    <div
-                      key={account.id}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#131313]"
-                    >
+            {socialAccounts.length === 0 ? <p className="text-center py-8 text-muted-foreground">No accounts connected</p> : <div className="space-y-3">
+                {socialAccounts.map(account => {
+              const connectedCampaigns = account.connected_campaigns || [];
+              const latestDemographicSubmission = account.demographic_submissions?.[0];
+              const demographicStatus = latestDemographicSubmission?.status;
+              return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#131313]">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
-                        <div
-                          onClick={() => account.account_link && window.open(account.account_link, '_blank')}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent w-fit"
-                        >
+                        <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent w-fit">
                           {getPlatformIcon(account.platform)}
                           <span className="font-medium">{account.username}</span>
                         </div>
 
-                        {connectedCampaigns.length > 0 && (
-                          <Link2 className="hidden sm:block h-3.5 w-3.5 text-white/40 flex-shrink-0" />
-                        )}
+                        {connectedCampaigns.length > 0 && <Link2 className="hidden sm:block h-3.5 w-3.5 text-white/40 flex-shrink-0" />}
 
-                        {connectedCampaigns.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {connectedCampaigns.map((connection) => {
-                              const logoUrl = connection.campaign.brands?.logo_url || connection.campaign.brand_logo_url;
-                              return (
-                                <div
-                                  key={connection.connection_id}
-                                  onClick={() => handleCampaignClick(connection.campaign.id)}
-                                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:border-white/20 transition-colors cursor-pointer hover:bg-[#222]"
-                                >
-                                  {logoUrl && (
-                                    <img
-                                      src={logoUrl}
-                                      alt={connection.campaign.brand_name}
-                                      className="h-4 w-4 object-contain"
-                                    />
-                                  )}
+                        {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-2">
+                            {connectedCampaigns.map(connection => {
+                      const logoUrl = connection.campaign.brands?.logo_url || connection.campaign.brand_logo_url;
+                      return <div key={connection.connection_id} onClick={() => handleCampaignClick(connection.campaign.id)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:border-white/20 transition-colors cursor-pointer hover:bg-[#222]">
+                                  {logoUrl && <img src={logoUrl} alt={connection.campaign.brand_name} className="h-4 w-4 object-contain" />}
                                   <span className="text-xs font-medium">{connection.campaign.title}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
+                                </div>;
+                    })}
+                          </div>}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    </div>;
+            })}
+              </div>}
           </CardContent>
         </Card>
 
         {/* Footer */}
-        <div className="text-center pt-8 pb-4">
+        <div className="text-center pt-8 pb-4 py-[5px]">
           <img src={wordmarkLogo} alt="Virality" className="h-10 mx-auto opacity-50" />
         </div>
       </div>
 
       {/* Campaign Sheet */}
-      <JoinCampaignSheet
-        campaign={selectedCampaign}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-      />
-    </div>
-  );
+      <JoinCampaignSheet campaign={selectedCampaign} open={sheetOpen} onOpenChange={setSheetOpen} />
+    </div>;
 }
