@@ -158,7 +158,17 @@ export default function BrandLibrary() {
           row[header] = values[index] || "";
         });
 
+        // Validate required fields and skip invalid rows
         if (row.account && row.platform && row.video_link) {
+          // Parse date properly - expect format YYYY-MM-DD
+          let uploadDate = row.upload_date;
+          if (uploadDate && uploadDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // Valid date format
+          } else {
+            // Default to today if invalid
+            uploadDate = new Date().toISOString().split('T')[0];
+          }
+
           videoData.push({
             brand_id: brandId,
             account: row.account,
@@ -170,7 +180,7 @@ export default function BrandLibrary() {
             comments: parseInt(row.comments) || 0,
             engagement_rate: parseFloat(row.engagement_rate) || 0,
             views_performance: parseFloat(row.views_performance) || 0,
-            upload_date: row.upload_date || new Date().toISOString().split('T')[0],
+            upload_date: uploadDate,
           });
         }
       }
@@ -225,7 +235,7 @@ export default function BrandLibrary() {
 
   if (loading) {
     return (
-      <div className="h-screen w-full bg-background flex flex-col p-6">
+      <div className="h-screen w-full bg-[#191919] flex flex-col p-6">
         <Skeleton className="h-10 w-64 mb-6" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           {[1, 2, 3, 4].map(i => (
@@ -238,14 +248,14 @@ export default function BrandLibrary() {
   }
 
   return (
-    <div className="h-screen w-full bg-background flex flex-col">
+    <div className="h-screen w-full bg-[#191919] flex flex-col">
       {/* Mobile Menu Button */}
       <div className="md:hidden p-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => sidebar.setOpenMobile(true)}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-white/60 hover:text-white hover:bg-white/10"
         >
           <Menu className="h-6 w-6" />
         </Button>
@@ -255,8 +265,8 @@ export default function BrandLibrary() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Video Library & Analytics</h1>
-            <p className="text-sm text-muted-foreground mt-1">Track and analyze your video performance</p>
+            <h1 className="text-3xl font-bold text-white">Video Library & Analytics</h1>
+            <p className="text-sm text-white/60 mt-1">Track and analyze your video performance</p>
           </div>
           <div className="flex gap-2">
             <Input
@@ -286,58 +296,58 @@ export default function BrandLibrary() {
 
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-card/50">
+          <Card className="bg-[#202020] border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Views</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-white/60">Total Views</CardTitle>
+              <Eye className="h-4 w-4 text-white/60" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{formatNumber(analytics.totalViews)}</div>
-              <p className="text-xs text-muted-foreground mt-1">{analytics.totalVideos} videos</p>
+              <div className="text-2xl font-bold text-white">{formatNumber(analytics.totalViews)}</div>
+              <p className="text-xs text-white/60 mt-1">{analytics.totalVideos} videos</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50">
+          <Card className="bg-[#202020] border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Likes</CardTitle>
-              <Heart className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-white/60">Total Likes</CardTitle>
+              <Heart className="h-4 w-4 text-white/60" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{formatNumber(analytics.totalLikes)}</div>
-              <p className="text-xs text-muted-foreground mt-1">Across all videos</p>
+              <div className="text-2xl font-bold text-white">{formatNumber(analytics.totalLikes)}</div>
+              <p className="text-xs text-white/60 mt-1">Across all videos</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50">
+          <Card className="bg-[#202020] border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Comments</CardTitle>
-              <MessageCircle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-white/60">Total Comments</CardTitle>
+              <MessageCircle className="h-4 w-4 text-white/60" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{formatNumber(analytics.totalComments)}</div>
-              <p className="text-xs text-muted-foreground mt-1">Engagement count</p>
+              <div className="text-2xl font-bold text-white">{formatNumber(analytics.totalComments)}</div>
+              <p className="text-xs text-white/60 mt-1">Engagement count</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50">
+          <Card className="bg-[#202020] border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Avg Engagement</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-white/60">Avg Engagement</CardTitle>
+              <BarChart3 className="h-4 w-4 text-white/60" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{analytics.avgEngagementRate.toFixed(2)}%</div>
-              <p className="text-xs text-muted-foreground mt-1">Average rate</p>
+              <div className="text-2xl font-bold text-white">{analytics.avgEngagementRate.toFixed(2)}%</div>
+              <p className="text-xs text-white/60 mt-1">Average rate</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Videos Table */}
         {videos.length === 0 ? (
-          <Card className="bg-card/50">
+          <Card className="bg-[#202020] border-white/10">
             <CardContent className="py-16 text-center">
-              <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No videos imported yet</h3>
-              <p className="text-sm text-muted-foreground mb-6">Upload a CSV file to start tracking your video analytics</p>
+              <Upload className="h-12 w-12 text-white/60 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">No videos imported yet</h3>
+              <p className="text-sm text-white/60 mb-6">Upload a CSV file to start tracking your video analytics</p>
               <label htmlFor="csv-upload">
                 <Button asChild>
                   <span>Import CSV</span>
@@ -346,10 +356,10 @@ export default function BrandLibrary() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-card/50">
+          <Card className="bg-[#202020] border-white/10">
             <CardHeader>
-              <CardTitle className="text-foreground">Video Performance</CardTitle>
-              <CardDescription>Detailed analytics for all imported videos</CardDescription>
+              <CardTitle className="text-white">Video Performance</CardTitle>
+              <CardDescription className="text-white/60">Detailed analytics for all imported videos</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -374,7 +384,7 @@ export default function BrandLibrary() {
                             href={video.video_link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-foreground hover:text-primary transition-colors"
+                            className="text-white hover:text-primary transition-colors"
                           >
                             {video.account}
                           </a>
@@ -384,16 +394,16 @@ export default function BrandLibrary() {
                             {video.platform}
                           </Badge>
                         </TableCell>
-                        <TableCell className="max-w-xs truncate text-muted-foreground">
+                        <TableCell className="max-w-xs truncate text-white/60">
                           {video.video_title}
                         </TableCell>
-                        <TableCell className="text-right text-foreground">
+                        <TableCell className="text-right text-white">
                           {formatNumber(video.views)}
                         </TableCell>
-                        <TableCell className="text-right text-foreground">
+                        <TableCell className="text-right text-white">
                           {formatNumber(video.likes)}
                         </TableCell>
-                        <TableCell className="text-right text-foreground">
+                        <TableCell className="text-right text-white">
                           {formatNumber(video.comments)}
                         </TableCell>
                         <TableCell className="text-right">
@@ -401,7 +411,7 @@ export default function BrandLibrary() {
                             {video.engagement_rate.toFixed(2)}%
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-white/60">
                           {new Date(video.upload_date).toLocaleDateString()}
                         </TableCell>
                       </TableRow>
