@@ -22,11 +22,7 @@ export default function BrandAccount() {
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [brandId, setBrandId] = useState("");
   const [accountUrl, setAccountUrl] = useState("");
-  const [showAccountTab, setShowAccountTab] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [userFullName, setUserFullName] = useState("");
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
 
@@ -38,7 +34,7 @@ export default function BrandAccount() {
         // Fetch brand data
         const { data: brandData, error: brandError } = await supabase
           .from("brands")
-          .select("id, account_url, show_account_tab")
+          .select("id, account_url")
           .eq("slug", slug)
           .maybeSingle() as any;
 
@@ -46,23 +42,6 @@ export default function BrandAccount() {
         if (brandData) {
           setBrandId(brandData.id);
           setAccountUrl(brandData.account_url || "");
-          setShowAccountTab(brandData.show_account_tab ?? true);
-        }
-
-        // Fetch user data
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUserEmail(user.email || "");
-          
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", user.id)
-            .maybeSingle();
-          
-          if (profile) {
-            setUserFullName(profile.full_name || "");
-          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -75,40 +54,6 @@ export default function BrandAccount() {
     fetchData();
   }, [slug]);
 
-  const handleSave = async () => {
-    if (!brandId) return;
-
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from("brands")
-        .update({ 
-          account_url: accountUrl || null,
-          show_account_tab: showAccountTab
-        } as any)
-        .eq("id", brandId);
-
-      if (error) throw error;
-
-      toast.success("Settings updated successfully");
-    } catch (error) {
-      console.error("Error updating settings:", error);
-      toast.error("Failed to update settings");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast.success("Signed out successfully");
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Failed to sign out");
-    }
-  };
 
   if (loading || adminLoading) {
     return (
@@ -169,42 +114,12 @@ export default function BrandAccount() {
             ) : (
               <Card className="bg-[#202020] border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-white">Invoice Configuration</CardTitle>
+                  <CardTitle className="text-white">No Invoice Page Configured</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {!isAdmin && (
-                    <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                      <p className="text-yellow-500 text-sm">
-                        Only administrators can edit these settings
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="account-url" className="text-white">
-                      Invoice Page URL
-                    </Label>
-                    <Input
-                      id="account-url"
-                      type="url"
-                      placeholder="https://example.com/invoices"
-                      value={accountUrl}
-                      onChange={(e) => setAccountUrl(e.target.value)}
-                      className="bg-[#191919] border-white/10 text-white"
-                      disabled={!isAdmin}
-                    />
-                    <p className="text-sm text-white/60">
-                      This URL will be embedded in the Invoices tab
-                    </p>
-                  </div>
-
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving || !isAdmin}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    {saving ? "Saving..." : "Save Settings"}
-                  </Button>
+                <CardContent>
+                  <p className="text-white/60">
+                    An administrator needs to configure the invoice page URL in the brand settings.
+                  </p>
                 </CardContent>
               </Card>
             )}

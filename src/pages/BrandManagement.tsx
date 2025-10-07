@@ -82,6 +82,7 @@ export default function BrandManagement() {
   const [brandType, setBrandType] = useState<string>("");
   const [assetsUrl, setAssetsUrl] = useState("");
   const [homeUrl, setHomeUrl] = useState("");
+  const [accountUrl, setAccountUrl] = useState("");
   const [savingUrls, setSavingUrls] = useState(false);
   const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
@@ -207,12 +208,13 @@ export default function BrandManagement() {
       const {
         data: brandData,
         error: brandError
-      } = await supabase.from("brands").select("id, assets_url, home_url, brand_type").eq("slug", slug).maybeSingle();
+      } = await supabase.from("brands").select("id, assets_url, home_url, account_url, brand_type").eq("slug", slug).maybeSingle();
       if (brandError) throw brandError;
       if (!brandData) return;
       setBrandId(brandData.id);
       setAssetsUrl(brandData.assets_url || "");
       setHomeUrl(brandData.home_url || "");
+      setAccountUrl(brandData.account_url || "");
       setBrandType(brandData.brand_type || "");
       const {
         data,
@@ -356,6 +358,7 @@ export default function BrandManagement() {
       } = await supabase.from("brands").update({
         assets_url: assetsUrl || null,
         home_url: homeUrl || null,
+        account_url: accountUrl || null,
         brand_type: brandType || null
       }).eq("id", brandId);
       if (error) throw error;
@@ -1028,6 +1031,24 @@ export default function BrandManagement() {
                   <Textarea id="home-url" placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />' value={homeUrl} onChange={e => setHomeUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white font-mono min-h-[120px]" disabled={!isAdmin} />
                   <p className="text-sm text-white/60">
                     For DWY brands, paste HTML code (like iframe) to embed on the Home page instead of the default dashboard
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="account-url" className="text-white">
+                    Invoice Page URL
+                  </Label>
+                  <Input 
+                    id="account-url" 
+                    type="url" 
+                    placeholder="https://example.com/invoices" 
+                    value={accountUrl} 
+                    onChange={e => setAccountUrl(e.target.value)} 
+                    className="bg-[#191919] border-white/10 text-white" 
+                    disabled={!isAdmin} 
+                  />
+                  <p className="text-sm text-white/60">
+                    This URL will be embedded in the Invoices tab
                   </p>
                 </div>
 
