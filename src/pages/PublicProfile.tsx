@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link2, BadgeCheck, Clock, XCircle, AlertCircle } from "lucide-react";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -49,6 +50,7 @@ export default function PublicProfile() {
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [campaignCache, setCampaignCache] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetchProfile();
@@ -80,6 +82,7 @@ export default function PublicProfile() {
 
       if (socialData) {
         // Fetch connected campaigns for each social account
+        const campaignsToFetch = new Set<string>();
         const accountsWithCampaigns = await Promise.all(
           socialData.map(async (account) => {
             const { data: campaignConnections } = await supabase
@@ -98,6 +101,13 @@ export default function PublicProfile() {
               `)
               .eq("social_account_id", account.id);
 
+            // Track campaign IDs to pre-fetch
+            campaignConnections?.forEach(conn => {
+              if (conn.campaigns) {
+                campaignsToFetch.add((conn.campaigns as any).id);
+              }
+            });
+
             const { data: demographics } = await supabase
               .from("demographic_submissions")
               .select("status")
@@ -115,6 +125,32 @@ export default function PublicProfile() {
             };
           })
         );
+
+        // Pre-fetch full campaign data for instant loading
+        if (campaignsToFetch.size > 0) {
+          const { data: fullCampaigns } = await supabase
+            .from("campaigns")
+            .select(`
+              *,
+              brands (
+                logo_url
+              )
+            `)
+            .in("id", Array.from(campaignsToFetch));
+
+          if (fullCampaigns) {
+            const cache: Record<string, any> = {};
+            fullCampaigns.forEach(campaign => {
+              cache[campaign.id] = {
+                ...campaign,
+                brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
+                platforms: campaign.allowed_platforms || [],
+                application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions as string[] : []
+              };
+            });
+            setCampaignCache(cache);
+          }
+        }
 
         setSocialAccounts(accountsWithCampaigns);
       }
@@ -139,8 +175,33 @@ export default function PublicProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading profile...</p>
+      <div className="min-h-screen bg-background">
+        {/* Header Skeleton */}
+        <div className="bg-background">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+            <div className="flex flex-col items-center text-center space-y-6">
+              <Skeleton className="h-32 w-32 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+          <Card className="bg-card border-0">
+            <CardContent className="p-6">
+              <Skeleton className="h-6 w-48 mb-4" />
+              <div className="space-y-3">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -157,6 +218,14 @@ export default function PublicProfile() {
   }
 
   const handleCampaignClick = async (campaignId: string) => {
+    // Check if campaign is already cached
+    if (campaignCache[campaignId]) {
+      setSelectedCampaign(campaignCache[campaignId]);
+      setSheetOpen(true);
+      return;
+    }
+
+    // Fallback: fetch if not cached
     const { data } = await supabase
       .from("campaigns")
       .select(`
@@ -169,12 +238,14 @@ export default function PublicProfile() {
       .single();
 
     if (data) {
-      setSelectedCampaign({
+      const campaignData = {
         ...data,
         brand_logo_url: data.brand_logo_url || (data.brands as any)?.logo_url,
         platforms: data.allowed_platforms || [],
         application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : []
-      });
+      };
+      setSelectedCampaign(campaignData);
+      setCampaignCache(prev => ({ ...prev, [campaignId]: campaignData }));
       setSheetOpen(true);
     }
   };
