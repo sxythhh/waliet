@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Plus, GripVertical, Trash2, Pencil, Upload, Link as LinkIcon, X } from "lucide-react";
+import { Menu, Plus, Trash2, Pencil, Upload, Link as LinkIcon, X, Move } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -54,6 +54,7 @@ export default function BrandLibrary() {
     video_url: ""
   });
   const [draggedItem, setDraggedItem] = useState<ContentStyle | null>(null);
+  const [dragOverPhase, setDragOverPhase] = useState<string | null>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -93,9 +94,14 @@ export default function BrandLibrary() {
     setDraggedItem(content);
     e.dataTransfer.effectAllowed = "move";
   };
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, phase: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    setDragOverPhase(phase);
+  };
+  
+  const handleDragLeave = () => {
+    setDragOverPhase(null);
   };
   const handleDrop = async (e: React.DragEvent, newPhase: string) => {
     e.preventDefault();
@@ -120,6 +126,7 @@ export default function BrandLibrary() {
       toast.error("Failed to update");
     }
     setDraggedItem(null);
+    setDragOverPhase(null);
   };
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -240,8 +247,14 @@ export default function BrandLibrary() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {PHASES.map(phase => {
           const phaseContent = contentStyles.filter(c => c.phase === phase.id);
-          return <div key={phase.id} onDragOver={handleDragOver} onDrop={e => handleDrop(e, phase.id)}>
-                <Card className="bg-[#202020] ">
+          const isDragOver = dragOverPhase === phase.id;
+          return <div 
+                key={phase.id} 
+                onDragOver={e => handleDragOver(e, phase.id)} 
+                onDragLeave={handleDragLeave}
+                onDrop={e => handleDrop(e, phase.id)}
+              >
+                <Card className={`transition-colors duration-200 ${isDragOver ? 'bg-[#2a2a2a] ring-2 ring-white/20' : 'bg-[#202020]'}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -269,8 +282,9 @@ export default function BrandLibrary() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2 min-h-[400px]">
-                    {phaseContent.length === 0 ? <div className="text-center py-8 text-white/40 text-sm">Drop cards here</div> : phaseContent.map(content => <div key={content.id} draggable onDragStart={e => handleDragStart(e, content)} className="group bg-[#191919] rounded-lg p-3 transition-colors cursor-move">
-                          <div className="flex items-start">
+                    {phaseContent.map(content => <div key={content.id} draggable onDragStart={e => handleDragStart(e, content)} className="group bg-[#191919] rounded-lg p-3 transition-colors cursor-move hover:bg-[#222222]">
+                          <div className="flex items-start gap-2">
+                            <Move className="h-4 w-4 mt-1 text-white/20 group-hover:text-white/40 transition-colors" />
                             <div className="flex-1 min-w-0 space-y-2">
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full" style={{
