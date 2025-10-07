@@ -39,7 +39,7 @@ const Index = () => {
       }} className="font-chakra font-semibold tracking-tight backdrop-blur-xl border-0 transition-all duration-300 px-8 shadow-[0_4px_0_0_hsl(var(--muted))] hover:shadow-[0_2px_0_0_hsl(var(--muted))] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none bg-[#181818]/80">
           Login
         </Button>
-        <Button onClick={() => navigate("/auth")} className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-primary hover:bg-primary-glow transition-all duration-300 px-8 shadow-[0_4px_0_0_hsl(var(--primary-glow))] hover:shadow-[0_2px_0_0_hsl(var(--primary-glow)),0_0_20px_hsl(var(--primary)/0.5)] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-[0_0_20px_hsl(var(--primary)/0.5)] animate-pulse" style={{
+        <Button onClick={() => navigate("/auth")} className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-primary hover:bg-primary-glow transition-all duration-300 px-8 shadow-[0_4px_0_0_hsl(var(--primary-glow))] hover:shadow-[0_2px_0_0_hsl(var(--primary-glow)),0_0_20px_hsl(var(--primary)/0.5)] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-[0_0_20px_hsl(var(--primary)/0.5)]" style={{
         letterSpacing: '-0.5px'
       }}>
           Create Account
