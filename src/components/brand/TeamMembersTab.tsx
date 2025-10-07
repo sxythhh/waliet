@@ -173,13 +173,16 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Team Members</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Team Members</h2>
+          <p className="text-sm text-muted-foreground mt-1">Manage your team and pending invitations</p>
+        </div>
         {canManageTeam && (
           <Button
             onClick={() => setInviteDialogOpen(true)}
-            className="bg-primary hover:bg-primary/90"
+            size="sm"
           >
             <UserPlus className="mr-2 h-4 w-4" />
             Invite Member
@@ -188,89 +191,85 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
       </div>
 
       {/* Active Members */}
-      <Card className="bg-[#202020] border-white/10">
-        <CardHeader>
-          <CardTitle className="text-white">Active Members ({members.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {members.map((member) => (
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground">
+          Active Members ({members.length})
+        </h3>
+        <div className="space-y-2">
+          {members.map((member) => (
+            <div
+              key={member.id}
+              className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                {getRoleIcon(member.role)}
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {member.profiles.full_name || "Unknown"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{member.profiles.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-muted/50 rounded">
+                  {member.role}
+                </span>
+                {canManageTeam && member.role !== "owner" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveMember(member.id)}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pending Invitations */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground">
+          Pending Invitations ({invitations.length})
+        </h3>
+        {invitations.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">No pending invitations</p>
+        ) : (
+          <div className="space-y-2">
+            {invitations.map((invitation) => (
               <div
-                key={member.id}
-                className="flex items-center justify-between p-4 bg-[#191919] rounded-lg"
+                key={invitation.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  {getRoleIcon(member.role)}
-                  <div>
-                    <p className="text-white font-medium">
-                      {member.profiles.full_name || "Unknown"}
-                    </p>
-                    <p className="text-sm text-white/60">{member.profiles.email}</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{invitation.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Invited {new Date(invitation.created_at).toLocaleDateString()}
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-white/60 capitalize px-2 py-1 bg-white/5 rounded">
-                    {member.role}
+                  <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-muted/50 rounded">
+                    {invitation.role}
                   </span>
-                  {canManageTeam && member.role !== "owner" && (
+                  {canManageTeam && (
                     <Button
                       variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                      size="sm"
+                      onClick={() => handleCancelInvitation(invitation.id)}
+                      className="h-8 text-muted-foreground hover:text-foreground"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      Cancel
                     </Button>
                   )}
                 </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Pending Invitations */}
-      <Card className="bg-[#202020] border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Pending Invitations ({invitations.length})</CardTitle>
-          </CardHeader>
-        <CardContent>
-          {invitations.length === 0 ? (
-            <p className="text-white/60 text-center py-4">No pending invitations</p>
-          ) : (
-            <div className="space-y-3">
-              {invitations.map((invitation) => (
-                <div
-                  key={invitation.id}
-                  className="flex items-center justify-between p-4 bg-[#191919] rounded-lg"
-                >
-                  <div>
-                    <p className="text-white font-medium">{invitation.email}</p>
-                    <p className="text-sm text-white/60">
-                      Invited {new Date(invitation.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-white/60 capitalize px-2 py-1 bg-white/5 rounded">
-                      {invitation.role}
-                    </span>
-                    {canManageTeam && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCancelInvitation(invitation.id)}
-                        className="text-white/60 hover:text-white"
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
       <InviteMemberDialog
         open={inviteDialogOpen}
