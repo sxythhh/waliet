@@ -393,7 +393,7 @@ export default function BrandLibrary() {
                 </TabsContent>
               </Tabs>
               {formData.video_url && (
-                <div className="mt-3 relative">
+                <div className="mt-3 relative max-h-64 overflow-hidden">
                   <ContentVideoPlayer videoUrl={formData.video_url} />
                   <Button
                     type="button"
