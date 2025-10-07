@@ -22,12 +22,17 @@ export default function BrandAssets() {
       try {
         const { data, error } = await supabase
           .from("brands")
-          .select("assets_url")
+          .select("assets_url, brand_type")
           .eq("slug", slug)
           .maybeSingle();
 
         if (error) throw error;
-        setAssetsUrl(data?.assets_url || null);
+        
+        // If DWY brand has no assets_url, use default
+        const url = data?.assets_url || 
+          (data?.brand_type === "DWY" ? "https://partners.virality.cc/template/assets" : null);
+        
+        setAssetsUrl(url);
       } catch (error) {
         console.error("Error fetching brand:", error);
         toast.error("Failed to load assets");
