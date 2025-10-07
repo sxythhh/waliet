@@ -232,6 +232,13 @@ export function ImportCampaignStatsDialog({
         
         onImportComplete();
         onMatchingRequired();
+        
+        // Close the dialog after successful sync
+        setTimeout(() => {
+          setOpen(false);
+          setShortimizeCollectionName("");
+          setSyncProgress(null);
+        }, 1500);
       } else {
         toast.error(data.error || "Failed to sync from Shortimize");
       }
