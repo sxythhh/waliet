@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link2, BadgeCheck, Clock, XCircle, AlertCircle } from "lucide-react";
+import { Link2, ArrowRight } from "lucide-react";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
@@ -257,7 +257,9 @@ export default function PublicProfile() {
       setSheetOpen(true);
     }
   };
-  return <div className="min-h-screen bg-background">
+  const showBanner = !user && profile.id !== user?.id;
+
+  return <div className="min-h-screen bg-background pb-20">
       {/* Header with Large Avatar */}
       <div className="bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -325,5 +327,20 @@ export default function PublicProfile() {
 
       {/* Campaign Sheet */}
       <JoinCampaignSheet campaign={selectedCampaign} open={sheetOpen} onOpenChange={setSheetOpen} />
+
+      {/* Banner for Logged Out Users */}
+      {showBanner && (
+        <div 
+          onClick={() => navigate("/")}
+          className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] py-6 px-6 cursor-pointer hover:opacity-90 transition-opacity z-50 rounded-t-[32px]"
+        >
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <span className="text-white font-instrument font-extrabold text-2xl tracking-tighter">
+              Go Viral, Get Paid
+            </span>
+            <ArrowRight className="h-6 w-6 text-white" />
+          </div>
+        </div>
+      )}
     </div>;
 }
