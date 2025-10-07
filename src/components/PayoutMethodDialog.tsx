@@ -238,7 +238,7 @@ export default function PayoutMethodDialog({
             }}>
                     UPI ID
                   </Label>
-                  <Input id="upi-id" type="text" placeholder="yourname@axl" value={upiEmail} onChange={e => setUpiEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                  <Input id="upi-id" type="text" placeholder="Enter your UPI ID" value={upiEmail} onChange={e => setUpiEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                 </div>}
 
               {selectedMethod === "revolut" && <div className="space-y-3">
