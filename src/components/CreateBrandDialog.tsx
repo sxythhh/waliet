@@ -120,6 +120,35 @@ export function CreateBrandDialog({
 
       if (inviteError) throw inviteError;
 
+      // Create warmap events for brand onboarding and renewal
+      const warmapEvents = [
+        {
+          title: `${values.name} Onboarding`,
+          event_date: new Date().toISOString().split('T')[0],
+          description: `Onboarding process for ${values.name}`,
+          created_by: user.id
+        }
+      ];
+
+      // Add renewal event if renewal date exists
+      if (values.renewal_date) {
+        warmapEvents.push({
+          title: `${values.name} Renewal`,
+          event_date: values.renewal_date,
+          description: `Renewal date for ${values.name}`,
+          created_by: user.id
+        });
+      }
+
+      const { error: warmapError } = await supabase
+        .from("warmap_events")
+        .insert(warmapEvents);
+
+      if (warmapError) {
+        console.error("Error creating warmap events:", warmapError);
+        // Don't fail the whole operation if warmap events fail
+      }
+
       // Send webhook notification
       try {
         await fetch("https://ivelinivnv.app.n8n.cloud/webhook/fbb95851-05f5-4ada-a0b6-383b8e96591c", {
