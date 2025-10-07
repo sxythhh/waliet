@@ -269,9 +269,8 @@ export default function BrandLibrary() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2 min-h-[400px]">
-                    {phaseContent.length === 0 ? <div className="text-center py-8 text-white/40 text-sm">Drop cards here</div> : phaseContent.map(content => <div key={content.id} draggable onDragStart={e => handleDragStart(e, content)} className="group bg-[#191919] border border-white/10 rounded-lg p-3 hover:border-white/20 transition-colors cursor-move">
-                          <div className="flex items-start gap-2">
-                            <GripVertical className="h-4 w-4 mt-1 text-white/40" />
+                    {phaseContent.length === 0 ? <div className="text-center py-8 text-white/40 text-sm">Drop cards here</div> : phaseContent.map(content => <div key={content.id} draggable onDragStart={e => handleDragStart(e, content)} className="group bg-[#191919] rounded-lg p-3 transition-colors cursor-move">
+                          <div className="flex items-start">
                             <div className="flex-1 min-w-0 space-y-2">
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full" style={{
