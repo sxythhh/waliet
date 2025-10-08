@@ -4,12 +4,9 @@ import { WarmapTab } from "@/components/admin/WarmapTab";
 import { WorkTab } from "@/components/admin/WorkTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { SalesTab } from "@/components/admin/SalesTab";
-
 export default function AdminOverview() {
   const [activeTab, setActiveTab] = useState("warmap");
-
-  return (
-    <div className="w-full h-full p-6">
+  return <div className="w-full h-full p-6">
       <div className="max-w-7xl mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-fit mx-auto mb-6 bg-card rounded-full p-1 shadow-lg">
@@ -19,9 +16,7 @@ export default function AdminOverview() {
             <TabsTrigger value="work" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Work
             </TabsTrigger>
-            <TabsTrigger value="sales" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
-              Sales
-            </TabsTrigger>
+            
             <TabsTrigger value="analytics" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Analytics
             </TabsTrigger>
@@ -44,6 +39,5 @@ export default function AdminOverview() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 }
