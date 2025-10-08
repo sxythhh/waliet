@@ -219,7 +219,7 @@ export function UserDetailsDialog({
           <CollapsibleTrigger className="w-full">
             <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Payment Methods ({paymentMethods.length})
+                Payment Methods ({paymentMethods?.length || 0})
               </h3>
               {paymentMethodsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </div>
@@ -228,7 +228,7 @@ export function UserDetailsDialog({
           <CollapsibleContent>
             {loadingPaymentMethods ? <div className="text-center py-8 text-muted-foreground">
                 Loading payment methods...
-              </div> : paymentMethods.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+              </div> : (!paymentMethods || paymentMethods.length === 0) ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
                 No payment methods configured
               </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
                 {paymentMethods.map((method, index) => <div key={index} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
