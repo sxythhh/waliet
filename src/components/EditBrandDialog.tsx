@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Pencil, Upload, X } from "lucide-react";
@@ -22,7 +23,16 @@ const brandSchema = z.object({
   home_url: z.string().trim().optional().or(z.literal("")),
   account_url: z.string().url().optional().or(z.literal("")),
   assets_url: z.string().url().optional().or(z.literal("")),
-  show_account_tab: z.boolean()
+  show_account_tab: z.boolean(),
+  // Sales deal fields
+  deal_value: z.string().optional(),
+  probability: z.string().optional(),
+  close_date: z.string().optional(),
+  next_payment_date: z.string().optional(),
+  payment_amount: z.string().optional(),
+  notes: z.string().optional(),
+  won_date: z.string().optional(),
+  lost_reason: z.string().optional(),
 });
 type BrandFormValues = z.infer<typeof brandSchema>;
 interface Brand {
@@ -51,7 +61,9 @@ export function EditBrandDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(brand.logo_url);
+  const [dealId, setDealId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const form = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
     defaultValues: {
@@ -62,7 +74,15 @@ export function EditBrandDialog({
       home_url: brand.home_url || "",
       account_url: brand.account_url || "",
       assets_url: brand.assets_url || "",
-      show_account_tab: brand.show_account_tab ?? true
+      show_account_tab: brand.show_account_tab ?? true,
+      deal_value: "",
+      probability: "",
+      close_date: "",
+      next_payment_date: "",
+      payment_amount: "",
+      notes: "",
+      won_date: "",
+      lost_reason: "",
     }
   });
   useEffect(() => {
@@ -70,16 +90,57 @@ export function EditBrandDialog({
       const defaultAssetsUrl = brand.assets_url || 
         (brand.brand_type === "DWY" ? "https://partners.virality.cc/template/assets" : "");
       
-      form.reset({
-        name: brand.name,
-        slug: brand.slug,
-        description: brand.description || "",
-        brand_type: brand.brand_type as "Lead" | "DWY" | "Client" || "Client",
-        home_url: brand.home_url || "",
-        account_url: brand.account_url || "",
-        assets_url: defaultAssetsUrl,
-        show_account_tab: brand.show_account_tab ?? true
-      });
+      // Fetch sales deal data
+      const fetchDealData = async () => {
+        const { data: dealData } = await supabase
+          .from('sales_deals')
+          .select('*')
+          .eq('brand_id', brand.id)
+          .maybeSingle();
+
+        if (dealData) {
+          setDealId(dealData.id);
+          form.reset({
+            name: brand.name,
+            slug: brand.slug,
+            description: brand.description || "",
+            brand_type: brand.brand_type as "Lead" | "DWY" | "Client" || "Client",
+            home_url: brand.home_url || "",
+            account_url: brand.account_url || "",
+            assets_url: defaultAssetsUrl,
+            show_account_tab: brand.show_account_tab ?? true,
+            deal_value: dealData.deal_value?.toString() || "",
+            probability: dealData.probability?.toString() || "",
+            close_date: dealData.close_date || "",
+            next_payment_date: dealData.next_payment_date || "",
+            payment_amount: dealData.payment_amount?.toString() || "",
+            notes: dealData.notes || "",
+            won_date: dealData.won_date || "",
+            lost_reason: dealData.lost_reason || "",
+          });
+        } else {
+          form.reset({
+            name: brand.name,
+            slug: brand.slug,
+            description: brand.description || "",
+            brand_type: brand.brand_type as "Lead" | "DWY" | "Client" || "Client",
+            home_url: brand.home_url || "",
+            account_url: brand.account_url || "",
+            assets_url: defaultAssetsUrl,
+            show_account_tab: brand.show_account_tab ?? true,
+            deal_value: "",
+            probability: "",
+            close_date: "",
+            next_payment_date: "",
+            payment_amount: "",
+            notes: "",
+            won_date: "",
+            lost_reason: "",
+          });
+        }
+      };
+
+      fetchDealData();
       setLogoPreview(brand.logo_url);
       setLogoFile(null);
     }
@@ -122,20 +183,44 @@ export function EditBrandDialog({
     setIsSubmitting(true);
     try {
       const logoUrl = await uploadLogo();
-      const {
-        error
-      } = await supabase.from("brands").update({
-        name: values.name,
-        slug: values.slug,
-        description: values.description || null,
-        logo_url: logoUrl,
-        brand_type: values.brand_type,
-        home_url: values.home_url || null,
-        account_url: values.account_url || null,
-        assets_url: values.assets_url || null,
-        show_account_tab: values.show_account_tab
-      }).eq("id", brand.id);
-      if (error) throw error;
+      
+      // Update brand
+      const { error: brandError } = await supabase
+        .from("brands")
+        .update({
+          name: values.name,
+          slug: values.slug,
+          description: values.description || null,
+          logo_url: logoUrl,
+          brand_type: values.brand_type,
+          home_url: values.home_url || null,
+          account_url: values.account_url || null,
+          assets_url: values.assets_url || null,
+          show_account_tab: values.show_account_tab
+        })
+        .eq("id", brand.id);
+      
+      if (brandError) throw brandError;
+
+      // Update or create sales deal
+      if (dealId) {
+        const { error: dealError } = await supabase
+          .from('sales_deals')
+          .update({
+            deal_value: values.deal_value ? parseFloat(values.deal_value) : null,
+            probability: values.probability ? parseInt(values.probability) : null,
+            close_date: values.close_date || null,
+            next_payment_date: values.next_payment_date || null,
+            payment_amount: values.payment_amount ? parseFloat(values.payment_amount) : null,
+            notes: values.notes || null,
+            won_date: values.won_date || null,
+            lost_reason: values.lost_reason || null,
+          })
+          .eq('id', dealId);
+
+        if (dealError) throw dealError;
+      }
+
       toast.success("Brand updated successfully!");
       setOpen(false);
       onSuccess?.();
@@ -299,6 +384,125 @@ export function EditBrandDialog({
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                   </FormItem>} />
+            </div>
+
+            <Separator className="my-6" />
+
+            {/* Sales Deal Information */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">Sales Deal Information</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="deal_value" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Deal Value ($)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        step="0.01"
+                        placeholder="0.00" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="probability" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Probability (%)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        max="100"
+                        placeholder="50" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="close_date" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expected Close Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="next_payment_date" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Next Payment Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              <FormField control={form.control} name="payment_amount" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Payment Amount ($)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      step="0.01"
+                      placeholder="0.00" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="notes" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Add notes about this deal..." 
+                      className="resize-none"
+                      rows={4}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="won_date" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Won Date (if applicable)</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="lost_reason" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lost Reason (if applicable)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Why was this deal lost?" 
+                        className="resize-none"
+                        rows={2}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
