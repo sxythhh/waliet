@@ -152,7 +152,7 @@ export function SalesPipelineView() {
       </div>
 
       <DragOverlay>
-        {activeDeal && <SalesDealCard deal={activeDeal} isDragging />}
+        {activeDeal ? <SalesDealCard deal={activeDeal} isDragging /> : null}
       </DragOverlay>
     </DndContext>
   );

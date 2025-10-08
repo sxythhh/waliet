@@ -50,6 +50,11 @@ export function EditSalesDealDialog({ deal, children, onUpdate }: EditSalesDealD
     notes: deal.notes || '',
     lost_reason: deal.lost_reason || '',
   });
+  
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,9 +90,9 @@ export function EditSalesDealDialog({ deal, children, onUpdate }: EditSalesDealD
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+      <div onClick={handleClick}>
         {children}
-      </DialogTrigger>
+      </div>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Deal - {deal.brands.name}</DialogTitle>
