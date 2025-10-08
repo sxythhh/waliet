@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SalesPipelineView } from "./SalesPipelineView";
 import { SalesAnalyticsView } from "./SalesAnalyticsView";
+import { AllBrandsView } from "./AllBrandsView";
 
 export function SalesTab() {
   const [activeView, setActiveView] = useState("pipeline");
@@ -16,6 +17,9 @@ export function SalesTab() {
           <TabsTrigger value="analytics" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
             Analytics
           </TabsTrigger>
+          <TabsTrigger value="all-brands" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
+            All Brands
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pipeline" className="mt-0">
@@ -24,6 +28,10 @@ export function SalesTab() {
 
         <TabsContent value="analytics" className="mt-0">
           <SalesAnalyticsView />
+        </TabsContent>
+
+        <TabsContent value="all-brands" className="mt-0">
+          <AllBrandsView />
         </TabsContent>
       </Tabs>
     </div>
