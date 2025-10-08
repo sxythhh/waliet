@@ -177,46 +177,6 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
                 )}
               </div>
 
-              {(deal.brands?.home_url || deal.brands?.account_url || deal.brands?.assets_url) && (
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Links</Label>
-                  <div className="space-y-1">
-                    {deal.brands?.home_url && (
-                      <a 
-                        href={deal.brands.home_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Home URL
-                      </a>
-                    )}
-                    {deal.brands?.account_url && (
-                      <a 
-                        href={deal.brands.account_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Account URL
-                      </a>
-                    )}
-                    {deal.brands?.assets_url && (
-                      <a 
-                        href={deal.brands.assets_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Assets URL
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Brand Actions */}
               <div className="flex flex-wrap gap-2 pt-2">
