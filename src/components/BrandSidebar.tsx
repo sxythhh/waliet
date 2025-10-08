@@ -41,8 +41,8 @@ export function BrandSidebar() {
 
   // Wait for brands to load before rendering
   if (loading || brands.length === 0) {
-    return <Sidebar className="border-r border-[#272727] bg-[#202020]">
-        <SidebarHeader className="border-b border-transparent p-6 bg-[#202020]">
+    return <Sidebar className="border-r border-sidebar-border bg-sidebar-background">
+        <SidebarHeader className="border-b border-transparent p-6 bg-sidebar-background">
           <div className="h-8 w-full bg-white/5 rounded animate-pulse" />
         </SidebarHeader>
       </Sidebar>;
@@ -107,7 +107,7 @@ export function BrandSidebar() {
   const dynamicMenuItems = baseMenuItems;
 
   const brandSelector = (
-    <div className="p-4 bg-[#202020] px-[5px] py-[5px]">
+    <div className="p-4 bg-sidebar-background px-[5px] py-[5px]">
       {isAdmin ? (
         <Select value={currentSlug} onValueChange={value => navigate(`/brand/${value}`)}>
           <SelectTrigger className="w-full bg-white/5 border-none text-white hover:bg-white/10 font-chakra font-semibold tracking-tight focus:ring-0 focus:ring-offset-0">
@@ -118,7 +118,7 @@ export function BrandSidebar() {
               </div>
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="bg-[#2a2a2a] border-white/10">
+          <SelectContent className="bg-popover border-white/10">
             {brands.filter(brand => brand.is_active).map(brand => <SelectItem key={brand.slug} value={brand.slug} className="text-white hover:bg-white/10 focus:bg-white/10 font-chakra font-semibold tracking-tight">
                 <div className="flex items-center gap-2">
                   {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 rounded object-cover" /> : <div className="h-5 w-5 rounded bg-white/10" />}
@@ -151,7 +151,7 @@ export function BrandSidebar() {
             }}
             className={({
               isActive
-            }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${isActive ? 'bg-[#5865F2] hover:bg-[#5865F2]' : 'hover:bg-[#2C2C2C]'}`}>
+            }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${isActive ? 'bg-primary hover:bg-primary' : 'hover:bg-sidebar-accent'}`}>
             {({
               isActive
             }) => <>
@@ -166,7 +166,7 @@ export function BrandSidebar() {
   );
 
   const bookCallButton = currentBrand?.brand_type === "lead" ? (
-    <div className="p-4 bg-[#202020]">
+    <div className="p-4 bg-sidebar-background">
       <a href="https://partners.virality.cc/book" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all active:scale-95" style={{
         backgroundColor: '#5865F2',
         boxShadow: '0 4px 0 0 #3b45a0',
@@ -182,7 +182,7 @@ export function BrandSidebar() {
   if (isMobile) {
     return (
       <Sheet open={sidebar.openMobile} onOpenChange={sidebar.setOpenMobile}>
-        <SheetContent side="left" className="w-80 p-0 bg-[#202020] border-[#272727]">
+        <SheetContent side="left" className="w-80 p-0 bg-sidebar-background border-sidebar-border">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
@@ -201,10 +201,10 @@ export function BrandSidebar() {
   }
 
   // Desktop Sidebar
-  return <Sidebar className="border-r border-[#272727] bg-[#202020] font-instrument">
+  return <Sidebar className="border-r border-sidebar-border bg-sidebar-background font-instrument">
       {brandSelector}
       
-      <SidebarContent className="bg-[#202020]">
+      <SidebarContent className="bg-sidebar-background">
         <SidebarGroup>
           <SidebarGroupContent>
             {menuContent}
