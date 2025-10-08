@@ -266,7 +266,7 @@ export function UserDetailsDialog({
                         {method.method === 'paypal' && method.details?.email && <div className="space-y-2">
                             <div className="space-y-1">
                               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email Address</p>
-                              <p className="text-xs break-all bg-muted/30 p-2.5 rounded border border-border/50 flex items-center gap-2">
+                              <p className="">
                                 <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
                                 {method.details.email}
                               </p>
