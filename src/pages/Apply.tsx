@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Upload, X, ArrowLeft, ArrowRight } from "lucide-react";
@@ -358,27 +359,40 @@ export default function Apply() {
                 )}
 
                 {currentStep === 1 && (
-                  <div className="space-y-5">
+                  <div className="space-y-6">
                     <FormField
                       control={form.control}
                       name="current_mrr"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>What is your company's current MRR? *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select MRR range" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Pre-Revenue">Pre-Revenue</SelectItem>
-                              <SelectItem value="$0 - $10,000 / month">$0 - $10,000 / month</SelectItem>
-                              <SelectItem value="$10,000 - $50,000 / month">$10,000 - $50,000 / month</SelectItem>
-                              <SelectItem value="$50,000 - $100,000 / month">$50,000 - $100,000 / month</SelectItem>
-                              <SelectItem value="$100,000+ / month">$100,000+ / month</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              className="grid gap-3"
+                            >
+                              {[
+                                "Pre-Revenue",
+                                "$0 - $10,000 / month",
+                                "$10,000 - $50,000 / month",
+                                "$50,000 - $100,000 / month",
+                                "$100,000+ / month"
+                              ].map((option) => (
+                                <label
+                                  key={option}
+                                  className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
+                                    field.value === option
+                                      ? "bg-primary/10 text-primary"
+                                      : "bg-muted/30 hover:bg-muted/50"
+                                  }`}
+                                >
+                                  <RadioGroupItem value={option} className="shrink-0" />
+                                  <span className="text-sm font-medium">{option}</span>
+                                </label>
+                              ))}
+                            </RadioGroup>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -390,22 +404,33 @@ export default function Apply() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Monthly budget for content campaign *</FormLabel>
-                          <FormDescription>
-                            Include retainer + media spend
-                          </FormDescription>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select budget range" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="$1,000 - $5,000">$1,000 - $5,000</SelectItem>
-                              <SelectItem value="$5,000 - $10,000">$5,000 - $10,000</SelectItem>
-                              <SelectItem value="$10,000 - $30,000">$10,000 - $30,000</SelectItem>
-                              <SelectItem value="$30,000+">$30,000+</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormDescription>Include retainer + media spend</FormDescription>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              className="grid gap-3"
+                            >
+                              {[
+                                "$1,000 - $5,000",
+                                "$5,000 - $10,000",
+                                "$10,000 - $30,000",
+                                "$30,000+"
+                              ].map((option) => (
+                                <label
+                                  key={option}
+                                  className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
+                                    field.value === option
+                                      ? "bg-primary/10 text-primary"
+                                      : "bg-muted/30 hover:bg-muted/50"
+                                  }`}
+                                >
+                                  <RadioGroupItem value={option} className="shrink-0" />
+                                  <span className="text-sm font-medium">{option}</span>
+                                </label>
+                              ))}
+                            </RadioGroup>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
