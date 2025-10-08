@@ -103,8 +103,11 @@ export default function AdminUsers() {
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [userPaymentMethods, setUserPaymentMethods] = useState<any[]>([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(false);
+  const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
   const [csvImportDialogOpen, setCsvImportDialogOpen] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importResults, setImportResults] = useState<any>(null);
@@ -297,11 +300,36 @@ export default function AdminUsers() {
     }
     setLoadingTransactions(false);
   };
+  const fetchUserPaymentMethods = async (userId: string) => {
+    setLoadingPaymentMethods(true);
+    const {
+      data,
+      error
+    } = await supabase.from("wallets").select("payout_method").eq("user_id", userId).maybeSingle();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch payment methods"
+      });
+      setUserPaymentMethods([]);
+    } else if (data && data.payout_method) {
+      // For now, we'll show the method type. Details are stored encrypted.
+      setUserPaymentMethods([{
+        method: data.payout_method,
+        details: {} // Encrypted details not shown for security
+      }]);
+    } else {
+      setUserPaymentMethods([]);
+    }
+    setLoadingPaymentMethods(false);
+  };
   const openUserDetailsDialog = (user: User) => {
     setSelectedUser(user);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(user.id);
     fetchUserTransactions(user.id);
+    fetchUserPaymentMethods(user.id);
   };
   const openAddToCampaignDialog = (user: User) => {
     setSelectedUser(user);
@@ -1261,7 +1289,7 @@ export default function AdminUsers() {
       </Dialog>
 
       {/* User Details Dialog */}
-      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} transactions={userTransactions} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} onEditScore={openEditScoreFromSocialAccount} />
+      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} transactions={userTransactions} paymentMethods={userPaymentMethods} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} onEditScore={openEditScoreFromSocialAccount} />
         </TabsContent>
 
         {/* Demographics Tab */}

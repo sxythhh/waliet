@@ -47,18 +47,27 @@ interface Transaction {
   description?: string;
   metadata?: any;
 }
+interface PaymentMethod {
+  method: string;
+  details: any;
+}
+
 interface UserDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: UserProfile | null;
   socialAccounts: SocialAccount[];
   transactions: Transaction[];
+  paymentMethods: PaymentMethod[];
   loadingSocialAccounts: boolean;
   loadingTransactions: boolean;
+  loadingPaymentMethods: boolean;
   socialAccountsOpen: boolean;
   onSocialAccountsOpenChange: (open: boolean) => void;
   transactionsOpen: boolean;
   onTransactionsOpenChange: (open: boolean) => void;
+  paymentMethodsOpen: boolean;
+  onPaymentMethodsOpenChange: (open: boolean) => void;
   onEditScore?: (account: SocialAccount) => void;
 }
 const getPlatformIcon = (platform: string) => {
@@ -79,12 +88,16 @@ export function UserDetailsDialog({
   user,
   socialAccounts,
   transactions,
+  paymentMethods,
   loadingSocialAccounts,
   loadingTransactions,
+  loadingPaymentMethods,
   socialAccountsOpen,
   onSocialAccountsOpenChange,
   transactionsOpen,
   onTransactionsOpenChange,
+  paymentMethodsOpen,
+  onPaymentMethodsOpenChange,
   onEditScore
 }: UserDetailsDialogProps) {
   if (!user) return null;
@@ -197,6 +210,60 @@ export function UserDetailsDialog({
                       </div>
                     </div>;
             })}
+              </div>}
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Payment Methods Section - Collapsible */}
+        <Collapsible open={paymentMethodsOpen} onOpenChange={onPaymentMethodsOpenChange} className="pt-3 border-t py-0">
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Payment Methods ({paymentMethods.length})
+              </h3>
+              {paymentMethodsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </div>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent>
+            {loadingPaymentMethods ? <div className="text-center py-8 text-muted-foreground">
+                Loading payment methods...
+              </div> : paymentMethods.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+                No payment methods configured
+              </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
+                {paymentMethods.map((method, index) => <div key={index} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium capitalize text-sm">{method.method}</span>
+                          <Badge variant="secondary" className="text-[10px]">Default</Badge>
+                        </div>
+                        
+                        {/* Display method details based on type */}
+                        {method.method === 'crypto' && method.details?.address && <div className="space-y-1">
+                            <p className="text-[10px] text-muted-foreground">Wallet Address</p>
+                            <p className="text-xs font-mono break-all bg-muted/20 p-2 rounded">
+                              {method.details.address}
+                            </p>
+                            {method.details.network && <p className="text-[10px] text-muted-foreground mt-1">
+                                Network: <span className="font-medium capitalize">{method.details.network}</span>
+                              </p>}
+                          </div>}
+                        
+                        {method.method === 'paypal' && method.details?.email && <div className="space-y-1">
+                            <p className="text-[10px] text-muted-foreground">PayPal Email</p>
+                            <p className="text-xs break-all bg-muted/20 p-2 rounded">
+                              {method.details.email}
+                            </p>
+                          </div>}
+                        
+                        {method.method === 'wise' && method.details?.email && <div className="space-y-1">
+                            <p className="text-[10px] text-muted-foreground">Wise Email</p>
+                            <p className="text-xs break-all bg-muted/20 p-2 rounded">
+                              {method.details.email}
+                            </p>
+                          </div>}
+                      </div>
+                    </div>)}
               </div>}
           </CollapsibleContent>
         </Collapsible>

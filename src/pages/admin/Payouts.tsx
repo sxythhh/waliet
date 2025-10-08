@@ -71,8 +71,11 @@ export default function AdminPayouts() {
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [userPaymentMethods, setUserPaymentMethods] = useState<any[]>([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(false);
+  const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState<PayoutRequest['profiles'] | null>(null);
   const {
     toast
@@ -163,11 +166,35 @@ export default function AdminPayouts() {
     }
     setLoadingTransactions(false);
   };
+  const fetchUserPaymentMethods = async (userId: string) => {
+    setLoadingPaymentMethods(true);
+    const {
+      data,
+      error
+    } = await supabase.from("wallets").select("payout_method").eq("user_id", userId).maybeSingle();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch payment methods"
+      });
+      setUserPaymentMethods([]);
+    } else if (data && data.payout_method) {
+      setUserPaymentMethods([{
+        method: data.payout_method,
+        details: {}
+      }]);
+    } else {
+      setUserPaymentMethods([]);
+    }
+    setLoadingPaymentMethods(false);
+  };
   const openUserDetailsDialog = (profile: PayoutRequest['profiles']) => {
     setSelectedUserProfile(profile);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(profile.id);
     fetchUserTransactions(profile.id);
+    fetchUserPaymentMethods(profile.id);
   };
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -809,6 +836,6 @@ export default function AdminPayouts() {
       </Dialog>
 
       {/* User Details Dialog */}
-      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUserProfile} socialAccounts={userSocialAccounts} transactions={userTransactions} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} />
+      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUserProfile} socialAccounts={userSocialAccounts} transactions={userTransactions} paymentMethods={userPaymentMethods} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} />
     </div>;
 }
