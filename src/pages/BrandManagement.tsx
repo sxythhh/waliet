@@ -22,6 +22,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
 import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
+import { VideosTab } from "@/components/brand/VideosTab";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -568,6 +569,9 @@ export default function BrandManagement() {
               Applications
               {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
             </TabsTrigger>
+            <TabsTrigger value="videos" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+              Videos
+            </TabsTrigger>
             <TabsTrigger value="settings" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
               Settings
             </TabsTrigger>
@@ -1079,6 +1083,11 @@ export default function BrandManagement() {
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Videos Tab */}
+          <TabsContent value="videos">
+            <VideosTab />
           </TabsContent>
         </Tabs>
 
