@@ -188,15 +188,29 @@ export default function Apply() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Apply for Virality Campaign</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground bg-[#111111]">
             Join our content campaign and scale your brand
           </p>
         </div>
+
         {/* Progress Bar */}
         <div className="mb-6">
+          <div className="flex justify-between mb-3">
+            {STEPS.map((step, index) => {
+            const isActive = index === currentStep;
+            const isCompleted = index < currentStep;
+            return <div key={index} className="flex flex-col items-center flex-1">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 text-xs font-medium transition-all ${isCompleted ? "bg-primary text-primary-foreground" : isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    {index + 1}
+                  </div>
+                  <span className={`text-xs text-center ${isActive ? "font-medium text-foreground" : "text-muted-foreground"} hidden sm:block`}>
+                    {step}
+                  </span>
+                </div>;
+          })}
+          </div>
           <Progress value={progress} className="h-1.5" />
         </div>
-
 
         <Card className="border-none shadow-sm">
           <CardHeader className="pb-6">
