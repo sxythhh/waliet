@@ -245,7 +245,7 @@ export function VideosTab() {
                       axisLine={{ stroke: 'hsl(var(--border))', opacity: 0.2 }}
                     />
                     <ChartTooltip 
-                      content={<ChartTooltipContent />}
+                      content={<ChartTooltipContent className="border-0 bg-[#0C0C0C]/95 backdrop-blur-sm" />}
                       cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, opacity: 0.2 }}
                     />
                     <Legend 
@@ -259,8 +259,8 @@ export function VideosTab() {
                       strokeWidth={3}
                       fill="url(#cumulativeGradient)"
                       name="Cumulative Views"
-                      dot={{ fill: 'hsl(var(--primary))', r: 5, strokeWidth: 2, stroke: '#0C0C0C' }}
-                      activeDot={{ r: 7, strokeWidth: 2, stroke: '#0C0C0C' }}
+                      dot={false}
+                      activeDot={false}
                     />
                     <Area 
                       type="monotone" 
@@ -269,8 +269,8 @@ export function VideosTab() {
                       strokeWidth={2}
                       fill="url(#viewsGradient)"
                       name="Video Views"
-                      dot={{ fill: 'hsl(var(--chart-2))', r: 4, strokeWidth: 2, stroke: '#0C0C0C' }}
-                      activeDot={{ r: 6, strokeWidth: 2, stroke: '#0C0C0C' }}
+                      dot={false}
+                      activeDot={false}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
