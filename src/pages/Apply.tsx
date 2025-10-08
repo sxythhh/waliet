@@ -186,12 +186,7 @@ export default function Apply() {
   }
   return <div className="min-h-screen bg-background py-8 sm:py-16 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Apply for Virality Campaign</h1>
-          <p className="text-muted-foreground bg-[#111111]">
-            Join our content campaign and scale your brand
-          </p>
-        </div>
+        
 
         {/* Progress Bar */}
         <div className="mb-8">
