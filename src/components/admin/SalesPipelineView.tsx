@@ -13,7 +13,16 @@ type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'l
 interface Brand {
   id: string;
   name: string;
+  slug: string;
+  description: string | null;
   logo_url: string | null;
+  brand_type: string | null;
+  home_url: string | null;
+  account_url: string | null;
+  assets_url: string | null;
+  show_account_tab: boolean;
+  is_active: boolean;
+  created_at: string;
 }
 
 interface SalesDeal {
@@ -68,7 +77,16 @@ export function SalesPipelineView() {
           brands (
             id,
             name,
-            logo_url
+            slug,
+            description,
+            logo_url,
+            brand_type,
+            home_url,
+            account_url,
+            assets_url,
+            show_account_tab,
+            is_active,
+            created_at
           )
         `)
         .order('created_at', { ascending: false });
