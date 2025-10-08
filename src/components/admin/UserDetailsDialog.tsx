@@ -1,8 +1,10 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail } from "lucide-react";
+import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -99,6 +101,16 @@ export function UserDetailsDialog({
   onPaymentMethodsOpenChange,
   onEditScore
 }: UserDetailsDialogProps) {
+  const { toast } = useToast();
+  
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: `${label} copied to clipboard`,
+    });
+  };
+  
   if (!user) return null;
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl bg-[#0b0b0b]">
@@ -246,9 +258,19 @@ export function UserDetailsDialog({
                         {method.method === 'crypto' && <div className="space-y-2">
                             {method.details?.address && <div className="space-y-1">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Wallet Address</p>
-                                <p className="text-xs font-mono break-all ">
-                                  {method.details.address}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-xs font-mono break-all flex-1">
+                                    {method.details.address}
+                                  </p>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 shrink-0"
+                                    onClick={() => copyToClipboard(method.details.address, "Wallet address")}
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>}
                             
                             {method.details?.network && <div className="grid grid-cols-2 gap-2">
@@ -266,20 +288,40 @@ export function UserDetailsDialog({
                         {method.method === 'paypal' && method.details?.email && <div className="space-y-2">
                             <div className="space-y-1">
                               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email Address</p>
-                              <p className="">
-                                <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
-                                {method.details.email}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs flex items-center gap-2 flex-1">
+                                  <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  {method.details.email}
+                                </p>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 shrink-0"
+                                  onClick={() => copyToClipboard(method.details.email, "Email")}
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
                           </div>}
                         
                         {method.method === 'wise' && <div className="space-y-2">
                             {method.details?.email && <div className="space-y-1">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email Address</p>
-                                <p className="text-xs break-all bg-muted/30 p-2.5 rounded border border-border/50 flex items-center gap-2">
+                                <div className="flex items-center gap-2 bg-muted/30 p-2.5 rounded border border-border/50">
                                   <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
-                                  {method.details.email}
-                                </p>
+                                  <p className="text-xs break-all flex-1">
+                                    {method.details.email}
+                                  </p>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 shrink-0"
+                                    onClick={() => copyToClipboard(method.details.email, "Email")}
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>}
                             
                             {(method.details?.account_number || method.details?.routing_number) && <div className="grid grid-cols-2 gap-2">
