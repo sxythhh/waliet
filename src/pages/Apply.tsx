@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -38,6 +38,8 @@ const STEPS = [
   "Contact Info",
 ];
 
+const STORAGE_KEY = 'brand-application-progress';
+
 export default function Apply() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,6 +64,41 @@ export default function Apply() {
       phone: "",
     },
   });
+
+  // Load saved progress on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.formData) {
+          form.reset(parsed.formData);
+        }
+        if (parsed.currentStep !== undefined) {
+          setCurrentStep(parsed.currentStep);
+        }
+        if (parsed.logoPreview) {
+          setLogoPreview(parsed.logoPreview);
+        }
+        toast.success("Progress restored");
+      } catch (error) {
+        console.error("Error loading saved progress:", error);
+      }
+    }
+  }, []);
+
+  // Auto-save form data when it changes
+  useEffect(() => {
+    const subscription = form.watch((formData) => {
+      const dataToSave = {
+        formData,
+        currentStep,
+        logoPreview,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    });
+    return () => subscription.unsubscribe();
+  }, [form, currentStep, logoPreview]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -177,6 +214,9 @@ export default function Apply() {
 
       if (error) throw error;
 
+      // Clear saved progress after successful submission
+      localStorage.removeItem(STORAGE_KEY);
+      
       setIsSubmitted(true);
       toast.success("Application submitted successfully!");
       form.reset();
