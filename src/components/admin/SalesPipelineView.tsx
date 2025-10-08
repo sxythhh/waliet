@@ -4,6 +4,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, u
 import { SalesPipelineColumn } from "./SalesPipelineColumn";
 import { SalesDealCard } from "./SalesDealCard";
 import { AddBrandToPipelineDialog } from "./AddBrandToPipelineDialog";
+import { SalesDealSheet } from "./SalesDealSheet";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -43,6 +44,8 @@ export function SalesPipelineView() {
   const [deals, setDeals] = useState<SalesDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeDeal, setActiveDeal] = useState<SalesDeal | null>(null);
+  const [sheetDeal, setSheetDeal] = useState<SalesDeal | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -83,6 +86,11 @@ export function SalesPipelineView() {
   const handleDragStart = (event: DragStartEvent) => {
     const deal = deals.find(d => d.id === event.active.id);
     if (deal) setActiveDeal(deal);
+  };
+
+  const handleOpenSheet = (deal: SalesDeal) => {
+    setSheetDeal(deal);
+    setSheetOpen(true);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -147,6 +155,7 @@ export function SalesPipelineView() {
             stage={stage}
             deals={deals.filter(d => d.stage === stage.value)}
             onRefresh={fetchDeals}
+            onOpenSheet={handleOpenSheet}
           />
         ))}
       </div>
@@ -154,6 +163,13 @@ export function SalesPipelineView() {
       <DragOverlay>
         {activeDeal ? <SalesDealCard deal={activeDeal} isDragging /> : null}
       </DragOverlay>
+
+      <SalesDealSheet
+        deal={sheetDeal}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onUpdate={fetchDeals}
+      />
     </DndContext>
   );
 }

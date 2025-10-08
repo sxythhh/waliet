@@ -2,10 +2,8 @@ import { useDraggable } from "@dnd-kit/core";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, DollarSign, Pencil } from "lucide-react";
-import { EditSalesDealDialog } from "./EditSalesDealDialog";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { CalendarDays, DollarSign } from "lucide-react";
+import { useRef, useState } from "react";
 type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
 interface Brand {
   id: string;
@@ -30,13 +28,16 @@ interface SalesDealCardProps {
   deal: SalesDeal;
   isDragging?: boolean;
   onUpdate?: () => void;
+  onOpenSheet?: (deal: SalesDeal) => void;
 }
 export function SalesDealCard({
   deal,
   isDragging = false,
-  onUpdate
+  onUpdate,
+  onOpenSheet
 }: SalesDealCardProps) {
-  const [editOpen, setEditOpen] = useState(false);
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
+  const [isDraggingCard, setIsDraggingCard] = useState(false);
   
   const {
     attributes,
@@ -46,6 +47,29 @@ export function SalesDealCard({
   } = useDraggable({
     id: deal.id
   });
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    setIsDraggingCard(false);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (dragStartPos.current) {
+      const deltaX = Math.abs(e.clientX - dragStartPos.current.x);
+      const deltaY = Math.abs(e.clientY - dragStartPos.current.y);
+      if (deltaX > 5 || deltaY > 5) {
+        setIsDraggingCard(true);
+      }
+    }
+  };
+
+  const handleClick = () => {
+    if (!isDraggingCard && onOpenSheet) {
+      onOpenSheet(deal);
+    }
+    dragStartPos.current = null;
+    setIsDraggingCard(false);
+  };
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`
   } : undefined;
@@ -58,17 +82,6 @@ export function SalesDealCard({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{deal.brands.name}</p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 shrink-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditOpen(true);
-          }}
-        >
-          <Pencil className="h-3 w-3" />
-        </Button>
       </div>
 
       {deal.deal_value && <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -95,17 +108,17 @@ export function SalesDealCard({
   }
   
   return (
-    <>
-      <Card 
-        ref={setNodeRef} 
-        style={style} 
-        {...attributes}
-        {...listeners}
-        className="p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow bg-[#181818] py-[5px] px-[10px]"
-      >
-        {cardContent}
-      </Card>
-      <EditSalesDealDialog deal={deal} open={editOpen} onOpenChange={setEditOpen} onUpdate={onUpdate} />
-    </>
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes}
+      {...listeners}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onClick={handleClick}
+      className="p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow bg-[#181818] py-[5px] px-[10px]"
+    >
+      {cardContent}
+    </Card>
   );
 }

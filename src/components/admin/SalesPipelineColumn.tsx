@@ -33,9 +33,10 @@ interface SalesPipelineColumnProps {
   };
   deals: SalesDeal[];
   onRefresh: () => void;
+  onOpenSheet: (deal: SalesDeal) => void;
 }
 
-export function SalesPipelineColumn({ stage, deals, onRefresh }: SalesPipelineColumnProps) {
+export function SalesPipelineColumn({ stage, deals, onRefresh, onOpenSheet }: SalesPipelineColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: stage.value,
   });
@@ -62,7 +63,12 @@ export function SalesPipelineColumn({ stage, deals, onRefresh }: SalesPipelineCo
       }`}>
         <div className="flex flex-col gap-2">
           {deals.map(deal => (
-            <SalesDealCard key={deal.id} deal={deal} onUpdate={onRefresh} />
+            <SalesDealCard 
+              key={deal.id} 
+              deal={deal} 
+              onUpdate={onRefresh}
+              onOpenSheet={onOpenSheet}
+            />
           ))}
         </div>
       </Card>
