@@ -306,18 +306,21 @@ export default function AdminUsers() {
       error
     } = await supabase.from("wallets").select("payout_method, payout_details").eq("user_id", userId).maybeSingle();
     if (error) {
+      console.error("Error fetching payment methods:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to fetch payment methods"
       });
       setUserPaymentMethods([]);
+    } else if (data && data.payout_details && Array.isArray(data.payout_details)) {
+      // payout_details is an array of payment methods
+      setUserPaymentMethods(data.payout_details);
     } else if (data && data.payout_method) {
-      // Parse payout details if available
-      const details = data.payout_details || {};
+      // Fallback for old format
       setUserPaymentMethods([{
         method: data.payout_method,
-        details: details
+        details: {}
       }]);
     } else {
       setUserPaymentMethods([]);
