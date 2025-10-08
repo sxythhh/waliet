@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, DollarSign } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
 interface Brand {
   id: string;
@@ -36,8 +36,7 @@ export function SalesDealCard({
   onUpdate,
   onOpenSheet
 }: SalesDealCardProps) {
-  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
-  const [isDraggingCard, setIsDraggingCard] = useState(false);
+  const mouseDownTime = useRef<number>(0);
   
   const {
     attributes,
@@ -48,27 +47,16 @@ export function SalesDealCard({
     id: deal.id
   });
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
-    setIsDraggingCard(false);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (dragStartPos.current) {
-      const deltaX = Math.abs(e.clientX - dragStartPos.current.x);
-      const deltaY = Math.abs(e.clientY - dragStartPos.current.y);
-      if (deltaX > 5 || deltaY > 5) {
-        setIsDraggingCard(true);
-      }
-    }
+  const handleMouseDown = () => {
+    mouseDownTime.current = Date.now();
   };
 
   const handleClick = () => {
-    if (!isDraggingCard && onOpenSheet) {
+    const timeDiff = Date.now() - mouseDownTime.current;
+    // Only open sheet if it was a quick click (< 200ms) and not a drag
+    if (timeDiff < 200 && !transform && onOpenSheet) {
       onOpenSheet(deal);
     }
-    dragStartPos.current = null;
-    setIsDraggingCard(false);
   };
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`
@@ -113,8 +101,7 @@ export function SalesDealCard({
       style={style} 
       {...attributes}
       {...listeners}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
+      onMouseDown={handleMouseDown}
       onClick={handleClick}
       className="p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow bg-[#181818] py-[5px] px-[10px]"
     >
