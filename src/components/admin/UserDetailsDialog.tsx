@@ -15,6 +15,8 @@ interface UserProfile {
     balance: number;
     total_earned: number;
     total_withdrawn: number;
+    payout_method?: string | null;
+    payout_details?: any;
   } | null;
 }
 interface SocialAccount {
@@ -126,6 +128,30 @@ export function UserDetailsDialog({
             </div>
           </div>
         </div>
+
+        {/* Payment Method Section */}
+        {user.wallets?.payout_method && (
+          <div className="pt-3 border-t">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
+              Payment Method
+            </h3>
+            <div className="bg-card/50 px-4 py-3 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium capitalize">{user.wallets.payout_method}</p>
+                  {user.wallets.payout_details && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {user.wallets.payout_details.email || 
+                       user.wallets.payout_details.address || 
+                       (user.wallets.payout_details.account_number && `•••• ${user.wallets.payout_details.account_number.slice(-4)}`) || 
+                       'Details on file'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Social Accounts Section - Collapsible */}
         <Collapsible open={socialAccountsOpen} onOpenChange={onSocialAccountsOpenChange} className="pt-3 border-t py-0">
