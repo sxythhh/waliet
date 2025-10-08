@@ -334,7 +334,7 @@ export default function PublicProfile() {
           onClick={() => navigate("/")}
           className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] py-6 px-6 cursor-pointer hover:opacity-90 transition-opacity z-50 rounded-t-[32px]"
         >
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="max-w-4xl mx-auto flex items-center justify-center gap-3">
             <span className="text-white font-instrument font-extrabold text-2xl tracking-tighter">
               Go Viral, Get Paid
             </span>
