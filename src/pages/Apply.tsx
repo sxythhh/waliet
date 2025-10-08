@@ -263,58 +263,77 @@ export default function Apply() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 {currentStep === 0 && (
                   <div className="space-y-5">
-                    {/* Logo Upload */}
-                    <div className="space-y-3">
-                      <FormLabel>Brand Logo (Optional)</FormLabel>
-                      <div className="flex flex-col items-center gap-3">
-                        {logoPreview ? (
-                          <div className="relative">
-                            <img
-                              src={logoPreview}
-                              alt="Logo preview"
-                              className="w-24 h-24 object-contain rounded-lg border border-border"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-background border"
-                              onClick={removeLogo}
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <label className="w-full cursor-pointer">
-                            <div className="border border-dashed border-border rounded-lg py-6 px-4 text-center hover:border-primary/50 transition-colors">
-                              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                              <p className="text-sm font-medium mb-0.5">Click to upload logo</p>
-                              <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                    {/* Logo and Business Info Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-[140px,1fr] gap-6">
+                      {/* Logo Upload */}
+                      <div className="space-y-2">
+                        <FormLabel>Logo</FormLabel>
+                        <div className="flex flex-col items-center">
+                          {logoPreview ? (
+                            <div className="relative">
+                              <img
+                                src={logoPreview}
+                                alt="Logo preview"
+                                className="w-24 h-24 object-contain rounded-lg border border-border"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-background border"
+                                onClick={removeLogo}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
                             </div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={handleLogoChange}
-                            />
-                          </label>
-                        )}
+                          ) : (
+                            <label className="w-24 h-24 cursor-pointer">
+                              <div className="w-full h-full border border-dashed border-border rounded-lg flex flex-col items-center justify-center hover:border-primary/50 transition-colors">
+                                <Upload className="w-6 h-6 text-muted-foreground mb-1" />
+                                <p className="text-[10px] text-muted-foreground">Upload</p>
+                              </div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleLogoChange}
+                              />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Business Name and Website */}
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="business_name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Business Name *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Acme Inc." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="website"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Website</FormLabel>
+                              <FormControl>
+                                <Input type="url" placeholder="https://example.com" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
-
-                    <FormField
-                      control={form.control}
-                      name="business_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Business Name *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Acme Inc." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
                     <FormField
                       control={form.control}
@@ -326,25 +345,10 @@ export default function Apply() {
                             Tell us what you sell or offer in 1-2 sentences
                           </FormDescription>
                           <FormControl>
-                            <Textarea
-                              placeholder="We help businesses..."
-                              className="min-h-[80px] resize-none"
+                            <Input
+                              placeholder="We help businesses scale through content marketing..."
                               {...field}
                             />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="website"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Website</FormLabel>
-                          <FormControl>
-                            <Input type="url" placeholder="https://example.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
