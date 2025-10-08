@@ -28,6 +28,7 @@ import Training from "./pages/Training";
 import CourseDetail from "./pages/CourseDetail";
 import AdminOverview from "./pages/admin/Overview";
 import AdminBrands from "./pages/admin/Brands";
+import AdminSales from "./pages/admin/Sales";
 import AdminCampaigns from "./pages/admin/Campaigns";
 import AdminUsers from "./pages/admin/Users";
 import AdminPayouts from "./pages/admin/Payouts";
@@ -131,6 +132,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
           <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
           <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
+          <Route path="/admin/sales" element={<AdminLayout><AdminSales /></AdminLayout>} />
           <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
           <Route path="/admin/campaigns" element={<AdminLayout><AdminCampaigns /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />

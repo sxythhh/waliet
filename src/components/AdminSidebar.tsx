@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, ChevronLeft, ChevronRight, PieChart } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,10 @@ const menuItems = [{
   title: "Overview",
   icon: LayoutDashboard,
   path: "/admin"
+}, {
+  title: "Sales",
+  icon: PieChart,
+  path: "/admin/sales"
 }, {
   title: "Brands",
   icon: Package,
