@@ -2,7 +2,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SalesDealCard } from "./SalesDealCard";
 import { Card } from "@/components/ui/card";
 
-type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
+type SalesStage = 'lead' | 'qualified' | 'negotiation' | 'won' | 'lost';
 
 interface Brand {
   id: string;

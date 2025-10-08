@@ -7,7 +7,7 @@ import { SalesDealSheet } from "./SalesDealSheet";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
+type SalesStage = 'lead' | 'qualified' | 'negotiation' | 'won' | 'lost';
 
 interface Brand {
   id: string;
@@ -41,8 +41,7 @@ interface SalesDeal {
 
 const STAGES: { value: SalesStage; label: string; color: string }[] = [
   { value: 'lead', label: 'Lead', color: 'bg-slate-500' },
-  { value: 'qualified', label: 'Qualified', color: 'bg-blue-500' },
-  { value: 'proposal', label: 'Proposal', color: 'bg-purple-500' },
+  { value: 'qualified', label: 'Booked Call', color: 'bg-blue-500' },
   { value: 'negotiation', label: 'Negotiation', color: 'bg-orange-500' },
   { value: 'won', label: 'Won', color: 'bg-green-500' },
   { value: 'lost', label: 'Lost', color: 'bg-red-500' },

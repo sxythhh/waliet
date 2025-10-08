@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SalesDealSheet } from "@/components/admin/SalesDealSheet";
 import { toast } from "sonner";
 
-type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
+type SalesStage = 'lead' | 'qualified' | 'negotiation' | 'won' | 'lost';
 
 
 interface Brand {
@@ -81,10 +81,10 @@ export function AllBrandsView() {
       if (!dealData) {
         const { data: newDeal, error: createError } = await supabase
           .from('sales_deals')
-          .insert({
+          .insert([{
             brand_id: brand.id,
             stage: 'lead' as SalesStage,
-          })
+          }])
           .select()
           .single();
 
