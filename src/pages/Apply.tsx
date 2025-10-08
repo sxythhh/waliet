@@ -194,22 +194,8 @@ export default function Apply() {
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex justify-between mb-3">
-            {STEPS.map((step, index) => {
-            const isActive = index === currentStep;
-            const isCompleted = index < currentStep;
-            return <div key={index} className="flex flex-col items-center flex-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 text-xs font-medium transition-all ${isCompleted ? "bg-primary text-primary-foreground" : isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                    {index + 1}
-                  </div>
-                  <span className={`text-xs text-center ${isActive ? "font-medium text-foreground" : "text-muted-foreground"} hidden sm:block`}>
-                    {step}
-                  </span>
-                </div>;
-          })}
-          </div>
-          <Progress value={progress} className="h-1.5" />
+        <div className="mb-8">
+          <Progress value={progress} className="h-2" />
         </div>
 
         <Card className="border-none shadow-sm">
@@ -233,7 +219,7 @@ export default function Apply() {
                                 <X className="w-3 h-3" />
                               </Button>
                             </div> : <label className="w-32 h-32 cursor-pointer">
-                              <div className="w-full h-full border border-dashed border-border rounded-lg flex flex-col items-center justify-center hover:border-primary/50 transition-colors">
+                              <div className="w-full h-full border border-dashed border-border rounded-lg flex flex-col items-center justify-center p-6 hover:border-2 hover:border-primary/50 transition-all">
                                 <Upload className="w-7 h-7 text-muted-foreground mb-1.5" />
                                 <p className="text-xs text-muted-foreground">Upload</p>
                               </div>
