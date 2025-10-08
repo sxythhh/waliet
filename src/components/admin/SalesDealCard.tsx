@@ -2,8 +2,10 @@ import { useDraggable } from "@dnd-kit/core";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, DollarSign } from "lucide-react";
+import { CalendarDays, DollarSign, Pencil } from "lucide-react";
 import { EditSalesDealDialog } from "./EditSalesDealDialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
 interface Brand {
   id: string;
@@ -34,14 +36,15 @@ export function SalesDealCard({
   isDragging = false,
   onUpdate
 }: SalesDealCardProps) {
+  const [editOpen, setEditOpen] = useState(false);
+  
   const {
     attributes,
     listeners,
     setNodeRef,
     transform
   } = useDraggable({
-    id: deal.id,
-    disabled: isDragging
+    id: deal.id
   });
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`
@@ -55,6 +58,17 @@ export function SalesDealCard({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{deal.brands.name}</p>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditOpen(true);
+          }}
+        >
+          <Pencil className="h-3 w-3" />
+        </Button>
       </div>
 
       {deal.deal_value && <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -79,9 +93,19 @@ export function SalesDealCard({
         {cardContent}
       </Card>;
   }
-  return <EditSalesDealDialog deal={deal} onUpdate={onUpdate}>
-      <Card ref={setNodeRef} style={style} className="p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow bg-[#181818] py-[5px] px-[10px]">
+  
+  return (
+    <>
+      <Card 
+        ref={setNodeRef} 
+        style={style} 
+        {...attributes}
+        {...listeners}
+        className="p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow bg-[#181818] py-[5px] px-[10px]"
+      >
         {cardContent}
       </Card>
-    </EditSalesDealDialog>;
+      <EditSalesDealDialog deal={deal} open={editOpen} onOpenChange={setEditOpen} onUpdate={onUpdate} />
+    </>
+  );
 }

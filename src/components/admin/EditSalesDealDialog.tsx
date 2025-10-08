@@ -33,12 +33,20 @@ interface SalesDeal {
 
 interface EditSalesDealDialogProps {
   deal: SalesDeal;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   onUpdate?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function EditSalesDealDialog({ deal, children, onUpdate }: EditSalesDealDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditSalesDealDialog({ 
+  deal, 
+  children, 
+  onUpdate,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange
+}: EditSalesDealDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     deal_value: deal.deal_value?.toString() || '',
@@ -51,10 +59,8 @@ export function EditSalesDealDialog({ deal, children, onUpdate }: EditSalesDealD
     lost_reason: deal.lost_reason || '',
   });
   
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setOpen(true);
-  };
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,9 +96,11 @@ export function EditSalesDealDialog({ deal, children, onUpdate }: EditSalesDealD
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={handleClick}>
-        {children}
-      </div>
+      {children && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Deal - {deal.brands.name}</DialogTitle>
