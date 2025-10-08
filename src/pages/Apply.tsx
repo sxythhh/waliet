@@ -192,6 +192,10 @@ export default function Apply() {
             Join our content campaign and scale your brand
           </p>
         </div>
+        {/* Progress Bar */}
+        <div className="mb-6">
+          <Progress value={progress} className="h-1.5" />
+        </div>
 
 
         <Card className="border-none shadow-sm">
