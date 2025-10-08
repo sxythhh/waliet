@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, Grid, List, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -123,7 +123,6 @@ export default function AdminUsers() {
   const [editScoreDialogOpen, setEditScoreDialogOpen] = useState(false);
   const [editingSubmission, setEditingSubmission] = useState<DemographicSubmission | null>(null);
   const [editScore, setEditScore] = useState("");
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [sortField, setSortField] = useState<"balance" | "totalEarned" | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [addToCampaignDialogOpen, setAddToCampaignDialogOpen] = useState(false);
@@ -978,22 +977,6 @@ export default function AdminUsers() {
                 </PopoverContent>
               </Popover>
 
-              <Button
-                variant={viewMode === "cards" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("cards")}
-                className="h-10 w-10"
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "table" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("table")}
-                className="h-10 w-10"
-              >
-                <List className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </CardContent>
@@ -1004,67 +987,7 @@ export default function AdminUsers() {
           <CardContent className="text-center py-12 text-muted-foreground">
             No users found
           </CardContent>
-        </Card> : viewMode === "cards" ? <div className="grid grid-cols-2 gap-6 w-full">
-          {filteredUsers.map(user => {
-            const balance = user.wallets?.balance || 0;
-            const totalEarned = user.wallets?.total_earned || 0;
-            const totalWithdrawn = user.wallets?.total_withdrawn || 0;
-            return <Card key={user.id} className="bg-card border-0 overflow-hidden cursor-pointer transition-all hover:bg-[#1D1D1D]" onClick={() => openUserDetailsDialog(user)}>
-                <CardContent className="p-6">
-                  {/* User Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3 flex-1">
-                      {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-10 w-10 rounded-full object-cover" /> : <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <UsersIcon className="h-5 w-5 text-primary" />
-                        </div>}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold truncate">
-                          {user.username}
-                        </h3>
-                        {user.full_name && <p className="text-sm text-muted-foreground truncate">
-                            {user.full_name}
-                          </p>}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <Button size="sm" onClick={e => {
-                        e.stopPropagation();
-                        openAddToCampaignDialog(user);
-                      }} variant="outline" className="gap-1">
-                        Add to Campaign
-                      </Button>
-                      <Button size="sm" onClick={e => {
-                        e.stopPropagation();
-                        openPayDialog(user);
-                      }} className="gap-1">
-                        <DollarSign className="h-4 w-4" />
-                        Pay
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Connected Accounts */}
-                  <div className="mb-4">
-                    <p className="text-xs text-muted-foreground mb-2">Connected Accounts</p>
-                    {user.social_accounts && user.social_accounts.length > 0 ? <div className="flex flex-wrap gap-2">
-                        {user.social_accounts.map(account => {
-                      const demographicStatus = account.demographic_submissions?.[0]?.status;
-                      return <div key={account.id} title={`${account.username} - ${account.follower_count.toLocaleString()} followers`} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-[#282828]/50">
-                            {getPlatformIcon(account.platform)}
-                            <span className="font-medium">{account.username}</span>
-                            {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success fill-success/20" />}
-                            {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning fill-warning/20" />}
-                            {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
-                            {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive fill-destructive/20" />}
-                          </div>;
-                    })}
-                      </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
-                  </div>
-
-                </CardContent>
-              </Card>;
-          })}
-        </div> : <Card className="bg-card border-0">
+        </Card> : <Card className="bg-card border-0">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
