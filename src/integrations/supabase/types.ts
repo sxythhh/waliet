@@ -24,6 +24,7 @@ export type Database = {
           email: string
           has_content_library: string
           id: string
+          logo_url: string | null
           monthly_budget: string
           name: string
           notes: string | null
@@ -42,6 +43,7 @@ export type Database = {
           email: string
           has_content_library: string
           id?: string
+          logo_url?: string | null
           monthly_budget: string
           name: string
           notes?: string | null
@@ -60,6 +62,7 @@ export type Database = {
           email?: string
           has_content_library?: string
           id?: string
+          logo_url?: string | null
           monthly_budget?: string
           name?: string
           notes?: string | null
