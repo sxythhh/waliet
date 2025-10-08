@@ -304,7 +304,7 @@ export default function AdminUsers() {
     const {
       data,
       error
-    } = await supabase.from("wallets").select("payout_method").eq("user_id", userId).maybeSingle();
+    } = await supabase.from("wallets").select("payout_method, payout_details").eq("user_id", userId).maybeSingle();
     if (error) {
       toast({
         variant: "destructive",
@@ -313,10 +313,11 @@ export default function AdminUsers() {
       });
       setUserPaymentMethods([]);
     } else if (data && data.payout_method) {
-      // For now, we'll show the method type. Details are stored encrypted.
+      // Parse payout details if available
+      const details = data.payout_details || {};
       setUserPaymentMethods([{
         method: data.payout_method,
-        details: {} // Encrypted details not shown for security
+        details: details
       }]);
     } else {
       setUserPaymentMethods([]);

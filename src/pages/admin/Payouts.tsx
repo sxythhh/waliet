@@ -171,7 +171,7 @@ export default function AdminPayouts() {
     const {
       data,
       error
-    } = await supabase.from("wallets").select("payout_method").eq("user_id", userId).maybeSingle();
+    } = await supabase.from("wallets").select("payout_method, payout_details").eq("user_id", userId).maybeSingle();
     if (error) {
       toast({
         variant: "destructive",
@@ -180,9 +180,10 @@ export default function AdminPayouts() {
       });
       setUserPaymentMethods([]);
     } else if (data && data.payout_method) {
+      const details = data.payout_details || {};
       setUserPaymentMethods([{
         method: data.payout_method,
-        details: {}
+        details: details
       }]);
     } else {
       setUserPaymentMethods([]);

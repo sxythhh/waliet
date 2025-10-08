@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -232,35 +232,67 @@ export function UserDetailsDialog({
                 No payment methods configured
               </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
                 {paymentMethods.map((method, index) => <div key={index} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium capitalize text-sm">{method.method}</span>
-                          <Badge variant="secondary" className="text-[10px]">Default</Badge>
+                          <div className="flex items-center gap-2">
+                            {method.method === 'crypto' && <Wallet className="h-4 w-4 text-primary" />}
+                            {method.method === 'paypal' && <Globe className="h-4 w-4 text-primary" />}
+                            {method.method === 'wise' && <Mail className="h-4 w-4 text-primary" />}
+                            <span className="font-semibold capitalize text-sm">{method.method}</span>
+                          </div>
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">Active</Badge>
                         </div>
                         
                         {/* Display method details based on type */}
-                        {method.method === 'crypto' && method.details?.address && <div className="space-y-1">
-                            <p className="text-[10px] text-muted-foreground">Wallet Address</p>
-                            <p className="text-xs font-mono break-all bg-muted/20 p-2 rounded">
-                              {method.details.address}
-                            </p>
-                            {method.details.network && <p className="text-[10px] text-muted-foreground mt-1">
-                                Network: <span className="font-medium capitalize">{method.details.network}</span>
-                              </p>}
+                        {method.method === 'crypto' && <div className="space-y-2">
+                            {method.details?.address && <div className="space-y-1">
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Wallet Address</p>
+                                <p className="text-xs font-mono break-all bg-muted/30 p-2.5 rounded border border-border/50">
+                                  {method.details.address}
+                                </p>
+                              </div>}
+                            
+                            {method.details?.network && <div className="grid grid-cols-2 gap-2">
+                                <div className="bg-muted/20 p-2 rounded">
+                                  <p className="text-[10px] text-muted-foreground mb-0.5">Network</p>
+                                  <p className="text-xs font-medium capitalize">{method.details.network}</p>
+                                </div>
+                                {method.details?.token && <div className="bg-muted/20 p-2 rounded">
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Token</p>
+                                    <p className="text-xs font-medium uppercase">{method.details.token}</p>
+                                  </div>}
+                              </div>}
                           </div>}
                         
-                        {method.method === 'paypal' && method.details?.email && <div className="space-y-1">
-                            <p className="text-[10px] text-muted-foreground">PayPal Email</p>
-                            <p className="text-xs break-all bg-muted/20 p-2 rounded">
-                              {method.details.email}
-                            </p>
+                        {method.method === 'paypal' && method.details?.email && <div className="space-y-2">
+                            <div className="space-y-1">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email Address</p>
+                              <p className="text-xs break-all bg-muted/30 p-2.5 rounded border border-border/50 flex items-center gap-2">
+                                <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                                {method.details.email}
+                              </p>
+                            </div>
                           </div>}
                         
-                        {method.method === 'wise' && method.details?.email && <div className="space-y-1">
-                            <p className="text-[10px] text-muted-foreground">Wise Email</p>
-                            <p className="text-xs break-all bg-muted/20 p-2 rounded">
-                              {method.details.email}
-                            </p>
+                        {method.method === 'wise' && <div className="space-y-2">
+                            {method.details?.email && <div className="space-y-1">
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email Address</p>
+                                <p className="text-xs break-all bg-muted/30 p-2.5 rounded border border-border/50 flex items-center gap-2">
+                                  <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  {method.details.email}
+                                </p>
+                              </div>}
+                            
+                            {(method.details?.account_number || method.details?.routing_number) && <div className="grid grid-cols-2 gap-2">
+                                {method.details?.account_number && <div className="bg-muted/20 p-2 rounded">
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Account</p>
+                                    <p className="text-xs font-medium font-mono">••••{method.details.account_number.slice(-4)}</p>
+                                  </div>}
+                                {method.details?.routing_number && <div className="bg-muted/20 p-2 rounded">
+                                    <p className="text-[10px] text-muted-foreground mb-0.5">Routing</p>
+                                    <p className="text-xs font-medium font-mono">••••{method.details.routing_number.slice(-4)}</p>
+                                  </div>}
+                              </div>}
                           </div>}
                       </div>
                     </div>)}
