@@ -171,7 +171,7 @@ export default function Apply() {
             <div className="mx-auto mb-6 w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
               <CheckCircle2 className="w-10 h-10 text-primary" />
             </div>
-            <CardTitle className="text-3xl mb-3">Application Submitted!</CardTitle>
+            
             <CardDescription className="text-base leading-relaxed">
               Thank you for your interest. We'll review your application and get back to you within 24-48 hours.
             </CardDescription>
