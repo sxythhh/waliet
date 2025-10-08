@@ -16,9 +16,6 @@ export default function AdminOverview() {
           <TabsTrigger value="work" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Work
             </TabsTrigger>
-            <TabsTrigger value="sales" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
-              Sales
-            </TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Analytics
             </TabsTrigger>
