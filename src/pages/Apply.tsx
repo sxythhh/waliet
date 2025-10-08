@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, Upload, X, ArrowLeft, ArrowRight, Building2, DollarSign, Target, FolderOpen } from "lucide-react";
+import { CheckCircle2, Upload, X, ArrowLeft, ArrowRight } from "lucide-react";
 
 const applicationSchema = z.object({
   business_name: z.string().min(2, "Business name is required"),
@@ -30,11 +30,11 @@ const applicationSchema = z.object({
 type ApplicationFormValues = z.infer<typeof applicationSchema>;
 
 const STEPS = [
-  { title: "Business Details", icon: Building2 },
-  { title: "Budget & Goals", icon: DollarSign },
-  { title: "Objectives", icon: Target },
-  { title: "Content Library", icon: FolderOpen },
-  { title: "Contact Info", icon: CheckCircle2 },
+  "Business Details",
+  "Budget & Goals",
+  "Objectives",
+  "Content Library",
+  "Contact Info",
 ];
 
 export default function Apply() {
@@ -193,17 +193,17 @@ export default function Apply() {
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <CheckCircle2 className="w-8 h-8 text-primary" />
+        <Card className="max-w-lg w-full border-none shadow-none">
+          <CardHeader className="text-center pb-8">
+            <div className="mx-auto mb-6 w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+              <CheckCircle2 className="w-10 h-10 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Application Submitted!</CardTitle>
-            <CardDescription className="text-base">
+            <CardTitle className="text-3xl mb-3">Application Submitted!</CardTitle>
+            <CardDescription className="text-base leading-relaxed">
               Thank you for your interest. We'll review your application and get back to you within 24-48 hours.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <Button onClick={() => setIsSubmitted(false)} className="w-full" size="lg">
               Submit Another Application
             </Button>
@@ -213,94 +213,82 @@ export default function Apply() {
     );
   }
 
-  const StepIcon = STEPS[currentStep].icon;
-
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background py-8 sm:py-16 px-4">
+      <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Apply for Virality Campaign</h1>
-          <p className="text-muted-foreground text-lg">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Apply for Virality Campaign</h1>
+          <p className="text-muted-foreground">
             Join our content campaign and scale your brand
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between mb-4">
+        <div className="mb-6">
+          <div className="flex justify-between mb-3">
             {STEPS.map((step, index) => {
-              const Icon = step.icon;
               const isActive = index === currentStep;
               const isCompleted = index < currentStep;
               
               return (
                 <div key={index} className="flex flex-col items-center flex-1">
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-colors ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 text-xs font-medium transition-all ${
                       isCompleted
                         ? "bg-primary text-primary-foreground"
                         : isActive
-                        ? "bg-primary/20 text-primary border-2 border-primary"
+                        ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-6 h-6" />
-                    ) : (
-                      <Icon className="w-6 h-6" />
-                    )}
+                    {index + 1}
                   </div>
-                  <span className={`text-xs text-center hidden sm:block ${isActive ? "font-semibold" : ""}`}>
-                    {step.title}
+                  <span className={`text-xs text-center ${isActive ? "font-medium text-foreground" : "text-muted-foreground"} hidden sm:block`}>
+                    {step}
                   </span>
                 </div>
               );
             })}
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-1.5" />
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <StepIcon className="w-6 h-6 text-primary" />
-              <div>
-                <CardTitle>{STEPS[currentStep].title}</CardTitle>
-                <CardDescription>Step {currentStep + 1} of {STEPS.length}</CardDescription>
-              </div>
-            </div>
+        <Card className="border-none shadow-sm">
+          <CardHeader className="pb-6">
+            <CardTitle className="text-xl">{STEPS[currentStep]}</CardTitle>
+            <CardDescription>Step {currentStep + 1} of {STEPS.length}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 {currentStep === 0 && (
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     {/* Logo Upload */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <FormLabel>Brand Logo (Optional)</FormLabel>
-                      <div className="flex flex-col items-center gap-4">
+                      <div className="flex flex-col items-center gap-3">
                         {logoPreview ? (
                           <div className="relative">
                             <img
                               src={logoPreview}
                               alt="Logo preview"
-                              className="w-32 h-32 object-contain rounded-lg border-2 border-border"
+                              className="w-24 h-24 object-contain rounded-lg border border-border"
                             />
                             <Button
                               type="button"
-                              variant="destructive"
+                              variant="ghost"
                               size="icon"
-                              className="absolute -top-2 -right-2 w-6 h-6 rounded-full"
+                              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-background border"
                               onClick={removeLogo}
                             >
-                              <X className="w-4 h-4" />
+                              <X className="w-3 h-3" />
                             </Button>
                           </div>
                         ) : (
-                          <label className="w-full max-w-xs cursor-pointer">
-                            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
-                              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                              <p className="text-sm font-medium mb-1">Click to upload logo</p>
+                          <label className="w-full cursor-pointer">
+                            <div className="border border-dashed border-border rounded-lg py-6 px-4 text-center hover:border-primary/50 transition-colors">
+                              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                              <p className="text-sm font-medium mb-0.5">Click to upload logo</p>
                               <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
                             </div>
                             <input
@@ -340,7 +328,7 @@ export default function Apply() {
                           <FormControl>
                             <Textarea
                               placeholder="We help businesses..."
-                              className="min-h-[100px]"
+                              className="min-h-[80px] resize-none"
                               {...field}
                             />
                           </FormControl>
@@ -366,7 +354,7 @@ export default function Apply() {
                 )}
 
                 {currentStep === 1 && (
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     <FormField
                       control={form.control}
                       name="current_mrr"
@@ -422,7 +410,7 @@ export default function Apply() {
                 )}
 
                 {currentStep === 2 && (
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     <FormField
                       control={form.control}
                       name="timeline_commitment"
@@ -487,7 +475,7 @@ export default function Apply() {
                 )}
 
                 {currentStep === 3 && (
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     <FormField
                       control={form.control}
                       name="has_content_library"
@@ -525,10 +513,10 @@ export default function Apply() {
                 )}
 
                 {currentStep === 4 && (
-                  <div className="space-y-6">
-                    <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                  <div className="space-y-5">
+                    <div className="bg-muted/30 rounded-lg p-3 mb-4">
                       <p className="text-sm text-muted-foreground">
-                        Almost done! We just need your contact information to get in touch with you.
+                        Almost done! We just need your contact information.
                       </p>
                     </div>
 
@@ -576,26 +564,27 @@ export default function Apply() {
                   </div>
                 )}
 
-                <div className="flex justify-between pt-6 border-t">
+                <div className="flex justify-between pt-4 mt-2 border-t">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     onClick={prevStep}
                     disabled={currentStep === 0}
+                    size="sm"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Previous
                   </Button>
 
                   {currentStep < STEPS.length - 1 ? (
-                    <Button type="button" onClick={nextStep}>
+                    <Button type="button" onClick={nextStep} size="sm">
                       Next
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-4 h-4 ml-1.5" />
                     </Button>
                   ) : (
-                    <Button type="submit" disabled={isSubmitting || uploadingLogo}>
+                    <Button type="submit" disabled={isSubmitting || uploadingLogo} size="sm">
                       {isSubmitting || uploadingLogo ? "Submitting..." : "Submit Application"}
-                      <CheckCircle2 className="w-4 h-4 ml-2" />
+                      <CheckCircle2 className="w-4 h-4 ml-1.5" />
                     </Button>
                   )}
                 </div>
