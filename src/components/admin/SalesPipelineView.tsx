@@ -73,7 +73,7 @@ export function SalesPipelineView() {
         .from('sales_deals')
         .select(`
           *,
-          brands (
+          brands!inner (
             id,
             name,
             slug,
@@ -88,6 +88,7 @@ export function SalesPipelineView() {
             created_at
           )
         `)
+        .eq('brands.is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
