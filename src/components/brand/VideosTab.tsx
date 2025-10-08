@@ -145,52 +145,36 @@ export function VideosTab() {
             <Card className="bg-[#1a1a1a] border-white/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-                <Eye className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalViews.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Across {videos.length} videos
-                </p>
               </CardContent>
             </Card>
 
             <Card className="bg-[#1a1a1a] border-white/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Likes</CardTitle>
-                <Heart className="h-4 w-4 text-pink-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalLikes.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {((totalLikes / totalViews) * 100).toFixed(2)}% like rate
-                </p>
               </CardContent>
             </Card>
 
             <Card className="bg-[#1a1a1a] border-white/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Comments</CardTitle>
-                <MessageSquare className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalComments.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {(totalComments / videos.length).toFixed(1)} avg per video
-                </p>
               </CardContent>
             </Card>
 
             <Card className="bg-[#1a1a1a] border-white/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Avg Engagement</CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{avgEngagementRate.toFixed(2)}%</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Engagement rate
-                </p>
               </CardContent>
             </Card>
           </div>
