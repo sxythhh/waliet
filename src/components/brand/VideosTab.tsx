@@ -142,7 +142,7 @@ export function VideosTab() {
       {videos.length > 0 && (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <Card className="bg-[#1a1a1a] border-white/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Views</CardTitle>
                 <Eye className="h-4 w-4 text-primary" />
@@ -155,7 +155,7 @@ export function VideosTab() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-pink-500/10 to-pink-500/5 border-pink-500/20">
+            <Card className="bg-[#1a1a1a] border-white/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Likes</CardTitle>
                 <Heart className="h-4 w-4 text-pink-500" />
@@ -168,7 +168,7 @@ export function VideosTab() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+            <Card className="bg-[#1a1a1a] border-white/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Comments</CardTitle>
                 <MessageSquare className="h-4 w-4 text-blue-500" />
@@ -181,7 +181,7 @@ export function VideosTab() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+            <Card className="bg-[#1a1a1a] border-white/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Avg Engagement</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-500" />
