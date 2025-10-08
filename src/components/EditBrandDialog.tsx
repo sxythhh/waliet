@@ -51,13 +51,21 @@ interface EditBrandDialogProps {
   brand: Brand;
   onSuccess?: () => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  reactivateButton?: React.ReactNode;
 }
 export function EditBrandDialog({
   brand,
   onSuccess,
-  trigger
+  trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  reactivateButton
 }: EditBrandDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(brand.logo_url);
@@ -505,13 +513,20 @@ export function EditBrandDialog({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Updating..." : "Update Brand"}
-              </Button>
+            <div className="flex justify-between gap-3 pt-4">
+              {reactivateButton && (
+                <div className="mr-auto">
+                  {reactivateButton}
+                </div>
+              )}
+              <div className="flex gap-3 ml-auto">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Updating..." : "Update Brand"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
