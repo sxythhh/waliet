@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_applications: {
+        Row: {
+          business_description: string
+          business_name: string
+          created_at: string
+          current_mrr: string
+          desired_outcome: string
+          email: string
+          has_content_library: string
+          id: string
+          monthly_budget: string
+          name: string
+          notes: string | null
+          phone: string | null
+          status: string
+          timeline_commitment: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          business_description: string
+          business_name: string
+          created_at?: string
+          current_mrr: string
+          desired_outcome: string
+          email: string
+          has_content_library: string
+          id?: string
+          monthly_budget: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          timeline_commitment: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          business_description?: string
+          business_name?: string
+          created_at?: string
+          current_mrr?: string
+          desired_outcome?: string
+          email?: string
+          has_content_library?: string
+          id?: string
+          monthly_budget?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          timeline_commitment?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       brand_course_access: {
         Row: {
           brand_id: string

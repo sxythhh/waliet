@@ -35,6 +35,7 @@ import AdminCourses from "./pages/admin/Courses";
 import AdminWallets from "./pages/admin/Wallets";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
+import Apply from "./pages/Apply";
 import { AuthProvider } from "@/contexts/AuthContext";
 const queryClient = new QueryClient();
 function DashboardLayout({
@@ -125,6 +126,7 @@ const App = () => <QueryClientProvider client={queryClient}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/apply" element={<Apply />} />
           <Route path="/join/:slug" element={<CampaignJoin />} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
           <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
