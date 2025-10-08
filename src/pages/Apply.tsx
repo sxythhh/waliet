@@ -294,29 +294,23 @@ export default function Apply() {
                         </FormItem>} />
                   </div>}
 
-                {currentStep === 2 && <div className="space-y-5">
+                {currentStep === 2 && <div className="space-y-6">
                     <FormField control={form.control} name="timeline_commitment" render={({
                   field
                 }) => <FormItem>
                           <FormLabel>Timeline and commitment level *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select commitment level" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="We're just testing the waters and exploring options.">
-                                Testing the waters
-                              </SelectItem>
-                              <SelectItem value="We have a budget approved, ready to commit to a multi-month run to see results.">
-                                Ready for multi-month commitment
-                              </SelectItem>
-                              <SelectItem value="We're actively running campaigns and want to scale/expand.">
-                                Actively scaling
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="grid gap-3">
+                              {[
+                                { value: "We're just testing the waters and exploring options.", label: "Testing the waters" },
+                                { value: "We have a budget approved, ready to commit to a multi-month run to see results.", label: "Ready for multi-month commitment" },
+                                { value: "We're actively running campaigns and want to scale/expand.", label: "Actively scaling" }
+                              ].map(option => <label key={option.value} className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors ${field.value === option.value ? "bg-primary/10 text-primary" : "bg-muted/30 hover:bg-muted/50"}`}>
+                                  <RadioGroupItem value={option.value} className="shrink-0" />
+                                  <span className="text-sm font-medium">{option.label}</span>
+                                </label>)}
+                            </RadioGroup>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>} />
 
@@ -324,27 +318,19 @@ export default function Apply() {
                   field
                 }) => <FormItem>
                           <FormLabel>What is the #1 outcome you want to achieve? *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select desired outcome" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Massive Brand Awareness / View Volume">
-                                Massive Brand Awareness / View Volume
-                              </SelectItem>
-                              <SelectItem value="Direct Conversions (App Installs, Sign-ups, Sales)">
-                                Direct Conversions (App Installs, Sign-ups, Sales)
-                              </SelectItem>
-                              <SelectItem value="Community Building / Engagement">
-                                Community Building / Engagement
-                              </SelectItem>
-                              <SelectItem value="Thought Leadership / Credibility">
-                                Thought Leadership / Credibility
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="grid gap-3">
+                              {[
+                                "Massive Brand Awareness / View Volume",
+                                "Direct Conversions (App Installs, Sign-ups, Sales)",
+                                "Community Building / Engagement",
+                                "Thought Leadership / Credibility"
+                              ].map(option => <label key={option} className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors ${field.value === option ? "bg-primary/10 text-primary" : "bg-muted/30 hover:bg-muted/50"}`}>
+                                  <RadioGroupItem value={option} className="shrink-0" />
+                                  <span className="text-sm font-medium">{option}</span>
+                                </label>)}
+                            </RadioGroup>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>} />
                   </div>}
