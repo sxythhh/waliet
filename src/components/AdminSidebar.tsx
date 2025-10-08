@@ -9,10 +9,6 @@ const menuItems = [{
   icon: LayoutDashboard,
   path: "/admin"
 }, {
-  title: "Sales",
-  icon: PieChart,
-  path: "/admin/sales"
-}, {
   title: "Brands",
   icon: Package,
   path: "/admin/brands"
