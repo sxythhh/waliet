@@ -124,7 +124,7 @@ export default function BrandDashboard() {
     }
   };
   if (loading) {
-    return <div className="min-h-screen p-8 bg-[#191919]">
+    return <div className="min-h-screen p-8 bg-background">
         <div className="max-w-7xl mx-auto">
           <Skeleton className="h-8 w-48 mb-6" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -137,8 +137,8 @@ export default function BrandDashboard() {
       </div>;
   }
   if (!brand) {
-    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">Brand not found</div>
+    return <div className="min-h-screen p-8 bg-background flex items-center justify-center">
+        <div className="text-foreground">Brand not found</div>
       </div>;
   }
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
@@ -151,17 +151,17 @@ export default function BrandDashboard() {
 
   // If only one view is available, set it as active
   const effectiveView = !hasHomeEmbed ? "campaigns" : !hasCampaigns ? "home" : activeView;
-  return <div className="min-h-screen bg-[#191919]">
+  return <div className="min-h-screen bg-background">
       {/* Header - Hide when showing home embed */}
       {effectiveView !== "home" && (
         <>
           <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} className="text-white/60 hover:text-white hover:bg-white/10">
+                <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} className="text-muted-foreground hover:text-foreground hover:bg-accent">
                   {isMobile ? <Menu className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
                 </Button>
-                <h1 className="text-2xl font-bold text-white font-['Instrument_Sans'] tracking-[-0.5px]">
+                <h1 className="text-2xl font-bold text-foreground font-['Instrument_Sans'] tracking-[-0.5px]">
                   {brand.name}
                 </h1>
               </div>
@@ -170,12 +170,12 @@ export default function BrandDashboard() {
 
             {/* View Toggle - Only show if both views are available */}
             {showToggle && <Tabs value={effectiveView} onValueChange={handleViewChange} className="w-full mb-6">
-              <TabsList className="bg-[#202020] border-white/10">
-                <TabsTrigger value="home" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
+              <TabsList className="bg-card border-border">
+                <TabsTrigger value="home" className="gap-2 data-[state=active]:bg-accent">
                   <Home className="h-4 w-4" />
                   Home
                 </TabsTrigger>
-                <TabsTrigger value="campaigns" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
+                <TabsTrigger value="campaigns" className="gap-2 data-[state=active]:bg-accent">
                   <LayoutGrid className="h-4 w-4" />
                   Campaigns
                 </TabsTrigger>
@@ -190,7 +190,7 @@ export default function BrandDashboard() {
         <div className="fixed top-4 right-4 z-50">
           <Button
             onClick={() => setActiveView("campaigns")}
-            className="bg-[#5865F2] hover:bg-[#4752C4]"
+            className="bg-primary hover:bg-primary/90"
           >
             <LayoutGrid className="h-4 w-4 mr-2" />
             View Campaigns
@@ -214,17 +214,17 @@ export default function BrandDashboard() {
                     {campaigns.map(campaign => {
               const usedBudget = Number(campaign.budget_used || 0);
               const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
-              return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+              return <Card key={campaign.id} className="bg-card border-none overflow-hidden cursor-pointer transition-all hover:bg-accent" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
                           {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
                               <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
                             </div>}
                           <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-xl font-semibold text-white mb-1">
+                          <h3 className="text-xl font-semibold text-foreground mb-1">
                             {campaign.title}
                           </h3>
                           <div onClick={e => e.stopPropagation()}>
-                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
+                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-accent">
                                   <Pencil className="h-4 w-4" />
                                 </Button>} />
                           </div>
@@ -233,12 +233,12 @@ export default function BrandDashboard() {
                             {/* Budget Progress Bar */}
                             <div className="space-y-2 mb-4">
                               <div className="flex items-center justify-between text-sm">
-                                <span className="text-white/60">Budget Usage</span>
-                                <span className="text-white font-medium">
+                                <span className="text-muted-foreground">Budget Usage</span>
+                                <span className="text-foreground font-medium">
                                   ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
                                 </span>
                               </div>
-                              <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
+                              <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                                 <div className="absolute inset-0 bg-primary rounded-full transition-all duration-500" style={{
                         width: `${budgetPercentage}%`
                       }} />
@@ -247,8 +247,8 @@ export default function BrandDashboard() {
 
                             {/* RPM Display */}
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-white/60">RPM:</span>
-                              <span className="text-white font-semibold">
+                              <span className="text-muted-foreground">RPM:</span>
+                              <span className="text-foreground font-semibold">
                                 ${Number(campaign.rpm_rate).toFixed(2)}
                               </span>
                             </div>
@@ -257,7 +257,7 @@ export default function BrandDashboard() {
             })}
                   </div>
                 </div> : <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-white/60 mb-4">No campaigns yet</p>
+                  <p className="text-muted-foreground mb-4">No campaigns yet</p>
                   <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
                 </div>}
             </div>}
@@ -272,17 +272,17 @@ export default function BrandDashboard() {
                 {campaigns.map(campaign => {
           const usedBudget = Number(campaign.budget_used || 0);
           const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
-          return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+          return <Card key={campaign.id} className="bg-card border-none overflow-hidden cursor-pointer transition-all hover:bg-accent" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
                       {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
                           <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
                         </div>}
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-4">
-                          <h3 className="font-semibold text-white mb-1 text-xl">
+                          <h3 className="font-semibold text-foreground mb-1 text-xl">
                             {campaign.title}
                           </h3>
                           <div onClick={e => e.stopPropagation()}>
-                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
+                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-accent">
                                   <Pencil className="h-4 w-4" />
                                 </Button>} />
                           </div>
@@ -291,12 +291,12 @@ export default function BrandDashboard() {
                         {/* Budget Progress Bar */}
                         <div className="space-y-2 mb-4">
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-white/60">Budget Usage</span>
-                            <span className="text-white font-medium">
+                            <span className="text-muted-foreground">Budget Usage</span>
+                            <span className="text-foreground font-medium">
                               ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
                             </span>
                           </div>
-                          <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
+                          <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                             <div className="absolute inset-0 bg-primary rounded-full transition-all duration-500" style={{
                     width: `${budgetPercentage}%`
                   }} />
@@ -305,8 +305,8 @@ export default function BrandDashboard() {
 
                         {/* RPM Display */}
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-white/60">RPM:</span>
-                          <span className="text-white font-semibold">
+                          <span className="text-muted-foreground">RPM:</span>
+                          <span className="text-foreground font-semibold">
                             ${Number(campaign.rpm_rate).toFixed(2)}
                           </span>
                         </div>
@@ -314,23 +314,23 @@ export default function BrandDashboard() {
                     </Card>;
         })}
               </div> : <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-white/60 mb-4">No campaigns yet</p>
+                <p className="text-muted-foreground mb-4">No campaigns yet</p>
                 <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
               </div>}
           </div>}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent className="bg-[#202020] border-white/10">
+          <AlertDialogContent className="bg-card border-border">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-white">Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
-                This will permanently delete <strong className="text-white">{campaignToDelete?.title}</strong>.
+              <AlertDialogTitle className="text-foreground">Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                This will permanently delete <strong className="text-foreground">{campaignToDelete?.title}</strong>.
                 This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+              <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-accent">
                 Cancel
               </AlertDialogCancel>
               <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
