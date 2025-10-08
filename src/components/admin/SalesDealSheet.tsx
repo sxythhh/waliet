@@ -178,18 +178,11 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
               </div>
 
 
-              {/* Brand Actions */}
+              {/* Brand Actions - Keep only Edit and View Page here */}
               <div className="flex flex-wrap gap-2 pt-2">
                 {deal.brands?.brand_type === "DWY" && (
                   <ManageRoadmapDialog brandId={deal.brands.id} brandName={deal.brands.name} />
                 )}
-                <Button 
-                  size="sm" 
-                  variant={deal.brands?.is_active ? "outline" : "default"}
-                  onClick={toggleBrandActive}
-                >
-                  {deal.brands?.is_active ? 'Deactivate' : 'Activate'}
-                </Button>
                 {deal.brands && (
                   <EditBrandDialog brand={deal.brands} onSuccess={onUpdate} />
                 )}
@@ -200,15 +193,6 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
                 >
                   <ExternalLink className="h-4 w-4 mr-1" />
                   View Page
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={handleDeleteClick}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete Brand
                 </Button>
               </div>
             </div>
@@ -323,6 +307,30 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
                 )}
               </div>
             )}
+
+            {/* Danger Zone - Deactivate & Delete at bottom */}
+            <div className="space-y-3 pt-6 border-t mt-6">
+              <h4 className="text-sm font-medium text-muted-foreground">Danger Zone</h4>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="destructive"
+                  onClick={toggleBrandActive}
+                  className="flex-1"
+                >
+                  {deal.brands?.is_active ? 'Deactivate Brand' : 'Activate Brand'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="destructive" 
+                  onClick={handleDeleteClick}
+                  className="flex-1"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete Brand
+                </Button>
+              </div>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
