@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Upload, TrendingUp, Eye, Heart, MessageSquare, BarChart3 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 interface VideoData {
@@ -195,10 +195,12 @@ export function VideosTab() {
             </Card>
           </div>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-[#1a1a1a] via-[#202020] to-[#1a1a1a] border-white/5 shadow-xl">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-white">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                </div>
                 Cumulative Views Over Time
               </CardTitle>
             </CardHeader>
@@ -217,45 +219,68 @@ export function VideosTab() {
                 className="h-[400px] w-full"
               >
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={cumulativeData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <AreaChart data={cumulativeData}>
+                    <defs>
+                      <linearGradient id="cumulativeGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+                      </linearGradient>
+                      <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.6}/>
+                        <stop offset="50%" stopColor="hsl(var(--chart-2))" stopOpacity={0.2}/>
+                        <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.1} />
                     <XAxis 
                       dataKey="date" 
-                      className="text-xs"
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      axisLine={{ stroke: 'hsl(var(--border))', opacity: 0.2 }}
                     />
                     <YAxis 
-                      className="text-xs"
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      axisLine={{ stroke: 'hsl(var(--border))', opacity: 0.2 }}
                     />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Legend />
-                    <Line 
+                    <ChartTooltip 
+                      content={<ChartTooltipContent />}
+                      cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, opacity: 0.2 }}
+                    />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: '20px' }}
+                      iconType="circle"
+                    />
+                    <Area 
                       type="monotone" 
                       dataKey="cumulativeViews" 
                       stroke="hsl(var(--primary))"
                       strokeWidth={3}
+                      fill="url(#cumulativeGradient)"
                       name="Cumulative Views"
-                      dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                      dot={{ fill: 'hsl(var(--primary))', r: 5, strokeWidth: 2, stroke: '#0C0C0C' }}
+                      activeDot={{ r: 7, strokeWidth: 2, stroke: '#0C0C0C' }}
                     />
-                    <Line 
+                    <Area 
                       type="monotone" 
                       dataKey="views" 
                       stroke="hsl(var(--chart-2))"
                       strokeWidth={2}
+                      fill="url(#viewsGradient)"
                       name="Video Views"
-                      dot={{ fill: 'hsl(var(--chart-2))', r: 3 }}
-                      opacity={0.6}
+                      dot={{ fill: 'hsl(var(--chart-2))', r: 4, strokeWidth: 2, stroke: '#0C0C0C' }}
+                      activeDot={{ r: 6, strokeWidth: 2, stroke: '#0C0C0C' }}
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-[#1a1a1a] via-[#202020] to-[#1a1a1a] border-white/5 shadow-xl">
             <CardHeader>
-              <CardTitle>Top Performing Videos</CardTitle>
+              <CardTitle className="text-white">Top Performing Videos</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -265,9 +290,9 @@ export function VideosTab() {
                   .map((video, index) => (
                     <div 
                       key={index} 
-                      className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                      className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-[#151515] to-[#1a1a1a] hover:from-[#1a1a1a] hover:to-[#202020] transition-all duration-300 border border-white/5 hover:border-primary/20"
                     >
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center font-bold text-white shadow-lg shadow-primary/20">
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -275,7 +300,7 @@ export function VideosTab() {
                           href={video.video_link} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="font-medium hover:text-primary transition-colors line-clamp-1"
+                          className="font-medium text-white hover:text-primary transition-colors line-clamp-1"
                         >
                           {video.video_title}
                         </a>
