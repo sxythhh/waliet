@@ -949,6 +949,65 @@ export type Database = {
           },
         ]
       }
+      sales_deals: {
+        Row: {
+          brand_id: string
+          close_date: string | null
+          created_at: string
+          deal_value: number | null
+          id: string
+          lost_reason: string | null
+          next_payment_date: string | null
+          notes: string | null
+          owner_id: string | null
+          payment_amount: number | null
+          probability: number | null
+          stage: Database["public"]["Enums"]["sales_stage"]
+          updated_at: string
+          won_date: string | null
+        }
+        Insert: {
+          brand_id: string
+          close_date?: string | null
+          created_at?: string
+          deal_value?: number | null
+          id?: string
+          lost_reason?: string | null
+          next_payment_date?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          payment_amount?: number | null
+          probability?: number | null
+          stage?: Database["public"]["Enums"]["sales_stage"]
+          updated_at?: string
+          won_date?: string | null
+        }
+        Update: {
+          brand_id?: string
+          close_date?: string | null
+          created_at?: string
+          deal_value?: number | null
+          id?: string
+          lost_reason?: string | null
+          next_payment_date?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          payment_amount?: number | null
+          probability?: number | null
+          stage?: Database["public"]["Enums"]["sales_stage"]
+          updated_at?: string
+          won_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_deals_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -1560,6 +1619,13 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       payout_status_new: "pending" | "in_transit" | "completed" | "rejected"
+      sales_stage:
+        | "lead"
+        | "qualified"
+        | "proposal"
+        | "negotiation"
+        | "won"
+        | "lost"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1689,6 +1755,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       payout_status_new: ["pending", "in_transit", "completed", "rejected"],
+      sales_stage: [
+        "lead",
+        "qualified",
+        "proposal",
+        "negotiation",
+        "won",
+        "lost",
+      ],
     },
   },
 } as const
