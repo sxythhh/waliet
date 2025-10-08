@@ -345,24 +345,18 @@ export default function Apply() {
                           <FormDescription>
                             This includes podcasts, interviews, webinars, or other video content
                           </FormDescription>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select an option" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Yes, we have hours of content ready to go">
-                                Yes, we have hours of content ready to go
-                              </SelectItem>
-                              <SelectItem value="We have some content, but not a ton">
-                                We have some content, but not a ton
-                              </SelectItem>
-                              <SelectItem value="No, we'd need to discuss a strategy for content creation.">
-                                No, we'd need to discuss a strategy for content creation
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="grid gap-3">
+                              {[
+                                "Yes, we have hours of content ready to go",
+                                "We have some content, but not a ton",
+                                "No, we'd need to discuss a strategy for content creation."
+                              ].map(option => <label key={option} className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors ${field.value === option ? "bg-primary/10 text-primary" : "bg-muted/30 hover:bg-muted/50"}`}>
+                                  <RadioGroupItem value={option} className="shrink-0" />
+                                  <span className="text-sm font-medium">{option}</span>
+                                </label>)}
+                            </RadioGroup>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>} />
                   </div>}
