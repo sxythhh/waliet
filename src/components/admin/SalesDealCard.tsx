@@ -84,10 +84,6 @@ export function SalesDealCard({
           <CalendarDays className="w-3 h-3" />
           <span>{new Date(deal.close_date).toLocaleDateString()}</span>
         </div>}
-
-      {deal.won_date && deal.stage === 'won' && <Badge variant="default" className="w-fit text-xs bg-green-500">
-          Won {new Date(deal.won_date).toLocaleDateString()}
-        </Badge>}
     </div>;
   if (isDragging) {
     return <Card className="p-3 opacity-50 rotate-3">
