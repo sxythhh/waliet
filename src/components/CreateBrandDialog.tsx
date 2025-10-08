@@ -108,6 +108,20 @@ export function CreateBrandDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      // Create sales deal for the brand (automatically add to lead stage)
+      const { error: dealError } = await supabase
+        .from("sales_deals")
+        .insert({
+          brand_id: brandData.id,
+          stage: 'lead',
+          owner_id: user.id
+        });
+
+      if (dealError) {
+        console.error("Error creating sales deal:", dealError);
+        // Don't fail the whole operation if deal creation fails
+      }
+
       // Create brand invitation
       const { error: inviteError } = await supabase
         .from("brand_invitations")

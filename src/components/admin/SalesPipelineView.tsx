@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SalesPipelineColumn } from "./SalesPipelineColumn";
 import { SalesDealCard } from "./SalesDealCard";
-import { AddBrandToPipelineDialog } from "./AddBrandToPipelineDialog";
 import { SalesDealSheet } from "./SalesDealSheet";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -162,10 +161,6 @@ export function SalesPipelineView() {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex justify-end mb-4">
-        <AddBrandToPipelineDialog onSuccess={fetchDeals} />
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 pb-8">
         {STAGES.map(stage => (
           <SalesPipelineColumn
