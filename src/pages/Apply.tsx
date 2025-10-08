@@ -264,7 +264,7 @@ export default function Apply() {
                 {currentStep === 0 && (
                   <div className="space-y-5">
                     {/* Logo and Business Info Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-[140px,1fr] gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-[160px,1fr] gap-6">
                       {/* Logo Upload */}
                       <div className="space-y-2">
                         <FormLabel>Logo</FormLabel>
@@ -274,7 +274,7 @@ export default function Apply() {
                               <img
                                 src={logoPreview}
                                 alt="Logo preview"
-                                className="w-24 h-24 object-contain rounded-lg border border-border"
+                                className="w-32 h-32 object-contain rounded-lg border border-border"
                               />
                               <Button
                                 type="button"
@@ -287,10 +287,10 @@ export default function Apply() {
                               </Button>
                             </div>
                           ) : (
-                            <label className="w-24 h-24 cursor-pointer">
+                            <label className="w-32 h-32 cursor-pointer">
                               <div className="w-full h-full border border-dashed border-border rounded-lg flex flex-col items-center justify-center hover:border-primary/50 transition-colors">
-                                <Upload className="w-6 h-6 text-muted-foreground mb-1" />
-                                <p className="text-[10px] text-muted-foreground">Upload</p>
+                                <Upload className="w-7 h-7 text-muted-foreground mb-1.5" />
+                                <p className="text-xs text-muted-foreground">Upload</p>
                               </div>
                               <input
                                 type="file"
@@ -304,7 +304,7 @@ export default function Apply() {
                       </div>
 
                       {/* Business Name and Website */}
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <FormField
                           control={form.control}
                           name="business_name"
