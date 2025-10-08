@@ -51,7 +51,6 @@ interface PaymentMethod {
   method: string;
   details: any;
 }
-
 interface UserDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -228,7 +227,7 @@ export function UserDetailsDialog({
           <CollapsibleContent>
             {loadingPaymentMethods ? <div className="text-center py-8 text-muted-foreground">
                 Loading payment methods...
-              </div> : (!paymentMethods || paymentMethods.length === 0) ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
+              </div> : !paymentMethods || paymentMethods.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
                 No payment methods configured
               </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
                 {paymentMethods.map((method, index) => <div key={index} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
@@ -247,7 +246,7 @@ export function UserDetailsDialog({
                         {method.method === 'crypto' && <div className="space-y-2">
                             {method.details?.address && <div className="space-y-1">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Wallet Address</p>
-                                <p className="text-xs font-mono break-all bg-muted/30 p-2.5 rounded border border-border/50">
+                                <p className="text-xs font-mono break-all ">
                                   {method.details.address}
                                 </p>
                               </div>}
