@@ -211,10 +211,6 @@ export function VideosTab() {
                     label: "Cumulative Views",
                     color: "hsl(var(--primary))",
                   },
-                  views: {
-                    label: "Video Views",
-                    color: "hsl(var(--chart-2))",
-                  },
                 }}
                 className="h-[400px] w-full"
               >
@@ -225,11 +221,6 @@ export function VideosTab() {
                         <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
                         <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
                         <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
-                      </linearGradient>
-                      <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.6}/>
-                        <stop offset="50%" stopColor="hsl(var(--chart-2))" stopOpacity={0.2}/>
-                        <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.1} />
@@ -259,16 +250,6 @@ export function VideosTab() {
                       strokeWidth={3}
                       fill="url(#cumulativeGradient)"
                       name="Cumulative Views"
-                      dot={false}
-                      activeDot={false}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="views" 
-                      stroke="hsl(var(--chart-2))"
-                      strokeWidth={2}
-                      fill="url(#viewsGradient)"
-                      name="Video Views"
                       dot={false}
                       activeDot={false}
                     />
