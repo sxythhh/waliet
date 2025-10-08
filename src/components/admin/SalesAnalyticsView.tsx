@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, Target, Calendar, Award, XCircle } from "lucide-react";
+import { DollarSign, TrendingUp, Target, Calendar, Award } from "lucide-react";
 import { Loader2 } from "lucide-react";
 
 interface AnalyticsData {
   totalPipelineValue: number;
   weightedPipelineValue: number;
   wonDeals: number;
-  lostDeals: number;
   totalDeals: number;
   closeRate: number;
   avgDealValue: number;
@@ -32,9 +31,8 @@ export function SalesAnalyticsView() {
 
       if (error) throw error;
 
-      const activeDeals = deals.filter(d => d.stage !== 'won' && d.stage !== 'lost');
+      const activeDeals = deals.filter(d => d.stage !== 'won');
       const wonDeals = deals.filter(d => d.stage === 'won');
-      const lostDeals = deals.filter(d => d.stage === 'lost');
 
       const totalPipelineValue = activeDeals.reduce((sum, deal) => sum + (deal.deal_value || 0), 0);
       const weightedPipelineValue = activeDeals.reduce(
@@ -48,8 +46,8 @@ export function SalesAnalyticsView() {
         .filter(d => d.won_date && new Date(d.won_date) >= thisMonth)
         .reduce((sum, deal) => sum + (deal.deal_value || 0), 0);
 
-      const totalClosed = wonDeals.length + lostDeals.length;
-      const closeRate = totalClosed > 0 ? (wonDeals.length / totalClosed) * 100 : 0;
+      const totalClosed = wonDeals.length;
+      const closeRate = totalClosed > 0 ? 100 : 0;
 
       const avgDealValue = wonDeals.length > 0
         ? wonDeals.reduce((sum, d) => sum + (d.deal_value || 0), 0) / wonDeals.length
@@ -64,7 +62,6 @@ export function SalesAnalyticsView() {
         totalPipelineValue,
         weightedPipelineValue,
         wonDeals: wonDeals.length,
-        lostDeals: lostDeals.length,
         totalDeals: deals.length,
         closeRate,
         avgDealValue,
@@ -116,7 +113,7 @@ export function SalesAnalyticsView() {
               {analytics.closeRate.toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {analytics.wonDeals} won / {analytics.wonDeals + analytics.lostDeals} closed
+              {analytics.wonDeals} won / {analytics.wonDeals} closed
             </p>
           </CardContent>
         </Card>
@@ -171,23 +168,14 @@ export function SalesAnalyticsView() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Win/Loss Summary</CardTitle>
+            <CardTitle className="text-lg">Won Deals Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Award className="h-8 w-8 text-green-500" />
-                <div>
-                  <p className="text-2xl font-bold">{analytics.wonDeals}</p>
-                  <p className="text-sm text-muted-foreground">Deals Won</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <XCircle className="h-8 w-8 text-red-500" />
-                <div>
-                  <p className="text-2xl font-bold">{analytics.lostDeals}</p>
-                  <p className="text-sm text-muted-foreground">Deals Lost</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <Award className="h-8 w-8 text-green-500" />
+              <div>
+                <p className="text-2xl font-bold">{analytics.wonDeals}</p>
+                <p className="text-sm text-muted-foreground">Deals Won</p>
               </div>
             </div>
           </CardContent>

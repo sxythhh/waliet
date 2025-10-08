@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SalesDealSheet } from "@/components/admin/SalesDealSheet";
 import { toast } from "sonner";
 
-type SalesStage = 'lead' | 'qualified' | 'negotiation' | 'won' | 'lost';
+type SalesStage = 'lead' | 'qualified' | 'negotiation' | 'won';
 
 
 interface Brand {

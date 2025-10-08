@@ -7,7 +7,7 @@ import { SalesDealSheet } from "./SalesDealSheet";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-type SalesStage = 'lead' | 'qualified' | 'negotiation' | 'won' | 'lost';
+type SalesStage = 'lead' | 'qualified' | 'negotiation' | 'won';
 
 interface Brand {
   id: string;
@@ -44,7 +44,6 @@ const STAGES: { value: SalesStage; label: string; color: string }[] = [
   { value: 'qualified', label: 'Booked Call', color: 'bg-blue-500' },
   { value: 'negotiation', label: 'Negotiation', color: 'bg-orange-500' },
   { value: 'won', label: 'Won', color: 'bg-green-500' },
-  { value: 'lost', label: 'Lost', color: 'bg-red-500' },
 ];
 
 export function SalesPipelineView() {
@@ -161,7 +160,7 @@ export function SalesPipelineView() {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-8">
         {STAGES.map(stage => (
           <SalesPipelineColumn
             key={stage.value}
