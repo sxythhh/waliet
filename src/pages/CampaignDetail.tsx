@@ -206,17 +206,57 @@ export default function CampaignDetail() {
   // Show embed URL if available
   if (!campaign.embed_url) {
     return (
-      <div className="p-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard?tab=campaigns")}
-          className="mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Campaigns
-        </Button>
-        <p className="text-muted-foreground">No embed URL available for this campaign.</p>
-      </div>
+      <>
+        <div className="p-8">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/dashboard?tab=campaigns")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Campaigns
+            </Button>
+            
+            <Button
+              variant="ghost"
+              onClick={() => setShowLeaveDialog(true)}
+              disabled={leavingCampaign}
+              className="bg-destructive/10 text-destructive hover:bg-destructive/20"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Leave Campaign
+            </Button>
+          </div>
+          <p className="text-muted-foreground">No embed URL available for this campaign.</p>
+        </div>
+        
+        {/* Leave Campaign Confirmation Dialog */}
+        <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Leave Campaign?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to leave this campaign? This will:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Withdraw your application</li>
+                  <li>Unlink all connected social accounts</li>
+                  <li>Remove your access to campaign resources</li>
+                </ul>
+                <p className="mt-2">You can always reapply later if the campaign is still active.</p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleLeaveCampaign}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                {leavingCampaign ? "Leaving..." : "Leave Campaign"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
     );
   }
 
