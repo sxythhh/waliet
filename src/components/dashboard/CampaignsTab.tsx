@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -43,7 +43,9 @@ export function CampaignsTab() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
+  const [leaveCampaignDialogOpen, setLeaveCampaignDialogOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [leavingCampaign, setLeavingCampaign] = useState(false);
   const [manageAccountDialogOpen, setManageAccountDialogOpen] = useState(false);
   const [submitDemographicsDialogOpen, setSubmitDemographicsDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<{
@@ -218,6 +220,63 @@ export function CampaignsTab() {
       setSelectedCampaignId(null);
     }
   };
+
+  const handleLeaveCampaign = async () => {
+    if (!selectedCampaignId) return;
+    
+    setLeavingCampaign(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please sign in to leave campaign",
+        });
+        return;
+      }
+
+      // 1. Update all campaign submissions to 'withdrawn'
+      const { error: submissionError } = await supabase
+        .from("campaign_submissions")
+        .update({ status: 'withdrawn' })
+        .eq("campaign_id", selectedCampaignId)
+        .eq("creator_id", user.id)
+        .neq("status", "withdrawn");
+
+      if (submissionError) throw submissionError;
+
+      // 2. Unlink all social accounts from this campaign
+      const { error: accountError } = await supabase
+        .from("social_accounts")
+        .update({ campaign_id: null })
+        .eq("campaign_id", selectedCampaignId)
+        .eq("user_id", user.id);
+
+      if (accountError) throw accountError;
+
+      toast({
+        title: "Left Campaign",
+        description: "You have successfully left this campaign",
+      });
+
+      // Refresh campaigns list
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error leaving campaign:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to leave campaign. Please try again.",
+      });
+    } finally {
+      setLeavingCampaign(false);
+      setLeaveCampaignDialogOpen(false);
+      setSelectedCampaignId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
@@ -244,11 +303,17 @@ export function CampaignsTab() {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
       const isPending = campaign.submission_status === 'pending';
-      return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => !isPending && navigate(`/campaign/${campaign.id}`)}>
+      const isEnded = campaign.status === 'ended';
+      return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : isEnded ? 'opacity-75 cursor-pointer' : 'cursor-pointer'}`} onClick={() => !isPending && !isEnded && navigate(`/campaign/${campaign.id}`)}>
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                {isEnded && <div className="absolute top-2 right-2">
+                  <Badge variant="secondary" className="bg-muted/90 text-muted-foreground font-semibold">
+                    Ended
+                  </Badge>
+                </div>}
               </div>}
 
             {/* Content Section */}
@@ -259,9 +324,14 @@ export function CampaignsTab() {
                     <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                   </div>}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
-                    {campaign.title}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 flex-1">
+                      {campaign.title}
+                    </h3>
+                    {isEnded && !campaign.banner_url && <Badge variant="secondary" className="bg-muted/90 text-muted-foreground font-semibold text-[10px]">
+                      Ended
+                    </Badge>}
+                  </div>
                   <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
                 </div>
               </div>
@@ -341,6 +411,15 @@ export function CampaignsTab() {
                     <X className="w-3.5 h-3.5 mr-1.5" />
                     Withdraw Application
                   </Button>
+                </div> : isEnded ? <div className="mt-auto pt-2">
+                  <Button variant="ghost" size="sm" onClick={e => {
+              e.stopPropagation();
+              setSelectedCampaignId(campaign.id);
+              setLeaveCampaignDialogOpen(true);
+            }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
+                    <LogOut className="w-3.5 h-3.5 mr-1.5" />
+                    Leave Campaign
+                  </Button>
                 </div> : <div className="mt-auto pt-2">
                   <Button variant="ghost" size="sm" onClick={e => {
               e.stopPropagation();
@@ -414,6 +493,33 @@ export function CampaignsTab() {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleWithdrawApplication} className="bg-destructive hover:bg-destructive/90">
             Withdraw
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    
+    {/* Leave Campaign Confirmation Dialog */}
+    <AlertDialog open={leaveCampaignDialogOpen} onOpenChange={setLeaveCampaignDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Leave Campaign?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to leave this campaign? This will:
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Withdraw your application</li>
+              <li>Unlink all connected social accounts</li>
+              <li>Remove your access to campaign resources</li>
+            </ul>
+            <p className="mt-2">You can always reapply later if the campaign is still active.</p>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleLeaveCampaign}
+            className="bg-destructive hover:bg-destructive/90"
+          >
+            {leavingCampaign ? "Leaving..." : "Leave Campaign"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
