@@ -7,55 +7,58 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
-
 export default function BrandAuth() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     phoneNumber: "",
-    firstName: "",
+    firstName: ""
   });
-
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       if (session) {
         navigate("/dashboard");
       }
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) {
-          navigate("/dashboard");
-        }
+    const {
+      data: {
+        subscription
       }
-    );
-
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        navigate("/dashboard");
+      }
+    });
     return () => subscription.unsubscribe();
   }, [navigate]);
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (formData.password.length < 6) {
       toast({
         title: "Error",
         description: "Password must be at least 6 characters",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setLoading(true);
-
     try {
-      const { error } = await supabase.auth.signUp({
+      const {
+        error
+      } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -63,105 +66,71 @@ export default function BrandAuth() {
           data: {
             full_name: formData.firstName,
             phone_number: formData.phoneNumber,
-            account_type: 'brand',
-          },
-        },
+            account_type: 'brand'
+          }
+        }
       });
-
       if (error) {
         toast({
           title: "Error",
           description: error.message,
-          variant: "destructive",
+          variant: "destructive"
         });
       } else {
         toast({
           title: "Success",
-          description: "Brand account created successfully! Please check your email to confirm your account.",
+          description: "Brand account created successfully! Please check your email to confirm your account."
         });
       }
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+  return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
-            Join as a Brand
-          </h1>
-          <p className="text-muted-foreground">
-            Launch campaigns and connect with top creators
-          </p>
-        </div>
+        
 
         <Card className="border-primary/20 shadow-xl backdrop-blur-sm bg-card/95">
           <form onSubmit={handleSignUp}>
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-foreground/90">First Name</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="Enter your first name"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  required
-                  className="h-11"
-                />
+                <Input id="firstName" type="text" placeholder="Enter your first name" value={formData.firstName} onChange={e => setFormData({
+                ...formData,
+                firstName: e.target.value
+              })} required className="h-11" />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-foreground/90">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="brand@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  className="h-11"
-                />
+                <Input id="email" type="email" placeholder="brand@example.com" value={formData.email} onChange={e => setFormData({
+                ...formData,
+                email: e.target.value
+              })} required className="h-11" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber" className="text-foreground/90">Phone Number</Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  placeholder="+1 (555) 000-0000"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  required
-                  className="h-11"
-                />
+                <Input id="phoneNumber" type="tel" placeholder="+1 (555) 000-0000" value={formData.phoneNumber} onChange={e => setFormData({
+                ...formData,
+                phoneNumber: e.target.value
+              })} required className="h-11" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-foreground/90">Password</Label>
                 <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a secure password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                    className="h-11 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <Input id="password" type={showPassword ? "text" : "password"} placeholder="Create a secure password" value={formData.password} onChange={e => setFormData({
+                  ...formData,
+                  password: e.target.value
+                })} required className="h-11 pr-10" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
@@ -170,11 +139,7 @@ export default function BrandAuth() {
             </CardContent>
 
             <CardFooter className="flex flex-col space-y-4 pb-6">
-              <Button
-                type="submit"
-                className="w-full h-11 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full h-11 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg" disabled={loading}>
                 {loading ? "Creating account..." : "Create Brand Account"}
               </Button>
 
@@ -203,6 +168,5 @@ export default function BrandAuth() {
           </form>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 }
