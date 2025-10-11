@@ -102,7 +102,7 @@ export default function BrandAuth() {
             <CardContent className="space-y-5 pt-6">
               <div className="flex items-center justify-center gap-3 mb-2">
                 <img src={brandLogo} alt="Virality Logo" className="h-8 w-8" />
-                <span className="font-clash font-semibold text-2xl tracking-[-0.04em]">VIRALITY</span>
+                <span className="font-clash font-semibold text-[21px] tracking-[-0.04em]">VIRALITY</span>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-foreground/90">First Name</Label>
