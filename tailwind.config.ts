@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         'instrument': ['Instrument Sans', 'sans-serif'],
         'chakra': ['Chakra Petch', 'sans-serif'],
+        'clash': ['Clash Grotesk', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
+import brandLogo from "@/assets/brand-logo.avif";
 export default function BrandAuth() {
   const navigate = useNavigate();
   const {
@@ -99,6 +100,10 @@ export default function BrandAuth() {
         <Card className="shadow-xl backdrop-blur-sm bg-card/95">
           <form onSubmit={handleSignUp}>
             <CardContent className="space-y-5 pt-6">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <img src={brandLogo} alt="Virality Logo" className="h-8 w-8" />
+                <span className="font-clash font-semibold text-2xl tracking-[-0.04em]">VIRALITY</span>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-foreground/90">First Name</Label>
                 <Input id="firstName" type="text" placeholder="Enter your first name" value={formData.firstName} onChange={e => setFormData({
