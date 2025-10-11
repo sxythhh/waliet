@@ -28,7 +28,7 @@ export default function BrandAuth() {
       }
     }) => {
       if (session) {
-        navigate("/dashboard");
+        navigate("/apply");
       }
     });
 
@@ -39,7 +39,7 @@ export default function BrandAuth() {
       }
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        navigate("/dashboard");
+        navigate("/apply");
       }
     });
     return () => subscription.unsubscribe();
@@ -62,7 +62,7 @@ export default function BrandAuth() {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/apply`,
           data: {
             full_name: formData.firstName,
             phone_number: formData.phoneNumber,
