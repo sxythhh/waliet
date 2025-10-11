@@ -96,7 +96,7 @@ export default function BrandAuth() {
       <div className="w-full max-w-md">
         
 
-        <Card className="border-primary/20 shadow-xl backdrop-blur-sm bg-card/95">
+        <Card className="shadow-xl backdrop-blur-sm bg-card/95">
           <form onSubmit={handleSignUp}>
             <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
