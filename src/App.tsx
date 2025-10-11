@@ -14,6 +14,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import BrandAuth from "./pages/BrandAuth";
 import Dashboard from "./pages/Dashboard";
 import CampaignDetail from "./pages/CampaignDetail";
 import CampaignJoin from "./pages/CampaignJoin";
@@ -126,6 +127,7 @@ const App = () => <QueryClientProvider client={queryClient}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/brand-auth" element={<BrandAuth />} />
           <Route path="/apply" element={<Apply />} />
           <Route path="/join/:slug" element={<CampaignJoin />} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />

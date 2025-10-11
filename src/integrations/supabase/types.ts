@@ -830,6 +830,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string
           avatar_url: string | null
           bio: string | null
           city: string | null
@@ -847,6 +848,7 @@ export type Database = {
           views_score: number | null
         }
         Insert: {
+          account_type?: string
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
@@ -864,6 +866,7 @@ export type Database = {
           views_score?: number | null
         }
         Update: {
+          account_type?: string
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
