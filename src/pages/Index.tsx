@@ -36,7 +36,7 @@ const Index = () => {
       <div className="fixed top-6 right-6 flex gap-3 z-50">
         <Button onClick={() => navigate("/auth")} variant="outline" style={{
         letterSpacing: '-0.5px'
-      }} className="font-chakra font-semibold tracking-tight backdrop-blur-xl border-0 transition-all duration-300 px-8 shadow-[0_4px_0_0_hsl(var(--muted))] hover:shadow-[0_2px_0_0_hsl(var(--muted))] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none bg-[#181818]/80">
+      }} className="font-chakra font-semibold tracking-tight backdrop-blur-xl border-0 transition-all duration-300 px-8 shadow-[0_4px_0_0_hsl(var(--muted))] hover:shadow-[0_2px_0_0_hsl(var(--muted))] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none bg-[#181818]/80 hover:bg-[#1F1F1F]">
           Login
         </Button>
         <Button onClick={() => navigate("/auth?tab=signup")} className="font-chakra font-semibold tracking-tight backdrop-blur-xl bg-primary hover:bg-primary-glow transition-all duration-300 px-8 shadow-[0_4px_0_0_hsl(var(--primary))] hover:shadow-[0_2px_0_0_hsl(var(--primary)),0_0_20px_hsl(var(--primary)/0.5)] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-[0_0_20px_hsl(var(--primary)/0.5)]" style={{
