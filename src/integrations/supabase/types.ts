@@ -841,7 +841,11 @@ export type Database = {
           full_name: string | null
           id: string
           phone_number: string | null
+          referral_code: string | null
+          referral_earnings: number | null
+          successful_referrals: number | null
           total_earnings: number | null
+          total_referrals: number | null
           trust_score: number | null
           updated_at: string | null
           username: string
@@ -859,7 +863,11 @@ export type Database = {
           full_name?: string | null
           id: string
           phone_number?: string | null
+          referral_code?: string | null
+          referral_earnings?: number | null
+          successful_referrals?: number | null
           total_earnings?: number | null
+          total_referrals?: number | null
           trust_score?: number | null
           updated_at?: string | null
           username: string
@@ -877,11 +885,48 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone_number?: string | null
+          referral_code?: string | null
+          referral_earnings?: number | null
+          successful_referrals?: number | null
           total_earnings?: number | null
+          total_referrals?: number | null
           trust_score?: number | null
           updated_at?: string | null
           username?: string
           views_score?: number | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_earned: number | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_earned?: number | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_earned?: number | null
+          status?: string
         }
         Relationships: []
       }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useReferralTracking } from "@/hooks/useReferralTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") === "signup" ? "signup" : "signin";
+  const { trackReferral } = useReferralTracking();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -56,6 +58,7 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     const {
+      data,
       error
     } = await supabase.auth.signUp({
       email,
@@ -75,6 +78,10 @@ export default function Auth() {
         description: error.message
       });
     } else {
+      // Track referral if there's a referral code
+      if (data.user) {
+        await trackReferral(data.user.id);
+      }
       toast({
         title: "Success!",
         description: "Account created successfully. Welcome to Virality!"
