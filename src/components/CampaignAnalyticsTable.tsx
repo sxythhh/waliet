@@ -619,11 +619,6 @@ export function CampaignAnalyticsTable({
       if (walletFetchError) throw walletFetchError;
 
       const newBalance = (currentWallet.balance || 0) - amount;
-      if (newBalance < 0) {
-        toast.error("Cannot revert: Would result in negative balance");
-        setRevertingTransaction(false);
-        return;
-      }
 
       const { error: walletUpdateError } = await supabase
         .from("wallets")
