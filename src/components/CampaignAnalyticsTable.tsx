@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -115,6 +115,9 @@ export function CampaignAnalyticsTable({
     end: string;
   }>>([]);
   const [trackAccountDialogOpen, setTrackAccountDialogOpen] = useState(false);
+  const [revertDialogOpen, setRevertDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [revertingTransaction, setRevertingTransaction] = useState(false);
   const itemsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
@@ -576,6 +579,116 @@ export function CampaignAnalyticsTable({
       toast.error("Failed to process payment");
     }
   };
+
+  const handleRevertTransaction = async () => {
+    if (!selectedTransaction || !selectedTransaction.metadata?.analytics_id) {
+      toast.error("Invalid transaction data");
+      return;
+    }
+
+    setRevertingTransaction(true);
+    try {
+      const amount = Math.abs(selectedTransaction.amount);
+      const userId = selectedTransaction.user_id;
+
+      // 1. Update wallet - subtract the amount
+      const { data: currentWallet, error: walletFetchError } = await supabase
+        .from("wallets")
+        .select("balance, total_earned")
+        .eq("user_id", userId)
+        .single();
+
+      if (walletFetchError) throw walletFetchError;
+
+      const newBalance = (currentWallet.balance || 0) - amount;
+      if (newBalance < 0) {
+        toast.error("Cannot revert: Would result in negative balance");
+        setRevertingTransaction(false);
+        return;
+      }
+
+      const { error: walletUpdateError } = await supabase
+        .from("wallets")
+        .update({
+          balance: newBalance,
+          total_earned: Math.max(0, (currentWallet.total_earned || 0) - amount)
+        })
+        .eq("user_id", userId);
+
+      if (walletUpdateError) throw walletUpdateError;
+
+      // 2. Create balance correction transaction
+      const { error: correctionError } = await supabase
+        .from("wallet_transactions")
+        .insert({
+          user_id: userId,
+          amount: -amount,
+          type: "balance_correction",
+          description: `Reverted payment for ${selectedTransaction.metadata.platform} account @${selectedTransaction.metadata.account_username}`,
+          status: "completed",
+          metadata: {
+            original_transaction_id: selectedTransaction.id,
+            campaign_id: campaignId,
+            analytics_id: selectedTransaction.metadata.analytics_id,
+            account_username: selectedTransaction.metadata.account_username,
+            platform: selectedTransaction.metadata.platform,
+            views: selectedTransaction.metadata.views,
+            reverted_at: new Date().toISOString()
+          }
+        });
+
+      if (correctionError) throw correctionError;
+
+      // 3. Update analytics - mark as unpaid
+      const { error: analyticsError } = await supabase
+        .from("campaign_account_analytics")
+        .update({
+          paid_views: 0,
+          last_payment_amount: 0,
+          last_payment_date: null
+        })
+        .eq("id", selectedTransaction.metadata.analytics_id);
+
+      if (analyticsError) throw analyticsError;
+
+      // 4. Update campaign budget_used
+      const { data: campaignData, error: campaignFetchError } = await supabase
+        .from("campaigns")
+        .select("budget_used")
+        .eq("id", campaignId)
+        .single();
+
+      if (campaignFetchError) throw campaignFetchError;
+
+      const { error: campaignUpdateError } = await supabase
+        .from("campaigns")
+        .update({
+          budget_used: Math.max(0, (campaignData.budget_used || 0) - amount)
+        })
+        .eq("id", campaignId);
+
+      if (campaignUpdateError) throw campaignUpdateError;
+
+      toast.success(`Transaction of $${amount.toFixed(2)} successfully reverted`);
+      setRevertDialogOpen(false);
+      setSelectedTransaction(null);
+
+      // Refresh data
+      await Promise.all([
+        fetchAnalytics(),
+        fetchTransactions()
+      ]);
+
+      if (onPaymentComplete) {
+        onPaymentComplete();
+      }
+    } catch (error) {
+      console.error("Error reverting transaction:", error);
+      toast.error("Failed to revert transaction");
+    } finally {
+      setRevertingTransaction(false);
+    }
+  };
   const filteredAnalytics = analytics.filter(item => {
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
@@ -858,6 +971,7 @@ export function CampaignAnalyticsTable({
                     <TableHead className="text-white/60 font-medium text-sm py-3 text-right">Views</TableHead>
                     <TableHead className="text-white/60 font-medium text-sm py-3 text-right">Amount</TableHead>
                     <TableHead className="text-white/60 font-medium text-sm py-3">Status</TableHead>
+                    <TableHead className="text-white/60 font-medium text-sm py-3 text-center">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -902,6 +1016,30 @@ export function CampaignAnalyticsTable({
                           <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
                             {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="bg-[#202020] py-3 text-center">
+                          {txn.status === 'completed' && txn.type === 'earning' && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedTransaction(txn);
+                                      setRevertDialogOpen(true);
+                                    }}
+                                    className="h-7 w-7 p-0 hover:bg-red-500/10 hover:text-red-500"
+                                  >
+                                    <RotateCcw className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Revert Transaction</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </TableCell>
                       </TableRow>;
                 })}
@@ -1276,5 +1414,67 @@ export function CampaignAnalyticsTable({
         toast.success("Account will be tracked in Shortimize");
       }}
     />
+
+    {/* Revert Transaction Dialog */}
+    <AlertDialog open={revertDialogOpen} onOpenChange={setRevertDialogOpen}>
+      <AlertDialogContent className="bg-[#0b0b0b] border-white/10">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-white flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+            Revert Transaction
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-white/60">
+            This will permanently revert this payment transaction. The following actions will be performed:
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        
+        {selectedTransaction && (
+          <div className="space-y-3 my-4">
+            <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+              <div className="text-sm text-white/60 mb-1">Transaction Amount</div>
+              <div className="text-2xl font-bold text-red-500">-${Math.abs(selectedTransaction.amount).toFixed(2)}</div>
+            </div>
+            
+            <div className="space-y-2 text-sm">
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span className="text-white/80">Subtract ${Math.abs(selectedTransaction.amount).toFixed(2)} from user's balance</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span className="text-white/80">Create a "Balance Correction" transaction</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span className="text-white/80">Mark account as unpaid in analytics</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                <span className="text-white/80">Reduce campaign's used budget by ${Math.abs(selectedTransaction.amount).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20 mt-4">
+              <p className="text-sm text-red-400 font-medium">
+                ⚠️ This action cannot be undone. The user will see this as a balance deduction.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <AlertDialogFooter>
+          <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleRevertTransaction}
+            disabled={revertingTransaction}
+            className="bg-red-500 hover:bg-red-600 text-white"
+          >
+            {revertingTransaction ? "Reverting..." : "Revert Transaction"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </>;
 }

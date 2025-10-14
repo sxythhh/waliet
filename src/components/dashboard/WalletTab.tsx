@@ -51,7 +51,7 @@ interface WithdrawalDataPoint {
 }
 interface Transaction {
   id: string;
-  type: 'earning' | 'withdrawal';
+  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction';
   amount: number;
   date: Date;
   destination?: string;
@@ -756,8 +756,8 @@ export function WalletTab() {
                       letterSpacing: '-0.5px'
                     }}>
                           {transaction.type === 'earning' ? 'Earnings' : 
-                           transaction.type === 'balance_correction' ? 'Balance Correction' : 
-                           transaction.type === 'referral' ? 'Referral Bonus' : 'Withdrawal'}
+                           transaction.type === 'referral' ? 'Referral Bonus' :
+                           transaction.type === 'balance_correction' ? 'Balance Correction' : 'Withdrawal'}
                         </p>
                         {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
                       letterSpacing: '-0.5px'
@@ -1240,8 +1240,8 @@ export function WalletTab() {
                       <span className="text-sm text-muted-foreground">Type</span>
                       <span className="text-sm font-medium capitalize">
                         {selectedTransaction.type === 'earning' ? 'Earnings' : 
-                         selectedTransaction.type === 'balance_correction' ? 'Balance Correction' :
-                         selectedTransaction.type === 'referral' ? 'Referral Bonus' : 'Withdrawal'}
+                         selectedTransaction.type === 'referral' ? 'Referral Bonus' :
+                         selectedTransaction.type === 'balance_correction' ? 'Balance Correction' : 'Withdrawal'}
                       </span>
                     </div>
 
