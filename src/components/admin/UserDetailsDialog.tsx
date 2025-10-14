@@ -1,10 +1,14 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy } from "lucide-react";
+import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -70,6 +74,7 @@ interface UserDetailsDialogProps {
   paymentMethodsOpen: boolean;
   onPaymentMethodsOpenChange: (open: boolean) => void;
   onEditScore?: (account: SocialAccount) => void;
+  onBalanceUpdated?: () => void;
 }
 const getPlatformIcon = (platform: string) => {
   switch (platform.toLowerCase()) {
@@ -99,9 +104,14 @@ export function UserDetailsDialog({
   onTransactionsOpenChange,
   paymentMethodsOpen,
   onPaymentMethodsOpenChange,
-  onEditScore
+  onEditScore,
+  onBalanceUpdated
 }: UserDetailsDialogProps) {
   const { toast } = useToast();
+  const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustDescription, setAdjustDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -109,6 +119,85 @@ export function UserDetailsDialog({
       title: "Copied!",
       description: `${label} copied to clipboard`,
     });
+  };
+
+  const handleBalanceAdjustment = async () => {
+    if (!user?.id) return;
+    
+    const amount = parseFloat(adjustAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid positive amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Get current wallet balance
+      const { data: wallet, error: walletError } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .single();
+
+      if (walletError) throw walletError;
+
+      const currentBalance = wallet.balance || 0;
+      const newBalance = currentBalance - amount;
+
+      if (newBalance < 0) {
+        toast({
+          title: "Insufficient Balance",
+          description: "Cannot subtract more than the current balance",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Update wallet balance
+      const { error: updateError } = await supabase
+        .from("wallets")
+        .update({ balance: newBalance })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      // Create transaction record
+      const { error: transactionError } = await supabase
+        .from("wallet_transactions")
+        .insert({
+          user_id: user.id,
+          amount: -amount,
+          type: "balance_correction",
+          status: "completed",
+          description: adjustDescription || "Balance Correction",
+        });
+
+      if (transactionError) throw transactionError;
+
+      toast({
+        title: "Balance Updated",
+        description: `Successfully subtracted $${amount.toFixed(2)} from balance`,
+      });
+
+      setAdjustDialogOpen(false);
+      setAdjustAmount("");
+      setAdjustDescription("");
+      onBalanceUpdated?.();
+    } catch (error) {
+      console.error("Error adjusting balance:", error);
+      toast({
+        title: "Error",
+        description: "Failed to adjust balance. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   if (!user) return null;
@@ -128,25 +217,36 @@ export function UserDetailsDialog({
               </p>}
             
             {/* Wallet Stats */}
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              <div className="bg-card/50 px-3 py-2 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Balance</p>
-                <p className="text-lg font-semibold text-success">
-                  ${(user.wallets?.balance || 0).toFixed(2)}
-                </p>
+            <div className="space-y-2 mt-2">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-card/50 px-3 py-2 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Balance</p>
+                  <p className="text-lg font-semibold text-success">
+                    ${(user.wallets?.balance || 0).toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-card/50 px-3 py-2 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Total Earned</p>
+                  <p className="text-lg font-semibold">
+                    ${(user.wallets?.total_earned || 0).toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-card/50 px-3 py-2 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Withdrawn</p>
+                  <p className="text-lg font-semibold">
+                    ${(user.wallets?.total_withdrawn || 0).toFixed(2)}
+                  </p>
+                </div>
               </div>
-              <div className="bg-card/50 px-3 py-2 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Total Earned</p>
-                <p className="text-lg font-semibold">
-                  ${(user.wallets?.total_earned || 0).toFixed(2)}
-                </p>
-              </div>
-              <div className="bg-card/50 px-3 py-2 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Withdrawn</p>
-                <p className="text-lg font-semibold">
-                  ${(user.wallets?.total_withdrawn || 0).toFixed(2)}
-                </p>
-              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full"
+                onClick={() => setAdjustDialogOpen(true)}
+              >
+                <Minus className="h-4 w-4 mr-2" />
+                Subtract from Balance
+              </Button>
             </div>
           </div>
         </div>
@@ -436,6 +536,63 @@ export function UserDetailsDialog({
               </div>}
           </CollapsibleContent>
         </Collapsible>
+
+        {/* Balance Adjustment Dialog */}
+        <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
+          <DialogContent className="bg-[#0b0b0b]">
+            <DialogHeader>
+              <DialogTitle>Subtract from Balance</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount to Subtract</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={adjustAmount}
+                  onChange={(e) => setAdjustAmount(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input
+                  id="description"
+                  placeholder="Balance Correction"
+                  value={adjustDescription}
+                  onChange={(e) => setAdjustDescription(e.target.value)}
+                />
+              </div>
+              {adjustAmount && !isNaN(parseFloat(adjustAmount)) && (
+                <div className="p-3 bg-card/50 rounded-lg space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Current Balance:</span>
+                    <span className="font-medium">${(user.wallets?.balance || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtract:</span>
+                    <span className="font-medium text-destructive">-${parseFloat(adjustAmount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm pt-2 border-t">
+                    <span className="text-muted-foreground">New Balance:</span>
+                    <span className="font-semibold">
+                      ${((user.wallets?.balance || 0) - parseFloat(adjustAmount)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAdjustDialogOpen(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button onClick={handleBalanceAdjustment} disabled={isSubmitting}>
+                {isSubmitting ? "Processing..." : "Subtract Amount"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>;
 }
