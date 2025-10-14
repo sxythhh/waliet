@@ -360,7 +360,8 @@ export function WalletTab() {
         }
         allTransactions.push({
           id: txn.id,
-          type: txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund' ? 'earning' : 'withdrawal',
+          type: txn.type === 'balance_correction' ? 'balance_correction' : 
+                txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund' ? 'earning' : 'withdrawal',
           amount: Number(txn.amount) || 0,
           date: new Date(txn.created_at),
           destination,
@@ -756,8 +757,8 @@ export function WalletTab() {
                       letterSpacing: '-0.5px'
                     }}>
                           {transaction.type === 'earning' ? 'Earnings' : 
-                           transaction.type === 'referral' ? 'Referral Bonus' :
-                           transaction.type === 'balance_correction' ? 'Balance Correction' : 'Withdrawal'}
+                           transaction.type === 'balance_correction' ? 'Balance Correction' :
+                           transaction.type === 'referral' ? 'Referral Bonus' : 'Withdrawal'}
                         </p>
                         {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
                       letterSpacing: '-0.5px'
@@ -791,11 +792,11 @@ export function WalletTab() {
                       </div>
                     </div>
                   </div>
-                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`} style={{
+                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' ? 'text-green-500' : transaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
                 letterSpacing: '-0.5px'
               }}>
-                    {transaction.type === 'earning' ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
+                    {transaction.type === 'earning' ? '+' : transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                   </div>
                 </div>)}
             </div>}
@@ -1247,8 +1248,8 @@ export function WalletTab() {
 
                     <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                       <span className="text-sm text-muted-foreground">Amount</span>
-                      <span className={`text-sm font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : 'text-red-500'}`}>
-                        {selectedTransaction.type === 'earning' ? '+' : '-'}${Math.abs(selectedTransaction.amount).toFixed(2)}
+                      <span className={`text-sm font-bold ${selectedTransaction.type === 'earning' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
+                        {selectedTransaction.type === 'earning' ? '+' : selectedTransaction.amount < 0 ? '-' : '+'}${Math.abs(selectedTransaction.amount).toFixed(2)}
                       </span>
                     </div>
 
