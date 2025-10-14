@@ -93,6 +93,7 @@ export function CampaignAnalyticsTable({
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showLinkedOnly, setShowLinkedOnly] = useState(false);
+  const [showPaidOnly, setShowPaidOnly] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AnalyticsData | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -710,8 +711,9 @@ export function CampaignAnalyticsTable({
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
     const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null;
+    const matchesPaidFilter = !showPaidOnly || (item.last_payment_amount && item.last_payment_amount > 0);
     const matchesDateRange = selectedDateRange === "all" || `${item.start_date}|${item.end_date}` === selectedDateRange;
-    return matchesSearch && matchesPlatform && matchesLinkedFilter && matchesDateRange;
+    return matchesSearch && matchesPlatform && matchesLinkedFilter && matchesPaidFilter && matchesDateRange;
   }).sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
@@ -835,6 +837,10 @@ export function CampaignAnalyticsTable({
                 <Button variant={showLinkedOnly ? "default" : "outline"} onClick={() => setShowLinkedOnly(!showLinkedOnly)} size="sm" className={`h-8 text-sm ${showLinkedOnly ? "bg-primary" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}>
                   <Filter className="h-4 w-4 mr-1" />
                   Linked
+                </Button>
+                <Button variant={showPaidOnly ? "default" : "outline"} onClick={() => setShowPaidOnly(!showPaidOnly)} size="sm" className={`h-8 text-sm ${showPaidOnly ? "bg-green-500 hover:bg-green-600" : "bg-[#191919] border-white/10 text-white hover:bg-white/10"}`}>
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Paid
                 </Button>
               </div>
             </div>
