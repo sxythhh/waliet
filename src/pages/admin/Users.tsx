@@ -689,16 +689,22 @@ export default function AdminUsers() {
         }
       } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
-      const {
-        error: updateError
-      } = await supabase.from("demographic_submissions").update({
+      const updateData: any = {
         status: finalStatus,
         score: finalStatus === "approved" ? scoreValue : null,
-        tier1_percentage: finalStatus === "approved" ? scoreValue : null,
         admin_notes: adminNotes.trim() || null,
         reviewed_at: new Date().toISOString(),
         reviewed_by: session.user.id
-      }).eq("id", selectedSubmission.id);
+      };
+      
+      // Only update tier1_percentage when approving (it's required, so don't null it on reject)
+      if (finalStatus === "approved") {
+        updateData.tier1_percentage = scoreValue;
+      }
+      
+      const {
+        error: updateError
+      } = await supabase.from("demographic_submissions").update(updateData).eq("id", selectedSubmission.id);
       if (updateError) throw updateError;
       if (finalStatus === "approved") {
         const {
