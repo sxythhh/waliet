@@ -474,7 +474,24 @@ export function CampaignAnalyticsTable({
         const {
           data: profiles
         } = await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds);
-        const transactionsWithProfiles = data.map(txn => ({
+        
+        // Fetch analytics records to check if transactions have been reverted
+        const analyticsIds = data
+          .map(t => (t.metadata as any)?.analytics_id)
+          .filter(Boolean);
+        
+        const { data: analyticsData } = await supabase
+          .from("campaign_account_analytics")
+          .select("id, last_payment_amount")
+          .in("id", analyticsIds);
+        
+        // Filter out transactions where the analytics record shows no payment (reverted)
+        const activeTransactions = data.filter(txn => {
+          const analytics = analyticsData?.find(a => a.id === (txn.metadata as any)?.analytics_id);
+          return analytics && analytics.last_payment_amount > 0;
+        });
+        
+        const transactionsWithProfiles = activeTransactions.map(txn => ({
           ...txn,
           profiles: profiles?.find(p => p.id === txn.user_id)
         })) as Transaction[];
