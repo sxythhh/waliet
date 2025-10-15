@@ -30,6 +30,7 @@ interface SocialAccount {
   account_link: string;
   social_account_campaigns?: Array<{
     campaigns: {
+      id: string;
       title: string;
       brand_name: string;
       brand_logo_url?: string | null;
@@ -112,6 +113,7 @@ export function UserDetailsDialog({
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustDescription, setAdjustDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [unlinkingAccountId, setUnlinkingAccountId] = useState<string | null>(null);
   
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -119,6 +121,36 @@ export function UserDetailsDialog({
       title: "Copied!",
       description: `${label} copied to clipboard`,
     });
+  };
+
+  const handleUnlinkAccount = async (socialAccountId: string, campaignId: string) => {
+    setUnlinkingAccountId(socialAccountId);
+    try {
+      const { error } = await supabase
+        .from("social_account_campaigns")
+        .delete()
+        .eq("social_account_id", socialAccountId)
+        .eq("campaign_id", campaignId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Account Unlinked",
+        description: "Social account has been unlinked from the campaign",
+      });
+
+      // Refresh the social accounts
+      onBalanceUpdated?.();
+    } catch (error) {
+      console.error("Error unlinking account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to unlink account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUnlinkingAccountId(null);
+    }
   };
 
   const handleBalanceAdjustment = async () => {
@@ -307,14 +339,29 @@ export function UserDetailsDialog({
                           </div>
                         </div>
                         
-                        {/* Campaign Link */}
-                        <div className="shrink-0">
-                          {linkedCampaign ? <div className="flex items-center gap-2">
-                              {(linkedCampaign.brands?.logo_url || linkedCampaign.brand_logo_url) && <img src={linkedCampaign.brands?.logo_url || linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-6 w-6 rounded object-cover" />}
-                              <span className="font-medium text-sm">
-                                {linkedCampaign.title}
-                              </span>
-                            </div> : <span className="text-xs text-muted-foreground italic">
+                        {/* Campaign Link and Unlink Button */}
+                        <div className="shrink-0 flex items-center gap-2">
+                          {linkedCampaign ? <>
+                              <div className="flex items-center gap-2">
+                                {(linkedCampaign.brands?.logo_url || linkedCampaign.brand_logo_url) && <img src={linkedCampaign.brands?.logo_url || linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-6 w-6 rounded object-cover" />}
+                                <span className="font-medium text-sm">
+                                  {linkedCampaign.title}
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-7 px-2 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const campaignId = account.social_account_campaigns?.[0]?.campaigns?.id;
+                                  if (campaignId) handleUnlinkAccount(account.id, campaignId);
+                                }}
+                                disabled={unlinkingAccountId === account.id}
+                              >
+                                {unlinkingAccountId === account.id ? "Unlinking..." : "Unlink"}
+                              </Button>
+                            </> : <span className="text-xs text-muted-foreground italic">
                               Not linked
                             </span>}
                         </div>
