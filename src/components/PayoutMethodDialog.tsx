@@ -116,7 +116,11 @@ export default function PayoutMethodDialog({
   const isMaxMethodsReached = currentMethodCount >= 3;
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] bg-[#0a0a0a] border-[#1a1a1a] max-h-[90vh] overflow-y-auto">
-        
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">
+            {isMaxMethodsReached ? "Maximum Methods Reached" : "Add Payout Method"}
+          </DialogTitle>
+        </DialogHeader>
 
         {!isMaxMethodsReached && <div className="flex flex-col sm:flex-row gap-6 pt-6 py-[19px]">
             {/* Payment Method Sidebar */}
