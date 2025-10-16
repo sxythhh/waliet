@@ -648,13 +648,15 @@ export default function AdminPayouts() {
 
                             <div className="min-w-0">
                               <p className="text-xs font-medium text-muted-foreground mb-1.5">
-                                {request.payout_method === 'crypto' ? 'Wallet Address' : 'Account'}
+                                {request.payout_method === 'crypto' ? 'Wallet Address' : request.payout_method === 'upi' ? 'UPI ID' : 'Account'}
                               </p>
                               <div 
                                 className="flex items-center gap-2 cursor-pointer hover:bg-muted/20 rounded px-2 py-1 -ml-2 transition-colors group"
                                 onClick={() => {
                                   const textToCopy = request.payout_method === 'crypto' 
                                     ? (request.payout_details?.address || request.payout_details?.wallet_address || '')
+                                    : request.payout_method === 'upi'
+                                    ? (request.payout_details?.upi_id || '')
                                     : (request.payout_details?.email || request.payout_details?.account_number || '');
                                   
                                   navigator.clipboard.writeText(textToCopy);
@@ -667,6 +669,8 @@ export default function AdminPayouts() {
                                 <p className="text-sm font-mono truncate flex-1">
                                   {request.payout_method === 'crypto' 
                                     ? (request.payout_details?.address || request.payout_details?.wallet_address || 'N/A')
+                                    : request.payout_method === 'upi'
+                                    ? (request.payout_details?.upi_id || 'N/A')
                                     : (request.payout_details?.email || request.payout_details?.account_number || 'N/A')}
                                 </p>
                                 <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
