@@ -56,7 +56,7 @@ export default function PayoutMethodDialog({
   const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("");
-  const [upiEmail, setUpiEmail] = useState("");
+  const [upiId, setUpiId] = useState("");
 
   // Bank transfer fields
   const [bankName, setBankName] = useState("");
@@ -85,9 +85,9 @@ export default function PayoutMethodDialog({
         email: paypalEmail
       });
     } else if (selectedMethod === "upi") {
-      if (!upiEmail) return;
+      if (!upiId) return;
       onSave("upi", {
-        email: upiEmail
+        upi_id: upiId
       });
     } else if (selectedMethod === "revolut") {
       if (!revolutTag) return;
@@ -106,7 +106,7 @@ export default function PayoutMethodDialog({
     // Reset all fields
     setWalletAddress("");
     setPaypalEmail("");
-    setUpiEmail("");
+    setUpiId("");
     setRevolutTag("");
     setCardNumber("");
     setLegalName("");
@@ -238,7 +238,7 @@ export default function PayoutMethodDialog({
             }}>
                     UPI ID
                   </Label>
-                  <Input id="upi-id" type="text" placeholder="Enter your UPI ID" value={upiEmail} onChange={e => setUpiEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                  <Input id="upi-id" type="text" placeholder="yourname@okaxis" value={upiId} onChange={e => setUpiId(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
                 </div>}
 
               {selectedMethod === "revolut" && <div className="space-y-3">
@@ -287,7 +287,7 @@ export default function PayoutMethodDialog({
             <Button variant="outline" className="flex-1 h-12 bg-[#0f0f0f] border-[#2a2a2a] hover:bg-[#1a1a1a]" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "upi" && !upiEmail || selectedMethod === "revolut" && !revolutTag || selectedMethod === "debit" && (!cardNumber || !legalName || !address)}>
+            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "upi" && !upiId || selectedMethod === "revolut" && !revolutTag || selectedMethod === "debit" && (!cardNumber || !legalName || !address)}>
               Add Method
             </Button>
           </div>}
