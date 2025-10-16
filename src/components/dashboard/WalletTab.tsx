@@ -428,22 +428,33 @@ export function WalletTab() {
       method,
       details
     }];
+    
+    console.log("Adding payout method:", { method, details });
+    console.log("Updated methods array:", updatedMethods);
+    
+    const payoutDetailsPayload = updatedMethods.map(m => ({
+      method: m.method,
+      details: m.details
+    }));
+    
+    console.log("Payload to Supabase:", payoutDetailsPayload);
+    
     const {
       error
     } = await supabase.from("wallets").update({
       payout_method: method,
-      payout_details: updatedMethods.map(m => ({
-        method: m.method,
-        details: m.details
-      }))
+      payout_details: payoutDetailsPayload
     }).eq("id", wallet.id);
+    
     if (error) {
+      console.error("Supabase error when adding payout method:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to add payout method"
+        description: `Failed to add payout method: ${error.message}`
       });
     } else {
+      console.log("Payout method added successfully");
       toast({
         title: "Success",
         description: "Payout method added successfully"
