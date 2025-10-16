@@ -848,6 +848,8 @@ export function WalletTab() {
                 return "Wise";
               case "revolut":
                 return "Revolut";
+              case "upi":
+                return "UPI";
               case "tips":
                 return "TIPS";
               default:
@@ -866,6 +868,8 @@ export function WalletTab() {
                 return method.details.email;
               case "revolut":
                 return method.details.email;
+              case "upi":
+                return method.details.upi_id;
               case "tips":
                 return method.details.username;
               default:
