@@ -4,6 +4,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -13,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, DollarSign, Calendar, User } from "lucide-react";
+import { Search, DollarSign, Calendar as CalendarIcon, User } from "lucide-react";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import instagramLogo from "@/assets/instagram-logo.svg";
@@ -42,6 +46,8 @@ export default function Transactions() {
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [amountFilter, setAmountFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const [campaigns, setCampaigns] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
 
@@ -176,7 +182,19 @@ export default function Transactions() {
       matchesAmount = Math.abs(tx.amount) < 10;
     }
 
-    return matchesSearch && matchesCampaign && matchesType && matchesAmount;
+    // Date range filter
+    let matchesDateRange = true;
+    const txDate = new Date(tx.created_at);
+    if (dateFrom) {
+      matchesDateRange = txDate >= dateFrom;
+    }
+    if (dateTo && matchesDateRange) {
+      const endOfDay = new Date(dateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      matchesDateRange = txDate <= endOfDay;
+    }
+
+    return matchesSearch && matchesCampaign && matchesType && matchesAmount && matchesDateRange;
   });
 
   const getStatusBadge = (status: string) => {
@@ -216,7 +234,7 @@ export default function Transactions() {
       </div>
 
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 z-10" />
             <Input
@@ -266,6 +284,61 @@ export default function Transactions() {
               <SelectItem value="under10">Under $10</SelectItem>
             </SelectContent>
           </Select>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal",
+                  !dateFrom && !dateTo && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFrom ? (
+                  dateTo ? (
+                    <>
+                      {format(dateFrom, "LLL dd")} - {format(dateTo, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateFrom, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <div className="flex flex-col gap-2 p-3">
+                <div className="text-sm font-medium">From:</div>
+                <Calendar
+                  mode="single"
+                  selected={dateFrom}
+                  onSelect={setDateFrom}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+                <div className="text-sm font-medium mt-2">To:</div>
+                <Calendar
+                  mode="single"
+                  selected={dateTo}
+                  onSelect={setDateTo}
+                  disabled={(date) => dateFrom ? date < dateFrom : false}
+                  className="pointer-events-auto"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDateFrom(undefined);
+                    setDateTo(undefined);
+                  }}
+                  className="mt-2"
+                >
+                  Clear dates
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </Card>
 
@@ -300,7 +373,7 @@ export default function Transactions() {
                 <TableRow key={tx.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
                         {format(new Date(tx.created_at), "MMM d, yyyy HH:mm")}
                       </span>
