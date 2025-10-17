@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -35,11 +36,31 @@ export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [amountFilter, setAmountFilter] = useState<string>("all");
+  const [campaigns, setCampaigns] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchTransactions();
+    fetchCampaigns();
   }, []);
+
+  const fetchCampaigns = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("id, title")
+        .order("title");
+
+      if (error) throw error;
+
+      setCampaigns(data?.map(c => ({ id: c.id, name: c.title })) || []);
+    } catch (error) {
+      console.error("Error fetching campaigns:", error);
+    }
+  };
 
   const fetchTransactions = async () => {
     try {
@@ -122,13 +143,38 @@ export default function Transactions() {
     }
   };
 
-  const filteredTransactions = transactions.filter(
-    (tx) =>
+  const filteredTransactions = transactions.filter((tx) => {
+    // Search term filter
+    const matchesSearch =
       tx.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tx.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      tx.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Campaign filter
+    const matchesCampaign =
+      selectedCampaign === "all" ||
+      (selectedCampaign === "none" && !tx.metadata?.campaign_id) ||
+      (tx.metadata?.campaign_id === selectedCampaign);
+
+    // Type filter
+    const matchesType =
+      selectedType === "all" || tx.type === selectedType;
+
+    // Amount filter
+    let matchesAmount = true;
+    if (amountFilter === "positive") {
+      matchesAmount = tx.amount > 0;
+    } else if (amountFilter === "negative") {
+      matchesAmount = tx.amount < 0;
+    } else if (amountFilter === "over100") {
+      matchesAmount = Math.abs(tx.amount) > 100;
+    } else if (amountFilter === "under10") {
+      matchesAmount = Math.abs(tx.amount) < 10;
+    }
+
+    return matchesSearch && matchesCampaign && matchesType && matchesAmount;
+  });
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
@@ -158,14 +204,58 @@ export default function Transactions() {
       </div>
 
       <Card className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search by username, email, description, or campaign..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 z-10" />
+            <Input
+              placeholder="Search by username, email, description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by campaign" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Campaigns</SelectItem>
+              <SelectItem value="none">No Campaign</SelectItem>
+              {campaigns.map((campaign) => (
+                <SelectItem key={campaign.id} value={campaign.id}>
+                  {campaign.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedType} onValueChange={setSelectedType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="credit">Credit</SelectItem>
+              <SelectItem value="debit">Debit</SelectItem>
+              <SelectItem value="earnings">Earnings</SelectItem>
+              <SelectItem value="referral_bonus">Referral Bonus</SelectItem>
+              <SelectItem value="withdrawal">Withdrawal</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={amountFilter} onValueChange={setAmountFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by amount" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Amounts</SelectItem>
+              <SelectItem value="positive">Positive Only</SelectItem>
+              <SelectItem value="negative">Negative Only</SelectItem>
+              <SelectItem value="over100">Over $100</SelectItem>
+              <SelectItem value="under10">Under $10</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </Card>
 
