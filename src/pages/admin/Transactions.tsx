@@ -233,23 +233,23 @@ export default function Transactions() {
         </div>
       </div>
 
-      <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 z-10" />
+      <Card className="p-4 bg-muted/30 border-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3.5 w-3.5 z-10" />
             <Input
-              placeholder="Search by username, email, description..."
+              placeholder="Search transactions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-8 h-9 text-sm bg-background/60 border-0 shadow-sm"
             />
           </div>
 
           <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by campaign" />
+            <SelectTrigger className="w-[160px] h-9 text-sm bg-background/60 border-0 shadow-sm">
+              <SelectValue placeholder="Campaign" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background">
               <SelectItem value="all">All Campaigns</SelectItem>
               <SelectItem value="none">No Campaign</SelectItem>
               {campaigns.map((campaign) => (
@@ -261,10 +261,10 @@ export default function Transactions() {
           </Select>
 
           <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by type" />
+            <SelectTrigger className="w-[140px] h-9 text-sm bg-background/60 border-0 shadow-sm">
+              <SelectValue placeholder="Type" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background">
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="earning">Earning</SelectItem>
               <SelectItem value="withdrawal">Withdrawal</SelectItem>
@@ -273,10 +273,10 @@ export default function Transactions() {
           </Select>
 
           <Select value={amountFilter} onValueChange={setAmountFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by amount" />
+            <SelectTrigger className="w-[140px] h-9 text-sm bg-background/60 border-0 shadow-sm">
+              <SelectValue placeholder="Amount" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background">
               <SelectItem value="all">All Amounts</SelectItem>
               <SelectItem value="positive">Positive Only</SelectItem>
               <SelectItem value="negative">Negative Only</SelectItem>
@@ -288,17 +288,17 @@ export default function Transactions() {
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
                 className={cn(
-                  "justify-start text-left font-normal",
+                  "h-9 px-3 text-sm bg-background/60 border-0 shadow-sm hover:bg-background/80",
                   !dateFrom && !dateTo && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-2 h-3.5 w-3.5" />
                 {dateFrom ? (
                   dateTo ? (
                     <>
-                      {format(dateFrom, "LLL dd")} - {format(dateTo, "LLL dd, y")}
+                      {format(dateFrom, "LLL dd")} - {format(dateTo, "LLL dd")}
                     </>
                   ) : (
                     format(dateFrom, "LLL dd, y")
@@ -308,9 +308,9 @@ export default function Transactions() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 bg-background border shadow-lg" align="start">
               <div className="flex flex-col gap-2 p-3">
-                <div className="text-sm font-medium">From:</div>
+                <div className="text-xs font-medium text-muted-foreground">From:</div>
                 <Calendar
                   mode="single"
                   selected={dateFrom}
@@ -318,7 +318,7 @@ export default function Transactions() {
                   initialFocus
                   className="pointer-events-auto"
                 />
-                <div className="text-sm font-medium mt-2">To:</div>
+                <div className="text-xs font-medium text-muted-foreground mt-2">To:</div>
                 <Calendar
                   mode="single"
                   selected={dateTo}
@@ -327,7 +327,8 @@ export default function Transactions() {
                   className="pointer-events-auto"
                 />
                 <Button
-                  variant="outline"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setDateFrom(undefined);
                     setDateTo(undefined);
