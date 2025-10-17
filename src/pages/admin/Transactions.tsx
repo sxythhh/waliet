@@ -385,10 +385,10 @@ export default function Transactions() {
                   </TableCell>
                   <TableCell className="py-3">
                     <div className={cn(
-                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-semibold text-sm",
+                      "inline-flex items-center gap-1.5 font-semibold text-sm",
                       tx.amount >= 0 
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400" 
-                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
+                        ? "text-green-600 dark:text-green-400" 
+                        : "text-red-600 dark:text-red-400"
                     )}>
                       <DollarSign className="h-3.5 w-3.5" />
                       {tx.amount >= 0 ? "+" : ""}{tx.amount.toFixed(2)}
