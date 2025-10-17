@@ -236,11 +236,9 @@ export default function Transactions() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="credit">Credit</SelectItem>
-              <SelectItem value="debit">Debit</SelectItem>
-              <SelectItem value="earnings">Earnings</SelectItem>
-              <SelectItem value="referral_bonus">Referral Bonus</SelectItem>
+              <SelectItem value="earning">Earning</SelectItem>
               <SelectItem value="withdrawal">Withdrawal</SelectItem>
+              <SelectItem value="balance_correction">Balance Correction</SelectItem>
             </SelectContent>
           </Select>
 
