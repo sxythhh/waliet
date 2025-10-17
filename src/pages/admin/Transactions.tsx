@@ -12,8 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, DollarSign, Calendar, User, FileText } from "lucide-react";
+import { Search, DollarSign, Calendar, User } from "lucide-react";
 import { format } from "date-fns";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface Transaction {
   id: string;
@@ -27,6 +28,7 @@ interface Transaction {
   username?: string;
   email?: string;
   campaign_name?: string;
+  campaign_logo_url?: string;
 }
 
 export default function Transactions() {
@@ -73,34 +75,39 @@ export default function Transactions() {
         ?.filter(tx => tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata)
         .map(tx => (tx.metadata as any).campaign_id) || [];
 
-      let campaignNames: Record<string, string> = {};
+      let campaignsMap: Record<string, { title: string; brand_logo_url?: string }> = {};
       if (campaignIds.length > 0) {
         const { data: campaignData } = await supabase
           .from("campaigns")
-          .select("id, title")
+          .select("id, title, brand_logo_url")
           .in("id", campaignIds);
 
-        campaignNames = campaignData?.reduce((acc, camp) => ({
+        campaignsMap = campaignData?.reduce((acc, camp) => ({
           ...acc,
-          [camp.id]: camp.title
+          [camp.id]: { title: camp.title, brand_logo_url: camp.brand_logo_url }
         }), {}) || {};
       }
 
-      const formattedTransactions = txData?.map((tx: any) => ({
-        id: tx.id,
-        user_id: tx.user_id,
-        amount: tx.amount,
-        type: tx.type,
-        status: tx.status,
-        description: tx.description,
-        metadata: tx.metadata,
-        created_at: tx.created_at,
-        username: profilesMap[tx.user_id]?.username,
-        email: profilesMap[tx.user_id]?.email,
-        campaign_name: tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata 
-          ? campaignNames[(tx.metadata as any).campaign_id] 
-          : undefined
-      })) || [];
+      const formattedTransactions = txData?.map((tx: any) => {
+        const campaignId = tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata 
+          ? (tx.metadata as any).campaign_id 
+          : undefined;
+        
+        return {
+          id: tx.id,
+          user_id: tx.user_id,
+          amount: tx.amount,
+          type: tx.type,
+          status: tx.status,
+          description: tx.description,
+          metadata: tx.metadata,
+          created_at: tx.created_at,
+          username: profilesMap[tx.user_id]?.username,
+          email: profilesMap[tx.user_id]?.email,
+          campaign_name: campaignId ? campaignsMap[campaignId]?.title : undefined,
+          campaign_logo_url: campaignId ? campaignsMap[campaignId]?.brand_logo_url : undefined
+        };
+      }) || [];
 
       setTransactions(formattedTransactions);
     } catch (error: any) {
@@ -222,7 +229,13 @@ export default function Transactions() {
                   <TableCell>
                     {tx.campaign_name ? (
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        {tx.campaign_logo_url && (
+                          <OptimizedImage 
+                            src={tx.campaign_logo_url} 
+                            alt={`${tx.campaign_name} logo`}
+                            className="h-6 w-6 rounded object-cover"
+                          />
+                        )}
                         <span className="text-sm">{tx.campaign_name}</span>
                       </div>
                     ) : (
