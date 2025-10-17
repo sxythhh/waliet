@@ -34,6 +34,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminPayouts from "./pages/admin/Payouts";
 import AdminCourses from "./pages/admin/Courses";
 import AdminWallets from "./pages/admin/Wallets";
+import AdminTransactions from "./pages/admin/Transactions";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 import Apply from "./pages/Apply";
@@ -141,6 +142,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
           <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
           <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
+          <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
           <Route path="/brand/:slug" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
           <Route path="/brand/:slug/management" element={<BrandLayout><BrandManagement /></BrandLayout>} />
           <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
