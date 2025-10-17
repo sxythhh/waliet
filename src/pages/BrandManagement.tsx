@@ -465,14 +465,11 @@ export default function BrandManagement() {
       if (transactionError) throw transactionError;
 
       // Update campaign budget - fetch current value from database to avoid stale state
-      const { data: currentCampaign, error: fetchError } = await supabase
-        .from("campaigns")
-        .select("budget_used")
-        .eq("id", selectedCampaignId)
-        .single();
-      
+      const {
+        data: currentCampaign,
+        error: fetchError
+      } = await supabase.from("campaigns").select("budget_used").eq("id", selectedCampaignId).single();
       if (fetchError) throw fetchError;
-      
       const currentBudgetUsed = Number(currentCampaign?.budget_used || 0);
       const {
         error: budgetError
@@ -482,52 +479,36 @@ export default function BrandManagement() {
       if (budgetError) throw budgetError;
 
       // Update campaign analytics
-      const { data: socialAccount } = await supabase
-        .from("social_accounts")
-        .select("username, account_link")
-        .eq("user_id", selectedUserForPayment.creator_id)
-        .eq("platform", selectedUserForPayment.platform)
-        .single();
-
+      const {
+        data: socialAccount
+      } = await supabase.from("social_accounts").select("username, account_link").eq("user_id", selectedUserForPayment.creator_id).eq("platform", selectedUserForPayment.platform).single();
       if (socialAccount) {
-        const { data: existingAnalytics } = await supabase
-          .from("campaign_account_analytics")
-          .select("*")
-          .eq("campaign_id", selectedCampaignId)
-          .eq("user_id", selectedUserForPayment.creator_id)
-          .eq("platform", selectedUserForPayment.platform)
-          .eq("account_username", socialAccount.username)
-          .maybeSingle();
-
+        const {
+          data: existingAnalytics
+        } = await supabase.from("campaign_account_analytics").select("*").eq("campaign_id", selectedCampaignId).eq("user_id", selectedUserForPayment.creator_id).eq("platform", selectedUserForPayment.platform).eq("account_username", socialAccount.username).maybeSingle();
         if (existingAnalytics) {
           // Update existing analytics record
-          await supabase
-            .from("campaign_account_analytics")
-            .update({
-              paid_views: (existingAnalytics.paid_views || 0) + (selectedUserForPayment.views || 0),
-              last_payment_amount: amount,
-              last_payment_date: new Date().toISOString(),
-            })
-            .eq("id", existingAnalytics.id);
+          await supabase.from("campaign_account_analytics").update({
+            paid_views: (existingAnalytics.paid_views || 0) + (selectedUserForPayment.views || 0),
+            last_payment_amount: amount,
+            last_payment_date: new Date().toISOString()
+          }).eq("id", existingAnalytics.id);
         } else {
           // Create new analytics record
-          await supabase
-            .from("campaign_account_analytics")
-            .insert({
-              campaign_id: selectedCampaignId,
-              user_id: selectedUserForPayment.creator_id,
-              platform: selectedUserForPayment.platform,
-              account_username: socialAccount.username,
-              account_link: socialAccount.account_link,
-              paid_views: selectedUserForPayment.views || 0,
-              last_payment_amount: amount,
-              last_payment_date: new Date().toISOString(),
-              total_views: 0,
-              total_videos: 0,
-            });
+          await supabase.from("campaign_account_analytics").insert({
+            campaign_id: selectedCampaignId,
+            user_id: selectedUserForPayment.creator_id,
+            platform: selectedUserForPayment.platform,
+            account_username: socialAccount.username,
+            account_link: socialAccount.account_link,
+            paid_views: selectedUserForPayment.views || 0,
+            last_payment_amount: amount,
+            last_payment_date: new Date().toISOString(),
+            total_views: 0,
+            total_videos: 0
+          });
         }
       }
-
       toast.success(`Successfully paid $${amount.toFixed(2)} to ${selectedUserForPayment.profiles?.username}`);
       setPaymentDialogOpen(false);
       setSelectedUserForPayment(null);
@@ -584,32 +565,26 @@ export default function BrandManagement() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">{selectedCampaign?.title}</h1>
-            {campaigns.length > 1 && (
-              <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+            {campaigns.length > 1 && <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
                 <SelectTrigger className="w-[280px] bg-[#202020] border-white/10 text-white">
                   <SelectValue placeholder="Select campaign" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#202020] border-white/10">
-                  {campaigns.map(campaign => (
-                    <SelectItem key={campaign.id} value={campaign.id} className="text-white hover:bg-white/10">
+                  {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="text-white hover:bg-white/10">
                       {campaign.title}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
-              </Select>
-            )}
+              </Select>}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleRefresh} className="text-white border-white/10 hover:bg-white/10">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            {isAdmin && (
-              <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+            {isAdmin && <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Campaign
-              </Button>
-            )}
+              </Button>}
           </div>
         </div>
 
@@ -902,27 +877,7 @@ export default function BrandManagement() {
                               </div>
 
                               {/* Stats Grid */}
-                              <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-white/5 rounded-lg p-3">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Eye className="h-3.5 w-3.5 text-blue-400" />
-                                    <span className="text-xs text-white/60">Views</span>
-                                  </div>
-                                  <span className="text-lg font-semibold text-white">
-                                    {submission.views?.toLocaleString() || 0}
-                                  </span>
-                                </div>
-
-                                <div className="bg-white/5 rounded-lg p-3">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <DollarSign className="h-3.5 w-3.5 text-green-400" />
-                                    <span className="text-xs text-white/60">Earnings</span>
-                                  </div>
-                                  <span className="text-lg font-semibold text-white">
-                                    ${submission.earnings?.toFixed(2) || '0.00'}
-                                  </span>
-                                </div>
-                              </div>
+                              
 
                               {/* Social Accounts */}
                               {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
@@ -941,14 +896,7 @@ export default function BrandManagement() {
                                 </div>}
 
                               {/* Payment Button */}
-                              <Button className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400" onClick={() => {
-                          setSelectedUserForPayment(submission);
-                          setPaymentAmount("");
-                          setPaymentDialogOpen(true);
-                        }}>
-                                <DollarSign className="h-4 w-4 mr-2" />
-                                Pay Creator
-                              </Button>
+                              
 
                             </div>
                           </CardContent>
