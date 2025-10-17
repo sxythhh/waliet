@@ -43,14 +43,28 @@ export default function Transactions() {
     try {
       const { data: txData, error: txError } = await supabase
         .from("wallet_transactions")
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            email
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
+
+      if (txError) throw txError;
+
+      // Fetch user profiles separately
+      const userIds = txData?.map(tx => tx.user_id).filter((id): id is string => !!id) || [];
+      const uniqueUserIds = [...new Set(userIds)];
+      
+      let profilesMap: Record<string, any> = {};
+      
+      if (uniqueUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, username, email")
+          .in("id", uniqueUserIds);
+
+        profilesMap = profilesData?.reduce((acc, profile) => ({
+          ...acc,
+          [profile.id]: profile
+        }), {} as Record<string, any>) || {};
+      }
 
       if (txError) throw txError;
 
@@ -81,8 +95,8 @@ export default function Transactions() {
         description: tx.description,
         metadata: tx.metadata,
         created_at: tx.created_at,
-        username: tx.profiles?.username,
-        email: tx.profiles?.email,
+        username: profilesMap[tx.user_id]?.username,
+        email: profilesMap[tx.user_id]?.email,
         campaign_name: tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata 
           ? campaignNames[(tx.metadata as any).campaign_id] 
           : undefined
