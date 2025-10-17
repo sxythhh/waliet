@@ -396,7 +396,7 @@ export default function Transactions() {
                     </div>
                   </TableCell>
                   <TableCell className="py-3">
-                    <Badge variant="secondary" className="text-xs font-medium">
+                    <Badge variant="secondary" className="text-xs font-medium capitalize px-2.5 py-0.5">
                       {tx.type.replace("_", " ")}
                     </Badge>
                   </TableCell>
