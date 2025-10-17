@@ -480,12 +480,61 @@ export default function BrandManagement() {
         budget_used: currentBudgetUsed + amount
       }).eq("id", selectedCampaignId);
       if (budgetError) throw budgetError;
+
+      // Update campaign analytics
+      const { data: socialAccount } = await supabase
+        .from("social_accounts")
+        .select("username, account_link")
+        .eq("user_id", selectedUserForPayment.creator_id)
+        .eq("platform", selectedUserForPayment.platform)
+        .single();
+
+      if (socialAccount) {
+        const { data: existingAnalytics } = await supabase
+          .from("campaign_account_analytics")
+          .select("*")
+          .eq("campaign_id", selectedCampaignId)
+          .eq("user_id", selectedUserForPayment.creator_id)
+          .eq("platform", selectedUserForPayment.platform)
+          .eq("account_username", socialAccount.username)
+          .maybeSingle();
+
+        if (existingAnalytics) {
+          // Update existing analytics record
+          await supabase
+            .from("campaign_account_analytics")
+            .update({
+              paid_views: (existingAnalytics.paid_views || 0) + (selectedUserForPayment.views || 0),
+              last_payment_amount: amount,
+              last_payment_date: new Date().toISOString(),
+            })
+            .eq("id", existingAnalytics.id);
+        } else {
+          // Create new analytics record
+          await supabase
+            .from("campaign_account_analytics")
+            .insert({
+              campaign_id: selectedCampaignId,
+              user_id: selectedUserForPayment.creator_id,
+              platform: selectedUserForPayment.platform,
+              account_username: socialAccount.username,
+              account_link: socialAccount.account_link,
+              paid_views: selectedUserForPayment.views || 0,
+              last_payment_amount: amount,
+              last_payment_date: new Date().toISOString(),
+              total_views: 0,
+              total_videos: 0,
+            });
+        }
+      }
+
       toast.success(`Successfully paid $${amount.toFixed(2)} to ${selectedUserForPayment.profiles?.username}`);
       setPaymentDialogOpen(false);
       setSelectedUserForPayment(null);
       setPaymentAmount("");
       fetchCampaigns();
       fetchTransactions();
+      fetchAnalytics();
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment");
