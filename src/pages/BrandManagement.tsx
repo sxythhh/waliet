@@ -464,8 +464,16 @@ export default function BrandManagement() {
       });
       if (transactionError) throw transactionError;
 
-      // Update campaign budget
-      const currentBudgetUsed = Number(selectedCampaign?.budget_used || 0);
+      // Update campaign budget - fetch current value from database to avoid stale state
+      const { data: currentCampaign, error: fetchError } = await supabase
+        .from("campaigns")
+        .select("budget_used")
+        .eq("id", selectedCampaignId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      const currentBudgetUsed = Number(currentCampaign?.budget_used || 0);
       const {
         error: budgetError
       } = await supabase.from("campaigns").update({
