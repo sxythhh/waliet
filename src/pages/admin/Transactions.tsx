@@ -16,6 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Search, DollarSign, Calendar, User } from "lucide-react";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 
 interface Transaction {
   id: string;
@@ -185,6 +188,15 @@ export default function Transactions() {
     return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
   };
 
+  const getPlatformIcon = (platform: string) => {
+    const icons: Record<string, string> = {
+      tiktok: tiktokLogo,
+      instagram: instagramLogo,
+      youtube: youtubeLogo,
+    };
+    return icons[platform.toLowerCase()];
+  };
+
   const getTypeBadge = (type: string) => {
     const isCredit = type === "credit" || type === "earnings" || type === "referral_bonus";
     return (
@@ -330,8 +342,24 @@ export default function Transactions() {
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="max-w-xs truncate" title={tx.description}>
-                    {tx.description}
+                  <TableCell className="max-w-xs" title={tx.description}>
+                    {tx.type === "earning" && tx.metadata?.account_username && tx.metadata?.platform ? (
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          {getPlatformIcon(tx.metadata.platform) && (
+                            <img 
+                              src={getPlatformIcon(tx.metadata.platform)} 
+                              alt={tx.metadata.platform}
+                              className="h-4 w-4"
+                            />
+                          )}
+                          <span className="font-medium">@{tx.metadata.account_username}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground truncate">{tx.description}</span>
+                      </div>
+                    ) : (
+                      <span className="truncate block">{tx.description}</span>
+                    )}
                   </TableCell>
                   <TableCell>{getStatusBadge(tx.status)}</TableCell>
                 </TableRow>
