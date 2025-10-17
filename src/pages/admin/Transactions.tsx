@@ -345,79 +345,75 @@ export default function Transactions() {
       <Card>
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Campaign</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[200px]">User & Date</TableHead>
+              <TableHead className="w-[140px]">Amount</TableHead>
+              <TableHead className="w-[120px]">Type</TableHead>
+              <TableHead>Details</TableHead>
+              <TableHead className="w-[80px] text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={5} className="text-center py-8">
                   Loading transactions...
                 </TableCell>
               </TableRow>
             ) : filteredTransactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   No transactions found
                 </TableCell>
               </TableRow>
             ) : (
               filteredTransactions.map((tx) => (
-                <TableRow key={tx.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {format(new Date(tx.created_at), "MMM d, yyyy HH:mm")}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex flex-col">
-                        <span className="font-medium">{tx.username || "Unknown"}</span>
-                        <span className="text-xs text-muted-foreground">{tx.email}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className={tx.amount >= 0 ? "text-green-600" : "text-red-600"}>
-                        {tx.amount >= 0 ? "+" : ""}${tx.amount.toFixed(2)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{tx.type}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {tx.campaign_name ? (
+                <TableRow key={tx.id} className="hover:bg-muted/50">
+                  <TableCell className="py-3">
+                    <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
-                        {tx.campaign_logo_url && (
-                          <OptimizedImage 
-                            src={tx.campaign_logo_url} 
-                            alt={`${tx.campaign_name} logo`}
-                            className="h-6 w-6 rounded object-cover"
-                          />
-                        )}
-                        <span className="text-sm">{tx.campaign_name}</span>
+                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="font-medium text-sm">{tx.username || "Unknown"}</span>
                       </div>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
+                      <div className="flex items-center gap-2 ml-5">
+                        <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(tx.created_at), "MMM d, yyyy · HH:mm")}
+                        </span>
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell className="max-w-xs" title={tx.description}>
-                    {tx.type === "earning" && tx.metadata?.account_username && tx.metadata?.platform ? (
-                      <div className="flex flex-col gap-1">
+                  <TableCell className="py-3">
+                    <div className={cn(
+                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-semibold text-sm",
+                      tx.amount >= 0 
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400" 
+                        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
+                    )}>
+                      <DollarSign className="h-3.5 w-3.5" />
+                      {tx.amount >= 0 ? "+" : ""}{tx.amount.toFixed(2)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <Badge variant="secondary" className="text-xs font-medium">
+                      {tx.type.replace("_", " ")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="flex flex-col gap-2">
+                      {tx.campaign_name && (
+                        <div className="flex items-center gap-2">
+                          {tx.campaign_logo_url && (
+                            <OptimizedImage 
+                              src={tx.campaign_logo_url} 
+                              alt={`${tx.campaign_name} logo`}
+                              className="h-5 w-5 rounded object-cover"
+                            />
+                          )}
+                          <span className="text-xs font-medium text-muted-foreground">{tx.campaign_name}</span>
+                        </div>
+                      )}
+                      {tx.type === "earning" && tx.metadata?.account_username && tx.metadata?.platform ? (
                         <div className="flex items-center gap-2">
                           {getPlatformIcon(tx.metadata.platform) && (
                             <img 
@@ -426,15 +422,16 @@ export default function Transactions() {
                               className="h-4 w-4"
                             />
                           )}
-                          <span className="font-medium">@{tx.metadata.account_username}</span>
+                          <span className="text-sm font-medium">@{tx.metadata.account_username}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground truncate">{tx.description}</span>
-                      </div>
-                    ) : (
-                      <span className="truncate block">{tx.description}</span>
-                    )}
+                      ) : (
+                        <span className="text-sm text-muted-foreground">{tx.description}</span>
+                      )}
+                    </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(tx.status)}</TableCell>
+                  <TableCell className="py-3 text-right">
+                    {getStatusBadge(tx.status)}
+                  </TableCell>
                 </TableRow>
               ))
             )}
