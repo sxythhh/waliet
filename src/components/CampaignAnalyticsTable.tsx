@@ -703,7 +703,8 @@ export function CampaignAnalyticsTable({
     }
   };
   const filteredAnalytics = analytics.filter(item => {
-    const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.profiles?.username && item.profiles.username.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
     const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null;
     const matchesPaidFilter = !showPaidOnly || (item.last_payment_amount && item.last_payment_amount > 0);
