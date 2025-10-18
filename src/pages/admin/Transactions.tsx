@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, DollarSign, Calendar as CalendarIcon, User } from "lucide-react";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -43,6 +44,17 @@ export default function Transactions() {
     id: string;
     name: string;
   }[]>([]);
+  const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [userSocialAccounts, setUserSocialAccounts] = useState<any[]>([]);
+  const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
+  const [userTransactions, setUserTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [userPaymentMethods, setUserPaymentMethods] = useState<any[]>([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
+  const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
+  const [transactionsOpen, setTransactionsOpen] = useState(false);
+  const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
   const {
     toast
   } = useToast();
@@ -138,6 +150,117 @@ export default function Transactions() {
       setLoading(false);
     }
   };
+
+  const fetchUserSocialAccounts = async (userId: string) => {
+    setLoadingSocialAccounts(true);
+    const { data, error } = await supabase
+      .from("social_accounts")
+      .select(`
+        *,
+        social_account_campaigns (
+          campaigns (
+            id,
+            title,
+            brand_name,
+            brand_logo_url
+          )
+        ),
+        demographic_submissions (
+          status,
+          tier1_percentage,
+          submitted_at
+        )
+      `)
+      .eq("user_id", userId);
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch social accounts"
+      });
+      setUserSocialAccounts([]);
+    } else {
+      setUserSocialAccounts(data || []);
+    }
+    setLoadingSocialAccounts(false);
+  };
+
+  const fetchUserTransactions = async (userId: string) => {
+    setLoadingTransactions(true);
+    const { data: txData, error } = await supabase
+      .from("wallet_transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch transactions"
+      });
+      setUserTransactions([]);
+    } else {
+      setUserTransactions(txData || []);
+    }
+    setLoadingTransactions(false);
+  };
+
+  const fetchUserPaymentMethods = async (userId: string) => {
+    setLoadingPaymentMethods(true);
+    const { data, error } = await supabase
+      .from("wallets")
+      .select("payout_method, payout_details")
+      .eq("user_id", userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error fetching payment methods:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch payment methods"
+      });
+      setUserPaymentMethods([]);
+    } else {
+      setUserPaymentMethods(data ? [data] : []);
+    }
+    setLoadingPaymentMethods(false);
+  };
+
+  const openUserDetailsDialog = async (userId: string) => {
+    // Fetch user profile
+    const { data: userData, error } = await supabase
+      .from("profiles")
+      .select(`
+        *,
+        wallets (
+          balance,
+          total_earned,
+          total_withdrawn
+        )
+      `)
+      .eq("id", userId)
+      .maybeSingle();
+    
+    if (error || !userData) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch user details"
+      });
+      return;
+    }
+
+    setSelectedUser(userData);
+    setUserDetailsDialogOpen(true);
+    fetchUserSocialAccounts(userId);
+    fetchUserTransactions(userId);
+    fetchUserPaymentMethods(userId);
+  };
+
   const filteredTransactions = transactions.filter(tx => {
     // Search term filter
     const matchesSearch = tx.username?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.email?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -300,7 +423,12 @@ export default function Transactions() {
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
                         <User className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="font-medium text-sm">{tx.username || "Unknown"}</span>
+                        <span 
+                          className="font-medium text-sm cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}
+                        >
+                          {tx.username || "Unknown"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 ml-5">
                         <CalendarIcon className="h-3 w-3 text-muted-foreground" />
@@ -353,5 +481,32 @@ export default function Transactions() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* User Details Dialog */}
+      {selectedUser && (
+        <UserDetailsDialog
+          open={userDetailsDialogOpen}
+          onOpenChange={setUserDetailsDialogOpen}
+          user={selectedUser}
+          socialAccounts={userSocialAccounts}
+          loadingSocialAccounts={loadingSocialAccounts}
+          transactions={userTransactions}
+          loadingTransactions={loadingTransactions}
+          paymentMethods={userPaymentMethods}
+          loadingPaymentMethods={loadingPaymentMethods}
+          socialAccountsOpen={socialAccountsOpen}
+          onSocialAccountsOpenChange={setSocialAccountsOpen}
+          transactionsOpen={transactionsOpen}
+          onTransactionsOpenChange={setTransactionsOpen}
+          paymentMethodsOpen={paymentMethodsOpen}
+          onPaymentMethodsOpenChange={setPaymentMethodsOpen}
+          onBalanceUpdated={() => {
+            fetchTransactions();
+            if (selectedUser) {
+              fetchUserTransactions(selectedUser.id);
+            }
+          }}
+        />
+      )}
     </div>;
 }
