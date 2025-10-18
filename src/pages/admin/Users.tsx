@@ -300,21 +300,32 @@ export default function AdminUsers() {
       const enrichedTransactions = await Promise.all((txData || []).map(async (tx) => {
         const metadata = (tx.metadata || {}) as any;
         
+        console.log('=== Transaction Debug ===');
+        console.log('ID:', tx.id);
+        console.log('Type:', tx.type);
+        console.log('Description:', tx.description);
+        console.log('Metadata before enrichment:', JSON.stringify(metadata, null, 2));
+        
         // If metadata has campaign_id, fetch campaign details
         if (metadata.campaign_id) {
-          const { data: campaignData } = await supabase
+          const { data: campaignData, error } = await supabase
             .from("campaigns")
             .select("title, brand_name")
             .eq("id", metadata.campaign_id)
             .maybeSingle();
           
+          if (error) {
+            console.error('Error fetching campaign:', error);
+          }
+          
           if (campaignData) {
             metadata.campaign_name = campaignData.title;
+            console.log('Campaign fetched:', campaignData.title);
           }
         }
         
-        // account_username and platform should already be in metadata
-        // from the payment processing, no need to fetch
+        console.log('Metadata after enrichment:', JSON.stringify(metadata, null, 2));
+        console.log('=========================');
         
         return {
           ...tx,

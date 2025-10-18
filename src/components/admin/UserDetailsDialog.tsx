@@ -535,6 +535,8 @@ export function UserDetailsDialog({
               const isBalanceCorrection = transaction.type === 'balance_correction';
               const isEarning = transaction.type === 'earning';
               
+              console.log('Displaying transaction:', transaction.id, 'isEarning:', isEarning, 'metadata:', metadata);
+              
               return <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
                       <div className="space-y-3">
                         {/* Header: Type, Status, Amount */}
