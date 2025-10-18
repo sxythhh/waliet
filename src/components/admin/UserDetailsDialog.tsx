@@ -618,7 +618,7 @@ export function UserDetailsDialog({
                           </div>}
 
                         {/* Description */}
-                        {transaction.description && <p className="text-xs text-muted-foreground truncate pt-1 border-t">
+                        {!isEarning && transaction.description && <p className="text-xs text-muted-foreground truncate pt-1 border-t">
                             {transaction.description}
                           </p>}
                       </div>
