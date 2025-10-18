@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus } from "lucide-react";
+import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,6 +138,7 @@ export function UserDetailsDialog({
   const [adjustDescription, setAdjustDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [unlinkingAccountId, setUnlinkingAccountId] = useState<string | null>(null);
+  const [deletingAccountId, setDeletingAccountId] = useState<string | null>(null);
   
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -174,6 +175,35 @@ export function UserDetailsDialog({
       });
     } finally {
       setUnlinkingAccountId(null);
+    }
+  };
+
+  const handleDeleteAccount = async (socialAccountId: string) => {
+    setDeletingAccountId(socialAccountId);
+    try {
+      const { error } = await supabase
+        .from("social_accounts")
+        .delete()
+        .eq("id", socialAccountId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Account Deleted",
+        description: "Social account has been permanently deleted",
+      });
+
+      // Refresh the social accounts
+      onBalanceUpdated?.();
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingAccountId(null);
     }
   };
 
@@ -332,6 +362,7 @@ export function UserDetailsDialog({
                       <div className="flex items-center justify-between gap-4">
                         {/* Account Info */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
+
                           <div className="shrink-0">
                             {getPlatformIconElement(account.platform)}
                           </div>
@@ -388,6 +419,20 @@ export function UserDetailsDialog({
                             </> : <span className="text-xs text-muted-foreground italic">
                               Not linked
                             </span>}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Are you sure you want to permanently delete @${account.username}?`)) {
+                                handleDeleteAccount(account.id);
+                              }
+                            }}
+                            disabled={deletingAccountId === account.id}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>;
