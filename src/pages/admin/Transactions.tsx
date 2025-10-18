@@ -330,13 +330,13 @@ export default function Transactions() {
                           {getPlatformIcon(tx.metadata.platform) && <img src={getPlatformIcon(tx.metadata.platform)} alt={tx.metadata.platform} className="h-4 w-4" />}
                           <span className="text-sm font-medium">@{tx.metadata.account_username}</span>
                         </div> : <span className="text-sm text-muted-foreground">{tx.description}</span>}
-                      {tx.type === "earning" && tx.metadata?.campaign_budget_before !== undefined && (
+                      {(tx.type === "earning" || tx.metadata?.adjustment_type === "manual_budget_update") && tx.metadata?.campaign_budget_before !== undefined && (
                         <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium">Budget:</span>
-                            <span>${Number(tx.metadata.campaign_budget_before).toFixed(2)}</span>
+                            <span>${Number(tx.metadata.campaign_budget_before || tx.metadata.budget_before).toFixed(2)}</span>
                             <span>→</span>
-                            <span className="font-semibold">${Number(tx.metadata.campaign_budget_after).toFixed(2)}</span>
+                            <span className="font-semibold">${Number(tx.metadata.campaign_budget_after || tx.metadata.budget_after).toFixed(2)}</span>
                             {tx.metadata.campaign_total_budget && (
                               <span className="text-muted-foreground/70">/ ${Number(tx.metadata.campaign_total_budget).toFixed(2)}</span>
                             )}

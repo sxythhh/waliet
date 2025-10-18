@@ -382,13 +382,47 @@ export default function BrandManagement() {
       toast.error("Please enter a valid budget amount");
       return;
     }
+    
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      // Get current budget_used before update
+      const { data: currentCampaign } = await supabase
+        .from("campaigns")
+        .select("budget_used, title")
+        .eq("id", selectedCampaignId)
+        .single();
+
+      const oldBudgetUsed = currentCampaign?.budget_used || 0;
+      const budgetChange = budgetUsedValue - oldBudgetUsed;
+
+      // Update campaign budget
       const {
         error
       } = await supabase.from("campaigns").update({
         budget_used: budgetUsedValue
       }).eq("id", selectedCampaignId);
       if (error) throw error;
+
+      // Create a transaction record for this manual budget adjustment
+      await supabase.from("wallet_transactions").insert({
+        user_id: session.user.id, // Admin who made the change
+        amount: budgetChange,
+        type: "admin_adjustment",
+        status: "completed",
+        description: `Manual budget adjustment for campaign: ${currentCampaign?.title || 'Unknown'}`,
+        metadata: {
+          campaign_id: selectedCampaignId,
+          campaign_name: currentCampaign?.title,
+          budget_before: oldBudgetUsed,
+          budget_after: budgetUsedValue,
+          adjustment_type: "manual_budget_update",
+          admin_id: session.user.id
+        },
+        created_by: session.user.id
+      });
+
       toast.success("Budget updated successfully");
       setEditBudgetDialogOpen(false);
       fetchCampaigns();
