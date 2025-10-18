@@ -110,6 +110,7 @@ export default function Transactions() {
       }
       const formattedTransactions = txData?.map((tx: any) => {
         const campaignId = tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata ? (tx.metadata as any).campaign_id : undefined;
+        console.log('Transaction:', tx.id, 'Campaign ID:', campaignId, 'Logo URL:', campaignsMap[campaignId]?.brand_logo_url);
         return {
           id: tx.id,
           user_id: tx.user_id,
