@@ -282,11 +282,12 @@ export default function AdminUsers() {
   const fetchUserTransactions = async (userId: string) => {
     setLoadingTransactions(true);
     const {
-      data,
+      data: txData,
       error
     } = await supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", {
       ascending: false
     }).limit(10);
+    
     if (error) {
       toast({
         variant: "destructive",
@@ -295,7 +296,44 @@ export default function AdminUsers() {
       });
       setUserTransactions([]);
     } else {
-      setUserTransactions(data || []);
+      // Enrich transactions with campaign and account data
+      const enrichedTransactions = await Promise.all((txData || []).map(async (tx) => {
+        const metadata = (tx.metadata || {}) as any;
+        
+        // If metadata has campaign_id, fetch campaign details
+        if (metadata.campaign_id && !metadata.campaign_name) {
+          const { data: campaignData } = await supabase
+            .from("campaigns")
+            .select("title, brand_name")
+            .eq("id", metadata.campaign_id)
+            .single();
+          
+          if (campaignData) {
+            metadata.campaign_name = campaignData.title;
+          }
+        }
+        
+        // If metadata has social_account_id, fetch account details
+        if (metadata.social_account_id && !metadata.account_username) {
+          const { data: accountData } = await supabase
+            .from("social_accounts")
+            .select("username, platform")
+            .eq("id", metadata.social_account_id)
+            .single();
+          
+          if (accountData) {
+            metadata.account_username = accountData.username;
+            metadata.platform = accountData.platform;
+          }
+        }
+        
+        return {
+          ...tx,
+          metadata
+        };
+      }));
+      
+      setUserTransactions(enrichedTransactions);
     }
     setLoadingTransactions(false);
   };

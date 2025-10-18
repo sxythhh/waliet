@@ -52,7 +52,18 @@ interface Transaction {
   status: string;
   created_at: string;
   description?: string;
-  metadata?: any;
+  metadata?: {
+    campaign_id?: string;
+    campaign_name?: string;
+    account_username?: string;
+    platform?: string;
+    payout_method?: string;
+    network?: string;
+    balance_before?: number;
+    balance_after?: number;
+    payoutDetails?: any;
+    [key: string]: any;
+  };
 }
 interface PaymentMethod {
   method: string;
