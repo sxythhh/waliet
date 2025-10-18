@@ -409,7 +409,7 @@ export default function BrandManagement() {
       await supabase.from("wallet_transactions").insert({
         user_id: session.user.id, // Admin who made the change
         amount: budgetChange,
-        type: "admin_adjustment",
+        type: "balance_correction",
         status: "completed",
         description: `Manual budget adjustment for campaign: ${currentCampaign?.title || 'Unknown'}`,
         metadata: {
