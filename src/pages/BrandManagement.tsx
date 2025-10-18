@@ -445,6 +445,13 @@ export default function BrandManagement() {
       }).eq("user_id", selectedUserForPayment.creator_id);
       if (walletUpdateError) throw walletUpdateError;
 
+      // Get current campaign budget before update
+      const { data: campaignBefore } = await supabase
+        .from("campaigns")
+        .select("budget_used, budget")
+        .eq("id", selectedCampaignId)
+        .single();
+
       // Create wallet transaction
       const {
         error: transactionError
@@ -459,7 +466,10 @@ export default function BrandManagement() {
           submission_id: selectedUserForPayment.id,
           platform: selectedUserForPayment.platform,
           balance_before: balance_before,
-          balance_after: balance_after
+          balance_after: balance_after,
+          campaign_budget_before: campaignBefore?.budget_used || 0,
+          campaign_budget_after: (campaignBefore?.budget_used || 0) + amount,
+          campaign_total_budget: campaignBefore?.budget || 0
         }
       });
       if (transactionError) throw transactionError;

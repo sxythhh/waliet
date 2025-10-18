@@ -535,7 +535,14 @@ export function CampaignAnalyticsTable({
       }).eq("user_id", selectedUser.user_id);
       if (walletUpdateError) throw walletUpdateError;
 
-      // Create wallet transaction with proper metadata
+      // Get current campaign budget before update
+      const { data: campaignBefore } = await supabase
+        .from("campaigns")
+        .select("budget_used, budget")
+        .eq("id", campaignId)
+        .single();
+
+      // Create wallet transaction with proper metadata including budget snapshot
       const {
         error: transactionError
       } = await supabase.from("wallet_transactions").insert({
@@ -551,7 +558,10 @@ export function CampaignAnalyticsTable({
           platform: selectedUser.platform,
           views: selectedUser.total_views,
           balance_before: balance_before,
-          balance_after: balance_after
+          balance_after: balance_after,
+          campaign_budget_before: campaignBefore?.budget_used || 0,
+          campaign_budget_after: (campaignBefore?.budget_used || 0) + amount,
+          campaign_total_budget: campaignBefore?.budget || 0
         }
       });
       if (transactionError) throw transactionError;
