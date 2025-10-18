@@ -415,12 +415,11 @@ export default function BrandManagement() {
         metadata: {
           campaign_id: selectedCampaignId,
           campaign_name: currentCampaign?.title,
-          budget_before: oldBudgetUsed,
-          budget_after: budgetUsedValue,
+          campaign_budget_before: oldBudgetUsed,
+          campaign_budget_after: budgetUsedValue,
           adjustment_type: "manual_budget_update",
           admin_id: session.user.id
-        },
-        created_by: session.user.id
+        }
       });
       
       if (txnError) {
