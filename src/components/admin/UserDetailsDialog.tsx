@@ -77,7 +77,20 @@ interface UserDetailsDialogProps {
   onEditScore?: (account: SocialAccount) => void;
   onBalanceUpdated?: () => void;
 }
-const getPlatformIcon = (platform: string) => {
+const getPlatformIcon = (platform: string): string | null => {
+  switch (platform.toLowerCase()) {
+    case 'tiktok':
+      return tiktokLogo;
+    case 'instagram':
+      return instagramLogo;
+    case 'youtube':
+      return youtubeLogo;
+    default:
+      return null;
+  }
+};
+
+const getPlatformIconElement = (platform: string) => {
   switch (platform.toLowerCase()) {
     case 'tiktok':
       return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
@@ -309,7 +322,7 @@ export function UserDetailsDialog({
                         {/* Account Info */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div className="shrink-0">
-                            {getPlatformIcon(account.platform)}
+                            {getPlatformIconElement(account.platform)}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
@@ -508,13 +521,16 @@ export function UserDetailsDialog({
                 {transactions.map(transaction => {
               const metadata = transaction.metadata as any;
               const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
+              const isBalanceCorrection = transaction.type === 'balance_correction';
+              const isEarning = transaction.type === 'earning';
+              
               return <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
                       <div className="space-y-3">
                         {/* Header: Type, Status, Amount */}
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium capitalize text-sm">{transaction.type}</span>
+                              <span className="font-medium capitalize text-sm">{transaction.type.replace('_', ' ')}</span>
                               <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${transaction.status === 'completed' ? 'bg-green-500/10 text-green-500' : transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-500' : transaction.status === 'in_transit' ? 'bg-blue-500/10 text-blue-500' : transaction.status === 'rejected' ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground'}`}>
                                 {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                               </span>
@@ -528,13 +544,30 @@ export function UserDetailsDialog({
                           </div>
                           
                           <div className="text-right shrink-0">
-                            <p className={`text-lg font-semibold ${isWithdrawal ? 'text-red-500' : 'text-green-500'}`} style={{
+                            <p className={`text-lg font-semibold ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`} style={{
                         fontFamily: 'Chakra Petch, sans-serif'
                       }}>
-                              {isWithdrawal ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                              {transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                             </p>
                           </div>
                         </div>
+
+                        {/* Campaign & Account Info (for earnings) */}
+                        {isEarning && metadata && (metadata.campaign_name || metadata.account_username) && <div className="p-2 bg-muted/20 rounded-md">
+                            <div className="space-y-2">
+                              {metadata.campaign_name && <div className="flex items-center gap-2">
+                                  <p className="text-[10px] text-muted-foreground">Campaign:</p>
+                                  <p className="text-xs font-medium">{metadata.campaign_name}</p>
+                                </div>}
+                              {metadata.account_username && metadata.platform && <div className="flex items-center gap-2">
+                                  <p className="text-[10px] text-muted-foreground">Account:</p>
+                                  <div className="flex items-center gap-1">
+                                    {getPlatformIcon(metadata.platform) && <img src={getPlatformIcon(metadata.platform)} alt={metadata.platform} className="h-3 w-3" />}
+                                    <p className="text-xs font-medium">@{metadata.account_username}</p>
+                                  </div>
+                                </div>}
+                            </div>
+                          </div>}
 
                         {/* Payment Method & Network (for withdrawals) */}
                         {isWithdrawal && metadata && <div className="space-y-2">
