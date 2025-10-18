@@ -566,22 +566,19 @@ export function UserDetailsDialog({
                         </div>
 
                         {/* Campaign & Account Info (for earnings) */}
-                        {isEarning && <div className="p-2 bg-muted/20 rounded-md">
+                        {isEarning && metadata && (metadata.campaign_name || metadata.account_username) && <div className="p-2 bg-muted/20 rounded-md">
                             <div className="space-y-2">
-                              {metadata?.campaign_name && <div className="flex items-center gap-2">
+                              {metadata.campaign_name && <div className="flex items-center gap-2">
                                   <p className="text-[10px] text-muted-foreground">Campaign:</p>
                                   <p className="text-xs font-medium">{metadata.campaign_name}</p>
                                 </div>}
-                              {metadata?.account_username && <div className="flex items-center gap-2">
+                              {metadata.account_username && metadata.platform && <div className="flex items-center gap-2">
                                   <p className="text-[10px] text-muted-foreground">Account:</p>
                                   <div className="flex items-center gap-1">
-                                    {metadata.platform && getPlatformIcon(metadata.platform) && <img src={getPlatformIcon(metadata.platform)} alt={metadata.platform} className="h-3 w-3" />}
+                                    {getPlatformIcon(metadata.platform) && <img src={getPlatformIcon(metadata.platform)} alt={metadata.platform} className="h-3 w-3" />}
                                     <p className="text-xs font-medium">@{metadata.account_username}</p>
                                   </div>
                                 </div>}
-                              {!metadata?.account_username && !metadata?.campaign_name && transaction.description && (
-                                <p className="text-xs text-muted-foreground">{transaction.description}</p>
-                              )}
                             </div>
                           </div>}
 
