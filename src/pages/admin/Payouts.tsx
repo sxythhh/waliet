@@ -552,8 +552,7 @@ export default function AdminPayouts() {
         'polygon': '/src/assets/polygon-logo.png',
         'solana': '/src/assets/solana-logo.png',
         'optimism': '/src/assets/optimism-logo.png',
-        'usdc': '/src/assets/usdc-logo.png',
-        'usdt': '/src/assets/usdt-logo.png'
+        'usdc': '/src/assets/usdc-logo.png'
       };
       const logoUrl = logoMap[network];
       console.log('Logo URL:', logoUrl);

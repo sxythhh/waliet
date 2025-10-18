@@ -11,7 +11,6 @@ import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
-import usdtLogo from "@/assets/usdt-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 interface PayoutMethodDialogProps {
   open: boolean;
@@ -20,10 +19,6 @@ interface PayoutMethodDialogProps {
   currentMethodCount: number;
 }
 const cryptoCurrencies = [{
-  id: "usdt",
-  name: "USDT",
-  logo: usdtLogo
-}, {
   id: "usdc",
   name: "USDC",
   logo: usdcLogo

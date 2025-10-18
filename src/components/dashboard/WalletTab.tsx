@@ -20,7 +20,6 @@ import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
-import usdtLogo from "@/assets/usdt-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
@@ -907,7 +906,6 @@ export function WalletTab() {
           const getCryptoLogo = () => {
             const currency = method.details?.currency?.toLowerCase();
             const network = method.details?.network?.toLowerCase();
-            if (currency === 'usdt') return usdtLogo;
             if (currency === 'usdc') return usdcLogo;
             if (network === 'ethereum') return ethereumLogo;
             if (network === 'optimism') return optimismLogo;
