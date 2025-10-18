@@ -119,6 +119,7 @@ export function CampaignAnalyticsTable({
   const [revertDialogOpen, setRevertDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [revertingTransaction, setRevertingTransaction] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const itemsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
@@ -516,6 +517,8 @@ export function CampaignAnalyticsTable({
       toast.error("Please enter a valid amount");
       return;
     }
+    
+    setIsSubmitting(true);
     try {
       // First, update the wallet balance
       const {
@@ -637,6 +640,8 @@ export function CampaignAnalyticsTable({
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1335,10 +1340,18 @@ export function CampaignAnalyticsTable({
           }} className="bg-transparent border-white/10 text-white hover:bg-white/5">
             Cancel
           </Button>
-              <Button onClick={() => {
-            handlePayUser();
-          }} className="bg-primary hover:bg-primary/90" disabled={selectedUser && selectedUser.paid_views >= selectedUser.total_views}>
-                {selectedUser && selectedUser.paid_views >= selectedUser.total_views ? "Already Paid" : "Send Payment"}
+              <Button 
+                onClick={() => {
+                  handlePayUser();
+                }} 
+                className="bg-primary hover:bg-primary/90" 
+                disabled={isSubmitting || (selectedUser && selectedUser.paid_views >= selectedUser.total_views)}
+              >
+                {isSubmitting 
+                  ? "Processing.." 
+                  : selectedUser && selectedUser.paid_views >= selectedUser.total_views 
+                    ? "Already Paid" 
+                    : "Send Payment"}
               </Button>
         </DialogFooter>
       </DialogContent>
