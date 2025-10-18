@@ -588,6 +588,38 @@ export function CampaignAnalyticsTable({
         budget_used: (campaignData.budget_used || 0) + amount
       }).eq("id", campaignId);
       if (campaignUpdateError) throw campaignUpdateError;
+      // Send email notification
+      try {
+        const { data: userProfile } = await supabase
+          .from("profiles")
+          .select("email, full_name, username")
+          .eq("id", selectedUser.user_id)
+          .single();
+
+        const { data: campaignData } = await supabase
+          .from("campaigns")
+          .select("title")
+          .eq("id", campaignId)
+          .single();
+
+        if (userProfile?.email && campaignData?.title) {
+          await supabase.functions.invoke("send-payment-notification", {
+            body: {
+              userEmail: userProfile.email,
+              userName: userProfile.full_name || userProfile.username,
+              amount: amount,
+              campaignName: campaignData.title,
+              accountUsername: selectedUser.account_username,
+              platform: selectedUser.platform,
+              views: selectedUser.total_views
+            }
+          });
+        }
+      } catch (emailError) {
+        console.error("Error sending payment notification email:", emailError);
+        // Don't fail the payment if email fails
+      }
+
       toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
       setPaymentDialogOpen(false);
       setPaymentAmount("");
