@@ -110,7 +110,6 @@ export default function Transactions() {
       }
       const formattedTransactions = txData?.map((tx: any) => {
         const campaignId = tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata ? (tx.metadata as any).campaign_id : undefined;
-        console.log('Transaction:', tx.id, 'Campaign ID:', campaignId, 'Logo URL:', campaignsMap[campaignId]?.brand_logo_url);
         return {
           id: tx.id,
           user_id: tx.user_id,
@@ -300,7 +299,7 @@ export default function Transactions() {
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
                         <User className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="font-medium text-sm">{tx.username || "Unknown"}</span>
+                        
                       </div>
                       <div className="flex items-center gap-2 ml-5">
                         <CalendarIcon className="h-3 w-3 text-muted-foreground" />
@@ -331,19 +330,15 @@ export default function Transactions() {
                           {getPlatformIcon(tx.metadata.platform) && <img src={getPlatformIcon(tx.metadata.platform)} alt={tx.metadata.platform} className="h-4 w-4" />}
                           <span className="text-sm font-medium">@{tx.metadata.account_username}</span>
                         </div> : <span className="text-sm text-muted-foreground">{tx.description}</span>}
-                      {(tx.type === "earning" || tx.metadata?.adjustment_type === "manual_budget_update") && (tx.metadata?.campaign_budget_before !== undefined || tx.metadata?.budget_before !== undefined) && (
-                        <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                      {tx.type === "earning" && tx.metadata?.campaign_budget_before !== undefined && <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-medium">Campaign Budget:</span>
-                            <span>${Number(tx.metadata.budget_before || tx.metadata.campaign_budget_before || 0).toFixed(2)}</span>
+                            <span className="font-medium">Budget:</span>
+                            <span>${Number(tx.metadata.campaign_budget_before).toFixed(2)}</span>
                             <span>→</span>
-                            <span className="font-semibold">${Number(tx.metadata.budget_after || tx.metadata.campaign_budget_after || 0).toFixed(2)}</span>
-                            {tx.metadata.campaign_total_budget && (
-                              <span className="text-muted-foreground/70">/ ${Number(tx.metadata.campaign_total_budget).toFixed(2)}</span>
-                            )}
+                            <span className="font-semibold">${Number(tx.metadata.campaign_budget_after).toFixed(2)}</span>
+                            {tx.metadata.campaign_total_budget && <span className="text-muted-foreground/70">/ ${Number(tx.metadata.campaign_total_budget).toFixed(2)}</span>}
                           </div>
-                        </div>
-                      )}
+                        </div>}
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-right">
