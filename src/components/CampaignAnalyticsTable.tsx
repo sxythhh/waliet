@@ -1436,7 +1436,7 @@ export function CampaignAnalyticsTable({
                   }>;
                 }>);
                 const users = Object.values(userGroups);
-                return users.filter(user => user.username.toLowerCase().includes(userSearchTerm.toLowerCase()) || user.accounts.some(a => a.account_username.toLowerCase().includes(userSearchTerm.toLowerCase()))).map(user => <div key={user.user_id} onClick={() => handleLinkAccount(user.user_id)} className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
+                return users.filter(user => user.username.toLowerCase().includes(userSearchTerm.toLowerCase()) || user.accounts.some(a => a.account_username.toLowerCase().includes(userSearchTerm.toLowerCase()))).map(user => <div key={user.user_id} className="p-3 rounded-lg bg-white/5 border border-white/10 transition-colors">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 flex-1">
                               <Avatar className="h-8 w-8">
@@ -1458,7 +1458,14 @@ export function CampaignAnalyticsTable({
                                 </div>
                               </div>
                             </div>
-                            <Link2 className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleLinkAccount(user.user_id)}
+                              className="ml-2 flex-shrink-0"
+                            >
+                              <Link2 className="h-4 w-4 mr-1" />
+                              Link
+                            </Button>
                           </div>
                         </div>);
               })()}
