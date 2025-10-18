@@ -1096,8 +1096,9 @@ export function WalletTab() {
             </div>
 
             <div className="p-3 bg-neutral-900 rounded-lg text-sm">
-              <p className="text-muted-foreground">Processing Time</p>
-              <p className="font-medium">3-5 business days</p>
+              <p className="text-muted-foreground">2-3 business day wait time</p>
+              <p className="text-xs text-muted-foreground mb-2">(Payouts will not be operated on Saturday & Sunday)</p>
+              <p className="font-medium">$1 + 0.75% fee</p>
             </div>
           </div>
 
