@@ -37,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending payment notification to:", userEmail);
 
     const emailResponse = await resend.emails.send({
-      from: "Virality <onboarding@resend.dev>",
+      from: "Virality <payments@notifications.virality.gg>",
       to: [userEmail],
       subject: `Payment Received: $${amount.toFixed(2)} for ${campaignName}`,
       html: `
