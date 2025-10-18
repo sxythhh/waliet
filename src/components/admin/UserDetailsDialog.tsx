@@ -181,25 +181,34 @@ export function UserDetailsDialog({
   const handleDeleteAccount = async (socialAccountId: string) => {
     setDeletingAccountId(socialAccountId);
     try {
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from("social_accounts")
-        .delete()
+        .delete({ count: 'exact' })
         .eq("id", socialAccountId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Delete error details:", error);
+        throw error;
+      }
+
+      console.log("Delete result - rows affected:", count);
+
+      if (count === 0) {
+        throw new Error("No account was deleted. It may have already been removed.");
+      }
 
       toast({
         title: "Account Deleted",
         description: "Social account has been permanently deleted",
       });
 
-      // Refresh the social accounts
+      // Refresh the data by calling the parent's refresh function
       onBalanceUpdated?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting account:", error);
       toast({
         title: "Error",
-        description: "Failed to delete account. Please try again.",
+        description: error.message || "Failed to delete account. Please try again.",
         variant: "destructive",
       });
     } finally {
