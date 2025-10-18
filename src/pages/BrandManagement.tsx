@@ -406,7 +406,7 @@ export default function BrandManagement() {
       if (error) throw error;
 
       // Create a transaction record for this manual budget adjustment
-      await supabase.from("wallet_transactions").insert({
+      const { error: txnError } = await supabase.from("wallet_transactions").insert({
         user_id: session.user.id, // Admin who made the change
         amount: budgetChange,
         type: "balance_correction",
@@ -422,6 +422,11 @@ export default function BrandManagement() {
         },
         created_by: session.user.id
       });
+      
+      if (txnError) {
+        console.error("Transaction logging error:", txnError);
+        // Don't fail the budget update if transaction logging fails
+      }
 
       toast.success("Budget updated successfully");
       setEditBudgetDialogOpen(false);
