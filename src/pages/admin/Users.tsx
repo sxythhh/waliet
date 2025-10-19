@@ -98,6 +98,7 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
+  const [approvedSortOrder, setApprovedSortOrder] = useState<'asc' | 'desc'>('asc'); // asc = soonest first, desc = latest first
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
@@ -881,7 +882,11 @@ export default function AdminUsers() {
       </Badge>;
   };
   const pendingSubmissions = submissions.filter(s => s.status === "pending" && s.social_accounts);
-  const approvedSubmissions = submissions.filter(s => s.status === "approved" && s.social_accounts);
+  const approvedSubmissions = submissions.filter(s => s.status === "approved" && s.social_accounts).sort((a, b) => {
+    const dateA = new Date(a.submitted_at).getTime() + 7 * 24 * 60 * 60 * 1000;
+    const dateB = new Date(b.submitted_at).getTime() + 7 * 24 * 60 * 60 * 1000;
+    return approvedSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+  });
   const rejectedSubmissions = submissions.filter(s => s.status === "rejected" && s.social_accounts);
   const avgTier1 = submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0;
   const stats = {
@@ -1323,7 +1328,28 @@ export default function AdminUsers() {
                   <CardContent className="py-12 text-center text-muted-foreground">
                     No approved submissions
                   </CardContent>
-                </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                </Card> : <>
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setApprovedSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                      className="gap-2"
+                    >
+                      {approvedSortOrder === 'asc' ? (
+                        <>
+                          <ArrowUp className="h-4 w-4" />
+                          Soonest First
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDown className="h-4 w-4" />
+                          Latest First
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {approvedSubmissions.map(submission => {
                 const submittedDate = new Date(submission.submitted_at);
                 const nextSubmissionDate = new Date(submittedDate.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -1415,7 +1441,8 @@ export default function AdminUsers() {
                       </CardContent>
                     </Card>;
               })}
-                </div>}
+                </div>
+              </>}
             </TabsContent>
           </Tabs>
 
