@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -946,7 +946,7 @@ export function CampaignAnalyticsTable({
                         setPaymentDialogOpen(true);
                       }
                     }}>
-                        {item.user_id && item.profiles ? <div className="flex items-center gap-1.5">
+                        {item.user_id && item.profiles ? <div className="flex items-center gap-1.5 group">
                             <Avatar className="h-5 w-5">
                               <AvatarImage src={item.profiles.avatar_url || undefined} />
                               <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
@@ -957,6 +957,40 @@ export function CampaignAnalyticsTable({
                           letterSpacing: '-0.3px',
                           fontWeight: 600
                         }}>{item.profiles.username}</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 hover:text-red-400"
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      try {
+                                        const { error } = await supabase
+                                          .from('campaign_account_analytics')
+                                          .update({ user_id: null })
+                                          .eq('campaign_id', campaignId)
+                                          .eq('platform', item.platform)
+                                          .ilike('account_username', item.account_username);
+                                        
+                                        if (error) throw error;
+                                        toast.success('Account unlinked from user');
+                                        fetchAnalytics();
+                                      } catch (error) {
+                                        console.error('Error unlinking account:', error);
+                                        toast.error('Failed to unlink account');
+                                      }
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Unlink account</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             {item.paid_views >= item.total_views && item.paid_views > 0 && <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
