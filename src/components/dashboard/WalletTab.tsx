@@ -1094,9 +1094,23 @@ export function WalletTab() {
             </div>
 
             <div className="p-3 bg-neutral-900 rounded-lg text-sm">
-              <p className="text-muted-foreground">2-3 business day wait time</p>
-              <p className="text-xs text-muted-foreground mb-2">(Payouts will not be operated on Saturday & Sunday)</p>
-              <p className="font-medium">$1 + 0.75% fee</p>
+              {(() => {
+                const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                const isPayPal = selectedMethod?.method === 'paypal';
+                
+                return isPayPal ? (
+                  <>
+                    <p className="text-muted-foreground">24h wait time</p>
+                    <p className="font-medium">6% fee</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground">2-3 business day wait time</p>
+                    <p className="text-xs text-muted-foreground mb-2">(Payouts will not be operated on Saturday & Sunday)</p>
+                    <p className="font-medium">$1 + 0.75% fee</p>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
