@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "Virality <team@virality.cc>",
+        from: "Virality <no-reply@notifications.virality.gg>",
         to: [email],
         subject: "Reset Your Virality Password",
         html: `
