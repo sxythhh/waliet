@@ -1,5 +1,8 @@
 project_id = "upiypxzjaagithghxayv"
 
+[functions.send-password-reset]
+verify_jwt = false
+
 [functions.notify-demographic-submission]
 verify_jwt = false
 

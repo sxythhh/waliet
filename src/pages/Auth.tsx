@@ -149,23 +149,38 @@ export default function Auth() {
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth`
-    });
-    setLoading(false);
-    if (error) {
+    
+    try {
+      const { error } = await supabase.functions.invoke('send-password-reset', {
+        body: { 
+          email: resetEmail,
+          redirectTo: `${window.location.origin}/auth`
+        }
+      });
+
+      setLoading(false);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message
+        });
+      } else {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a password reset link."
+        });
+        setShowResetDialog(false);
+        setResetEmail("");
+      }
+    } catch (error: any) {
+      setLoading(false);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message
+        description: error.message || "Failed to send reset email"
       });
-    } else {
-      toast({
-        title: "Check your email",
-        description: "We've sent you a password reset link."
-      });
-      setShowResetDialog(false);
-      setResetEmail("");
     }
   };
 
