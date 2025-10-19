@@ -33,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectTo
+        redirectTo: redirectTo.replace('/auth', '/reset-password')
       }
     });
 
