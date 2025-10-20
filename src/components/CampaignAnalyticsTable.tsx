@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
@@ -179,56 +180,83 @@ export function CampaignAnalyticsTable({
       }).sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime());
       setDateRanges(uniqueRanges);
 
-      // Manually fetch user profiles and demographic submissions for accounts with user_id
-      const analyticsWithProfiles = await Promise.all((data || []).map(async item => {
-        if (item.user_id) {
-          // Fetch profile
-          const {
-            data: profile
-          } = await supabase.from("profiles").select("username, avatar_url").eq("id", item.user_id).single();
+      // Batch fetch all data at once for better performance
+      const userIds = [...new Set((data || []).filter(item => item.user_id).map(item => item.user_id))];
+      
+      // Fetch all profiles at once
+      const { data: profiles } = userIds.length > 0 
+        ? await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds)
+        : { data: [] };
+      const profilesMap = new Map((profiles || []).map(p => [p.id, p]));
 
-          // Fetch social account for this platform connected to this campaign that matches the username
-          let { data: socialAccount } = await supabase
+      // Fetch all social accounts at once
+      const { data: socialAccounts } = userIds.length > 0
+        ? await supabase
             .from("social_account_campaigns")
             .select(`
               social_accounts!inner (
                 id,
                 platform,
-                username
+                username,
+                user_id
               )
             `)
             .eq("campaign_id", campaignId)
-            .eq("social_accounts.user_id", item.user_id)
-            .eq("social_accounts.platform", item.platform)
-            .ilike("social_accounts.username", item.account_username)
-            .maybeSingle();
+            .in("social_accounts.user_id", userIds)
+        : { data: [] };
+      
+      // Create a map for quick lookup: user_id + platform + username -> account
+      const socialAccountsMap = new Map();
+      (socialAccounts || []).forEach((item: any) => {
+        const account = item.social_accounts;
+        const key = `${account.user_id}_${account.platform}_${account.username.toLowerCase()}`;
+        socialAccountsMap.set(key, account);
+      });
 
-          // Extract the social account from the nested structure
-          const account = (socialAccount as any)?.social_accounts;
-          let demographicSubmission = null;
-          if (account) {
-            // Fetch most recent demographic submission for this social account
-            const {
-              data: submission
-            } = await supabase.from("demographic_submissions").select("id, status, submitted_at, tier1_percentage, score").eq("social_account_id", account.id).order("submitted_at", {
-              ascending: false
-            }).limit(1).maybeSingle();
-            demographicSubmission = submission;
-          }
+      // Get all social account IDs for demographic submissions
+      const socialAccountIds = Array.from(socialAccountsMap.values()).map((acc: any) => acc.id);
+      
+      // Fetch all demographic submissions at once
+      const { data: allSubmissions } = socialAccountIds.length > 0
+        ? await supabase
+            .from("demographic_submissions")
+            .select("id, social_account_id, status, submitted_at, tier1_percentage, score")
+            .in("social_account_id", socialAccountIds)
+            .order("submitted_at", { ascending: false })
+        : { data: [] };
+      
+      // Group submissions by social_account_id and get most recent
+      const submissionsMap = new Map();
+      (allSubmissions || []).forEach(sub => {
+        if (!submissionsMap.has(sub.social_account_id)) {
+          submissionsMap.set(sub.social_account_id, sub);
+        }
+      });
+
+      // Map everything together efficiently
+      const analyticsWithProfiles = (data || []).map(item => {
+        if (!item.user_id) {
           return {
             ...item,
-            profiles: profile,
-            social_account: account,
-            demographic_submission: demographicSubmission
+            profiles: null,
+            social_account: null,
+            demographic_submission: null
           };
         }
+
+        const profile = profilesMap.get(item.user_id);
+        const accountKey = `${item.user_id}_${item.platform}_${item.account_username.toLowerCase()}`;
+        const account = socialAccountsMap.get(accountKey);
+        const submission = account ? submissionsMap.get(account.id) : null;
+
         return {
           ...item,
-          profiles: null,
-          social_account: null,
-          demographic_submission: null
+          profiles: profile || null,
+          social_account: account || null,
+          demographic_submission: submission || null
         };
-      }));
+      });
+
       setAnalytics(analyticsWithProfiles);
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -783,8 +811,49 @@ export function CampaignAnalyticsTable({
   const avgEngagement = analytics.length > 0 ? analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length : 0;
   if (loading) {
     return <Card className="bg-card border">
-        <CardContent className="p-8">
-          <div className="text-center text-muted-foreground">Loading analytics...</div>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            {/* Header Skeleton */}
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-6 w-32" />
+              <div className="flex gap-2">
+                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-9 w-24" />
+              </div>
+            </div>
+            
+            {/* Table Skeleton */}
+            <div className="space-y-2">
+              {/* Table Header */}
+              <div className="grid grid-cols-6 gap-4 pb-2 border-b">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+              
+              {/* Table Rows */}
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="grid grid-cols-6 gap-4 py-3 border-b border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-16 ml-auto" />
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-7 w-7 ml-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>;
   }
