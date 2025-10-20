@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 
@@ -65,8 +66,34 @@ export default function CampaignPreview() {
 
   if (loading || !campaign) {
     return (
-      <div className="p-8">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="h-[calc(100vh-4rem)] w-full flex flex-col">
+        <div className="p-4 border-b bg-background">
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="flex-1 overflow-auto p-8">
+          <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+            {/* Large banner card skeleton */}
+            <Skeleton className="w-full aspect-video rounded-xl" />
+            
+            {/* Title skeleton */}
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-3/4" />
+              
+              {/* Subtitle/section heading */}
+              <Skeleton className="h-8 w-1/2 mt-8" />
+              
+              {/* Text content lines */}
+              <div className="space-y-3 pt-4">
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-11/12" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-4/5" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-5/6" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
