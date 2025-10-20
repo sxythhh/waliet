@@ -889,21 +889,21 @@ export function CampaignAnalyticsTable({
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+          <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border hover:bg-transparent">
                     <TableHead className="text-muted-foreground font-medium text-sm sticky left-0 bg-card z-10 py-3">Account</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-sm py-3">User</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-right cursor-pointer hover:text-foreground transition-colors text-sm whitespace-nowrap py-3" onClick={() => handleSort('total_views')}>
+                    <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">User</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-right cursor-pointer hover:text-foreground transition-colors text-sm whitespace-nowrap py-3 bg-card" onClick={() => handleSort('total_views')}>
                       <div className="flex items-center justify-end gap-1">
                         Views
                         {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-sm py-3">Time Period</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-sm py-3">Last Paid</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-sm w-8 py-3"></TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Time Period</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Last Paid</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-sm w-8 py-3 bg-card"></TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
@@ -1012,31 +1012,31 @@ export function CampaignAnalyticsTable({
                             <span className="text-xs text-white/80 font-medium">Link User</span>
                           </div>}
                       </TableCell>
-                      <TableCell className="text-white text-right text-sm bg-[#202020] py-3" style={{
+                      <TableCell className="text-foreground text-right text-sm bg-card py-3" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
                     }}>
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-white/60 text-sm bg-[#202020] py-3">
+                      <TableCell className="text-muted-foreground text-sm bg-card py-3">
                         {item.start_date && item.end_date ? (
                           <span className="text-xs whitespace-nowrap">
                             {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
                         ) : (
-                          <span className="text-xs text-white/40">—</span>
+                          <span className="text-xs text-muted-foreground/60">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-white/60 text-sm bg-[#202020] py-3">
+                      <TableCell className="text-muted-foreground text-sm bg-card py-3">
                         {item.last_payment_date ? (
                           <span className="text-xs">
                             {formatDistanceToNow(new Date(item.last_payment_date), { addSuffix: true })}
                           </span>
                         ) : (
-                          <span className="text-xs text-white/40">—</span>
+                          <span className="text-xs text-muted-foreground/60">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="py-3 bg-[#202020]">
+                      <TableCell className="py-3 bg-card">
                         <Button variant="ghost" size="icon" onClick={() => {
                         setDeleteAccountId(item.id);
                         setDeleteDialogOpen(true);
@@ -1049,44 +1049,44 @@ export function CampaignAnalyticsTable({
               </TableBody>
             </Table>
           </div>
-          {filteredAnalytics.length === 0 && <div className="text-center py-12 text-white/40">
+          {filteredAnalytics.length === 0 && <div className="text-center py-12 text-muted-foreground">
               No accounts match your filters
             </div>}
         </CardContent>
       </Card>}
 
         {/* Transactions History */}
-        {showTransactions && <Card className="bg-[#202020] border-transparent">
-          <CardHeader className="px-3 py-3">
-            <CardTitle className="text-white text-sm">Transaction History</CardTitle>
+        {showTransactions && <Card className="bg-card border">
+          <CardHeader className="px-3 py-3 border-b border-border">
+            <CardTitle className="text-foreground text-sm">Transaction History</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="text-white/60 font-medium text-sm py-3">Date</TableHead>
-                    <TableHead className="text-white/60 font-medium text-sm py-3">User</TableHead>
-                    <TableHead className="text-white/60 font-medium text-sm py-3">Account</TableHead>
-                    <TableHead className="text-white/60 font-medium text-sm py-3 text-right">Views</TableHead>
-                    <TableHead className="text-white/60 font-medium text-sm py-3 text-right">Amount</TableHead>
-                    <TableHead className="text-white/60 font-medium text-sm py-3">Status</TableHead>
-                    <TableHead className="text-white/60 font-medium text-sm py-3 text-center">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Date</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">User</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Account</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 text-right bg-card">Views</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 text-right bg-card">Amount</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Status</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 text-center bg-card">Action</TableHead>
+                </TableRow>
+              </TableHeader>
                 <TableBody>
-                  {transactions.map(txn => {
+                {transactions.map(txn => {
                   const metadata = txn.metadata || {};
                   const platformIcon = getPlatformIcon(metadata.platform || '');
-                  return <TableRow key={txn.id} className="border-white/10 hover:bg-white/5">
-                        <TableCell className="text-white/60 text-sm bg-[#202020] py-3">
+                  return <TableRow key={txn.id} className="border-border hover:bg-muted/50">
+                        <TableCell className="text-muted-foreground text-sm bg-card py-3">
                           {new Date(txn.created_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
                       })}
                         </TableCell>
-                        <TableCell className="bg-[#202020] py-3">
+                        <TableCell className="bg-card py-3">
                           <div className="flex items-center gap-2">
                             <Avatar className="h-5 w-5">
                               <AvatarImage src={txn.profiles?.avatar_url || undefined} />
@@ -1094,30 +1094,30 @@ export function CampaignAnalyticsTable({
                                 {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-white text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
+                            <span className="text-foreground text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="bg-[#202020] py-3">
+                        <TableCell className="bg-card py-3">
                           <div className="flex items-center gap-2">
                             {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
-                            <span className="text-white/80 text-sm">@{metadata.account_username || 'N/A'}</span>
+                            <span className="text-foreground/80 text-sm">@{metadata.account_username || 'N/A'}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-white/80 text-right text-sm bg-[#202020] py-3" style={{
+                        <TableCell className="text-foreground/80 text-right text-sm bg-card py-3" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
                     }}>
                           {metadata.views?.toLocaleString() || '0'}
                         </TableCell>
-                        <TableCell className="text-green-400 text-right font-semibold text-sm bg-[#202020] py-3">
+                        <TableCell className="text-green-400 text-right font-semibold text-sm bg-card py-3">
                           +${Number(txn.amount).toFixed(2)}
                         </TableCell>
-                        <TableCell className="bg-[#202020] py-3">
+                        <TableCell className="bg-card py-3">
                           <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
                             {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="bg-[#202020] py-3 text-center">
+                        <TableCell className="bg-card py-3 text-center">
                           {txn.status === 'completed' && txn.type === 'earning' && (
                             <TooltipProvider>
                               <Tooltip>
@@ -1146,7 +1146,7 @@ export function CampaignAnalyticsTable({
                 </TableBody>
               </Table>
             </div>
-            {transactions.length === 0 && <div className="text-center py-12 text-white/40">
+          {transactions.length === 0 && <div className="text-center py-12 text-muted-foreground">
                 No transactions yet
               </div>}
           </CardContent>
