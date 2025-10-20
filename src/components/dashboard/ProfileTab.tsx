@@ -16,6 +16,7 @@ import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog"
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -522,6 +523,25 @@ export function ProfileTab() {
 
       {/* Public Profile Link */}
       
+
+      {/* Settings */}
+      <Card className="bg-card border-0">
+        <CardHeader>
+          <CardTitle className="text-lg">Settings</CardTitle>
+          <CardDescription>Customize your app preferences</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Theme</Label>
+              <p className="text-xs text-muted-foreground">
+                Switch between light and dark mode
+              </p>
+            </div>
+            <ThemeToggle />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Overview */}
       
