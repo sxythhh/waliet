@@ -790,32 +790,39 @@ export default function BrandManagement() {
               </Card>
 
               {/* Daily Spend - Bar Chart */}
-              <Card className="bg-[#202020] border-transparent">
+              <Card className="bg-[#0C0C0C] border-transparent">
                 <CardHeader>
                   <CardTitle className="text-white text-sm">Daily Spend</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
                     {(() => {
-                    const dailySpendData = transactions.reduce((acc: any[], txn) => {
-                      const date = new Date(txn.created_at).toLocaleDateString('en-US', {
+                    // Generate last 7 days
+                    const last7Days = Array.from({ length: 7 }, (_, i) => {
+                      const date = new Date();
+                      date.setDate(date.getDate() - (6 - i));
+                      return {
+                        date: date.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        }),
+                        spend: 0
+                      };
+                    });
+
+                    // Map transaction data to the 7 days
+                    transactions.forEach(txn => {
+                      const txnDate = new Date(txn.created_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric'
                       });
-                      const existing = acc.find(item => item.date === date);
-                      if (existing) {
-                        existing.spend += Number(txn.amount);
-                      } else {
-                        acc.push({
-                          date,
-                          spend: Number(txn.amount)
-                        });
+                      const dayData = last7Days.find(day => day.date === txnDate);
+                      if (dayData) {
+                        dayData.spend += Number(txn.amount);
                       }
-                      return acc;
-                    }, []);
+                    });
 
-                    // Sort by date and take last 7 days
-                    const sortedData = dailySpendData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(-7);
+                    const sortedData = last7Days;
                     if (sortedData.length === 0) {
                       return <div className="h-full flex items-center justify-center text-white/40 text-sm">
                             No spending data available
