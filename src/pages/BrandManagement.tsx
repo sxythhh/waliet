@@ -609,6 +609,16 @@ export default function BrandManagement() {
       }
       return true;
     });
+
+    // Remove duplicates by keeping only the latest submission per creator
+    const uniqueByCreator = new Map();
+    filtered.forEach(submission => {
+      const existing = uniqueByCreator.get(submission.creator_id);
+      if (!existing || new Date(submission.submitted_at) > new Date(existing.submitted_at)) {
+        uniqueByCreator.set(submission.creator_id, submission);
+      }
+    });
+    filtered = Array.from(uniqueByCreator.values());
     if (sortOrder) {
       return [...filtered].sort((a, b) => {
         const aPaid = transactions.filter(txn => txn.user_id === a.creator_id).reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
