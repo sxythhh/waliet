@@ -603,30 +603,21 @@ export function CreateCampaignDialog({
               </div>
 
               {/* Campaign Info */}
-              <div className="p-4 space-y-4">
-                {/* Status Badge */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {isCampaignEnded ? <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
-                        Ended
-                      </span> : <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
-                        Active
-                      </span>}
-                    {form.watch("is_featured") && <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                        Featured
-                      </span>}
-                  </div>
-                </div>
+              <div className="p-4 space-y-4 bg-[#0a0a0a]">
+                {/* Featured Badge */}
+                {form.watch("is_featured") && <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                      Featured
+                    </span>
+                  </div>}
 
                 {/* Title */}
                 <h3 className="text-xl font-bold text-white line-clamp-2">
                   {form.watch("title") || "Campaign Title"}
                 </h3>
 
-                {/* RPM & Platforms */}
-                <div className="flex items-center gap-3 text-sm text-white/60">
-                  <span>${form.watch("rpm_rate") || "0.00"} / 1k views</span>
-                  <div className="flex items-center gap-2">
+                {/* Platforms */}
+                <div className="flex items-center gap-2 text-sm">
                     {form.watch("allowed_platforms")?.includes("tiktok") && <div className="flex items-center gap-1.5">
                         <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
                         <span className="text-xs">TikTok</span>
@@ -644,7 +635,6 @@ export function CreateCampaignDialog({
                         <span className="text-xs">X</span>
                       </div>}
                   </div>
-                </div>
 
                 {/* Budget Progress */}
                 {!form.watch("is_infinite_budget") && form.watch("budget") && <div className="space-y-2">
