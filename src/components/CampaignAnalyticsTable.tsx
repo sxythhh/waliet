@@ -978,7 +978,7 @@ export function CampaignAnalyticsTable({
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>}
-                          </div> : <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/10 rounded-md px-2 py-1.5 border border-white/10 transition-all" onClick={e => {
+                          </div> : <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/10 rounded-md px-2 py-1.5 border transition-all w-fit" onClick={e => {
                         e.stopPropagation();
                         openLinkDialog(item);
                       }}>
