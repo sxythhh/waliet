@@ -171,6 +171,11 @@ export function WalletTab() {
       ascending: true
     });
 
+    console.log("🔍 Fetching earnings data:");
+    console.log("Total transactions:", allTransactions?.length || 0);
+    console.log("Current wallet balance:", wallet?.balance);
+    console.log("Sample transactions:", allTransactions?.slice(0, 5));
+
     // Generate date points for every day in the selected period
     const days = timePeriod === '3D' ? 3 : timePeriod === '1W' || timePeriod === 'TW' ? 7 : timePeriod === '1M' ? 30 : timePeriod === '3M' ? 90 : 365;
     const dataPoints: EarningsDataPoint[] = [];
@@ -210,6 +215,9 @@ export function WalletTab() {
         amount: Number(Math.max(0, balanceAtDate).toFixed(2))
       });
     }
+
+    console.log("📊 Generated data points:", dataPoints);
+    console.log("Final data point amount:", dataPoints[dataPoints.length - 1]?.amount);
     setEarningsData(dataPoints);
   };
   const fetchWithdrawalData = async () => {
