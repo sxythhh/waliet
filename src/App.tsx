@@ -65,11 +65,11 @@ function DashboardLayout({
   }, []);
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full flex-col md:flex-row">
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col w-full">
-          {/* Mobile header with hamburger trigger - only shown on mobile */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile header with hamburger */}
           <header className="md:hidden sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
             <SidebarTrigger />
             <div className="flex-1 flex justify-center">

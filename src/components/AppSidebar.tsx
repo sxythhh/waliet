@@ -38,13 +38,11 @@ export function AppSidebar() {
   return (
     <>
       {/* Desktop Topbar */}
-      <nav className="hidden md:flex sticky top-0 z-10 h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-        {/* Logo */}
+      <nav className="hidden md:flex w-full sticky top-0 z-10 h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
         <div className="flex items-center">
           <img src={wordmarkLogo} alt="Logo" className="h-8" />
         </div>
 
-        {/* Navigation Items */}
         <div className="flex items-center gap-1">
           {menuItems.map(item => {
             const isActive = currentTab === item.tab;
@@ -65,7 +63,6 @@ export function AppSidebar() {
           })}
         </div>
 
-        {/* User Profile Placeholder */}
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
             <User className="h-4 w-4 text-muted-foreground" />
