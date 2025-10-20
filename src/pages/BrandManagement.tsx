@@ -620,7 +620,7 @@ export default function BrandManagement() {
       }
     });
     filtered = Array.from(uniqueByCreator.values());
-    
+
     // Sort by total paid if sortOrder is active
     if (sortOrder) {
       return [...filtered].sort((a, b) => {
@@ -629,7 +629,7 @@ export default function BrandManagement() {
         return sortOrder === 'desc' ? bPaid - aPaid : aPaid - bPaid;
       });
     }
-    
+
     // Sort by number of linked accounts if accountSortOrder is active
     if (accountSortOrder) {
       return [...filtered].sort((a, b) => {
@@ -638,7 +638,6 @@ export default function BrandManagement() {
         return accountSortOrder === 'desc' ? bAccountCount - aAccountCount : aAccountCount - bAccountCount;
       });
     }
-    
     return filtered;
   })();
   const pendingSubmissions = submissions.filter(s => {
@@ -1043,10 +1042,7 @@ export default function BrandManagement() {
                     {pendingSubmissions.length}
                   </Badge>
                 </CardTitle>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="text" placeholder="Search by name or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-[#1a1a1a] border-0 focus-visible:ring-1 focus-visible:ring-primary/50" />
-                </div>
+                
               </CardHeader>
               <CardContent className="space-y-3 bg-[#0C0C0C]">
                 {pendingSubmissions.length === 0 ? <div className="text-center py-8">
