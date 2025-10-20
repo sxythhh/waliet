@@ -441,6 +441,7 @@ export type Database = {
           flag_deadline: string | null
           id: string
           is_flagged: boolean | null
+          platform: string | null
           submission_text: string | null
           updated_at: string | null
           video_url: string
@@ -454,6 +455,7 @@ export type Database = {
           flag_deadline?: string | null
           id?: string
           is_flagged?: boolean | null
+          platform?: string | null
           submission_text?: string | null
           updated_at?: string | null
           video_url: string
@@ -467,6 +469,7 @@ export type Database = {
           flag_deadline?: string | null
           id?: string
           is_flagged?: boolean | null
+          platform?: string | null
           submission_text?: string | null
           updated_at?: string | null
           video_url?: string
