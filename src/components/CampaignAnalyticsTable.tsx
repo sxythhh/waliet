@@ -988,7 +988,7 @@ export function CampaignAnalyticsTable({
                         </div>
                       </TableCell>
                       <TableCell className="py-3 bg-card">
-                        {item.user_id && item.profiles ? <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/5 rounded-md px-1.5 py-1 transition-colors" onClick={() => openUserDetailsDialog(item)}>
+                        {item.user_id && item.profiles ? <div className="flex items-center gap-1.5 cursor-pointer rounded-md px-1.5 py-1" onClick={() => openUserDetailsDialog(item)}>
                             <Avatar className="h-5 w-5">
                               <AvatarImage src={item.profiles.avatar_url || undefined} />
                               <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
@@ -999,19 +999,6 @@ export function CampaignAnalyticsTable({
                           letterSpacing: '-0.3px',
                           fontWeight: 600
                         }}>{item.profiles.username}</span>
-                            {item.paid_views >= item.total_views && item.paid_views > 0 && <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30 text-[10px] font-semibold px-1.5 py-0 rounded-[4px]">
-                                      Paid
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="bg-[#2a2a2a] border-white/10 text-white">
-                                    <p className="text-sm font-medium">Paid ${item.last_payment_amount.toFixed(2)}</p>
-                                    <p className="text-xs text-white/60">{new Date(item.last_payment_date!).toLocaleDateString()}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>}
                           </div> : <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/10 rounded-md px-2 py-1.5 border transition-all w-fit" onClick={e => {
                         e.stopPropagation();
                         openLinkDialog(item);
