@@ -819,7 +819,7 @@ export function CampaignAnalyticsTable({
         
 
         {/* Navigation Tabs */}
-        <div className="flex items-center border-b border-white/10 mb-4">
+        <div className="flex items-center border-b border-white/10">
           <button 
             onClick={() => setShowTransactions(false)} 
             className={`px-4 py-2 text-sm font-medium transition-colors relative ${
@@ -847,8 +847,10 @@ export function CampaignAnalyticsTable({
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
-          
-          {!showTransactions && dateRanges.length > 0 && <div className="ml-auto flex items-center gap-2 pb-2">
+        </div>
+
+        {/* CSV Period Selector */}
+        {!showTransactions && dateRanges.length > 0 && <div className="flex items-center gap-2 mb-4 mt-4">
               <Label className="text-muted-foreground text-sm">CSV Period:</Label>
               <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
                 <SelectTrigger className="w-[200px] bg-muted border">
@@ -880,7 +882,6 @@ export function CampaignAnalyticsTable({
                   Delete Period
                 </Button>}
             </div>}
-        </div>
 
         {/* Filters and Table */}
         {!showTransactions && <Card className="bg-card border">
