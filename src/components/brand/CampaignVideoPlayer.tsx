@@ -247,22 +247,24 @@ export function CampaignVideoPlayer({
                   {selectedUser.email && <p className="text-sm text-muted-foreground">{selectedUser.email}</p>}
                   
                   {/* Trust Score */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold text-white tracking-[-0.5px]">
-                        {selectedUser.trust_score ?? 0}%
-                      </span>
-                      <div className="flex items-center gap-0.5">
-                        {(() => {
-                          const { count, color } = getTrustScoreDiamonds(selectedUser.trust_score ?? 0);
-                          return [...Array(count)].map((_, i) => (
-                            <Diamond key={i} className={`w-3 h-3 ${color}`} />
-                          ));
-                        })()}
+                  {selectedUser.trust_score && selectedUser.trust_score > 0 && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-white tracking-[-0.5px]">
+                          {selectedUser.trust_score}%
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          {(() => {
+                            const { count, color } = getTrustScoreDiamonds(selectedUser.trust_score);
+                            return [...Array(count)].map((_, i) => (
+                              <Diamond key={i} className={`w-3 h-3 ${color}`} />
+                            ));
+                          })()}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 

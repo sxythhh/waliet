@@ -996,22 +996,24 @@ export default function BrandManagement() {
                                       {submission.profiles?.username || "Unknown"}
                                     </p>
                                     {/* Trust Score */}
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs text-muted-foreground tracking-[-0.5px]">Trust:</span>
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-xs font-bold text-foreground tracking-[-0.5px]">
-                                          {submission.profiles?.trust_score ?? 0}%
-                                        </span>
-                                        <div className="flex items-center gap-0.5">
-                                          {(() => {
-                                            const { count, color } = getTrustScoreDiamonds(submission.profiles?.trust_score ?? 0);
-                                            return [...Array(count)].map((_, i) => (
-                                              <Diamond key={i} className={`w-2.5 h-2.5 ${color}`} />
-                                            ));
-                                          })()}
+                                    {submission.profiles?.trust_score && submission.profiles.trust_score > 0 && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground tracking-[-0.5px]">Trust:</span>
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-xs font-bold text-foreground tracking-[-0.5px]">
+                                            {submission.profiles.trust_score}%
+                                          </span>
+                                          <div className="flex items-center gap-0.5">
+                                            {(() => {
+                                              const { count, color } = getTrustScoreDiamonds(submission.profiles.trust_score);
+                                              return [...Array(count)].map((_, i) => (
+                                                <Diamond key={i} className={`w-2.5 h-2.5 ${color}`} />
+                                              ));
+                                            })()}
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
+                                    )}
                                   </div>
                                 </div>
                               </TableCell>
@@ -1397,22 +1399,24 @@ export default function BrandManagement() {
                   {selectedUser.profiles?.email && <p className="text-sm text-muted-foreground">{selectedUser.profiles.email}</p>}
                   
                   {/* Trust Score */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold text-white tracking-[-0.5px]">
-                        {selectedUser.profiles?.trust_score ?? 0}%
-                      </span>
-                      <div className="flex items-center gap-0.5">
-                        {(() => {
-                          const { count, color } = getTrustScoreDiamonds(selectedUser.profiles?.trust_score ?? 0);
-                          return [...Array(count)].map((_, i) => (
-                            <Diamond key={i} className={`w-3 h-3 ${color}`} />
-                          ));
-                        })()}
+                  {selectedUser.profiles?.trust_score && selectedUser.profiles.trust_score > 0 && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-white tracking-[-0.5px]">
+                          {selectedUser.profiles.trust_score}%
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          {(() => {
+                            const { count, color } = getTrustScoreDiamonds(selectedUser.profiles.trust_score);
+                            return [...Array(count)].map((_, i) => (
+                              <Diamond key={i} className={`w-3 h-3 ${color}`} />
+                            ));
+                          })()}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 

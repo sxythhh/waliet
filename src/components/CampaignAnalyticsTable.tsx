@@ -1279,22 +1279,24 @@ export function CampaignAnalyticsTable({
                     <div className="font-semibold text-foreground">@{selectedUser.profiles?.username}</div>
                     
                     {/* Trust Score */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-muted-foreground font-medium">Trust Score</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-foreground">
-                          {selectedUser.profiles?.trust_score ?? 0}%
-                        </span>
-                        <div className="flex items-center gap-0.5 ml-1">
-                          {(() => {
-                            const { count, color } = getTrustScoreDiamonds(selectedUser.profiles?.trust_score ?? 0);
-                            return [...Array(count)].map((_, i) => (
-                              <Diamond key={i} className={`w-3 h-3 ${color}`} />
-                            ));
-                          })()}
+                    {selectedUser.profiles?.trust_score && selectedUser.profiles.trust_score > 0 && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground font-medium">Trust Score</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-bold text-foreground">
+                            {selectedUser.profiles.trust_score}%
+                          </span>
+                          <div className="flex items-center gap-0.5 ml-1">
+                            {(() => {
+                              const { count, color } = getTrustScoreDiamonds(selectedUser.profiles.trust_score);
+                              return [...Array(count)].map((_, i) => (
+                                <Diamond key={i} className={`w-3 h-3 ${color}`} />
+                              ));
+                            })()}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                     
                     <div className="flex items-center gap-2">
                       {(() => {
@@ -1597,22 +1599,24 @@ export function CampaignAnalyticsTable({
                 </h3>
                 
                 {/* Trust Score */}
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-white tracking-[-0.5px]">
-                      {selectedUserForDetails.profiles?.trust_score ?? 0}%
-                    </span>
-                    <div className="flex items-center gap-0.5">
-                      {(() => {
-                        const { count, color } = getTrustScoreDiamonds(selectedUserForDetails.profiles?.trust_score ?? 0);
-                        return [...Array(count)].map((_, i) => (
-                          <Diamond key={i} className={`w-3 h-3 ${color}`} />
-                        ));
-                      })()}
+                {selectedUserForDetails.profiles?.trust_score && selectedUserForDetails.profiles.trust_score > 0 && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold text-white tracking-[-0.5px]">
+                        {selectedUserForDetails.profiles.trust_score}%
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        {(() => {
+                          const { count, color } = getTrustScoreDiamonds(selectedUserForDetails.profiles.trust_score);
+                          return [...Array(count)].map((_, i) => (
+                            <Diamond key={i} className={`w-3 h-3 ${color}`} />
+                          ));
+                        })()}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
