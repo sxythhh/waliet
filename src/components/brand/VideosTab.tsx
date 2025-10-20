@@ -115,7 +115,7 @@ export function VideosTab({ campaignId, isAdmin, approvedCreators }: VideosTabPr
       {isLoading ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="bg-[#0C0C0C] border-white/5">
+            <Card key={i} className="bg-[#0C0C0C] border-transparent">
               <CardContent className="p-6 space-y-4">
                 <Skeleton className="aspect-[9/16] w-full rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
