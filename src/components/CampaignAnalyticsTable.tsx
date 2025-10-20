@@ -1563,7 +1563,7 @@ export function CampaignAnalyticsTable({
             {userSocialAccounts.length > 0 && (
               <div>
                 <h4 className="text-sm font-semibold text-white mb-3">Connected Accounts</h4>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2">
                   {userSocialAccounts.map((account: any) => (
                     <a
                       key={account.id}
