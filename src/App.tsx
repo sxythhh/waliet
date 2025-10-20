@@ -66,13 +66,10 @@ function DashboardLayout({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        {/* Mobile sidebar with hamburger */}
-        <div className="md:hidden">
-          <AppSidebar />
-        </div>
+        <AppSidebar />
         
         <div className="flex-1 flex flex-col w-full">
-          {/* Mobile header with hamburger trigger */}
+          {/* Mobile header with hamburger trigger - only shown on mobile */}
           <header className="md:hidden sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
             <SidebarTrigger />
             <div className="flex-1 flex justify-center">
@@ -80,11 +77,6 @@ function DashboardLayout({
             </div>
             <div className="w-10" />
           </header>
-
-          {/* Desktop topbar (rendered by AppSidebar) */}
-          <div className="hidden md:block">
-            <AppSidebar />
-          </div>
 
           <main className="flex-1">{children}</main>
         </div>
