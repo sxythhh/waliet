@@ -30,6 +30,7 @@ interface CampaignVideoPlayerProps {
     estimated_payout: number | null;
     flag_deadline: string | null;
     is_flagged: boolean;
+    platform?: string;
   };
   isAdmin: boolean;
   onFlagUpdate: () => void;
@@ -158,9 +159,20 @@ export function CampaignVideoPlayer({
             </div>
           </div>}
 
-        {/* TikTok Logo */}
+        {/* Platform Logo */}
         <div className="absolute top-4 left-4">
-          <img src={tiktokLogo} alt="TikTok" className="w-8 h-8" />
+          {(() => {
+            switch (videoData.platform?.toLowerCase()) {
+              case 'tiktok':
+                return <img src={tiktokLogo} alt="TikTok" className="w-8 h-8" />;
+              case 'instagram':
+                return <img src={instagramLogo} alt="Instagram" className="w-8 h-8" />;
+              case 'youtube':
+                return <img src={youtubeLogo} alt="YouTube" className="w-8 h-8" />;
+              default:
+                return <img src={tiktokLogo} alt="Platform" className="w-8 h-8" />;
+            }
+          })()}
         </div>
 
         {/* Controls */}

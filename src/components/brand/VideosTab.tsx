@@ -33,6 +33,7 @@ interface CampaignVideo {
   flag_deadline: string | null;
   is_flagged: boolean;
   created_at: string;
+  platform?: string;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -142,14 +143,15 @@ export function VideosTab({ campaignId, isAdmin, approvedCreators }: VideosTabPr
                     rpm_rate: video.campaigns.rpm_rate,
                     budget: video.campaigns.budget
                   }}
-                  videoData={{
-                    id: video.id,
-                    submission_text: video.submission_text,
-                    bot_score: video.bot_score,
-                    estimated_payout: video.estimated_payout,
-                    flag_deadline: video.flag_deadline,
-                    is_flagged: video.is_flagged
-                  }}
+              videoData={{
+                id: video.id,
+                submission_text: video.submission_text,
+                bot_score: video.bot_score,
+                estimated_payout: video.estimated_payout,
+                flag_deadline: video.flag_deadline,
+                is_flagged: video.is_flagged,
+                platform: video.platform
+              }}
                   isAdmin={isAdmin}
                   onFlagUpdate={fetchVideos}
                 />
