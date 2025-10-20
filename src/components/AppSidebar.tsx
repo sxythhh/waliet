@@ -1,60 +1,73 @@
-import { Airplay, Dock, Scissors, Compass, Users, ArrowUpRight, BellRing, GraduationCap } from "lucide-react";
+import { Airplay, Dock, Compass, User } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-const menuItems = [{
-  title: "Campaigns",
-  tab: "campaigns",
-  icon: Airplay
-}, {
-  title: "Wallet",
-  tab: "wallet",
-  icon: Dock
-}, {
-  title: "Discover",
-  tab: "discover",
-  icon: Compass
-}, {
-  title: "Notifications",
-  tab: "notifications",
-  icon: BellRing
-}, {
-  title: "Training",
-  tab: "training",
-  icon: GraduationCap
-}, {
-  title: "Referrals",
-  tab: "referrals",
-  icon: Users
-}, {
-  title: "Profile",
-  tab: "profile",
-  icon: Scissors
-}];
+import wordmarkLogo from "@/assets/wordmark-logo.png";
+
+const menuItems = [
+  {
+    title: "Campaigns",
+    tab: "campaigns",
+    icon: Airplay
+  },
+  {
+    title: "Wallet",
+    tab: "wallet",
+    icon: Dock
+  },
+  {
+    title: "Discover",
+    tab: "discover",
+    icon: Compass
+  },
+  {
+    title: "Profile",
+    tab: "profile",
+    icon: User
+  }
+];
+
 export function AppSidebar() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "campaigns";
+
   const handleTabClick = (tab: string) => {
     navigate(`/dashboard?tab=${tab}`);
   };
-  return <Sidebar className="border-none">
-      <SidebarContent className="pt-0 bg-[#0c0c0c]">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map(item => {
-              const isActive = currentTab === item.tab;
-              return <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton onClick={() => handleTabClick(item.tab)} isActive={isActive} className="h-10 py-[6px] pl-3 text-[14.4px] font-semibold font-instrument tracking-[-0.5px] data-[active=true]:bg-primary data-[active=true]:text-white data-[active=true]:font-bold hover:bg-sidebar-accent text-[#8A8A8A]">
-                      <item.icon className={`h-[22px] w-[22px] ${isActive ? 'text-white' : 'text-[#6A6A6A]'}`} />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>;
-            })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>;
+
+  return (
+    <nav className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+      {/* Logo */}
+      <div className="flex items-center">
+        <img src={wordmarkLogo} alt="Logo" className="h-8" />
+      </div>
+
+      {/* Navigation Items */}
+      <div className="flex items-center gap-1">
+        {menuItems.map(item => {
+          const isActive = currentTab === item.tab;
+          return (
+            <button
+              key={item.title}
+              onClick={() => handleTabClick(item.tab)}
+              className={`flex flex-col items-center gap-1 px-6 py-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="text-xs font-medium">{item.title}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* User Profile Placeholder */}
+      <div className="flex items-center">
+        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+          <User className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </div>
+    </nav>
+  );
 }
