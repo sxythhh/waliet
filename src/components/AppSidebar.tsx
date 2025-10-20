@@ -56,7 +56,7 @@ export function AppSidebar() {
               }`}
             >
               <item.icon className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="text-[10px] md:text-xs font-medium">{item.title}</span>
+              <span className="hidden md:block text-xs font-medium">{item.title}</span>
             </button>
           );
         })}
