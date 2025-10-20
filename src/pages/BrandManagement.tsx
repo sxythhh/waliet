@@ -597,35 +597,35 @@ export default function BrandManagement() {
       </div>;
   }
   if (campaigns.length === 0) {
-    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">No campaigns found</div>
+    return <div className="min-h-screen p-8 bg-background flex items-center justify-center">
+        <div className="text-foreground">No campaigns found</div>
       </div>;
   }
-  return <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
+  return <div className="min-h-screen p-4 md:p-8 bg-background">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Mobile Menu Button */}
         <div className="md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : sidebar.toggleSidebar()} className="text-white/60 hover:text-white hover:bg-white/10">
+          <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : sidebar.toggleSidebar()} className="text-muted-foreground hover:text-foreground hover:bg-accent">
             {isMobile ? <Menu className="h-6 w-6" /> : <PanelLeft className="h-6 w-6" />}
           </Button>
         </div>
         {/* Campaign Selector */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">{selectedCampaign?.title}</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2 font-instrument tracking-tight">{selectedCampaign?.title}</h1>
             {campaigns.length > 1 && <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-                <SelectTrigger className="w-[280px] bg-[#202020] border-white/10 text-white">
+                <SelectTrigger className="w-[280px] bg-card border">
                   <SelectValue placeholder="Select campaign" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#202020] border-white/10">
-                  {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="text-white hover:bg-white/10">
+                <SelectContent className="bg-card border z-50">
+                  {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="hover:bg-accent focus:bg-accent">
                       {campaign.title}
                     </SelectItem>)}
                 </SelectContent>
               </Select>}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh} className="text-white border-white/10 hover:bg-white/10">
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -638,21 +638,21 @@ export default function BrandManagement() {
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="bg-[#202020] border-white/10">
-            <TabsTrigger value="analytics" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsList className="bg-muted border">
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-card">
               Analytics
             </TabsTrigger>
-            <TabsTrigger value="creators" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="creators" className="data-[state=active]:bg-card">
               Creators
             </TabsTrigger>
-            <TabsTrigger value="applications" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="applications" className="data-[state=active]:bg-card">
               Applications
               {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="videos" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="videos" className="data-[state=active]:bg-card">
               Videos
             </TabsTrigger>
-            <TabsTrigger value="settings" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="settings" className="data-[state=active]:bg-card">
               Settings
             </TabsTrigger>
           </TabsList>
@@ -660,23 +660,20 @@ export default function BrandManagement() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
             {/* Campaign Performance Overview */}
-            <Card className="bg-[#202020] border-transparent">
+            <Card className="bg-card border">
               <CardHeader className="flex flex-row items-center justify-between py-[9px]">
-                <CardTitle className="text-white text-2xl">Performance Overview</CardTitle>
-                {selectedCampaign?.analytics_url && <Button variant="ghost" size="sm" onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')} className="text-white group bg-[#1a1a1a]">
+                <CardTitle className="text-2xl">Performance Overview</CardTitle>
+                {selectedCampaign?.analytics_url && <Button variant="ghost" size="sm" onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')} className="group bg-muted">
                     <span className="relative">
                       View Analytics
-                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                     </span>
                   </Button>}
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600
-                  }}>
+                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
+                    <div className="text-2xl font-bold font-chakra">
                       {(() => {
                       // Group by account and sum views across all date ranges
                       const accountViews = analytics.reduce((acc, a) => {
@@ -687,43 +684,34 @@ export default function BrandManagement() {
                       return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
                     })()}
                     </div>
-                    <div className="text-sm text-white/60 mt-1">Total Views</div>
+                    <div className="text-sm text-muted-foreground mt-1">Total Views</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600
-                  }}>
+                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
+                    <div className="text-2xl font-bold font-chakra">
                       {(() => {
                       // Get unique accounts
                       const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
                       return uniqueAccounts.size;
                     })()}
                     </div>
-                    <div className="text-sm text-white/60 mt-1">Total Accounts</div>
+                    <div className="text-sm text-muted-foreground mt-1">Total Accounts</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600
-                  }}>
+                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
+                    <div className="text-2xl font-bold font-chakra">
                       ${Number(selectedCampaign?.budget_used || 0).toFixed(2)}
                     </div>
-                    <div className="text-sm text-white/60 mt-1 flex items-center justify-center gap-1">
+                    <div className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
                       Budget Used
-                      {isAdmin && <Button variant="ghost" size="icon" className="h-4 w-4 text-white/40 hover:text-white hover:bg-white/10 p-0" onClick={handleEditBudgetUsed} title="Edit budget used">
+                      {isAdmin && <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground hover:text-foreground hover:bg-accent p-0" onClick={handleEditBudgetUsed} title="Edit budget used">
                           <Edit className="h-3 w-3" />
                         </Button>}
                     </div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600
-                  }}>
+                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
+                    <div className="text-2xl font-bold font-chakra">
                       ${effectiveCPM.toFixed(2)}
                     </div>
-                    <div className="text-sm text-white/60 mt-1">Effective CPM</div>
+                    <div className="text-sm text-muted-foreground mt-1">Effective CPM</div>
                   </div>
                 </div>
               </CardContent>
