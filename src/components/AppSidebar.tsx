@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 const menuItems = [
   {
@@ -91,15 +90,14 @@ export function AppSidebar() {
               }`}
             >
               <item.icon className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden md:block text-xs font-medium">{item.title}</span>
+              <span className="hidden md:block text-xs font-medium tracking-[-0.5px]">{item.title}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Right side: Theme Toggle + User Profile */}
-      <div className="hidden md:flex items-center gap-3">
-        <ThemeToggle />
+      {/* User Profile */}
+      <div className="hidden md:flex items-center">
         <Avatar className="w-8 h-8">
           <AvatarImage src={avatarUrl || undefined} alt={displayName} />
           <AvatarFallback className="bg-blue-500 text-white">
