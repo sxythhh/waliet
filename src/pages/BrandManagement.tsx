@@ -1408,7 +1408,7 @@ export default function BrandManagement() {
           {selectedUser && <div className="space-y-6 mt-4">
               {/* User Profile Section */}
               <div className="flex items-center gap-4 pb-6">
-                {selectedUser.profiles?.avatar_url ? <img src={selectedUser.profiles.avatar_url} alt={selectedUser.profiles.username} className="w-20 h-20 rounded-full object-cover ring-2 ring-primary" /> : <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-primary">
+                {selectedUser.profiles?.avatar_url ? <img src={selectedUser.profiles.avatar_url} alt={selectedUser.profiles.username} className="w-20 h-20 rounded-full object-cover" /> : <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
                     <span className="text-primary font-semibold text-3xl">
                       {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                     </span>
