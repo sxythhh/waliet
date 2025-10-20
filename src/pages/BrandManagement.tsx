@@ -95,6 +95,7 @@ export default function BrandManagement() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [processingSubmissionId, setProcessingSubmissionId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [accountSortOrder, setAccountSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [kickDialogOpen, setKickDialogOpen] = useState(false);
   const [userToKick, setUserToKick] = useState<Submission | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -619,6 +620,8 @@ export default function BrandManagement() {
       }
     });
     filtered = Array.from(uniqueByCreator.values());
+    
+    // Sort by total paid if sortOrder is active
     if (sortOrder) {
       return [...filtered].sort((a, b) => {
         const aPaid = transactions.filter(txn => txn.user_id === a.creator_id).reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
@@ -626,6 +629,16 @@ export default function BrandManagement() {
         return sortOrder === 'desc' ? bPaid - aPaid : aPaid - bPaid;
       });
     }
+    
+    // Sort by number of linked accounts if accountSortOrder is active
+    if (accountSortOrder) {
+      return [...filtered].sort((a, b) => {
+        const aAccountCount = a.profiles?.social_accounts?.length || 0;
+        const bAccountCount = b.profiles?.social_accounts?.length || 0;
+        return accountSortOrder === 'desc' ? bAccountCount - aAccountCount : aAccountCount - bAccountCount;
+      });
+    }
+    
     return filtered;
   })();
   const pendingSubmissions = submissions.filter(s => {
@@ -906,7 +919,16 @@ export default function BrandManagement() {
                       <TableHeader>
                         <TableRow className="border-b border-border hover:bg-transparent">
                           <TableHead className="text-muted-foreground font-medium">Creator</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Linked Accounts</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">
+                            <button onClick={() => {
+                          if (accountSortOrder === null) setAccountSortOrder('desc');else if (accountSortOrder === 'desc') setAccountSortOrder('asc');else setAccountSortOrder(null);
+                        }} className="flex items-center gap-2 hover:text-foreground transition-colors">
+                              Linked Accounts
+                              {accountSortOrder === null && <ArrowUpDown className="h-4 w-4" />}
+                              {accountSortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
+                              {accountSortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
+                            </button>
+                          </TableHead>
                           <TableHead className="text-muted-foreground font-medium">
                             <button onClick={() => {
                           if (sortOrder === null) setSortOrder('desc');else if (sortOrder === 'desc') setSortOrder('asc');else setSortOrder(null);
