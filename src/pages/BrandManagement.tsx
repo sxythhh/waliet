@@ -891,6 +891,7 @@ export default function BrandManagement() {
                         <TableRow className="border-b border-border hover:bg-transparent">
                           <TableHead className="text-muted-foreground font-medium">Creator</TableHead>
                           <TableHead className="text-muted-foreground font-medium">Linked Accounts</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Total Paid</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -952,6 +953,24 @@ export default function BrandManagement() {
                                           </span>}
                                       </a>)}
                                   </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
+                              </TableCell>
+
+                              {/* Total Paid Column */}
+                              <TableCell className="py-4">
+                                {(() => {
+                                  const creatorTransactions = transactions.filter(
+                                    txn => txn.user_id === submission.creator_id
+                                  );
+                                  const totalPaid = creatorTransactions.reduce(
+                                    (sum, txn) => sum + Number(txn.amount || 0),
+                                    0
+                                  );
+                                  return (
+                                    <div className="font-semibold text-foreground">
+                                      ${totalPaid.toFixed(2)}
+                                    </div>
+                                  );
+                                })()}
                               </TableCell>
                             </TableRow>;
                     })}
