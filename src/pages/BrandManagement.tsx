@@ -859,10 +859,10 @@ export default function BrandManagement() {
 
           {/* Creators Tab */}
           <TabsContent value="creators">
-            <Card className="bg-[#202020] border-0">
-              <CardHeader className="pb-4">
+            <Card className="bg-card border">
+              <CardHeader className="pb-4 border-b border-border">
                 <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 font-instrument tracking-tight">
                     Active Creators
                     <Badge variant="secondary" className="ml-2">
                       {approvedSubmissions.length}
@@ -874,70 +874,95 @@ export default function BrandManagement() {
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {approvedSubmissions.length === 0 ? <div className="text-center py-8">
+              <CardContent className="p-0">
+                {approvedSubmissions.length === 0 ? <div className="text-center py-12">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                     <p className="text-muted-foreground text-sm">No active creators yet</p>
-                  </div> : <div className="space-y-3">
-                    {approvedSubmissions.map(submission => {
-                  const getPlatformIcon = (platform: string) => {
-                    switch (platform.toLowerCase()) {
-                      case 'tiktok':
-                        return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
-                      case 'instagram':
-                        return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
-                      case 'youtube':
-                        return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
-                      default:
-                        return null;
-                    }
-                  };
-                  return <Card key={submission.id} className="bg-[#1a1a1a] overflow-hidden rounded-xl transition-all group">
-                          <CardContent className="p-0">
-                            <div className="p-5">
-                              {/* Header Section */}
-                              <div className="flex items-start gap-4 mb-4">
-                                {/* Avatar */}
-                                <div className="flex-shrink-0">
-                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-12 h-12 rounded-full object-cover" /> : <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                                      <Users className="h-6 w-6 text-primary" />
+                  </div> : <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-border hover:bg-transparent">
+                          <TableHead className="text-muted-foreground font-medium">Creator</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Linked Accounts</TableHead>
+                          <TableHead className="text-muted-foreground font-medium text-center">Trust Score</TableHead>
+                          <TableHead className="text-muted-foreground font-medium text-center">Demographics</TableHead>
+                          <TableHead className="text-muted-foreground font-medium text-center">Views Score</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {approvedSubmissions.map(submission => {
+                      const getPlatformIcon = (platform: string) => {
+                        switch (platform.toLowerCase()) {
+                          case 'tiktok':
+                            return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
+                          case 'instagram':
+                            return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
+                          case 'youtube':
+                            return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
+                          default:
+                            return null;
+                        }
+                      };
+                      return <TableRow key={submission.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                              {/* Creator Column */}
+                              <TableCell className="py-4">
+                                <div className="flex items-center gap-3">
+                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-10 h-10 rounded-full object-cover ring-2 ring-border" /> : <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center ring-2 ring-border">
+                                      <Users className="h-5 w-5 text-muted-foreground" />
                                     </div>}
+                                  <div>
+                                    <p className="font-semibold text-foreground">
+                                      {submission.profiles?.username || "Unknown"}
+                                    </p>
+                                  </div>
                                 </div>
+                              </TableCell>
 
-                                {/* Creator Info */}
-                                <div className="flex-1">
-                                  <h3 className="font-semibold text-white text-lg">
-                                    {submission.profiles?.username || "Unknown"}
-                                  </h3>
-                                </div>
-                              </div>
-
-                              {/* Stats Grid */}
-                              
-
-                              {/* Social Accounts */}
-                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
-                                  <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all hover:scale-105">
+                              {/* Linked Accounts Column */}
+                              <TableCell className="py-4">
+                                {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? <div className="flex flex-wrap gap-1.5">
+                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#0d0d0d] hover:bg-[#1a1a1a] transition-colors text-xs group">
                                         {getPlatformIcon(account.platform)}
-                                        <span className="text-sm font-medium text-white">
+                                        <span className="font-medium text-foreground group-hover:text-primary transition-colors">
                                           @{account.username}
                                         </span>
-                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
+                                        {account.follower_count > 0 && <span className="text-muted-foreground">
                                             {account.follower_count.toLocaleString()}
-                                          </Badge>}
+                                          </span>}
                                       </a>)}
-                                  </div>
-                                </div>}
+                                  </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
+                              </TableCell>
 
-                              {/* Payment Button */}
-                              
+                              {/* Trust Score Column */}
+                              <TableCell className="py-4 text-center">
+                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0d0d0d]">
+                                  <span className="text-sm font-bold font-chakra text-foreground">
+                                    {submission.profiles?.trust_score || 0}
+                                  </span>
+                                </div>
+                              </TableCell>
 
-                            </div>
-                          </CardContent>
-                        </Card>;
-                })}
+                              {/* Demographics Score Column */}
+                              <TableCell className="py-4 text-center">
+                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0d0d0d]">
+                                  <span className="text-sm font-bold font-chakra text-foreground">
+                                    {submission.profiles?.demographics_score || 0}
+                                  </span>
+                                </div>
+                              </TableCell>
+
+                              {/* Views Score Column */}
+                              <TableCell className="py-4 text-center">
+                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0d0d0d]">
+                                  <span className="text-sm font-bold font-chakra text-foreground">
+                                    {submission.profiles?.views_score || 0}
+                                  </span>
+                                </div>
+                              </TableCell>
+                            </TableRow>;
+                    })}
+                      </TableBody>
+                    </Table>
                   </div>}
               </CardContent>
             </Card>
