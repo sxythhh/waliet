@@ -922,9 +922,18 @@ export function CampaignAnalyticsTable({
             <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
               <CardTitle className="text-sm font-instrument tracking-tight">Account Analytics</CardTitle>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTrackAccountDialogOpen(true)}
+                  className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
+                >
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Track Account
+                </Button>
                 <div className="relative flex-1 sm:w-40">
-                  <Search className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                  <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-8 bg-[#0a0a0a] border-0 text-xs text-center" />
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-7 h-8 bg-muted border text-xs" />
                 </div>
                 <Select value={platformFilter} onValueChange={setPlatformFilter}>
                   <SelectTrigger className="w-full sm:w-28 h-8 bg-muted border text-sm">
@@ -937,11 +946,11 @@ export function CampaignAnalyticsTable({
                       </SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Button variant={showLinkedOnly ? "default" : "outline"} onClick={() => setShowLinkedOnly(!showLinkedOnly)} size="sm" className={`h-8 text-sm ${showLinkedOnly ? "bg-primary" : "bg-muted hover:bg-accent"}`}>
+                <Button variant={showLinkedOnly ? "default" : "outline"} onClick={() => setShowLinkedOnly(!showLinkedOnly)} size="sm" className={`h-8 text-sm ${showLinkedOnly ? "bg-primary" : "bg-muted border hover:bg-accent"}`}>
                   <Filter className="h-4 w-4 mr-1" />
                   Linked
                 </Button>
-                <Button variant={showPaidOnly ? "default" : "outline"} onClick={() => setShowPaidOnly(!showPaidOnly)} size="sm" className={`h-8 text-sm ${showPaidOnly ? "bg-green-500 hover:bg-green-600" : "bg-muted hover:bg-accent"}`}>
+                <Button variant={showPaidOnly ? "default" : "outline"} onClick={() => setShowPaidOnly(!showPaidOnly)} size="sm" className={`h-8 text-sm ${showPaidOnly ? "bg-green-500 hover:bg-green-600" : "bg-muted border hover:bg-accent"}`}>
                   <DollarSign className="h-4 w-4 mr-1" />
                   Paid
                 </Button>
