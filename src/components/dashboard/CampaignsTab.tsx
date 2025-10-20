@@ -279,7 +279,7 @@ export function CampaignsTab() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
         <Skeleton className="h-[350px] rounded-lg" />
         <Skeleton className="h-[350px] rounded-lg" />
         <Skeleton className="h-[350px] rounded-lg" />
