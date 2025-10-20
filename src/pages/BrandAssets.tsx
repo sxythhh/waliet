@@ -51,10 +51,10 @@ export default function BrandAssets() {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-8 bg-[#191919]">
+      <div className="min-h-screen p-8 bg-[#0C0C0C]">
         <div className="space-y-4">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-[calc(100vh-200px)] w-full rounded-lg" />
+          <Skeleton className="h-8 w-48 bg-[#1a1a1a]" />
+          <Skeleton className="h-[calc(100vh-200px)] w-full rounded-lg bg-[#1a1a1a]" />
         </div>
       </div>
     );
@@ -63,7 +63,7 @@ export default function BrandAssets() {
   // For DWY brands, show the roadmap
   if (brandType === "DWY" && brandId) {
     return (
-      <div className="min-h-screen w-full bg-[#191919]">
+      <div className="min-h-screen w-full bg-[#0C0C0C]">
         {/* Mobile Menu Button */}
         {isMobile && (
           <div className="p-4">
@@ -85,7 +85,7 @@ export default function BrandAssets() {
   // For non-DWY brands, show iframe if URL exists
   if (!assetsUrl) {
     return (
-      <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
+      <div className="min-h-screen p-8 bg-[#0C0C0C] flex items-center justify-center">
         <div className="text-center">
           <div className="text-white text-xl mb-2">No Assets URL Configured</div>
           <div className="text-white/60">
@@ -97,7 +97,7 @@ export default function BrandAssets() {
   }
 
   return (
-    <div className="h-screen w-full bg-[#191919] flex flex-col">
+    <div className="h-screen w-full bg-[#0C0C0C] flex flex-col">
       {/* Mobile Menu Button */}
       <div className="md:hidden p-4">
         <Button

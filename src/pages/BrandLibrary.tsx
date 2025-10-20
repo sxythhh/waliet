@@ -222,14 +222,14 @@ export default function BrandLibrary() {
     }
   };
   if (loading) {
-    return <div className="h-screen w-full bg-[#191919] flex flex-col p-6">
+    return <div className="h-screen w-full bg-[#0C0C0C] flex flex-col p-6">
         <Skeleton className="h-10 w-64 mb-6" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-96 rounded-lg" />)}
         </div>
       </div>;
   }
-  return <div className="h-screen w-full bg-[#191919] flex flex-col">
+  return <div className="h-screen w-full bg-[#0C0C0C] flex flex-col">
       <div className="md:hidden p-4">
         <Button variant="ghost" size="icon" onClick={() => sidebar.setOpenMobile(true)} className="text-white/60 hover:text-white hover:bg-white/10">
           <Menu className="h-6 w-6" />
