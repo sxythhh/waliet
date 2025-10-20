@@ -252,12 +252,12 @@ export function CreateCampaignDialog({
             <div className="space-y-3">
               <label className="text-sm font-medium text-white">Campaign Banner</label>
               <div className="flex flex-col gap-3">
-                {bannerPreview ? <div className="relative w-full h-56 rounded-xl overflow-hidden bg-[#191919] border border-white/10">
+                {bannerPreview ? <div className="relative w-full h-56 rounded-xl overflow-hidden bg-[#191919]">
                     <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
-                    <Button type="button" size="icon" className="absolute top-3 right-3 bg-[#191919]/80 hover:bg-destructive border border-white/10" onClick={removeBanner}>
+                    <Button type="button" size="icon" className="absolute top-3 right-3 bg-[#191919]/80 hover:bg-destructive" onClick={removeBanner}>
                       <X className="h-4 w-4 text-white" />
                     </Button>
-                  </div> : <div className="w-full h-56 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors bg-[#191919]" onClick={() => fileInputRef.current?.click()}>
+                  </div> : <div className="w-full h-56 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors bg-[#191919]" onClick={() => fileInputRef.current?.click()}>
                     <div className="text-center">
                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
                         <Upload className="h-8 w-8 text-white/60" />
@@ -279,13 +279,13 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter campaign title" className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary" {...field} />
+                    <Input placeholder="Enter campaign title" className="bg-[#191919] text-white placeholder:text-white/40" {...field} />
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
 
 
-            {campaign?.slug && <div className="p-3 rounded-lg bg-[#191919] border border-white/10">
+            {campaign?.slug && <div className="p-3 rounded-lg bg-[#191919]">
                 <p className="text-xs text-white/40 mb-1">Campaign Slug</p>
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-white/80 font-mono flex-1">{campaign.slug}</p>
@@ -303,7 +303,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Brief description of the campaign" className="resize-none bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary" rows={3} {...field} />
+                    <Textarea placeholder="Brief description of the campaign" className="resize-none bg-[#191919] text-white placeholder:text-white/40" rows={3} {...field} />
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
@@ -311,7 +311,7 @@ export function CreateCampaignDialog({
             {/* Infinite Budget Toggle */}
             <FormField control={form.control} name="is_infinite_budget" render={({
                 field
-              }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-4 bg-[#191919]">
+              }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg p-4 bg-[#191919]">
                   <div className="space-y-1">
                     <FormLabel className="text-white font-medium cursor-pointer">
                       Infinite Budget
@@ -331,7 +331,7 @@ export function CreateCampaignDialog({
                 }) => <FormItem>
                     <FormLabel className="text-white">Budget ($)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" step="0.01" disabled={form.watch("is_infinite_budget")} className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary disabled:opacity-50" {...field} />
+                      <Input type="number" placeholder="0.00" step="0.01" disabled={form.watch("is_infinite_budget")} className="bg-[#191919] text-white placeholder:text-white/40 disabled:opacity-50" {...field} />
                     </FormControl>
                     <FormMessage className="text-destructive/80" />
                   </FormItem>} />
@@ -341,7 +341,7 @@ export function CreateCampaignDialog({
                 }) => <FormItem>
                     <FormLabel className="text-white">RPM Rate ($)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" step="0.01" className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary" {...field} />
+                      <Input type="number" placeholder="0.00" step="0.01" className="bg-[#191919] text-white placeholder:text-white/40" {...field} />
                     </FormControl>
                     <FormMessage className="text-destructive/80" />
                   </FormItem>} />
@@ -352,7 +352,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Guidelines</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Enter campaign guidelines and requirements" className="resize-none bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary" rows={4} {...field} />
+                    <Textarea placeholder="Enter campaign guidelines and requirements" className="resize-none bg-[#191919] text-white placeholder:text-white/40" rows={4} {...field} />
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
@@ -362,7 +362,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Embed URL (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/campaign-embed" className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary" {...field} />
+                    <Input placeholder="https://example.com/campaign-embed" className="bg-[#191919] text-white placeholder:text-white/40" {...field} />
                   </FormControl>
                   <p className="text-xs text-white/40 mt-1">
                     Enter a URL to display as an embedded page for campaign participants
@@ -375,7 +375,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Preview URL (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/campaign-preview" className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary" {...field} />
+                    <Input placeholder="https://example.com/campaign-preview" className="bg-[#191919] text-white placeholder:text-white/40" {...field} />
                   </FormControl>
                   <p className="text-xs text-white/40 mt-1">
                     Enter a URL to display as preview for non-members viewing this campaign
@@ -388,7 +388,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Analytics URL (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/analytics" className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary" {...field} />
+                    <Input placeholder="https://example.com/analytics" className="bg-[#191919] text-white placeholder:text-white/40" {...field} />
                   </FormControl>
                   <p className="text-xs text-white/40 mt-1">
                     Enter a URL to external analytics dashboard
@@ -401,7 +401,7 @@ export function CreateCampaignDialog({
                   <div className="space-y-3">
                     <FormField control={form.control} name="allowed_platforms" render={({
                     field
-                  }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-3 bg-[#191919]">
+                  }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg p-3 bg-[#191919]">
                           <FormLabel className="text-white font-normal cursor-pointer">
                             TikTok
                           </FormLabel>
@@ -414,7 +414,7 @@ export function CreateCampaignDialog({
                         </FormItem>} />
                     <FormField control={form.control} name="allowed_platforms" render={({
                     field
-                  }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-3 bg-[#191919]">
+                  }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg p-3 bg-[#191919]">
                           <FormLabel className="text-white font-normal cursor-pointer">
                             Instagram
                           </FormLabel>
@@ -427,7 +427,7 @@ export function CreateCampaignDialog({
                         </FormItem>} />
                     <FormField control={form.control} name="allowed_platforms" render={({
                     field
-                  }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-3 bg-[#191919]">
+                  }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg p-3 bg-[#191919]">
                           <FormLabel className="text-white font-normal cursor-pointer">
                             X (Twitter)
                           </FormLabel>
@@ -440,7 +440,7 @@ export function CreateCampaignDialog({
                         </FormItem>} />
                     <FormField control={form.control} name="allowed_platforms" render={({
                     field
-                  }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-white/10 p-3 bg-[#191919]">
+                  }) => <FormItem className="flex items-center justify-between space-y-0 rounded-lg p-3 bg-[#191919]">
                           <FormLabel className="text-white font-normal cursor-pointer">
                             YouTube
                           </FormLabel>
@@ -465,7 +465,7 @@ export function CreateCampaignDialog({
                       const newQuestions = [...(field.value || [])];
                       newQuestions[index] = e.target.value;
                       field.onChange(newQuestions);
-                    }} placeholder={`Question ${index + 1}`} className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary" />
+                    }} placeholder={`Question ${index + 1}`} className="bg-[#191919] text-white placeholder:text-white/40" />
                         <Button type="button" variant="ghost" size="icon" onClick={() => {
                       const newQuestions = field.value?.filter((_, i) => i !== index) || [];
                       field.onChange(newQuestions);
@@ -473,7 +473,7 @@ export function CreateCampaignDialog({
                           <X className="h-4 w-4" />
                         </Button>
                       </div>)}
-                    {(!field.value || field.value.length < 3) && <Button type="button" variant="outline" size="sm" onClick={() => field.onChange([...(field.value || []), ""])} className="w-full bg-[#191919] border-white/10 text-white hover:bg-white/5">
+                    {(!field.value || field.value.length < 3) && <Button type="button" variant="outline" size="sm" onClick={() => field.onChange([...(field.value || []), ""])} className="w-full bg-[#191919] text-white hover:bg-white/5">
                         <Plus className="h-4 w-4 mr-2" />
                         Add Question
                       </Button>}
@@ -484,7 +484,7 @@ export function CreateCampaignDialog({
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
 
-            <div className="space-y-4 p-4 bg-[#191919]/50 rounded-lg border border-white/10">
+            <div className="space-y-4 p-4 bg-[#191919]/50 rounded-lg">
               <FormField control={form.control} name="requires_application" render={({
                   field
                 }) => <FormItem className="flex items-center space-x-3 space-y-0">
@@ -538,7 +538,7 @@ export function CreateCampaignDialog({
                 }) => <FormItem>
                       <FormLabel className="text-white">Access Code *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter access code (min 6 characters)" className="bg-[#191919] border-white/10 text-white placeholder:text-white/40 focus:border-primary uppercase font-mono tracking-wider" {...field} onChange={e => field.onChange(e.target.value.toUpperCase())} />
+                        <Input placeholder="Enter access code (min 6 characters)" className="bg-[#191919] text-white placeholder:text-white/40 uppercase font-mono tracking-wider" {...field} onChange={e => field.onChange(e.target.value.toUpperCase())} />
                       </FormControl>
                       <p className="text-xs text-white/40">
                         This code will be required for creators to join your campaign
@@ -548,7 +548,7 @@ export function CreateCampaignDialog({
             </div>
 
             {/* Mark as Ended Toggle */}
-            {campaign && <div className="flex items-center justify-between rounded-lg border border-white/10 p-4 bg-[#191919]">
+            {campaign && <div className="flex items-center justify-between rounded-lg p-4 bg-[#191919]">
                 <div>
                   <p className="text-white font-medium">Mark Campaign as Ended</p>
                   <p className="text-xs text-white/40 mt-1">
@@ -558,7 +558,7 @@ export function CreateCampaignDialog({
                 <Switch checked={isCampaignEnded} onCheckedChange={setIsCampaignEnded} />
               </div>}
 
-            <div className="flex justify-between gap-3 pt-4 border-t border-white/10">
+            <div className="flex justify-between gap-3 pt-4">
               <div>
                 {campaign && onDelete && <Button type="button" variant="ghost" onClick={() => setDeleteDialogOpen(true)} disabled={isSubmitting} className="text-destructive/60 hover:text-destructive hover:bg-destructive/10">
                     <Trash2 className="h-4 w-4 mr-2" />
