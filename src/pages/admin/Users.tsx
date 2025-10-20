@@ -18,6 +18,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
+import { TrustScoreIndicator } from "@/components/brand/TrustScoreIndicator";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -28,6 +29,7 @@ interface User {
   full_name: string;
   avatar_url: string | null;
   total_earnings: number;
+  trust_score: number;
   wallets: {
     balance: number;
     total_earned: number;
