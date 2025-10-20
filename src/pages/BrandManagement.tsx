@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -907,13 +907,30 @@ export default function BrandManagement() {
                               {/* Creator Column */}
                               <TableCell className="py-4">
                                 <div className="flex items-center gap-3">
-                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-10 h-10 rounded-full object-cover ring-2 ring-border" /> : <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center ring-2 ring-border">
-                                      <Users className="h-5 w-5 text-muted-foreground" />
+                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-10 h-10 rounded-full object-cover ring-2 ring-border" /> : <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-border">
+                                      <span className="text-primary font-semibold text-lg">
+                                        {submission.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                                      </span>
                                     </div>}
-                                  <div>
+                                  <div className="space-y-1">
                                     <p className="font-semibold text-foreground">
                                       {submission.profiles?.username || "Unknown"}
                                     </p>
+                                    {/* Trust Score */}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">Trust:</span>
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-xs font-bold text-foreground">100%</span>
+                                        <div className="flex items-center gap-0.5">
+                                          {[...Array(5)].map((_, i) => (
+                                            <Diamond
+                                              key={i}
+                                              className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500"
+                                            />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               </TableCell>
