@@ -7,6 +7,7 @@ import { Upload, Video } from "lucide-react";
 import { UploadCampaignVideoDialog } from "./UploadCampaignVideoDialog";
 import { CampaignVideoPlayer } from "./CampaignVideoPlayer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface VideosTabProps {
   campaignId: string;
@@ -125,34 +126,39 @@ export function VideosTab({ campaignId, isAdmin, approvedCreators }: VideosTabPr
           ))}
         </div>
       ) : videos.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {videos.map((video) => (
-            <CampaignVideoPlayer
-              key={video.id}
-              videoUrl={video.video_url}
-              creatorId={video.creator_id}
-              creator={{
-                username: video.profiles.username,
-                avatar_url: video.profiles.avatar_url
-              }}
-              campaign={{
-                title: video.campaigns.title,
-                rpm_rate: video.campaigns.rpm_rate,
-                budget: video.campaigns.budget
-              }}
-              videoData={{
-                id: video.id,
-                submission_text: video.submission_text,
-                bot_score: video.bot_score,
-                estimated_payout: video.estimated_payout,
-                flag_deadline: video.flag_deadline,
-                is_flagged: video.is_flagged
-              }}
-              isAdmin={isAdmin}
-              onFlagUpdate={fetchVideos}
-            />
-          ))}
-        </div>
+        <Carousel className="w-full">
+          <CarouselContent className="-ml-4">
+            {videos.map((video) => (
+              <CarouselItem key={video.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                <CampaignVideoPlayer
+                  videoUrl={video.video_url}
+                  creatorId={video.creator_id}
+                  creator={{
+                    username: video.profiles.username,
+                    avatar_url: video.profiles.avatar_url
+                  }}
+                  campaign={{
+                    title: video.campaigns.title,
+                    rpm_rate: video.campaigns.rpm_rate,
+                    budget: video.campaigns.budget
+                  }}
+                  videoData={{
+                    id: video.id,
+                    submission_text: video.submission_text,
+                    bot_score: video.bot_score,
+                    estimated_payout: video.estimated_payout,
+                    flag_deadline: video.flag_deadline,
+                    is_flagged: video.is_flagged
+                  }}
+                  isAdmin={isAdmin}
+                  onFlagUpdate={fetchVideos}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-0" />
+          <CarouselNext className="right-0" />
+        </Carousel>
       ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">

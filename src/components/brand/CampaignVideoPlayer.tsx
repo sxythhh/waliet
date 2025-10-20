@@ -148,7 +148,7 @@ export function CampaignVideoPlayer({
   const daysUntilDeadline = getDaysUntilDeadline();
   return <div className="bg-[#0C0C0C] rounded-2xl overflow-hidden">
       {/* Video Player */}
-      <div ref={containerRef} className="relative bg-black aspect-[9/16] max-w-[350px] mx-auto">
+      <div ref={containerRef} className="relative bg-black aspect-[9/16] max-w-[280px] max-h-[400px] mx-auto">
         <video ref={videoRef} src={videoUrl} className="w-full h-full object-contain" loop playsInline muted={isMuted} onClick={togglePlay} />
         
         {/* Play Button Overlay */}
