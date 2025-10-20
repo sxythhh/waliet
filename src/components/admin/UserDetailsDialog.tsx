@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -17,6 +18,7 @@ interface UserProfile {
   username: string;
   full_name?: string | null;
   avatar_url?: string | null;
+  trust_score?: number | null;
   wallets?: {
     balance: number;
     total_earned: number;
@@ -139,6 +141,8 @@ export function UserDetailsDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [unlinkingAccountId, setUnlinkingAccountId] = useState<string | null>(null);
   const [deletingAccountId, setDeletingAccountId] = useState<string | null>(null);
+  const [trustScore, setTrustScore] = useState<number>(user?.trust_score ?? 0);
+  const [isUpdatingTrustScore, setIsUpdatingTrustScore] = useState(false);
   
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -294,6 +298,36 @@ export function UserDetailsDialog({
       setIsSubmitting(false);
     }
   };
+
+  const handleTrustScoreUpdate = async (newScore: number) => {
+    if (!user?.id) return;
+    
+    setIsUpdatingTrustScore(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ trust_score: newScore })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Trust Score Updated",
+        description: `Trust score set to ${newScore}`,
+      });
+
+      onBalanceUpdated?.();
+    } catch (error) {
+      console.error("Error updating trust score:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update trust score. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingTrustScore(false);
+    }
+  };
   
   if (!user) return null;
   return <Dialog open={open} onOpenChange={onOpenChange}>
@@ -313,7 +347,7 @@ export function UserDetailsDialog({
             
             {/* Wallet Stats */}
             <div className="space-y-2 mt-2">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <div className="bg-card/50 px-3 py-2 rounded-lg">
                   <p className="text-xs text-muted-foreground mb-1">Balance</p>
                   <p className="text-lg font-semibold text-success">
@@ -331,6 +365,38 @@ export function UserDetailsDialog({
                   <p className="text-lg font-semibold">
                     ${(user.wallets?.total_withdrawn || 0).toFixed(2)}
                   </p>
+                </div>
+                <div className="bg-card/50 px-3 py-2 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
+                  <p className="text-lg font-semibold">
+                    {user.trust_score ?? 0}/100
+                  </p>
+                </div>
+              </div>
+              
+              {/* Trust Score Slider */}
+              <div className="bg-card/50 px-3 py-3 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Set Trust Score</Label>
+                  <span className="text-sm font-medium">{trustScore}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Slider
+                    value={[trustScore]}
+                    onValueChange={(value) => setTrustScore(value[0])}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                    disabled={isUpdatingTrustScore}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => handleTrustScoreUpdate(trustScore)}
+                    disabled={isUpdatingTrustScore || trustScore === (user.trust_score ?? 0)}
+                    className="h-8 px-3"
+                  >
+                    {isUpdatingTrustScore ? "Updating..." : "Update"}
+                  </Button>
                 </div>
               </div>
               <Button 
