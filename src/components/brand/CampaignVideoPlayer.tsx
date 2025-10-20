@@ -175,7 +175,7 @@ export function CampaignVideoPlayer({
       </div>
 
       {/* Creator Info */}
-      <div className="p-4 space-y-3">
+      <div className="py-4 space-y-3">
         <div 
           className="flex items-center justify-between cursor-pointer group"
           onClick={handleUserClick}
