@@ -1,7 +1,6 @@
 import { Airplay, Dock, Compass, User } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 const menuItems = [
   {
@@ -36,66 +35,39 @@ export function AppSidebar() {
   };
 
   return (
-    <>
-      {/* Desktop Topbar */}
-      <nav className="hidden md:flex w-full sticky top-0 z-10 h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-        <div className="flex items-center">
-          <img src={wordmarkLogo} alt="Logo" className="h-8" />
-        </div>
+    <nav className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+      {/* Logo */}
+      <div className="flex items-center">
+        <img src={wordmarkLogo} alt="Logo" className="h-8" />
+      </div>
 
-        <div className="flex items-center gap-1">
-          {menuItems.map(item => {
-            const isActive = currentTab === item.tab;
-            return (
-              <button
-                key={item.title}
-                onClick={() => handleTabClick(item.tab)}
-                className={`flex flex-col items-center gap-1 px-6 py-2 rounded-lg transition-colors ${
-                  isActive 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="text-xs font-medium">{item.title}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Navigation Items */}
+      <div className="flex items-center gap-1">
+        {menuItems.map(item => {
+          const isActive = currentTab === item.tab;
+          return (
+            <button
+              key={item.title}
+              onClick={() => handleTabClick(item.tab)}
+              className={`flex flex-col items-center gap-1 px-6 py-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="text-xs font-medium">{item.title}</span>
+            </button>
+          );
+        })}
+      </div>
 
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <User className="h-4 w-4 text-muted-foreground" />
-          </div>
+      {/* User Profile Placeholder */}
+      <div className="flex items-center">
+        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+          <User className="h-4 w-4 text-muted-foreground" />
         </div>
-      </nav>
-
-      {/* Mobile Sidebar */}
-      <Sidebar className="md:hidden border-none">
-        <SidebarContent className="pt-0 bg-background">
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {menuItems.map(item => {
-                  const isActive = currentTab === item.tab;
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        onClick={() => handleTabClick(item.tab)} 
-                        isActive={isActive}
-                        className="h-10 py-[6px] pl-3 text-[14.4px] font-semibold tracking-[-0.5px] data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:font-bold hover:bg-accent"
-                      >
-                        <item.icon className="h-[22px] w-[22px]" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-    </>
+      </div>
+    </nav>
   );
 }
