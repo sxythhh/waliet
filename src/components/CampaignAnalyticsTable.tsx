@@ -1030,11 +1030,20 @@ export function CampaignAnalyticsTable({
                           {item.user_id && <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={e => {
-                                e.stopPropagation();
-                                setSelectedUser(item);
-                                setPaymentDialogOpen(true);
-                              }} className="h-7 w-7 text-green-400 hover:text-green-300 hover:bg-green-500/10">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      setSelectedUser(item);
+                                      setPaymentDialogOpen(true);
+                                    }} 
+                                    className={`h-7 w-7 ${
+                                      item.paid_views >= item.total_views 
+                                        ? "text-muted-foreground hover:text-muted-foreground/80 hover:bg-muted/10" 
+                                        : "text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
+                                    }`}
+                                  >
                                     <DollarSign className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
