@@ -308,7 +308,6 @@ export function CampaignsTab() {
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 {isEnded && <div className="absolute top-2 right-2">
                   <Badge variant="secondary" className="bg-muted/90 text-muted-foreground font-semibold">
                     Ended
