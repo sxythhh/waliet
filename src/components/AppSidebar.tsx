@@ -49,7 +49,7 @@ export function AppSidebar() {
             <button
               key={item.title}
               onClick={() => handleTabClick(item.tab)}
-              className={`flex flex-col items-center gap-0.5 md:gap-1 px-2 md:px-6 py-1.5 md:py-2 rounded-lg transition-colors ${
+              className={`flex flex-col items-center justify-center gap-0.5 md:gap-1 w-14 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-lg transition-colors ${
                 isActive 
                   ? 'bg-primary text-primary-foreground' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
