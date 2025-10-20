@@ -190,13 +190,17 @@ export function WalletTab() {
           if (txnDate <= currentDate) {
             const amount = Number(txn.amount) || 0;
 
-            // Add positive amounts (earnings, bonuses, etc.)
-            if (['earning', 'admin_adjustment', 'bonus', 'refund'].includes(txn.type)) {
-              balanceAtDate += amount;
+            // Add positive amounts (earnings, bonuses, referrals, etc.)
+            if (['earning', 'admin_adjustment', 'bonus', 'refund', 'referral'].includes(txn.type)) {
+              balanceAtDate += Math.abs(amount);
             }
-            // Subtract withdrawals (amount is already negative in DB)
+            // Subtract withdrawals and balance corrections if negative
             else if (txn.type === 'withdrawal' && txn.status === 'completed') {
-              balanceAtDate += amount; // amount is negative, so this subtracts
+              balanceAtDate -= Math.abs(amount);
+            }
+            else if (txn.type === 'balance_correction') {
+              // Balance corrections can be positive or negative
+              balanceAtDate += amount;
             }
           }
         });
@@ -205,11 +209,6 @@ export function WalletTab() {
         date: dateStr,
         amount: Number(Math.max(0, balanceAtDate).toFixed(2))
       });
-    }
-
-    // Ensure the last point shows current wallet balance
-    if (dataPoints.length > 0 && wallet) {
-      dataPoints[dataPoints.length - 1].amount = Number(wallet.balance.toFixed(2));
     }
     setEarningsData(dataPoints);
   };
