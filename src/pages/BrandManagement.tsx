@@ -683,7 +683,7 @@ export default function BrandManagement() {
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="bg-muted border">
+          <TabsList className="bg-[#0C0C0C] border">
             <TabsTrigger value="analytics" className="data-[state=active]:bg-card">
               Analytics
             </TabsTrigger>
