@@ -1122,100 +1122,152 @@ export default function BrandManagement() {
                   />
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-0">
                 {pendingSubmissions.length === 0 ? <div className="text-center py-12">
                     <Users className="h-12 w-12 mx-auto mb-3 text-white/20" />
                     <p className="text-white/40 text-sm">No pending applications</p>
-                  </div> : <div className="space-y-3">
-                    {pendingSubmissions.map(submission => {
-                  const getPlatformIcon = (platform: string) => {
-                    switch (platform.toLowerCase()) {
-                      case 'tiktok':
-                        return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
-                      case 'instagram':
-                        return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
-                      case 'youtube':
-                        return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
-                      default:
-                        return null;
-                    }
-                  };
-                  return <Card key={submission.id} className="bg-[#1C1C1C] border-0 hover:bg-[#242424] transition-colors">
-                          <CardContent className="p-0">
-                            <div className="p-5">
-                              {/* Application Q&A Section */}
-                              {submission.application_answers && submission.application_answers.length > 0 && <div className="mb-4 space-y-3">
-                                  {submission.application_answers.map((qa, index) => <div key={index} className="bg-[#0C0C0C] rounded-lg p-3 border border-white/5">
-                                      <p className="text-xs font-medium text-white/60 mb-1.5">{qa.question}</p>
-                                      <p className="text-sm text-white">{qa.answer}</p>
-                                    </div>)}
-                                </div>}
+                  </div> : <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-white/5 hover:bg-transparent">
+                          <TableHead className="text-white/60 font-medium">Creator</TableHead>
+                          <TableHead className="text-white/60 font-medium">Applied</TableHead>
+                          <TableHead className="text-white/60 font-medium">Linked Accounts</TableHead>
+                          <TableHead className="text-white/60 font-medium">Application</TableHead>
+                          <TableHead className="text-white/60 font-medium text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingSubmissions.map(submission => {
+                          const getPlatformIcon = (platform: string) => {
+                            switch (platform.toLowerCase()) {
+                              case 'tiktok':
+                                return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
+                              case 'instagram':
+                                return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
+                              case 'youtube':
+                                return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
+                              default:
+                                return null;
+                            }
+                          };
+                          
+                          const getInitial = (username: string) => {
+                            return username?.charAt(0).toUpperCase() || 'U';
+                          };
 
-                              {/* Header Section */}
-                              <div className="flex items-start justify-between gap-4 mb-4">
-                                <div className="flex items-start gap-3 flex-1">
-                                  {/* Avatar */}
-                                  <div className="flex-shrink-0">
-                                    {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-14 h-14 rounded-full object-cover" /> : <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
-                                        <Users className="h-7 w-7 text-primary" />
-                                      </div>}
-                                  </div>
+                          return <TableRow key={submission.id} className="border-b border-white/5 hover:bg-[#1C1C1C] transition-colors">
+                              {/* Creator Column */}
+                              <TableCell className="py-3">
+                                <div className="flex items-center gap-3">
+                                  {submission.profiles?.avatar_url ? (
+                                    <img 
+                                      src={submission.profiles.avatar_url} 
+                                      alt={submission.profiles.username} 
+                                      className="w-8 h-8 rounded-full object-cover" 
+                                    />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                                      <span className="text-primary text-sm font-semibold">
+                                        {getInitial(submission.profiles?.username || '')}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <span className="text-white text-sm font-medium">
+                                    {submission.profiles?.username || "Unknown"}
+                                  </span>
+                                </div>
+                              </TableCell>
 
-                                  {/* Creator Info */}
-                                  <div className="flex-1">
-                                    <h3 className="font-semibold text-white text-lg mb-1">
-                                      {submission.profiles?.username || "Unknown"}
-                                    </h3>
-                                    <div className="flex items-center gap-2 text-xs text-white/60">
-                                      <span>Applied {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                              {/* Applied Date Column */}
+                              <TableCell className="py-3">
+                                <span className="text-white/60 text-sm">
+                                  {new Date(submission.submitted_at).toLocaleDateString('en-US', {
                                     month: 'short',
                                     day: 'numeric',
                                     year: 'numeric'
-                                  })}</span>
-                                      
-                                    
-                                    </div>
-                                  </div>
-                                </div>
+                                  })}
+                                </span>
+                              </TableCell>
 
-                                {/* Action Buttons */}
-                                <div className="flex gap-2 flex-shrink-0">
-                                  <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-green-500/20 hover:bg-green-500/30 text-green-400 h-9 px-4" disabled={processingSubmissionId === submission.id}>
-                                    {processingSubmissionId === submission.id ? <>
-                                        <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
-                                        Processing...
-                                      </> : <>
-                                        <Check className="h-4 w-4 mr-1.5" />
-                                        Approve
-                                      </>}
-                                  </Button>
-                                  <Button size="sm" variant="outline" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-0 h-9 px-4" disabled={processingSubmissionId === submission.id}>
-                                    <X className="h-4 w-4 mr-1.5" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {/* Social Accounts */}
-                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
-                                  <h4 className="text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Linked Accounts</h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0C0C0C] hover:bg-[#2a2a2a] transition-all group border border-white/5">
+                              {/* Linked Accounts Column */}
+                              <TableCell className="py-3">
+                                {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {submission.profiles.social_accounts.map(account => (
+                                      <a 
+                                        key={account.id} 
+                                        href={account.account_link || '#'} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[#0C0C0C] hover:bg-[#2a2a2a] transition-all group border border-white/5"
+                                      >
                                         {getPlatformIcon(account.platform)}
-                                        <span className="text-sm font-medium text-white group-hover:underline">
+                                        <span className="text-xs text-white/80 group-hover:underline">
                                           @{account.username}
                                         </span>
-                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/5 text-white/70 text-xs border-0">
-                                            {account.follower_count.toLocaleString()}
-                                          </Badge>}
-                                      </a>)}
+                                        {account.follower_count > 0 && (
+                                          <span className="text-xs text-white/50">
+                                            ({account.follower_count.toLocaleString()})
+                                          </span>
+                                        )}
+                                      </a>
+                                    ))}
                                   </div>
-                                </div>}
+                                ) : (
+                                  <span className="text-white/40 text-sm">No accounts</span>
+                                )}
+                              </TableCell>
 
-                            </div>
-                          </CardContent>
-                        </Card>;
-                })}
+                              {/* Application Answers Column */}
+                              <TableCell className="py-3 max-w-xs">
+                                {submission.application_answers && submission.application_answers.length > 0 ? (
+                                  <div className="space-y-1.5">
+                                    {submission.application_answers.map((qa, index) => (
+                                      <div key={index} className="text-xs">
+                                        <span className="text-white/50">{qa.question}:</span>{' '}
+                                        <span className="text-white/80">{qa.answer}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-white/40 text-sm">No answers</span>
+                                )}
+                              </TableCell>
+
+                              {/* Actions Column */}
+                              <TableCell className="py-3 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button 
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleApplicationAction(submission.id, "approved")} 
+                                    className="h-8 w-8 hover:bg-green-500/20 text-green-400 hover:text-green-300" 
+                                    disabled={processingSubmissionId === submission.id}
+                                    title="Approve"
+                                  >
+                                    {processingSubmissionId === submission.id ? (
+                                      <RefreshCw className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Check className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                  <Button 
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleApplicationAction(submission.id, "rejected")} 
+                                    className="h-8 w-8 hover:bg-red-500/20 text-red-400 hover:text-red-300" 
+                                    disabled={processingSubmissionId === submission.id}
+                                    title="Reject"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>;
+                        })}
+                      </TableBody>
+                    </Table>
                   </div>}
               </CardContent>
             </Card>
