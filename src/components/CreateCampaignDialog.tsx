@@ -604,14 +604,19 @@ export function CreateCampaignDialog({
 
               {/* Campaign Info */}
               <div className="p-4 space-y-4">
-                {/* Featured Badge */}
-                {form.watch("is_featured") && <div className="flex items-center justify-between">
+                {/* Status Badge */}
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                      Featured
-                    </span>
+                    {isCampaignEnded ? <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+                        Ended
+                      </span> : <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+                        Active
+                      </span>}
+                    {form.watch("is_featured") && <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                        Featured
+                      </span>}
                   </div>
-                </div>}
+                </div>
 
                 {/* Title */}
                 <h3 className="text-xl font-bold text-white line-clamp-2">
@@ -619,11 +624,8 @@ export function CreateCampaignDialog({
                 </h3>
 
                 {/* RPM & Platforms */}
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
-                    <span className="text-primary font-semibold">${form.watch("rpm_rate") || "0.00"}</span>
-                    <span className="text-muted-foreground text-xs">per 1k views</span>
-                  </div>
+                <div className="flex items-center gap-3 text-sm text-white/60">
+                  <span>${form.watch("rpm_rate") || "0.00"} / 1k views</span>
                   <div className="flex items-center gap-2">
                     {form.watch("allowed_platforms")?.includes("tiktok") && <div className="flex items-center gap-1.5">
                         <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
