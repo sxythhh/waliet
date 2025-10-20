@@ -602,7 +602,20 @@ export default function BrandManagement() {
   
   // Filter and sort approved submissions
   const approvedSubmissions = (() => {
-    const filtered = submissions.filter(s => s.status === "approved");
+    let filtered = submissions.filter(s => {
+      if (s.status !== "approved") return false;
+      
+      // Filter by search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const username = s.profiles?.username?.toLowerCase() || "";
+        const accountUsernames = s.profiles?.social_accounts?.map((acc: any) => acc.username?.toLowerCase() || "").join(" ") || "";
+        
+        return username.includes(query) || accountUsernames.includes(query);
+      }
+      
+      return true;
+    });
     
     if (sortOrder) {
       return [...filtered].sort((a, b) => {
@@ -929,7 +942,7 @@ export default function BrandManagement() {
           {/* Creators Tab */}
           <TabsContent value="creators">
             <Card className="bg-card border">
-              <CardHeader className="pb-4 border-b border-border">
+              <CardHeader className="pb-4 border-b border-border space-y-4">
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-instrument tracking-tight">
                     Active Creators
@@ -942,6 +955,16 @@ export default function BrandManagement() {
                     Export CSV
                   </Button>
                 </CardTitle>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search by name or account username..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+                  />
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 {approvedSubmissions.length === 0 ? <div className="text-center py-12">
