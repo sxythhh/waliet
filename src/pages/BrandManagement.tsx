@@ -982,8 +982,30 @@ export default function BrandManagement() {
                       return <TableRow key={submission.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                               {/* Creator Column */}
                               <TableCell className="py-4">
-                                <div className="flex items-center gap-3 cursor-pointer group" onClick={() => {
-                            setSelectedUser(submission);
+                                <div className="flex items-center gap-3 cursor-pointer group" onClick={async () => {
+                            // Fetch campaign-specific payment data
+                            const { data: transactions } = await supabase
+                              .from('wallet_transactions')
+                              .select('amount')
+                              .eq('user_id', submission.creator_id)
+                              .eq('type', 'earning')
+                              .eq('status', 'completed')
+                              .filter('metadata->>campaign_id', 'eq', selectedCampaignId);
+                            
+                            const totalPaid = transactions?.reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0;
+                            
+                            // Count videos for this campaign
+                            const { count: videoCount } = await supabase
+                              .from('campaign_videos')
+                              .select('*', { count: 'exact', head: true })
+                              .eq('creator_id', submission.creator_id)
+                              .eq('campaign_id', selectedCampaignId);
+                            
+                            setSelectedUser({
+                              ...submission,
+                              total_paid: totalPaid,
+                              video_count: videoCount || 0
+                            });
                             setIsUserDialogOpen(true);
                           }}>
                                   {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-10 h-10 rounded-full object-cover ring-2 ring-border" /> : <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-border">
