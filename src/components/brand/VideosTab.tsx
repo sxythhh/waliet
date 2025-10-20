@@ -130,6 +130,7 @@ export function VideosTab({ campaignId, isAdmin, approvedCreators }: VideosTabPr
             <CampaignVideoPlayer
               key={video.id}
               videoUrl={video.video_url}
+              creatorId={video.creator_id}
               creator={{
                 username: video.profiles.username,
                 avatar_url: video.profiles.avatar_url
