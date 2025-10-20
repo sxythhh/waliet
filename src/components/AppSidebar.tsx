@@ -35,28 +35,28 @@ export function AppSidebar() {
   };
 
   return (
-    <nav className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+    <nav className="sticky top-0 z-10 flex h-14 md:h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:px-6">
       {/* Logo */}
       <div className="flex items-center">
-        <img src={wordmarkLogo} alt="Logo" className="h-8" />
+        <img src={wordmarkLogo} alt="Logo" className="h-6 md:h-8" />
       </div>
 
       {/* Navigation Items */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 md:gap-1">
         {menuItems.map(item => {
           const isActive = currentTab === item.tab;
           return (
             <button
               key={item.title}
               onClick={() => handleTabClick(item.tab)}
-              className={`flex flex-col items-center gap-1 px-6 py-2 rounded-lg transition-colors ${
+              className={`flex flex-col items-center gap-0.5 md:gap-1 px-2 md:px-6 py-1.5 md:py-2 rounded-lg transition-colors ${
                 isActive 
                   ? 'bg-primary text-primary-foreground' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{item.title}</span>
+              <item.icon className="h-4 w-4 md:h-5 md:w-5" />
+              <span className="text-[10px] md:text-xs font-medium">{item.title}</span>
             </button>
           );
         })}
@@ -64,8 +64,8 @@ export function AppSidebar() {
 
       {/* User Profile Placeholder */}
       <div className="flex items-center">
-        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-          <User className="h-4 w-4 text-muted-foreground" />
+        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center">
+          <User className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
         </div>
       </div>
     </nav>
