@@ -826,7 +826,7 @@ export function CampaignAnalyticsTable({
             {/* Table Skeleton */}
             <div className="space-y-2">
               {/* Table Header */}
-              <div className="grid grid-cols-6 gap-4 pb-2 border-b">
+              <div className="grid grid-cols-6 gap-4 pb-2">
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-4 w-16" />
                 <Skeleton className="h-4 w-16" />
@@ -837,7 +837,7 @@ export function CampaignAnalyticsTable({
               
               {/* Table Rows */}
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="grid grid-cols-6 gap-4 py-3 border-b border-border/50">
+                <div key={i} className="grid grid-cols-6 gap-4 py-3">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-5 w-5 rounded" />
                     <Skeleton className="h-4 w-24" />
