@@ -124,21 +124,20 @@ export default function BrandDashboard() {
     }
   };
   if (loading) {
-    return <div className="min-h-screen p-8 bg-[#191919]">
+    return <div className="min-h-screen p-8 bg-background">
         <div className="max-w-7xl mx-auto">
           <Skeleton className="h-8 w-48 mb-6" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Skeleton className="h-48 rounded-lg" />
-            <Skeleton className="h-48 rounded-lg" />
-            <Skeleton className="h-48 rounded-lg" />
-            <Skeleton className="h-48 rounded-lg" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <Skeleton className="h-[350px] rounded-lg" />
+            <Skeleton className="h-[350px] rounded-lg" />
+            <Skeleton className="h-[350px] rounded-lg" />
           </div>
         </div>
       </div>;
   }
   if (!brand) {
-    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">Brand not found</div>
+    return <div className="min-h-screen p-8 bg-background flex items-center justify-center">
+        <div className="text-foreground">Brand not found</div>
       </div>;
   }
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
@@ -151,17 +150,17 @@ export default function BrandDashboard() {
 
   // If only one view is available, set it as active
   const effectiveView = !hasHomeEmbed ? "campaigns" : !hasCampaigns ? "home" : activeView;
-  return <div className="min-h-screen bg-[#191919]">
+  return <div className="min-h-screen bg-background">
       {/* Header - Hide when showing home embed */}
       {effectiveView !== "home" && (
         <>
           <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} className="text-white/60 hover:text-white hover:bg-white/10">
+                <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} className="text-muted-foreground hover:text-foreground hover:bg-accent">
                   {isMobile ? <Menu className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
                 </Button>
-                <h1 className="text-2xl font-bold text-white font-['Instrument_Sans'] tracking-[-0.5px]">
+                <h1 className="text-2xl font-bold text-foreground font-instrument tracking-tight">
                   {brand.name}
                 </h1>
               </div>
@@ -170,12 +169,12 @@ export default function BrandDashboard() {
 
             {/* View Toggle - Only show if both views are available */}
             {showToggle && <Tabs value={effectiveView} onValueChange={handleViewChange} className="w-full mb-6">
-              <TabsList className="bg-[#202020] border-white/10">
-                <TabsTrigger value="home" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
+              <TabsList className="bg-muted border-border">
+                <TabsTrigger value="home" className="gap-2 data-[state=active]:bg-card">
                   <Home className="h-4 w-4" />
                   Home
                 </TabsTrigger>
-                <TabsTrigger value="campaigns" className="gap-2 data-[state=active]:bg-[#2a2a2a]">
+                <TabsTrigger value="campaigns" className="gap-2 data-[state=active]:bg-card">
                   <LayoutGrid className="h-4 w-4" />
                   Campaigns
                 </TabsTrigger>
@@ -190,7 +189,7 @@ export default function BrandDashboard() {
         <div className="fixed top-4 right-4 z-50">
           <Button
             onClick={() => setActiveView("campaigns")}
-            className="bg-[#5865F2] hover:bg-[#4752C4]"
+            className="bg-primary hover:bg-primary/90"
           >
             <LayoutGrid className="h-4 w-4 mr-2" />
             View Campaigns
@@ -208,56 +207,60 @@ export default function BrandDashboard() {
             </div>}
 
           {/* Campaigns View - With Padding */}
-          {effectiveView === "campaigns" && <div className="max-w-5xl mx-auto px-8 pb-8">
-              {campaigns.length > 0 ? <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {effectiveView === "campaigns" && <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
+              {campaigns.length > 0 ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                     {campaigns.map(campaign => {
               const usedBudget = Number(campaign.budget_used || 0);
               const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
-              return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
-                          {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
-                              <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
+              return <Card key={campaign.id} className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+                          {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                              <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                             </div>}
-                          <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-xl font-semibold text-white mb-1">
+                          <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
+                        <div className="flex items-start justify-between">
+                          <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1">
                             {campaign.title}
                           </h3>
                           <div onClick={e => e.stopPropagation()}>
-                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
-                                  <Pencil className="h-4 w-4" />
+                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent">
+                                  <Pencil className="h-3.5 w-3.5" />
                                 </Button>} />
                           </div>
                         </div>
 
-                            {/* Budget Progress Bar */}
-                            <div className="space-y-2 mb-4">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-white/60">Budget Usage</span>
-                                <span className="text-white font-medium">
-                                  ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
-                                </span>
+                            {/* Budget Progress Bar - Refined */}
+                            <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
+                              <div className="flex items-baseline justify-between">
+                                <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                                  <span className="text-base font-bold tabular-nums">${usedBudget.toLocaleString()}</span>
+                                  <span className="text-xs text-muted-foreground font-bold">/ ${Number(campaign.budget).toLocaleString()}</span>
+                                </div>
                               </div>
-                              <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
-                                <div className="absolute inset-0 bg-primary rounded-full transition-all duration-500" style={{
+                              
+                              {/* Progress Bar */}
+                              <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                                <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                         width: `${budgetPercentage}%`
                       }} />
+                              </div>
+                              
+                              <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                                <span className="font-medium">{budgetPercentage.toFixed(0)}% used</span>
                               </div>
                             </div>
 
                             {/* RPM Display */}
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-white/60">RPM:</span>
-                              <span className="text-white font-semibold">
+                            <div className="flex items-center justify-between text-xs pt-1">
+                              <span className="text-muted-foreground font-medium">RPM Rate</span>
+                              <span className="font-bold tabular-nums">
                                 ${Number(campaign.rpm_rate).toFixed(2)}
                               </span>
                             </div>
                           </CardContent>
                         </Card>;
             })}
-                  </div>
                 </div> : <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-white/60 mb-4">No campaigns yet</p>
+                  <p className="text-muted-foreground mb-4">No campaigns yet</p>
                   <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
                 </div>}
             </div>}
@@ -267,46 +270,52 @@ export default function BrandDashboard() {
             <div dangerouslySetInnerHTML={{
         __html: brand.home_url || ""
       }} className="w-full h-full" />
-          </div> : <div className="max-w-5xl mx-auto px-8 pb-8">
-            {campaigns.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          </div> : <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
+            {campaigns.length > 0 ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                 {campaigns.map(campaign => {
           const usedBudget = Number(campaign.budget_used || 0);
           const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
-          return <Card key={campaign.id} className="bg-[#202020] border-none overflow-hidden cursor-pointer transition-all hover:bg-[#252525]" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
-                      {campaign.banner_url && <div className="w-full h-32 overflow-hidden">
-                          <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
+          return <Card key={campaign.id} className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+                      {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                          <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                         </div>}
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="font-semibold text-white mb-1 text-xl">
+                      <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
+                        <div className="flex items-start justify-between">
+                          <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1">
                             {campaign.title}
                           </h3>
                           <div onClick={e => e.stopPropagation()}>
-                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10">
-                                  <Pencil className="h-4 w-4" />
+                            <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent">
+                                  <Pencil className="h-3.5 w-3.5" />
                                 </Button>} />
                           </div>
                         </div>
 
-                        {/* Budget Progress Bar */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-white/60">Budget Usage</span>
-                            <span className="text-white font-medium">
-                              ${usedBudget.toLocaleString()} / ${Number(campaign.budget).toLocaleString()}
-                            </span>
+                        {/* Budget Progress Bar - Refined */}
+                        <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
+                          <div className="flex items-baseline justify-between">
+                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                              <span className="text-base font-bold tabular-nums">${usedBudget.toLocaleString()}</span>
+                              <span className="text-xs text-muted-foreground font-bold">/ ${Number(campaign.budget).toLocaleString()}</span>
+                            </div>
                           </div>
-                          <div className="relative h-3 bg-[#191919] rounded-full overflow-hidden">
-                            <div className="absolute inset-0 bg-primary rounded-full transition-all duration-500" style={{
+                          
+                          {/* Progress Bar */}
+                          <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                            <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                     width: `${budgetPercentage}%`
                   }} />
+                          </div>
+                          
+                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                            <span className="font-medium">{budgetPercentage.toFixed(0)}% used</span>
                           </div>
                         </div>
 
                         {/* RPM Display */}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-white/60">RPM:</span>
-                          <span className="text-white font-semibold">
+                        <div className="flex items-center justify-between text-xs pt-1">
+                          <span className="text-muted-foreground font-medium">RPM Rate</span>
+                          <span className="font-bold tabular-nums">
                             ${Number(campaign.rpm_rate).toFixed(2)}
                           </span>
                         </div>
@@ -314,23 +323,23 @@ export default function BrandDashboard() {
                     </Card>;
         })}
               </div> : <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-white/60 mb-4">No campaigns yet</p>
+                <p className="text-muted-foreground mb-4">No campaigns yet</p>
                 <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
               </div>}
           </div>}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent className="bg-[#202020] border-white/10">
+          <AlertDialogContent className="bg-card border">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-white">Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
-                This will permanently delete <strong className="text-white">{campaignToDelete?.title}</strong>.
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete <strong className="text-foreground">{campaignToDelete?.title}</strong>.
                 This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+              <AlertDialogCancel className="bg-muted border hover:bg-accent">
                 Cancel
               </AlertDialogCancel>
               <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
