@@ -3,11 +3,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Loader2 } from "lucide-react";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 
 interface UploadCampaignVideoDialogProps {
   open: boolean;
@@ -33,10 +35,7 @@ export function UploadCampaignVideoDialog({
 }: UploadCampaignVideoDialogProps) {
   const [uploading, setUploading] = useState(false);
   const [selectedCreatorId, setSelectedCreatorId] = useState("");
-  const [submissionText, setSubmissionText] = useState("");
-  const [botScore, setBotScore] = useState("");
-  const [estimatedPayout, setEstimatedPayout] = useState("");
-  const [flagDeadline, setFlagDeadline] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState("");
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,8 +56,8 @@ export function UploadCampaignVideoDialog({
   };
 
   const handleUpload = async () => {
-    if (!videoFile || !selectedCreatorId) {
-      toast.error('Please select a video file and creator');
+    if (!videoFile || !selectedCreatorId || !selectedPlatform) {
+      toast.error('Please select a video file, creator, and platform');
       return;
     }
 
@@ -86,10 +85,7 @@ export function UploadCampaignVideoDialog({
           campaign_id: campaignId,
           creator_id: selectedCreatorId,
           video_url: publicUrl,
-          submission_text: submissionText || null,
-          bot_score: botScore ? parseInt(botScore) : null,
-          estimated_payout: estimatedPayout ? parseFloat(estimatedPayout) : null,
-          flag_deadline: flagDeadline ? new Date(flagDeadline).toISOString() : null
+          platform: selectedPlatform
         });
 
       if (insertError) throw insertError;
@@ -100,10 +96,7 @@ export function UploadCampaignVideoDialog({
       
       // Reset form
       setSelectedCreatorId("");
-      setSubmissionText("");
-      setBotScore("");
-      setEstimatedPayout("");
-      setFlagDeadline("");
+      setSelectedPlatform("");
       setVideoFile(null);
     } catch (error) {
       console.error('Error uploading video:', error);
@@ -115,7 +108,7 @@ export function UploadCampaignVideoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1a1a1a] border-white/10 max-w-2xl">
+      <DialogContent className="bg-black border-white/10 max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-white">Upload Campaign Video</DialogTitle>
           <DialogDescription className="text-white/60">
@@ -163,55 +156,32 @@ export function UploadCampaignVideoDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="submission" className="text-white">Submission Text</Label>
-            <Textarea
-              id="submission"
-              placeholder="e.g., POV: You're a sicko"
-              value={submissionText}
-              onChange={(e) => setSubmissionText(e.target.value)}
-              className="bg-[#0C0C0C] border-white/10 text-white min-h-[80px]"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="botScore" className="text-white">Bot Score</Label>
-              <Input
-                id="botScore"
-                type="number"
-                placeholder="98"
-                min="0"
-                max="100"
-                value={botScore}
-                onChange={(e) => setBotScore(e.target.value)}
-                className="bg-[#0C0C0C] border-white/10 text-white"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="payout" className="text-white">Estimated Payout ($)</Label>
-              <Input
-                id="payout"
-                type="number"
-                placeholder="19.99"
-                step="0.01"
-                min="0"
-                value={estimatedPayout}
-                onChange={(e) => setEstimatedPayout(e.target.value)}
-                className="bg-[#0C0C0C] border-white/10 text-white"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="deadline" className="text-white">Flag Deadline</Label>
-            <Input
-              id="deadline"
-              type="datetime-local"
-              value={flagDeadline}
-              onChange={(e) => setFlagDeadline(e.target.value)}
-              className="bg-[#0C0C0C] border-white/10 text-white"
-            />
+            <Label htmlFor="platform" className="text-white">Platform</Label>
+            <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+              <SelectTrigger className="bg-[#0C0C0C] border-white/10 text-white">
+                <SelectValue placeholder="Select a platform" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1a1a1a] border-white/10">
+                <SelectItem value="tiktok" className="text-white hover:bg-white/5">
+                  <div className="flex items-center gap-2">
+                    <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
+                    <span>TikTok</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="instagram" className="text-white hover:bg-white/5">
+                  <div className="flex items-center gap-2">
+                    <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />
+                    <span>Instagram</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="youtube" className="text-white hover:bg-white/5">
+                  <div className="flex items-center gap-2">
+                    <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />
+                    <span>YouTube</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -226,7 +196,7 @@ export function UploadCampaignVideoDialog({
           </Button>
           <Button
             onClick={handleUpload}
-            disabled={uploading || !videoFile || !selectedCreatorId}
+            disabled={uploading || !videoFile || !selectedCreatorId || !selectedPlatform}
             className="bg-primary hover:bg-primary/90"
           >
             {uploading ? (
