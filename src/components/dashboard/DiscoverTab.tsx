@@ -181,7 +181,7 @@ export function DiscoverTab() {
         </div>
 
         {/* Campaigns Grid */}
-        {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
+        {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             <Skeleton className="h-[350px] rounded-lg" />
             <Skeleton className="h-[350px] rounded-lg" />
             <Skeleton className="h-[350px] rounded-lg" />
@@ -191,7 +191,7 @@ export function DiscoverTab() {
           </div> : sortedCampaigns.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-slate-50 font-medium">No campaigns found</p>
-          </div> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
+          </div> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {sortedCampaigns.map(campaign => {
           const budgetUsed = campaign.budget_used || 0;
           const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
