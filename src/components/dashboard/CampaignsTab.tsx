@@ -298,7 +298,7 @@ export function CampaignsTab() {
         </Button>
       </div>;
   }
-  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
+  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
       {campaigns.map(campaign => {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
