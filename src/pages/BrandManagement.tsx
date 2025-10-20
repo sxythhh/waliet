@@ -269,15 +269,10 @@ export default function BrandManagement() {
       });
       if (error) throw error;
 
-      // Filter out pending applications from users who already have approved submissions
-      const approvedCreatorIds = new Set((data || []).filter(s => s.status === 'approved').map(s => s.creator_id));
+      // Show all pending and approved submissions
+      // Filter out only rejected and withdrawn submissions
       const filteredData = (data || []).filter(submission => {
-        // Keep approved submissions
-        if (submission.status === 'approved') return true;
-        // Keep pending submissions only if user doesn't have an approved one
-        if (submission.status === 'pending') return !approvedCreatorIds.has(submission.creator_id);
-        // Filter out rejected and withdrawn submissions
-        return false;
+        return submission.status === 'approved' || submission.status === 'pending';
       });
 
       // Fetch social accounts via junction table
@@ -1106,30 +1101,31 @@ export default function BrandManagement() {
 
           {/* Applications Tab */}
           <TabsContent value="applications">
-            <Card className="bg-[#202020] border-0">
+            <Card className="bg-[#0C0C0C] border-0">
               <CardHeader className="pb-4 space-y-4">
-                <CardTitle className="flex items-center gap-2">
-                  
-                  Pending Applications
-                  <Badge variant="secondary" className="ml-2">
-                    {pendingSubmissions.length}
-                  </Badge>
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    Pending Applications
+                    <Badge variant="secondary" className="ml-2 bg-white/10 text-white">
+                      {pendingSubmissions.length}
+                    </Badge>
+                  </CardTitle>
+                </div>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                   <Input
                     type="text"
                     placeholder="Search by name or account username..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-[#1a1a1a] border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+                    className="pl-10 bg-[#1C1C1C] border-0 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-primary/50"
                   />
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {pendingSubmissions.length === 0 ? <div className="text-center py-8">
-                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                    <p className="text-muted-foreground text-sm">No pending applications</p>
+                {pendingSubmissions.length === 0 ? <div className="text-center py-12">
+                    <Users className="h-12 w-12 mx-auto mb-3 text-white/20" />
+                    <p className="text-white/40 text-sm">No pending applications</p>
                   </div> : <div className="space-y-3">
                     {pendingSubmissions.map(submission => {
                   const getPlatformIcon = (platform: string) => {
@@ -1144,14 +1140,14 @@ export default function BrandManagement() {
                         return null;
                     }
                   };
-                  return <Card key={submission.id} className="bg-[#1a1a1a] overflow-hidden rounded-xl transition-all">
+                  return <Card key={submission.id} className="bg-[#1C1C1C] border-0 hover:bg-[#242424] transition-colors">
                           <CardContent className="p-0">
                             <div className="p-5">
                               {/* Application Q&A Section */}
                               {submission.application_answers && submission.application_answers.length > 0 && <div className="mb-4 space-y-3">
-                                  {submission.application_answers.map((qa, index) => <div key={index} className="bg-white/5 rounded-lg p-3">
-                                      <p className="text-xs font-medium text-white/80 mb-1.5">{qa.question}</p>
-                                      <p className="text-sm text-white/90">{qa.answer}</p>
+                                  {submission.application_answers.map((qa, index) => <div key={index} className="bg-[#0C0C0C] rounded-lg p-3 border border-white/5">
+                                      <p className="text-xs font-medium text-white/60 mb-1.5">{qa.question}</p>
+                                      <p className="text-sm text-white">{qa.answer}</p>
                                     </div>)}
                                 </div>}
 
@@ -1202,14 +1198,14 @@ export default function BrandManagement() {
 
                               {/* Social Accounts */}
                               {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
-                                  <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
+                                  <h4 className="text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Linked Accounts</h4>
                                   <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all group">
+                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0C0C0C] hover:bg-[#2a2a2a] transition-all group border border-white/5">
                                         {getPlatformIcon(account.platform)}
                                         <span className="text-sm font-medium text-white group-hover:underline">
                                           @{account.username}
                                         </span>
-                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
+                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/5 text-white/70 text-xs border-0">
                                             {account.follower_count.toLocaleString()}
                                           </Badge>}
                                       </a>)}
