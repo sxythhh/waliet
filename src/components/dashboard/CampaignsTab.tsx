@@ -304,7 +304,12 @@ export function CampaignsTab() {
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
       const isPending = campaign.submission_status === 'pending';
       const isEnded = campaign.status === 'ended';
-      return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : isEnded ? 'opacity-75 cursor-pointer' : 'cursor-pointer'}`} onClick={() => !isPending && !isEnded && navigate(`/campaign/${campaign.id}`)}>
+      return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : isEnded ? 'opacity-75 cursor-pointer' : 'cursor-pointer'}`} onClick={() => {
+        console.log('Campaign clicked:', { id: campaign.id, status: campaign.submission_status, isPending, isEnded });
+        if (!isPending && !isEnded) {
+          navigate(`/campaign/${campaign.id}`);
+        }
+      }}>
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />

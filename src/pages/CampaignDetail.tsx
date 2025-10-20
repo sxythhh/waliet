@@ -65,6 +65,8 @@ export default function CampaignDetail() {
       let retries = 0;
       const maxRetries = 3;
       
+      console.log('Checking access for campaign:', id, 'user:', user.id);
+      
       while (!submissionData && retries < maxRetries) {
         const { data } = await supabase
           .from("campaign_submissions")
@@ -74,6 +76,7 @@ export default function CampaignDetail() {
           .eq("status", "approved")
           .maybeSingle();
         
+        console.log(`Retry ${retries + 1}:`, { found: !!data, data });
         submissionData = data;
         
         if (!submissionData && retries < maxRetries - 1) {
@@ -95,6 +98,12 @@ export default function CampaignDetail() {
           .eq("status", "pending")
           .maybeSingle();
 
+        console.log('Access denied - no approved submission found', { 
+          campaignId: id, 
+          userId: user.id, 
+          hasPending: !!pendingSubmission 
+        });
+
         toast({
           variant: "destructive",
           title: "Access Denied",
@@ -102,7 +111,7 @@ export default function CampaignDetail() {
             ? "Your application is pending approval" 
             : "You must be approved to view this campaign",
         });
-        navigate("/dashboard?tab=discover");
+        navigate("/dashboard?tab=campaigns");
         return;
       }
 
