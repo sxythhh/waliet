@@ -213,25 +213,34 @@ export default function CampaignDetail() {
           <Skeleton className="h-10 w-36" />
         </div>
         <div className="flex-1 overflow-auto p-8">
-          <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+          <div className="max-w-4xl space-y-6 animate-fade-in">
             {/* Large banner card skeleton */}
             <Skeleton className="w-full aspect-video rounded-xl" />
             
-            {/* Title skeleton */}
-            <div className="space-y-4">
-              <Skeleton className="h-12 w-3/4" />
+            {/* Title and text content */}
+            <div className="space-y-6">
+              {/* Main title */}
+              <Skeleton className="h-10 w-2/3" />
               
-              {/* Subtitle/section heading */}
-              <Skeleton className="h-8 w-1/2 mt-8" />
+              {/* Section heading */}
+              <Skeleton className="h-7 w-1/3" />
               
-              {/* Text content lines */}
-              <div className="space-y-3 pt-4">
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-11/12" />
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-4/5" />
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-5/6" />
+              {/* Text paragraph 1 */}
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-11/12" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+              
+              {/* Section heading 2 */}
+              <Skeleton className="h-7 w-2/5" />
+              
+              {/* Text paragraph 2 */}
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-4/5" />
               </div>
             </div>
           </div>
