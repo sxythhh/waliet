@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
+import { UserDetailsDialog } from "./admin/UserDetailsDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -121,8 +122,15 @@ export function CampaignAnalyticsTable({
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [revertingTransaction, setRevertingTransaction] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userContextDialogOpen, setUserContextDialogOpen] = useState(false);
-  const [selectedUserContext, setSelectedUserContext] = useState<AnalyticsData | null>(null);
+  const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState<AnalyticsData | null>(null);
+  const [userDetailsSocialAccounts, setUserDetailsSocialAccounts] = useState<any[]>([]);
+  const [userDetailsTransactions, setUserDetailsTransactions] = useState<any[]>([]);
+  const [userDetailsPaymentMethods, setUserDetailsPaymentMethods] = useState<any[]>([]);
+  const [loadingUserDetails, setLoadingUserDetails] = useState(false);
+  const [socialAccountsOpen, setSocialAccountsOpen] = useState(true);
+  const [transactionsOpen, setTransactionsOpen] = useState(false);
+  const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
   const itemsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
@@ -368,6 +376,84 @@ export function CampaignAnalyticsTable({
     setUserSearchTerm("");
     fetchAvailableUsers(account.platform);
     setLinkAccountDialogOpen(true);
+  };
+
+  const openUserDetailsDialog = async (item: AnalyticsData) => {
+    if (!item.user_id) return;
+    
+    setSelectedUserForDetails(item);
+    setUserDetailsDialogOpen(true);
+    setLoadingUserDetails(true);
+
+    try {
+      // Fetch user profile with wallet data
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          username,
+          full_name,
+          avatar_url,
+          wallets (
+            balance,
+            total_earned,
+            total_withdrawn
+          )
+        `)
+        .eq("id", item.user_id)
+        .single();
+
+      // Fetch social accounts
+      const { data: socialAccounts } = await supabase
+        .from("social_accounts")
+        .select(`
+          id,
+          platform,
+          username,
+          account_link,
+          social_account_campaigns (
+            campaigns (
+              id,
+              title,
+              brand_name,
+              brand_logo_url,
+              brands (
+                logo_url
+              )
+            )
+          ),
+          demographic_submissions (
+            status,
+            tier1_percentage,
+            submitted_at
+          )
+        `)
+        .eq("user_id", item.user_id)
+        .order("submitted_at", { referencedTable: "demographic_submissions", ascending: false });
+
+      // Fetch transactions
+      const { data: transactionsData } = await supabase
+        .from("wallet_transactions")
+        .select("*")
+        .eq("user_id", item.user_id)
+        .order("created_at", { ascending: false });
+
+      // Fetch payment methods
+      const { data: wallet } = await supabase
+        .from("wallets")
+        .select("payout_method, payout_details")
+        .eq("user_id", item.user_id)
+        .single();
+
+      setUserDetailsSocialAccounts(socialAccounts || []);
+      setUserDetailsTransactions(transactionsData || []);
+      setUserDetailsPaymentMethods(wallet ? [{ method: wallet.payout_method, details: wallet.payout_details }] : []);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      toast.error("Failed to load user details");
+    } finally {
+      setLoadingUserDetails(false);
+    }
   };
   const getDemographicStatus = (item: AnalyticsData): 'none' | 'pending' | 'approved' | 'outdated' => {
     if (!item.demographic_submission) return 'none';
@@ -924,65 +1010,17 @@ export function CampaignAnalyticsTable({
                         </div>
                       </TableCell>
                       <TableCell className="py-3 bg-card">
-                        {item.user_id && item.profiles ? <div className="flex items-center gap-1.5 group">
-                            <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/5 rounded-md px-1.5 py-1 transition-colors" onClick={() => {
-                              setSelectedUserContext(item);
-                              setUserContextDialogOpen(true);
-                            }}>
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage src={item.profiles.avatar_url || undefined} />
-                                <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
-                                  {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{
-                            letterSpacing: '-0.3px',
-                            fontWeight: 600
-                          }}>{item.profiles.username}</span>
-                            </div>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-green-500/20 hover:text-green-400" onClick={e => {
-                                e.stopPropagation();
-                                setSelectedUser(item);
-                                setPaymentDialogOpen(true);
-                              }}>
-                                    <DollarSign className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Send payment</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 hover:text-red-400" onClick={async e => {
-                                e.stopPropagation();
-                                try {
-                                  const {
-                                    error
-                                  } = await supabase.from('campaign_account_analytics').update({
-                                    user_id: null
-                                  }).eq('campaign_id', campaignId).eq('platform', item.platform).ilike('account_username', item.account_username);
-                                  if (error) throw error;
-                                  toast.success('Account unlinked from user');
-                                  fetchAnalytics();
-                                } catch (error) {
-                                  console.error('Error unlinking account:', error);
-                                  toast.error('Failed to unlink account');
-                                }
-                              }}>
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Unlink account</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                        {item.user_id && item.profiles ? <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/5 rounded-md px-1.5 py-1 transition-colors" onClick={() => openUserDetailsDialog(item)}>
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={item.profiles.avatar_url || undefined} />
+                              <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                                {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{
+                          letterSpacing: '-0.3px',
+                          fontWeight: 600
+                        }}>{item.profiles.username}</span>
                             {item.paid_views >= item.total_views && item.paid_views > 0 && <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1029,12 +1067,39 @@ export function CampaignAnalyticsTable({
                           </span> : <span className="text-xs text-muted-foreground/60">—</span>}
                       </TableCell>
                       <TableCell className="py-3 bg-card">
-                        <Button variant="ghost" size="icon" onClick={() => {
-                        setDeleteAccountId(item.id);
-                        setDeleteDialogOpen(true);
-                      }} className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          {item.user_id && <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={e => {
+                                e.stopPropagation();
+                                setSelectedUser(item);
+                                setPaymentDialogOpen(true);
+                              }} className="h-7 w-7 text-green-400 hover:text-green-300 hover:bg-green-500/10">
+                                    <DollarSign className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Send payment</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => {
+                              setDeleteAccountId(item.id);
+                              setDeleteDialogOpen(true);
+                            }} className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Delete analytics</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                       </TableCell>
                     </TableRow>;
                 })}
@@ -1507,101 +1572,37 @@ export function CampaignAnalyticsTable({
       toast.success("Account will be tracked in Shortimize");
     }} />
 
-    {/* User Context Dialog */}
-    <Dialog open={userContextDialogOpen} onOpenChange={setUserContextDialogOpen}>
-      <DialogContent className="bg-card border text-foreground max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-foreground">
-            <User className="h-5 w-5 text-primary" />
-            User Profile
-          </DialogTitle>
-        </DialogHeader>
-        
-        {selectedUserContext?.profiles && <div className="space-y-4 py-4">
-            {/* User Info */}
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30 border">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={selectedUserContext.profiles.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/20 text-primary text-lg">
-                  {selectedUserContext.profiles.username?.charAt(0).toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="font-semibold text-foreground text-lg">@{selectedUserContext.profiles.username}</div>
-                <div className="text-sm text-muted-foreground">User ID: {selectedUserContext.user_id?.slice(0, 8)}...</div>
-              </div>
-            </div>
-
-            {/* Account Info */}
-            <div className="space-y-2">
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Connected Account</div>
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/20 border">
-                {(() => {
-                  const platformIcon = getPlatformIcon(selectedUserContext.platform);
-                  return platformIcon && <img src={platformIcon} alt={selectedUserContext.platform} className="w-5 h-5" />;
-                })()}
-                <span className="font-medium text-foreground capitalize">{selectedUserContext.platform}</span>
-                <span className="text-muted-foreground">@{selectedUserContext.account_username}</span>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-muted/20 border">
-                <div className="text-xs text-muted-foreground mb-1">Total Views</div>
-                <div className="text-lg font-bold text-foreground">{selectedUserContext.total_views.toLocaleString()}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/20 border">
-                <div className="text-xs text-muted-foreground mb-1">Videos</div>
-                <div className="text-lg font-bold text-foreground">{selectedUserContext.total_videos}</div>
-              </div>
-            </div>
-
-            {/* Payment Status */}
-            {selectedUserContext.last_payment_amount > 0 && <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/10">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-medium text-green-400">Last Payment</div>
-                  <div className="text-sm font-bold text-foreground">${selectedUserContext.last_payment_amount.toFixed(2)}</div>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {selectedUserContext.last_payment_date && new Date(selectedUserContext.last_payment_date).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </div>
-              </div>}
-
-            {/* Demographics Status */}
-            <div className="p-3 rounded-lg bg-muted/20 border">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">Demographics</span>
-                <div className="flex items-center gap-2">
-                  {getDemographicIcon(getDemographicStatus(selectedUserContext))}
-                  <span className="text-xs text-foreground">
-                    {(() => {
-                      const status = getDemographicStatus(selectedUserContext);
-                      const submission = selectedUserContext.demographic_submission;
-                      switch (status) {
-                        case 'none': return 'Not submitted';
-                        case 'outdated': return 'Outdated';
-                        case 'pending': return 'Pending review';
-                        case 'approved': return submission ? `${submission.tier1_percentage}% Tier 1` : 'Approved';
-                      }
-                    })()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setUserContextDialogOpen(false)}>
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    {/* User Details Dialog */}
+    <UserDetailsDialog
+      open={userDetailsDialogOpen}
+      onOpenChange={setUserDetailsDialogOpen}
+      user={selectedUserForDetails?.profiles ? {
+        id: selectedUserForDetails.user_id!,
+        username: selectedUserForDetails.profiles.username,
+        full_name: selectedUserForDetails.profiles.username,
+        avatar_url: selectedUserForDetails.profiles.avatar_url,
+        wallets: userDetailsPaymentMethods.length > 0 ? {
+          balance: 0,
+          total_earned: 0,
+          total_withdrawn: 0
+        } : null
+      } : null}
+      socialAccounts={userDetailsSocialAccounts}
+      transactions={userDetailsTransactions}
+      paymentMethods={userDetailsPaymentMethods}
+      loadingSocialAccounts={loadingUserDetails}
+      loadingTransactions={loadingUserDetails}
+      loadingPaymentMethods={loadingUserDetails}
+      socialAccountsOpen={socialAccountsOpen}
+      onSocialAccountsOpenChange={setSocialAccountsOpen}
+      transactionsOpen={transactionsOpen}
+      onTransactionsOpenChange={setTransactionsOpen}
+      paymentMethodsOpen={paymentMethodsOpen}
+      onPaymentMethodsOpenChange={setPaymentMethodsOpen}
+      onBalanceUpdated={() => {
+        fetchAnalytics();
+      }}
+    />
 
     {/* Revert Transaction Dialog */}
     <AlertDialog open={revertDialogOpen} onOpenChange={setRevertDialogOpen}>
