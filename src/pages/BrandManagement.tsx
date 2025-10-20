@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond, ArrowUpDown, ArrowUp, ArrowDown, Hammer } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -94,6 +94,8 @@ export default function BrandManagement() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [processingSubmissionId, setProcessingSubmissionId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [kickDialogOpen, setKickDialogOpen] = useState(false);
+  const [userToKick, setUserToKick] = useState<Submission | null>(null);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
   const exportToCSV = () => {
@@ -570,6 +572,28 @@ export default function BrandManagement() {
       toast.error("Failed to process payment");
     }
   };
+  
+  const handleKickUser = async () => {
+    if (!userToKick) return;
+    
+    try {
+      const { error } = await supabase
+        .from("campaign_submissions")
+        .update({ status: "withdrawn" })
+        .eq("id", userToKick.id);
+      
+      if (error) throw error;
+      
+      toast.success(`Removed ${userToKick.profiles?.username} from campaign`);
+      setKickDialogOpen(false);
+      setUserToKick(null);
+      fetchSubmissions();
+    } catch (error) {
+      console.error("Error removing user:", error);
+      toast.error("Failed to remove user from campaign");
+    }
+  };
+  
   const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
   
   // Filter and sort approved submissions
@@ -927,6 +951,7 @@ export default function BrandManagement() {
                               {sortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
                             </button>
                           </TableHead>
+                          <TableHead className="text-muted-foreground font-medium text-center">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1006,6 +1031,23 @@ export default function BrandManagement() {
                                     </div>
                                   );
                                 })()}
+                              </TableCell>
+
+                              {/* Actions Column */}
+                              <TableCell className="py-4">
+                                <div className="flex justify-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setUserToKick(submission);
+                                      setKickDialogOpen(true);
+                                    }}
+                                    className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
+                                  >
+                                    <Hammer className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>;
                     })}
@@ -1302,6 +1344,26 @@ export default function BrandManagement() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Kick User Confirmation Dialog */}
+        <AlertDialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
+          <AlertDialogContent className="bg-[#202020] border-white/10">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white">Remove User from Campaign?</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/60">
+                Are you sure you want to remove {userToKick?.profiles?.username} from this campaign? This action will mark their submission as withdrawn.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleKickUser} className="bg-destructive hover:bg-destructive/90">
+                Remove User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>;
 }
