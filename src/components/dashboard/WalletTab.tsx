@@ -171,11 +171,6 @@ export function WalletTab() {
       ascending: true
     });
 
-    console.log("🔍 Fetching earnings data:");
-    console.log("Total transactions:", allTransactions?.length || 0);
-    console.log("Current wallet balance:", wallet?.balance);
-    console.log("Sample transactions:", allTransactions?.slice(0, 5));
-
     // Generate date points for every day in the selected period
     const days = timePeriod === '3D' ? 3 : timePeriod === '1W' || timePeriod === 'TW' ? 7 : timePeriod === '1M' ? 30 : timePeriod === '3M' ? 90 : 365;
     const dataPoints: EarningsDataPoint[] = [];
@@ -195,17 +190,13 @@ export function WalletTab() {
           if (txnDate <= currentDate) {
             const amount = Number(txn.amount) || 0;
 
-            // Add positive amounts (earnings, bonuses, referrals, etc.)
-            if (['earning', 'admin_adjustment', 'bonus', 'refund', 'referral'].includes(txn.type)) {
-              balanceAtDate += Math.abs(amount);
-            }
-            // Subtract withdrawals and balance corrections if negative
-            else if (txn.type === 'withdrawal' && txn.status === 'completed') {
-              balanceAtDate -= Math.abs(amount);
-            }
-            else if (txn.type === 'balance_correction') {
-              // Balance corrections can be positive or negative
+            // Add positive amounts (earnings, bonuses, etc.)
+            if (['earning', 'admin_adjustment', 'bonus', 'refund'].includes(txn.type)) {
               balanceAtDate += amount;
+            }
+            // Subtract withdrawals (amount is already negative in DB)
+            else if (txn.type === 'withdrawal' && txn.status === 'completed') {
+              balanceAtDate += amount; // amount is negative, so this subtracts
             }
           }
         });
@@ -216,8 +207,10 @@ export function WalletTab() {
       });
     }
 
-    console.log("📊 Generated data points:", dataPoints);
-    console.log("Final data point amount:", dataPoints[dataPoints.length - 1]?.amount);
+    // Ensure the last point shows current wallet balance
+    if (dataPoints.length > 0 && wallet) {
+      dataPoints[dataPoints.length - 1].amount = Number(wallet.balance.toFixed(2));
+    }
     setEarningsData(dataPoints);
   };
   const fetchWithdrawalData = async () => {
