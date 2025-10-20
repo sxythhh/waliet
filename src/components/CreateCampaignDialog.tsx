@@ -27,6 +27,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Upload, X, Trash2, Copy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import tiktokLogo from "@/assets/tiktok-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.svg";
 
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
@@ -877,12 +880,12 @@ export function CreateCampaignDialog({
             </div>
 
             {/* Campaign Preview Card */}
-            <div className="rounded-xl overflow-hidden bg-[#111111] border border-white/10">
+            <div className="rounded-xl overflow-hidden bg-[#111111]">
               {/* Banner */}
               <div className="relative w-full h-48 bg-gradient-to-br from-primary/20 to-primary/5">
-                {bannerPreview ? (
+                {(bannerPreview || campaign?.banner_url) ? (
                   <img 
-                    src={bannerPreview} 
+                    src={bannerPreview || campaign?.banner_url || ''} 
                     alt="Campaign banner" 
                     className="w-full h-full object-cover"
                   />
@@ -923,25 +926,28 @@ export function CreateCampaignDialog({
                 {/* RPM & Platforms */}
                 <div className="flex items-center gap-3 text-sm text-white/60">
                   <span>${form.watch("rpm_rate") || "0.00"} / 1k views</span>
-                  <span>•</span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     {form.watch("allowed_platforms")?.includes("tiktok") && (
-                      <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
-                        <span className="text-xs">TT</span>
+                      <div className="flex items-center gap-1.5">
+                        <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
+                        <span className="text-xs">TikTok</span>
                       </div>
                     )}
                     {form.watch("allowed_platforms")?.includes("instagram") && (
-                      <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
-                        <span className="text-xs">IG</span>
+                      <div className="flex items-center gap-1.5">
+                        <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />
+                        <span className="text-xs">Instagram</span>
                       </div>
                     )}
                     {form.watch("allowed_platforms")?.includes("youtube") && (
-                      <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
-                        <span className="text-xs">YT</span>
+                      <div className="flex items-center gap-1.5">
+                        <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />
+                        <span className="text-xs">YouTube</span>
                       </div>
                     )}
                     {form.watch("allowed_platforms")?.includes("x") && (
-                      <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
+                      <div className="flex items-center gap-1.5">
+                        <X className="w-4 h-4" />
                         <span className="text-xs">X</span>
                       </div>
                     )}
