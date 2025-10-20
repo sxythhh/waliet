@@ -630,14 +630,14 @@ export default function BrandManagement() {
   if (loading || adminLoading) {
     return <div className="min-h-screen p-8 bg-[#191919]">
         <div className="max-w-7xl mx-auto space-y-6">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-12 w-full max-w-xs" />
+          <Skeleton className="h-10 w-64 bg-[#0C0C0C]" />
+          <Skeleton className="h-12 w-full max-w-xs bg-[#0C0C0C]" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
+            <Skeleton className="h-24 rounded-lg bg-[#0C0C0C]" />
+            <Skeleton className="h-24 rounded-lg bg-[#0C0C0C]" />
+            <Skeleton className="h-24 rounded-lg bg-[#0C0C0C]" />
           </div>
-          <Skeleton className="h-96 rounded-lg" />
+          <Skeleton className="h-96 rounded-lg bg-[#0C0C0C]" />
         </div>
       </div>;
   }
