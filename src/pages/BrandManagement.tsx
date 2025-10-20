@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -382,18 +382,18 @@ export default function BrandManagement() {
       toast.error("Please enter a valid budget amount");
       return;
     }
+    
     try {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
       // Get current budget_used before update
-      const {
-        data: currentCampaign
-      } = await supabase.from("campaigns").select("budget_used, title").eq("id", selectedCampaignId).single();
+      const { data: currentCampaign } = await supabase
+        .from("campaigns")
+        .select("budget_used, title")
+        .eq("id", selectedCampaignId)
+        .single();
+
       const oldBudgetUsed = currentCampaign?.budget_used || 0;
       const budgetChange = budgetUsedValue - oldBudgetUsed;
 
@@ -406,11 +406,8 @@ export default function BrandManagement() {
       if (error) throw error;
 
       // Create a transaction record for this manual budget adjustment
-      const {
-        error: txnError
-      } = await supabase.from("wallet_transactions").insert({
-        user_id: session.user.id,
-        // Admin who made the change
+      const { error: txnError } = await supabase.from("wallet_transactions").insert({
+        user_id: session.user.id, // Admin who made the change
         amount: budgetChange,
         type: "balance_correction",
         status: "completed",
@@ -424,10 +421,12 @@ export default function BrandManagement() {
           admin_id: session.user.id
         }
       });
+      
       if (txnError) {
         console.error("Transaction logging error:", txnError);
         // Don't fail the budget update if transaction logging fails
       }
+
       toast.success("Budget updated successfully");
       setEditBudgetDialogOpen(false);
       fetchCampaigns();
@@ -485,9 +484,11 @@ export default function BrandManagement() {
       if (walletUpdateError) throw walletUpdateError;
 
       // Get current campaign budget before update
-      const {
-        data: campaignBefore
-      } = await supabase.from("campaigns").select("budget_used, budget").eq("id", selectedCampaignId).single();
+      const { data: campaignBefore } = await supabase
+        .from("campaigns")
+        .select("budget_used, budget")
+        .eq("id", selectedCampaignId)
+        .single();
 
       // Create wallet transaction
       const {
@@ -596,35 +597,35 @@ export default function BrandManagement() {
       </div>;
   }
   if (campaigns.length === 0) {
-    return <div className="min-h-screen p-8 bg-[#191919] flex items-center justify-center">
-        <div className="text-white">No campaigns found</div>
+    return <div className="min-h-screen p-8 bg-background flex items-center justify-center">
+        <div className="text-foreground">No campaigns found</div>
       </div>;
   }
-  return <div className="min-h-screen p-4 md:p-8 bg-[#191919]">
+  return <div className="min-h-screen p-4 md:p-8 bg-background">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Mobile Menu Button */}
         <div className="md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : sidebar.toggleSidebar()} className="text-white/60 hover:text-white hover:bg-white/10">
+          <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : sidebar.toggleSidebar()} className="text-muted-foreground hover:text-foreground hover:bg-accent">
             {isMobile ? <Menu className="h-6 w-6" /> : <PanelLeft className="h-6 w-6" />}
           </Button>
         </div>
         {/* Campaign Selector */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">{selectedCampaign?.title}</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2 font-instrument tracking-tight">{selectedCampaign?.title}</h1>
             {campaigns.length > 1 && <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-                <SelectTrigger className="w-[280px] bg-[#202020] border-white/10 text-white">
+                <SelectTrigger className="w-[280px] bg-card border">
                   <SelectValue placeholder="Select campaign" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#202020] border-white/10">
-                  {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="text-white hover:bg-white/10">
+                <SelectContent className="bg-card border z-50">
+                  {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="hover:bg-accent focus:bg-accent">
                       {campaign.title}
                     </SelectItem>)}
                 </SelectContent>
               </Select>}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh} className="text-white border-white/10 hover:bg-white/10">
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -637,21 +638,21 @@ export default function BrandManagement() {
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="bg-[#202020] border-white/10">
-            <TabsTrigger value="analytics" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsList className="bg-muted border">
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-card">
               Analytics
             </TabsTrigger>
-            <TabsTrigger value="creators" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="creators" className="data-[state=active]:bg-card">
               Creators
             </TabsTrigger>
-            <TabsTrigger value="applications" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="applications" className="data-[state=active]:bg-card">
               Applications
               {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="videos" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="videos" className="data-[state=active]:bg-card">
               Videos
             </TabsTrigger>
-            <TabsTrigger value="settings" className="text-[#A6A6A6] data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="settings" className="data-[state=active]:bg-card">
               Settings
             </TabsTrigger>
           </TabsList>
@@ -659,23 +660,20 @@ export default function BrandManagement() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
             {/* Campaign Performance Overview */}
-            <Card className="bg-[#202020] border-transparent">
+            <Card className="bg-card border">
               <CardHeader className="flex flex-row items-center justify-between py-[9px]">
-                <CardTitle className="text-white text-2xl">Performance Overview</CardTitle>
-                {selectedCampaign?.analytics_url && <Button variant="ghost" size="sm" onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')} className="text-white group bg-[#1a1a1a]">
+                <CardTitle className="text-2xl">Performance Overview</CardTitle>
+                {selectedCampaign?.analytics_url && <Button variant="ghost" size="sm" onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')} className="group bg-muted">
                     <span className="relative">
                       View Analytics
-                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                     </span>
                   </Button>}
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600
-                  }}>
+                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
+                    <div className="text-2xl font-bold font-chakra">
                       {(() => {
                       // Group by account and sum views across all date ranges
                       const accountViews = analytics.reduce((acc, a) => {
@@ -686,50 +684,41 @@ export default function BrandManagement() {
                       return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
                     })()}
                     </div>
-                    <div className="text-sm text-white/60 mt-1">Total Views</div>
+                    <div className="text-sm text-muted-foreground mt-1">Total Views</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600
-                  }}>
+                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
+                    <div className="text-2xl font-bold font-chakra">
                       {(() => {
                       // Get unique accounts
                       const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
                       return uniqueAccounts.size;
                     })()}
                     </div>
-                    <div className="text-sm text-white/60 mt-1">Total Accounts</div>
+                    <div className="text-sm text-muted-foreground mt-1">Total Accounts</div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600
-                  }}>
+                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
+                    <div className="text-2xl font-bold font-chakra">
                       ${Number(selectedCampaign?.budget_used || 0).toFixed(2)}
                     </div>
-                    <div className="text-sm text-white/60 mt-1 flex items-center justify-center gap-1">
+                    <div className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
                       Budget Used
-                      {isAdmin && <Button variant="ghost" size="icon" className="h-4 w-4 text-white/40 hover:text-white hover:bg-white/10 p-0" onClick={handleEditBudgetUsed} title="Edit budget used">
+                      {isAdmin && <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground hover:text-foreground hover:bg-accent p-0" onClick={handleEditBudgetUsed} title="Edit budget used">
                           <Edit className="h-3 w-3" />
                         </Button>}
                     </div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-[#191919]">
-                    <div className="text-2xl font-bold text-white" style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600
-                  }}>
+                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
+                    <div className="text-2xl font-bold font-chakra">
                       ${effectiveCPM.toFixed(2)}
                     </div>
-                    <div className="text-sm text-white/60 mt-1">Effective CPM</div>
+                    <div className="text-sm text-muted-foreground mt-1">Effective CPM</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <div className="flex justify-end gap-2">
-              <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} className="bg-[#0c0d0c]" />
+              <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
             </div>
             
             {/* Imported Analytics Data */}
@@ -870,10 +859,10 @@ export default function BrandManagement() {
 
           {/* Creators Tab */}
           <TabsContent value="creators">
-            <Card className="bg-[#202020] border-0">
-              <CardHeader className="pb-4">
+            <Card className="bg-card border">
+              <CardHeader className="pb-4 border-b border-border">
                 <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 font-instrument tracking-tight">
                     Active Creators
                     <Badge variant="secondary" className="ml-2">
                       {approvedSubmissions.length}
@@ -885,70 +874,82 @@ export default function BrandManagement() {
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {approvedSubmissions.length === 0 ? <div className="text-center py-8">
+              <CardContent className="p-0">
+                {approvedSubmissions.length === 0 ? <div className="text-center py-12">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                     <p className="text-muted-foreground text-sm">No active creators yet</p>
-                  </div> : <div className="space-y-3">
-                    {approvedSubmissions.map(submission => {
-                  const getPlatformIcon = (platform: string) => {
-                    switch (platform.toLowerCase()) {
-                      case 'tiktok':
-                        return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
-                      case 'instagram':
-                        return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
-                      case 'youtube':
-                        return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
-                      default:
-                        return null;
-                    }
-                  };
-                  return <Card key={submission.id} className="bg-[#1a1a1a] overflow-hidden rounded-xl transition-all group">
-                          <CardContent className="p-0">
-                            <div className="p-5">
-                              {/* Header Section */}
-                              <div className="flex items-start gap-4 mb-4">
-                                {/* Avatar */}
-                                <div className="flex-shrink-0">
-                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-12 h-12 rounded-full object-cover" /> : <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                                      <Users className="h-6 w-6 text-primary" />
+                  </div> : <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-border hover:bg-transparent">
+                          <TableHead className="text-muted-foreground font-medium">Creator</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Linked Accounts</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {approvedSubmissions.map(submission => {
+                      const getPlatformIcon = (platform: string) => {
+                        switch (platform.toLowerCase()) {
+                          case 'tiktok':
+                            return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
+                          case 'instagram':
+                            return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
+                          case 'youtube':
+                            return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
+                          default:
+                            return null;
+                        }
+                      };
+                      return <TableRow key={submission.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                              {/* Creator Column */}
+                              <TableCell className="py-4">
+                                <div className="flex items-center gap-3">
+                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-10 h-10 rounded-full object-cover ring-2 ring-border" /> : <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-border">
+                                      <span className="text-primary font-semibold text-lg">
+                                        {submission.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                                      </span>
                                     </div>}
-                                </div>
-
-                                {/* Creator Info */}
-                                <div className="flex-1">
-                                  <h3 className="font-semibold text-white text-lg">
-                                    {submission.profiles?.username || "Unknown"}
-                                  </h3>
-                                </div>
-                              </div>
-
-                              {/* Stats Grid */}
-                              
-
-                              {/* Social Accounts */}
-                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
-                                  <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all hover:scale-105">
-                                        {getPlatformIcon(account.platform)}
-                                        <span className="text-sm font-medium text-white">
-                                          @{account.username}
-                                        </span>
-                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
-                                            {account.follower_count.toLocaleString()}
-                                          </Badge>}
-                                      </a>)}
+                                  <div className="space-y-1">
+                                    <p className="font-semibold text-foreground">
+                                      {submission.profiles?.username || "Unknown"}
+                                    </p>
+                                    {/* Trust Score */}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">Trust:</span>
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-xs font-bold text-foreground">100%</span>
+                                        <div className="flex items-center gap-0.5">
+                                          {[...Array(5)].map((_, i) => (
+                                            <Diamond
+                                              key={i}
+                                              className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500"
+                                            />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>}
+                                </div>
+                              </TableCell>
 
-                              {/* Payment Button */}
-                              
-
-                            </div>
-                          </CardContent>
-                        </Card>;
-                })}
+                              {/* Linked Accounts Column */}
+                              <TableCell className="py-4">
+                                {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? <div className="flex flex-wrap gap-1.5">
+                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#0d0d0d] hover:bg-[#1a1a1a] transition-colors text-xs group">
+                                        {getPlatformIcon(account.platform)}
+                                        <span className="font-medium text-foreground group-hover:underline transition-all">
+                                          {account.username}
+                                        </span>
+                                        {account.follower_count > 0 && <span className="text-muted-foreground">
+                                            {account.follower_count.toLocaleString()}
+                                          </span>}
+                                      </a>)}
+                                  </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
+                              </TableCell>
+                            </TableRow>;
+                    })}
+                      </TableBody>
+                    </Table>
                   </div>}
               </CardContent>
             </Card>
