@@ -1156,7 +1156,7 @@ export default function BrandManagement() {
                             return username?.charAt(0).toUpperCase() || 'U';
                           };
 
-                          return <TableRow key={submission.id} className="border-b border-white/5 hover:bg-[#1C1C1C] transition-colors">
+                          return <TableRow key={submission.id} className="border-b border-white/5">
                               {/* Creator Column */}
                               <TableCell className="py-3">
                                 <div className="flex items-center gap-3">
@@ -1242,7 +1242,7 @@ export default function BrandManagement() {
                                     size="icon"
                                     variant="ghost"
                                     onClick={() => handleApplicationAction(submission.id, "approved")} 
-                                    className="h-8 w-8 hover:bg-green-500/20 text-green-400 hover:text-green-300" 
+                                    className="h-8 w-8 bg-green-500/10 text-green-400 hover:bg-green-500/20" 
                                     disabled={processingSubmissionId === submission.id}
                                     title="Approve"
                                   >
@@ -1256,7 +1256,7 @@ export default function BrandManagement() {
                                     size="icon"
                                     variant="ghost"
                                     onClick={() => handleApplicationAction(submission.id, "rejected")} 
-                                    className="h-8 w-8 hover:bg-red-500/20 text-red-400 hover:text-red-300" 
+                                    className="h-8 w-8 bg-red-500/10 text-red-400 hover:bg-red-500/20" 
                                     disabled={processingSubmissionId === submission.id}
                                     title="Reject"
                                   >
