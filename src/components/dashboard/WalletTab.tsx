@@ -359,8 +359,7 @@ export function WalletTab() {
         }
         allTransactions.push({
           id: txn.id,
-          type: txn.type === 'balance_correction' ? 'balance_correction' : 
-                txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund' ? 'earning' : 'withdrawal',
+          type: txn.type === 'balance_correction' ? 'balance_correction' : txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund' ? 'earning' : 'withdrawal',
           amount: Number(txn.amount) || 0,
           date: new Date(txn.created_at),
           destination,
@@ -427,24 +426,22 @@ export function WalletTab() {
       method,
       details
     }];
-    
-    console.log("Adding payout method:", { method, details });
+    console.log("Adding payout method:", {
+      method,
+      details
+    });
     console.log("Updated methods array:", updatedMethods);
-    
     const payoutDetailsPayload = updatedMethods.map(m => ({
       method: m.method,
       details: m.details
     }));
-    
     console.log("Payload to Supabase:", payoutDetailsPayload);
-    
     const {
       error
     } = await supabase.from("wallets").update({
       payout_method: method,
       payout_details: payoutDetailsPayload
     }).eq("id", wallet.id);
-    
     if (error) {
       console.error("Supabase error when adding payout method:", error);
       toast({
@@ -653,7 +650,7 @@ export function WalletTab() {
   return <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header with Main Balance */}
       <div className="flex items-center justify-between py-0">
-        <h2 className="hidden sm:block text-3xl font-semibold font-instrument tracking-[-0.5px]">Virality Wallet</h2>
+        
         <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0 ml-auto" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}>
           <ArrowDownLeft className="h-4 w-4" />
           Request Payout
@@ -766,9 +763,7 @@ export function WalletTab() {
                         <p className="text-sm font-bold font-instrument" style={{
                       letterSpacing: '-0.5px'
                     }}>
-                          {transaction.type === 'earning' ? 'Earnings' : 
-                           transaction.type === 'balance_correction' ? 'Balance Correction' :
-                           transaction.type === 'referral' ? 'Referral Bonus' : 'Withdrawal'}
+                          {transaction.type === 'earning' ? 'Earnings' : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : 'Withdrawal'}
                         </p>
                         {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
                       letterSpacing: '-0.5px'
@@ -1095,22 +1090,17 @@ export function WalletTab() {
 
             <div className="p-3 bg-neutral-900 rounded-lg text-sm">
               {(() => {
-                const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
-                const isPayPal = selectedMethod?.method === 'paypal';
-                
-                return isPayPal ? (
-                  <>
+              const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+              const isPayPal = selectedMethod?.method === 'paypal';
+              return isPayPal ? <>
                     <p className="text-muted-foreground">24h wait time</p>
                     <p className="font-medium">6% fee</p>
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <p className="text-muted-foreground">2-3 business day wait time</p>
                     <p className="text-xs text-muted-foreground mb-2">(Payouts will not be operated on Saturday & Sunday)</p>
                     <p className="font-medium">$1 + 0.75% fee</p>
-                  </>
-                );
-              })()}
+                  </>;
+            })()}
             </div>
           </div>
 
@@ -1268,9 +1258,7 @@ export function WalletTab() {
                     <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                       <span className="text-sm text-muted-foreground">Type</span>
                       <span className="text-sm font-medium capitalize">
-                        {selectedTransaction.type === 'earning' ? 'Earnings' : 
-                         selectedTransaction.type === 'referral' ? 'Referral Bonus' :
-                         selectedTransaction.type === 'balance_correction' ? 'Balance Correction' : 'Withdrawal'}
+                        {selectedTransaction.type === 'earning' ? 'Earnings' : selectedTransaction.type === 'referral' ? 'Referral Bonus' : selectedTransaction.type === 'balance_correction' ? 'Balance Correction' : 'Withdrawal'}
                       </span>
                     </div>
 
