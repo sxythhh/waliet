@@ -121,6 +121,8 @@ export function CampaignAnalyticsTable({
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [revertingTransaction, setRevertingTransaction] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userContextDialogOpen, setUserContextDialogOpen] = useState(false);
+  const [selectedUserContext, setSelectedUserContext] = useState<AnalyticsData | null>(null);
   const itemsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
@@ -921,23 +923,39 @@ export function CampaignAnalyticsTable({
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 bg-card cursor-pointer transition-colors" onClick={() => {
-                      if (item.user_id && item.profiles) {
-                        setSelectedUser(item);
-                        setPaymentDialogOpen(true);
-                      }
-                    }}>
+                      <TableCell className="py-3 bg-card">
                         {item.user_id && item.profiles ? <div className="flex items-center gap-1.5 group">
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage src={item.profiles.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
-                                {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{
-                          letterSpacing: '-0.3px',
-                          fontWeight: 600
-                        }}>{item.profiles.username}</span>
+                            <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/5 rounded-md px-1.5 py-1 transition-colors" onClick={() => {
+                              setSelectedUserContext(item);
+                              setUserContextDialogOpen(true);
+                            }}>
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage src={item.profiles.avatar_url || undefined} />
+                                <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                                  {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{
+                            letterSpacing: '-0.3px',
+                            fontWeight: 600
+                          }}>{item.profiles.username}</span>
+                            </div>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-green-500/20 hover:text-green-400" onClick={e => {
+                                e.stopPropagation();
+                                setSelectedUser(item);
+                                setPaymentDialogOpen(true);
+                              }}>
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Send payment</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1488,6 +1506,102 @@ export function CampaignAnalyticsTable({
       fetchAnalytics();
       toast.success("Account will be tracked in Shortimize");
     }} />
+
+    {/* User Context Dialog */}
+    <Dialog open={userContextDialogOpen} onOpenChange={setUserContextDialogOpen}>
+      <DialogContent className="bg-card border text-foreground max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-foreground">
+            <User className="h-5 w-5 text-primary" />
+            User Profile
+          </DialogTitle>
+        </DialogHeader>
+        
+        {selectedUserContext?.profiles && <div className="space-y-4 py-4">
+            {/* User Info */}
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30 border">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={selectedUserContext.profiles.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary/20 text-primary text-lg">
+                  {selectedUserContext.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="font-semibold text-foreground text-lg">@{selectedUserContext.profiles.username}</div>
+                <div className="text-sm text-muted-foreground">User ID: {selectedUserContext.user_id?.slice(0, 8)}...</div>
+              </div>
+            </div>
+
+            {/* Account Info */}
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Connected Account</div>
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/20 border">
+                {(() => {
+                  const platformIcon = getPlatformIcon(selectedUserContext.platform);
+                  return platformIcon && <img src={platformIcon} alt={selectedUserContext.platform} className="w-5 h-5" />;
+                })()}
+                <span className="font-medium text-foreground capitalize">{selectedUserContext.platform}</span>
+                <span className="text-muted-foreground">@{selectedUserContext.account_username}</span>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-muted/20 border">
+                <div className="text-xs text-muted-foreground mb-1">Total Views</div>
+                <div className="text-lg font-bold text-foreground">{selectedUserContext.total_views.toLocaleString()}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/20 border">
+                <div className="text-xs text-muted-foreground mb-1">Videos</div>
+                <div className="text-lg font-bold text-foreground">{selectedUserContext.total_videos}</div>
+              </div>
+            </div>
+
+            {/* Payment Status */}
+            {selectedUserContext.last_payment_amount > 0 && <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/10">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-medium text-green-400">Last Payment</div>
+                  <div className="text-sm font-bold text-foreground">${selectedUserContext.last_payment_amount.toFixed(2)}</div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {selectedUserContext.last_payment_date && new Date(selectedUserContext.last_payment_date).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </div>
+              </div>}
+
+            {/* Demographics Status */}
+            <div className="p-3 rounded-lg bg-muted/20 border">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Demographics</span>
+                <div className="flex items-center gap-2">
+                  {getDemographicIcon(getDemographicStatus(selectedUserContext))}
+                  <span className="text-xs text-foreground">
+                    {(() => {
+                      const status = getDemographicStatus(selectedUserContext);
+                      const submission = selectedUserContext.demographic_submission;
+                      switch (status) {
+                        case 'none': return 'Not submitted';
+                        case 'outdated': return 'Outdated';
+                        case 'pending': return 'Pending review';
+                        case 'approved': return submission ? `${submission.tier1_percentage}% Tier 1` : 'Approved';
+                      }
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setUserContextDialogOpen(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     {/* Revert Transaction Dialog */}
     <AlertDialog open={revertDialogOpen} onOpenChange={setRevertDialogOpen}>
