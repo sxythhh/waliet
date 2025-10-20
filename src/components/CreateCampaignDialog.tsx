@@ -303,7 +303,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Brief description of the campaign" className="resize-none bg-[#191919] text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0" rows={3} {...field} />
+                    <Textarea placeholder="Brief description of the campaign" className="resize-none bg-[#191919] text-white placeholder:text-white/40 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" rows={3} {...field} />
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
@@ -352,7 +352,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Guidelines</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Enter campaign guidelines and requirements" className="resize-none bg-[#191919] text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0" rows={4} {...field} />
+                    <Textarea placeholder="Enter campaign guidelines and requirements" className="resize-none bg-[#191919] text-white placeholder:text-white/40 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" rows={4} {...field} />
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
