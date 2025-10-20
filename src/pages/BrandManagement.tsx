@@ -611,12 +611,34 @@ export default function BrandManagement() {
   const handleKickUser = async () => {
     if (!userToKick) return;
     try {
-      const {
-        error
-      } = await supabase.from("campaign_submissions").update({
-        status: "withdrawn"
-      }).eq("id", userToKick.id);
-      if (error) throw error;
+      // Update submission status to withdrawn
+      const { error: submissionError } = await supabase
+        .from("campaign_submissions")
+        .update({ status: "withdrawn" })
+        .eq("id", userToKick.id);
+      
+      if (submissionError) throw submissionError;
+
+      // Get user's social accounts
+      const { data: socialAccounts, error: accountsError } = await supabase
+        .from("social_accounts")
+        .select("id")
+        .eq("user_id", userToKick.creator_id);
+
+      if (accountsError) throw accountsError;
+
+      // Unlink all their accounts from this campaign
+      if (socialAccounts && socialAccounts.length > 0) {
+        const accountIds = socialAccounts.map(acc => acc.id);
+        const { error: unlinkError } = await supabase
+          .from("social_account_campaigns")
+          .delete()
+          .eq("campaign_id", selectedCampaignId)
+          .in("social_account_id", accountIds);
+
+        if (unlinkError) throw unlinkError;
+      }
+
       toast.success(`Removed ${userToKick.profiles?.username} from campaign`);
       setKickDialogOpen(false);
       setUserToKick(null);
