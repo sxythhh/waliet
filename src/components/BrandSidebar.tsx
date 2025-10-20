@@ -151,11 +151,10 @@ export function BrandSidebar() {
             }}
             className={({
               isActive
-            }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-[#2a2a2a] text-muted-foreground'}`}>
+            }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-[#1C1C1C] hover:text-white text-muted-foreground'}`}>
             {({
               isActive
             }) => <>
-                <item.icon className="h-5 w-5" />
                 <span>{item.title}</span>
               </>}
           </NavLink>
