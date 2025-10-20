@@ -23,7 +23,6 @@ import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
 import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
 import { VideosTab } from "@/components/brand/VideosTab";
-import { TrustScoreIndicator } from "@/components/brand/TrustScoreIndicator";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -919,19 +918,9 @@ export default function BrandManagement() {
 
                                 {/* Creator Info */}
                                 <div className="flex-1">
-                                  <h3 className="font-semibold text-white text-lg mb-2">
+                                  <h3 className="font-semibold text-white text-lg">
                                     {submission.profiles?.username || "Unknown"}
                                   </h3>
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs text-white/60">Trust Score:</span>
-                                      <TrustScoreIndicator 
-                                        score={submission.profiles?.trust_score || 0} 
-                                        showPercentage={true}
-                                        size="sm"
-                                      />
-                                    </div>
-                                  </div>
                                 </div>
                               </div>
 
