@@ -107,8 +107,8 @@ export function CampaignVideoPlayer({
         
         {/* Play Button Overlay */}
         {!isPlaying && <div className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/30" onClick={togglePlay}>
-            <div className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-2xl">
-              <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-black border-b-[12px] border-b-transparent ml-1"></div>
+            <div className="w-14 h-14 rounded-full bg-primary backdrop-blur-sm flex items-center justify-center hover:bg-primary/90 transition-colors shadow-2xl">
+              <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-white border-b-[10px] border-b-transparent ml-1"></div>
             </div>
           </div>}
 
