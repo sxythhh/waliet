@@ -303,7 +303,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Brief description of the campaign" className="resize-none bg-[#191919] text-white placeholder:text-white/40" rows={3} {...field} />
+                    <Textarea placeholder="Brief description of the campaign" className="resize-none bg-[#191919] text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0" rows={3} {...field} />
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
@@ -352,7 +352,7 @@ export function CreateCampaignDialog({
               }) => <FormItem>
                   <FormLabel className="text-white">Campaign Guidelines</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Enter campaign guidelines and requirements" className="resize-none bg-[#191919] text-white placeholder:text-white/40" rows={4} {...field} />
+                    <Textarea placeholder="Enter campaign guidelines and requirements" className="resize-none bg-[#191919] text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0" rows={4} {...field} />
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
@@ -584,7 +584,7 @@ export function CreateCampaignDialog({
           </div>
 
           {/* Right Column - Preview */}
-          <div className="hidden lg:flex flex-col bg-[#0a0a0a] border-l border-white/10 p-6 overflow-y-auto">
+          <div className="hidden lg:flex flex-col bg-[#111111] p-6 overflow-y-auto">
             <div className="flex items-center gap-2 text-white/40 mb-6">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
