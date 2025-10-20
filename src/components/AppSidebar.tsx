@@ -35,10 +35,10 @@ export function AppSidebar() {
   };
 
   return (
-    <nav className="sticky top-0 z-10 flex h-14 md:h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:px-6">
+    <nav className="sticky top-0 z-10 flex h-14 md:h-16 items-center justify-center md:justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:px-6">
       {/* Logo */}
-      <div className="flex items-center">
-        <img src={wordmarkLogo} alt="Logo" className="h-6 md:h-8" />
+      <div className="hidden md:flex items-center">
+        <img src={wordmarkLogo} alt="Logo" className="h-8" />
       </div>
 
       {/* Navigation Items */}
@@ -63,9 +63,9 @@ export function AppSidebar() {
       </div>
 
       {/* User Profile Placeholder */}
-      <div className="flex items-center">
-        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center">
-          <User className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
+      <div className="hidden md:flex items-center">
+        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+          <User className="h-4 w-4 text-muted-foreground" />
         </div>
       </div>
     </nav>
