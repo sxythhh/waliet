@@ -1243,7 +1243,11 @@ export default function BrandManagement() {
 
           {/* Videos Tab */}
           <TabsContent value="videos">
-            <VideosTab />
+            <VideosTab 
+              campaignId={selectedCampaignId}
+              isAdmin={isAdmin}
+              approvedCreators={approvedSubmissions}
+            />
           </TabsContent>
         </Tabs>
 

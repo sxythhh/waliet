@@ -431,6 +431,63 @@ export type Database = {
           },
         ]
       }
+      campaign_videos: {
+        Row: {
+          bot_score: number | null
+          campaign_id: string
+          created_at: string | null
+          creator_id: string
+          estimated_payout: number | null
+          flag_deadline: string | null
+          id: string
+          is_flagged: boolean | null
+          submission_text: string | null
+          updated_at: string | null
+          video_url: string
+        }
+        Insert: {
+          bot_score?: number | null
+          campaign_id: string
+          created_at?: string | null
+          creator_id: string
+          estimated_payout?: number | null
+          flag_deadline?: string | null
+          id?: string
+          is_flagged?: boolean | null
+          submission_text?: string | null
+          updated_at?: string | null
+          video_url: string
+        }
+        Update: {
+          bot_score?: number | null
+          campaign_id?: string
+          created_at?: string | null
+          creator_id?: string
+          estimated_payout?: number | null
+          flag_deadline?: string | null
+          id?: string
+          is_flagged?: boolean | null
+          submission_text?: string | null
+          updated_at?: string | null
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_videos_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_videos_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           access_code: string | null

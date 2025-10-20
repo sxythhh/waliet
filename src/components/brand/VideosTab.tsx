@@ -1,314 +1,185 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, TrendingUp, Eye, Heart, MessageSquare, BarChart3 } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Upload, Video } from "lucide-react";
+import { UploadCampaignVideoDialog } from "./UploadCampaignVideoDialog";
+import { CampaignVideoPlayer } from "./CampaignVideoPlayer";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface VideoData {
-  account: string;
-  platform: string;
-  video_link: string;
-  video_title: string;
-  views: number;
-  likes: number;
-  comments: number;
-  engagement_rate: number;
-  views_performance: number;
-  upload_date: string;
+interface VideosTabProps {
+  campaignId: string;
+  isAdmin: boolean;
+  approvedCreators: Array<{
+    id: string;
+    creator_id: string;
+    profiles: {
+      username: string;
+      avatar_url: string | null;
+    };
+  }>;
 }
 
-export function VideosTab() {
-  const [videos, setVideos] = useState<VideoData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+interface CampaignVideo {
+  id: string;
+  campaign_id: string;
+  creator_id: string;
+  video_url: string;
+  submission_text: string | null;
+  bot_score: number | null;
+  estimated_payout: number | null;
+  flag_deadline: string | null;
+  is_flagged: boolean;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+  campaigns: {
+    title: string;
+    rpm_rate: number;
+    budget: number;
+  };
+}
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+export function VideosTab({ campaignId, isAdmin, approvedCreators }: VideosTabProps) {
+  const [videos, setVideos] = useState<CampaignVideo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
-    if (!file.name.endsWith('.csv')) {
-      toast.error('Please upload a CSV file');
-      return;
-    }
 
-    setIsLoading(true);
+  useEffect(() => {
+    fetchVideos();
+  }, [campaignId]);
+
+  const fetchVideos = async () => {
     try {
-      const text = await file.text();
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-      
-      const parsedData: VideoData[] = [];
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (!line.trim()) continue;
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('campaign_videos')
+        .select(`
+          *,
+          campaigns!campaign_videos_campaign_id_fkey (title, rpm_rate, budget)
+        `)
+        .eq('campaign_id', campaignId)
+        .order('created_at', { ascending: false });
 
-        const values: string[] = [];
-        let currentValue = '';
-        let insideQuotes = false;
+      if (error) throw error;
 
-        for (let j = 0; j < line.length; j++) {
-          const char = line[j];
-          if (char === '"') {
-            insideQuotes = !insideQuotes;
-          } else if (char === ',' && !insideQuotes) {
-            values.push(currentValue.trim());
-            currentValue = '';
-          } else {
-            currentValue += char;
-          }
-        }
-        values.push(currentValue.trim());
+      // Fetch profiles separately for each video
+      const videosWithProfiles = await Promise.all(
+        (data || []).map(async (video) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', video.creator_id)
+            .single();
 
-        if (values.length >= 10) {
-          parsedData.push({
-            account: values[0],
-            platform: values[1],
-            video_link: values[2],
-            video_title: values[3],
-            views: parseInt(values[4]) || 0,
-            likes: parseInt(values[5]) || 0,
-            comments: parseInt(values[6]) || 0,
-            engagement_rate: parseFloat(values[7]) || 0,
-            views_performance: parseFloat(values[8]) || 0,
-            upload_date: values[9]
-          });
-        }
-      }
+          return {
+            ...video,
+            profiles: profile || { username: 'Unknown', avatar_url: null }
+          };
+        })
+      );
 
-      setVideos(parsedData);
-      toast.success(`Imported ${parsedData.length} videos`);
+      setVideos(videosWithProfiles as CampaignVideo[]);
     } catch (error) {
-      console.error('Error parsing CSV:', error);
-      toast.error('Failed to parse CSV file');
+      console.error('Error fetching videos:', error);
+      toast.error('Failed to load videos');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const totalViews = videos.reduce((sum, v) => sum + v.views, 0);
-  const totalLikes = videos.reduce((sum, v) => sum + v.likes, 0);
-  const totalComments = videos.reduce((sum, v) => sum + v.comments, 0);
-  const avgEngagementRate = videos.length > 0 
-    ? videos.reduce((sum, v) => sum + v.engagement_rate, 0) / videos.length 
-    : 0;
-
-  // Prepare cumulative views data sorted by date
-  const cumulativeData = videos
-    .sort((a, b) => {
-      const dateA = new Date(a.upload_date.split('/').reverse().join('-'));
-      const dateB = new Date(b.upload_date.split('/').reverse().join('-'));
-      return dateA.getTime() - dateB.getTime();
-    })
-    .reduce((acc: any[], video, index) => {
-      const prevViews = index > 0 ? acc[index - 1].cumulativeViews : 0;
-      acc.push({
-        date: video.upload_date,
-        views: video.views,
-        cumulativeViews: prevViews + video.views,
-        engagement: video.engagement_rate
-      });
-      return acc;
-    }, []);
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-card border">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Video Analytics Import</span>
-            <div className="relative">
-              <Input
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="csv-upload"
-              />
-              <label htmlFor="csv-upload">
-                <Button disabled={isLoading} asChild>
-                  <span>
-                    <Upload className="mr-2 h-4 w-4" />
-                    {isLoading ? 'Importing...' : 'Import CSV'}
-                  </span>
-                </Button>
-              </label>
+            <div className="flex items-center gap-2">
+              <Video className="h-5 w-5" />
+              Campaign Videos
             </div>
+            {isAdmin && (
+              <Button onClick={() => setUploadDialogOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Video
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
       </Card>
 
-      {videos.length > 0 && (
-        <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-[#1a1a1a] border-white/5">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalViews.toLocaleString()}</div>
+      {isLoading ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="bg-[#0C0C0C] border-white/5">
+              <CardContent className="p-6 space-y-4">
+                <Skeleton className="aspect-[9/16] w-full rounded-lg" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
               </CardContent>
             </Card>
-
-            <Card className="bg-[#1a1a1a] border-white/5">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Likes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalLikes.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#1a1a1a] border-white/5">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Comments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalComments.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#1a1a1a] border-white/5">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg Engagement</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{avgEngagementRate.toFixed(2)}%</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="bg-gradient-to-br from-[#1a1a1a] via-[#202020] to-[#1a1a1a] border-white/5 shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                </div>
-                Cumulative Views Over Time
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  cumulativeViews: {
-                    label: "Cumulative Views",
-                    color: "hsl(var(--primary))",
-                  },
-                }}
-                className="h-[400px] w-full"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={cumulativeData}>
-                    <defs>
-                      <linearGradient id="cumulativeGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                        <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.1} />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="hsl(var(--muted-foreground))"
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      axisLine={{ stroke: 'hsl(var(--border))', opacity: 0.2 }}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))"
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      axisLine={{ stroke: 'hsl(var(--border))', opacity: 0.2 }}
-                    />
-                    <ChartTooltip 
-                      content={<ChartTooltipContent className="border-0 bg-[#0C0C0C]/95 backdrop-blur-sm" />}
-                      cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, opacity: 0.2 }}
-                    />
-                    <Legend 
-                      wrapperStyle={{ paddingTop: '20px' }}
-                      iconType="circle"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="cumulativeViews" 
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={3}
-                      fill="url(#cumulativeGradient)"
-                      name="Cumulative Views"
-                      dot={false}
-                      activeDot={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-[#1a1a1a] via-[#202020] to-[#1a1a1a] border-white/5 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-white">Top Performing Videos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {videos
-                  .sort((a, b) => b.views - a.views)
-                  .slice(0, 10)
-                  .map((video, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-[#151515] to-[#1a1a1a] hover:from-[#1a1a1a] hover:to-[#202020] transition-all duration-300 border border-white/5 hover:border-primary/20"
-                    >
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center font-bold text-white shadow-lg shadow-primary/20">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <a 
-                          href={video.video_link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="font-medium text-white hover:text-primary transition-colors line-clamp-1"
-                        >
-                          {video.video_title}
-                        </a>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {video.views.toLocaleString()}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Heart className="h-3 w-3" />
-                            {video.likes.toLocaleString()}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
-                            {video.comments}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3" />
-                            {video.engagement_rate.toFixed(2)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right text-xs text-muted-foreground">
-                        {video.upload_date}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {videos.length === 0 && (
+          ))}
+        </div>
+      ) : videos.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {videos.map((video) => (
+            <CampaignVideoPlayer
+              key={video.id}
+              videoUrl={video.video_url}
+              creator={{
+                username: video.profiles.username,
+                avatar_url: video.profiles.avatar_url
+              }}
+              campaign={{
+                title: video.campaigns.title,
+                rpm_rate: video.campaigns.rpm_rate,
+                budget: video.campaigns.budget
+              }}
+              videoData={{
+                id: video.id,
+                submission_text: video.submission_text,
+                bot_score: video.bot_score,
+                estimated_payout: video.estimated_payout,
+                flag_deadline: video.flag_deadline,
+                is_flagged: video.is_flagged
+              }}
+              isAdmin={isAdmin}
+              onFlagUpdate={fetchVideos}
+            />
+          ))}
+        </div>
+      ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No videos imported yet</h3>
-            <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Upload a CSV file to view video analytics, cumulative views, and performance metrics
+            <Video className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No videos uploaded yet</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
+              {isAdmin
+                ? 'Upload videos and link them to creators to showcase campaign content'
+                : 'Videos will appear here once uploaded by the campaign manager'}
             </p>
+            {isAdmin && (
+              <Button onClick={() => setUploadDialogOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Video
+              </Button>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {isAdmin && (
+        <UploadCampaignVideoDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          campaignId={campaignId}
+          approvedCreators={approvedCreators}
+          onSuccess={fetchVideos}
+        />
       )}
     </div>
   );
