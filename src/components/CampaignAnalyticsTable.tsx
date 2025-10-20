@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -1216,20 +1216,20 @@ export function CampaignAnalyticsTable({
 
     {/* Payment Dialog */}
     <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-      <DialogContent className="bg-[#202020] border-white/10 text-white">
+      <DialogContent className="bg-card border text-foreground">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-foreground">
             <DollarSign className="h-5 w-5 text-primary" />
             Pay User
           </DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogDescription className="text-muted-foreground">
             Send payment to user for their campaign performance
           </DialogDescription>
         </DialogHeader>
         
         {selectedUser && <div className="space-y-4 py-4">
             {/* User Info Card */}
-            <div className="p-4 rounded-lg bg-white/5 border border-white/10 space-y-3">
+            <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
               <div className="flex items-start gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={selectedUser.profiles?.avatar_url || undefined} />
@@ -1237,35 +1237,49 @@ export function CampaignAnalyticsTable({
                     {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 space-y-2">
-                  <div>
-                    <div className="font-semibold text-white">@{selectedUser.profiles?.username}</div>
-                    <div className="flex items-center gap-2 mt-1">
+                <div className="flex-1 space-y-3">
+                  <div className="space-y-2">
+                    <div className="font-semibold text-foreground">@{selectedUser.profiles?.username}</div>
+                    
+                    {/* Trust Score */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground font-medium">Trust Score</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-bold text-foreground">100%</span>
+                        <div className="flex items-center gap-0.5 ml-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Diamond
+                              key={i}
+                              className="w-3 h-3 fill-emerald-500 text-emerald-500"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
                       {(() => {
                       const platformIcon = getPlatformIcon(selectedUser.platform);
-                      return platformIcon && <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                      return platformIcon && <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-muted/50 border">
                             <img src={platformIcon} alt={selectedUser.platform} className="w-3 h-3" />
-                            <span className="text-xs text-white/80 capitalize">{selectedUser.platform}</span>
+                            <span className="text-xs text-muted-foreground capitalize">{selectedUser.platform}</span>
                           </div>;
                     })()}
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                        <span className="text-xs text-white/60">@{selectedUser.account_username}</span>
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-muted/50 border">
+                        <span className="text-xs text-muted-foreground">@{selectedUser.account_username}</span>
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Performance Stats - Moved here */}
-                  
                 </div>
               </div>
 
               {/* Demographic Status */}
-              <div className="pt-2 border-t border-white/10">
+              <div className="pt-2 border-t">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-white/60 font-medium">Demographics Status</span>
+                  <span className="text-xs text-muted-foreground font-medium">Demographics Status</span>
                   <div className="flex items-center gap-2">
                     {getDemographicIcon(getDemographicStatus(selectedUser))}
-                    <span className="text-xs text-white/80">
+                    <span className="text-xs text-foreground/80">
                       {(() => {
                       const status = getDemographicStatus(selectedUser);
                       const submission = selectedUser.demographic_submission;
@@ -1284,7 +1298,7 @@ export function CampaignAnalyticsTable({
                   </div>
                 </div>
                 
-                {selectedUser.demographic_submission && <div className="mt-1 text-xs text-white/40">
+                {selectedUser.demographic_submission && <div className="mt-1 text-xs text-muted-foreground/60">
                     Last submitted: {new Date(selectedUser.demographic_submission.submitted_at).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -1306,9 +1320,9 @@ export function CampaignAnalyticsTable({
                     <Check className="h-3.5 w-3.5 text-green-400" />
                     <span className="text-xs font-medium text-green-400">Last Payment</span>
                   </div>
-                  <span className="text-sm font-semibold text-white">${selectedUser.last_payment_amount.toFixed(2)}</span>
+                  <span className="text-sm font-semibold text-foreground">${selectedUser.last_payment_amount.toFixed(2)}</span>
                 </div>
-                <div className="flex items-center justify-between mt-1.5 text-xs text-white/50">
+                <div className="flex items-center justify-between mt-1.5 text-xs text-muted-foreground">
                   <span>{selectedUser.paid_views.toLocaleString()} views</span>
                   <span>{new Date(selectedUser.last_payment_date!).toLocaleDateString()}</span>
                 </div>
@@ -1323,30 +1337,30 @@ export function CampaignAnalyticsTable({
             {/* Payout Calculation */}
             <div className="space-y-3">
               <div className="p-2">
-                <div className="text-sm font-medium text-white mb-2">Calculated Payout</div>
+                <div className="text-sm font-medium text-foreground mb-2">Calculated Payout</div>
                 
                 {(() => {
                 const calc = calculatePayout(selectedUser);
                 return <>
-                      <div className="space-y-2 text-xs text-white/60 mb-3">
+                      <div className="space-y-2 text-xs text-muted-foreground mb-3">
                         <div className="flex justify-between">
                           <span>Views:</span>
-                          <span className="text-white font-mono">{calc.views.toLocaleString()}</span>
+                          <span className="text-foreground font-mono">{calc.views.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>RPM Rate:</span>
-                          <span className="text-white font-mono">${calc.rpm.toFixed(2)}</span>
+                          <span className="text-foreground font-mono">${calc.rpm.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Demographic %:</span>
-                          <span className={`font-mono ${calc.demographicMultiplier === 0.4 ? 'text-yellow-400' : 'text-white'}`}>
+                          <span className={`font-mono ${calc.demographicMultiplier === 0.4 ? 'text-yellow-400' : 'text-foreground'}`}>
                             {calc.demographicPercentage.toFixed(0)}% 
                             {calc.demographicMultiplier === 0.4 && ' (default)'}
                           </span>
                         </div>
                       </div>
                       
-                      <div className="text-2xl font-bold text-white text-center py-2">
+                      <div className="text-2xl font-bold text-foreground text-center py-2">
                         ${calc.payout.toFixed(2)}
                       </div>
                     </>;
@@ -1355,11 +1369,11 @@ export function CampaignAnalyticsTable({
 
               {/* Manual Override */}
               <div className="space-y-2">
-                <Label htmlFor="payment-amount" className="text-white text-sm">
+                <Label htmlFor="payment-amount" className="text-foreground text-sm">
                   Custom Amount (Optional)
                 </Label>
-                <Input id="payment-amount" type="number" step="0.01" min="0" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="Leave empty to use calculated amount" className="bg-[#191919] border-white/10 text-white" />
-                <p className="text-xs text-white/40">
+                <Input id="payment-amount" type="number" step="0.01" min="0" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="Leave empty to use calculated amount" className="bg-muted border text-foreground" />
+                <p className="text-xs text-muted-foreground">
                   Override the calculated amount if needed
                 </p>
               </div>
@@ -1371,7 +1385,7 @@ export function CampaignAnalyticsTable({
             setPaymentDialogOpen(false);
             setPaymentAmount("");
             setSelectedUser(null);
-          }} className="bg-transparent border-white/10 text-white hover:bg-white/5">
+          }}>
             Cancel
           </Button>
               <Button 
