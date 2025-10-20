@@ -17,7 +17,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
-import { UserDetailsDialog } from "./admin/UserDetailsDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -124,13 +123,8 @@ export function CampaignAnalyticsTable({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState<AnalyticsData | null>(null);
-  const [userDetailsSocialAccounts, setUserDetailsSocialAccounts] = useState<any[]>([]);
-  const [userDetailsTransactions, setUserDetailsTransactions] = useState<any[]>([]);
-  const [userDetailsPaymentMethods, setUserDetailsPaymentMethods] = useState<any[]>([]);
+  const [userSocialAccounts, setUserSocialAccounts] = useState<any[]>([]);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
-  const [socialAccountsOpen, setSocialAccountsOpen] = useState(true);
-  const [transactionsOpen, setTransactionsOpen] = useState(false);
-  const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
   const itemsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
@@ -386,68 +380,13 @@ export function CampaignAnalyticsTable({
     setLoadingUserDetails(true);
 
     try {
-      // Fetch user profile with wallet data
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          username,
-          full_name,
-          avatar_url,
-          wallets (
-            balance,
-            total_earned,
-            total_withdrawn
-          )
-        `)
-        .eq("id", item.user_id)
-        .single();
-
-      // Fetch social accounts
+      // Fetch social accounts for this user
       const { data: socialAccounts } = await supabase
         .from("social_accounts")
-        .select(`
-          id,
-          platform,
-          username,
-          account_link,
-          social_account_campaigns (
-            campaigns (
-              id,
-              title,
-              brand_name,
-              brand_logo_url,
-              brands (
-                logo_url
-              )
-            )
-          ),
-          demographic_submissions (
-            status,
-            tier1_percentage,
-            submitted_at
-          )
-        `)
-        .eq("user_id", item.user_id)
-        .order("submitted_at", { referencedTable: "demographic_submissions", ascending: false });
+        .select("id, platform, username, account_link, follower_count")
+        .eq("user_id", item.user_id);
 
-      // Fetch transactions
-      const { data: transactionsData } = await supabase
-        .from("wallet_transactions")
-        .select("*")
-        .eq("user_id", item.user_id)
-        .order("created_at", { ascending: false });
-
-      // Fetch payment methods
-      const { data: wallet } = await supabase
-        .from("wallets")
-        .select("payout_method, payout_details")
-        .eq("user_id", item.user_id)
-        .single();
-
-      setUserDetailsSocialAccounts(socialAccounts || []);
-      setUserDetailsTransactions(transactionsData || []);
-      setUserDetailsPaymentMethods(wallet ? [{ method: wallet.payout_method, details: wallet.payout_details }] : []);
+      setUserSocialAccounts(socialAccounts || []);
     } catch (error) {
       console.error("Error fetching user details:", error);
       toast.error("Failed to load user details");
@@ -1573,36 +1512,142 @@ export function CampaignAnalyticsTable({
     }} />
 
     {/* User Details Dialog */}
-    <UserDetailsDialog
-      open={userDetailsDialogOpen}
-      onOpenChange={setUserDetailsDialogOpen}
-      user={selectedUserForDetails?.profiles ? {
-        id: selectedUserForDetails.user_id!,
-        username: selectedUserForDetails.profiles.username,
-        full_name: selectedUserForDetails.profiles.username,
-        avatar_url: selectedUserForDetails.profiles.avatar_url,
-        wallets: userDetailsPaymentMethods.length > 0 ? {
-          balance: 0,
-          total_earned: 0,
-          total_withdrawn: 0
-        } : null
-      } : null}
-      socialAccounts={userDetailsSocialAccounts}
-      transactions={userDetailsTransactions}
-      paymentMethods={userDetailsPaymentMethods}
-      loadingSocialAccounts={loadingUserDetails}
-      loadingTransactions={loadingUserDetails}
-      loadingPaymentMethods={loadingUserDetails}
-      socialAccountsOpen={socialAccountsOpen}
-      onSocialAccountsOpenChange={setSocialAccountsOpen}
-      transactionsOpen={transactionsOpen}
-      onTransactionsOpenChange={setTransactionsOpen}
-      paymentMethodsOpen={paymentMethodsOpen}
-      onPaymentMethodsOpenChange={setPaymentMethodsOpen}
-      onBalanceUpdated={() => {
-        fetchAnalytics();
-      }}
-    />
+    <Dialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen}>
+      <DialogContent className="bg-[#0a0a0a] max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-white">Creator Details</DialogTitle>
+        </DialogHeader>
+        
+        {selectedUserForDetails && (
+          <div className="space-y-6 mt-4">
+            {/* User Profile Section */}
+            <div className="flex items-center gap-4 pb-6">
+              {selectedUserForDetails.profiles?.avatar_url ? (
+                <img 
+                  src={selectedUserForDetails.profiles.avatar_url} 
+                  alt={selectedUserForDetails.profiles.username} 
+                  className="w-20 h-20 rounded-full object-cover ring-2 ring-primary"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-primary">
+                  <span className="text-primary font-semibold text-3xl">
+                    {selectedUserForDetails.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+              )}
+              
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {selectedUserForDetails.profiles?.username || "Unknown User"}
+                </h3>
+                
+                {/* Trust Score */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-white tracking-[-0.5px]">100%</span>
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Diamond
+                          key={i}
+                          className="w-3 h-3 fill-emerald-500 text-emerald-500"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Accounts Section */}
+            {userSocialAccounts.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-white mb-3">Connected Accounts</h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {userSocialAccounts.map((account: any) => (
+                    <a
+                      key={account.id}
+                      href={account.account_link || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        {(() => {
+                          switch (account.platform.toLowerCase()) {
+                            case 'tiktok':
+                              return <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />;
+                            case 'instagram':
+                              return <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />;
+                            case 'youtube':
+                              return <img src={youtubeLogo} alt="YouTube" className="w-5 h-5" />;
+                            default:
+                              return null;
+                          }
+                        })()}
+                        <div>
+                          <p className="font-medium text-white group-hover:underline">
+                            @{account.username}
+                          </p>
+                          <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                        </div>
+                      </div>
+                      {account.follower_count > 0 && (
+                        <span className="text-sm font-semibold text-white">
+                          {account.follower_count.toLocaleString()} followers
+                        </span>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Campaign Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-[#111111]">
+                <p className="text-xs text-muted-foreground mb-1">Total Views</p>
+                <p className="text-xl font-bold text-white">
+                  {selectedUserForDetails.total_views?.toLocaleString() || '0'}
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-[#111111]">
+                <p className="text-xs text-muted-foreground mb-1">Last Payment</p>
+                <p className="text-xl font-bold text-white">
+                  ${selectedUserForDetails.last_payment_amount?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+            </div>
+
+            {/* Demographics Status */}
+            {selectedUserForDetails.demographic_submission && (
+              <div className="p-4 rounded-lg bg-[#111111]">
+                <p className="text-xs text-muted-foreground mb-2">Demographics Status</p>
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize"
+                    style={{
+                      backgroundColor: selectedUserForDetails.demographic_submission.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : 
+                                     selectedUserForDetails.demographic_submission.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 
+                                     'rgba(234, 179, 8, 0.1)',
+                      color: selectedUserForDetails.demographic_submission.status === 'approved' ? 'rgb(34, 197, 94)' : 
+                           selectedUserForDetails.demographic_submission.status === 'rejected' ? 'rgb(239, 68, 68)' : 
+                           'rgb(234, 179, 8)'
+                    }}
+                  >
+                    {selectedUserForDetails.demographic_submission.status}
+                  </div>
+                  {selectedUserForDetails.demographic_submission.status === 'approved' && (
+                    <div className="text-xs text-muted-foreground">
+                      Tier 1: {selectedUserForDetails.demographic_submission.tier1_percentage}%
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
 
     {/* Revert Transaction Dialog */}
     <AlertDialog open={revertDialogOpen} onOpenChange={setRevertDialogOpen}>
