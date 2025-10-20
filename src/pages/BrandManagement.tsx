@@ -24,6 +24,7 @@ import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialog";
 import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
 import { VideosTab } from "@/components/brand/VideosTab";
+import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -31,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface Campaign {
   id: string;
   title: string;
+  description: string | null;
   budget: number;
   budget_used: number;
   rpm_rate: number;
@@ -38,6 +40,16 @@ interface Campaign {
   banner_url: string | null;
   preview_url: string | null;
   analytics_url: string | null;
+  guidelines: string | null;
+  allowed_platforms: string[];
+  application_questions: any[];
+  slug?: string;
+  embed_url?: string | null;
+  is_private?: boolean;
+  access_code?: string | null;
+  requires_application?: boolean;
+  is_infinite_budget?: boolean;
+  is_featured?: boolean;
 }
 interface SocialAccount {
   id: string;
@@ -101,6 +113,7 @@ export default function BrandManagement() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [manageCampaignOpen, setManageCampaignOpen] = useState(false);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
   const exportToCSV = () => {
@@ -228,11 +241,14 @@ export default function BrandManagement() {
       const {
         data,
         error
-      } = await supabase.from("campaigns").select("id, title, budget, budget_used, rpm_rate, status, banner_url, preview_url, analytics_url").eq("brand_id", brandData.id).order("created_at", {
+      } = await supabase.from("campaigns").select("id, title, description, budget, budget_used, rpm_rate, status, banner_url, preview_url, analytics_url, guidelines, allowed_platforms, application_questions, slug, embed_url, is_private, access_code, requires_application, is_infinite_budget, is_featured").eq("brand_id", brandData.id).order("created_at", {
         ascending: false
       });
       if (error) throw error;
-      setCampaigns(data || []);
+      setCampaigns((data || []).map(c => ({
+        ...c,
+        application_questions: Array.isArray(c.application_questions) ? c.application_questions : []
+      })));
       if (data && data.length > 0) {
         setSelectedCampaignId(data[0].id);
       }
@@ -709,9 +725,9 @@ export default function BrandManagement() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            {isAdmin && <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Campaign
+            {isAdmin && <Button variant="outline" size="sm" onClick={() => setManageCampaignOpen(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Manage Campaign
               </Button>}
           </div>
         </div>
@@ -1220,6 +1236,19 @@ export default function BrandManagement() {
             <VideosTab campaignId={selectedCampaignId} isAdmin={isAdmin} approvedCreators={approvedSubmissions} />
           </TabsContent>
         </Tabs>
+
+        {/* Manage Campaign Dialog */}
+        {selectedCampaign && (
+          <CreateCampaignDialog
+            brandId={brandId}
+            brandName={slug || ""}
+            campaign={selectedCampaign}
+            open={manageCampaignOpen}
+            onOpenChange={setManageCampaignOpen}
+            onSuccess={fetchCampaigns}
+            onDelete={() => setDeleteDialogOpen(true)}
+          />
+        )}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

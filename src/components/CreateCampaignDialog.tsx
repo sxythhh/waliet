@@ -73,6 +73,7 @@ interface Campaign {
   title: string;
   description: string | null;
   budget: number;
+  budget_used: number;
   rpm_rate: number;
   guidelines: string | null;
   banner_url: string | null;
@@ -274,19 +275,22 @@ export function CreateCampaignDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#202020] border-white/10">
-        <DialogHeader>
-          <DialogTitle className="text-white text-2xl">
-            {campaign ? "Edit Campaign" : "Create New Campaign"}
-          </DialogTitle>
-          <DialogDescription className="text-white/60">
-            {campaign
-              ? `Edit campaign details for ${brandName}`
-              : `Create a new campaign for ${brandName}`}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-7xl max-h-[90vh] bg-[#0a0a0a] border border-white/10 p-0 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] h-full max-h-[90vh]">
+          {/* Left Column - Form */}
+          <div className="overflow-y-auto p-6 lg:p-8">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-white text-2xl">
+                {campaign ? "Edit Campaign" : "Create New Campaign"}
+              </DialogTitle>
+              <DialogDescription className="text-white/60">
+                {campaign
+                  ? `Edit campaign details for ${brandName}`
+                  : `Create a new campaign for ${brandName}`}
+              </DialogDescription>
+            </DialogHeader>
 
-        <Form {...form}>
+            <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Banner Upload */}
             <div className="space-y-3">
@@ -860,6 +864,134 @@ export function CreateCampaignDialog({
             </div>
           </form>
         </Form>
+          </div>
+
+          {/* Right Column - Preview */}
+          <div className="hidden lg:flex flex-col bg-[#0a0a0a] border-l border-white/10 p-6 overflow-y-auto">
+            <div className="flex items-center gap-2 text-white/40 mb-6">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span className="text-sm font-medium">Preview</span>
+            </div>
+
+            {/* Campaign Preview Card */}
+            <div className="rounded-xl overflow-hidden bg-[#111111] border border-white/10">
+              {/* Banner */}
+              <div className="relative w-full h-48 bg-gradient-to-br from-primary/20 to-primary/5">
+                {bannerPreview ? (
+                  <img 
+                    src={bannerPreview} 
+                    alt="Campaign banner" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Upload className="h-12 w-12 text-white/20" />
+                  </div>
+                )}
+              </div>
+
+              {/* Campaign Info */}
+              <div className="p-4 space-y-4">
+                {/* Status Badge */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isCampaignEnded ? (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+                        Ended
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+                        Active
+                      </span>
+                    )}
+                    {form.watch("is_featured") && (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                        Featured
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-bold text-white line-clamp-2">
+                  {form.watch("title") || "Campaign Title"}
+                </h3>
+
+                {/* RPM & Platforms */}
+                <div className="flex items-center gap-3 text-sm text-white/60">
+                  <span>${form.watch("rpm_rate") || "0.00"} / 1k views</span>
+                  <span>•</span>
+                  <div className="flex items-center gap-1.5">
+                    {form.watch("allowed_platforms")?.includes("tiktok") && (
+                      <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
+                        <span className="text-xs">TT</span>
+                      </div>
+                    )}
+                    {form.watch("allowed_platforms")?.includes("instagram") && (
+                      <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
+                        <span className="text-xs">IG</span>
+                      </div>
+                    )}
+                    {form.watch("allowed_platforms")?.includes("youtube") && (
+                      <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
+                        <span className="text-xs">YT</span>
+                      </div>
+                    )}
+                    {form.watch("allowed_platforms")?.includes("x") && (
+                      <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
+                        <span className="text-xs">X</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Budget Progress */}
+                {!form.watch("is_infinite_budget") && form.watch("budget") && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-white/60">
+                        ${campaign?.budget_used?.toFixed(2) || "0.00"} / ${Number(form.watch("budget")).toFixed(2)}
+                      </span>
+                      <span className="text-white font-semibold">
+                        {campaign?.budget_used && Number(form.watch("budget")) 
+                          ? Math.round((campaign.budget_used / Number(form.watch("budget"))) * 100)
+                          : 0}%
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary rounded-full transition-all duration-300"
+                        style={{
+                          width: `${campaign?.budget_used && Number(form.watch("budget"))
+                            ? Math.min((campaign.budget_used / Number(form.watch("budget"))) * 100, 100)
+                            : 0}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {form.watch("is_infinite_budget") && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                      ∞ Unlimited Budget
+                    </div>
+                  </div>
+                )}
+
+                {/* Description Preview */}
+                {form.watch("description") && (
+                  <p className="text-sm text-white/60 line-clamp-3">
+                    {form.watch("description")}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </DialogContent>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
