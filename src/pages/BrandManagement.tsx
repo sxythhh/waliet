@@ -1003,7 +1003,7 @@ export default function BrandManagement() {
           {/* Applications Tab */}
           <TabsContent value="applications">
             <Card className="bg-[#202020] border-0">
-              <CardHeader className="pb-4 space-y-4">
+              <CardHeader className="pb-4 space-y-4 bg-[#0C0C0C]">
                 <CardTitle className="flex items-center gap-2">
                   
                   Pending Applications
