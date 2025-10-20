@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1380,7 +1381,7 @@ export default function BrandManagement() {
 
       {/* User Details Dialog */}
       <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
-        <DialogContent className="bg-[#0a0a0a] border border-white/10 max-w-2xl">
+        <DialogContent className="bg-[#0a0a0a] max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white">Creator Details</DialogTitle>
           </DialogHeader>
@@ -1388,7 +1389,7 @@ export default function BrandManagement() {
           {selectedUser && (
             <div className="space-y-6 mt-4">
               {/* User Profile Section */}
-              <div className="flex items-center gap-4 pb-6 border-b border-white/10">
+              <div className="flex items-center gap-4 pb-6">
                 {selectedUser.profiles?.avatar_url ? (
                   <img 
                     src={selectedUser.profiles.avatar_url} 
@@ -1475,13 +1476,13 @@ export default function BrandManagement() {
 
               {/* Campaign Stats */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-[#111111] border border-white/5">
+                <div className="p-4 rounded-lg bg-[#111111]">
                   <p className="text-xs text-muted-foreground mb-1">Total Paid</p>
                   <p className="text-xl font-bold text-white">
                     ${selectedUser.total_paid?.toFixed(2) || '0.00'}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg bg-[#111111] border border-white/5">
+                <div className="p-4 rounded-lg bg-[#111111]">
                   <p className="text-xs text-muted-foreground mb-1">Videos Submitted</p>
                   <p className="text-xl font-bold text-white">
                     {selectedUser.video_count || 0}
@@ -1491,19 +1492,26 @@ export default function BrandManagement() {
 
               {/* Application Status */}
               {selectedUser.status && (
-                <div className="p-4 rounded-lg bg-[#111111] border border-white/5">
+                <div className="p-4 rounded-lg bg-[#111111]">
                   <p className="text-xs text-muted-foreground mb-2">Application Status</p>
-                  <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize"
-                    style={{
-                      backgroundColor: selectedUser.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : 
-                                     selectedUser.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 
-                                     'rgba(234, 179, 8, 0.1)',
-                      color: selectedUser.status === 'approved' ? 'rgb(34, 197, 94)' : 
-                           selectedUser.status === 'rejected' ? 'rgb(239, 68, 68)' : 
-                           'rgb(234, 179, 8)'
-                    }}
-                  >
-                    {selectedUser.status}
+                  <div className="flex items-center justify-between">
+                    <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize"
+                      style={{
+                        backgroundColor: selectedUser.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : 
+                                       selectedUser.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 
+                                       'rgba(234, 179, 8, 0.1)',
+                        color: selectedUser.status === 'approved' ? 'rgb(34, 197, 94)' : 
+                             selectedUser.status === 'rejected' ? 'rgb(239, 68, 68)' : 
+                             'rgb(234, 179, 8)'
+                      }}
+                    >
+                      {selectedUser.status}
+                    </div>
+                    {selectedUser.status === 'approved' && selectedUser.submitted_at && (
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(selectedUser.submitted_at), 'MMM d, yyyy')}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
