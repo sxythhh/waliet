@@ -96,6 +96,8 @@ export default function BrandManagement() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [kickDialogOpen, setKickDialogOpen] = useState(false);
   const [userToKick, setUserToKick] = useState<Submission | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
   const exportToCSV = () => {
@@ -971,21 +973,27 @@ export default function BrandManagement() {
                       return <TableRow key={submission.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                               {/* Creator Column */}
                               <TableCell className="py-4">
-                                <div className="flex items-center gap-3">
+                                <div 
+                                  className="flex items-center gap-3 cursor-pointer group" 
+                                  onClick={() => {
+                                    setSelectedUser(submission);
+                                    setIsUserDialogOpen(true);
+                                  }}
+                                >
                                   {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-10 h-10 rounded-full object-cover ring-2 ring-border" /> : <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-border">
                                       <span className="text-primary font-semibold text-lg">
                                         {submission.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                                       </span>
                                     </div>}
                                   <div className="space-y-1">
-                                    <p className="font-semibold text-foreground">
+                                    <p className="font-semibold text-foreground group-hover:underline transition-all">
                                       {submission.profiles?.username || "Unknown"}
                                     </p>
                                     {/* Trust Score */}
                                     <div className="flex items-center gap-2">
-                                      <span className="text-xs text-muted-foreground">Trust:</span>
+                                      <span className="text-xs text-muted-foreground tracking-[-0.5px]">Trust:</span>
                                       <div className="flex items-center gap-1">
-                                        <span className="text-xs font-bold text-foreground">100%</span>
+                                        <span className="text-xs font-bold text-foreground tracking-[-0.5px]">100%</span>
                                         <div className="flex items-center gap-0.5">
                                           {[...Array(5)].map((_, i) => (
                                             <Diamond
@@ -1369,5 +1377,139 @@ export default function BrandManagement() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+
+      {/* User Details Dialog */}
+      <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+        <DialogContent className="bg-[#0a0a0a] border border-white/10 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-white">Creator Details</DialogTitle>
+          </DialogHeader>
+          
+          {selectedUser && (
+            <div className="space-y-6 mt-4">
+              {/* User Profile Section */}
+              <div className="flex items-center gap-4 pb-6 border-b border-white/10">
+                {selectedUser.profiles?.avatar_url ? (
+                  <img 
+                    src={selectedUser.profiles.avatar_url} 
+                    alt={selectedUser.profiles.username} 
+                    className="w-20 h-20 rounded-full object-cover ring-2 ring-primary"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-primary">
+                    <span className="text-primary font-semibold text-3xl">
+                      {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-1">
+                    {selectedUser.profiles?.username || "Unknown User"}
+                  </h3>
+                  {selectedUser.profiles?.email && (
+                    <p className="text-sm text-muted-foreground">{selectedUser.profiles.email}</p>
+                  )}
+                  
+                  {/* Trust Score */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold text-white tracking-[-0.5px]">100%</span>
+                      <div className="flex items-center gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Diamond
+                            key={i}
+                            className="w-3 h-3 fill-emerald-500 text-emerald-500"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Accounts Section */}
+              {selectedUser.profiles?.social_accounts && selectedUser.profiles.social_accounts.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-white mb-3">Connected Accounts</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {selectedUser.profiles.social_accounts.map((account: any) => (
+                      <a
+                        key={account.id}
+                        href={account.account_link || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          {(() => {
+                            switch (account.platform.toLowerCase()) {
+                              case 'tiktok':
+                                return <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />;
+                              case 'instagram':
+                                return <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />;
+                              case 'youtube':
+                                return <img src={youtubeLogo} alt="YouTube" className="w-5 h-5" />;
+                              default:
+                                return null;
+                            }
+                          })()}
+                          <div>
+                            <p className="font-medium text-white group-hover:underline">
+                              @{account.username}
+                            </p>
+                            <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                          </div>
+                        </div>
+                        {account.follower_count > 0 && (
+                          <span className="text-sm font-semibold text-white">
+                            {account.follower_count.toLocaleString()} followers
+                          </span>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Campaign Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg bg-[#111111] border border-white/5">
+                  <p className="text-xs text-muted-foreground mb-1">Total Paid</p>
+                  <p className="text-xl font-bold text-white">
+                    ${selectedUser.total_paid?.toFixed(2) || '0.00'}
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg bg-[#111111] border border-white/5">
+                  <p className="text-xs text-muted-foreground mb-1">Videos Submitted</p>
+                  <p className="text-xl font-bold text-white">
+                    {selectedUser.video_count || 0}
+                  </p>
+                </div>
+              </div>
+
+              {/* Application Status */}
+              {selectedUser.status && (
+                <div className="p-4 rounded-lg bg-[#111111] border border-white/5">
+                  <p className="text-xs text-muted-foreground mb-2">Application Status</p>
+                  <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize"
+                    style={{
+                      backgroundColor: selectedUser.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : 
+                                     selectedUser.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 
+                                     'rgba(234, 179, 8, 0.1)',
+                      color: selectedUser.status === 'approved' ? 'rgb(34, 197, 94)' : 
+                           selectedUser.status === 'rejected' ? 'rgb(239, 68, 68)' : 
+                           'rgb(234, 179, 8)'
+                    }}
+                  >
+                    {selectedUser.status}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>;
 }
