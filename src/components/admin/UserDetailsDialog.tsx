@@ -1,12 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2 } from "lucide-react";
+import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2, Diamond } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -374,18 +373,19 @@ export function UserDetailsDialog({
                 </div>
               </div>
               
-              {/* Trust Score Slider */}
+              {/* Trust Score Input */}
               <div className="bg-card/50 px-3 py-3 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Diamond className="w-4 h-4 fill-emerald-500 text-emerald-500" />
                   <Label className="text-xs text-muted-foreground">Set Trust Score</Label>
-                  <span className="text-sm font-medium">{trustScore}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Slider
-                    value={[trustScore]}
-                    onValueChange={(value) => setTrustScore(value[0])}
+                  <Input
+                    type="number"
+                    min={0}
                     max={100}
-                    step={1}
+                    value={trustScore}
+                    onChange={(e) => setTrustScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
                     className="flex-1"
                     disabled={isUpdatingTrustScore}
                   />
