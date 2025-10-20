@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond, ArrowUpDown, ArrowUp, ArrowDown, Hammer } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond, ArrowUpDown, ArrowUp, ArrowDown, Hammer, Search } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -99,6 +99,7 @@ export default function BrandManagement() {
   const [userToKick, setUserToKick] = useState<Submission | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
   const exportToCSV = () => {
@@ -619,7 +620,20 @@ export default function BrandManagement() {
     return filtered;
   })();
   
-  const pendingSubmissions = submissions.filter(s => s.status === "pending");
+  const pendingSubmissions = submissions.filter(s => {
+    if (s.status !== "pending") return false;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const username = s.profiles?.username?.toLowerCase() || "";
+      const accountUsernames = s.profiles?.social_accounts?.map((acc: any) => acc.username?.toLowerCase() || "").join(" ") || "";
+      
+      return username.includes(query) || accountUsernames.includes(query);
+    }
+    
+    return true;
+  });
 
   // Group by account and sum views across all date ranges to avoid counting duplicates
   const accountViews = analytics.reduce((acc: Record<string, number>, a: any) => {
@@ -923,7 +937,7 @@ export default function BrandManagement() {
                       {approvedSubmissions.length}
                     </Badge>
                   </div>
-                  <Button variant="outline" size="sm" onClick={exportToCSV} disabled={approvedSubmissions.length === 0} className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={exportToCSV} disabled={approvedSubmissions.length === 0} className="flex items-center gap-2 border-0">
                     <Download className="h-4 w-4" />
                     Export CSV
                   </Button>
@@ -1070,7 +1084,7 @@ export default function BrandManagement() {
           {/* Applications Tab */}
           <TabsContent value="applications">
             <Card className="bg-[#202020] border-0">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-4 space-y-4">
                 <CardTitle className="flex items-center gap-2">
                   
                   Pending Applications
@@ -1078,6 +1092,16 @@ export default function BrandManagement() {
                     {pendingSubmissions.length}
                   </Badge>
                 </CardTitle>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search by name or account username..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-[#1a1a1a] border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+                  />
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {pendingSubmissions.length === 0 ? <div className="text-center py-8">
