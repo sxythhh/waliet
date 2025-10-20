@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const menuItems = [
   {
@@ -69,7 +70,7 @@ export function AppSidebar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between border-t md:border-t-0 md:border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:px-6">
+    <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:px-6">
       {/* Logo */}
       <div className="hidden md:flex items-center">
         <img src={wordmarkLogo} alt="Logo" className="h-12" />
@@ -96,8 +97,9 @@ export function AppSidebar() {
         })}
       </div>
 
-      {/* User Profile */}
-      <div className="hidden md:flex items-center">
+      {/* Right side: Theme Toggle + User Profile */}
+      <div className="hidden md:flex items-center gap-3">
+        <ThemeToggle />
         <Avatar className="w-8 h-8">
           <AvatarImage src={avatarUrl || undefined} alt={displayName} />
           <AvatarFallback className="bg-blue-500 text-white">

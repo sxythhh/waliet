@@ -524,30 +524,11 @@ export function ProfileTab() {
       {/* Public Profile Link */}
       
 
-      {/* Settings */}
-      <Card className="bg-card border-0">
-        <CardHeader>
-          <CardTitle className="text-lg">Settings</CardTitle>
-          <CardDescription>Customize your app preferences</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-sm font-medium">Theme</Label>
-              <p className="text-xs text-muted-foreground">
-                Switch between light and dark mode
-              </p>
-            </div>
-            <ThemeToggle />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Stats Overview */}
       
 
       {/* Edit Profile */}
-      <Card className="bg-card border-0">
+      <Card className="bg-card">
         <CardHeader>
           <CardTitle className="text-lg">Edit Profile</CardTitle>
           <CardDescription>Update your public profile information</CardDescription>
@@ -653,7 +634,8 @@ export function ProfileTab() {
             </div>
 
             {/* Save Button */}
-            <div className="flex items-center justify-between pt-4 border-t py-0">
+            <div className="flex items-center justify-between pt-4">
+
               <Button type="button" variant="outline" onClick={async () => {
               await supabase.auth.signOut();
               navigate('/auth');
