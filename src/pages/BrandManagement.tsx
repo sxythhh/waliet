@@ -721,21 +721,11 @@ export default function BrandManagement() {
               </Select>}
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRefresh}
-              className="bg-[#202020] hover:bg-[#181818] border-0"
-            >
+            <Button variant="ghost" size="sm" onClick={handleRefresh} className="bg-[#202020] hover:bg-[#181818] border-0">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            {isAdmin && <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setManageCampaignOpen(true)}
-              className="bg-[#202020] hover:bg-[#181818] border-0"
-            >
+            {isAdmin && <Button variant="ghost" size="sm" onClick={() => setManageCampaignOpen(true)} className="bg-[#202020] hover:bg-[#181818] border-0">
                 <Edit className="h-4 w-4 mr-2" />
                 Manage Campaign
               </Button>}
@@ -767,15 +757,7 @@ export default function BrandManagement() {
           <TabsContent value="analytics" className="space-y-4">
             {/* Campaign Performance Overview */}
             <Card className="bg-card border">
-              <CardHeader className="flex flex-row items-center justify-between py-[9px]">
-                <CardTitle className="text-2xl">Performance Overview</CardTitle>
-                {selectedCampaign?.analytics_url && <Button variant="ghost" size="sm" onClick={() => window.open(selectedCampaign.analytics_url!, '_blank')} className="group bg-muted">
-                    <span className="relative">
-                      View Analytics
-                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                    </span>
-                  </Button>}
-              </CardHeader>
+              
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
@@ -1248,17 +1230,7 @@ export default function BrandManagement() {
         </Tabs>
 
         {/* Manage Campaign Dialog */}
-        {selectedCampaign && (
-          <CreateCampaignDialog
-            brandId={brandId}
-            brandName={slug || ""}
-            campaign={selectedCampaign}
-            open={manageCampaignOpen}
-            onOpenChange={setManageCampaignOpen}
-            onSuccess={fetchCampaigns}
-            onDelete={() => setDeleteDialogOpen(true)}
-          />
-        )}
+        {selectedCampaign && <CreateCampaignDialog brandId={brandId} brandName={slug || ""} campaign={selectedCampaign} open={manageCampaignOpen} onOpenChange={setManageCampaignOpen} onSuccess={fetchCampaigns} onDelete={() => setDeleteDialogOpen(true)} />}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
