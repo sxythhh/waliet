@@ -628,16 +628,16 @@ export default function BrandManagement() {
   const budgetUsed = Number(selectedCampaign?.budget_used || 0);
   const effectiveCPM = totalViews > 0 ? budgetUsed / totalViews * 1000 : 0;
   if (loading || adminLoading) {
-    return <div className="min-h-screen p-8 bg-[#191919]">
+    return <div className="min-h-screen p-8 bg-[#0C0C0C]">
         <div className="max-w-7xl mx-auto space-y-6">
-          <Skeleton className="h-10 w-64 bg-[#0C0C0C]" />
-          <Skeleton className="h-12 w-full max-w-xs bg-[#0C0C0C]" />
+          <Skeleton className="h-10 w-64 bg-[#1a1a1a]" />
+          <Skeleton className="h-12 w-full max-w-xs bg-[#1a1a1a]" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Skeleton className="h-24 rounded-lg bg-[#0C0C0C]" />
-            <Skeleton className="h-24 rounded-lg bg-[#0C0C0C]" />
-            <Skeleton className="h-24 rounded-lg bg-[#0C0C0C]" />
+            <Skeleton className="h-24 rounded-lg bg-[#1a1a1a]" />
+            <Skeleton className="h-24 rounded-lg bg-[#1a1a1a]" />
+            <Skeleton className="h-24 rounded-lg bg-[#1a1a1a]" />
           </div>
-          <Skeleton className="h-96 rounded-lg bg-[#0C0C0C]" />
+          <Skeleton className="h-96 rounded-lg bg-[#1a1a1a]" />
         </div>
       </div>;
   }
