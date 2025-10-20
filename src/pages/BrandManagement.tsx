@@ -389,18 +389,18 @@ export default function BrandManagement() {
       toast.error("Please enter a valid budget amount");
       return;
     }
-    
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
       // Get current budget_used before update
-      const { data: currentCampaign } = await supabase
-        .from("campaigns")
-        .select("budget_used, title")
-        .eq("id", selectedCampaignId)
-        .single();
-
+      const {
+        data: currentCampaign
+      } = await supabase.from("campaigns").select("budget_used, title").eq("id", selectedCampaignId).single();
       const oldBudgetUsed = currentCampaign?.budget_used || 0;
       const budgetChange = budgetUsedValue - oldBudgetUsed;
 
@@ -413,8 +413,11 @@ export default function BrandManagement() {
       if (error) throw error;
 
       // Create a transaction record for this manual budget adjustment
-      const { error: txnError } = await supabase.from("wallet_transactions").insert({
-        user_id: session.user.id, // Admin who made the change
+      const {
+        error: txnError
+      } = await supabase.from("wallet_transactions").insert({
+        user_id: session.user.id,
+        // Admin who made the change
         amount: budgetChange,
         type: "balance_correction",
         status: "completed",
@@ -428,12 +431,10 @@ export default function BrandManagement() {
           admin_id: session.user.id
         }
       });
-      
       if (txnError) {
         console.error("Transaction logging error:", txnError);
         // Don't fail the budget update if transaction logging fails
       }
-
       toast.success("Budget updated successfully");
       setEditBudgetDialogOpen(false);
       fetchCampaigns();
@@ -491,11 +492,9 @@ export default function BrandManagement() {
       if (walletUpdateError) throw walletUpdateError;
 
       // Get current campaign budget before update
-      const { data: campaignBefore } = await supabase
-        .from("campaigns")
-        .select("budget_used, budget")
-        .eq("id", selectedCampaignId)
-        .single();
+      const {
+        data: campaignBefore
+      } = await supabase.from("campaigns").select("budget_used, budget").eq("id", selectedCampaignId).single();
 
       // Create wallet transaction
       const {
@@ -576,18 +575,15 @@ export default function BrandManagement() {
       toast.error("Failed to process payment");
     }
   };
-  
   const handleKickUser = async () => {
     if (!userToKick) return;
-    
     try {
-      const { error } = await supabase
-        .from("campaign_submissions")
-        .update({ status: "withdrawn" })
-        .eq("id", userToKick.id);
-      
+      const {
+        error
+      } = await supabase.from("campaign_submissions").update({
+        status: "withdrawn"
+      }).eq("id", userToKick.id);
       if (error) throw error;
-      
       toast.success(`Removed ${userToKick.profiles?.username} from campaign`);
       setKickDialogOpen(false);
       setUserToKick(null);
@@ -597,54 +593,41 @@ export default function BrandManagement() {
       toast.error("Failed to remove user from campaign");
     }
   };
-  
   const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
-  
+
   // Filter and sort approved submissions
   const approvedSubmissions = (() => {
     let filtered = submissions.filter(s => {
       if (s.status !== "approved") return false;
-      
+
       // Filter by search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const username = s.profiles?.username?.toLowerCase() || "";
         const accountUsernames = s.profiles?.social_accounts?.map((acc: any) => acc.username?.toLowerCase() || "").join(" ") || "";
-        
         return username.includes(query) || accountUsernames.includes(query);
       }
-      
       return true;
     });
-    
     if (sortOrder) {
       return [...filtered].sort((a, b) => {
-        const aPaid = transactions
-          .filter(txn => txn.user_id === a.creator_id)
-          .reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
-        const bPaid = transactions
-          .filter(txn => txn.user_id === b.creator_id)
-          .reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
-        
+        const aPaid = transactions.filter(txn => txn.user_id === a.creator_id).reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
+        const bPaid = transactions.filter(txn => txn.user_id === b.creator_id).reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
         return sortOrder === 'desc' ? bPaid - aPaid : aPaid - bPaid;
       });
     }
-    
     return filtered;
   })();
-  
   const pendingSubmissions = submissions.filter(s => {
     if (s.status !== "pending") return false;
-    
+
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       const username = s.profiles?.username?.toLowerCase() || "";
       const accountUsernames = s.profiles?.social_accounts?.map((acc: any) => acc.username?.toLowerCase() || "").join(" ") || "";
-      
       return username.includes(query) || accountUsernames.includes(query);
     }
-    
     return true;
   });
 
@@ -805,64 +788,7 @@ export default function BrandManagement() {
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
               {/* Views by Platform - Pie Chart */}
-              <Card className="bg-[#202020] border-transparent">
-                <CardHeader>
-                  <CardTitle className="text-white text-sm">Views by Platform</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    {(() => {
-                    const platformData = analytics.reduce((acc: any[], account) => {
-                      const existing = acc.find(item => item.platform === account.platform);
-                      if (existing) {
-                        existing.views += account.total_views;
-                      } else {
-                        acc.push({
-                          platform: account.platform,
-                          views: account.total_views
-                        });
-                      }
-                      return acc;
-                    }, []);
-                    const COLORS: Record<string, string> = {
-                      tiktok: '#EF4444',
-                      instagram: '#A855F7',
-                      youtube: '#EF4444'
-                    };
-                    if (platformData.length === 0) {
-                      return <div className="h-full flex items-center justify-center text-white/40 text-sm">
-                            No platform data available
-                          </div>;
-                    }
-                    const totalViews = platformData.reduce((sum, item) => sum + item.views, 0);
-                    return <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={platformData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="views" nameKey="platform" stroke="none">
-                              {platformData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[entry.platform.toLowerCase()] || '#22C55E'} className="transition-opacity hover:opacity-80" />)}
-                            </Pie>
-                            <Tooltip contentStyle={{
-                          backgroundColor: "#0C0C0C",
-                          border: "none",
-                          borderRadius: "8px",
-                          padding: "8px 12px"
-                        }} labelStyle={{
-                          color: "#ffffff",
-                          fontFamily: "Inter, sans-serif",
-                          fontSize: "12px",
-                          fontWeight: 500,
-                          textTransform: "capitalize"
-                        }} itemStyle={{
-                          color: "#ffffff",
-                          fontFamily: "Inter, sans-serif",
-                          fontSize: "12px"
-                        }} formatter={(value: number) => [`${value.toLocaleString()} views (${(value / totalViews * 100).toFixed(1)}%)`, '']} />
-                            <Legend verticalAlign="bottom" height={36} formatter={value => <span className="text-white/70 text-xs capitalize">{value}</span>} iconType="circle" iconSize={8} />
-                          </PieChart>
-                        </ResponsiveContainer>;
-                  })()}
-                  </div>
-                </CardContent>
-              </Card>
+              
 
               {/* Daily Spend - Bar Chart */}
               <Card className="bg-[#0C0C0C] border-transparent">
@@ -873,7 +799,9 @@ export default function BrandManagement() {
                   <div className="h-64">
                     {(() => {
                     // Generate last 7 days
-                    const last7Days = Array.from({ length: 7 }, (_, i) => {
+                    const last7Days = Array.from({
+                      length: 7
+                    }, (_, i) => {
                       const date = new Date();
                       date.setDate(date.getDate() - (6 - i));
                       return {
@@ -896,7 +824,6 @@ export default function BrandManagement() {
                         dayData.spend += Number(txn.amount);
                       }
                     });
-
                     const sortedData = last7Days;
                     if (sortedData.length === 0) {
                       return <div className="h-full flex items-center justify-center text-white/40 text-sm">
@@ -957,13 +884,7 @@ export default function BrandManagement() {
                 </CardTitle>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search by name or account username..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
-                  />
+                  <Input type="text" placeholder="Search by name or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50" />
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -977,14 +898,9 @@ export default function BrandManagement() {
                           <TableHead className="text-muted-foreground font-medium">Creator</TableHead>
                           <TableHead className="text-muted-foreground font-medium">Linked Accounts</TableHead>
                           <TableHead className="text-muted-foreground font-medium">
-                            <button
-                              onClick={() => {
-                                if (sortOrder === null) setSortOrder('desc');
-                                else if (sortOrder === 'desc') setSortOrder('asc');
-                                else setSortOrder(null);
-                              }}
-                              className="flex items-center gap-2 hover:text-foreground transition-colors"
-                            >
+                            <button onClick={() => {
+                          if (sortOrder === null) setSortOrder('desc');else if (sortOrder === 'desc') setSortOrder('asc');else setSortOrder(null);
+                        }} className="flex items-center gap-2 hover:text-foreground transition-colors">
                               Total Paid
                               {sortOrder === null && <ArrowUpDown className="h-4 w-4" />}
                               {sortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
@@ -1011,13 +927,10 @@ export default function BrandManagement() {
                       return <TableRow key={submission.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                               {/* Creator Column */}
                               <TableCell className="py-4">
-                                <div 
-                                  className="flex items-center gap-3 cursor-pointer group" 
-                                  onClick={() => {
-                                    setSelectedUser(submission);
-                                    setIsUserDialogOpen(true);
-                                  }}
-                                >
+                                <div className="flex items-center gap-3 cursor-pointer group" onClick={() => {
+                            setSelectedUser(submission);
+                            setIsUserDialogOpen(true);
+                          }}>
                                   {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-10 h-10 rounded-full object-cover ring-2 ring-border" /> : <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-border">
                                       <span className="text-primary font-semibold text-lg">
                                         {submission.profiles?.username?.charAt(0).toUpperCase() || 'U'}
@@ -1033,12 +946,7 @@ export default function BrandManagement() {
                                       <div className="flex items-center gap-1">
                                         <span className="text-xs font-bold text-foreground tracking-[-0.5px]">100%</span>
                                         <div className="flex items-center gap-0.5">
-                                          {[...Array(5)].map((_, i) => (
-                                            <Diamond
-                                              key={i}
-                                              className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500"
-                                            />
-                                          ))}
+                                          {[...Array(5)].map((_, i) => <Diamond key={i} className="w-2.5 h-2.5 fill-emerald-500 text-emerald-500" />)}
                                         </div>
                                       </div>
                                     </div>
@@ -1064,33 +972,21 @@ export default function BrandManagement() {
                               {/* Total Paid Column */}
                               <TableCell className="py-4">
                                 {(() => {
-                                  const creatorTransactions = transactions.filter(
-                                    txn => txn.user_id === submission.creator_id
-                                  );
-                                  const totalPaid = creatorTransactions.reduce(
-                                    (sum, txn) => sum + Number(txn.amount || 0),
-                                    0
-                                  );
-                                  return (
-                                    <div className="font-semibold text-foreground">
+                            const creatorTransactions = transactions.filter(txn => txn.user_id === submission.creator_id);
+                            const totalPaid = creatorTransactions.reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
+                            return <div className="font-semibold text-foreground">
                                       ${totalPaid.toFixed(2)}
-                                    </div>
-                                  );
-                                })()}
+                                    </div>;
+                          })()}
                               </TableCell>
 
                               {/* Actions Column */}
                               <TableCell className="py-4">
                                 <div className="flex justify-center">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      setUserToKick(submission);
-                                      setKickDialogOpen(true);
-                                    }}
-                                    className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
-                                  >
+                                  <Button variant="ghost" size="sm" onClick={() => {
+                              setUserToKick(submission);
+                              setKickDialogOpen(true);
+                            }} className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors">
                                     <Hammer className="h-4 w-4" />
                                   </Button>
                                 </div>
@@ -1106,173 +1002,114 @@ export default function BrandManagement() {
 
           {/* Applications Tab */}
           <TabsContent value="applications">
-            <Card className="bg-[#0C0C0C] border-0">
+            <Card className="bg-[#202020] border-0">
               <CardHeader className="pb-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    Pending Applications
-                    <Badge variant="secondary" className="ml-2 bg-white/10 text-white">
-                      {pendingSubmissions.length}
-                    </Badge>
-                  </CardTitle>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  
+                  Pending Applications
+                  <Badge variant="secondary" className="ml-2">
+                    {pendingSubmissions.length}
+                  </Badge>
+                </CardTitle>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                  <Input
-                    type="text"
-                    placeholder="Search by name or account username..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-[#1C1C1C] border-0 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-primary/50"
-                  />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input type="text" placeholder="Search by name or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-[#1a1a1a] border-0 focus-visible:ring-1 focus-visible:ring-primary/50" />
                 </div>
               </CardHeader>
-              <CardContent className="p-0">
-                {pendingSubmissions.length === 0 ? <div className="text-center py-12">
-                    <Users className="h-12 w-12 mx-auto mb-3 text-white/20" />
-                    <p className="text-white/40 text-sm">No pending applications</p>
-                  </div> : <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-b border-white/5 hover:bg-transparent">
-                          <TableHead className="text-white/60 font-medium">Creator</TableHead>
-                          <TableHead className="text-white/60 font-medium">Applied</TableHead>
-                          <TableHead className="text-white/60 font-medium">Linked Accounts</TableHead>
-                          <TableHead className="text-white/60 font-medium">Application</TableHead>
-                          <TableHead className="text-white/60 font-medium text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pendingSubmissions.map(submission => {
-                          const getPlatformIcon = (platform: string) => {
-                            switch (platform.toLowerCase()) {
-                              case 'tiktok':
-                                return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
-                              case 'instagram':
-                                return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
-                              case 'youtube':
-                                return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
-                              default:
-                                return null;
-                            }
-                          };
-                          
-                          const getInitial = (username: string) => {
-                            return username?.charAt(0).toUpperCase() || 'U';
-                          };
+              <CardContent className="space-y-3">
+                {pendingSubmissions.length === 0 ? <div className="text-center py-8">
+                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                    <p className="text-muted-foreground text-sm">No pending applications</p>
+                  </div> : <div className="space-y-3">
+                    {pendingSubmissions.map(submission => {
+                  const getPlatformIcon = (platform: string) => {
+                    switch (platform.toLowerCase()) {
+                      case 'tiktok':
+                        return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
+                      case 'instagram':
+                        return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
+                      case 'youtube':
+                        return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
+                      default:
+                        return null;
+                    }
+                  };
+                  return <Card key={submission.id} className="bg-[#1a1a1a] overflow-hidden rounded-xl transition-all">
+                          <CardContent className="p-0">
+                            <div className="p-5">
+                              {/* Application Q&A Section */}
+                              {submission.application_answers && submission.application_answers.length > 0 && <div className="mb-4 space-y-3">
+                                  {submission.application_answers.map((qa, index) => <div key={index} className="bg-white/5 rounded-lg p-3">
+                                      <p className="text-xs font-medium text-white/80 mb-1.5">{qa.question}</p>
+                                      <p className="text-sm text-white/90">{qa.answer}</p>
+                                    </div>)}
+                                </div>}
 
-                          return <TableRow key={submission.id} className="border-b border-white/5">
-                              {/* Creator Column */}
-                              <TableCell className="py-3">
-                                <div className="flex items-center gap-3">
-                                  {submission.profiles?.avatar_url ? (
-                                    <img 
-                                      src={submission.profiles.avatar_url} 
-                                      alt={submission.profiles.username} 
-                                      className="w-8 h-8 rounded-full object-cover" 
-                                    />
-                                  ) : (
-                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                                      <span className="text-primary text-sm font-semibold">
-                                        {getInitial(submission.profiles?.username || '')}
-                                      </span>
-                                    </div>
-                                  )}
-                                  <span className="text-white text-sm font-medium">
-                                    {submission.profiles?.username || "Unknown"}
-                                  </span>
-                                </div>
-                              </TableCell>
+                              {/* Header Section */}
+                              <div className="flex items-start justify-between gap-4 mb-4">
+                                <div className="flex items-start gap-3 flex-1">
+                                  {/* Avatar */}
+                                  <div className="flex-shrink-0">
+                                    {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-14 h-14 rounded-full object-cover" /> : <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+                                        <Users className="h-7 w-7 text-primary" />
+                                      </div>}
+                                  </div>
 
-                              {/* Applied Date Column */}
-                              <TableCell className="py-3">
-                                <span className="text-white/60 text-sm">
-                                  {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                                  {/* Creator Info */}
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-white text-lg mb-1">
+                                      {submission.profiles?.username || "Unknown"}
+                                    </h3>
+                                    <div className="flex items-center gap-2 text-xs text-white/60">
+                                      <span>Applied {new Date(submission.submitted_at).toLocaleDateString('en-US', {
                                     month: 'short',
                                     day: 'numeric',
                                     year: 'numeric'
-                                  })}
-                                </span>
-                              </TableCell>
-
-                              {/* Linked Accounts Column */}
-                              <TableCell className="py-3">
-                                {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {submission.profiles.social_accounts.map(account => (
-                                      <a 
-                                        key={account.id} 
-                                        href={account.account_link || '#'} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[#0C0C0C] hover:bg-[#2a2a2a] transition-all group border border-white/5"
-                                      >
-                                        {getPlatformIcon(account.platform)}
-                                        <span className="text-xs text-white/80 group-hover:underline">
-                                          @{account.username}
-                                        </span>
-                                        {account.follower_count > 0 && (
-                                          <span className="text-xs text-white/50">
-                                            ({account.follower_count.toLocaleString()})
-                                          </span>
-                                        )}
-                                      </a>
-                                    ))}
+                                  })}</span>
+                                      
+                                    
+                                    </div>
                                   </div>
-                                ) : (
-                                  <span className="text-white/40 text-sm">No accounts</span>
-                                )}
-                              </TableCell>
+                                </div>
 
-                              {/* Application Answers Column */}
-                              <TableCell className="py-3 max-w-xs">
-                                {submission.application_answers && submission.application_answers.length > 0 ? (
-                                  <div className="space-y-1.5">
-                                    {submission.application_answers.map((qa, index) => (
-                                      <div key={index} className="text-xs">
-                                        <span className="text-white/50">{qa.question}:</span>{' '}
-                                        <span className="text-white/80">{qa.answer}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <span className="text-white/40 text-sm">No answers</span>
-                                )}
-                              </TableCell>
-
-                              {/* Actions Column */}
-                              <TableCell className="py-3 text-right">
-                                <div className="flex items-center justify-end gap-1">
-                                  <Button 
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => handleApplicationAction(submission.id, "approved")} 
-                                    className="h-8 w-8 bg-green-500/10 text-green-400 hover:bg-green-500/20" 
-                                    disabled={processingSubmissionId === submission.id}
-                                    title="Approve"
-                                  >
-                                    {processingSubmissionId === submission.id ? (
-                                      <RefreshCw className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <Check className="h-4 w-4" />
-                                    )}
+                                {/* Action Buttons */}
+                                <div className="flex gap-2 flex-shrink-0">
+                                  <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-green-500/20 hover:bg-green-500/30 text-green-400 h-9 px-4" disabled={processingSubmissionId === submission.id}>
+                                    {processingSubmissionId === submission.id ? <>
+                                        <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
+                                        Processing...
+                                      </> : <>
+                                        <Check className="h-4 w-4 mr-1.5" />
+                                        Approve
+                                      </>}
                                   </Button>
-                                  <Button 
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => handleApplicationAction(submission.id, "rejected")} 
-                                    className="h-8 w-8 bg-red-500/10 text-red-400 hover:bg-red-500/20" 
-                                    disabled={processingSubmissionId === submission.id}
-                                    title="Reject"
-                                  >
-                                    <X className="h-4 w-4" />
+                                  <Button size="sm" variant="outline" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-0 h-9 px-4" disabled={processingSubmissionId === submission.id}>
+                                    <X className="h-4 w-4 mr-1.5" />
+                                    Reject
                                   </Button>
                                 </div>
-                              </TableCell>
-                            </TableRow>;
-                        })}
-                      </TableBody>
-                    </Table>
+                              </div>
+
+                              {/* Social Accounts */}
+                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
+                                  <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all group">
+                                        {getPlatformIcon(account.platform)}
+                                        <span className="text-sm font-medium text-white group-hover:underline">
+                                          @{account.username}
+                                        </span>
+                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
+                                            {account.follower_count.toLocaleString()}
+                                          </Badge>}
+                                      </a>)}
+                                  </div>
+                                </div>}
+
+                            </div>
+                          </CardContent>
+                        </Card>;
+                })}
                   </div>}
               </CardContent>
             </Card>
@@ -1352,11 +1189,7 @@ export default function BrandManagement() {
 
           {/* Videos Tab */}
           <TabsContent value="videos">
-            <VideosTab 
-              campaignId={selectedCampaignId}
-              isAdmin={isAdmin}
-              approvedCreators={approvedSubmissions}
-            />
+            <VideosTab campaignId={selectedCampaignId} isAdmin={isAdmin} approvedCreators={approvedSubmissions} />
           </TabsContent>
         </Tabs>
 
@@ -1486,31 +1319,20 @@ export default function BrandManagement() {
             <DialogTitle className="text-2xl font-bold text-white">Creator Details</DialogTitle>
           </DialogHeader>
           
-          {selectedUser && (
-            <div className="space-y-6 mt-4">
+          {selectedUser && <div className="space-y-6 mt-4">
               {/* User Profile Section */}
               <div className="flex items-center gap-4 pb-6">
-                {selectedUser.profiles?.avatar_url ? (
-                  <img 
-                    src={selectedUser.profiles.avatar_url} 
-                    alt={selectedUser.profiles.username} 
-                    className="w-20 h-20 rounded-full object-cover ring-2 ring-primary"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-primary">
+                {selectedUser.profiles?.avatar_url ? <img src={selectedUser.profiles.avatar_url} alt={selectedUser.profiles.username} className="w-20 h-20 rounded-full object-cover ring-2 ring-primary" /> : <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-primary">
                     <span className="text-primary font-semibold text-3xl">
                       {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                     </span>
-                  </div>
-                )}
+                  </div>}
                 
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-1">
                     {selectedUser.profiles?.username || "Unknown User"}
                   </h3>
-                  {selectedUser.profiles?.email && (
-                    <p className="text-sm text-muted-foreground">{selectedUser.profiles.email}</p>
-                  )}
+                  {selectedUser.profiles?.email && <p className="text-sm text-muted-foreground">{selectedUser.profiles.email}</p>}
                   
                   {/* Trust Score */}
                   <div className="flex items-center gap-2 mt-2">
@@ -1518,12 +1340,7 @@ export default function BrandManagement() {
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-bold text-white tracking-[-0.5px]">100%</span>
                       <div className="flex items-center gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Diamond
-                            key={i}
-                            className="w-3 h-3 fill-emerald-500 text-emerald-500"
-                          />
-                        ))}
+                        {[...Array(5)].map((_, i) => <Diamond key={i} className="w-3 h-3 fill-emerald-500 text-emerald-500" />)}
                       </div>
                     </div>
                   </div>
@@ -1531,31 +1348,23 @@ export default function BrandManagement() {
               </div>
 
               {/* Social Accounts Section */}
-              {selectedUser.profiles?.social_accounts && selectedUser.profiles.social_accounts.length > 0 && (
-                <div>
+              {selectedUser.profiles?.social_accounts && selectedUser.profiles.social_accounts.length > 0 && <div>
                   <h4 className="text-sm font-semibold text-white mb-3">Connected Accounts</h4>
                   <div className="grid grid-cols-1 gap-2">
-                    {selectedUser.profiles.social_accounts.map((account: any) => (
-                      <a
-                        key={account.id}
-                        href={account.account_link || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group"
-                      >
+                    {selectedUser.profiles.social_accounts.map((account: any) => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group">
                         <div className="flex items-center gap-3">
                           {(() => {
-                            switch (account.platform.toLowerCase()) {
-                              case 'tiktok':
-                                return <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />;
-                              case 'instagram':
-                                return <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />;
-                              case 'youtube':
-                                return <img src={youtubeLogo} alt="YouTube" className="w-5 h-5" />;
-                              default:
-                                return null;
-                            }
-                          })()}
+                    switch (account.platform.toLowerCase()) {
+                      case 'tiktok':
+                        return <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />;
+                      case 'instagram':
+                        return <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />;
+                      case 'youtube':
+                        return <img src={youtubeLogo} alt="YouTube" className="w-5 h-5" />;
+                      default:
+                        return null;
+                    }
+                  })()}
                           <div>
                             <p className="font-medium text-white group-hover:underline">
                               @{account.username}
@@ -1563,16 +1372,12 @@ export default function BrandManagement() {
                             <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
                           </div>
                         </div>
-                        {account.follower_count > 0 && (
-                          <span className="text-sm font-semibold text-white">
+                        {account.follower_count > 0 && <span className="text-sm font-semibold text-white">
                             {account.follower_count.toLocaleString()} followers
-                          </span>
-                        )}
-                      </a>
-                    ))}
+                          </span>}
+                      </a>)}
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Campaign Stats */}
               <div className="grid grid-cols-2 gap-4">
@@ -1591,32 +1396,21 @@ export default function BrandManagement() {
               </div>
 
               {/* Application Status */}
-              {selectedUser.status && (
-                <div className="p-4 rounded-lg bg-[#111111]">
+              {selectedUser.status && <div className="p-4 rounded-lg bg-[#111111]">
                   <p className="text-xs text-muted-foreground mb-2">Application Status</p>
                   <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize"
-                      style={{
-                        backgroundColor: selectedUser.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : 
-                                       selectedUser.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 
-                                       'rgba(234, 179, 8, 0.1)',
-                        color: selectedUser.status === 'approved' ? 'rgb(34, 197, 94)' : 
-                             selectedUser.status === 'rejected' ? 'rgb(239, 68, 68)' : 
-                             'rgb(234, 179, 8)'
-                      }}
-                    >
+                    <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize" style={{
+                backgroundColor: selectedUser.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : selectedUser.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                color: selectedUser.status === 'approved' ? 'rgb(34, 197, 94)' : selectedUser.status === 'rejected' ? 'rgb(239, 68, 68)' : 'rgb(234, 179, 8)'
+              }}>
                       {selectedUser.status}
                     </div>
-                    {selectedUser.status === 'approved' && selectedUser.submitted_at && (
-                      <div className="text-xs text-muted-foreground">
+                    {selectedUser.status === 'approved' && selectedUser.submitted_at && <div className="text-xs text-muted-foreground">
                         {format(new Date(selectedUser.submitted_at), 'MMM d, yyyy')}
-                      </div>
-                    )}
+                      </div>}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
         </DialogContent>
       </Dialog>
     </div>;
