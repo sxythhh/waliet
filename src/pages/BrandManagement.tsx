@@ -1016,7 +1016,7 @@ export default function BrandManagement() {
                   <Input type="text" placeholder="Search by name or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-[#1a1a1a] border-0 focus-visible:ring-1 focus-visible:ring-primary/50" />
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 bg-[#0C0C0C]">
                 {pendingSubmissions.length === 0 ? <div className="text-center py-8">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                     <p className="text-muted-foreground text-sm">No pending applications</p>
