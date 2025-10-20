@@ -611,11 +611,12 @@ export default function BrandManagement() {
   const handleKickUser = async () => {
     if (!userToKick) return;
     try {
-      // Update submission status to withdrawn
+      // Update ALL submission statuses to withdrawn for this user and campaign
       const { error: submissionError } = await supabase
         .from("campaign_submissions")
         .update({ status: "withdrawn" })
-        .eq("id", userToKick.id);
+        .eq("creator_id", userToKick.creator_id)
+        .eq("campaign_id", selectedCampaignId);
       
       if (submissionError) throw submissionError;
 
