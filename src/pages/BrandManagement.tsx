@@ -721,11 +721,21 @@ export default function BrandManagement() {
               </Select>}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleRefresh}
+              className="bg-[#202020] hover:bg-[#181818] border-0"
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            {isAdmin && <Button variant="outline" size="sm" onClick={() => setManageCampaignOpen(true)}>
+            {isAdmin && <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setManageCampaignOpen(true)}
+              className="bg-[#202020] hover:bg-[#181818] border-0"
+            >
                 <Edit className="h-4 w-4 mr-2" />
                 Manage Campaign
               </Button>}
