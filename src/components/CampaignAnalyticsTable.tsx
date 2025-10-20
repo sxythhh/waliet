@@ -128,22 +128,14 @@ export function CampaignAnalyticsTable({
     fetchTransactions();
 
     // Set up real-time subscription for demographic submissions
-    const demographicChannel = supabase
-      .channel('demographic-submissions-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'demographic_submissions'
-        },
-        (payload) => {
-          console.log('Demographic submission changed:', payload);
-          fetchAnalytics(); // Refresh analytics when demographics change
-        }
-      )
-      .subscribe();
-
+    const demographicChannel = supabase.channel('demographic-submissions-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'demographic_submissions'
+    }, payload => {
+      console.log('Demographic submission changed:', payload);
+      fetchAnalytics(); // Refresh analytics when demographics change
+    }).subscribe();
     return () => {
       supabase.removeChannel(demographicChannel);
     };
@@ -182,29 +174,29 @@ export function CampaignAnalyticsTable({
 
       // Batch fetch all data at once for better performance
       const userIds = [...new Set((data || []).filter(item => item.user_id).map(item => item.user_id))];
-      
+
       // Fetch all profiles at once
-      const { data: profiles } = userIds.length > 0 
-        ? await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds)
-        : { data: [] };
+      const {
+        data: profiles
+      } = userIds.length > 0 ? await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds) : {
+        data: []
+      };
       const profilesMap = new Map((profiles || []).map(p => [p.id, p]));
 
       // Fetch all social accounts at once
-      const { data: socialAccounts } = userIds.length > 0
-        ? await supabase
-            .from("social_account_campaigns")
-            .select(`
+      const {
+        data: socialAccounts
+      } = userIds.length > 0 ? await supabase.from("social_account_campaigns").select(`
               social_accounts!inner (
                 id,
                 platform,
                 username,
                 user_id
               )
-            `)
-            .eq("campaign_id", campaignId)
-            .in("social_accounts.user_id", userIds)
-        : { data: [] };
-      
+            `).eq("campaign_id", campaignId).in("social_accounts.user_id", userIds) : {
+        data: []
+      };
+
       // Create a map for quick lookup: user_id + platform + username -> account
       const socialAccountsMap = new Map();
       (socialAccounts || []).forEach((item: any) => {
@@ -215,16 +207,16 @@ export function CampaignAnalyticsTable({
 
       // Get all social account IDs for demographic submissions
       const socialAccountIds = Array.from(socialAccountsMap.values()).map((acc: any) => acc.id);
-      
+
       // Fetch all demographic submissions at once
-      const { data: allSubmissions } = socialAccountIds.length > 0
-        ? await supabase
-            .from("demographic_submissions")
-            .select("id, social_account_id, status, submitted_at, tier1_percentage, score")
-            .in("social_account_id", socialAccountIds)
-            .order("submitted_at", { ascending: false })
-        : { data: [] };
-      
+      const {
+        data: allSubmissions
+      } = socialAccountIds.length > 0 ? await supabase.from("demographic_submissions").select("id, social_account_id, status, submitted_at, tier1_percentage, score").in("social_account_id", socialAccountIds).order("submitted_at", {
+        ascending: false
+      }) : {
+        data: []
+      };
+
       // Group submissions by social_account_id and get most recent
       const submissionsMap = new Map();
       (allSubmissions || []).forEach(sub => {
@@ -243,12 +235,10 @@ export function CampaignAnalyticsTable({
             demographic_submission: null
           };
         }
-
         const profile = profilesMap.get(item.user_id);
         const accountKey = `${item.user_id}_${item.platform}_${item.account_username.toLowerCase()}`;
         const account = socialAccountsMap.get(accountKey);
         const submission = account ? submissionsMap.get(account.id) : null;
-
         return {
           ...item,
           profiles: profile || null,
@@ -256,7 +246,6 @@ export function CampaignAnalyticsTable({
           demographic_submission: submission || null
         };
       });
-
       setAnalytics(analyticsWithProfiles);
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -270,21 +259,14 @@ export function CampaignAnalyticsTable({
       const {
         data: approvedSubmissions,
         error: submissionsError
-      } = await supabase
-        .from('campaign_submissions')
-        .select('creator_id')
-        .eq('campaign_id', campaignId)
-        .eq('status', 'approved');
-      
+      } = await supabase.from('campaign_submissions').select('creator_id').eq('campaign_id', campaignId).eq('status', 'approved');
       if (submissionsError) throw submissionsError;
-      
       const approvedUserIds = approvedSubmissions?.map(s => s.creator_id) || [];
-      
       if (approvedUserIds.length === 0) {
         setAvailableUsers([]);
         return;
       }
-      
+
       // Get social accounts for approved users that are connected to this campaign
       const {
         data: campaignAccounts,
@@ -298,21 +280,14 @@ export function CampaignAnalyticsTable({
             follower_count,
             account_link
           )
-        `).eq('campaign_id', campaignId)
-        .in('social_accounts.user_id', approvedUserIds);
-      
+        `).eq('campaign_id', campaignId).in('social_accounts.user_id', approvedUserIds);
       if (error) throw error;
-      
+
       // Fetch profile data for each unique user
       const uniqueUserIds = [...new Set(campaignAccounts?.map((ca: any) => ca.social_accounts.user_id))];
-      const profilesPromises = uniqueUserIds.map(userId => 
-        supabase.from('profiles').select('username, avatar_url').eq('id', userId).single()
-      );
+      const profilesPromises = uniqueUserIds.map(userId => supabase.from('profiles').select('username, avatar_url').eq('id', userId).single());
       const profilesResults = await Promise.all(profilesPromises);
-      const profilesMap = new Map(
-        profilesResults.map((result, index) => [uniqueUserIds[index], result.data])
-      );
-      
+      const profilesMap = new Map(profilesResults.map((result, index) => [uniqueUserIds[index], result.data]));
       const users = campaignAccounts?.map((ca: any) => {
         const account = ca.social_accounts;
         const profile = profilesMap.get(account.user_id);
@@ -342,16 +317,11 @@ export function CampaignAnalyticsTable({
       if (analyticsError) throw analyticsError;
 
       // Find if there's a matching social account for this user
-      const { data: existingAccount, error: accountCheckError } = await supabase
-        .from('social_accounts')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('platform', selectedAnalyticsAccount.platform)
-        .ilike('username', selectedAnalyticsAccount.account_username)
-        .maybeSingle();
-      
+      const {
+        data: existingAccount,
+        error: accountCheckError
+      } = await supabase.from('social_accounts').select('id').eq('user_id', userId).eq('platform', selectedAnalyticsAccount.platform).ilike('username', selectedAnalyticsAccount.account_username).maybeSingle();
       if (accountCheckError && accountCheckError.code !== 'PGRST116') throw accountCheckError;
-
       let socialAccountId = existingAccount?.id;
 
       // If no matching social account exists, create one
@@ -361,31 +331,26 @@ export function CampaignAnalyticsTable({
           user_id: userId,
           platform: selectedAnalyticsAccount.platform,
           username: selectedAnalyticsAccount.account_username,
-          account_link: selectedAnalyticsAccount.account_link || '',
+          account_link: selectedAnalyticsAccount.account_link || ''
         };
-
-        const { data: newAccount, error: createError } = await supabase
-          .from('social_accounts')
-          .insert(insertData)
-          .select('id')
-          .single();
-        
+        const {
+          data: newAccount,
+          error: createError
+        } = await supabase.from('social_accounts').insert(insertData).select('id').single();
         if (createError) throw createError;
         socialAccountId = newAccount.id;
       }
 
       // Link the social account to the campaign if not already linked
-      const { error: linkError } = await supabase
-        .from('social_account_campaigns')
-        .upsert({
-          social_account_id: socialAccountId,
-          campaign_id: campaignId,
-        }, {
-          onConflict: 'social_account_id,campaign_id'
-        });
-      
+      const {
+        error: linkError
+      } = await supabase.from('social_account_campaigns').upsert({
+        social_account_id: socialAccountId,
+        campaign_id: campaignId
+      }, {
+        onConflict: 'social_account_id,campaign_id'
+      });
       if (linkError) throw linkError;
-
       toast.success("Account successfully linked to user");
       setLinkAccountDialogOpen(false);
       setSelectedAnalyticsAccount(null);
@@ -504,23 +469,18 @@ export function CampaignAnalyticsTable({
         const {
           data: profiles
         } = await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds);
-        
+
         // Fetch analytics records to check if transactions have been reverted
-        const analyticsIds = data
-          .map(t => (t.metadata as any)?.analytics_id)
-          .filter(Boolean);
-        
-        const { data: analyticsData } = await supabase
-          .from("campaign_account_analytics")
-          .select("id, last_payment_amount")
-          .in("id", analyticsIds);
-        
+        const analyticsIds = data.map(t => (t.metadata as any)?.analytics_id).filter(Boolean);
+        const {
+          data: analyticsData
+        } = await supabase.from("campaign_account_analytics").select("id, last_payment_amount").in("id", analyticsIds);
+
         // Filter out transactions where the analytics record shows no payment (reverted)
         const activeTransactions = data.filter(txn => {
           const analytics = analyticsData?.find(a => a.id === (txn.metadata as any)?.analytics_id);
           return analytics && analytics.last_payment_amount > 0;
         });
-        
         const transactionsWithProfiles = activeTransactions.map(txn => ({
           ...txn,
           profiles: profiles?.find(p => p.id === txn.user_id)
@@ -545,7 +505,6 @@ export function CampaignAnalyticsTable({
       toast.error("Please enter a valid amount");
       return;
     }
-    
     setIsSubmitting(true);
     try {
       // First, update the wallet balance
@@ -554,10 +513,8 @@ export function CampaignAnalyticsTable({
         error: walletFetchError
       } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", selectedUser.user_id).single();
       if (walletFetchError) throw walletFetchError;
-      
       const balance_before = currentWallet.balance || 0;
       const balance_after = balance_before + amount;
-      
       const {
         error: walletUpdateError
       } = await supabase.from("wallets").update({
@@ -567,11 +524,9 @@ export function CampaignAnalyticsTable({
       if (walletUpdateError) throw walletUpdateError;
 
       // Get current campaign budget before update
-      const { data: campaignBefore } = await supabase
-        .from("campaigns")
-        .select("budget_used, budget")
-        .eq("id", campaignId)
-        .single();
+      const {
+        data: campaignBefore
+      } = await supabase.from("campaigns").select("budget_used, budget").eq("id", campaignId).single();
 
       // Create wallet transaction with proper metadata including budget snapshot
       const {
@@ -621,18 +576,12 @@ export function CampaignAnalyticsTable({
       if (campaignUpdateError) throw campaignUpdateError;
       // Send email notification
       try {
-        const { data: userProfile } = await supabase
-          .from("profiles")
-          .select("email, full_name, username")
-          .eq("id", selectedUser.user_id)
-          .single();
-
-        const { data: campaignData } = await supabase
-          .from("campaigns")
-          .select("title")
-          .eq("id", campaignId)
-          .single();
-
+        const {
+          data: userProfile
+        } = await supabase.from("profiles").select("email, full_name, username").eq("id", selectedUser.user_id).single();
+        const {
+          data: campaignData
+        } = await supabase.from("campaigns").select("title").eq("id", campaignId).single();
         if (userProfile?.email && campaignData?.title) {
           await supabase.functions.invoke("send-payment-notification", {
             body: {
@@ -650,18 +599,13 @@ export function CampaignAnalyticsTable({
         console.error("Error sending payment notification email:", emailError);
         // Don't fail the payment if email fails
       }
-
       toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
       setPaymentDialogOpen(false);
       setPaymentAmount("");
       setSelectedUser(null);
 
       // Immediate refresh for instant UI update
-      await Promise.all([
-        fetchAnalytics(),
-        fetchTransactions()
-      ]);
-      
+      await Promise.all([fetchAnalytics(), fetchTransactions()]);
       if (onPaymentComplete) {
         onPaymentComplete();
       }
@@ -672,101 +616,80 @@ export function CampaignAnalyticsTable({
       setIsSubmitting(false);
     }
   };
-
   const handleRevertTransaction = async () => {
     if (!selectedTransaction || !selectedTransaction.metadata?.analytics_id) {
       toast.error("Invalid transaction data");
       return;
     }
-
     setRevertingTransaction(true);
     try {
       const amount = Math.abs(selectedTransaction.amount);
       const userId = selectedTransaction.user_id;
 
       // 1. Update wallet - subtract the amount
-      const { data: currentWallet, error: walletFetchError } = await supabase
-        .from("wallets")
-        .select("balance, total_earned")
-        .eq("user_id", userId)
-        .single();
-
+      const {
+        data: currentWallet,
+        error: walletFetchError
+      } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", userId).single();
       if (walletFetchError) throw walletFetchError;
-
       const newBalance = (currentWallet.balance || 0) - amount;
-
-      const { error: walletUpdateError } = await supabase
-        .from("wallets")
-        .update({
-          balance: newBalance,
-          total_earned: Math.max(0, (currentWallet.total_earned || 0) - amount)
-        })
-        .eq("user_id", userId);
-
+      const {
+        error: walletUpdateError
+      } = await supabase.from("wallets").update({
+        balance: newBalance,
+        total_earned: Math.max(0, (currentWallet.total_earned || 0) - amount)
+      }).eq("user_id", userId);
       if (walletUpdateError) throw walletUpdateError;
 
       // 2. Create balance correction transaction
-      const { error: correctionError } = await supabase
-        .from("wallet_transactions")
-        .insert({
-          user_id: userId,
-          amount: -amount,
-          type: "balance_correction",
-          description: `Reverted payment for ${selectedTransaction.metadata.platform} account @${selectedTransaction.metadata.account_username}`,
-          status: "completed",
-          metadata: {
-            original_transaction_id: selectedTransaction.id,
-            campaign_id: campaignId,
-            analytics_id: selectedTransaction.metadata.analytics_id,
-            account_username: selectedTransaction.metadata.account_username,
-            platform: selectedTransaction.metadata.platform,
-            views: selectedTransaction.metadata.views,
-            reverted_at: new Date().toISOString()
-          }
-        });
-
+      const {
+        error: correctionError
+      } = await supabase.from("wallet_transactions").insert({
+        user_id: userId,
+        amount: -amount,
+        type: "balance_correction",
+        description: `Reverted payment for ${selectedTransaction.metadata.platform} account @${selectedTransaction.metadata.account_username}`,
+        status: "completed",
+        metadata: {
+          original_transaction_id: selectedTransaction.id,
+          campaign_id: campaignId,
+          analytics_id: selectedTransaction.metadata.analytics_id,
+          account_username: selectedTransaction.metadata.account_username,
+          platform: selectedTransaction.metadata.platform,
+          views: selectedTransaction.metadata.views,
+          reverted_at: new Date().toISOString()
+        }
+      });
       if (correctionError) throw correctionError;
 
       // 3. Update analytics - mark as unpaid
-      const { error: analyticsError } = await supabase
-        .from("campaign_account_analytics")
-        .update({
-          paid_views: 0,
-          last_payment_amount: 0,
-          last_payment_date: null
-        })
-        .eq("id", selectedTransaction.metadata.analytics_id);
-
+      const {
+        error: analyticsError
+      } = await supabase.from("campaign_account_analytics").update({
+        paid_views: 0,
+        last_payment_amount: 0,
+        last_payment_date: null
+      }).eq("id", selectedTransaction.metadata.analytics_id);
       if (analyticsError) throw analyticsError;
 
       // 4. Update campaign budget_used
-      const { data: campaignData, error: campaignFetchError } = await supabase
-        .from("campaigns")
-        .select("budget_used")
-        .eq("id", campaignId)
-        .single();
-
+      const {
+        data: campaignData,
+        error: campaignFetchError
+      } = await supabase.from("campaigns").select("budget_used").eq("id", campaignId).single();
       if (campaignFetchError) throw campaignFetchError;
-
-      const { error: campaignUpdateError } = await supabase
-        .from("campaigns")
-        .update({
-          budget_used: Math.max(0, (campaignData.budget_used || 0) - amount)
-        })
-        .eq("id", campaignId);
-
+      const {
+        error: campaignUpdateError
+      } = await supabase.from("campaigns").update({
+        budget_used: Math.max(0, (campaignData.budget_used || 0) - amount)
+      }).eq("id", campaignId);
       if (campaignUpdateError) throw campaignUpdateError;
-
       toast.success(`Transaction of $${amount.toFixed(2)} successfully reverted`);
       setRevertDialogOpen(false);
       setSelectedTransaction(null);
 
       // Refresh data
-      await Promise.all([
-        fetchAnalytics(),
-        fetchTransactions()
-      ]);
-
+      await Promise.all([fetchAnalytics(), fetchTransactions()]);
       if (onPaymentComplete) {
         onPaymentComplete();
       }
@@ -778,11 +701,10 @@ export function CampaignAnalyticsTable({
     }
   };
   const filteredAnalytics = analytics.filter(item => {
-    const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.profiles?.username && item.profiles.username.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase()) || item.profiles?.username && item.profiles.username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
     const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null;
-    const matchesPaidFilter = !showPaidOnly || (item.last_payment_amount && item.last_payment_amount > 0);
+    const matchesPaidFilter = !showPaidOnly || item.last_payment_amount && item.last_payment_amount > 0;
     const matchesDateRange = selectedDateRange === "all" || `${item.start_date}|${item.end_date}` === selectedDateRange;
     return matchesSearch && matchesPlatform && matchesLinkedFilter && matchesPaidFilter && matchesDateRange;
   }).sort((a, b) => {
@@ -836,8 +758,7 @@ export function CampaignAnalyticsTable({
               </div>
               
               {/* Table Rows */}
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="grid grid-cols-6 gap-4 py-3">
+              {[...Array(8)].map((_, i) => <div key={i} className="grid grid-cols-6 gap-4 py-3">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-5 w-5 rounded" />
                     <Skeleton className="h-4 w-24" />
@@ -850,8 +771,7 @@ export function CampaignAnalyticsTable({
                   <Skeleton className="h-4 w-28" />
                   <Skeleton className="h-4 w-20" />
                   <Skeleton className="h-7 w-7 ml-auto" />
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </CardContent>
@@ -922,15 +842,7 @@ export function CampaignAnalyticsTable({
             <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
               <CardTitle className="text-sm font-instrument tracking-tight">Account Analytics</CardTitle>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTrackAccountDialogOpen(true)}
-                  className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
-                >
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Track Account
-                </Button>
+                
                 <div className="relative flex-1 sm:w-40">
                   <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                   <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-7 h-8 bg-muted border text-xs" />
@@ -1029,29 +941,22 @@ export function CampaignAnalyticsTable({
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 hover:text-red-400"
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      try {
-                                        const { error } = await supabase
-                                          .from('campaign_account_analytics')
-                                          .update({ user_id: null })
-                                          .eq('campaign_id', campaignId)
-                                          .eq('platform', item.platform)
-                                          .ilike('account_username', item.account_username);
-                                        
-                                        if (error) throw error;
-                                        toast.success('Account unlinked from user');
-                                        fetchAnalytics();
-                                      } catch (error) {
-                                        console.error('Error unlinking account:', error);
-                                        toast.error('Failed to unlink account');
-                                      }
-                                    }}
-                                  >
+                                  <Button variant="ghost" size="icon" className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 hover:text-red-400" onClick={async e => {
+                                e.stopPropagation();
+                                try {
+                                  const {
+                                    error
+                                  } = await supabase.from('campaign_account_analytics').update({
+                                    user_id: null
+                                  }).eq('campaign_id', campaignId).eq('platform', item.platform).ilike('account_username', item.account_username);
+                                  if (error) throw error;
+                                  toast.success('Account unlinked from user');
+                                  fetchAnalytics();
+                                } catch (error) {
+                                  console.error('Error unlinking account:', error);
+                                  toast.error('Failed to unlink account');
+                                }
+                              }}>
                                     <X className="h-3 w-3" />
                                   </Button>
                                 </TooltipTrigger>
@@ -1088,22 +993,22 @@ export function CampaignAnalyticsTable({
                         {item.total_views.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm bg-card py-3">
-                        {item.start_date && item.end_date ? (
-                          <span className="text-xs whitespace-nowrap">
-                            {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground/60">—</span>
-                        )}
+                        {item.start_date && item.end_date ? <span className="text-xs whitespace-nowrap">
+                            {new Date(item.start_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })} - {new Date(item.end_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                          </span> : <span className="text-xs text-muted-foreground/60">—</span>}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm bg-card py-3">
-                        {item.last_payment_date ? (
-                          <span className="text-xs">
-                            {formatDistanceToNow(new Date(item.last_payment_date), { addSuffix: true })}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground/60">—</span>
-                        )}
+                        {item.last_payment_date ? <span className="text-xs">
+                            {formatDistanceToNow(new Date(item.last_payment_date), {
+                          addSuffix: true
+                        })}
+                          </span> : <span className="text-xs text-muted-foreground/60">—</span>}
                       </TableCell>
                       <TableCell className="py-3 bg-card">
                         <Button variant="ghost" size="icon" onClick={() => {
@@ -1187,19 +1092,13 @@ export function CampaignAnalyticsTable({
                           </Badge>
                         </TableCell>
                         <TableCell className="bg-card py-3 text-center">
-                          {txn.status === 'completed' && txn.type === 'earning' && (
-                            <TooltipProvider>
+                          {txn.status === 'completed' && txn.type === 'earning' && <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedTransaction(txn);
-                                      setRevertDialogOpen(true);
-                                    }}
-                                    className="h-7 w-7 p-0 hover:bg-red-500/10 hover:text-red-500"
-                                  >
+                                  <Button variant="ghost" size="sm" onClick={() => {
+                              setSelectedTransaction(txn);
+                              setRevertDialogOpen(true);
+                            }} className="h-7 w-7 p-0 hover:bg-red-500/10 hover:text-red-500">
                                     <RotateCcw className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
@@ -1207,8 +1106,7 @@ export function CampaignAnalyticsTable({
                                   <p>Revert Transaction</p>
                                 </TooltipContent>
                               </Tooltip>
-                            </TooltipProvider>
-                          )}
+                            </TooltipProvider>}
                         </TableCell>
                       </TableRow>;
                 })}
@@ -1316,12 +1214,7 @@ export function CampaignAnalyticsTable({
                       <div className="flex items-center gap-1">
                         <span className="text-sm font-bold text-foreground">100%</span>
                         <div className="flex items-center gap-0.5 ml-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Diamond
-                              key={i}
-                              className="w-3 h-3 fill-emerald-500 text-emerald-500"
-                            />
-                          ))}
+                          {[...Array(5)].map((_, i) => <Diamond key={i} className="w-3 h-3 fill-emerald-500 text-emerald-500" />)}
                         </div>
                       </div>
                     </div>
@@ -1457,18 +1350,10 @@ export function CampaignAnalyticsTable({
           }}>
             Cancel
           </Button>
-              <Button 
-                onClick={() => {
-                  handlePayUser();
-                }} 
-                className="bg-primary hover:bg-primary/90" 
-                disabled={isSubmitting || (selectedUser && selectedUser.paid_views >= selectedUser.total_views)}
-              >
-                {isSubmitting 
-                  ? "Processing.." 
-                  : selectedUser && selectedUser.paid_views >= selectedUser.total_views 
-                    ? "Already Paid" 
-                    : "Send Payment"}
+              <Button onClick={() => {
+            handlePayUser();
+          }} className="bg-primary hover:bg-primary/90" disabled={isSubmitting || selectedUser && selectedUser.paid_views >= selectedUser.total_views}>
+                {isSubmitting ? "Processing.." : selectedUser && selectedUser.paid_views >= selectedUser.total_views ? "Already Paid" : "Send Payment"}
               </Button>
         </DialogFooter>
       </DialogContent>
@@ -1575,11 +1460,7 @@ export function CampaignAnalyticsTable({
                                 </div>
                               </div>
                             </div>
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleLinkAccount(user.user_id)}
-                              className="ml-2 flex-shrink-0"
-                            >
+                            <Button size="sm" onClick={() => handleLinkAccount(user.user_id)} className="ml-2 flex-shrink-0">
                               <Link2 className="h-4 w-4 mr-1" />
                               Link
                             </Button>
@@ -1603,15 +1484,10 @@ export function CampaignAnalyticsTable({
     </Dialog>
     
     {/* Shortimize Track Account Dialog */}
-    <ShortimizeTrackAccountDialog
-      campaignId={campaignId}
-      open={trackAccountDialogOpen}
-      onOpenChange={setTrackAccountDialogOpen}
-      onSuccess={() => {
-        fetchAnalytics();
-        toast.success("Account will be tracked in Shortimize");
-      }}
-    />
+    <ShortimizeTrackAccountDialog campaignId={campaignId} open={trackAccountDialogOpen} onOpenChange={setTrackAccountDialogOpen} onSuccess={() => {
+      fetchAnalytics();
+      toast.success("Account will be tracked in Shortimize");
+    }} />
 
     {/* Revert Transaction Dialog */}
     <AlertDialog open={revertDialogOpen} onOpenChange={setRevertDialogOpen}>
@@ -1626,8 +1502,7 @@ export function CampaignAnalyticsTable({
           </AlertDialogDescription>
         </AlertDialogHeader>
         
-        {selectedTransaction && (
-          <div className="space-y-3 my-4">
+        {selectedTransaction && <div className="space-y-3 my-4">
             <div className="p-3 bg-white/5 rounded-lg border border-white/10">
               <div className="text-sm text-white/60 mb-1">Transaction Amount</div>
               <div className="text-2xl font-bold text-red-500">-${Math.abs(selectedTransaction.amount).toFixed(2)}</div>
@@ -1657,18 +1532,13 @@ export function CampaignAnalyticsTable({
                 ⚠️ This action cannot be undone. The user will see this as a balance deduction.
               </p>
             </div>
-          </div>
-        )}
+          </div>}
 
         <AlertDialogFooter>
           <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleRevertTransaction}
-            disabled={revertingTransaction}
-            className="bg-red-500 hover:bg-red-600 text-white"
-          >
+          <AlertDialogAction onClick={handleRevertTransaction} disabled={revertingTransaction} className="bg-red-500 hover:bg-red-600 text-white">
             {revertingTransaction ? "Reverting..." : "Revert Transaction"}
           </AlertDialogAction>
         </AlertDialogFooter>
