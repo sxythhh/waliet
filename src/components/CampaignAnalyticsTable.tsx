@@ -818,18 +818,37 @@ export function CampaignAnalyticsTable({
         {/* Summary Cards */}
         
 
-        {/* Navigation Buttons */}
-        <div className="flex gap-2 mb-4 items-center">
-          <Button variant={!showTransactions ? "default" : "outline"} onClick={() => setShowTransactions(false)} size="sm" className={`text-sm ${!showTransactions ? "bg-primary" : "bg-muted border hover:bg-accent"}`}>
-            <BarChart3 className="h-4 w-4 mr-1.5" />
+        {/* Navigation Tabs */}
+        <div className="flex items-center border-b border-white/10 mb-4">
+          <button 
+            onClick={() => setShowTransactions(false)} 
+            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              !showTransactions 
+                ? "text-white" 
+                : "text-white/60 hover:text-white"
+            }`}
+          >
             Analytics
-          </Button>
-          <Button variant={showTransactions ? "default" : "outline"} onClick={() => setShowTransactions(true)} size="sm" className={`text-sm ${showTransactions ? "bg-primary" : "bg-muted border hover:bg-accent"}`}>
-            <Receipt className="h-4 w-4 mr-1.5" />
+            {!showTransactions && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          <button 
+            onClick={() => setShowTransactions(true)} 
+            className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
+              showTransactions 
+                ? "text-white" 
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            <Receipt className="h-4 w-4" />
             Transactions ({transactions.length})
-          </Button>
+            {showTransactions && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
           
-          {!showTransactions && dateRanges.length > 0 && <div className="ml-auto flex items-center gap-2">
+          {!showTransactions && dateRanges.length > 0 && <div className="ml-auto flex items-center gap-2 pb-2">
               <Label className="text-muted-foreground text-sm">CSV Period:</Label>
               <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
                 <SelectTrigger className="w-[200px] bg-muted border">
