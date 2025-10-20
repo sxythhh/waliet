@@ -1,4 +1,4 @@
-import { Airplay, Dock, Compass, User } from "lucide-react";
+import { Airplay, Dock, Compass, Coins } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,7 +25,7 @@ const menuItems = [
   {
     title: "Profile",
     tab: "profile",
-    icon: User
+    icon: Coins
   }
 ];
 
