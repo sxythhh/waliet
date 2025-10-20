@@ -20,6 +20,23 @@ import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+
+const getTrustScoreDiamonds = (score: number) => {
+  if (score < 20) {
+    return { count: 1, color: 'fill-red-500 text-red-500' };
+  } else if (score < 40) {
+    return { count: 2, color: 'fill-red-500 text-red-500' };
+  } else if (score < 60) {
+    return { count: 3, color: 'fill-yellow-500 text-yellow-500' };
+  } else if (score < 80) {
+    return { count: 4, color: 'fill-yellow-500 text-yellow-500' };
+  } else if (score < 100) {
+    return { count: 4, color: 'fill-emerald-500 text-emerald-500' };
+  } else {
+    return { count: 5, color: 'fill-emerald-500 text-emerald-500' };
+  }
+};
+
 interface DemographicSubmission {
   id: string;
   status: string;
@@ -56,6 +73,7 @@ interface AnalyticsData {
   profiles?: {
     username: string;
     avatar_url: string | null;
+    trust_score?: number | null;
   } | null;
   social_account?: SocialAccount | null;
   demographic_submission?: DemographicSubmission | null;
@@ -72,6 +90,7 @@ interface Transaction {
   profiles?: {
     username: string;
     avatar_url: string | null;
+    trust_score?: number | null;
   };
 }
 interface CampaignAnalyticsTableProps {
@@ -1263,9 +1282,16 @@ export function CampaignAnalyticsTable({
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-muted-foreground font-medium">Trust Score</span>
                       <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-foreground">100%</span>
+                        <span className="text-sm font-bold text-foreground">
+                          {selectedUser.profiles?.trust_score ?? 0}%
+                        </span>
                         <div className="flex items-center gap-0.5 ml-1">
-                          {[...Array(5)].map((_, i) => <Diamond key={i} className="w-3 h-3 fill-emerald-500 text-emerald-500" />)}
+                          {(() => {
+                            const { count, color } = getTrustScoreDiamonds(selectedUser.profiles?.trust_score ?? 0);
+                            return [...Array(count)].map((_, i) => (
+                              <Diamond key={i} className={`w-3 h-3 ${color}`} />
+                            ));
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1574,14 +1600,16 @@ export function CampaignAnalyticsTable({
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-white tracking-[-0.5px]">100%</span>
+                    <span className="text-sm font-bold text-white tracking-[-0.5px]">
+                      {selectedUserForDetails.profiles?.trust_score ?? 0}%
+                    </span>
                     <div className="flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Diamond
-                          key={i}
-                          className="w-3 h-3 fill-emerald-500 text-emerald-500"
-                        />
-                      ))}
+                      {(() => {
+                        const { count, color } = getTrustScoreDiamonds(selectedUserForDetails.profiles?.trust_score ?? 0);
+                        return [...Array(count)].map((_, i) => (
+                          <Diamond key={i} className={`w-3 h-3 ${color}`} />
+                        ));
+                      })()}
                     </div>
                   </div>
                 </div>
