@@ -884,9 +884,6 @@ export default function BrandManagement() {
                         <TableRow className="border-b border-border hover:bg-transparent">
                           <TableHead className="text-muted-foreground font-medium">Creator</TableHead>
                           <TableHead className="text-muted-foreground font-medium">Linked Accounts</TableHead>
-                          <TableHead className="text-muted-foreground font-medium text-center">Trust Score</TableHead>
-                          <TableHead className="text-muted-foreground font-medium text-center">Demographics</TableHead>
-                          <TableHead className="text-muted-foreground font-medium text-center">Views Score</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -940,41 +937,14 @@ export default function BrandManagement() {
                                 {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? <div className="flex flex-wrap gap-1.5">
                                     {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#0d0d0d] hover:bg-[#1a1a1a] transition-colors text-xs group">
                                         {getPlatformIcon(account.platform)}
-                                        <span className="font-medium text-foreground group-hover:text-primary transition-colors">
-                                          @{account.username}
+                                        <span className="font-medium text-foreground group-hover:underline transition-all">
+                                          {account.username}
                                         </span>
                                         {account.follower_count > 0 && <span className="text-muted-foreground">
                                             {account.follower_count.toLocaleString()}
                                           </span>}
                                       </a>)}
                                   </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
-                              </TableCell>
-
-                              {/* Trust Score Column */}
-                              <TableCell className="py-4 text-center">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0d0d0d]">
-                                  <span className="text-sm font-bold font-chakra text-foreground">
-                                    {submission.profiles?.trust_score || 0}
-                                  </span>
-                                </div>
-                              </TableCell>
-
-                              {/* Demographics Score Column */}
-                              <TableCell className="py-4 text-center">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0d0d0d]">
-                                  <span className="text-sm font-bold font-chakra text-foreground">
-                                    {submission.profiles?.demographics_score || 0}
-                                  </span>
-                                </div>
-                              </TableCell>
-
-                              {/* Views Score Column */}
-                              <TableCell className="py-4 text-center">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#0d0d0d]">
-                                  <span className="text-sm font-bold font-chakra text-foreground">
-                                    {submission.profiles?.views_score || 0}
-                                  </span>
-                                </div>
                               </TableCell>
                             </TableRow>;
                     })}
