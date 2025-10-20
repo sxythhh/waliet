@@ -88,13 +88,6 @@ export function BrandSidebar() {
     }
   );
 
-  // Add Library
-  baseMenuItems.push({
-    title: "Library",
-    icon: GalleryHorizontalEnd,
-    path: "library"
-  });
-
   // Conditionally add Account tab based on show_account_tab setting
   if (currentBrand?.show_account_tab !== false) {
     baseMenuItems.push({
