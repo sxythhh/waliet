@@ -1,6 +1,10 @@
 import { Airplay, Dock, Compass, User } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const menuItems = [
   {
@@ -29,6 +33,36 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "campaigns";
+  const { user } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string>("");
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("avatar_url, full_name, username")
+      .eq("id", user.id)
+      .single();
+
+    if (data) {
+      setAvatarUrl(data.avatar_url);
+      setDisplayName(data.full_name || data.username || user.email || "");
+    } else {
+      setDisplayName(user.email || "");
+    }
+  };
+
+  const getInitial = () => {
+    return displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
+  };
 
   const handleTabClick = (tab: string) => {
     navigate(`/dashboard?tab=${tab}`);
@@ -62,11 +96,14 @@ export function AppSidebar() {
         })}
       </div>
 
-      {/* User Profile Placeholder */}
+      {/* User Profile */}
       <div className="hidden md:flex items-center">
-        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-          <User className="h-4 w-4 text-muted-foreground" />
-        </div>
+        <Avatar className="w-8 h-8">
+          <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+          <AvatarFallback className="bg-blue-500 text-white">
+            {getInitial()}
+          </AvatarFallback>
+        </Avatar>
       </div>
     </nav>
   );
