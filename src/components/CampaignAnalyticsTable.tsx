@@ -924,7 +924,7 @@ export function CampaignAnalyticsTable({
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <div className="relative flex-1 sm:w-40">
                   <Search className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                  <Input placeholder="" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-8 bg-[#0a0a0a] border-0 text-xs text-center" />
+                  <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="h-8 bg-[#0a0a0a] border-0 text-xs text-center" />
                 </div>
                 <Select value={platformFilter} onValueChange={setPlatformFilter}>
                   <SelectTrigger className="w-full sm:w-28 h-8 bg-muted border text-sm">
