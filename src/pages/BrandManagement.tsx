@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -93,6 +93,7 @@ export default function BrandManagement() {
   const [selectedUserForPayment, setSelectedUserForPayment] = useState<Submission | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [processingSubmissionId, setProcessingSubmissionId] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
   const exportToCSV = () => {
@@ -570,7 +571,27 @@ export default function BrandManagement() {
     }
   };
   const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
-  const approvedSubmissions = submissions.filter(s => s.status === "approved");
+  
+  // Filter and sort approved submissions
+  const approvedSubmissions = (() => {
+    const filtered = submissions.filter(s => s.status === "approved");
+    
+    if (sortOrder) {
+      return [...filtered].sort((a, b) => {
+        const aPaid = transactions
+          .filter(txn => txn.user_id === a.creator_id)
+          .reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
+        const bPaid = transactions
+          .filter(txn => txn.user_id === b.creator_id)
+          .reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
+        
+        return sortOrder === 'desc' ? bPaid - aPaid : aPaid - bPaid;
+      });
+    }
+    
+    return filtered;
+  })();
+  
   const pendingSubmissions = submissions.filter(s => s.status === "pending");
 
   // Group by account and sum views across all date ranges to avoid counting duplicates
@@ -891,7 +912,21 @@ export default function BrandManagement() {
                         <TableRow className="border-b border-border hover:bg-transparent">
                           <TableHead className="text-muted-foreground font-medium">Creator</TableHead>
                           <TableHead className="text-muted-foreground font-medium">Linked Accounts</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Total Paid</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">
+                            <button
+                              onClick={() => {
+                                if (sortOrder === null) setSortOrder('desc');
+                                else if (sortOrder === 'desc') setSortOrder('asc');
+                                else setSortOrder(null);
+                              }}
+                              className="flex items-center gap-2 hover:text-foreground transition-colors"
+                            >
+                              Total Paid
+                              {sortOrder === null && <ArrowUpDown className="h-4 w-4" />}
+                              {sortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
+                              {sortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
+                            </button>
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
