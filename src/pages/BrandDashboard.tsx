@@ -275,7 +275,7 @@ export default function BrandDashboard() {
                 {campaigns.map(campaign => {
           const usedBudget = Number(campaign.budget_used || 0);
           const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
-          return <Card key={campaign.id} className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+          return <Card key={campaign.id} className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden cursor-pointer" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
                       {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                           <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                         </div>}
