@@ -162,14 +162,11 @@ export function BrandSidebar() {
             onClick={() => window.open('https://partners.virality.cc/book', '_blank')}>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-              <Calendar className="w-5 h-5 text-primary" />
-            </div>
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-foreground">Book a Call</h3>
               <p className="text-xs text-muted-foreground">Meet with the Virality team</p>
             </div>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
           </div>
         </CardContent>
       </Card>
