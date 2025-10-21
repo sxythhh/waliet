@@ -231,7 +231,12 @@ export function CreateCampaignDialog({
   };
   return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger}
+        {trigger || (
+          <Button className="bg-primary hover:bg-primary/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            {campaign ? "Edit Campaign" : "Create Campaign"}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-7xl max-h-[90vh] bg-[#0a0a0a] border border-white/10 p-0 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] h-full max-h-[90vh]">
