@@ -53,7 +53,7 @@ export default function BrandAccount() {
     fetchData();
   }, [slug]);
   if (loading || adminLoading) {
-    return <div className="min-h-screen p-8 bg-[#0C0C0C]">
+    return <div className="min-h-screen p-8 bg-[#080808]">
         <div className="max-w-7xl mx-auto space-y-6">
           <Skeleton className="h-10 w-64 bg-[#1a1a1a]" />
           <Skeleton className="h-12 w-full max-w-md bg-[#1a1a1a]" />
@@ -65,7 +65,7 @@ export default function BrandAccount() {
         </div>
       </div>;
   }
-  return <div className="min-h-screen p-4 md:p-8 bg-[#0C0C0C]">
+  return <div className="min-h-screen p-4 md:p-8 bg-[#080808]">
       <div className="max-w-7xl mx-auto">
         {/* Mobile Menu Button */}
         <div className="mb-6 md:hidden">
