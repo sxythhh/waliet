@@ -774,9 +774,9 @@ export function CampaignAnalyticsTable({
         return null;
     }
   };
-  const totalViews = analytics.reduce((sum, a) => sum + a.total_views, 0);
-  const totalVideos = analytics.reduce((sum, a) => sum + a.total_videos, 0);
-  const avgEngagement = analytics.length > 0 ? analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length : 0;
+  const totalViews = filteredAnalytics.reduce((sum, a) => sum + a.total_views, 0);
+  const totalVideos = filteredAnalytics.reduce((sum, a) => sum + a.total_videos, 0);
+  const avgEngagement = filteredAnalytics.length > 0 ? filteredAnalytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / filteredAnalytics.length : 0;
   if (loading) {
     return <Card className="bg-card border">
         <CardContent className="p-6">
