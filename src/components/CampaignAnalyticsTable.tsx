@@ -746,13 +746,43 @@ export function CampaignAnalyticsTable({
       setRevertingTransaction(false);
     }
   };
-  const filteredAnalytics = analytics.filter(item => {
+  // Filter analytics by date range first, then get unique accounts
+  const dateFilteredAnalytics = selectedDateRange === "all" 
+    ? analytics 
+    : analytics.filter(item => `${item.start_date}|${item.end_date}` === selectedDateRange);
+
+  // Get unique accounts from ALL analytics (not date filtered)
+  const uniqueAccounts = new Map<string, AnalyticsData>();
+  
+  analytics.forEach(item => {
+    const key = `${item.platform}_${item.account_username.toLowerCase()}`;
+    if (!uniqueAccounts.has(key)) {
+      // Find the matching entry for the selected date range, or use the first entry
+      const matchingEntry = selectedDateRange === "all" 
+        ? item 
+        : dateFilteredAnalytics.find(d => 
+            d.platform === item.platform && 
+            d.account_username.toLowerCase() === item.account_username.toLowerCase()
+          ) || item;
+      
+      uniqueAccounts.set(key, matchingEntry);
+    }
+  });
+
+  const filteredAnalytics = Array.from(uniqueAccounts.values()).filter(item => {
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase()) || item.profiles?.username && item.profiles.username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
     const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null;
     const matchesPaidFilter = !showPaidOnly || item.last_payment_amount && item.last_payment_amount > 0;
-    const matchesDateRange = selectedDateRange === "all" || `${item.start_date}|${item.end_date}` === selectedDateRange;
-    return matchesSearch && matchesPlatform && matchesLinkedFilter && matchesPaidFilter && matchesDateRange;
+    
+    // For date range filtering, check if this account has data in the selected period
+    const hasDataInPeriod = selectedDateRange === "all" || 
+      dateFilteredAnalytics.some(d => 
+        d.platform === item.platform && 
+        d.account_username.toLowerCase() === item.account_username.toLowerCase()
+      );
+    
+    return matchesSearch && matchesPlatform && matchesLinkedFilter && matchesPaidFilter && hasDataInPeriod;
   }).sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
