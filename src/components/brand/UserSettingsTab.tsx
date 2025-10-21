@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { LogOut, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 export function UserSettingsTab() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -139,12 +140,40 @@ export function UserSettingsTab() {
     }
   };
   if (loading) {
-    return <div className="text-white">Loading...</div>;
+    return <div className="space-y-6">
+        <Skeleton className="h-8 w-48 bg-[#1a1a1a]" />
+        <Card className="bg-[#121212] border-none shadow-none">
+          <CardHeader>
+            <Skeleton className="h-6 w-40 bg-[#1a1a1a]" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-20 h-20 rounded-full bg-[#1a1a1a]" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#1a1a1a]" />
+                <Skeleton className="h-4 w-24 bg-[#1a1a1a]" />
+              </div>
+            </div>
+            <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
+            <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
+            <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
+              <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
+            </div>
+            <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
+            <div className="flex gap-3 pt-4">
+              <Skeleton className="h-10 flex-1 bg-[#1a1a1a]" />
+              <Skeleton className="h-10 w-32 bg-[#1a1a1a]" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>;
   }
   return <div className="space-y-6">
       <h2 className="text-2xl font-bold text-white">User Settings</h2>
 
-      <Card className="bg-[#202020] ">
+      <Card className="bg-[#121212] border-none shadow-none">
         <CardHeader>
           <CardTitle className="text-white">Profile Information</CardTitle>
         </CardHeader>
@@ -167,7 +196,7 @@ export function UserSettingsTab() {
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-white">Email Address</Label>
-            <Input id="email" type="email" value={userEmail} disabled className="bg-[#191919] border-white/10 text-white/60" />
+            <Input id="email" type="email" value={userEmail} disabled className="bg-[#191919] border-none text-white/60" />
             <p className="text-xs text-white/40">Email cannot be changed</p>
           </div>
 
@@ -176,7 +205,7 @@ export function UserSettingsTab() {
             <Input id="username" value={profile.username} onChange={e => setProfile({
             ...profile,
             username: e.target.value
-          })} className="bg-[#191919] border-white/10 text-white" />
+          })} className="bg-[#191919] border-none text-white" />
           </div>
 
           <div className="space-y-2">
@@ -184,7 +213,7 @@ export function UserSettingsTab() {
             <Input id="full_name" value={profile.full_name} onChange={e => setProfile({
             ...profile,
             full_name: e.target.value
-          })} className="bg-[#191919] border-white/10 text-white" />
+          })} className="bg-[#191919] border-none text-white" />
           </div>
 
           
@@ -195,7 +224,7 @@ export function UserSettingsTab() {
               <Input id="country" value={profile.country} onChange={e => setProfile({
               ...profile,
               country: e.target.value
-            })} className="bg-[#191919] border-white/10 text-white" />
+            })} className="bg-[#191919] border-none text-white" />
             </div>
 
             <div className="space-y-2">
@@ -203,7 +232,7 @@ export function UserSettingsTab() {
               <Input id="city" value={profile.city} onChange={e => setProfile({
               ...profile,
               city: e.target.value
-            })} className="bg-[#191919] border-white/10 text-white" />
+            })} className="bg-[#191919] border-none text-white" />
             </div>
           </div>
 
@@ -212,14 +241,14 @@ export function UserSettingsTab() {
             <Input id="phone" value={profile.phone_number} onChange={e => setProfile({
             ...profile,
             phone_number: e.target.value
-          })} className="bg-[#191919] border-white/10 text-white" placeholder="+1234567890" />
+          })} className="bg-[#191919] border-none text-white" placeholder="+1234567890" />
           </div>
 
           <div className="flex gap-3 pt-4">
             <Button onClick={handleSave} disabled={saving} className="flex-1 bg-primary hover:bg-primary/90">
               {saving ? "Saving..." : "Save Changes"}
             </Button>
-            <Button onClick={handleSignOut} variant="outline" className="border-white/10 text-white hover:bg-white/10">
+            <Button onClick={handleSignOut} variant="outline" className="border-none text-white hover:bg-white/10">
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
             </Button>
