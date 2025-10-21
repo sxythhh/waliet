@@ -460,15 +460,17 @@ export default function Transactions() {
                           <span className="text-sm font-medium">@{tx.metadata.account_username}</span>
                         </div> : <span className="text-sm text-muted-foreground">{tx.description}</span>}
                       {(tx.type === "earning" || tx.metadata?.adjustment_type === "manual_budget_update") && (tx.metadata?.campaign_budget_before !== undefined || tx.metadata?.budget_before !== undefined) && (
-                        <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-medium">Campaign Budget:</span>
-                            <span>${Number(tx.metadata.budget_before || tx.metadata.campaign_budget_before || 0).toFixed(2)}</span>
-                            <span>→</span>
-                            <span className="font-semibold">${Number(tx.metadata.budget_after || tx.metadata.campaign_budget_after || 0).toFixed(2)}</span>
-                            {tx.metadata.campaign_total_budget && (
-                              <span className="text-muted-foreground/70">/ ${Number(tx.metadata.campaign_total_budget).toFixed(2)}</span>
-                            )}
+                        <div className="mt-2 px-3 py-2 rounded-md bg-muted/30">
+                          <div className="flex items-baseline gap-2 text-xs">
+                            <span className="text-muted-foreground">Budget:</span>
+                            <div className="flex items-baseline gap-1.5 font-mono">
+                              <span className="text-foreground/70">${Number(tx.metadata.budget_before || tx.metadata.campaign_budget_before || 0).toFixed(2)}</span>
+                              <span className="text-muted-foreground/50">→</span>
+                              <span className="text-foreground font-semibold">${Number(tx.metadata.budget_after || tx.metadata.campaign_budget_after || 0).toFixed(2)}</span>
+                              {tx.metadata.campaign_total_budget && (
+                                <span className="text-muted-foreground/60 ml-1">of ${Number(tx.metadata.campaign_total_budget).toFixed(2)}</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}
