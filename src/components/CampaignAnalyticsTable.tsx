@@ -824,13 +824,7 @@ export function CampaignAnalyticsTable({
       </Card>;
   }
   if (analytics.length === 0) {
-    return <Card className="bg-card border">
-        <CardContent className="p-8">
-          <div className="text-center text-muted-foreground">
-            No analytics data available. Import a CSV file to get started.
-          </div>
-        </CardContent>
-      </Card>;
+    return null;
   }
   return <>
       <div className="space-y-4">

@@ -854,85 +854,87 @@ export default function BrandManagement() {
             {/* Matching Dialog */}
             <MatchAccountsDialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen} campaignId={selectedCampaignId} onMatchComplete={fetchSubmissions} />
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-              {/* Views by Platform - Pie Chart */}
-              
+            {/* Charts Section - Only show if analytics data exists */}
+            {analytics.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+                {/* Views by Platform - Pie Chart */}
+                
 
-              {/* Daily Spend - Bar Chart */}
-              <Card className="bg-[#0C0C0C] border-transparent">
-                <CardHeader>
-                  <CardTitle className="text-white text-sm">Daily Spend</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    {(() => {
-                    // Generate last 7 days
-                    const last7Days = Array.from({
-                      length: 7
-                    }, (_, i) => {
-                      const date = new Date();
-                      date.setDate(date.getDate() - (6 - i));
-                      return {
-                        date: date.toLocaleDateString('en-US', {
+                {/* Daily Spend - Bar Chart */}
+                <Card className="bg-[#0C0C0C] border-transparent">
+                  <CardHeader>
+                    <CardTitle className="text-white text-sm">Daily Spend</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64">
+                      {(() => {
+                      // Generate last 7 days
+                      const last7Days = Array.from({
+                        length: 7
+                      }, (_, i) => {
+                        const date = new Date();
+                        date.setDate(date.getDate() - (6 - i));
+                        return {
+                          date: date.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          }),
+                          spend: 0
+                        };
+                      });
+
+                      // Map transaction data to the 7 days
+                      transactions.forEach(txn => {
+                        const txnDate = new Date(txn.created_at).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric'
-                        }),
-                        spend: 0
-                      };
-                    });
-
-                    // Map transaction data to the 7 days
-                    transactions.forEach(txn => {
-                      const txnDate = new Date(txn.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
+                        });
+                        const dayData = last7Days.find(day => day.date === txnDate);
+                        if (dayData) {
+                          dayData.spend += Number(txn.amount);
+                        }
                       });
-                      const dayData = last7Days.find(day => day.date === txnDate);
-                      if (dayData) {
-                        dayData.spend += Number(txn.amount);
+                      const sortedData = last7Days;
+                      if (sortedData.length === 0) {
+                        return <div className="h-full flex items-center justify-center text-white/40 text-sm">
+                              No spending data available
+                            </div>;
                       }
-                    });
-                    const sortedData = last7Days;
-                    if (sortedData.length === 0) {
-                      return <div className="h-full flex items-center justify-center text-white/40 text-sm">
-                            No spending data available
-                          </div>;
-                    }
-                    return <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={sortedData}>
-                            <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.4)" fontSize={12} tickLine={false} axisLine={false} style={{
-                          opacity: 0.6
-                        }} />
-                            <YAxis stroke="rgba(255, 255, 255, 0.4)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} style={{
-                          opacity: 0.6
-                        }} />
-                            <Tooltip contentStyle={{
-                          backgroundColor: "#0C0C0C",
-                          border: "1px solid rgba(255, 255, 255, 0.1)",
-                          borderRadius: "8px",
-                          padding: "8px 12px"
-                        }} labelStyle={{
-                          color: "#ffffff",
-                          fontFamily: "Inter, sans-serif",
-                          fontSize: "12px",
-                          fontWeight: 500
-                        }} itemStyle={{
-                          color: "#ffffff",
-                          fontFamily: "Inter, sans-serif",
-                          fontSize: "12px"
-                        }} formatter={(value: number) => `$${value.toFixed(2)}`} cursor={{
-                          fill: "rgba(255, 255, 255, 0.05)"
-                        }} />
-                            <Bar dataKey="spend" fill="#22C55E" radius={[8, 8, 0, 0]} name="Spent" />
-                          </BarChart>
-                        </ResponsiveContainer>;
-                  })()}
-                  </div>
-                </CardContent>
-              </Card>
+                      return <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={sortedData}>
+                              <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.4)" fontSize={12} tickLine={false} axisLine={false} style={{
+                            opacity: 0.6
+                          }} />
+                              <YAxis stroke="rgba(255, 255, 255, 0.4)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} style={{
+                            opacity: 0.6
+                          }} />
+                              <Tooltip contentStyle={{
+                            backgroundColor: "#0C0C0C",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                            borderRadius: "8px",
+                            padding: "8px 12px"
+                          }} labelStyle={{
+                            color: "#ffffff",
+                            fontFamily: "Inter, sans-serif",
+                            fontSize: "12px",
+                            fontWeight: 500
+                          }} itemStyle={{
+                            color: "#ffffff",
+                            fontFamily: "Inter, sans-serif",
+                            fontSize: "12px"
+                          }} formatter={(value: number) => `$${value.toFixed(2)}`} cursor={{
+                            fill: "rgba(255, 255, 255, 0.05)"
+                          }} />
+                              <Bar dataKey="spend" fill="#22C55E" radius={[8, 8, 0, 0]} name="Spent" />
+                            </BarChart>
+                          </ResponsiveContainer>;
+                    })()}
+                    </div>
+                  </CardContent>
+                </Card>
 
-            </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Creators Tab */}
