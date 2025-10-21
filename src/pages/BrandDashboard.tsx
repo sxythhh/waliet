@@ -184,9 +184,10 @@ export default function BrandDashboard() {
         </>
       )}
 
-      {/* Floating toggle button when on home view */}
+      {/* Floating buttons when on home view */}
       {effectiveView === "home" && showToggle && (
-        <div className="fixed top-4 right-4 z-50">
+        <div className="fixed top-4 right-4 z-50 flex gap-2">
+          <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
           <Button
             onClick={() => setActiveView("campaigns")}
             className="bg-primary hover:bg-primary/90"
