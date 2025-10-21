@@ -164,7 +164,7 @@ export default function BrandDashboard() {
                   {brand.name}
                 </h1>
               </div>
-              {effectiveView === "campaigns" && <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />}
+              <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
             </div>
 
             {/* View Toggle - Only show if both views are available */}
