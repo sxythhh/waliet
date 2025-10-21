@@ -361,7 +361,8 @@ export function ImportCampaignStatsDialog({
         <div className="space-y-4">
           {/* Date Range Selection */}
           <div className="space-y-3">
-            <Label className="text-white text-sm font-medium">Data Period</Label>
+            <Label className="text-white text-sm font-medium">Data Period <span className="text-red-500">*</span></Label>
+            <p className="text-xs text-white/60">Select the time period this data represents</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="start-date" className="text-xs text-white/60">Start Date</Label>
@@ -429,7 +430,7 @@ export function ImportCampaignStatsDialog({
 
           {/* File Upload */}
           <div>
-            <Label htmlFor="file" className="text-white">CSV File</Label>
+            <Label htmlFor="file" className="text-white">CSV File <span className="text-red-500">*</span></Label>
             <Input
               id="file"
               type="file"
@@ -437,10 +438,24 @@ export function ImportCampaignStatsDialog({
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="bg-[#191919] border-white/10 text-white mt-2"
             />
+            {file && (
+              <p className="text-xs text-green-500 mt-2">
+                ✓ {file.name} selected
+              </p>
+            )}
             <p className="text-xs text-white/40 mt-2">
               Expected format: account, account_link, platform, total_videos, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked, amount_of_videos_tracked
             </p>
           </div>
+          
+          {/* Validation warning */}
+          {(!startDate || !endDate || !file) && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+              <p className="text-xs text-yellow-500/90">
+                <strong>Required:</strong> Please select both start/end dates and upload a CSV file to continue.
+              </p>
+            </div>
+          )}
           
           {importing && (
             <div className="space-y-2">
