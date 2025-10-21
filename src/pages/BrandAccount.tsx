@@ -77,7 +77,7 @@ export default function BrandAccount() {
         <h1 className="text-3xl font-bold text-white mb-6">Account</h1>
         
         <Tabs defaultValue="invoices" className="w-full">
-          <TabsList className="bg-[#202020] border-white/10">
+          <TabsList className="bg-black border-white/10">
             <TabsTrigger value="invoices" className="data-[state=active]:bg-[#191919]">
               Invoices
             </TabsTrigger>
