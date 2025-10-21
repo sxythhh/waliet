@@ -158,7 +158,7 @@ export function BrandSidebar() {
 
   const bookCallCard = (
     <div className="p-4 bg-sidebar">
-      <Card className="bg-gradient-to-br from-card/60 to-card/40 border-primary/20 backdrop-blur-sm overflow-hidden group cursor-pointer transition-all hover:border-primary/40"
+      <Card className="bg-muted/30 border-none shadow-none overflow-hidden group cursor-pointer"
             onClick={() => window.open('https://partners.virality.cc/book', '_blank')}>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-3">
