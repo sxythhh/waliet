@@ -8,8 +8,6 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoadmapView } from "@/components/brand/RoadmapView";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, ArrowRight } from "lucide-react";
 
 export default function BrandAssets() {
   const { slug } = useParams();
@@ -88,35 +86,12 @@ export default function BrandAssets() {
   if (!assetsUrl) {
     return (
       <div className="min-h-screen p-8 bg-[#0C0C0C] flex items-center justify-center">
-        <Card className="max-w-2xl w-full bg-gradient-to-br from-card/50 to-card/30 border-primary/20 backdrop-blur-sm">
-          <CardContent className="p-8 text-center space-y-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-2">
-              <Calendar className="w-8 h-8 text-primary" />
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className="text-3xl font-semibold text-foreground">Book a Call</h2>
-              <p className="text-muted-foreground text-lg">
-                Schedule a meeting with the Virality team to discuss your campaign strategy
-              </p>
-            </div>
-
-            <div className="pt-4">
-              <Button 
-                size="lg" 
-                className="group"
-                onClick={() => window.open('https://partners.virality.cc/book', '_blank')}
-              >
-                Schedule Your Call
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </div>
-
-            <p className="text-sm text-muted-foreground/60 pt-4">
-              No assets URL configured yet. Configure it in the Management section.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <div className="text-white text-xl mb-2">No Assets URL Configured</div>
+          <div className="text-white/60">
+            Configure the assets URL in the Management section
+          </div>
+        </div>
       </div>
     );
   }

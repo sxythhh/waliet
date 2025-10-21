@@ -1,9 +1,10 @@
-import { Home, FolderOpen, Pyramid, GalleryHorizontalEnd, Receipt, GraduationCap, Map, ArrowUpRight } from "lucide-react";
+import { Home, FolderOpen, Pyramid, GalleryHorizontalEnd, Receipt, GraduationCap, Map, ArrowUpRight, Calendar } from "lucide-react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -155,14 +156,25 @@ export function BrandSidebar() {
     </SidebarMenu>
   );
 
-  const bookCallButton = currentBrand?.brand_type === "lead" ? (
+  const bookCallCard = (
     <div className="p-4 bg-sidebar">
-      <a href="https://partners.virality.cc/book" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg transition-all active:scale-95 hover:bg-primary/90 shadow-lg">
-        <span>Book a Call</span>
-        <ArrowUpRight className="h-5 w-5" />
-      </a>
+      <Card className="bg-gradient-to-br from-card/60 to-card/40 border-primary/20 backdrop-blur-sm overflow-hidden group cursor-pointer transition-all hover:border-primary/40"
+            onClick={() => window.open('https://partners.virality.cc/book', '_blank')}>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <Calendar className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-foreground">Book a Call</h3>
+              <p className="text-xs text-muted-foreground">Meet with the Virality team</p>
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  ) : null;
+  );
 
   // Mobile Sheet
   if (isMobile) {
@@ -180,7 +192,7 @@ export function BrandSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
           </div>
-          {bookCallButton}
+          {bookCallCard}
         </SheetContent>
       </Sheet>
     );
@@ -198,6 +210,6 @@ export function BrandSidebar() {
         </SidebarGroup>
       </SidebarContent>
       
-      {bookCallButton}
+      {bookCallCard}
     </Sidebar>;
 }
