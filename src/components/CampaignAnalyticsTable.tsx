@@ -1065,40 +1065,29 @@ export function CampaignAnalyticsTable({
                       </TableCell>
                       <TableCell className="py-3 bg-card">
                         <div className="flex items-center gap-1">
-                          {item.user_id && (() => {
-                            // Check if this specific analytics record has been paid
-                            const isPaidForThisPeriod = transactions.some(txn => 
-                              txn.metadata?.analytics_id === item.id
-                            );
-                            
-                            // Only show payment button if NOT already paid for this period
-                            if (!isPaidForThisPeriod) {
-                              return (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          setSelectedUser(item);
-                                          setPaymentDialogOpen(true);
-                                        }} 
-                                        className="h-7 w-7 text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
-                                      >
-                                        <DollarSign className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Send payment for this period</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              );
-                            }
-                            return null;
-                          })()}
+                          {item.user_id && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      setSelectedUser(item);
+                                      setPaymentDialogOpen(true);
+                                    }} 
+                                    className="h-7 w-7 text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
+                                  >
+                                    <DollarSign className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Send payment</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -1459,8 +1448,8 @@ export function CampaignAnalyticsTable({
           </Button>
               <Button onClick={() => {
             handlePayUser();
-          }} className="bg-primary hover:bg-primary/90" disabled={isSubmitting || (selectedUser && transactions.some(txn => txn.metadata?.analytics_id === selectedUser.id))}>
-                {isSubmitting ? "Processing..." : (selectedUser && transactions.some(txn => txn.metadata?.analytics_id === selectedUser.id)) ? "Already Paid for This Period" : "Send Payment"}
+          }} className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+                {isSubmitting ? "Processing..." : "Send Payment"}
               </Button>
         </DialogFooter>
       </DialogContent>
