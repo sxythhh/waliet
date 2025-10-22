@@ -1042,42 +1042,32 @@ export function CampaignAnalyticsTable({
                           </span> : <span className="text-xs text-muted-foreground/60">—</span>}
                       </TableCell>
                       <TableCell className="py-3 bg-card">
-                        <div className="flex items-center gap-1.5">
-                          {item.user_id && (() => {
-                            // Check if there's a transaction for this analytics record
-                            const hasTransaction = transactions.some(txn => 
-                              (txn.metadata as any)?.analytics_id === item.id
-                            );
-                            
-                            return hasTransaction ? (
-                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/20 px-2 py-0.5 text-xs font-medium">
-                                <DollarSign className="h-3 w-3 mr-0.5" />
-                                Paid
-                              </Badge>
-                            ) : (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        setSelectedUser(item);
-                                        setPaymentDialogOpen(true);
-                                      }} 
-                                      className="h-7 w-7 text-green-400 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
-                                    >
-                                      <DollarSign className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Send payment</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            );
-                          })()}
+                        <div className="flex items-center gap-1">
+                          {item.user_id && <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      setSelectedUser(item);
+                                      setPaymentDialogOpen(true);
+                                    }} 
+                                    className={`h-7 w-7 ${
+                                      item.paid_views >= item.total_views 
+                                        ? "text-muted-foreground hover:text-muted-foreground/80 hover:bg-muted/10" 
+                                        : "text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
+                                    }`}
+                                  >
+                                    <DollarSign className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Send payment</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>}
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
