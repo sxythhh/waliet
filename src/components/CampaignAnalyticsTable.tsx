@@ -1043,76 +1043,41 @@ export function CampaignAnalyticsTable({
                       </TableCell>
                       <TableCell className="py-3 bg-card">
                         <div className="flex items-center gap-1.5">
-                          {item.user_id && (
-                            <>
-                              {/* Show Paid badge if account was paid in selected time range */}
-                              {item.paid_views >= item.total_views && item.last_payment_date && (
-                                (() => {
-                                  const [rangeStart, rangeEnd] = selectedDateRange !== "all" ? selectedDateRange.split('|') : [null, null];
-                                  const paymentDate = new Date(item.last_payment_date);
-                                  const isPaidInRange = selectedDateRange === "all" || (
-                                    rangeStart && rangeEnd &&
-                                    paymentDate >= new Date(rangeStart) && 
-                                    paymentDate <= new Date(rangeEnd)
-                                  );
-                                  
-                                  return isPaidInRange ? (
-                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/20 px-2 py-0.5 text-xs font-medium">
-                                      <DollarSign className="h-3 w-3 mr-0.5" />
-                                      Paid
-                                    </Badge>
-                                  ) : (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={e => {
-                                              e.stopPropagation();
-                                              setSelectedUser(item);
-                                              setPaymentDialogOpen(true);
-                                            }} 
-                                            className="h-7 w-7 text-muted-foreground hover:text-muted-foreground/80 hover:bg-muted/10"
-                                          >
-                                            <DollarSign className="h-4 w-4" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Send payment</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  );
-                                })()
-                              )}
-                              
-                              {/* Show pay button if not fully paid */}
-                              {item.paid_views < item.total_views && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          setSelectedUser(item);
-                                          setPaymentDialogOpen(true);
-                                        }} 
-                                        className="h-7 w-7 text-green-400 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
-                                      >
-                                        <DollarSign className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Send payment</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </>
-                          )}
+                          {item.user_id && (() => {
+                            // Check if there's a transaction for this analytics record
+                            const hasTransaction = transactions.some(txn => 
+                              (txn.metadata as any)?.analytics_id === item.id
+                            );
+                            
+                            return hasTransaction ? (
+                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/20 px-2 py-0.5 text-xs font-medium">
+                                <DollarSign className="h-3 w-3 mr-0.5" />
+                                Paid
+                              </Badge>
+                            ) : (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        setSelectedUser(item);
+                                        setPaymentDialogOpen(true);
+                                      }} 
+                                      className="h-7 w-7 text-green-400 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
+                                    >
+                                      <DollarSign className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Send payment</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            );
+                          })()}
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
