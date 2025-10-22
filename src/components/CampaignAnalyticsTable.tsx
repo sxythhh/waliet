@@ -998,24 +998,46 @@ export function CampaignAnalyticsTable({
                         </div>
                       </TableCell>
                       <TableCell className="py-3 bg-card">
-                        {item.user_id && item.profiles ? <div className="flex items-center gap-1.5 cursor-pointer rounded-md px-1.5 py-1" onClick={() => openUserDetailsDialog(item)}>
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage src={item.profiles.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
-                                {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{
-                          letterSpacing: '-0.3px',
-                          fontWeight: 600
-                        }}>{item.profiles.username}</span>
-                          </div> : <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/10 rounded-md px-2 py-1.5 border transition-all w-fit" onClick={e => {
-                        e.stopPropagation();
-                        openLinkDialog(item);
-                      }}>
+                        {item.user_id && item.profiles ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 cursor-pointer rounded-md px-1.5 py-1" onClick={() => openUserDetailsDialog(item)}>
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage src={item.profiles.avatar_url || undefined} />
+                                <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                                  {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{
+                                letterSpacing: '-0.3px',
+                                fontWeight: 600
+                              }}>{item.profiles.username}</span>
+                            </div>
+                            {(() => {
+                              // Check if this specific analytics record has been paid
+                              const isPaidForThisPeriod = transactions.some(txn => 
+                                txn.metadata?.analytics_id === item.id
+                              );
+                              
+                              if (isPaidForThisPeriod) {
+                                return (
+                                  <Badge className="bg-green-500/10 text-green-400 hover:bg-green-500/10 border-green-500/20 px-2 py-0.5 text-xs font-medium whitespace-nowrap">
+                                    <DollarSign className="h-3 w-3 mr-0.5" />
+                                    Paid
+                                  </Badge>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/10 rounded-md px-2 py-1.5 border transition-all w-fit" onClick={e => {
+                            e.stopPropagation();
+                            openLinkDialog(item);
+                          }}>
                             <Link2 className="h-3.5 w-3.5 text-white/60" />
                             <span className="text-xs text-white/80 font-medium">Link User</span>
-                          </div>}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-foreground text-right text-sm bg-card py-3" style={{
                       fontFamily: 'Inter, sans-serif',
@@ -1042,45 +1064,40 @@ export function CampaignAnalyticsTable({
                           </span> : <span className="text-xs text-muted-foreground/60">—</span>}
                       </TableCell>
                       <TableCell className="py-3 bg-card">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           {item.user_id && (() => {
                             // Check if this specific analytics record has been paid
                             const isPaidForThisPeriod = transactions.some(txn => 
                               txn.metadata?.analytics_id === item.id
                             );
                             
-                            return (
-                              <>
-                                {isPaidForThisPeriod ? (
-                                  <Badge className="bg-green-500/10 text-green-400 hover:bg-green-500/10 border-green-500/20 px-2 py-0.5 text-xs font-medium">
-                                    <DollarSign className="h-3 w-3 mr-1" />
-                                    Paid
-                                  </Badge>
-                                ) : (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            setSelectedUser(item);
-                                            setPaymentDialogOpen(true);
-                                          }} 
-                                          className="h-7 w-7 text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
-                                        >
-                                          <DollarSign className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Send payment for this period</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-                              </>
-                            );
+                            // Only show payment button if NOT already paid for this period
+                            if (!isPaidForThisPeriod) {
+                              return (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          setSelectedUser(item);
+                                          setPaymentDialogOpen(true);
+                                        }} 
+                                        className="h-7 w-7 text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
+                                      >
+                                        <DollarSign className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Send payment for this period</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              );
+                            }
+                            return null;
                           })()}
                           <TooltipProvider>
                             <Tooltip>
