@@ -1042,32 +1042,46 @@ export function CampaignAnalyticsTable({
                           </span> : <span className="text-xs text-muted-foreground/60">—</span>}
                       </TableCell>
                       <TableCell className="py-3 bg-card">
-                        <div className="flex items-center gap-1">
-                          {item.user_id && <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      setSelectedUser(item);
-                                      setPaymentDialogOpen(true);
-                                    }} 
-                                    className={`h-7 w-7 ${
-                                      item.paid_views >= item.total_views 
-                                        ? "text-muted-foreground hover:text-muted-foreground/80 hover:bg-muted/10" 
-                                        : "text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
-                                    }`}
-                                  >
-                                    <DollarSign className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Send payment</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>}
+                        <div className="flex items-center gap-1.5">
+                          {item.user_id && (() => {
+                            // Check if this specific analytics record has been paid
+                            const isPaidForThisPeriod = transactions.some(txn => 
+                              txn.metadata?.analytics_id === item.id
+                            );
+                            
+                            return (
+                              <>
+                                {isPaidForThisPeriod ? (
+                                  <Badge className="bg-green-500/10 text-green-400 hover:bg-green-500/10 border-green-500/20 px-2 py-0.5 text-xs font-medium">
+                                    <DollarSign className="h-3 w-3 mr-1" />
+                                    Paid
+                                  </Badge>
+                                ) : (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            setSelectedUser(item);
+                                            setPaymentDialogOpen(true);
+                                          }} 
+                                          className="h-7 w-7 text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
+                                        >
+                                          <DollarSign className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Send payment for this period</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </>
+                            );
+                          })()}
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -1428,8 +1442,8 @@ export function CampaignAnalyticsTable({
           </Button>
               <Button onClick={() => {
             handlePayUser();
-          }} className="bg-primary hover:bg-primary/90" disabled={isSubmitting || selectedUser && selectedUser.paid_views >= selectedUser.total_views}>
-                {isSubmitting ? "Processing.." : selectedUser && selectedUser.paid_views >= selectedUser.total_views ? "Already Paid" : "Send Payment"}
+          }} className="bg-primary hover:bg-primary/90" disabled={isSubmitting || (selectedUser && transactions.some(txn => txn.metadata?.analytics_id === selectedUser.id))}>
+                {isSubmitting ? "Processing..." : (selectedUser && transactions.some(txn => txn.metadata?.analytics_id === selectedUser.id)) ? "Already Paid for This Period" : "Send Payment"}
               </Button>
         </DialogFooter>
       </DialogContent>
