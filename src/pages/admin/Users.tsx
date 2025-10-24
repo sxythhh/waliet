@@ -94,6 +94,8 @@ export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
   const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(50);
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -139,6 +141,7 @@ export default function AdminUsers() {
   }, []);
   useEffect(() => {
     filterUsers();
+    setCurrentPage(1); // Reset to first page when filters change
   }, [searchQuery, selectedCampaign, users, sortField, sortOrder]);
   const fetchData = async () => {
     setLoading(true);
@@ -894,6 +897,17 @@ export default function AdminUsers() {
     totalBalance: users.reduce((sum, u) => sum + (u.wallets?.balance || 0), 0),
     totalEarned: users.reduce((sum, u) => sum + (u.wallets?.total_earned || 0), 0)
   };
+
+  // Pagination logic
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   if (loading) {
     return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading users...</p>
@@ -1053,7 +1067,7 @@ export default function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map(user => {
+                {currentUsers.map(user => {
                   const balance = user.wallets?.balance || 0;
                   const totalEarned = user.wallets?.total_earned || 0;
                   return <TableRow key={user.id} className="border-b border-border hover:bg-[#1D1D1D] cursor-pointer" onClick={() => openUserDetailsDialog(user)}>
@@ -1112,6 +1126,62 @@ export default function AdminUsers() {
             </Table>
           </CardContent>
         </Card>}
+
+      {/* Pagination */}
+      {filteredUsers.length > usersPerPage && (
+        <Card className="bg-card border-0">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {indexOfFirstUser + 1}-{Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length} users
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                        className="min-w-[40px]"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Payment Dialog */}
       <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
