@@ -193,6 +193,16 @@ export default function AdminUsers() {
   const filterUsers = async () => {
     let filtered = users;
 
+    console.log('🔍 Search Debug:', {
+      searchQuery,
+      totalUsers: users.length,
+      sampleUser: users[0] ? {
+        username: users[0].username,
+        full_name: users[0].full_name,
+        social_accounts: users[0].social_accounts?.map(acc => acc.username)
+      } : null
+    });
+
     // Search filter - search by Virality username, full name, or social account username
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -202,7 +212,25 @@ export default function AdminUsers() {
 
         // Search in social account usernames
         const matchesSocialAccount = user.social_accounts?.some(account => account.username?.toLowerCase().includes(query));
-        return matchesProfile || matchesSocialAccount;
+        
+        const matches = matchesProfile || matchesSocialAccount;
+        
+        if (matches) {
+          console.log('✅ Match found:', {
+            username: user.username,
+            full_name: user.full_name,
+            social_accounts: user.social_accounts?.map(acc => acc.username),
+            matchesProfile,
+            matchesSocialAccount
+          });
+        }
+        
+        return matches;
+      });
+      
+      console.log('🔍 Search Results:', {
+        query,
+        filteredCount: filtered.length
       });
     }
 
