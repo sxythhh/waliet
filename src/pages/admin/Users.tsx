@@ -91,6 +91,7 @@ export default function AdminUsers() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalUserCount, setTotalUserCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
   const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
@@ -146,7 +147,16 @@ export default function AdminUsers() {
   const fetchData = async () => {
     setLoading(true);
 
-    // Fetch users with wallets and social accounts
+    // Fetch total user count
+    const { count: totalCount } = await supabase
+      .from("profiles")
+      .select("*", { count: 'exact', head: true });
+    
+    if (totalCount) {
+      setTotalUserCount(totalCount);
+    }
+
+    // Fetch users with wallets and social accounts (with higher limit)
     const {
       data: usersData,
       error: usersError
@@ -168,7 +178,7 @@ export default function AdminUsers() {
         )
       `).order("created_at", {
       ascending: false
-    });
+    }).limit(5000);
     if (usersError) {
       toast({
         variant: "destructive",
@@ -921,7 +931,7 @@ export default function AdminUsers() {
   const rejectedSubmissions = submissions.filter(s => s.status === "rejected" && s.social_accounts);
   const avgTier1 = submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0;
   const stats = {
-    totalUsers: users.length,
+    totalUsers: totalUserCount,
     totalBalance: users.reduce((sum, u) => sum + (u.wallets?.balance || 0), 0),
     totalEarned: users.reduce((sum, u) => sum + (u.wallets?.total_earned || 0), 0)
   };
