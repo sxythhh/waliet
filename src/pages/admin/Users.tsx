@@ -201,46 +201,100 @@ export default function AdminUsers() {
     setLoading(false);
   };
   const filterUsers = async () => {
+    setLoading(true);
     let filtered = users;
 
     console.log('🔍 Search Debug:', {
       searchQuery,
+      selectedCampaign,
       totalUsers: users.length,
-      sampleUser: users[0] ? {
-        username: users[0].username,
-        full_name: users[0].full_name,
-        social_accounts: users[0].social_accounts?.map(acc => acc.username)
-      } : null
+      totalUserCount
     });
 
-    // Search filter - search by Virality username, full name, or social account username
+    // If there's a search query, query the database directly
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(user => {
-        // Search in profile username and full name
-        const matchesProfile = user.username?.toLowerCase().includes(query) || user.full_name?.toLowerCase().includes(query);
-
-        // Search in social account usernames
-        const matchesSocialAccount = user.social_accounts?.some(account => account.username?.toLowerCase().includes(query));
-        
-        const matches = matchesProfile || matchesSocialAccount;
-        
-        if (matches) {
-          console.log('✅ Match found:', {
-            username: user.username,
-            full_name: user.full_name,
-            social_accounts: user.social_accounts?.map(acc => acc.username),
-            matchesProfile,
-            matchesSocialAccount
-          });
-        }
-        
-        return matches;
-      });
       
-      console.log('🔍 Search Results:', {
+      // Search in profiles and social accounts
+      const { data: searchResults, error } = await supabase
+        .from("profiles")
+        .select(`
+          *,
+          wallets (
+            balance,
+            total_earned,
+            total_withdrawn
+          ),
+          social_accounts (
+            id,
+            platform,
+            username,
+            follower_count,
+            demographic_submissions (
+              status
+            )
+          )
+        `)
+        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+        .order("created_at", { ascending: false })
+        .limit(1000);
+
+      if (error) {
+        console.error('Search error:', error);
+        toast({
+          variant: "destructive",
+          title: "Search Error",
+          description: "Failed to search users"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Also search in social accounts
+      const { data: socialAccountResults } = await supabase
+        .from("social_accounts")
+        .select(`
+          user_id,
+          username,
+          profiles!inner (
+            *,
+            wallets (
+              balance,
+              total_earned,
+              total_withdrawn
+            ),
+            social_accounts (
+              id,
+              platform,
+              username,
+              follower_count,
+              demographic_submissions (
+                status
+              )
+            )
+          )
+        `)
+        .ilike('username', `%${query}%`)
+        .limit(1000);
+
+      // Combine results and deduplicate
+      const combinedResults = [...(searchResults || [])];
+      if (socialAccountResults) {
+        socialAccountResults.forEach(result => {
+          const profile = (result as any).profiles;
+          if (profile && !combinedResults.find(r => r.id === profile.id)) {
+            combinedResults.push(profile);
+          }
+        });
+      }
+
+      filtered = combinedResults as any;
+      
+      console.log('🔍 Database Search Results:', {
         query,
-        filteredCount: filtered.length
+        profileMatches: searchResults?.length || 0,
+        socialAccountMatches: socialAccountResults?.length || 0,
+        totalResults: filtered.length
       });
     }
 
@@ -278,6 +332,7 @@ export default function AdminUsers() {
     }
 
     setFilteredUsers(filtered);
+    setLoading(false);
   };
   const openPayDialog = (user: User) => {
     setSelectedUser(user);
