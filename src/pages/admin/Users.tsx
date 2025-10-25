@@ -93,6 +93,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [totalUserCount, setTotalUserCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
   const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -140,10 +141,20 @@ export default function AdminUsers() {
     fetchData();
     fetchSubmissions();
   }, []);
+  
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+  
   useEffect(() => {
     filterUsers();
     setCurrentPage(1); // Reset to first page when filters change
-  }, [searchQuery, selectedCampaign, users, sortField, sortOrder]);
+  }, [debouncedSearchQuery, selectedCampaign, users, sortField, sortOrder]);
   const fetchData = async () => {
     setLoading(true);
 
@@ -205,15 +216,15 @@ export default function AdminUsers() {
     let filtered = users;
 
     console.log('🔍 Search Debug:', {
-      searchQuery,
+      debouncedSearchQuery,
       selectedCampaign,
       totalUsers: users.length,
       totalUserCount
     });
 
     // If there's a search query, query the database directly
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    if (debouncedSearchQuery) {
+      const query = debouncedSearchQuery.toLowerCase();
       
       // Search in profiles and social accounts
       const { data: searchResults, error } = await supabase
