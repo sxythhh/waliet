@@ -37,6 +37,7 @@ import AdminTransactions from "./pages/admin/Transactions";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 import Apply from "./pages/Apply";
+import Discover from "./pages/Discover";
 import { AuthProvider } from "@/contexts/AuthContext";
 const queryClient = new QueryClient();
 function DashboardLayout({
@@ -121,6 +122,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/brand-auth" element={<BrandAuth />} />
           <Route path="/apply" element={<Apply />} />
+          <Route path="/discover" element={<Discover />} />
           <Route path="/join/:slug" element={<CampaignJoin />} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
           <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
