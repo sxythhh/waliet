@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, DollarSign, Video, Users } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
+import { ApplyToBountyDialog } from "@/components/ApplyToBountyDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
@@ -36,14 +37,38 @@ interface Campaign {
     logo_url: string;
   };
 }
+
+interface BountyCampaign {
+  id: string;
+  title: string;
+  description: string | null;
+  monthly_retainer: number;
+  videos_per_month: number;
+  content_style_requirements: string;
+  max_accepted_creators: number;
+  accepted_creators_count: number;
+  start_date: string | null;
+  end_date: string | null;
+  banner_url: string | null;
+  status: string;
+  created_at: string;
+  brand_id: string;
+  brands?: {
+    name: string;
+    logo_url: string;
+  };
+}
 export function DiscoverTab() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [bounties, setBounties] = useState<BountyCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("popular");
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [selectedBounty, setSelectedBounty] = useState<BountyCampaign | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [bountyDialogOpen, setBountyDialogOpen] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     fetchCampaigns();
@@ -58,14 +83,23 @@ export function DiscoverTab() {
       }
     } = await supabase.auth.getUser();
     let joinedCampaignIds: string[] = [];
+    let appliedBountyIds: string[] = [];
+    
     if (user) {
       // Get campaigns user has already joined or has pending applications for
-      // Allow reapplication if previously rejected
       const {
         data: submissions
       } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id).in("status", ["approved", "pending"]);
       joinedCampaignIds = submissions?.map(s => s.campaign_id) || [];
+
+      // Get bounties user has already applied to
+      const {
+        data: bountyApps
+      } = await supabase.from("bounty_applications").select("bounty_campaign_id").eq("user_id", user.id).in("status", ["pending", "accepted"]);
+      appliedBountyIds = bountyApps?.map(b => b.bounty_campaign_id) || [];
     }
+
+    // Fetch campaigns
     const {
       data,
       error
@@ -77,8 +111,8 @@ export function DiscoverTab() {
       `).in("status", ["active", "ended"]).order("created_at", {
       ascending: false
     });
+    
     if (!error && data) {
-      // Filter out campaigns the user has already joined
       const availableCampaigns = data.filter(campaign => !joinedCampaignIds.includes(campaign.id));
       const campaignsWithBrandLogo = availableCampaigns.map(campaign => ({
         ...campaign,
@@ -88,6 +122,26 @@ export function DiscoverTab() {
       }));
       setCampaigns(campaignsWithBrandLogo);
     }
+
+    // Fetch bounties
+    const {
+      data: bountiesData,
+      error: bountiesError
+    } = await supabase.from("bounty_campaigns").select(`
+        *,
+        brands (
+          name,
+          logo_url
+        )
+      `).in("status", ["active", "ended"]).order("created_at", {
+      ascending: false
+    });
+
+    if (!bountiesError && bountiesData) {
+      const availableBounties = bountiesData.filter(bounty => !appliedBountyIds.includes(bounty.id));
+      setBounties(availableBounties as BountyCampaign[]);
+    }
+
     setLoading(false);
   };
   const filteredCampaigns = campaigns.filter(campaign => {
@@ -180,7 +234,7 @@ export function DiscoverTab() {
           </div>
         </div>
 
-        {/* Campaigns Grid */}
+        {/* Campaigns and Bounties Grid */}
         {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             <Skeleton className="h-[350px] rounded-lg" />
             <Skeleton className="h-[350px] rounded-lg" />
@@ -188,10 +242,14 @@ export function DiscoverTab() {
             <Skeleton className="h-[350px] rounded-lg" />
             <Skeleton className="h-[350px] rounded-lg" />
             <Skeleton className="h-[350px] rounded-lg" />
-          </div> : sortedCampaigns.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
+          </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
-            <p className="text-slate-50 font-medium">No campaigns found</p>
-          </div> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
+            <p className="text-slate-50 font-medium">No campaigns or bounties found</p>
+          </div> : <div className="space-y-8">
+            {sortedCampaigns.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold text-foreground">Campaigns</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {sortedCampaigns.map(campaign => {
           const budgetUsed = campaign.budget_used || 0;
           const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
@@ -287,9 +345,105 @@ export function DiscoverTab() {
                   </CardContent>
                 </Card>;
         })}
+                </div>
+              </div>
+            )}
+
+            {bounties.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold text-foreground">Bounties</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  {bounties.map(bounty => {
+                    const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+                    const isFull = spotsRemaining <= 0;
+                    const isEnded = bounty.status === "ended";
+
+                    return (
+                      <Card
+                        key={bounty.id}
+                        className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative ${isEnded ? "opacity-60" : "cursor-pointer hover:bg-accent/50"}`}
+                        onClick={() => {
+                          if (!isEnded) {
+                            setSelectedBounty(bounty);
+                            setBountyDialogOpen(true);
+                          }
+                        }}
+                      >
+                        {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
+                        
+                        {bounty.banner_url && (
+                          <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                            <OptimizedImage
+                              src={bounty.banner_url}
+                              alt={bounty.title}
+                              className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                            />
+                            {isEnded && (
+                              <div className="absolute top-2 right-2 z-20">
+                                <span className="text-red-500 text-xs font-medium px-2 py-1 bg-[#1a1a1a] rounded">
+                                  Ended
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        <CardContent className="p-4 flex-1 flex flex-col gap-3">
+                          <div className="flex items-start gap-2.5">
+                            {bounty.brands?.logo_url && (
+                              <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
+                                <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
+                                {bounty.title}
+                              </h3>
+                              <p className="text-xs text-muted-foreground font-semibold">{bounty.brands?.name}</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Monthly Retainer</span>
+                              <span className="font-semibold">${bounty.monthly_retainer.toLocaleString()}</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Videos/Month</span>
+                              <span className="font-semibold">{bounty.videos_per_month}</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Positions</span>
+                              <span className={`font-semibold ${isFull ? 'text-red-500' : 'text-green-500'}`}>
+                                {bounty.accepted_creators_count} / {bounty.max_accepted_creators}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>}
       </div>
 
       <JoinCampaignSheet campaign={selectedCampaign} open={sheetOpen} onOpenChange={setSheetOpen} />
+      
+      {selectedBounty && (
+        <ApplyToBountyDialog
+          open={bountyDialogOpen}
+          onOpenChange={setBountyDialogOpen}
+          bountyId={selectedBounty.id}
+          bountyTitle={selectedBounty.title}
+          onSuccess={() => {
+            setBountyDialogOpen(false);
+            fetchCampaigns();
+          }}
+        />
+      )}
     </div>;
 }
