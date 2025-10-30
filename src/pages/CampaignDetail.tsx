@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, LogOut, Link } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Campaign {
@@ -308,24 +308,36 @@ export default function CampaignDetail() {
 
   return (
     <div className="h-screen w-full flex flex-col">
-      <div className="p-4 border-b flex items-center justify-between">
+      <div className="p-4 border-b flex items-center justify-between gap-4">
         <Button
           variant="ghost"
           onClick={() => navigate("/dashboard?tab=campaigns")}
+          className="bg-[#121212] border-t"
+          style={{ borderTopColor: '#3b3b3b' }}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Campaigns
+          Return
         </Button>
         
-        <Button
-          variant="ghost"
-          onClick={() => setShowLeaveDialog(true)}
-          disabled={leavingCampaign}
-          className="bg-destructive/10 text-destructive hover:bg-destructive/20"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Leave Campaign
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/dashboard?tab=profile")}
+          >
+            <Link className="mr-2 h-4 w-4" />
+            Link Account
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowLeaveDialog(true)}
+            disabled={leavingCampaign}
+            className="bg-destructive/10 text-destructive hover:bg-destructive/20"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       <div className="flex-1">
         <iframe
