@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import viralityLogo from "@/assets/virality-logo.webp";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") === "signup" ? "signup" : "signin";
@@ -26,6 +27,9 @@ export default function Auth() {
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
   const navigate = useNavigate();
   const {
     toast
@@ -96,6 +100,57 @@ export default function Auth() {
     } = await supabase.auth.signInWithPassword({
       email,
       password
+    });
+    setLoading(false);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    }
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      }
+    });
+    setLoading(false);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    } else {
+      setOtpSent(true);
+      toast({
+        title: "Code sent!",
+        description: "Check your email for the 6-digit code."
+      });
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      toast({
+        variant: "destructive",
+        title: "Invalid code",
+        description: "Please enter a 6-digit code."
+      });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otpCode,
+      type: 'email'
     });
     setLoading(false);
     if (error) {
@@ -271,68 +326,138 @@ export default function Auth() {
             </TabsList>
             
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
-                  <Input id="signin-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
-                  <div className="relative">
-                    <Input id="signin-password" type={showSignInPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
-                    <button
-                      type="button"
-                      onClick={() => setShowSignInPassword(!showSignInPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+              <div className="mb-4">
+                <Tabs value={loginMethod} onValueChange={(v) => setLoginMethod(v as "password" | "otp")} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 bg-muted/30">
+                    <TabsTrigger value="password" className="data-[state=active]:bg-primary/20">Password</TabsTrigger>
+                    <TabsTrigger value="otp" className="data-[state=active]:bg-primary/20">Email Code</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {loginMethod === "password" ? (
+                <form onSubmit={handleSignIn} className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
+                    <Input id="signin-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
                   </div>
-                  <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-                    <DialogTrigger asChild>
-                      <button type="button" className="text-sm text-primary hover:underline text-right w-full">
-                        Forgot password?
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
+                    <div className="relative">
+                      <Input id="signin-password" type={showSignInPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignInPassword(!showSignInPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-[#0b0b0b] border">
-                      <DialogHeader>
-                        <DialogTitle>Reset Password</DialogTitle>
-                        <DialogDescription>
-                          Enter your email address and we'll send you a link to reset your password.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handlePasswordReset} className="space-y-4 mt-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="space-y-2">
-                          <Label htmlFor="reset-email">Email</Label>
-                          <Input
-                            id="reset-email"
-                            type="email"
-                            placeholder="you@example.com"
-                            value={resetEmail}
-                            onChange={(e) => setResetEmail(e.target.value)}
-                            required
+                    </div>
+                    <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+                      <DialogTrigger asChild>
+                        <button type="button" className="text-sm text-primary hover:underline text-right w-full">
+                          Forgot password?
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-[#0b0b0b] border">
+                        <DialogHeader>
+                          <DialogTitle>Reset Password</DialogTitle>
+                          <DialogDescription>
+                            Enter your email address and we'll send you a link to reset your password.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handlePasswordReset} className="space-y-4 mt-4" onClick={(e) => e.stopPropagation()}>
+                          <div className="space-y-2">
+                            <Label htmlFor="reset-email">Email</Label>
+                            <Input
+                              id="reset-email"
+                              type="email"
+                              placeholder="you@example.com"
+                              value={resetEmail}
+                              onChange={(e) => setResetEmail(e.target.value)}
+                              required
+                              disabled={loading}
+                              className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary"
+                            />
+                          </div>
+                          <Button 
+                            type="submit" 
+                            className="w-full" 
                             disabled={loading}
-                            className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary"
-                          />
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {loading ? "Sending..." : "Send Reset Link"}
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  
+                  <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
+                    {loading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </form>
+              ) : (
+                <div className="space-y-3">
+                  {!otpSent ? (
+                    <form onSubmit={handleSendOtp} className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="otp-email" className="text-sm font-medium">Email</Label>
+                        <Input 
+                          id="otp-email" 
+                          type="email" 
+                          placeholder="you@example.com" 
+                          value={email} 
+                          onChange={e => setEmail(e.target.value)} 
+                          required 
+                          disabled={loading} 
+                          className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" 
+                        />
+                      </div>
+                      <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
+                        {loading ? "Sending code..." : "Send Code"}
+                      </Button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyOtp} className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="otp-code" className="text-sm font-medium">Enter 6-digit code</Label>
+                        <div className="flex justify-center">
+                          <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
                         </div>
-                        <Button 
-                          type="submit" 
-                          className="w-full" 
-                          disabled={loading}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {loading ? "Sending..." : "Send Reset Link"}
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                        <p className="text-sm text-muted-foreground text-center">
+                          Check your email for the code
+                        </p>
+                      </div>
+                      <Button type="submit" className="w-full h-11 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading || otpCode.length !== 6}>
+                        {loading ? "Verifying..." : "Verify Code"}
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        className="w-full" 
+                        onClick={() => {
+                          setOtpSent(false);
+                          setOtpCode("");
+                        }}
+                        disabled={loading}
+                      >
+                        Use a different email
+                      </Button>
+                    </form>
+                  )}
                 </div>
-                
-                <Button type="submit" className="w-full h-11 mt-6 font-chakra font-semibold tracking-[-0.5px] text-[15px]" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
-                </Button>
-              </form>
+              )}
             </TabsContent>
             
             <TabsContent value="signup">
