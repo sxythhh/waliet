@@ -91,9 +91,63 @@ export function AddSocialAccountDialog({
   const [username, setUsername] = useState("");
   const [accountLink, setAccountLink] = useState("");
   const [uploading, setUploading] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
+  const handleXOAuth = async () => {
+    const REDIRECT_URI = `${window.location.origin}/x/callback`;
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must be logged in to connect your X account"
+      });
+      return;
+    }
+
+    const STATE = btoa(JSON.stringify({ userId: session.user.id, returnTo: 'social_accounts' }));
+    const codeChallenge = 'challenge';
+    
+    const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?` +
+      `client_id=YXNfUndDN1BXZFZCOVhJMjFQaWQ6MTpjaQ&` +
+      `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+      `response_type=code&` +
+      `scope=tweet.read%20users.read&` +
+      `state=${STATE}&` +
+      `code_challenge=${codeChallenge}&` +
+      `code_challenge_method=plain`;
+
+    const popup = window.open(twitterAuthUrl, 'X OAuth', 'width=500,height=700');
+
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'x-oauth-success') {
+        popup?.close();
+        toast({
+          title: "Success!",
+          description: "X account connected successfully."
+        });
+        setUsername("");
+        setAccountLink("");
+        setSelectedPlatform("tiktok");
+        onOpenChange(false);
+        onSuccess();
+        window.removeEventListener('message', handleMessage);
+      } else if (event.data.type === 'x-oauth-error') {
+        popup?.close();
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: event.data.error || "Failed to connect X account."
+        });
+        window.removeEventListener('message', handleMessage);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -215,46 +269,87 @@ export function AddSocialAccountDialog({
             </div>
           </div>
 
-          {/* Username Input */}
-          <div className="space-y-2">
-            <Label htmlFor="username" className="text-sm font-medium flex items-center gap-2">
-              
-              Username
-            </Label>
-            <div className="relative">
-              <Input 
-                id="username" 
-                placeholder="mrbeast" 
-                value={username} 
-                onChange={e => {
-                  // Strip @ symbols from input
-                  const cleanedValue = e.target.value.replace(/@/g, "");
-                  setUsername(cleanedValue);
-                }} 
-                required 
-                className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4" 
-              />
+          {/* Show OAuth button for Twitter, manual input for others */}
+          {selectedPlatform === "twitter" ? (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted/20 border border-primary/20">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Connect your X account to automatically link your profile
+                </p>
+                <Button 
+                  type="button"
+                  onClick={handleXOAuth}
+                  className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors"
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Connecting...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      {getPlatformIcon("twitter")}
+                      Connect with X
+                    </span>
+                  )}
+                </Button>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">Don't include the @ symbol</p>
-          </div>
+          ) : (
+            <>
+              {/* Username Input */}
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-sm font-medium flex items-center gap-2">
+                  Username
+                </Label>
+                <div className="relative">
+                  <Input 
+                    id="username" 
+                    placeholder="mrbeast" 
+                    value={username} 
+                    onChange={e => {
+                      const cleanedValue = e.target.value.replace(/@/g, "");
+                      setUsername(cleanedValue);
+                    }} 
+                    required 
+                    className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4" 
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Don't include the @ symbol</p>
+              </div>
 
-          {/* Account Link Input */}
-          <div className="space-y-2">
-            <Label htmlFor="accountLink" className="text-sm font-medium">
-              Profile Link
-            </Label>
-            <div className="relative">
-              <Input id="accountLink" type="url" placeholder={`https://${selectedPlatform}.com/@${username || "username"}`} value={accountLink} onChange={e => setAccountLink(e.target.value)} required className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
-            </div>
-          </div>
+              {/* Account Link Input */}
+              <div className="space-y-2">
+                <Label htmlFor="accountLink" className="text-sm font-medium">
+                  Profile Link
+                </Label>
+                <div className="relative">
+                  <Input 
+                    id="accountLink" 
+                    type="url" 
+                    placeholder={`https://${selectedPlatform}.com/@${username || "username"}`} 
+                    value={accountLink} 
+                    onChange={e => setAccountLink(e.target.value)} 
+                    required 
+                    className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" 
+                  />
+                </div>
+              </div>
 
-          {/* Submit Button */}
-          <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors" disabled={uploading}>
-            {uploading ? <span className="flex items-center gap-2">
-                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Connecting...
-              </span> : "Connect Account"}
-          </Button>
+              {/* Submit Button */}
+              <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors" disabled={uploading}>
+                {uploading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Connecting...
+                  </span>
+                ) : (
+                  "Connect Account"
+                )}
+              </Button>
+            </>
+          )}
         </form>
       </DialogContent>
     </Dialog>;

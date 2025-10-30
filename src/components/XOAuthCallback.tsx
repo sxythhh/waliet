@@ -25,11 +25,12 @@ export function XOAuthCallback() {
         return;
       }
 
-      // Get user ID from state
-      let userId;
+      // Get user ID and returnTo from state
+      let userId, returnTo;
       try {
         const stateData = JSON.parse(atob(state || ''));
         userId = stateData.userId;
+        returnTo = stateData.returnTo; // 'social_accounts' or undefined
       } catch (e) {
         console.error('Failed to parse state:', e);
         if (window.opener) {
@@ -56,7 +57,7 @@ export function XOAuthCallback() {
       try {
         // Exchange code for X user data
         const { data, error: functionError } = await supabase.functions.invoke('x-oauth', {
-          body: { code, userId }
+          body: { code, userId, returnTo }
         });
 
         if (functionError) throw functionError;

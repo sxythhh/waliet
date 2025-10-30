@@ -19,7 +19,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PhoneInput } from "@/components/PhoneInput";
 import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
-import { XLinkDialog } from "@/components/XLinkDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -690,44 +689,6 @@ export function ProfileTab() {
               )}
             </div>
 
-            {/* X Integration */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm font-medium">X Account</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Connect your X account to access additional features
-                  </p>
-                </div>
-                <XLinkDialog 
-                  userId={profile.id}
-                  twitterUsername={profile.twitter_username || undefined}
-                  onSuccess={fetchProfile}
-                />
-              </div>
-              {profile.twitter_username && (
-                <div className="p-3 rounded-lg bg-muted/20 border border-primary/20 flex items-center gap-3">
-                  {profile.twitter_avatar && (
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={profile.twitter_avatar} />
-                      <AvatarFallback>
-                        {profile.twitter_username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">@{profile.twitter_username}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Connected {profile.twitter_connected_at && formatDistanceToNow(new Date(profile.twitter_connected_at), { addSuffix: true })}
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Linked
-                  </Badge>
-                </div>
-              )}
-            </div>
 
             {/* Save Button */}
             <div className="flex items-center justify-between pt-4">

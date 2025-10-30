@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { code, userId, action } = await req.json();
+    const { code, userId, action, returnTo } = await req.json();
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -86,21 +86,40 @@ serve(async (req) => {
 
     const { data: twitterUser } = await userResponse.json();
 
-    // Update profile with X data
-    const { error: updateError } = await supabaseClient
-      .from('profiles')
-      .update({
-        twitter_id: twitterUser.id,
-        twitter_username: twitterUser.username,
-        twitter_name: twitterUser.name,
-        twitter_avatar: twitterUser.profile_image_url,
-        twitter_connected_at: new Date().toISOString()
-      })
-      .eq('id', userId);
+    // Determine where to save the X account data based on returnTo parameter
+    if (returnTo === 'social_accounts') {
+      // Save to social_accounts table
+      const { error: insertError } = await supabaseClient
+        .from('social_accounts')
+        .insert({
+          user_id: userId,
+          platform: 'twitter',
+          username: twitterUser.username,
+          account_link: `https://twitter.com/${twitterUser.username}`,
+          is_verified: true
+        });
 
-    if (updateError) {
-      console.error('Failed to update profile:', updateError);
-      throw updateError;
+      if (insertError) {
+        console.error('Failed to insert social account:', insertError);
+        throw insertError;
+      }
+    } else {
+      // Update profile with X data (legacy behavior)
+      const { error: updateError } = await supabaseClient
+        .from('profiles')
+        .update({
+          twitter_id: twitterUser.id,
+          twitter_username: twitterUser.username,
+          twitter_name: twitterUser.name,
+          twitter_avatar: twitterUser.profile_image_url,
+          twitter_connected_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Failed to update profile:', updateError);
+        throw updateError;
+      }
     }
 
     return new Response(
