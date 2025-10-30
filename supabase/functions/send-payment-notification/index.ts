@@ -40,16 +40,21 @@ const handler = async (req: Request): Promise<Response> => {
     }: PaymentNotificationRequest = await req.json();
 
     console.log("Sending payment notification to:", userEmail);
+    console.log("User ID:", userId);
 
     // Send Discord DM if user has Discord linked
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('discord_id')
       .eq('id', userId)
       .single();
 
+    console.log("Profile lookup result:", { discord_id: profile?.discord_id, error: profileError });
+    console.log("Discord bot token available:", !!DISCORD_BOT_TOKEN);
+
     if (profile?.discord_id && DISCORD_BOT_TOKEN) {
+      console.log("Attempting to send Discord DM to:", profile.discord_id);
       try {
         // Create DM channel
         const dmChannelResponse = await fetch('https://discord.com/api/v10/users/@me/channels', {
@@ -65,9 +70,10 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (dmChannelResponse.ok) {
           const dmChannel = await dmChannelResponse.json();
+          console.log("DM channel created:", dmChannel.id);
           
           // Send message
-          await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
+          const messageResponse = await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
             method: 'POST',
             headers: {
               'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
@@ -108,12 +114,26 @@ const handler = async (req: Request): Promise<Response> => {
               }]
             }),
           });
-          console.log("Discord DM sent successfully");
+          
+          if (messageResponse.ok) {
+            console.log("Discord DM sent successfully");
+          } else {
+            const errorText = await messageResponse.text();
+            console.error("Discord message send failed:", messageResponse.status, errorText);
+          }
+        } else {
+          const errorText = await dmChannelResponse.text();
+          console.error("Discord DM channel creation failed:", dmChannelResponse.status, errorText);
         }
       } catch (discordError) {
         console.error("Discord DM failed (non-critical):", discordError);
         // Continue with email notification even if Discord fails
       }
+    } else {
+      console.log("Skipping Discord DM:", { 
+        hasDiscordId: !!profile?.discord_id, 
+        hasBotToken: !!DISCORD_BOT_TOKEN 
+      });
     }
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
