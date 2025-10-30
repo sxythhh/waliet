@@ -1025,6 +1025,11 @@ export type Database = {
           total_earnings: number | null
           total_referrals: number | null
           trust_score: number | null
+          twitter_avatar: string | null
+          twitter_connected_at: string | null
+          twitter_id: string | null
+          twitter_name: string | null
+          twitter_username: string | null
           updated_at: string | null
           username: string
           views_score: number | null
@@ -1053,6 +1058,11 @@ export type Database = {
           total_earnings?: number | null
           total_referrals?: number | null
           trust_score?: number | null
+          twitter_avatar?: string | null
+          twitter_connected_at?: string | null
+          twitter_id?: string | null
+          twitter_name?: string | null
+          twitter_username?: string | null
           updated_at?: string | null
           username: string
           views_score?: number | null
@@ -1081,6 +1091,11 @@ export type Database = {
           total_earnings?: number | null
           total_referrals?: number | null
           trust_score?: number | null
+          twitter_avatar?: string | null
+          twitter_connected_at?: string | null
+          twitter_id?: string | null
+          twitter_name?: string | null
+          twitter_username?: string | null
           updated_at?: string | null
           username?: string
           views_score?: number | null

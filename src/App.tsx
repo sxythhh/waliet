@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { DiscordOAuthCallback } from "@/components/DiscordOAuthCallback";
+import { XOAuthCallback } from "@/components/XOAuthCallback";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BrandAuth from "./pages/BrandAuth";
@@ -122,6 +123,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
+          <Route path="/x/callback" element={<XOAuthCallback />} />
           <Route path="/brand-auth" element={<BrandAuth />} />
           <Route path="/apply" element={<Apply />} />
           <Route path="/discover" element={<Discover />} />
