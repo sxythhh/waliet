@@ -71,11 +71,13 @@ export function SubmitDemographicsDialog({
 
       // Check if user can submit (7 days since last submission)
       const {
-        data: lastSubmission
+        data: lastSubmission,
+        error: queryError
       } = await supabase.from('demographic_submissions').select('submitted_at').eq('social_account_id', socialAccountId).order('submitted_at', {
         ascending: false
-      }).limit(1).single();
-      if (lastSubmission) {
+      }).limit(1).maybeSingle();
+      
+      if (lastSubmission && lastSubmission.submitted_at) {
         const daysSinceLastSubmission = Math.floor((Date.now() - new Date(lastSubmission.submitted_at).getTime()) / (1000 * 60 * 60 * 24));
         if (daysSinceLastSubmission < 7) {
           toast({
