@@ -649,11 +649,10 @@ export function WalletTab() {
   };
   return <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header with Main Balance */}
-      <div className="flex items-center justify-between py-0">
+      <div className="flex items-center justify-between py-0 border-t" style={{ borderColor: '#4b85f7' }}>
         
-        <Button onClick={handleRequestPayout} size="lg" className="gap-1 py-0 my-0 ml-auto" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}>
-          <ArrowDownLeft className="h-4 w-4" />
-          Request Payout
+        <Button onClick={handleRequestPayout} size="lg" className="py-0 my-0 ml-auto" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}>
+          Withdraw Balance
         </Button>
       </div>
 
