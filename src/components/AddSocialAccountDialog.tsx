@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import xLogo from "@/assets/x-logo.png";
 import { z } from "zod";
 
 // Helper function to extract username from URL based on platform
@@ -26,6 +27,9 @@ const extractUsernameFromUrl = (url: string, platform: Platform): string | null 
     if (platform === "youtube" && !hostname.includes("youtube.com")) {
       return null;
     }
+    if (platform === "twitter" && !(hostname.includes("twitter.com") || hostname.includes("x.com"))) {
+      return null;
+    }
     
     // Extract username based on platform
     if (platform === "tiktok" || platform === "youtube") {
@@ -35,8 +39,8 @@ const extractUsernameFromUrl = (url: string, platform: Platform): string | null 
       return match ? match[1].toLowerCase() : null;
     }
     
-    if (platform === "instagram") {
-      // Format: https://www.instagram.com/username/
+    if (platform === "instagram" || platform === "twitter") {
+      // Format: https://www.instagram.com/username/ or https://twitter.com/username
       const pathParts = urlObj.pathname.split('/').filter(p => p);
       return pathParts.length > 0 ? pathParts[0].toLowerCase() : null;
     }
@@ -48,7 +52,7 @@ const extractUsernameFromUrl = (url: string, platform: Platform): string | null 
 };
 
 const socialAccountSchema = z.object({
-  platform: z.enum(["tiktok", "instagram", "youtube"], {
+  platform: z.enum(["tiktok", "instagram", "youtube", "twitter"], {
     required_error: "Please select a platform"
   }),
   username: z.string()
@@ -77,7 +81,7 @@ interface AddSocialAccountDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
-type Platform = "tiktok" | "instagram" | "youtube";
+type Platform = "tiktok" | "instagram" | "youtube" | "twitter";
 export function AddSocialAccountDialog({
   open,
   onOpenChange,
@@ -165,6 +169,8 @@ export function AddSocialAccountDialog({
         return "Instagram";
       case "youtube":
         return "YouTube";
+      case "twitter":
+        return "X (Twitter)";
     }
   };
   const getPlatformIcon = (platform: Platform) => {
@@ -176,6 +182,8 @@ export function AddSocialAccountDialog({
         return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
       case "youtube":
         return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
+      case "twitter":
+        return <img src={xLogo} alt="X" className={iconClass} />;
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
@@ -191,8 +199,8 @@ export function AddSocialAccountDialog({
           {/* Platform Selection - Card Style */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Select Platform</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {(["tiktok", "instagram", "youtube"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`
+            <div className="grid grid-cols-2 gap-2">
+              {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`
                     relative flex flex-col items-center gap-2 p-3 rounded-lg
                     transition-all duration-300 hover:scale-105
                     ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
