@@ -41,7 +41,7 @@ export function XLinkDialog({ userId, twitterUsername, onSuccess }: XLinkDialogP
     const codeChallenge = 'challenge';
     
     const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?` +
-      `client_id=${TWITTER_CLIENT_ID}&` +
+      `client_id=${YXNfUndDN1BXZFZCOVhJMjFQaWQ6MTpjaQ}&` +
       `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
       `response_type=code&` +
       `scope=tweet.read%20users.read&` +
