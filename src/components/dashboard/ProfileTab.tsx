@@ -629,7 +629,7 @@ export function ProfileTab() {
                     bio: e.target.value
                   })} 
                   placeholder="Tell us about yourself..."
-                  className="bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 text-sm min-h-[100px] resize-none"
+                  className="bg-background focus-visible:bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none text-sm min-h-[100px] resize-none"
                   maxLength={500}
                 />
                 <p className="text-xs text-muted-foreground">
