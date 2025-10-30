@@ -548,6 +548,45 @@ export function ProfileTab() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSaveProfile} className="space-y-6">
+            {/* Discord Integration */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Discord Account</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Connect your Discord account to access community features
+                  </p>
+                </div>
+                <DiscordLinkDialog 
+                  userId={profile.id}
+                  discordUsername={profile.discord_username || undefined}
+                  onSuccess={fetchProfile}
+                />
+              </div>
+              {profile.discord_username && (
+                <div className="p-3 rounded-lg bg-muted/20 border border-primary/20 flex items-center gap-3">
+                  {profile.discord_avatar && (
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={profile.discord_avatar} />
+                      <AvatarFallback>
+                        {profile.discord_username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{profile.discord_username}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Connected {profile.discord_connected_at && formatDistanceToNow(new Date(profile.discord_connected_at), { addSuffix: true })}
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Linked
+                  </Badge>
+                </div>
+              )}
+            </div>
+
             {/* Avatar Upload Section */}
             <div className="space-y-3">
               <div className="flex items-start gap-6">
@@ -648,45 +687,6 @@ export function ProfileTab() {
                   {profile.bio?.length || 0}/500 characters
                 </p>
               </div>
-            </div>
-
-            {/* Discord Integration */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm font-medium">Discord Account</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Connect your Discord account to access community features
-                  </p>
-                </div>
-                <DiscordLinkDialog 
-                  userId={profile.id}
-                  discordUsername={profile.discord_username || undefined}
-                  onSuccess={fetchProfile}
-                />
-              </div>
-              {profile.discord_username && (
-                <div className="p-3 rounded-lg bg-muted/20 border border-primary/20 flex items-center gap-3">
-                  {profile.discord_avatar && (
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={profile.discord_avatar} />
-                      <AvatarFallback>
-                        {profile.discord_username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{profile.discord_username}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Connected {profile.discord_connected_at && formatDistanceToNow(new Date(profile.discord_connected_at), { addSuffix: true })}
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Linked
-                  </Badge>
-                </div>
-              )}
             </div>
 
 

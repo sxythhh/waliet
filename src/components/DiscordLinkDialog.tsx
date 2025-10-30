@@ -104,7 +104,11 @@ export function DiscordLinkDialog({ userId, discordUsername, onSuccess }: Discor
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={isLinked ? "outline" : "default"} size="sm" className="gap-2">
+        <Button 
+          variant={isLinked ? "outline" : "default"} 
+          size="sm" 
+          className={`gap-2 font-geist tracking-tight ${!isLinked ? 'bg-[#5765F2] hover:bg-[#5765F2]' : ''}`}
+        >
           {!isLinked && <img src={discordIcon} alt="Discord" className="w-4 h-4" />}
           {isLinked ? "Manage Discord" : "Connect Discord"}
         </Button>
