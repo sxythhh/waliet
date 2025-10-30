@@ -14,6 +14,118 @@ export type Database = {
   }
   public: {
     Tables: {
+      bounty_applications: {
+        Row: {
+          application_text: string | null
+          applied_at: string
+          bounty_campaign_id: string
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          application_text?: string | null
+          applied_at?: string
+          bounty_campaign_id: string
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          application_text?: string | null
+          applied_at?: string
+          bounty_campaign_id?: string
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_applications_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_campaigns: {
+        Row: {
+          accepted_creators_count: number
+          banner_url: string | null
+          brand_id: string
+          content_style_requirements: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          max_accepted_creators: number
+          monthly_retainer: number
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          videos_per_month: number
+        }
+        Insert: {
+          accepted_creators_count?: number
+          banner_url?: string | null
+          brand_id: string
+          content_style_requirements: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          max_accepted_creators: number
+          monthly_retainer: number
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          videos_per_month: number
+        }
+        Update: {
+          accepted_creators_count?: number
+          banner_url?: string | null
+          brand_id?: string
+          content_style_requirements?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          max_accepted_creators?: number
+          monthly_retainer?: number
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          videos_per_month?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_applications: {
         Row: {
           business_description: string
@@ -1748,18 +1860,9 @@ export type Database = {
         Args: { encrypted_details: string; wallet_user_id: string }
         Returns: Json
       }
-      encrypt_payout_details: {
-        Args: { details: Json }
-        Returns: string
-      }
-      get_current_user_email: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_email: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      encrypt_payout_details: { Args: { details: Json }; Returns: string }
+      get_current_user_email: { Args: never; Returns: string }
+      get_user_email: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

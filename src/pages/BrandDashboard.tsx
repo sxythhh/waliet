@@ -2,11 +2,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
+import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
+import { BountyApplicationsSheet } from "@/components/brand/BountyApplicationsSheet";
+import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid, Menu } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid, Menu, DollarSign, Video, Users, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -37,6 +41,22 @@ interface Campaign {
   slug: string;
   created_at: string;
 }
+
+interface BountyCampaign {
+  id: string;
+  title: string;
+  description: string | null;
+  monthly_retainer: number;
+  videos_per_month: number;
+  content_style_requirements: string;
+  max_accepted_creators: number;
+  accepted_creators_count: number;
+  start_date: string | null;
+  end_date: string | null;
+  banner_url: string | null;
+  status: string;
+  created_at: string;
+}
 export default function BrandDashboard() {
   const {
     slug
@@ -47,14 +67,19 @@ export default function BrandDashboard() {
   } = useSidebar();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [bounties, setBounties] = useState<BountyCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
-  const [activeView, setActiveView] = useState<"campaigns" | "home">("home");
+  const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
+  const [activeView, setActiveView] = useState<"campaigns" | "bounties" | "home">("home");
+  const [createBountyOpen, setCreateBountyOpen] = useState(false);
+  const [selectedBounty, setSelectedBounty] = useState<{ id: string; title: string; maxAccepted: number; currentAccepted: number } | null>(null);
+  const [applicationsSheetOpen, setApplicationsSheetOpen] = useState(false);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
   const handleViewChange = (value: string) => {
-    const newView = value as "campaigns" | "home";
+    const newView = value as "campaigns" | "bounties" | "home";
     setActiveView(newView);
 
     // Auto-hide sidebar when switching to Home view
@@ -92,6 +117,16 @@ export default function BrandDashboard() {
         application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions : []
       }));
       setCampaigns(parsedCampaigns as Campaign[]);
+
+      // Fetch bounties for this brand
+      const {
+        data: bountiesData,
+        error: bountiesError
+      } = await supabase.from("bounty_campaigns").select("*").eq("brand_id", brandData.id).order("created_at", {
+        ascending: false
+      });
+      if (bountiesError) throw bountiesError;
+      setBounties((bountiesData as any) || []);
     } catch (error) {
       console.error("Error fetching brand data:", error);
       toast.error("Failed to load brand data");
@@ -106,21 +141,43 @@ export default function BrandDashboard() {
     setCampaignToDelete(campaign);
     setDeleteDialogOpen(true);
   };
+  
+  const handleDeleteBountyClick = (bounty: BountyCampaign) => {
+    setBountyToDelete(bounty);
+    setDeleteDialogOpen(true);
+  };
+  
   const handleDeleteConfirm = async () => {
-    if (!campaignToDelete) return;
-    try {
-      const {
-        error
-      } = await supabase.from("campaigns").delete().eq("id", campaignToDelete.id);
-      if (error) throw error;
-      toast.success("Campaign deleted successfully");
-      fetchBrandData();
-    } catch (error) {
-      console.error("Error deleting campaign:", error);
-      toast.error("Failed to delete campaign");
-    } finally {
-      setDeleteDialogOpen(false);
-      setCampaignToDelete(null);
+    if (campaignToDelete) {
+      try {
+        const {
+          error
+        } = await supabase.from("campaigns").delete().eq("id", campaignToDelete.id);
+        if (error) throw error;
+        toast.success("Campaign deleted successfully");
+        fetchBrandData();
+      } catch (error) {
+        console.error("Error deleting campaign:", error);
+        toast.error("Failed to delete campaign");
+      } finally {
+        setDeleteDialogOpen(false);
+        setCampaignToDelete(null);
+      }
+    } else if (bountyToDelete) {
+      try {
+        const {
+          error
+        } = await supabase.from("bounty_campaigns").delete().eq("id", bountyToDelete.id);
+        if (error) throw error;
+        toast.success("Bounty deleted successfully");
+        fetchBrandData();
+      } catch (error) {
+        console.error("Error deleting bounty:", error);
+        toast.error("Failed to delete bounty");
+      } finally {
+        setDeleteDialogOpen(false);
+        setBountyToDelete(null);
+      }
     }
   };
   if (loading) {
@@ -164,7 +221,13 @@ export default function BrandDashboard() {
                   {brand.name}
                 </h1>
               </div>
-              <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
+              <div className="flex gap-2">
+                <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
+                <Button onClick={() => setCreateBountyOpen(true)} variant="outline" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  Create Bounty
+                </Button>
+              </div>
             </div>
 
             {/* View Toggle - Only show if both views are available */}
@@ -177,6 +240,10 @@ export default function BrandDashboard() {
                 <TabsTrigger value="campaigns" className="gap-2 data-[state=active]:bg-card">
                   <LayoutGrid className="h-4 w-4" />
                   Campaigns
+                </TabsTrigger>
+                <TabsTrigger value="bounties" className="gap-2 data-[state=active]:bg-card">
+                  <Users className="h-4 w-4" />
+                  Bounties
                 </TabsTrigger>
               </TabsList>
             </Tabs>}
@@ -329,13 +396,25 @@ export default function BrandDashboard() {
               </div>}
           </div>}
 
+          {/* Bounties View */}
+          {effectiveView === "bounties" && <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
+              <BountyCampaignsView 
+                bounties={bounties}
+                onViewApplications={(bounty) => {
+                  setSelectedBounty(bounty);
+                  setApplicationsSheetOpen(true);
+                }}
+                onDelete={handleDeleteBountyClick}
+              />
+          </div>}
+
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent className="bg-card border">
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete <strong className="text-foreground">{campaignToDelete?.title}</strong>.
+                This will permanently delete <strong className="text-foreground">{campaignToDelete?.title || bountyToDelete?.title}</strong>.
                 This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -349,5 +428,25 @@ export default function BrandDashboard() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Bounty Creation Dialog */}
+        <CreateBountyDialog 
+          open={createBountyOpen}
+          onOpenChange={setCreateBountyOpen}
+          brandId={brand.id}
+          onSuccess={fetchBrandData}
+        />
+
+        {/* Bounty Applications Sheet */}
+        {selectedBounty && (
+          <BountyApplicationsSheet
+            open={applicationsSheetOpen}
+            onOpenChange={setApplicationsSheetOpen}
+            bountyId={selectedBounty.id}
+            bountyTitle={selectedBounty.title}
+            maxAccepted={selectedBounty.maxAccepted}
+            currentAccepted={selectedBounty.currentAccepted}
+          />
+        )}
     </div>;
 }
