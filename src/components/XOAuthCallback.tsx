@@ -20,8 +20,11 @@ export function XOAuthCallback() {
             type: 'x-oauth-error',
             error: error
           }, window.location.origin);
+          window.close();
+        } else {
+          // If no opener, redirect to dashboard with error
+          navigate('/dashboard?tab=profile&error=x_oauth_failed');
         }
-        window.close();
         return;
       }
 
@@ -38,8 +41,10 @@ export function XOAuthCallback() {
             type: 'x-oauth-error',
             error: 'Invalid state parameter'
           }, window.location.origin);
+          window.close();
+        } else {
+          navigate('/dashboard?tab=profile&error=invalid_state');
         }
-        window.close();
         return;
       }
 
@@ -49,8 +54,10 @@ export function XOAuthCallback() {
             type: 'x-oauth-error',
             error: 'Missing authorization code or user ID'
           }, window.location.origin);
+          window.close();
+        } else {
+          navigate('/dashboard?tab=profile&error=missing_code');
         }
-        window.close();
         return;
       }
 
@@ -62,15 +69,17 @@ export function XOAuthCallback() {
 
         if (functionError) throw functionError;
 
-        // Send success message to parent window
+        // If there's an opener window, send message and close
         if (window.opener) {
           window.opener.postMessage({
             type: 'x-oauth-success',
             data
           }, window.location.origin);
+          window.close();
+        } else {
+          // If no opener, redirect to dashboard with success
+          navigate('/dashboard?tab=profile&success=x_connected');
         }
-        
-        window.close();
       } catch (error: any) {
         console.error('Error linking X:', error);
         if (window.opener) {
@@ -78,8 +87,10 @@ export function XOAuthCallback() {
             type: 'x-oauth-error',
             error: error.message
           }, window.location.origin);
+          window.close();
+        } else {
+          navigate('/dashboard?tab=profile&error=connection_failed');
         }
-        window.close();
       }
     };
 
