@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { code, userId, action } = await req.json();
+    const { code, userId, action, redirectUri } = await req.json();
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -49,8 +49,7 @@ serve(async (req) => {
 
     const DISCORD_CLIENT_ID = Deno.env.get('DISCORD_CLIENT_ID');
     const DISCORD_CLIENT_SECRET = Deno.env.get('DISCORD_CLIENT_SECRET');
-    // Use the actual app callback URL, not the edge function URL
-    const REDIRECT_URI = 'https://virality.gg/discord/callback';
+    const REDIRECT_URI = redirectUri;
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {

@@ -54,9 +54,11 @@ export function DiscordOAuthCallback() {
       }
 
       try {
+        const redirectUri = `${window.location.origin}/discord/callback`;
+        
         // Exchange code for Discord user data
         const { data, error: functionError } = await supabase.functions.invoke('discord-oauth', {
-          body: { code, userId }
+          body: { code, userId, redirectUri }
         });
 
         if (functionError) throw functionError;
