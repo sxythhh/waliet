@@ -321,8 +321,8 @@ export default function CampaignDetail() {
         
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
             onClick={() => navigate("/dashboard?tab=profile")}
+            className="border-0"
           >
             <Link className="mr-2 h-4 w-4" />
             Link Account
