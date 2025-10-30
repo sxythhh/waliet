@@ -272,7 +272,7 @@ export function AddSocialAccountDialog({
           {/* Show OAuth button for Twitter, manual input for others */}
           {selectedPlatform === "twitter" ? (
             <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-muted/20 border border-primary/20">
+              <div className="p-4 rounded-lg bg-muted/20 border">
                 <p className="text-sm text-muted-foreground mb-4">
                   Connect your X account to automatically link your profile
                 </p>
