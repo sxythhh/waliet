@@ -348,23 +348,24 @@ export function AnalyticsTab() {
                       border: "none",
                       borderRadius: "12px",
                       padding: "12px 16px",
-                      fontFamily: "Instrument Sans, sans-serif",
+                      fontFamily: "Geist, sans-serif",
+                      fontWeight: 700,
                       letterSpacing: "-0.5px"
                     }}
                     labelStyle={{
                       color: "#666666",
-                      fontWeight: 500,
+                      fontWeight: 700,
                       marginBottom: "4px",
-                      fontFamily: "Instrument Sans, sans-serif",
+                      fontFamily: "Geist, sans-serif",
                       letterSpacing: "-0.5px",
                       fontSize: "12px"
                     }}
                     formatter={(value: number) => [`${value}`, 'Users']}
                     itemStyle={{
                       color: "#ffffff",
-                      fontFamily: "Instrument Sans, sans-serif",
+                      fontFamily: "Geist, sans-serif",
                       letterSpacing: "-0.5px",
-                      fontWeight: 600
+                      fontWeight: 700
                     }}
                     cursor={{
                       stroke: "#333333",
@@ -420,23 +421,24 @@ export function AnalyticsTab() {
                       border: "none",
                       borderRadius: "12px",
                       padding: "12px 16px",
-                      fontFamily: "Instrument Sans, sans-serif",
+                      fontFamily: "Geist, sans-serif",
+                      fontWeight: 700,
                       letterSpacing: "-0.5px"
                     }}
                     labelStyle={{
                       color: "#666666",
-                      fontWeight: 500,
+                      fontWeight: 700,
                       marginBottom: "4px",
-                      fontFamily: "Instrument Sans, sans-serif",
+                      fontFamily: "Geist, sans-serif",
                       letterSpacing: "-0.5px",
                       fontSize: "12px"
                     }}
                     formatter={(value: number) => [`${value}`, 'Count']}
                     itemStyle={{
                       color: "#ffffff",
-                      fontFamily: "Instrument Sans, sans-serif",
+                      fontFamily: "Geist, sans-serif",
                       letterSpacing: "-0.5px",
-                      fontWeight: 600
+                      fontWeight: 700
                     }}
                     cursor={{
                       fill: "rgba(255, 255, 255, 0.05)"

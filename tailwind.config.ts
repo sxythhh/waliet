@@ -14,9 +14,13 @@ export default {
     },
     extend: {
       fontFamily: {
-        'instrument': ['Instrument Sans', 'sans-serif'],
+        'geist': ['Geist', 'sans-serif'],
+        'instrument': ['Geist', 'sans-serif'], // Alias for backward compatibility
         'chakra': ['Chakra Petch', 'sans-serif'],
         'clash': ['Clash Grotesk', 'sans-serif'],
+      },
+      letterSpacing: {
+        'tighter-custom': '-0.5px',
       },
       colors: {
         border: "hsl(var(--border))",
