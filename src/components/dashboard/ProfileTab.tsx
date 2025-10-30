@@ -491,13 +491,9 @@ export function ProfileTab() {
             const submissionTimestamp = getSubmissionTimestamp();
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#131313]">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
-                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent w-fit">
+                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent border-t w-fit" style={{ borderTopColor: '#3b3b3b' }}>
                         {getPlatformIcon(account.platform)}
                         <span className="font-medium">{account.username}</span>
-                        {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-success" />}
-                        {demographicStatus === 'pending' && <Clock className="h-4 w-4 text-warning" />}
-                        {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-destructive" />}
-                        {!demographicStatus && <AlertCircle className="h-4 w-4 text-destructive" />}
                       </div>
                       
                       {/* Link icon separator - hidden on mobile */}
