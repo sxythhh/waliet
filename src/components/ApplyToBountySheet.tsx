@@ -162,7 +162,7 @@ export function ApplyToBountySheet({
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-white/5 border border-white/10 p-4">
+            <div className="rounded-lg bg-white/5 p-4">
               <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
                 <DollarSign className="h-4 w-4" />
                 Monthly Retainer
@@ -172,7 +172,7 @@ export function ApplyToBountySheet({
               </p>
             </div>
 
-            <div className="rounded-lg bg-white/5 border border-white/10 p-4">
+            <div className="rounded-lg bg-white/5 p-4">
               <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
                 <Video className="h-4 w-4" />
                 Videos/Month
@@ -182,7 +182,7 @@ export function ApplyToBountySheet({
               </p>
             </div>
 
-            <div className="rounded-lg bg-white/5 border border-white/10 p-4 col-span-2">
+            <div className="rounded-lg bg-white/5 p-4 col-span-2">
               <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
                 <Users className="h-4 w-4" />
                 Available Positions
@@ -201,7 +201,7 @@ export function ApplyToBountySheet({
           </div>
 
           {/* Content Requirements */}
-          <div className="rounded-lg bg-white/5 border border-white/10 p-4">
+          <div className="rounded-lg bg-white/5 p-4">
             <h3 className="text-sm font-semibold text-white mb-2">Content Style Requirements</h3>
             <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">
               {bounty.content_style_requirements}
@@ -221,7 +221,7 @@ export function ApplyToBountySheet({
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
                 placeholder="https://youtube.com/watch?v=..."
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                className="bg-white/5 border-transparent text-white placeholder:text-white/30"
                 required
               />
               <p className="text-xs text-white/50 mt-2">
@@ -238,16 +238,16 @@ export function ApplyToBountySheet({
                 value={applicationText}
                 onChange={(e) => setApplicationText(e.target.value)}
                 placeholder="Tell the brand why you'd be perfect for this bounty..."
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 min-h-[120px] resize-none"
+                className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[120px] resize-none"
               />
             </div>
 
-            <div className="flex gap-3 pt-4 sticky bottom-0 bg-[#0a0a0a] py-4 -mx-6 px-6 border-t border-white/10">
+            <div className="flex gap-3 pt-4 sticky bottom-0 bg-[#0a0a0a] py-4 -mx-6 px-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="flex-1 bg-transparent border-white/10 text-white hover:bg-white/5"
+                className="flex-1 bg-transparent border-transparent text-white hover:bg-white/5"
                 disabled={submitting}
               >
                 Cancel
