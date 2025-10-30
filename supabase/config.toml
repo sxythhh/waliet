@@ -29,3 +29,6 @@ verify_jwt = true
 
 [functions.check-task-reminders]
 verify_jwt = false
+
+[functions.discord-oauth]
+verify_jwt = false

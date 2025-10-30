@@ -1009,6 +1009,12 @@ export type Database = {
           country: string | null
           created_at: string | null
           demographics_score: number | null
+          discord_avatar: string | null
+          discord_connected_at: string | null
+          discord_discriminator: string | null
+          discord_email: string | null
+          discord_id: string | null
+          discord_username: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -1031,6 +1037,12 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           demographics_score?: number | null
+          discord_avatar?: string | null
+          discord_connected_at?: string | null
+          discord_discriminator?: string | null
+          discord_email?: string | null
+          discord_id?: string | null
+          discord_username?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -1053,6 +1065,12 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           demographics_score?: number | null
+          discord_avatar?: string | null
+          discord_connected_at?: string | null
+          discord_discriminator?: string | null
+          discord_email?: string | null
+          discord_id?: string | null
+          discord_username?: string | null
           email?: string | null
           full_name?: string | null
           id?: string

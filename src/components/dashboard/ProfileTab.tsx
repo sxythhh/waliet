@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PhoneInput } from "@/components/PhoneInput";
+import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -35,6 +36,12 @@ interface Profile {
   country: string | null;
   city: string | null;
   phone_number: string | null;
+  discord_id: string | null;
+  discord_username: string | null;
+  discord_discriminator: string | null;
+  discord_avatar: string | null;
+  discord_email: string | null;
+  discord_connected_at: string | null;
 }
 interface SocialAccount {
   id: string;
@@ -636,6 +643,45 @@ export function ProfileTab() {
                   {profile.bio?.length || 0}/500 characters
                 </p>
               </div>
+            </div>
+
+            {/* Discord Integration */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Discord Account</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Connect your Discord account to access community features
+                  </p>
+                </div>
+                <DiscordLinkDialog 
+                  userId={profile.id}
+                  discordUsername={profile.discord_username || undefined}
+                  onSuccess={fetchProfile}
+                />
+              </div>
+              {profile.discord_username && (
+                <div className="p-3 rounded-lg bg-muted/20 border border-primary/20 flex items-center gap-3">
+                  {profile.discord_avatar && (
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={profile.discord_avatar} />
+                      <AvatarFallback>
+                        {profile.discord_username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{profile.discord_username}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Connected {profile.discord_connected_at && formatDistanceToNow(new Date(profile.discord_connected_at), { addSuffix: true })}
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Linked
+                  </Badge>
+                </div>
+              )}
             </div>
 
             {/* Save Button */}
