@@ -631,6 +631,7 @@ export function CampaignAnalyticsTable({
         if (userProfile?.email && campaignData?.title) {
           await supabase.functions.invoke("send-payment-notification", {
             body: {
+              userId: selectedUser.user_id,
               userEmail: userProfile.email,
               userName: userProfile.full_name || userProfile.username,
               amount: amount,
