@@ -28,8 +28,7 @@ export function DiscordLinkDialog({ userId, discordUsername, onSuccess }: Discor
   const isLinked = !!discordUsername;
 
   const handleLinkDiscord = () => {
-    // Replace 'YOUR_DISCORD_CLIENT_ID_HERE' with your actual Discord Client ID
-    const DISCORD_CLIENT_ID = 'YOUR_DISCORD_CLIENT_ID_HERE';
+    const DISCORD_CLIENT_ID = '1358316231341375518';
     
     const REDIRECT_URI = `${window.location.origin}/discord/callback`;
     const STATE = btoa(JSON.stringify({ userId }));
