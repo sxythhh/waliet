@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Search, DollarSign, Video, Users } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
-import { ApplyToBountyDialog } from "@/components/ApplyToBountyDialog";
+import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
@@ -68,7 +68,7 @@ export function DiscoverTab() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedBounty, setSelectedBounty] = useState<BountyCampaign | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [bountyDialogOpen, setBountyDialogOpen] = useState(false);
+  const [bountySheetOpen, setBountySheetOpen] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     fetchCampaigns();
@@ -361,11 +361,11 @@ export function DiscoverTab() {
                     return (
                       <Card
                         key={bounty.id}
-                        className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative ${isEnded ? "opacity-60" : "cursor-pointer hover:bg-accent/50"}`}
+                        className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative ${isEnded ? "opacity-60" : "cursor-pointer"}`}
                         onClick={() => {
                           if (!isEnded) {
                             setSelectedBounty(bounty);
-                            setBountyDialogOpen(true);
+                            setBountySheetOpen(true);
                           }
                         }}
                       >
@@ -433,17 +433,14 @@ export function DiscoverTab() {
 
       <JoinCampaignSheet campaign={selectedCampaign} open={sheetOpen} onOpenChange={setSheetOpen} />
       
-      {selectedBounty && (
-        <ApplyToBountyDialog
-          open={bountyDialogOpen}
-          onOpenChange={setBountyDialogOpen}
-          bountyId={selectedBounty.id}
-          bountyTitle={selectedBounty.title}
-          onSuccess={() => {
-            setBountyDialogOpen(false);
-            fetchCampaigns();
-          }}
-        />
-      )}
+      <ApplyToBountySheet
+        open={bountySheetOpen}
+        onOpenChange={setBountySheetOpen}
+        bounty={selectedBounty}
+        onSuccess={() => {
+          setBountySheetOpen(false);
+          fetchCampaigns();
+        }}
+      />
     </div>;
 }
