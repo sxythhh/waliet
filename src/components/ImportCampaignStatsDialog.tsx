@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface ImportCampaignStatsDialogProps {
   campaignId: string;
@@ -34,6 +35,7 @@ export function ImportCampaignStatsDialog({
   const [syncProgress, setSyncProgress] = useState<{ total: number; synced: number } | null>(null);
   const [shortimizeCollectionName, setShortimizeCollectionName] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const parseCSVLine = (line: string): string[] => {
     const result: string[] = [];
@@ -164,12 +166,12 @@ export function ImportCampaignStatsDialog({
         }
 
         if (records.length > 0) {
-          // Match existing accounts by username and platform, update with CSV data
+          // Insert records - allow multiple date ranges per account
           const { data, error } = await supabase
             .from("campaign_account_analytics")
             .upsert(records, { 
-              onConflict: 'campaign_id,account_username,platform',
-              ignoreDuplicates: false // Update existing records with new metrics
+              onConflict: 'campaign_id,account_username,platform,start_date,end_date',
+              ignoreDuplicates: false // Update if same date range exists
             });
 
           if (error) {
@@ -254,6 +256,7 @@ export function ImportCampaignStatsDialog({
 
   const handleDeleteAllAnalytics = async () => {
     setDeleting(true);
+    setDeleteConfirmOpen(false);
     try {
       const { error } = await supabase
         .from('campaign_account_analytics')
@@ -473,21 +476,12 @@ export function ImportCampaignStatsDialog({
         <DialogFooter className="mt-4 flex justify-between">
           <Button
             variant="destructive"
-            onClick={handleDeleteAllAnalytics}
+            onClick={() => setDeleteConfirmOpen(true)}
             disabled={deleting || importing || syncing}
             className="mr-auto"
           >
-            {deleting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              <>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete All Analytics
-              </>
-            )}
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete All Analytics
           </Button>
           
           <div className="flex gap-2">
@@ -509,6 +503,35 @@ export function ImportCampaignStatsDialog({
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="bg-[#202020] border-white/10 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Analytics?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              This will permanently delete all imported analytics data for this campaign. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/10">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAllAnalytics}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete All"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
