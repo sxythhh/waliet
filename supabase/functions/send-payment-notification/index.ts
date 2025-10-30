@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +12,7 @@ const corsHeaders = {
 };
 
 interface PaymentNotificationRequest {
+  userId: string;
   userEmail: string;
   userName: string;
   amount: number;
@@ -24,6 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { 
+      userId,
       userEmail, 
       userName, 
       amount, 
@@ -34,6 +40,81 @@ const handler = async (req: Request): Promise<Response> => {
     }: PaymentNotificationRequest = await req.json();
 
     console.log("Sending payment notification to:", userEmail);
+
+    // Send Discord DM if user has Discord linked
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('discord_id')
+      .eq('id', userId)
+      .single();
+
+    if (profile?.discord_id && DISCORD_BOT_TOKEN) {
+      try {
+        // Create DM channel
+        const dmChannelResponse = await fetch('https://discord.com/api/v10/users/@me/channels', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipient_id: profile.discord_id,
+          }),
+        });
+
+        if (dmChannelResponse.ok) {
+          const dmChannel = await dmChannelResponse.json();
+          
+          // Send message
+          await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: "💰 **Payment Received!**",
+              embeds: [{
+                title: "Payment Notification",
+                description: `You've received a payment for your campaign performance!`,
+                color: 0x10b981, // Green
+                fields: [
+                  {
+                    name: "Amount",
+                    value: `$${amount.toFixed(2)}`,
+                    inline: true
+                  },
+                  {
+                    name: "Campaign",
+                    value: campaignName,
+                    inline: true
+                  },
+                  {
+                    name: "Account",
+                    value: `@${accountUsername} (${platform})`,
+                    inline: false
+                  },
+                  {
+                    name: "Views Paid",
+                    value: views.toLocaleString(),
+                    inline: true
+                  }
+                ],
+                footer: {
+                  text: "Virality - Check your dashboard for details"
+                },
+                timestamp: new Date().toISOString()
+              }]
+            }),
+          });
+          console.log("Discord DM sent successfully");
+        }
+      } catch (discordError) {
+        console.error("Discord DM failed (non-critical):", discordError);
+        // Continue with email notification even if Discord fails
+      }
+    }
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",

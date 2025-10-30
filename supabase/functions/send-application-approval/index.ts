@@ -57,12 +57,88 @@ const handler = async (req: Request): Promise<Response> => {
 
     const campaign = submission.campaigns as any;
     const profile = submission.profiles as any;
+    const creatorId = submission.creator_id;
 
     if (!profile?.email) {
       throw new Error("User email not found");
     }
 
     const campaignUrl = `https://virality.gg/campaign/${campaign.id}`;
+
+    // Send Discord DM if user has Discord linked
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('discord_id')
+      .eq('id', creatorId)
+      .single();
+
+    if (userProfile?.discord_id) {
+      try {
+        const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+        
+        if (DISCORD_BOT_TOKEN) {
+          // Create DM channel
+          const dmChannelResponse = await fetch('https://discord.com/api/v10/users/@me/channels', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              recipient_id: userProfile.discord_id,
+            }),
+          });
+
+          if (dmChannelResponse.ok) {
+            const dmChannel = await dmChannelResponse.json();
+            
+            // Send message
+            await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                content: "🎉 **Campaign Application Approved!**",
+                embeds: [{
+                  title: campaign.title,
+                  description: `Congratulations! Your application has been approved by **${campaign.brand_name}**.`,
+                  color: 0x10b981, // Green
+                  thumbnail: campaign.brand_logo_url ? {
+                    url: campaign.brand_logo_url
+                  } : undefined,
+                  fields: [
+                    {
+                      name: "Next Steps",
+                      value: "• Review campaign guidelines\n• Link your social account\n• Start creating content\n• Earnings tracked automatically",
+                      inline: false
+                    }
+                  ],
+                  footer: {
+                    text: "Click the button below to view campaign details"
+                  },
+                  timestamp: new Date().toISOString()
+                }],
+                components: [{
+                  type: 1,
+                  components: [{
+                    type: 2,
+                    style: 5,
+                    label: "View Campaign",
+                    url: campaignUrl
+                  }]
+                }]
+              }),
+            });
+            console.log("Discord DM sent successfully");
+          }
+        }
+      } catch (discordError) {
+        console.error("Discord DM failed (non-critical):", discordError);
+        // Continue with email notification even if Discord fails
+      }
+    }
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
