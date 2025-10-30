@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
+import discordIcon from "@/assets/discord-icon.png";
 
 interface DiscordLinkDialogProps {
   userId: string;
@@ -103,8 +104,9 @@ export function DiscordLinkDialog({ userId, discordUsername, onSuccess }: Discor
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={isLinked ? "outline" : "default"} size="sm">
-          {isLinked ? "Manage Discord" : "Link Discord"}
+        <Button variant={isLinked ? "outline" : "default"} size="sm" className="gap-2">
+          {!isLinked && <img src={discordIcon} alt="Discord" className="w-4 h-4" />}
+          {isLinked ? "Manage Discord" : "Connect Discord"}
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-[#0b0b0b] border">
@@ -164,11 +166,12 @@ export function DiscordLinkDialog({ userId, discordUsername, onSuccess }: Discor
             ) : (
               <>
                 <Button
-                  className="flex-1"
+                  className="flex-1 gap-2"
                   onClick={handleLinkDiscord}
                   disabled={loading}
                 >
-                  Link Discord Account
+                  <img src={discordIcon} alt="Discord" className="w-4 h-4" />
+                  Connect Discord
                 </Button>
                 <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>
                   Cancel
