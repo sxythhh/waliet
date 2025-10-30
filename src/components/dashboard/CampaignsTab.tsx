@@ -380,7 +380,8 @@ export function CampaignsTab() {
                           setSelectedAccount(account);
                           setManageAccountDialogOpen(true);
                         }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent border-t"
+                        style={{ borderTopColor: '#3b3b3b' }}
                       >
                         <div className="w-4 h-4">
                           {account.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
