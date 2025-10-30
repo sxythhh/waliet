@@ -17,6 +17,7 @@ import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PhoneInput } from "@/components/PhoneInput";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -586,12 +587,16 @@ export function ProfileTab() {
             <div className="space-y-3">
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-                  <Input id="phone" type="tel" value={profile.phone_number || ""} onChange={e => setProfile({
-                  ...profile,
-                  phone_number: e.target.value
-                })} placeholder="+1 (555) 000-0000" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
+                  <PhoneInput
+                    value={profile.phone_number || ""}
+                    onChange={(value) => setProfile({
+                      ...profile,
+                      phone_number: value
+                    })}
+                    placeholder="Enter phone number"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -602,7 +607,7 @@ export function ProfileTab() {
                 })} placeholder="United States" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="city" className="text-sm font-medium">City</Label>
                   <Input id="city" value={profile.city || ""} onChange={e => setProfile({
                   ...profile,

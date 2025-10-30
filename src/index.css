@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Phone Input Styling */
+.phone-input-wrapper {
+  @apply w-full;
+}
+
+.phone-input-wrapper .PhoneInput {
+  @apply w-full;
+}
+
+.phone-input-wrapper .PhoneInputInput {
+  @apply w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.phone-input-wrapper .PhoneInputCountry {
+  @apply mr-2 flex items-center gap-1;
+}
+
+.phone-input-wrapper .PhoneInputCountrySelect {
+  @apply appearance-none bg-transparent border-none outline-none cursor-pointer p-0 m-0;
+}
+
+.phone-input-wrapper .PhoneInputCountryIcon {
+  @apply w-6 h-4 object-cover rounded-sm border border-white/10;
+}
+
+.phone-input-wrapper .PhoneInputCountryIconImg {
+  @apply w-full h-full object-cover;
+}
+
+.phone-input-wrapper .PhoneInputCountrySelectArrow {
+  @apply hidden;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
