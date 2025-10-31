@@ -376,6 +376,18 @@ export function JoinCampaignSheet({
               <p className="text-sm text-slate-50 font-medium">{campaign.description}</p>
             </div>}
 
+          {/* Embedded Content */}
+          <div style={{ overflow: 'hidden', width: '100%', height: '500px' }}>
+            <iframe
+              src="https://sweet-hands-792394.framer.app/pickplan"
+              width="100%"
+              height="500"
+              style={{ border: 'none', overflow: 'hidden' }}
+              scrolling="no"
+              sandbox="allow-same-origin allow-scripts allow-popups"
+            />
+          </div>
+
           {/* Budget & RPM */}
           {!campaign.is_infinite_budget && <div className="rounded-lg p-4 space-y-3 bg-muted/50">
               <div className="flex justify-between items-baseline">
