@@ -357,12 +357,12 @@ export function JoinCampaignSheet({
               {(campaign.campaign_type || campaign.category) && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {campaign.campaign_type && (
-                    <span className="px-2.5 py-1 text-xs font-medium bg-[#4b85f7] text-white border-t-2 border-[#4b85f7]" style={{ borderRadius: '8px' }}>
+                    <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-[#4b85f7]" style={{ borderRadius: '8px' }}>
                       {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
                     </span>
                   )}
                   {campaign.category && (
-                    <span className="px-2.5 py-1 text-xs font-medium bg-muted text-foreground border-t-2 border-[#4a4a4a]" style={{ borderRadius: '8px' }}>
+                    <span className="px-2.5 py-1 text-xs font-medium bg-muted text-foreground border-t border-[#4a4a4a]" style={{ borderRadius: '8px' }}>
                       {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </span>
                   )}
