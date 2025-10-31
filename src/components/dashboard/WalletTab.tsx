@@ -704,6 +704,29 @@ export function WalletTab() {
           }}>
               ${wallet?.balance?.toFixed(2) || "0.00"}
             </p>
+            
+            {/* Mini Balance Chart */}
+            <div className="h-20 -mx-2 mb-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={earningsData}>
+                  <defs>
+                    <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Area 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    fill="url(#balanceGradient)" 
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            
             <Separator className="my-4" />
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground font-medium">In Transit</span>
