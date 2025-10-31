@@ -1130,7 +1130,7 @@ export function WalletTab() {
         <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto">
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Header */}
-              <div className="p-6 pb-8 bg-gradient-to-b from-card to-background border-b sticky top-0 z-10">
+              <div className="p-6 pb-8 bg-card border-b sticky top-0 z-10">
                 {/* Close button and Logo on same line */}
                 <div className="flex items-center justify-between mb-6">
                   
