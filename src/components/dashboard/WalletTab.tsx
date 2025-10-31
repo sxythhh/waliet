@@ -85,7 +85,8 @@ export function WalletTab() {
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
   const [isSubmittingPayout, setIsSubmittingPayout] = useState(false);
   const [p2pTransferDialogOpen, setP2pTransferDialogOpen] = useState(false);
-  const [transactionSearch, setTransactionSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const {
     toast
   } = useToast();
@@ -717,12 +718,32 @@ export function WalletTab() {
         <CardHeader className="px-[24px] py-0 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-lg font-semibold py-[10px]">Recent Transactions</CardTitle>
           {transactions.length > 0 && (
-            <Input
-              placeholder="Search transactions..."
-              value={transactionSearch}
-              onChange={(e) => setTransactionSearch(e.target.value)}
-              className="max-w-xs"
-            />
+            <div className="flex gap-2">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Transaction Type" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="earning">Earnings</SelectItem>
+                  <SelectItem value="withdrawal">Withdrawals</SelectItem>
+                  <SelectItem value="transfer_sent">Transfers Sent</SelectItem>
+                  <SelectItem value="transfer_received">Transfers Received</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_transit">In Transit</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </CardHeader>
         <CardContent>
@@ -730,13 +751,15 @@ export function WalletTab() {
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <div className="space-y-3 max-h-[400px] overflow-y-auto">
               {transactions.filter(transaction => {
-                if (!transactionSearch) return true;
-                const searchLower = transactionSearch.toLowerCase();
-                const typeText = transaction.type === 'earning' ? 'earnings' : transaction.type === 'balance_correction' ? 'balance correction' : transaction.type === 'referral' ? 'referral bonus' : transaction.type === 'transfer_sent' ? 'transfer sent' : transaction.type === 'transfer_received' ? 'transfer received' : 'withdrawal';
-                return typeText.includes(searchLower) || 
-                       transaction.destination?.toLowerCase().includes(searchLower) ||
-                       transaction.source?.toLowerCase().includes(searchLower) ||
-                       transaction.campaign?.title.toLowerCase().includes(searchLower);
+                // Filter by type
+                if (typeFilter !== "all" && transaction.type !== typeFilter) {
+                  return false;
+                }
+                // Filter by status
+                if (statusFilter !== "all" && transaction.status !== statusFilter) {
+                  return false;
+                }
+                return true;
               }).map(transaction => <div key={transaction.id} onClick={() => {
               setSelectedTransaction(transaction);
               setTransactionSheetOpen(true);
