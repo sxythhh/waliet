@@ -1225,10 +1225,8 @@ export function WalletTab() {
                     <div className="space-y-3">
                       {/* Campaign Info */}
                       {selectedTransaction.campaign && <div className="flex items-center gap-3">
-                          {selectedTransaction.campaign.brand_logo_url ? <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center p-1">
+                          {selectedTransaction.campaign.brand_logo_url && <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center p-1">
                               <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-contain" />
-                            </div> : <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center">
-                              <DollarSign className="h-4 w-4 text-muted-foreground" />
                             </div>}
                           <div className="flex-1 min-w-0">
                             <div className="text-xs text-muted-foreground">Campaign</div>
