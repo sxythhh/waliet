@@ -317,9 +317,13 @@ export function WalletTab() {
     if (campaignIds.length > 0) {
       const {
         data: campaigns
-      } = await supabase.from("campaigns").select("id, title, brand_name, brand_logo_url").in("id", campaignIds);
+      } = await supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, brands(logo_url)").in("id", campaignIds);
       campaigns?.forEach(campaign => {
-        campaignsMap.set(campaign.id, campaign);
+        campaignsMap.set(campaign.id, {
+          ...campaign,
+          // Use brands.logo_url as fallback if brand_logo_url is null
+          brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url
+        });
       });
     }
 
@@ -812,23 +816,30 @@ export function WalletTab() {
             backgroundColor: '#0d0d0d'
           }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#131313]">
                   <div className="flex items-center gap-4 flex-1">
-                    {transaction.campaign && (
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
-                        {transaction.campaign.brand_logo_url ? (
-                          <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-contain" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
-                            {transaction.campaign.brand_name?.charAt(0).toUpperCase() || 'C'}
-                          </div>
-                        )}
-                      </div>
-                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-bold font-instrument" style={{
+                        <p className="text-sm font-bold font-instrument flex items-center gap-2" style={{
                     letterSpacing: '-0.5px'
                   }}>
-                          {transaction.type === 'earning' ? `Payment for ${transaction.campaign?.title || 'Campaign'}` : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
+                          {transaction.type === 'earning' ? (
+                            <>
+                              Payment for 
+                              {transaction.campaign && (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="flex-shrink-0 w-5 h-5 rounded bg-background border border-border flex items-center justify-center overflow-hidden">
+                                    {transaction.campaign.brand_logo_url ? (
+                                      <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <span className="text-[10px] font-semibold text-muted-foreground">
+                                        {transaction.campaign.brand_name?.charAt(0).toUpperCase() || 'C'}
+                                      </span>
+                                    )}
+                                  </span>
+                                  {transaction.campaign.title}
+                                </span>
+                              )}
+                            </>
+                          ) : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
                         </p>
                         {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
                     letterSpacing: '-0.5px'
