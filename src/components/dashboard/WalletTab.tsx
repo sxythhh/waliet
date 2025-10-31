@@ -821,25 +821,17 @@ export function WalletTab() {
                         <p className="text-sm font-bold font-instrument flex items-center gap-2" style={{
                     letterSpacing: '-0.5px'
                   }}>
-                          {transaction.type === 'earning' ? (
-                            <>
+                          {transaction.type === 'earning' ? <>
                               Payment for 
-                              {transaction.campaign && (
-                                <span className="inline-flex items-center gap-1.5">
+                              {transaction.campaign && <span className="inline-flex items-center gap-1.5">
                                   <span className="flex-shrink-0 w-5 h-5 rounded bg-background border border-border flex items-center justify-center overflow-hidden">
-                                    {transaction.campaign.brand_logo_url ? (
-                                      <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <span className="text-[10px] font-semibold text-muted-foreground">
+                                    {transaction.campaign.brand_logo_url ? <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" /> : <span className="text-[10px] font-semibold text-muted-foreground">
                                         {transaction.campaign.brand_name?.charAt(0).toUpperCase() || 'C'}
-                                      </span>
-                                    )}
+                                      </span>}
                                   </span>
                                   {transaction.campaign.title}
-                                </span>
-                              )}
-                            </>
-                          ) : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
+                                </span>}
+                            </> : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
                         </p>
                         {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
                     letterSpacing: '-0.5px'
@@ -1141,9 +1133,7 @@ export function WalletTab() {
               <div className="p-6 pb-8 bg-gradient-to-b from-card to-background border-b sticky top-0 z-10">
                 {/* Close button and Logo on same line */}
                 <div className="flex items-center justify-between mb-6">
-                  <Button variant="ghost" size="icon" className="-ml-2" onClick={() => setTransactionSheetOpen(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
+                  
                   <img src={wordmarkLogo} alt="Virality" className="h-12" />
                   <div className="w-8" />
                 </div>
