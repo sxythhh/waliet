@@ -275,7 +275,7 @@ export function WalletTab() {
       data: walletTransactions
     } = await supabase.from("wallet_transactions").select("*").eq("user_id", session.user.id).order("created_at", {
       ascending: false
-    }).limit(10);
+    });
 
     // Fetch payout requests to get full payout details
     const {
@@ -713,14 +713,14 @@ export function WalletTab() {
         </Card>
       </div>
 
-      {/* Recent Transactions - Full Width */}
+      {/* Transactions - Full Width */}
       <Card className="bg-card border-0">
         <CardHeader className="px-[24px] py-0 flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-lg font-semibold py-[10px]">Recent Transactions</CardTitle>
+          <CardTitle className="text-lg font-semibold py-[10px]">Transactions</CardTitle>
           {transactions.length > 0 && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-2">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] bg-muted/50 border-0">
                   <SelectValue placeholder="Transaction Type" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
@@ -732,7 +732,7 @@ export function WalletTab() {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] bg-muted/50 border-0">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
