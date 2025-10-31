@@ -874,8 +874,9 @@ export function WalletTab() {
                     </div>
                   </div>
                   <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : transaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`} style={{
-              fontFamily: 'Chakra Petch, sans-serif',
-              letterSpacing: '-0.5px'
+              fontFamily: 'Geist, sans-serif',
+              letterSpacing: '-0.5px',
+              fontWeight: 700
             }}>
                     {transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                   </div>
