@@ -293,8 +293,7 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
               <Button
                 onClick={handleValidateRecipient}
                 disabled={isValidating || isTransferring || !recipientIdentifier.trim()}
-                variant="outline"
-                className="bg-primary/10 border-0 hover:bg-primary/20"
+                className="bg-primary hover:bg-primary/90"
               >
                 {isValidating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
