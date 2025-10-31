@@ -24,7 +24,6 @@ import usdcLogo from "@/assets/usdc-logo.png";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
-import emptyTransactionsImage from '@/assets/empty-transactions.png';
 import { Skeleton } from "@/components/ui/skeleton";
 import { P2PTransferDialog } from "@/components/P2PTransferDialog";
 interface WalletData {
@@ -86,6 +85,7 @@ export function WalletTab() {
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
   const [isSubmittingPayout, setIsSubmittingPayout] = useState(false);
   const [p2pTransferDialogOpen, setP2pTransferDialogOpen] = useState(false);
+  const [transactionSearch, setTransactionSearch] = useState("");
   const {
     toast
   } = useToast();
@@ -674,7 +674,7 @@ export function WalletTab() {
         </div>
       </div>
 
-      {/* Earnings Graph and Recent Transactions - Side by Side */}
+      {/* Balance Cards - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Lifetime Earnings Card */}
         <Card className="bg-card border-0">
@@ -710,18 +710,34 @@ export function WalletTab() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Recent Transactions */}
-        <Card className="bg-card border-0">
-        <CardHeader className="px-[24px] py-0">
+      {/* Recent Transactions - Full Width */}
+      <Card className="bg-card border-0">
+        <CardHeader className="px-[24px] py-0 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-lg font-semibold py-[10px]">Recent Transactions</CardTitle>
+          {transactions.length > 0 && (
+            <Input
+              placeholder="Search transactions..."
+              value={transactionSearch}
+              onChange={(e) => setTransactionSearch(e.target.value)}
+              className="max-w-xs"
+            />
+          )}
         </CardHeader>
         <CardContent>
-          {transactions.length === 0 ? <div className="text-center py-8 flex flex-col items-center gap-4">
-              <img src={emptyTransactionsImage} alt="No transactions" className="w-64 h-64 object-contain opacity-80" />
+          {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <div className="space-y-3 max-h-[400px] overflow-y-auto">
-              {transactions.map(transaction => <div key={transaction.id} onClick={() => {
+              {transactions.filter(transaction => {
+                if (!transactionSearch) return true;
+                const searchLower = transactionSearch.toLowerCase();
+                const typeText = transaction.type === 'earning' ? 'earnings' : transaction.type === 'balance_correction' ? 'balance correction' : transaction.type === 'referral' ? 'referral bonus' : transaction.type === 'transfer_sent' ? 'transfer sent' : transaction.type === 'transfer_received' ? 'transfer received' : 'withdrawal';
+                return typeText.includes(searchLower) || 
+                       transaction.destination?.toLowerCase().includes(searchLower) ||
+                       transaction.source?.toLowerCase().includes(searchLower) ||
+                       transaction.campaign?.title.toLowerCase().includes(searchLower);
+              }).map(transaction => <div key={transaction.id} onClick={() => {
               setSelectedTransaction(transaction);
               setTransactionSheetOpen(true);
             }} style={{
@@ -780,7 +796,6 @@ export function WalletTab() {
             </div>}
         </CardContent>
       </Card>
-      </div>
 
       {/* Balance Cards */}
       
