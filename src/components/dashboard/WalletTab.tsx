@@ -1145,7 +1145,7 @@ export function WalletTab() {
                 
 
                 {/* Amount */}
-                <div className="text-center mb-2">
+                <div className="mb-2">
                   {selectedTransaction.type === 'withdrawal' ? <>
                       <div className="flex items-center justify-center mb-3">
                       <div className={`w-16 h-16 rounded-full ${selectedTransaction.status === 'completed' ? 'bg-green-500/10' : selectedTransaction.status === 'in_transit' ? 'bg-blue-500/10' : 'bg-orange-500/10'} flex items-center justify-center`}>
@@ -1158,8 +1158,9 @@ export function WalletTab() {
                         {selectedTransaction.status === 'completed' ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!` : selectedTransaction.status === 'in_transit' ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!` : `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
                       </p>
                     </> : <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? 'text-green-500' : 'text-red-500'}`} style={{
-                fontFamily: 'Chakra Petch, sans-serif',
-                letterSpacing: '-1px'
+                fontFamily: 'Geist, sans-serif',
+                letterSpacing: '-0.5px',
+                fontWeight: 700
               }}>
                       {selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? '+' : '-'}${Math.abs(selectedTransaction.amount).toFixed(2)}
                     </div>}
