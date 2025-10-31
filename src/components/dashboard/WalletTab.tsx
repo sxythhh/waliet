@@ -370,10 +370,7 @@ export function WalletTab() {
         }
         allTransactions.push({
           id: txn.id,
-          type: txn.type === 'balance_correction' ? 'balance_correction' : 
-                txn.type === 'transfer_sent' ? 'transfer_sent' :
-                txn.type === 'transfer_received' ? 'transfer_received' :
-                txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund' ? 'earning' : 'withdrawal',
+          type: txn.type === 'balance_correction' ? 'balance_correction' : txn.type === 'transfer_sent' ? 'transfer_sent' : txn.type === 'transfer_received' ? 'transfer_received' : txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund' ? 'earning' : 'withdrawal',
           amount: Number(txn.amount) || 0,
           date: new Date(txn.created_at),
           destination,
@@ -665,17 +662,13 @@ export function WalletTab() {
       {/* Header with Main Balance */}
       <div className="flex items-center justify-between py-0">
         <div className="flex gap-2">
-          <Button 
-            onClick={() => setP2pTransferDialogOpen(true)} 
-            size="lg" 
-            variant="outline"
-            className="py-0 my-0 border-0 bg-white/10 hover:bg-white/20 text-white font-geist tracking-tighter-custom"
-            disabled={!wallet || wallet.balance < 1}
-          >
+          <Button onClick={() => setP2pTransferDialogOpen(true)} size="lg" variant="outline" className="py-0 my-0 border-0 bg-white/10 hover:bg-white/20 text-white font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 1}>
             <ArrowRightLeft className="mr-2 h-4 w-4" />
             Transfer Money
           </Button>
-          <Button onClick={handleRequestPayout} size="lg" className="py-0 my-0 border-t font-geist tracking-tighter-custom" style={{ borderTopColor: '#4b85f7' }} disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}>
+          <Button onClick={handleRequestPayout} size="lg" className="py-0 my-0 border-t font-geist tracking-tighter-custom" style={{
+          borderTopColor: '#4b85f7'
+        }} disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}>
             Withdraw Balance
           </Button>
         </div>
@@ -687,12 +680,12 @@ export function WalletTab() {
         <Card className="bg-card border-0">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-green-500" />
-              </div>
+              
               <p className="text-sm text-muted-foreground font-semibold">Lifetime Earnings</p>
             </div>
-            <p className="text-4xl font-bold font-chakra" style={{ letterSpacing: '-0.3px' }}>
+            <p className="text-4xl font-bold font-chakra" style={{
+            letterSpacing: '-0.3px'
+          }}>
               ${wallet?.total_earned?.toFixed(2) || "0.00"}
             </p>
           </CardContent>
@@ -707,7 +700,9 @@ export function WalletTab() {
               </div>
               <p className="text-sm text-muted-foreground font-semibold">Current Balance</p>
             </div>
-            <p className="text-4xl font-bold font-chakra mb-4" style={{ letterSpacing: '-0.3px' }}>
+            <p className="text-4xl font-bold font-chakra mb-4" style={{
+            letterSpacing: '-0.3px'
+          }}>
               ${wallet?.balance?.toFixed(2) || "0.00"}
             </p>
             <Separator className="my-4" />
@@ -743,12 +738,7 @@ export function WalletTab() {
                         <p className="text-sm font-bold font-instrument" style={{
                       letterSpacing: '-0.5px'
                     }}>
-                          {transaction.type === 'earning' ? 'Earnings' : 
-                           transaction.type === 'balance_correction' ? 'Balance Correction' : 
-                           transaction.type === 'referral' ? 'Referral Bonus' : 
-                           transaction.type === 'transfer_sent' ? 'Transfer Sent' :
-                           transaction.type === 'transfer_received' ? 'Transfer Received' :
-                           'Withdrawal'}
+                          {transaction.type === 'earning' ? 'Earnings' : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
                         </p>
                         {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
                       letterSpacing: '-0.5px'
@@ -782,13 +772,7 @@ export function WalletTab() {
                       </div>
                     </div>
                   </div>
-                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${
-                    transaction.status === 'rejected' ? 'text-red-500' : 
-                    transaction.status === 'pending' ? 'text-yellow-500' : 
-                    transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : 
-                    transaction.type === 'balance_correction' ? 'text-orange-500' : 
-                    'text-red-500'
-                  }`} style={{
+                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : transaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
                 letterSpacing: '-0.5px'
               }}>
@@ -1132,27 +1116,16 @@ export function WalletTab() {
                 <div className="text-center mb-2">
                   {selectedTransaction.type === 'withdrawal' ? <>
                       <div className="flex items-center justify-center mb-3">
-                      <div className={`w-16 h-16 rounded-full ${
-                        selectedTransaction.status === 'completed' ? 'bg-green-500/10' : 
-                        selectedTransaction.status === 'in_transit' ? 'bg-blue-500/10' : 
-                        'bg-orange-500/10'
-                      } flex items-center justify-center`}>
-                          {selectedTransaction.status === 'completed' ? <Check className="w-8 h-8 text-green-500" /> : 
-                           selectedTransaction.status === 'in_transit' ? <TrendingUp className="w-8 h-8 text-blue-500" /> : 
-                           <Hourglass className="w-8 h-8 text-orange-500" />}
+                      <div className={`w-16 h-16 rounded-full ${selectedTransaction.status === 'completed' ? 'bg-green-500/10' : selectedTransaction.status === 'in_transit' ? 'bg-blue-500/10' : 'bg-orange-500/10'} flex items-center justify-center`}>
+                          {selectedTransaction.status === 'completed' ? <Check className="w-8 h-8 text-green-500" /> : selectedTransaction.status === 'in_transit' ? <TrendingUp className="w-8 h-8 text-blue-500" /> : <Hourglass className="w-8 h-8 text-orange-500" />}
                         </div>
                       </div>
                       <p className="text-white font-bold font-chakra" style={{
                   letterSpacing: '-0.3px'
                 }}>
-                        {selectedTransaction.status === 'completed' ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!` : 
-                         selectedTransaction.status === 'in_transit' ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!` : 
-                         `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
+                        {selectedTransaction.status === 'completed' ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!` : selectedTransaction.status === 'in_transit' ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!` : `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
                       </p>
-                    </> : <div className={`text-5xl font-bold ${
-                      selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? 'text-green-500' : 
-                      'text-red-500'
-                    }`} style={{
+                    </> : <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? 'text-green-500' : 'text-red-500'}`} style={{
                 fontFamily: 'Chakra Petch, sans-serif',
                 letterSpacing: '-1px'
               }}>
@@ -1182,11 +1155,7 @@ export function WalletTab() {
                       {/* Campaign Info */}
                       {selectedTransaction.campaign && <div className="flex items-center gap-3">
                           <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center p-1">
-                            {selectedTransaction.campaign.brand_logo_url ? (
-                              <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-contain" />
-                            ) : (
-                              <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            )}
+                            {selectedTransaction.campaign.brand_logo_url ? <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-contain" /> : <DollarSign className="h-4 w-4 text-muted-foreground" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs text-muted-foreground">Campaign</div>
@@ -1235,12 +1204,10 @@ export function WalletTab() {
                   </div>}
 
                 {/* Transfer Details - P2P */}
-                {(selectedTransaction.type === 'transfer_sent' || selectedTransaction.type === 'transfer_received') && selectedTransaction.metadata && (
-                  <div className="p-4 rounded-lg border border-border bg-[#1a1a1a]/30">
+                {(selectedTransaction.type === 'transfer_sent' || selectedTransaction.type === 'transfer_received') && selectedTransaction.metadata && <div className="p-4 rounded-lg border border-border bg-[#1a1a1a]/30">
                     <h4 className="font-semibold text-sm mb-3">Transfer Information</h4>
                     <div className="space-y-3">
-                      {selectedTransaction.type === 'transfer_sent' && selectedTransaction.metadata.recipient_username && (
-                        <div className="flex items-center gap-3">
+                      {selectedTransaction.type === 'transfer_sent' && selectedTransaction.metadata.recipient_username && <div className="flex items-center gap-3">
                           <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center">
                             <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
                           </div>
@@ -1248,10 +1215,8 @@ export function WalletTab() {
                             <div className="text-xs text-muted-foreground">Sent To</div>
                             <div className="text-sm font-semibold">@{selectedTransaction.metadata.recipient_username}</div>
                           </div>
-                        </div>
-                      )}
-                      {selectedTransaction.type === 'transfer_received' && selectedTransaction.metadata.sender_username && (
-                        <div className="flex items-center gap-3">
+                        </div>}
+                      {selectedTransaction.type === 'transfer_received' && selectedTransaction.metadata.sender_username && <div className="flex items-center gap-3">
                           <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center">
                             <ArrowDownLeft className="h-4 w-4 text-muted-foreground" />
                           </div>
@@ -1259,10 +1224,8 @@ export function WalletTab() {
                             <div className="text-xs text-muted-foreground">Received From</div>
                             <div className="text-sm font-semibold">@{selectedTransaction.metadata.sender_username}</div>
                           </div>
-                        </div>
-                      )}
-                      {selectedTransaction.metadata.note && (
-                        <div className="flex items-start gap-3">
+                        </div>}
+                      {selectedTransaction.metadata.note && <div className="flex items-start gap-3">
                           <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center">
                             <Copy className="h-4 w-4 text-muted-foreground" />
                           </div>
@@ -1270,11 +1233,9 @@ export function WalletTab() {
                             <div className="text-xs text-muted-foreground">Note</div>
                             <div className="text-sm">{selectedTransaction.metadata.note}</div>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 <Separator />
 
@@ -1305,22 +1266,13 @@ export function WalletTab() {
                     <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                       <span className="text-sm text-muted-foreground">Type</span>
                       <span className="text-sm font-medium capitalize">
-                        {selectedTransaction.type === 'earning' ? 'Earnings' : 
-                         selectedTransaction.type === 'referral' ? 'Referral Bonus' : 
-                         selectedTransaction.type === 'balance_correction' ? 'Balance Correction' : 
-                         selectedTransaction.type === 'transfer_sent' ? 'Transfer Sent' :
-                         selectedTransaction.type === 'transfer_received' ? 'Transfer Received' :
-                         'Withdrawal'}
+                        {selectedTransaction.type === 'earning' ? 'Earnings' : selectedTransaction.type === 'referral' ? 'Referral Bonus' : selectedTransaction.type === 'balance_correction' ? 'Balance Correction' : selectedTransaction.type === 'transfer_sent' ? 'Transfer Sent' : selectedTransaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
                       <span className="text-sm text-muted-foreground">Amount</span>
-                      <span className={`text-sm font-bold ${
-                        selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? 'text-green-500' : 
-                        selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 
-                        'text-red-500'
-                      }`}>
+                      <span className={`text-sm font-bold ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
                         {selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? '+' : selectedTransaction.amount < 0 ? '-' : '+'}${Math.abs(selectedTransaction.amount).toFixed(2)}
                       </span>
                     </div>
@@ -1451,14 +1403,9 @@ export function WalletTab() {
       </Sheet>
 
       {/* P2P Transfer Dialog */}
-      <P2PTransferDialog
-        open={p2pTransferDialogOpen}
-        onOpenChange={setP2pTransferDialogOpen}
-        currentBalance={wallet?.balance || 0}
-        onTransferComplete={() => {
-          fetchWallet();
-          fetchTransactions();
-        }}
-      />
+      <P2PTransferDialog open={p2pTransferDialogOpen} onOpenChange={setP2pTransferDialogOpen} currentBalance={wallet?.balance || 0} onTransferComplete={() => {
+      fetchWallet();
+      fetchTransactions();
+    }} />
     </div>;
 }
