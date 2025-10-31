@@ -579,6 +579,32 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
+
+    // Check for existing pending/in-transit withdrawal requests
+    const { data: existingRequests, error: checkError } = await supabase
+      .from("payout_requests")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .in("status", ["pending", "in_transit"]);
+
+    if (checkError) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to verify withdrawal status"
+      });
+      return;
+    }
+
+    if (existingRequests && existingRequests.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Pending Withdrawal Exists",
+        description: "You already have a pending withdrawal request. Please wait for it to be processed before requesting another."
+      });
+      return;
+    }
+
     const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
     if (!selectedMethod) return;
     setIsSubmittingPayout(true);
@@ -697,7 +723,7 @@ export function WalletTab() {
           </Button>
           <Button onClick={handleRequestPayout} size="lg" className="py-0 my-0 border-t font-geist tracking-tighter-custom" style={{
           borderTopColor: '#4b85f7'
-        }} disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0}>
+        }} disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
             Withdraw Balance
           </Button>
         </div>
