@@ -263,7 +263,7 @@ export default function Transactions() {
 
   const filteredTransactions = transactions.filter(tx => {
     // Search term filter
-    const matchesSearch = tx.username?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.email?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = tx.id?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.username?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.email?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Campaign filter
     const matchesCampaign = selectedCampaign === "all" || selectedCampaign === "none" && !tx.metadata?.campaign_id || tx.metadata?.campaign_id === selectedCampaign;
