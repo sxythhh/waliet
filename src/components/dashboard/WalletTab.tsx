@@ -679,12 +679,12 @@ export function WalletTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Lifetime Earnings Card */}
         <Card className="bg-card border-0">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3 mb-2">
               
               <p className="text-sm text-muted-foreground font-semibold">Lifetime Earnings</p>
             </div>
-            <p className="text-4xl font-bold font-chakra" style={{
+            <p className="text-3xl font-bold font-geist" style={{
             letterSpacing: '-0.3px'
           }}>
               ${wallet?.total_earned?.toFixed(2) || "0.00"}
@@ -694,12 +694,12 @@ export function WalletTab() {
 
         {/* Current Balance Card */}
         <Card className="bg-card border-0">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3 mb-2">
               
               <p className="text-sm text-muted-foreground font-semibold">Current Balance</p>
             </div>
-            <p className="text-4xl font-bold font-chakra mb-4" style={{
+            <p className="text-3xl font-bold font-geist mb-4" style={{
             letterSpacing: '-0.3px'
           }}>
               ${wallet?.balance?.toFixed(2) || "0.00"}
