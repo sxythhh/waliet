@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 import discordIcon from "@/assets/discord-icon.png";
 
 interface DiscordLinkDialogProps {
@@ -136,54 +136,42 @@ export function DiscordLinkDialog({ userId, discordUsername, discordAvatar, onSu
                   alt="Discord" 
                   className="w-12 h-12 rounded-full object-cover"
                 />
-                <div>
+                <div className="flex-1">
                   <div className="font-medium">{discordUsername}</div>
                   <div className="text-xs text-muted-foreground">Connected</div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleUnlinkDiscord}
+                  disabled={loading}
+                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           )}
 
           {!isLinked && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground">
-                By linking your Discord account, you'll be able to access exclusive features and connect with other creators in the Virality community.
-              </p>
-            </div>
-          )}
+            <>
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">
+                  By linking your Discord account, you'll be able to access exclusive features and connect with other creators in the Virality community.
+                </p>
+              </div>
 
-          <div className="flex gap-3">
-            {isLinked ? (
-              <>
-                <Button
-                  variant="destructive"
-                  className="flex-1"
-                  onClick={handleUnlinkDiscord}
-                  disabled={loading}
-                >
-                  {loading ? "Unlinking..." : "Unlink Discord"}
-                </Button>
-                <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>
-                  Close
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  className="flex-1 gap-2"
-                  onClick={handleLinkDiscord}
-                  disabled={loading}
-                >
-                  <img src={discordIcon} alt="Discord" className="w-4 h-4" />
-                  Connect Discord
-                </Button>
-                <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-              </>
-            )}
-          </div>
+              <Button
+                className="w-full gap-2"
+                onClick={handleLinkDiscord}
+                disabled={loading}
+              >
+                <img src={discordIcon} alt="Discord" className="w-4 h-4" />
+                Connect Discord
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
