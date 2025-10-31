@@ -715,7 +715,7 @@ export function WalletTab() {
 
       {/* Transactions - Full Width */}
       <Card className="bg-card border-0">
-        <CardHeader className="px-[24px] py-0 flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="px-[24px] pt-4 pb-0 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-lg font-semibold py-[10px]">Transactions</CardTitle>
           {transactions.length > 0 && (
             <div className="flex gap-2 mt-2">
