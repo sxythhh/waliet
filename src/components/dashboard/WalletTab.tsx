@@ -683,85 +683,40 @@ export function WalletTab() {
 
       {/* Earnings Graph and Recent Transactions - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Earnings Graph */}
+        {/* Lifetime Earnings Card */}
         <Card className="bg-card border-0">
-        <CardContent className="pt-6">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1 font-semibold">
-                {format(new Date(), 'MMM dd, yyyy')}
-              </p>
-              <p className="text-4xl font-bold font-chakra" style={{
-                letterSpacing: '-0.3px'
-              }}>
-                ${wallet?.balance?.toFixed(2) || "0.00"}
-              </p>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-sm text-muted-foreground font-semibold">Lifetime Earnings</p>
             </div>
-          </div>
+            <p className="text-4xl font-bold font-chakra" style={{ letterSpacing: '-0.3px' }}>
+              ${wallet?.total_earned?.toFixed(2) || "0.00"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <div className="h-64">
-            {earningsData.length > 0 ? <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={earningsData}>
-                  <defs>
-                    <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="50%" stopColor="#60a5fa" stopOpacity={0.15} />
-                      <stop offset="100%" stopColor="#93c5fd" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{
-                  opacity: 0.6
-                }} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} style={{
-                  opacity: 0.6
-                }} />
-                  <Tooltip contentStyle={{
-                  backgroundColor: "#0C0C0C",
-                  border: "none",
-                  borderRadius: "12px",
-                  padding: "12px 16px",
-                  fontFamily: "Geist, sans-serif",
-                  fontWeight: 700,
-                  letterSpacing: "-0.5px"
-                }} labelStyle={{
-                  color: "#666666",
-                  fontWeight: 700,
-                  marginBottom: "4px",
-                  fontFamily: "Geist, sans-serif",
-                  letterSpacing: "-0.5px",
-                  fontSize: "12px"
-                }} formatter={(value: number) => [`$${value.toFixed(2)}`, 'Balance']} itemStyle={{
-                  color: "#ffffff",
-                  fontFamily: "Geist, sans-serif",
-                  letterSpacing: "-0.5px",
-                  fontWeight: 700
-                }} cursor={{
-                  stroke: "#333333",
-                  strokeWidth: 2
-                }} />
-                  <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={3} fill="url(#balanceGradient)" dot={false} activeDot={{
-                  r: 6,
-                  fill: "#3b82f6",
-                  stroke: "#1a1a1a",
-                  strokeWidth: 2
-                }} />
-                </AreaChart>
-              </ResponsiveContainer> : <div className="h-full flex items-center justify-center">
-                <div className="text-center space-y-2">
-                  <div className="text-4xl font-bold text-blue-500">${wallet?.balance?.toFixed(2) || "0.00"}</div>
-                  <p className="text-sm text-muted-foreground">Current Balance</p>
-                </div>
-              </div>}
-          </div>
-
-          <Separator className="my-6" />
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground font-medium">In Transit</span>
-            <span className="text-lg font-semibold">${pendingWithdrawals.toFixed(2)}</span>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Current Balance Card */}
+        <Card className="bg-card border-0">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <WalletIcon className="h-5 w-5 text-blue-500" />
+              </div>
+              <p className="text-sm text-muted-foreground font-semibold">Current Balance</p>
+            </div>
+            <p className="text-4xl font-bold font-chakra mb-4" style={{ letterSpacing: '-0.3px' }}>
+              ${wallet?.balance?.toFixed(2) || "0.00"}
+            </p>
+            <Separator className="my-4" />
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground font-medium">In Transit</span>
+              <span className="text-lg font-semibold">${pendingWithdrawals.toFixed(2)}</span>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Recent Transactions */}
         <Card className="bg-card border-0">
