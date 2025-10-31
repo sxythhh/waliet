@@ -615,6 +615,8 @@ export type Database = {
           brand_name: string
           budget: number
           budget_used: number | null
+          campaign_type: string | null
+          category: string | null
           created_at: string | null
           description: string | null
           embed_url: string | null
@@ -644,6 +646,8 @@ export type Database = {
           brand_name: string
           budget: number
           budget_used?: number | null
+          campaign_type?: string | null
+          category?: string | null
           created_at?: string | null
           description?: string | null
           embed_url?: string | null
@@ -673,6 +677,8 @@ export type Database = {
           brand_name?: string
           budget?: number
           budget_used?: number | null
+          campaign_type?: string | null
+          category?: string | null
           created_at?: string | null
           description?: string | null
           embed_url?: string | null

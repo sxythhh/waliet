@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Upload, X, Trash2, Copy } from "lucide-react";
@@ -19,6 +20,8 @@ import youtubeLogo from "@/assets/youtube-logo.svg";
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   description: z.string().trim().max(500).optional(),
+  campaign_type: z.string().optional(),
+  category: z.string().optional(),
   is_infinite_budget: z.boolean().default(false),
   budget: z.string().optional(),
   rpm_rate: z.string().refine(val => !isNaN(Number(val)) && Number(val) > 0, {
@@ -58,6 +61,8 @@ interface Campaign {
   id: string;
   title: string;
   description: string | null;
+  campaign_type?: string | null;
+  category?: string | null;
   budget: number;
   budget_used: number;
   rpm_rate: number;
@@ -110,6 +115,8 @@ export function CreateCampaignDialog({
     defaultValues: {
       title: campaign?.title || "",
       description: campaign?.description || "",
+      campaign_type: campaign?.campaign_type || "",
+      category: campaign?.category || "",
       is_infinite_budget: campaign?.is_infinite_budget || false,
       budget: campaign?.budget?.toString() || "",
       rpm_rate: campaign?.rpm_rate?.toString() || "",
@@ -183,6 +190,8 @@ export function CreateCampaignDialog({
       const campaignData = {
         title: values.title,
         description: values.description || null,
+        campaign_type: values.campaign_type || null,
+        category: values.category || null,
         is_infinite_budget: values.is_infinite_budget,
         budget: values.is_infinite_budget ? 0 : Number(values.budget),
         rpm_rate: Number(values.rpm_rate),
@@ -312,6 +321,55 @@ export function CreateCampaignDialog({
                   </FormControl>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="campaign_type" render={({
+                  field
+                }) => <FormItem>
+                    <FormLabel className="text-white">Campaign Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-[#191919] text-white border-white/10">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-[#191919] border-white/10">
+                        <SelectItem value="ugc" className="text-white">UGC</SelectItem>
+                        <SelectItem value="clipping" className="text-white">Clipping</SelectItem>
+                        <SelectItem value="faceless" className="text-white">Faceless</SelectItem>
+                        <SelectItem value="slideshows" className="text-white">Slideshows</SelectItem>
+                        <SelectItem value="ai" className="text-white">AI</SelectItem>
+                        <SelectItem value="logo" className="text-white">Logo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-destructive/80" />
+                  </FormItem>} />
+
+              <FormField control={form.control} name="category" render={({
+                  field
+                }) => <FormItem>
+                    <FormLabel className="text-white">Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-[#191919] text-white border-white/10">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-[#191919] border-white/10">
+                        <SelectItem value="personal-brand" className="text-white">Personal Brand</SelectItem>
+                        <SelectItem value="lifestyle" className="text-white">Lifestyle</SelectItem>
+                        <SelectItem value="app" className="text-white">App</SelectItem>
+                        <SelectItem value="physical-product" className="text-white">Physical Product</SelectItem>
+                        <SelectItem value="trading-finance" className="text-white">Trading/Finance</SelectItem>
+                        <SelectItem value="software" className="text-white">Software</SelectItem>
+                        <SelectItem value="business" className="text-white">Business</SelectItem>
+                        <SelectItem value="music" className="text-white">Music</SelectItem>
+                        <SelectItem value="sports-gambling" className="text-white">Sports/Gambling</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-destructive/80" />
+                  </FormItem>} />
+            </div>
 
             {/* Infinite Budget Toggle */}
             <FormField control={form.control} name="is_infinite_budget" render={({
