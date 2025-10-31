@@ -369,10 +369,14 @@ export function JoinCampaignSheet({
               }}>
                       {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </span>}
-                  {campaign.platforms.map(platform => {
-                    const platformIcon = getPlatformIcon(platform);
-                    return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
-                  })}
+                  {campaign.platforms.length > 0 && <span className="px-2.5 py-1 flex items-center gap-1.5 bg-muted border-t border-[#4a4a4a]" style={{
+                borderRadius: '8px'
+              }}>
+                    {campaign.platforms.map(platform => {
+                      const platformIcon = getPlatformIcon(platform);
+                      return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
+                    })}
+                  </span>}
                 </div>}
             </div>
           </div>
