@@ -196,8 +196,9 @@ export function WalletTab() {
             if (['earning', 'admin_adjustment', 'bonus', 'refund', 'transfer_received'].includes(txn.type)) {
               balanceAtDate += amount;
             }
-            // Subtract withdrawals and transfers sent (amount is already negative in DB)
-            else if ((txn.type === 'withdrawal' && txn.status === 'completed') || txn.type === 'transfer_sent') {
+            // Subtract ALL withdrawals and transfers sent (amount is already negative in DB)
+            // Withdrawals reduce balance immediately when created, not when completed
+            else if (txn.type === 'withdrawal' || txn.type === 'transfer_sent') {
               balanceAtDate += amount; // amount is negative, so this subtracts
             }
           }
