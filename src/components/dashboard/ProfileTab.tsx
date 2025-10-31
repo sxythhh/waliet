@@ -556,6 +556,7 @@ export function ProfileTab() {
                 <DiscordLinkDialog 
                   userId={profile.id}
                   discordUsername={profile.discord_username || undefined}
+                  discordAvatar={profile.discord_avatar || undefined}
                   onSuccess={fetchProfile}
                 />
               </div>
