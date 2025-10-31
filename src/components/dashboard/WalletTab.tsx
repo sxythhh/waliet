@@ -814,10 +814,10 @@ export function WalletTab() {
             setTransactionSheetOpen(true);
           }} style={{
             backgroundColor: '#0d0d0d'
-          }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#131313]">
-                  <div className="flex items-center gap-4 flex-1">
+           }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#131313] gap-3">
+                  <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="text-sm font-bold font-instrument flex items-center gap-2" style={{
                     letterSpacing: '-0.5px'
                   }}>
@@ -865,7 +865,7 @@ export function WalletTab() {
                       </div>
                     </div>
                   </div>
-                  <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : transaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`} style={{
+                  <div className={`text-lg font-bold whitespace-nowrap sm:ml-4 self-end sm:self-auto ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : transaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`} style={{
               fontFamily: 'Geist, sans-serif',
               letterSpacing: '-0.5px',
               fontWeight: 700
