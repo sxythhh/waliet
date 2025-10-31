@@ -1020,65 +1020,6 @@ export function WalletTab() {
         </CardContent>
       </Card>
 
-      {/* Earnings History Chart */}
-      <Card className="bg-card border-0">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-lg font-semibold">Transaction History</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setEarningsChartOffset(earningsChartOffset + 1)} className="h-8 w-8">
-              <ChevronDown className="h-4 w-4 rotate-90" />
-            </Button>
-            <span className="text-xs text-muted-foreground min-w-[80px] text-center">
-              {earningsChartOffset === 0 ? 'Last 7 days' : `${earningsChartOffset * 7} days ago`}
-            </span>
-            <Button variant="ghost" size="icon" onClick={() => setEarningsChartOffset(Math.max(0, earningsChartOffset - 1))} disabled={earningsChartOffset === 0} className="h-8 w-8">
-              <ChevronDown className="h-4 w-4 -rotate-90" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64">
-            {withdrawalData.length > 0 ? <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={withdrawalData}>
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{
-                opacity: 0.6
-              }} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} style={{
-                opacity: 0.6
-              }} />
-                  <Tooltip contentStyle={{
-                backgroundColor: "#0C0C0C",
-                border: "none",
-                borderRadius: "12px",
-                padding: "12px 16px",
-                fontFamily: "Geist, sans-serif",
-                fontWeight: 700,
-                letterSpacing: "-0.5px"
-              }} labelStyle={{
-                color: "#666666",
-                fontWeight: 700,
-                marginBottom: "4px",
-                fontFamily: "Geist, sans-serif",
-                letterSpacing: "-0.5px",
-                fontSize: "12px"
-              }} itemStyle={{
-                color: "#ffffff",
-                fontFamily: "Geist, sans-serif",
-                letterSpacing: "-0.5px",
-                fontWeight: 700
-              }} formatter={(value: number) => `$${value.toFixed(2)}`} cursor={{
-                fill: "rgba(255, 255, 255, 0.05)"
-              }} />
-                  <Bar dataKey="earnings" fill="#22c55e" radius={[8, 8, 0, 0]} name="Earnings" />
-                  <Bar dataKey="withdrawals" fill="#ef4444" radius={[8, 8, 0, 0]} name="Withdrawals" />
-                </BarChart>
-              </ResponsiveContainer> : <div className="h-full flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">No transactions in this period</p>
-              </div>}
-          </div>
-         </CardContent>
-       </Card>
-
       <PayoutMethodDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleAddPayoutMethod} currentMethodCount={payoutMethods.length} />
 
       {/* Payout Request Dialog */}
