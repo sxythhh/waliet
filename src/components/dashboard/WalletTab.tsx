@@ -1191,7 +1191,6 @@ export function WalletTab() {
                             {selectedTransaction.campaign.brand_logo_url ? <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-contain" /> : <DollarSign className="h-4 w-4 text-muted-foreground" />}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-xs text-muted-foreground">Campaign</div>
                             <div className="text-sm font-semibold truncate">{selectedTransaction.campaign.title}</div>
                             <div className="text-xs text-muted-foreground truncate">{selectedTransaction.campaign.brand_name}</div>
                           </div>
