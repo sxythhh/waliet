@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, DollarSign, Calendar as CalendarIcon, User } from "lucide-react";
+import { Search, DollarSign, Calendar as CalendarIcon, User, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -313,7 +313,8 @@ export default function Transactions() {
     return icons[platform.toLowerCase()];
   };
   const getTypeBadge = (type: string) => {
-    const isCredit = type === "credit" || type === "earnings" || type === "referral_bonus";
+    const isCredit = type === "credit" || type === "earnings" || type === "referral_bonus" || type === "transfer_received";
+    const isDebit = type === "transfer_sent";
     return <Badge variant={isCredit ? "default" : "destructive"}>
         {isCredit ? "+" : "-"}${Math.abs(Number(type))}
       </Badge>;
@@ -458,6 +459,14 @@ export default function Transactions() {
                       {tx.type === "earning" && tx.metadata?.account_username && tx.metadata?.platform ? <div className="flex items-center gap-2">
                           {getPlatformIcon(tx.metadata.platform) && <img src={getPlatformIcon(tx.metadata.platform)} alt={tx.metadata.platform} className="h-4 w-4" />}
                           <span className="text-sm font-medium">@{tx.metadata.account_username}</span>
+                        </div> : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? <div className="flex items-center gap-2">
+                          <ArrowUpRight className="h-4 w-4 text-red-500" />
+                          <span className="text-sm font-medium">To: @{tx.metadata.recipient_username}</span>
+                          {tx.metadata.note && <span className="text-xs text-muted-foreground">({tx.metadata.note})</span>}
+                        </div> : tx.type === "transfer_received" && tx.metadata?.sender_username ? <div className="flex items-center gap-2">
+                          <ArrowDownLeft className="h-4 w-4 text-green-500" />
+                          <span className="text-sm font-medium">From: @{tx.metadata.sender_username}</span>
+                          {tx.metadata.note && <span className="text-xs text-muted-foreground">({tx.metadata.note})</span>}
                         </div> : <span className="text-sm text-muted-foreground">{tx.description}</span>}
                       {(tx.type === "earning" || tx.metadata?.adjustment_type === "manual_budget_update") && (tx.metadata?.campaign_budget_before !== undefined || tx.metadata?.budget_before !== undefined) && (
                         <div className="mt-2 px-3 py-2 rounded-md bg-muted/30">
