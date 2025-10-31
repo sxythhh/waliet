@@ -18,6 +18,8 @@ interface Campaign {
   id: string;
   title: string;
   description: string;
+  campaign_type?: string | null;
+  category?: string | null;
   brand_name: string;
   brand_logo_url: string;
   budget: number;
@@ -70,6 +72,19 @@ export function DiscoverTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bountySheetOpen, setBountySheetOpen] = useState(false);
   const navigate = useNavigate();
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return tiktokLogo;
+      case "instagram":
+        return instagramLogo;
+      case "youtube":
+        return youtubeLogo;
+      default:
+        return null;
+    }
+  };
   useEffect(() => {
     fetchCampaigns();
   }, []);
@@ -297,51 +312,27 @@ export function DiscoverTab() {
                       </div>
                     </div>
 
-                    {/* Budget Section */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
-                      {campaign.is_infinite_budget ? <>
-                          <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
-                              <span className="text-base font-bold">
-                                ∞ Unlimited Budget
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Animated Infinite Progress Bar */}
-                          <div className="relative h-1.5 rounded-full overflow-hidden" style={{
-                    background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
-                    backgroundSize: '20px 20px',
-                    animation: 'slide 1s linear infinite'
-                  }} />
-
-                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                            <span>No budget limit</span>
-                          </div>
-                        </> : <>
-                          <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
-                              <span className="text-base font-bold tabular-nums">
-                                ${budgetUsed.toLocaleString()}
-                              </span>
-                              <span className="text-xs text-muted-foreground font-semibold">
-                                / ${campaign.budget.toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Progress Bar */}
-                          <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
-                            <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                      width: `${budgetPercentage}%`
-                    }} />
-                          </div>
-
-                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                            <span className="font-semibold">{budgetPercentage.toFixed(0)}% used</span>
-                          </div>
-                        </>}
-                    </div>
+                    {/* Labels Section */}
+                    {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-2">
+                        {campaign.campaign_type && <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-[#4b85f7]" style={{
+                      borderRadius: '8px'
+                    }}>
+                            {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
+                          </span>}
+                        {campaign.category && <span className="px-2.5 py-1 text-xs font-medium bg-muted text-foreground border-t border-[#4a4a4a]" style={{
+                      borderRadius: '8px'
+                    }}>
+                            {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </span>}
+                        {campaign.platforms.length > 0 && <span className="px-2.5 py-1 flex items-center gap-1.5 bg-muted border-t border-[#4a4a4a]" style={{
+                      borderRadius: '8px'
+                    }}>
+                          {campaign.platforms.map(platform => {
+                            const platformIcon = getPlatformIcon(platform);
+                            return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
+                          })}
+                        </span>}
+                      </div>}
                   </CardContent>
                 </Card>;
         })}
