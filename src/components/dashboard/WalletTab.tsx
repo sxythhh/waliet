@@ -982,7 +982,7 @@ export function WalletTab() {
                   
                   <div className="relative flex items-center justify-between p-4 bg-[#0d0d0d]">
                     <div className="flex items-center gap-4 flex-1">
-                      {cryptoLogo}
+                      {method.method !== 'crypto' && cryptoLogo}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
                           <p className="text-base font-semibold text-foreground">
