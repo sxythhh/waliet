@@ -369,7 +369,7 @@ export function JoinCampaignSheet({
               }}>
                       {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </span>}
-                  {campaign.platforms.length > 0 && <span className="px-2.5 py-1 flex items-center gap-1.5 bg-muted border-t border-[#4a4a4a]" style={{
+                  {campaign.platforms.length > 0 && <span className="px-2.5 py-1 flex items-center gap-1.5 bg-card border-t border-[#2a2a2a]" style={{
                 borderRadius: '8px'
               }}>
                     {campaign.platforms.map(platform => {
