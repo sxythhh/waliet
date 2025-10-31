@@ -330,9 +330,13 @@ export function JoinCampaignSheet({
   const budgetRemaining = campaign.budget - (campaign.budget_used || 0);
   const budgetPercentage = campaign.budget > 0 ? (campaign.budget_used || 0) / campaign.budget * 100 : 0;
   return <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto" onOpenAutoFocus={async (e) => {
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto" onOpenAutoFocus={async e => {
       e.preventDefault();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       setIsLoggedIn(!!user);
       loadSocialAccounts();
     }}>
@@ -354,20 +358,18 @@ export function JoinCampaignSheet({
             <div className="flex-1">
               <h3 className="text-lg font-semibold">{campaign.title}</h3>
               <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
-              {(campaign.campaign_type || campaign.category) && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {campaign.campaign_type && (
-                    <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-[#4b85f7]" style={{ borderRadius: '8px' }}>
+              {(campaign.campaign_type || campaign.category) && <div className="flex flex-wrap gap-2 mt-2">
+                  {campaign.campaign_type && <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-[#4b85f7]" style={{
+                borderRadius: '8px'
+              }}>
                       {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
-                    </span>
-                  )}
-                  {campaign.category && (
-                    <span className="px-2.5 py-1 text-xs font-medium bg-muted text-foreground border-t border-[#4a4a4a]" style={{ borderRadius: '8px' }}>
+                    </span>}
+                  {campaign.category && <span className="px-2.5 py-1 text-xs font-medium bg-muted text-foreground border-t border-[#4a4a4a]" style={{
+                borderRadius: '8px'
+              }}>
                       {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </span>
-                  )}
-                </div>
-              )}
+                    </span>}
+                </div>}
             </div>
           </div>
 
@@ -377,22 +379,22 @@ export function JoinCampaignSheet({
             </div>}
 
           {/* Embedded Content */}
-          <div style={{ overflow: 'hidden', width: '100%', height: '500px' }}>
-            <iframe
-              src="https://sweet-hands-792394.framer.app/pickplan"
-              width="100%"
-              height="500"
-              style={{ border: 'none', overflow: 'hidden' }}
-              scrolling="no"
-              sandbox="allow-same-origin allow-scripts allow-popups"
-            />
+          <div style={{
+          overflow: 'hidden',
+          width: '100%',
+          height: '500px'
+        }}>
+            <iframe src="https://sweet-hands-792394.framer.app/pickplan" width="100%" height="500" style={{
+            border: 'none',
+            overflow: 'hidden'
+          }} scrolling="no" sandbox="allow-same-origin allow-scripts allow-popups" />
           </div>
 
           {/* Budget & RPM */}
           {!campaign.is_infinite_budget && <div className="rounded-lg p-4 space-y-3 bg-muted/50">
               <div className="flex justify-between items-baseline">
                 <span className="text-sm font-medium">Budget Progress</span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-slate-50 font-medium">
                   ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
                 </span>
               </div>
@@ -401,16 +403,7 @@ export function JoinCampaignSheet({
               width: `${budgetPercentage}%`
             }} />
               </div>
-              <div className="flex justify-between items-center pt-2">
-                <div>
-                  <p className="text-xs text-muted-foreground">RPM Rate</p>
-                  <p className="text-lg font-bold">${campaign.rpm_rate}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Remaining</p>
-                  <p className="text-lg font-bold">${budgetRemaining.toLocaleString()}</p>
-                </div>
-              </div>
+              
             </div>}
 
           {/* Campaign Preview Button - only show if preview_url exists */}
@@ -436,24 +429,18 @@ export function JoinCampaignSheet({
           </div>
 
           {/* Account Selection or Create Account */}
-          {!isLoggedIn ? (
-            <div className="space-y-3">
+          {!isLoggedIn ? <div className="space-y-3">
               <div className="p-6 rounded-lg bg-muted/50 text-center space-y-4">
                 <p className="text-sm font-medium text-foreground">Join this campaign</p>
                 <p className="text-xs text-muted-foreground">Create an account to start earning from your content</p>
-                <Button 
-                  onClick={() => {
-                    onOpenChange(false);
-                    navigate('/auth');
-                  }}
-                  className="w-full"
-                >
+                <Button onClick={() => {
+              onOpenChange(false);
+              navigate('/auth');
+            }} className="w-full">
                   Create Account
                 </Button>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
+            </div> : <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label>Select Social Accounts *</Label>
                 {socialAccounts.length > 0 && <p className="text-xs text-muted-foreground">
@@ -488,8 +475,7 @@ export function JoinCampaignSheet({
                     </button>;
             })}
               </div>}
-            </div>
-          )}
+            </div>}
 
           {/* Application Questions - only show if logged in and campaign requires application */}
           {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
@@ -503,16 +489,14 @@ export function JoinCampaignSheet({
             </div>)}
 
           {/* Submit Button - only show if logged in */}
-          {isLoggedIn && (
-            <div className="flex gap-2 pt-4">
+          {isLoggedIn && <div className="flex gap-2 pt-4">
               <Button variant="outline" className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => onOpenChange(false)} disabled={submitting}>
                 Cancel
               </Button>
               <Button className="flex-1" onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
                 {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
               </Button>
-            </div>
-          )}
+            </div>}
         </div>
       </SheetContent>
 
