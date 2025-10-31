@@ -561,7 +561,7 @@ export function ProfileTab() {
                 />
               </div>
               {profile.discord_username && (
-                <div className="p-3 rounded-lg bg-muted/20 border border-primary/20 flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-muted/20 border border-border flex items-center gap-3">
                   {profile.discord_avatar && (
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={profile.discord_avatar} />
@@ -576,10 +576,6 @@ export function ProfileTab() {
                       Connected {profile.discord_connected_at && formatDistanceToNow(new Date(profile.discord_connected_at), { addSuffix: true })}
                     </div>
                   </div>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Linked
-                  </Badge>
                 </div>
               )}
             </div>
