@@ -163,7 +163,6 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-
     const now = new Date();
     let start: Date;
     let days: number;
@@ -185,13 +184,11 @@ export function WalletTab() {
       case 'ALL':
       default:
         // Get all transactions to determine the earliest date
-        const { data: allTxns } = await supabase
-          .from("wallet_transactions")
-          .select("created_at")
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: true })
-          .limit(1);
-        
+        const {
+          data: allTxns
+        } = await supabase.from("wallet_transactions").select("created_at").eq("user_id", session.user.id).order("created_at", {
+          ascending: true
+        }).limit(1);
         if (allTxns && allTxns.length > 0) {
           start = new Date(allTxns[0].created_at);
           days = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
@@ -208,25 +205,22 @@ export function WalletTab() {
     } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).gte("created_at", start.toISOString()).order("created_at", {
       ascending: true
     });
-
     const dataPoints: EarningsDataPoint[] = [];
     let cumulativeEarnings = 0;
 
     // Generate data points
     const pointCount = Math.min(days, 30); // Max 30 points for performance
     const interval = Math.max(1, Math.floor(days / pointCount));
-
     for (let i = 0; i <= pointCount; i++) {
-      const currentDate = new Date(start.getTime() + (i * interval * 24 * 60 * 60 * 1000));
+      const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
       if (currentDate > now) break;
-      
       const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
 
       // Calculate cumulative earnings up to this date (only positive transactions)
       if (allTransactions) {
         allTransactions.forEach(txn => {
           const txnDate = new Date(txn.created_at);
-          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + ((i - 1) * interval * 24 * 60 * 60 * 1000))) {
+          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000)) {
             const amount = Number(txn.amount) || 0;
             // Only count earnings (positive amounts)
             if (['earning', 'admin_adjustment', 'bonus', 'refund', 'transfer_received'].includes(txn.type) && amount > 0) {
@@ -235,7 +229,6 @@ export function WalletTab() {
           }
         });
       }
-
       dataPoints.push({
         date: dateStr,
         amount: Number(cumulativeEarnings.toFixed(2))
@@ -246,7 +239,6 @@ export function WalletTab() {
     if (dataPoints.length > 0 && wallet && earningsChartPeriod === 'ALL') {
       dataPoints[dataPoints.length - 1].amount = Number(wallet.total_earned.toFixed(2));
     }
-
     setEarningsData(dataPoints);
   };
   const fetchWithdrawalData = async () => {
@@ -715,21 +707,9 @@ export function WalletTab() {
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm text-muted-foreground font-semibold">Lifetime Earnings</p>
               <div className="flex gap-1">
-                {(['1D', '1W', '1M', 'ALL'] as const).map((period) => (
-                  <Button
-                    key={period}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEarningsChartPeriod(period)}
-                    className={`h-7 px-2 text-xs font-semibold ${
-                      earningsChartPeriod === period 
-                        ? 'bg-primary/10 text-primary' 
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
+                {(['1D', '1W', '1M', 'ALL'] as const).map(period => <Button key={period} variant="ghost" size="sm" onClick={() => setEarningsChartPeriod(period)} className={`h-7 px-2 text-xs font-semibold ${earningsChartPeriod === period ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
                     {period}
-                  </Button>
-                ))}
+                  </Button>)}
               </div>
             </div>
             <p className="text-3xl font-bold font-geist mb-3" style={{
@@ -744,18 +724,11 @@ export function WalletTab() {
                 <AreaChart data={earningsData}>
                   <defs>
                     <linearGradient id="earningsGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <Area 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    fill="url(#earningsGradient)" 
-                    dot={false}
-                  />
+                  <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} fill="url(#earningsGradient)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -787,8 +760,7 @@ export function WalletTab() {
       <Card className="bg-card border-0">
         <CardHeader className="px-[24px] pt-4 pb-0 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-lg font-semibold py-[10px]">Transactions</CardTitle>
-          {transactions.length > 0 && (
-            <div className="flex gap-2 mt-2">
+          {transactions.length > 0 && <div className="flex gap-2 mt-2">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-[180px] bg-muted/50 border-0">
                   <SelectValue placeholder="Transaction Type" />
@@ -813,29 +785,28 @@ export function WalletTab() {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-          )}
+            </div>}
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <div className="space-y-3 max-h-[400px] overflow-y-auto">
               {transactions.filter(transaction => {
-                // Filter by type
-                if (typeFilter !== "all" && transaction.type !== typeFilter) {
-                  return false;
-                }
-                // Filter by status
-                if (statusFilter !== "all" && transaction.status !== statusFilter) {
-                  return false;
-                }
-                return true;
-              }).map(transaction => <div key={transaction.id} onClick={() => {
-              setSelectedTransaction(transaction);
-              setTransactionSheetOpen(true);
-            }} style={{
-              backgroundColor: '#0d0d0d'
-            }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#131313]">
+            // Filter by type
+            if (typeFilter !== "all" && transaction.type !== typeFilter) {
+              return false;
+            }
+            // Filter by status
+            if (statusFilter !== "all" && transaction.status !== statusFilter) {
+              return false;
+            }
+            return true;
+          }).map(transaction => <div key={transaction.id} onClick={() => {
+            setSelectedTransaction(transaction);
+            setTransactionSheetOpen(true);
+          }} style={{
+            backgroundColor: '#0d0d0d'
+          }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#131313]">
                   <div className="flex items-center gap-4 flex-1">
                     {transaction.campaign?.brand_logo_url && <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
                         <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-contain" />
@@ -843,13 +814,13 @@ export function WalletTab() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-bold font-instrument" style={{
-                      letterSpacing: '-0.5px'
-                    }}>
+                    letterSpacing: '-0.5px'
+                  }}>
                           {transaction.type === 'earning' ? 'Earnings' : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
                         </p>
                         {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
-                      letterSpacing: '-0.5px'
-                    }}>
+                    letterSpacing: '-0.5px'
+                  }}>
                             {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
                             {transaction.status === 'pending' && <Clock className="h-2.5 w-2.5" />}
                             {transaction.status === 'completed' && <Check className="h-2.5 w-2.5" />}
@@ -861,28 +832,28 @@ export function WalletTab() {
                       <div className="flex items-center gap-1.5 text-xs text-foreground/50 mb-1">
                         <Clock className="h-3 w-3" />
                         <span style={{
-                      letterSpacing: '-0.5px'
-                    }}>
+                    letterSpacing: '-0.5px'
+                  }}>
                           {(() => {
-                        const now = new Date();
-                        const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
-                        if (diffInHours < 24) {
-                          if (diffInHours < 1) {
-                            const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
-                            return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
-                          }
-                          return `${diffInHours}h ago`;
+                      const now = new Date();
+                      const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
+                      if (diffInHours < 24) {
+                        if (diffInHours < 1) {
+                          const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
+                          return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
                         }
-                        return format(transaction.date, 'MMM dd, yyyy / HH:mm');
-                      })()}
+                        return `${diffInHours}h ago`;
+                      }
+                      return format(transaction.date, 'MMM dd, yyyy / HH:mm');
+                    })()}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className={`text-lg font-bold whitespace-nowrap ml-4 ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : transaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`} style={{
-                fontFamily: 'Chakra Petch, sans-serif',
-                letterSpacing: '-0.5px'
-              }}>
+              fontFamily: 'Chakra Petch, sans-serif',
+              letterSpacing: '-0.5px'
+            }}>
                     {transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                   </div>
                 </div>)}
@@ -995,7 +966,7 @@ export function WalletTab() {
                   
                   <div className="relative flex items-center justify-between p-4 bg-[#0d0d0d]">
                     <div className="flex items-center gap-4 flex-1">
-                      {cryptoLogo && <img src={cryptoLogo} alt="Crypto logo" className="h-8 w-8 rounded-full" />}
+                      {cryptoLogo}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
                           <p className="text-base font-semibold text-foreground">
