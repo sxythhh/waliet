@@ -340,9 +340,7 @@ export function JoinCampaignSheet({
       setIsLoggedIn(!!user);
       loadSocialAccounts();
     }}>
-        <SheetHeader>
-          <SheetTitle className="text-xl font-semibold">Join Campaign</SheetTitle>
-        </SheetHeader>
+        
 
         <div className="mt-6 space-y-6">
           {/* Campaign Banner */}
@@ -373,9 +371,9 @@ export function JoinCampaignSheet({
                 borderRadius: '8px'
               }}>
                     {campaign.platforms.map(platform => {
-                      const platformIcon = getPlatformIcon(platform);
-                      return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
-                    })}
+                  const platformIcon = getPlatformIcon(platform);
+                  return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
+                })}
                   </span>}
                 </div>}
             </div>
