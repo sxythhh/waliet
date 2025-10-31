@@ -358,7 +358,7 @@ export function JoinCampaignSheet({
             <div className="flex-1">
               <h3 className="text-lg font-semibold">{campaign.title}</h3>
               <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
-              {(campaign.campaign_type || campaign.category) && <div className="flex flex-wrap gap-2 mt-2">
+              {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-2 mt-2">
                   {campaign.campaign_type && <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-[#4b85f7]" style={{
                 borderRadius: '8px'
               }}>
@@ -369,6 +369,10 @@ export function JoinCampaignSheet({
               }}>
                       {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </span>}
+                  {campaign.platforms.map(platform => {
+                    const platformIcon = getPlatformIcon(platform);
+                    return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
+                  })}
                 </div>}
             </div>
           </div>
@@ -412,21 +416,6 @@ export function JoinCampaignSheet({
               <span className="font-medium">View Campaign Details</span>
             </Button>}
 
-          {/* Allowed Platforms */}
-          <div>
-            <h4 className="text-sm font-semibold mb-2">Allowed Platforms</h4>
-            <div className="flex gap-2 flex-wrap">
-              {campaign.platforms.map(platform => {
-              const platformIcon = getPlatformIcon(platform);
-              return <div key={platform} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-muted border border-border">
-                    {platformIcon && <img src={platformIcon} alt={platform} className="w-3.5 h-3.5" />}
-                    <span className="text-xs font-medium text-foreground capitalize">
-                      {platform}
-                    </span>
-                  </div>;
-            })}
-            </div>
-          </div>
 
           {/* Account Selection or Create Account */}
           {!isLoggedIn ? <div className="space-y-3">
