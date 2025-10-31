@@ -266,7 +266,6 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
         </DialogHeader>
 
         <Alert className="bg-yellow-500/5 border-0">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
           <AlertDescription className="text-yellow-500/90 text-sm">
             <strong>Warning:</strong> Transfers are irreversible. Please verify the recipient before sending.
           </AlertDescription>
