@@ -695,9 +695,7 @@ export function WalletTab() {
         <Card className="bg-card border-0">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <WalletIcon className="h-5 w-5 text-blue-500" />
-              </div>
+              
               <p className="text-sm text-muted-foreground font-semibold">Current Balance</p>
             </div>
             <p className="text-4xl font-bold font-chakra mb-4" style={{
