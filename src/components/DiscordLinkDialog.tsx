@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle, Unlink } from "lucide-react";
 import discordIcon from "@/assets/discord-icon.png";
 
 interface DiscordLinkDialogProps {
@@ -147,7 +147,7 @@ export function DiscordLinkDialog({ userId, discordUsername, discordAvatar, onSu
                   disabled={loading}
                   className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
-                  <X className="h-4 w-4" />
+                  <Unlink className="h-4 w-4" />
                 </Button>
               </div>
             </div>
