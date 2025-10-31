@@ -812,9 +812,17 @@ export function WalletTab() {
             backgroundColor: '#0d0d0d'
           }} className="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#131313]">
                   <div className="flex items-center gap-4 flex-1">
-                    {transaction.campaign?.brand_logo_url && <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
-                        <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-contain" />
-                      </div>}
+                    {transaction.campaign && (
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border border-border flex items-center justify-center p-1.5">
+                        {transaction.campaign.brand_logo_url ? (
+                          <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
+                            {transaction.campaign.brand_name?.charAt(0).toUpperCase() || 'C'}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-bold font-instrument" style={{
