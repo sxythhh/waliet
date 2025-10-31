@@ -257,7 +257,7 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#202020] border-white/10 text-white max-w-md">
+      <DialogContent className="bg-black border-0 text-white max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Transfer Money</DialogTitle>
           <DialogDescription className="text-white/60">
@@ -265,7 +265,7 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
           </DialogDescription>
         </DialogHeader>
 
-        <Alert className="bg-yellow-500/10 border-yellow-500/20">
+        <Alert className="bg-yellow-500/5 border-0">
           <AlertTriangle className="h-4 w-4 text-yellow-500" />
           <AlertDescription className="text-yellow-500/90 text-sm">
             <strong>Warning:</strong> Transfers are irreversible. Please verify the recipient before sending.
@@ -288,14 +288,14 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
                   setRecipientInfo(null);
                 }}
                 placeholder="username or email@example.com"
-                className="bg-black/40 border-white/10 text-white flex-1"
+                className="bg-black border-0 text-white flex-1"
                 disabled={isTransferring}
               />
               <Button
                 onClick={handleValidateRecipient}
                 disabled={isValidating || isTransferring || !recipientIdentifier.trim()}
                 variant="outline"
-                className="bg-primary/10 border-primary/20 hover:bg-primary/20"
+                className="bg-primary/10 border-0 hover:bg-primary/20"
               >
                 {isValidating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -324,7 +324,7 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="bg-black/40 border-white/10 text-white"
+              className="bg-black border-0 text-white"
               min="1"
               step="0.01"
               disabled={isTransferring || !recipientInfo}
@@ -345,7 +345,7 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="What's this for?"
-              className="bg-black/40 border-white/10 text-white"
+              className="bg-black border-0 text-white"
               maxLength={100}
               disabled={isTransferring || !recipientInfo}
             />
@@ -353,7 +353,7 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
 
           {/* Transfer Summary */}
           {recipientInfo && amount && Number(amount) > 0 && (
-            <div className="bg-black/40 border border-white/10 rounded-lg p-4 space-y-2">
+            <div className="bg-black border-0 rounded-lg p-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-white/60">Transfer to</span>
                 <span className="font-semibold">{recipientInfo.username}</span>
@@ -362,7 +362,7 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
                 <span className="text-white/60">Amount</span>
                 <span className="font-semibold">${Number(amount).toFixed(2)}</span>
               </div>
-              <Separator className="bg-white/10" />
+              <Separator className="bg-white/5" />
               <div className="flex justify-between">
                 <span className="text-white/60">New Balance</span>
                 <span className="font-bold text-lg">${(currentBalance - Number(amount)).toFixed(2)}</span>
@@ -376,7 +376,7 @@ export function P2PTransferDialog({ open, onOpenChange, currentBalance, onTransf
             variant="outline"
             onClick={handleClose}
             disabled={isTransferring || isValidating}
-            className="bg-transparent border-white/10 text-white hover:bg-white/10"
+            className="bg-transparent border-0 text-white hover:bg-white/10"
           >
             Cancel
           </Button>
