@@ -17,6 +17,8 @@ interface Campaign {
   id: string;
   title: string;
   description: string;
+  campaign_type?: string | null;
+  category?: string | null;
   brand_name: string;
   brand_logo_url: string;
   budget: number;
@@ -352,6 +354,20 @@ export function JoinCampaignSheet({
             <div className="flex-1">
               <h3 className="text-lg font-semibold">{campaign.title}</h3>
               <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
+              {(campaign.campaign_type || campaign.category) && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {campaign.campaign_type && (
+                    <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary">
+                      {campaign.campaign_type.toUpperCase()}
+                    </span>
+                  )}
+                  {campaign.category && (
+                    <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground">
+                      {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
