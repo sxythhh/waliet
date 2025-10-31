@@ -668,7 +668,7 @@ export function WalletTab() {
             onClick={() => setP2pTransferDialogOpen(true)} 
             size="lg" 
             variant="outline"
-            className="py-0 my-0 border-primary/30 bg-primary/10 hover:bg-primary/20 text-white font-geist tracking-tighter-custom"
+            className="py-0 my-0 border-0 bg-white/10 hover:bg-white/20 text-white font-geist tracking-tighter-custom"
             disabled={!wallet || wallet.balance < 1}
           >
             <ArrowRightLeft className="mr-2 h-4 w-4" />
