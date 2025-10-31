@@ -87,6 +87,7 @@ export function WalletTab() {
   const [p2pTransferDialogOpen, setP2pTransferDialogOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [earningsChartPeriod, setEarningsChartPeriod] = useState<'1D' | '1W' | '1M' | 'ALL'>('1W');
   const {
     toast
   } = useToast();
@@ -114,7 +115,7 @@ export function WalletTab() {
       fetchWithdrawalData();
       fetchTransactions();
     }
-  }, [timePeriod, wallet, earningsChartOffset]);
+  }, [timePeriod, wallet, earningsChartOffset, earningsChartPeriod]);
   const getDateRange = () => {
     const now = new Date();
     switch (timePeriod) {
@@ -162,59 +163,90 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-    const {
-      start,
-      end
-    } = getDateRange();
 
-    // Get all wallet transactions from the beginning
+    const now = new Date();
+    let start: Date;
+    let days: number;
+
+    // Calculate date range based on selected period
+    switch (earningsChartPeriod) {
+      case '1D':
+        start = subDays(now, 1);
+        days = 1;
+        break;
+      case '1W':
+        start = subDays(now, 7);
+        days = 7;
+        break;
+      case '1M':
+        start = subMonths(now, 1);
+        days = 30;
+        break;
+      case 'ALL':
+      default:
+        // Get all transactions to determine the earliest date
+        const { data: allTxns } = await supabase
+          .from("wallet_transactions")
+          .select("created_at")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: true })
+          .limit(1);
+        
+        if (allTxns && allTxns.length > 0) {
+          start = new Date(allTxns[0].created_at);
+          days = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        } else {
+          start = subMonths(now, 1);
+          days = 30;
+        }
+        break;
+    }
+
+    // Get all earning transactions from the beginning
     const {
       data: allTransactions
-    } = await supabase.from("wallet_transactions").select("amount, created_at, type, status").eq("user_id", session.user.id).order("created_at", {
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).gte("created_at", start.toISOString()).order("created_at", {
       ascending: true
     });
 
-    // Generate date points for every day in the selected period
-    const days = timePeriod === '3D' ? 3 : timePeriod === '1W' || timePeriod === 'TW' ? 7 : timePeriod === '1M' ? 30 : timePeriod === '3M' ? 90 : 365;
     const dataPoints: EarningsDataPoint[] = [];
+    let cumulativeEarnings = 0;
 
-    // Create data point for each day
-    for (let i = 0; i <= days; i++) {
-      const currentDate = subDays(end, days - i);
-      const dateStr = format(currentDate, 'MMM dd');
+    // Generate data points
+    const pointCount = Math.min(days, 30); // Max 30 points for performance
+    const interval = Math.max(1, Math.floor(days / pointCount));
 
-      // Calculate cumulative balance up to this date
-      let balanceAtDate = 0;
+    for (let i = 0; i <= pointCount; i++) {
+      const currentDate = new Date(start.getTime() + (i * interval * 24 * 60 * 60 * 1000));
+      if (currentDate > now) break;
+      
+      const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
 
-      // Process all transactions up to and including this date
+      // Calculate cumulative earnings up to this date (only positive transactions)
       if (allTransactions) {
         allTransactions.forEach(txn => {
           const txnDate = new Date(txn.created_at);
-          if (txnDate <= currentDate) {
+          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + ((i - 1) * interval * 24 * 60 * 60 * 1000))) {
             const amount = Number(txn.amount) || 0;
-
-            // Add positive amounts (earnings, bonuses, transfers received, etc.)
-            if (['earning', 'admin_adjustment', 'bonus', 'refund', 'transfer_received'].includes(txn.type)) {
-              balanceAtDate += amount;
-            }
-            // Subtract ALL withdrawals and transfers sent (amount is already negative in DB)
-            // Withdrawals reduce balance immediately when created, not when completed
-            else if (txn.type === 'withdrawal' || txn.type === 'transfer_sent') {
-              balanceAtDate += amount; // amount is negative, so this subtracts
+            // Only count earnings (positive amounts)
+            if (['earning', 'admin_adjustment', 'bonus', 'refund', 'transfer_received'].includes(txn.type) && amount > 0) {
+              cumulativeEarnings += amount;
             }
           }
         });
       }
+
       dataPoints.push({
         date: dateStr,
-        amount: Number(Math.max(0, balanceAtDate).toFixed(2))
+        amount: Number(cumulativeEarnings.toFixed(2))
       });
     }
 
-    // Ensure the last point shows current wallet balance
-    if (dataPoints.length > 0 && wallet) {
-      dataPoints[dataPoints.length - 1].amount = Number(wallet.balance.toFixed(2));
+    // Ensure the last point shows current total earned
+    if (dataPoints.length > 0 && wallet && earningsChartPeriod === 'ALL') {
+      dataPoints[dataPoints.length - 1].amount = Number(wallet.total_earned.toFixed(2));
     }
+
     setEarningsData(dataPoints);
   };
   const fetchWithdrawalData = async () => {
@@ -680,15 +712,53 @@ export function WalletTab() {
         {/* Lifetime Earnings Card */}
         <Card className="bg-card border-0">
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3 mb-2">
-              
+            <div className="flex items-center justify-between mb-2">
               <p className="text-sm text-muted-foreground font-semibold">Lifetime Earnings</p>
+              <div className="flex gap-1">
+                {(['1D', '1W', '1M', 'ALL'] as const).map((period) => (
+                  <Button
+                    key={period}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEarningsChartPeriod(period)}
+                    className={`h-7 px-2 text-xs font-semibold ${
+                      earningsChartPeriod === period 
+                        ? 'bg-primary/10 text-primary' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {period}
+                  </Button>
+                ))}
+              </div>
             </div>
-            <p className="text-3xl font-bold font-geist" style={{
+            <p className="text-3xl font-bold font-geist mb-3" style={{
             letterSpacing: '-0.3px'
           }}>
               ${wallet?.total_earned?.toFixed(2) || "0.00"}
             </p>
+            
+            {/* Mini Earnings Chart */}
+            <div className="h-20 -mx-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={earningsData}>
+                  <defs>
+                    <linearGradient id="earningsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Area 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    fill="url(#earningsGradient)" 
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -704,29 +774,6 @@ export function WalletTab() {
           }}>
               ${wallet?.balance?.toFixed(2) || "0.00"}
             </p>
-            
-            {/* Mini Balance Chart */}
-            <div className="h-20 -mx-2 mb-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={earningsData}>
-                  <defs>
-                    <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <Area 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    fill="url(#balanceGradient)" 
-                    dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            
             <Separator className="my-4" />
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground font-medium">In Transit</span>
