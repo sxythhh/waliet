@@ -29,20 +29,37 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Skeleton } from "@/components/ui/skeleton";
-
 const getTrustScoreDiamonds = (score: number) => {
   if (score < 20) {
-    return { count: 1, color: 'fill-red-500 text-red-500' };
+    return {
+      count: 1,
+      color: 'fill-red-500 text-red-500'
+    };
   } else if (score < 40) {
-    return { count: 2, color: 'fill-red-500 text-red-500' };
+    return {
+      count: 2,
+      color: 'fill-red-500 text-red-500'
+    };
   } else if (score < 60) {
-    return { count: 3, color: 'fill-yellow-500 text-yellow-500' };
+    return {
+      count: 3,
+      color: 'fill-yellow-500 text-yellow-500'
+    };
   } else if (score < 80) {
-    return { count: 4, color: 'fill-yellow-500 text-yellow-500' };
+    return {
+      count: 4,
+      color: 'fill-yellow-500 text-yellow-500'
+    };
   } else if (score < 100) {
-    return { count: 4, color: 'fill-emerald-500 text-emerald-500' };
+    return {
+      count: 4,
+      color: 'fill-emerald-500 text-emerald-500'
+    };
   } else {
-    return { count: 5, color: 'fill-emerald-500 text-emerald-500' };
+    return {
+      count: 5,
+      color: 'fill-emerald-500 text-emerald-500'
+    };
   }
 };
 interface Campaign {
@@ -93,7 +110,13 @@ interface Submission {
     social_accounts: SocialAccount[];
   };
 }
-export default function BrandManagement({ showVideosTab = true, showImportButton = true }: { showVideosTab?: boolean; showImportButton?: boolean }) {
+export default function BrandManagement({
+  showVideosTab = true,
+  showImportButton = true
+}: {
+  showVideosTab?: boolean;
+  showImportButton?: boolean;
+}) {
   const {
     slug
   } = useParams();
@@ -615,34 +638,28 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
     if (!userToKick) return;
     try {
       // Update ALL submission statuses to withdrawn for this user and campaign
-      const { error: submissionError } = await supabase
-        .from("campaign_submissions")
-        .update({ status: "withdrawn" })
-        .eq("creator_id", userToKick.creator_id)
-        .eq("campaign_id", selectedCampaignId);
-      
+      const {
+        error: submissionError
+      } = await supabase.from("campaign_submissions").update({
+        status: "withdrawn"
+      }).eq("creator_id", userToKick.creator_id).eq("campaign_id", selectedCampaignId);
       if (submissionError) throw submissionError;
 
       // Get user's social accounts
-      const { data: socialAccounts, error: accountsError } = await supabase
-        .from("social_accounts")
-        .select("id")
-        .eq("user_id", userToKick.creator_id);
-
+      const {
+        data: socialAccounts,
+        error: accountsError
+      } = await supabase.from("social_accounts").select("id").eq("user_id", userToKick.creator_id);
       if (accountsError) throw accountsError;
 
       // Unlink all their accounts from this campaign
       if (socialAccounts && socialAccounts.length > 0) {
         const accountIds = socialAccounts.map(acc => acc.id);
-        const { error: unlinkError } = await supabase
-          .from("social_account_campaigns")
-          .delete()
-          .eq("campaign_id", selectedCampaignId)
-          .in("social_account_id", accountIds);
-
+        const {
+          error: unlinkError
+        } = await supabase.from("social_account_campaigns").delete().eq("campaign_id", selectedCampaignId).in("social_account_id", accountIds);
         if (unlinkError) throw unlinkError;
       }
-
       toast.success(`Removed ${userToKick.profiles?.username} from campaign`);
       setKickDialogOpen(false);
       setUserToKick(null);
@@ -787,11 +804,9 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
               Applications
               {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
             </TabsTrigger>
-            {showVideosTab && (
-              <TabsTrigger value="videos" className="data-[state=active]:bg-card">
+            {showVideosTab && <TabsTrigger value="videos" className="data-[state=active]:bg-card">
                 Videos
-              </TabsTrigger>
-            )}
+              </TabsTrigger>}
             <TabsTrigger value="settings" className="data-[state=active]:bg-card">
               Settings
             </TabsTrigger>
@@ -849,99 +864,18 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
               </CardContent>
             </Card>
 
-            {showImportButton && (
-              <div className="flex justify-end gap-2">
+            {showImportButton && <div className="flex justify-end gap-2">
                 <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
-              </div>
-            )}
+              </div>}
             
             {/* Imported Analytics Data */}
-            <CampaignAnalyticsTable campaignId={selectedCampaignId} onPaymentComplete={handleRefresh} />
+            
             
             {/* Matching Dialog */}
             <MatchAccountsDialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen} campaignId={selectedCampaignId} onMatchComplete={fetchSubmissions} />
 
             {/* Charts Section - Only show if analytics data exists */}
-            {analytics.length > 0 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-                {/* Views by Platform - Pie Chart */}
-                
-
-                {/* Daily Spend - Bar Chart */}
-                <Card className="bg-[#0C0C0C] border-transparent">
-                  <CardHeader>
-                    <CardTitle className="text-white text-sm">Daily Spend</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64">
-                      {(() => {
-                      // Generate last 7 days
-                      const last7Days = Array.from({
-                        length: 7
-                      }, (_, i) => {
-                        const date = new Date();
-                        date.setDate(date.getDate() - (6 - i));
-                        return {
-                          date: date.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          }),
-                          spend: 0
-                        };
-                      });
-
-                      // Map transaction data to the 7 days
-                      transactions.forEach(txn => {
-                        const txnDate = new Date(txn.created_at).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric'
-                        });
-                        const dayData = last7Days.find(day => day.date === txnDate);
-                        if (dayData) {
-                          dayData.spend += Number(txn.amount);
-                        }
-                      });
-                      const sortedData = last7Days;
-                      if (sortedData.length === 0) {
-                        return <div className="h-full flex items-center justify-center text-white/40 text-sm">
-                              No spending data available
-                            </div>;
-                      }
-                      return <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={sortedData}>
-                              <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.4)" fontSize={12} tickLine={false} axisLine={false} style={{
-                            opacity: 0.6
-                          }} />
-                              <YAxis stroke="rgba(255, 255, 255, 0.4)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={value => `$${value}`} style={{
-                            opacity: 0.6
-                          }} />
-                              <Tooltip contentStyle={{
-                            backgroundColor: "#0C0C0C",
-                            border: "1px solid rgba(255, 255, 255, 0.1)",
-                            borderRadius: "8px",
-                            padding: "8px 12px"
-                          }} labelStyle={{
-                            color: "#ffffff",
-                            fontFamily: "Inter, sans-serif",
-                            fontSize: "12px",
-                            fontWeight: 500
-                          }} itemStyle={{
-                            color: "#ffffff",
-                            fontFamily: "Inter, sans-serif",
-                            fontSize: "12px"
-                          }} formatter={(value: number) => `$${value.toFixed(2)}`} cursor={{
-                            fill: "rgba(255, 255, 255, 0.05)"
-                          }} />
-                              <Bar dataKey="spend" fill="#22C55E" radius={[8, 8, 0, 0]} name="Spent" />
-                            </BarChart>
-                          </ResponsiveContainer>;
-                    })()}
-                    </div>
-                  </CardContent>
-                </Card>
-
-              </div>
-            )}
+            {analytics.length > 0}
           </TabsContent>
 
           {/* Creators Tab */}
@@ -1016,23 +950,18 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
                               <TableCell className="py-4">
                                 <div className="flex items-center gap-3 cursor-pointer group" onClick={async () => {
                             // Fetch campaign-specific payment data
-                            const { data: transactions } = await supabase
-                              .from('wallet_transactions')
-                              .select('amount')
-                              .eq('user_id', submission.creator_id)
-                              .eq('type', 'earning')
-                              .eq('status', 'completed')
-                              .filter('metadata->>campaign_id', 'eq', selectedCampaignId);
-                            
+                            const {
+                              data: transactions
+                            } = await supabase.from('wallet_transactions').select('amount').eq('user_id', submission.creator_id).eq('type', 'earning').eq('status', 'completed').filter('metadata->>campaign_id', 'eq', selectedCampaignId);
                             const totalPaid = transactions?.reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0;
-                            
+
                             // Count videos for this campaign
-                            const { count: videoCount } = await supabase
-                              .from('campaign_videos')
-                              .select('*', { count: 'exact', head: true })
-                              .eq('creator_id', submission.creator_id)
-                              .eq('campaign_id', selectedCampaignId);
-                            
+                            const {
+                              count: videoCount
+                            } = await supabase.from('campaign_videos').select('*', {
+                              count: 'exact',
+                              head: true
+                            }).eq('creator_id', submission.creator_id).eq('campaign_id', selectedCampaignId);
                             setSelectedUser({
                               ...submission,
                               total_paid: totalPaid,
@@ -1050,8 +979,7 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
                                       {submission.profiles?.username || "Unknown"}
                                     </p>
                                     {/* Trust Score */}
-                                    {submission.profiles?.trust_score && submission.profiles.trust_score > 0 && (
-                                      <div className="flex items-center gap-2">
+                                    {submission.profiles?.trust_score && submission.profiles.trust_score > 0 && <div className="flex items-center gap-2">
                                         <span className="text-xs text-muted-foreground tracking-[-0.5px]">Trust:</span>
                                         <div className="flex items-center gap-1">
                                           <span className="text-xs font-bold text-foreground tracking-[-0.5px]">
@@ -1059,15 +987,15 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
                                           </span>
                                           <div className="flex items-center gap-0.5">
                                             {(() => {
-                                              const { count, color } = getTrustScoreDiamonds(submission.profiles.trust_score);
-                                              return [...Array(count)].map((_, i) => (
-                                                <Diamond key={i} className={`w-2.5 h-2.5 ${color}`} />
-                                              ));
-                                            })()}
+                                      const {
+                                        count,
+                                        color
+                                      } = getTrustScoreDiamonds(submission.profiles.trust_score);
+                                      return [...Array(count)].map((_, i) => <Diamond key={i} className={`w-2.5 h-2.5 ${color}`} />);
+                                    })()}
                                           </div>
                                         </div>
-                                      </div>
-                                    )}
+                                      </div>}
                                   </div>
                                 </div>
                               </TableCell>
@@ -1299,15 +1227,7 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
                   <Label htmlFor="shortimize-api-key" className="text-white">
                     Shortimize API Key
                   </Label>
-                  <Input 
-                    id="shortimize-api-key" 
-                    type="password" 
-                    placeholder="Enter your Shortimize API key" 
-                    value={shortimizeApiKey} 
-                    onChange={e => setShortimizeApiKey(e.target.value)} 
-                    className="bg-[#191919] border-white/10 text-white font-mono" 
-                    disabled={!isAdmin} 
-                  />
+                  <Input id="shortimize-api-key" type="password" placeholder="Enter your Shortimize API key" value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="bg-[#191919] border-white/10 text-white font-mono" disabled={!isAdmin} />
                   <p className="text-sm text-white/60">
                     API key used for Shortimize integration and analytics tracking
                   </p>
@@ -1321,11 +1241,9 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
           </TabsContent>
 
           {/* Videos Tab */}
-          {showVideosTab && (
-            <TabsContent value="videos">
+          {showVideosTab && <TabsContent value="videos">
               <VideosTab campaignId={selectedCampaignId} isAdmin={isAdmin} approvedCreators={approvedSubmissions} />
-            </TabsContent>
-          )}
+            </TabsContent>}
         </Tabs>
 
         {/* Manage Campaign Dialog */}
@@ -1473,8 +1391,7 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
                   {selectedUser.profiles?.email && <p className="text-sm text-muted-foreground">{selectedUser.profiles.email}</p>}
                   
                   {/* Trust Score */}
-                  {selectedUser.profiles?.trust_score && selectedUser.profiles.trust_score > 0 && (
-                    <div className="flex items-center gap-2 mt-2">
+                  {selectedUser.profiles?.trust_score && selectedUser.profiles.trust_score > 0 && <div className="flex items-center gap-2 mt-2">
                       <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-bold text-white tracking-[-0.5px]">
@@ -1482,15 +1399,15 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
                         </span>
                         <div className="flex items-center gap-0.5">
                           {(() => {
-                            const { count, color } = getTrustScoreDiamonds(selectedUser.profiles.trust_score);
-                            return [...Array(count)].map((_, i) => (
-                              <Diamond key={i} className={`w-3 h-3 ${color}`} />
-                            ));
-                          })()}
+                      const {
+                        count,
+                        color
+                      } = getTrustScoreDiamonds(selectedUser.profiles.trust_score);
+                      return [...Array(count)].map((_, i) => <Diamond key={i} className={`w-3 h-3 ${color}`} />);
+                    })()}
                         </div>
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
 
