@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
 import viralityLogo from "@/assets/virality-logo.webp";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -1078,10 +1078,10 @@ export function WalletTab() {
                                  e.stopPropagation();
                                  generateTransactionImage(transaction);
                                }}
-                               className="h-8 w-8"
-                             >
-                               <Share2 className="h-4 w-4" />
-                             </Button>
+                              className="h-8 w-8"
+                            >
+                              <Upload className="h-4 w-4" />
+                            </Button>
                            </TableCell>
                          </TableRow>)}
                   </TableBody>
