@@ -799,6 +799,15 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
+            {showImportButton && (
+              <div className="flex justify-end gap-2">
+                <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
+              </div>
+            )}
+            
+            {/* Imported Analytics Data */}
+            <CampaignAnalyticsTable campaignId={selectedCampaignId} onPaymentComplete={handleRefresh} />
+            
             {/* Campaign Performance Overview */}
             <Card className="bg-card border">
               
@@ -848,15 +857,6 @@ export default function BrandManagement({ showVideosTab = true, showImportButton
                 </div>
               </CardContent>
             </Card>
-
-            {showImportButton && (
-              <div className="flex justify-end gap-2">
-                <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
-              </div>
-            )}
-            
-            {/* Imported Analytics Data */}
-            <CampaignAnalyticsTable campaignId={selectedCampaignId} onPaymentComplete={handleRefresh} />
             
             {/* Matching Dialog */}
             <MatchAccountsDialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen} campaignId={selectedCampaignId} onMatchComplete={fetchSubmissions} />
