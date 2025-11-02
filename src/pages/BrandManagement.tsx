@@ -373,7 +373,7 @@ export default function BrandManagement({
         .from("wallet_transactions")
         .select(`
           *,
-          profiles:user_id (
+          profiles!wallet_transactions_user_id_fkey (
             id,
             username,
             avatar_url
