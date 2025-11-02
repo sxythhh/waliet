@@ -225,10 +225,10 @@ export default function BrandManagement({
   }, [slug]);
 
   useEffect(() => {
-    if (brandId && shortimizeApiKey) {
+    if (isManagementPage && brandId && shortimizeApiKey) {
       fetchShortimizeAccounts();
     }
-  }, [brandId, shortimizeApiKey]);
+  }, [isManagementPage, brandId, shortimizeApiKey]);
   useEffect(() => {
     if (selectedCampaignId) {
       fetchSubmissions();
