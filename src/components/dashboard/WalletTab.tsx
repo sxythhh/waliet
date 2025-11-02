@@ -1030,7 +1030,7 @@ export function WalletTab() {
               <div className="rounded-md border border-border overflow-x-auto">
                 <Table className="min-w-[600px]">
                   <TableHeader>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableRow>
                       <TableHead className="font-semibold">Details</TableHead>
                       <TableHead className="font-semibold text-right">Amount</TableHead>
                       <TableHead className="font-semibold text-right">Date</TableHead>
