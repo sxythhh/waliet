@@ -1350,7 +1350,7 @@ export function WalletTab() {
                           {selectedTransaction.status === 'completed' ? <Check className="w-8 h-8 text-green-500" /> : selectedTransaction.status === 'in_transit' ? <TrendingUp className="w-8 h-8 text-blue-500" /> : <Hourglass className="w-8 h-8 text-orange-500" />}
                         </div>
                       </div>
-                      <p className="text-foreground font-bold font-chakra" style={{
+                      <p className="text-foreground font-bold font-geist text-center" style={{
                   letterSpacing: '-0.3px'
                 }}>
                         {selectedTransaction.status === 'completed' ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!` : selectedTransaction.status === 'in_transit' ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!` : `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
