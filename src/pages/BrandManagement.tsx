@@ -93,7 +93,7 @@ interface Submission {
     social_accounts: SocialAccount[];
   };
 }
-export default function BrandManagement({ showVideosTab = true }: { showVideosTab?: boolean }) {
+export default function BrandManagement({ showVideosTab = true, showImportButton = true }: { showVideosTab?: boolean; showImportButton?: boolean }) {
   const {
     slug
   } = useParams();
@@ -849,9 +849,11 @@ export default function BrandManagement({ showVideosTab = true }: { showVideosTa
               </CardContent>
             </Card>
 
-            <div className="flex justify-end gap-2">
-              <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
-            </div>
+            {showImportButton && (
+              <div className="flex justify-end gap-2">
+                <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
+              </div>
+            )}
             
             {/* Imported Analytics Data */}
             <CampaignAnalyticsTable campaignId={selectedCampaignId} onPaymentComplete={handleRefresh} />
