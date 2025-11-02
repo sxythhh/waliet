@@ -800,14 +800,14 @@ export function WalletTab() {
           }}>
               {isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}
             </p>
-            <Separator className="my-4" />
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-muted-foreground font-medium">Available Balance</span>
-              <span className="text-lg font-semibold">{isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}</span>
+            <Separator className="my-2" />
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground font-medium">Available Balance</span>
+              <span className="text-base font-semibold">{isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}</span>
             </div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-muted-foreground font-medium">In Transit</span>
-              <span className="text-lg font-semibold">{isBalanceVisible ? `$${pendingWithdrawals.toFixed(2)}` : "••••••"}</span>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground font-medium">In Transit</span>
+              <span className="text-base font-semibold">{isBalanceVisible ? `$${pendingWithdrawals.toFixed(2)}` : "••••••"}</span>
             </div>
             <Button onClick={handleRequestPayout} className="w-full font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
               Withdraw Balance
