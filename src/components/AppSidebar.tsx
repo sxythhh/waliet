@@ -2,6 +2,7 @@ import { Layers, Dock, Compass, Coins, ArrowUpRight, LogOut } from "lucide-react
 import { useNavigate, useSearchParams } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 import discordIcon from "@/assets/discord-icon.png";
+import webStoriesIcon from "@/assets/web-stories-icon.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ const menuItems = [
   {
     title: "Campaigns",
     tab: "campaigns",
-    icon: Layers
+    icon: null as any // Will use custom SVG
   },
   {
     title: "Wallet",
@@ -99,7 +100,11 @@ export function AppSidebar() {
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
-              <item.icon className="h-4 w-4 md:h-5 md:w-5" />
+              {item.tab === "campaigns" ? (
+                <img src={webStoriesIcon} alt="" className="h-4 w-4 md:h-5 md:w-5" />
+              ) : (
+                <item.icon className="h-4 w-4 md:h-5 md:w-5" />
+              )}
               <span className="hidden md:block text-xs font-medium tracking-[-0.5px]">{item.title}</span>
             </button>
           );
