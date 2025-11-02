@@ -189,7 +189,9 @@ export function ManageAccountDialog({
           <div className="space-y-6">
             {/* Account Info */}
             <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-              
+              <div className="p-2 rounded-md bg-background">
+                {platformIcon}
+              </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">{account.username}</h3>
