@@ -357,17 +357,17 @@ export function JoinCampaignSheet({
               <h3 className="text-lg font-semibold">{campaign.title}</h3>
               <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
               {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-2 mt-2">
-                  {campaign.campaign_type && <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-[#4b85f7]" style={{
+                  {campaign.campaign_type && <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-primary/20" style={{
                 borderRadius: '8px'
               }}>
                       {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
                     </span>}
-                  {campaign.category && <span className="px-2.5 py-1 text-xs font-medium bg-muted text-foreground border-t border-[#4a4a4a]" style={{
+                  {campaign.category && <span className="px-2.5 py-1 text-xs font-medium bg-muted text-foreground border-t border-border" style={{
                 borderRadius: '8px'
               }}>
                       {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </span>}
-                  {campaign.platforms.length > 0 && <span className="px-2.5 py-1 flex items-center gap-1.5 bg-card border-t border-[#2a2a2a]" style={{
+                  {campaign.platforms.length > 0 && <span className="px-2.5 py-1 flex items-center gap-1.5 bg-card border-t border-border" style={{
                 borderRadius: '8px'
               }}>
                     {campaign.platforms.map(platform => {
