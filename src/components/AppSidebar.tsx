@@ -119,17 +119,12 @@ export function AppSidebar() {
               </Avatar>
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-0 bg-card" align="end">
-            <div className="p-6 space-y-4">
-              {/* Header Badge */}
-              <div className="inline-block px-3 py-1 bg-muted rounded-md">
-                <span className="text-xs font-bold tracking-wider">CLIPPER</span>
-              </div>
-
+          <PopoverContent className="w-72 p-0 bg-card" align="end">
+            <div className="p-4 space-y-3">
               {/* User Info */}
               <div>
-                <h3 className="text-2xl font-bold mb-1">{displayName}</h3>
-                <p className="text-muted-foreground">{user?.email}</p>
+                <h3 className="text-xl font-bold mb-1">{displayName}</h3>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
 
               {/* Settings Button */}
@@ -142,39 +137,39 @@ export function AppSidebar() {
               </Button>
 
               {/* Menu Items */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <button 
-                  className="w-full flex items-center justify-between px-0 py-3 text-left hover:opacity-70 transition-opacity"
+                  className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
                   onClick={() => window.open("https://discord.gg/your-discord", "_blank")}
                 >
                   <div className="flex items-center gap-3">
-                    <img src={discordIcon} alt="Discord" className="w-6 h-6" />
-                    <span className="font-semibold">Discord</span>
+                    <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
+                    <span className="font-medium text-sm">Discord</span>
                   </div>
-                  <ArrowUpRight className="w-5 h-5" />
+                  <ArrowUpRight className="w-4 h-4" />
                 </button>
 
                 <button 
-                  className="w-full flex items-center justify-between px-0 py-3 text-left hover:opacity-70 transition-opacity"
+                  className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
                   onClick={() => window.open("https://forms.gle/your-feedback-form", "_blank")}
                 >
-                  <span className="font-semibold">Give feedback</span>
-                  <ArrowUpRight className="w-5 h-5" />
+                  <span className="font-medium text-sm">Give feedback</span>
+                  <ArrowUpRight className="w-4 h-4" />
                 </button>
 
                 <button 
-                  className="w-full flex items-center justify-between px-0 py-3 text-left hover:opacity-70 transition-opacity"
+                  className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
                   onClick={() => window.open("https://support.example.com", "_blank")}
                 >
-                  <span className="font-semibold">Support</span>
-                  <ArrowUpRight className="w-5 h-5" />
+                  <span className="font-medium text-sm">Support</span>
+                  <ArrowUpRight className="w-4 h-4" />
                 </button>
 
                 <button 
-                  className="w-full flex items-center gap-2 px-0 py-3 text-left hover:opacity-70 transition-opacity"
+                  className="w-full flex items-center gap-2 px-0 py-2 text-left hover:opacity-70 transition-opacity"
                   onClick={handleSignOut}
                 >
-                  <span className="font-semibold">Log out</span>
+                  <span className="font-medium text-sm">Log out</span>
                 </button>
               </div>
 
