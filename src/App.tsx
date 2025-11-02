@@ -22,7 +22,6 @@ import CampaignJoin from "./pages/CampaignJoin";
 import CampaignPreview from "./pages/CampaignPreview";
 import BrandManagement from "./pages/BrandManagement";
 import BrandAssets from "./pages/BrandAssets";
-import BrandAssetsManagement from "./pages/BrandAssetsManagement";
 import BrandLibrary from "./pages/BrandLibrary";
 import BrandAccount from "./pages/BrandAccount";
 import BrandInvite from "./pages/BrandInvite";
@@ -140,7 +139,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
           <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
           <Route path="/brand/:slug" element={<BrandLayout><BrandAssets /></BrandLayout>} />
-          <Route path="/brand/management/:slug" element={<BrandLayout><BrandAssetsManagement /></BrandLayout>} />
+          <Route path="/brand/management/:slug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
           <Route path="/brand/:slug/assets" element={<BrandLayout><BrandManagement /></BrandLayout>} />
           <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
           <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
