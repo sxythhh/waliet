@@ -321,6 +321,7 @@ export type Database = {
           logo_url: string | null
           name: string
           renewal_date: string | null
+          shortimize_api_key: string | null
           show_account_tab: boolean
           slug: string
           updated_at: string
@@ -338,6 +339,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           renewal_date?: string | null
+          shortimize_api_key?: string | null
           show_account_tab?: boolean
           slug: string
           updated_at?: string
@@ -355,6 +357,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           renewal_date?: string | null
+          shortimize_api_key?: string | null
           show_account_tab?: boolean
           slug?: string
           updated_at?: string

@@ -113,6 +113,7 @@ export default function BrandManagement() {
   const [assetsUrl, setAssetsUrl] = useState("");
   const [homeUrl, setHomeUrl] = useState("");
   const [accountUrl, setAccountUrl] = useState("");
+  const [shortimizeApiKey, setShortimizeApiKey] = useState("");
   const [savingUrls, setSavingUrls] = useState(false);
   const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
@@ -246,7 +247,7 @@ export default function BrandManagement() {
       const {
         data: brandData,
         error: brandError
-      } = await supabase.from("brands").select("id, assets_url, home_url, account_url, brand_type").eq("slug", slug).maybeSingle();
+      } = await supabase.from("brands").select("id, assets_url, home_url, account_url, brand_type, shortimize_api_key").eq("slug", slug).maybeSingle();
       if (brandError) throw brandError;
       if (!brandData) return;
       setBrandId(brandData.id);
@@ -254,6 +255,7 @@ export default function BrandManagement() {
       setHomeUrl(brandData.home_url || "");
       setAccountUrl(brandData.account_url || "");
       setBrandType(brandData.brand_type || "");
+      setShortimizeApiKey(brandData.shortimize_api_key || "");
       const {
         data,
         error
@@ -400,7 +402,8 @@ export default function BrandManagement() {
         assets_url: assetsUrl || null,
         home_url: homeUrl || null,
         account_url: accountUrl || null,
-        brand_type: brandType || null
+        brand_type: brandType || null,
+        shortimize_api_key: shortimizeApiKey || null
       }).eq("id", brandId);
       if (error) throw error;
       toast.success("Settings updated successfully");
@@ -1285,6 +1288,24 @@ export default function BrandManagement() {
                   <Input id="account-url" type="url" placeholder="https://example.com/invoices" value={accountUrl} onChange={e => setAccountUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white" disabled={!isAdmin} />
                   <p className="text-sm text-white/60">
                     This URL will be embedded in the Invoices tab
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="shortimize-api-key" className="text-white">
+                    Shortimize API Key
+                  </Label>
+                  <Input 
+                    id="shortimize-api-key" 
+                    type="password" 
+                    placeholder="Enter your Shortimize API key" 
+                    value={shortimizeApiKey} 
+                    onChange={e => setShortimizeApiKey(e.target.value)} 
+                    className="bg-[#191919] border-white/10 text-white font-mono" 
+                    disabled={!isAdmin} 
+                  />
+                  <p className="text-sm text-white/60">
+                    API key used for Shortimize integration and analytics tracking
                   </p>
                 </div>
 
