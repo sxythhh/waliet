@@ -569,7 +569,7 @@ export function CampaignsTab() {
           onUpdate={fetchCampaigns}
           onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)}
           platformIcon={
-            <div className="w-4 h-4">
+            <div className="w-6 h-6">
               <img src={getPlatformIcon(selectedAccount.platform) || ''} alt={selectedAccount.platform} className="w-full h-full" />
             </div>
           }
