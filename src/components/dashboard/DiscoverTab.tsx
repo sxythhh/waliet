@@ -73,6 +73,7 @@ export function DiscoverTab() {
   const [hideInfiniteBudget, setHideInfiniteBudget] = useState(false);
   const [hideLowBudget, setHideLowBudget] = useState(false);
   const [hideEnded, setHideEnded] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedBounty, setSelectedBounty] = useState<BountyCampaign | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -265,11 +266,16 @@ export function DiscoverTab() {
 
             {/* Filter and Bookmark Icons */}
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className="h-11 w-11 bg-muted hover:bg-muted/80">
-                <SlidersHorizontal className="h-5 w-5" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setFiltersOpen(!filtersOpen)}
+                className="h-11 w-11 bg-muted hover:bg-muted/80"
+              >
+                <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
               </Button>
               <Button variant="ghost" size="icon" className="h-11 w-11 bg-muted hover:bg-muted/80">
-                <Bookmark className="h-5 w-5" />
+                <Bookmark className="h-5 w-5 text-muted-foreground" />
               </Button>
             </div>
 
@@ -329,93 +335,95 @@ export function DiscoverTab() {
           </div>
 
           {/* Second Row: Sort, Frequency, Status, and Hide Options */}
-          <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center flex-wrap">
-            {/* Sort By */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[140px] h-9 border-transparent bg-muted">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="oldest">Oldest</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                  <SelectItem value="budget-high">Budget (High-Low)</SelectItem>
-                  <SelectItem value="budget-low">Budget (Low-High)</SelectItem>
-                  <SelectItem value="rpm-high">RPM (High-Low)</SelectItem>
-                  <SelectItem value="rpm-low">RPM (Low-High)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Frequency (placeholder for future feature) */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Frequency:</span>
-              <Select value={frequency} onValueChange={setFrequency}>
-                <SelectTrigger className="w-[100px] h-9 border-transparent bg-muted">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Status Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[110px] h-9 border-transparent bg-muted">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="ended">Ended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Hide Options */}
-            <div className="flex items-center gap-4 flex-wrap">
+          {filtersOpen && (
+            <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center flex-wrap">
+              {/* Sort By */}
               <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="hide-infinite" 
-                  checked={hideInfiniteBudget}
-                  onCheckedChange={(checked) => setHideInfiniteBudget(checked as boolean)}
-                />
-                <Label htmlFor="hide-infinite" className="text-sm text-muted-foreground cursor-pointer">
-                  Hide infinite budget?
-                </Label>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[140px] h-9 border-transparent bg-muted">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="oldest">Oldest</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                    <SelectItem value="budget-high">Budget (High-Low)</SelectItem>
+                    <SelectItem value="budget-low">Budget (Low-High)</SelectItem>
+                    <SelectItem value="rpm-high">RPM (High-Low)</SelectItem>
+                    <SelectItem value="rpm-low">RPM (Low-High)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
+              {/* Frequency (placeholder for future feature) */}
               <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="hide-low-budget" 
-                  checked={hideLowBudget}
-                  onCheckedChange={(checked) => setHideLowBudget(checked as boolean)}
-                />
-                <Label htmlFor="hide-low-budget" className="text-sm text-muted-foreground cursor-pointer">
-                  Hide low budget?
-                </Label>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Frequency:</span>
+                <Select value={frequency} onValueChange={setFrequency}>
+                  <SelectTrigger className="w-[100px] h-9 border-transparent bg-muted">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
+              {/* Status Filter */}
               <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="hide-ended" 
-                  checked={hideEnded}
-                  onCheckedChange={(checked) => setHideEnded(checked as boolean)}
-                />
-                <Label htmlFor="hide-ended" className="text-sm text-muted-foreground cursor-pointer">
-                  Hide ended?
-                </Label>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[110px] h-9 border-transparent bg-muted">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="ended">Ended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Hide Options */}
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    id="hide-infinite" 
+                    checked={hideInfiniteBudget}
+                    onCheckedChange={(checked) => setHideInfiniteBudget(checked as boolean)}
+                  />
+                  <Label htmlFor="hide-infinite" className="text-sm text-muted-foreground cursor-pointer">
+                    Hide infinite budget?
+                  </Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    id="hide-low-budget" 
+                    checked={hideLowBudget}
+                    onCheckedChange={(checked) => setHideLowBudget(checked as boolean)}
+                  />
+                  <Label htmlFor="hide-low-budget" className="text-sm text-muted-foreground cursor-pointer">
+                    Hide low budget?
+                  </Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    id="hide-ended" 
+                    checked={hideEnded}
+                    onCheckedChange={(checked) => setHideEnded(checked as boolean)}
+                  />
+                  <Label htmlFor="hide-ended" className="text-sm text-muted-foreground cursor-pointer">
+                    Hide ended?
+                  </Label>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Campaigns and Bounties Grid */}
