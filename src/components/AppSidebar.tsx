@@ -1,10 +1,14 @@
-import { Airplay, Dock, Compass, Coins } from "lucide-react";
+import { Airplay, Dock, Compass, Coins, ArrowUpRight, LogOut } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
+import discordIcon from "@/assets/discord-icon.png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const menuItems = [
   {
@@ -68,6 +72,12 @@ export function AppSidebar() {
     navigate(`/dashboard?tab=${tab}`);
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+    toast.success("Logged out successfully");
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:px-6">
       {/* Logo */}
@@ -98,12 +108,85 @@ export function AppSidebar() {
 
       {/* User Profile */}
       <div className="hidden md:flex items-center">
-        <Avatar className="w-8 h-8">
-          <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-          <AvatarFallback className="bg-blue-500 text-white">
-            {getInitial()}
-          </AvatarFallback>
-        </Avatar>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="cursor-pointer">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                <AvatarFallback className="bg-muted text-muted-foreground">
+                  {getInitial()}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0 bg-card" align="end">
+            <div className="p-6 space-y-4">
+              {/* Header Badge */}
+              <div className="inline-block px-3 py-1 bg-muted rounded-md">
+                <span className="text-xs font-bold tracking-wider">CLIPPER</span>
+              </div>
+
+              {/* User Info */}
+              <div>
+                <h3 className="text-2xl font-bold mb-1">{displayName}</h3>
+                <p className="text-muted-foreground">{user?.email}</p>
+              </div>
+
+              {/* Settings Button */}
+              <Button 
+                className="w-full" 
+                variant="secondary"
+                onClick={() => handleTabClick("profile")}
+              >
+                Settings
+              </Button>
+
+              {/* Menu Items */}
+              <div className="space-y-2">
+                <button 
+                  className="w-full flex items-center justify-between px-0 py-3 text-left hover:opacity-70 transition-opacity"
+                  onClick={() => window.open("https://discord.gg/your-discord", "_blank")}
+                >
+                  <div className="flex items-center gap-3">
+                    <img src={discordIcon} alt="Discord" className="w-6 h-6" />
+                    <span className="font-semibold">Discord</span>
+                  </div>
+                  <ArrowUpRight className="w-5 h-5" />
+                </button>
+
+                <button 
+                  className="w-full flex items-center justify-between px-0 py-3 text-left hover:opacity-70 transition-opacity"
+                  onClick={() => window.open("https://forms.gle/your-feedback-form", "_blank")}
+                >
+                  <span className="font-semibold">Give feedback</span>
+                  <ArrowUpRight className="w-5 h-5" />
+                </button>
+
+                <button 
+                  className="w-full flex items-center justify-between px-0 py-3 text-left hover:opacity-70 transition-opacity"
+                  onClick={() => window.open("https://support.example.com", "_blank")}
+                >
+                  <span className="font-semibold">Support</span>
+                  <ArrowUpRight className="w-5 h-5" />
+                </button>
+
+                <button 
+                  className="w-full flex items-center gap-2 px-0 py-3 text-left hover:opacity-70 transition-opacity"
+                  onClick={handleSignOut}
+                >
+                  <span className="font-semibold">Log out</span>
+                </button>
+              </div>
+
+              {/* Footer Links */}
+              <div className="pt-4 border-t flex gap-4 text-sm text-muted-foreground">
+                <button className="hover:text-foreground transition-colors">Privacy</button>
+                <button className="hover:text-foreground transition-colors">Terms</button>
+                <button className="hover:text-foreground transition-colors">Clipper Terms</button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </nav>
   );
