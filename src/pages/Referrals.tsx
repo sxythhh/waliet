@@ -7,6 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, DollarSign, Copy, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
+import voteIconLight from "@/assets/vote-icon-light.svg";
+import voteIconDark from "@/assets/vote-icon-dark.svg";
 
 interface ReferredUser {
   id: string;
@@ -27,6 +30,7 @@ export default function Referrals() {
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   useEffect(() => {
     fetchReferralData();
@@ -176,7 +180,11 @@ export default function Referrals() {
           <CardContent>
             {referredUsers.length === 0 ? (
               <div className="text-center py-12">
-                <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <img 
+                  src={theme === "dark" ? voteIconDark : voteIconLight}
+                  alt=""
+                  className="mx-auto h-12 w-12 mb-4"
+                />
                 <p className="text-muted-foreground font-medium">
                   No referrals yet
                 </p>
