@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const menuItems = [
   {
@@ -133,13 +134,16 @@ export function AppSidebar() {
               </div>
 
               {/* Settings Button */}
-              <Button 
-                className="w-full" 
-                variant="secondary"
-                onClick={() => handleTabClick("profile")}
-              >
-                Settings
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1" 
+                  variant="secondary"
+                  onClick={() => handleTabClick("profile")}
+                >
+                  Settings
+                </Button>
+                <ThemeToggle />
+              </div>
 
               {/* Menu Items */}
               <div className="space-y-1">
