@@ -47,6 +47,7 @@ interface Profile {
   twitter_name: string | null;
   twitter_avatar: string | null;
   twitter_connected_at: string | null;
+  referral_code: string | null;
 }
 interface SocialAccount {
   id: string;
@@ -400,6 +401,15 @@ export function ProfileTab() {
     window.open(`/${profile?.username}`, '_blank');
   };
 
+  const handleCopyReferralCode = () => {
+    if (!profile?.referral_code) return;
+    navigator.clipboard.writeText(profile.referral_code);
+    toast({
+      title: "Copied!",
+      description: "Referral code copied to clipboard",
+    });
+  };
+
   if (loading || !profile) {
     return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading profile...</p>
@@ -409,7 +419,7 @@ export function ProfileTab() {
       {/* Profile Header */}
       <Card className="bg-card border-0">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
           <div className="space-y-1">
               <h2 className="text-xl font-semibold">Your Profile</h2>
               <p className="text-sm text-muted-foreground">virality.gg/{profile.username}</p>
@@ -433,6 +443,27 @@ export function ProfileTab() {
               </Button>
             </div>
           </div>
+          
+          {/* Referral Code Section */}
+          {profile.referral_code && (
+            <div className="pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Your Referral Code</p>
+                  <p className="text-lg font-mono font-semibold tracking-wider">{profile.referral_code}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyReferralCode}
+                  className="gap-2 bg-[#131313] border-0 hover:bg-[#1a1a1a]"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
