@@ -9,8 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -115,6 +115,7 @@ export function ProfileTab() {
     platform: string;
     username: string;
   } | null>(null);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     toast
@@ -640,12 +641,24 @@ export function ProfileTab() {
       
 
       {/* Content Preferences */}
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle className="text-lg">Content Preferences</CardTitle>
-          <CardDescription>Tell us about the content you create</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
+      <Collapsible open={preferencesOpen} onOpenChange={setPreferencesOpen}>
+        <Card className="bg-card">
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">Content Preferences</CardTitle>
+                  <CardDescription>Tell us about the content you create</CardDescription>
+                </div>
+                <ChevronDown 
+                  className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${preferencesOpen ? 'rotate-180' : ''}`}
+                />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="transition-all duration-300 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+            <CardContent className="space-y-8 pt-0">
           {/* Languages */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -756,8 +769,10 @@ export function ProfileTab() {
               })}
             </div>
           </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Edit Profile */}
       <Card className="bg-card">
