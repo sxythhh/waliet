@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Upload } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
-import youtubeLogo from "@/assets/youtube-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.png";
 interface SubmitDemographicsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

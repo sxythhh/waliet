@@ -10,7 +10,7 @@ import { Link2, ArrowRight } from "lucide-react";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
-import youtubeLogo from "@/assets/youtube-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.png";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 interface Profile {
   id: string;

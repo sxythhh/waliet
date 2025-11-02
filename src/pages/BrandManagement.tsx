@@ -28,7 +28,7 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { VideoHistoryDialog } from "@/components/VideoHistoryDialog";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
-import youtubeLogo from "@/assets/youtube-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
 const getTrustScoreDiamonds = (score: number) => {
   if (score < 20) {

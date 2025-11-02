@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 import { useTheme } from "next-themes";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
-import youtubeLogo from "@/assets/youtube-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.svg";
 import youtubeLogoBlack from "@/assets/youtube-logo-black.png";

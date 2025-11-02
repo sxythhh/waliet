@@ -16,7 +16,7 @@ import { Plus, Upload, X, Trash2, Copy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
-import youtubeLogo from "@/assets/youtube-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.png";
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   description: z.string().trim().max(500).optional(),

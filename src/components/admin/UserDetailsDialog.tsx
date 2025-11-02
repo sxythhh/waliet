@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
-import youtubeLogo from "@/assets/youtube-logo.svg";
+import youtubeLogo from "@/assets/youtube-logo.png";
 interface UserProfile {
   id: string;
   username: string;
