@@ -570,7 +570,7 @@ export function WalletTab() {
   };
   const generateTransactionImage = async (transaction: Transaction) => {
     try {
-      // Load and convert logo to base64
+      // Load and convert Virality logo to base64
       const logoImg = new Image();
       logoImg.crossOrigin = "anonymous";
       logoImg.src = viralityGhostLogo;
@@ -580,7 +580,7 @@ export function WalletTab() {
         logoImg.onerror = reject;
       });
       
-      // Convert logo to base64
+      // Convert Virality logo to base64
       const logoCanvas = document.createElement('canvas');
       logoCanvas.width = logoImg.width;
       logoCanvas.height = logoImg.height;
@@ -590,49 +590,79 @@ export function WalletTab() {
       }
       const logoBase64 = logoCanvas.toDataURL('image/png');
       
+      // Load and convert brand logo if available
+      let brandLogoBase64 = '';
+      if (transaction.campaign?.brand_logo_url) {
+        try {
+          const brandLogoImg = new Image();
+          brandLogoImg.crossOrigin = "anonymous";
+          brandLogoImg.src = transaction.campaign.brand_logo_url;
+          
+          await new Promise((resolve, reject) => {
+            brandLogoImg.onload = resolve;
+            brandLogoImg.onerror = () => resolve(null); // Continue without brand logo if it fails
+          });
+          
+          const brandLogoCanvas = document.createElement('canvas');
+          brandLogoCanvas.width = brandLogoImg.width;
+          brandLogoCanvas.height = brandLogoImg.height;
+          const brandLogoCtx = brandLogoCanvas.getContext('2d');
+          if (brandLogoCtx) {
+            brandLogoCtx.drawImage(brandLogoImg, 0, 0);
+          }
+          brandLogoBase64 = brandLogoCanvas.toDataURL('image/png');
+        } catch (e) {
+          console.log('Failed to load brand logo:', e);
+        }
+      }
+      
       // Create SVG with higher resolution and black background
       const svg = `
         <svg width="1600" height="800" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+          <style>
+            text { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: -0.5px; }
+          </style>
+          
           <!-- Black background -->
           <rect width="1600" height="800" fill="#000000" rx="40"/>
           
-          <!-- Logo -->
+          <!-- Virality Logo -->
           <image href="${logoBase64}" x="80" y="60" width="80" height="80"/>
-          <text x="180" y="120" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#fff">Virality</text>
+          <text x="180" y="120" font-size="48" font-weight="bold" fill="#fff">Virality</text>
           
           <!-- Transaction Type -->
-          <text x="80" y="220" font-family="Arial, sans-serif" font-size="32" fill="#888">Transaction Type</text>
-          <text x="80" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#fff">
+          <text x="80" y="220" font-size="32" fill="#888">Transaction Type</text>
+          <text x="80" y="280" font-size="48" font-weight="bold" fill="#fff">
             ${transaction.type === 'earning' ? 'Payment' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
           </text>
           
           <!-- Amount -->
-          <text x="80" y="380" font-family="Arial, sans-serif" font-size="32" fill="#888">Amount</text>
-          <text x="80" y="460" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="${transaction.type === 'earning' || transaction.type === 'transfer_received' ? '#10b981' : '#ef4444'}">
+          <text x="80" y="380" font-size="32" fill="#888">Amount</text>
+          <text x="80" y="460" font-size="96" font-weight="bold" fill="${transaction.type === 'earning' || transaction.type === 'transfer_received' ? '#10b981' : '#ef4444'}">
             ${transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : '-'}$${Math.abs(transaction.amount).toFixed(2)}
           </text>
           
           <!-- Date -->
-          <text x="80" y="580" font-family="Arial, sans-serif" font-size="32" fill="#888">Date</text>
-          <text x="80" y="640" font-family="Arial, sans-serif" font-size="36" fill="#fff">${format(transaction.date, 'MMMM dd, yyyy')}</text>
+          <text x="80" y="580" font-size="32" fill="#888">Date</text>
+          <text x="80" y="640" font-size="36" fill="#fff">${format(transaction.date, 'MMMM dd, yyyy')}</text>
           
           <!-- Status Badge -->
           ${transaction.status ? `
             <rect x="80" y="680" width="240" height="60" fill="${transaction.status === 'completed' ? '#10b98120' : transaction.status === 'rejected' ? '#ef444420' : '#f59e0b20'}" rx="16"/>
-            <text x="200" y="724" font-family="Arial, sans-serif" font-size="28" font-weight="600" fill="${transaction.status === 'completed' ? '#10b981' : transaction.status === 'rejected' ? '#ef4444' : '#f59e0b'}" text-anchor="middle">
+            <text x="200" y="724" font-size="28" font-weight="600" fill="${transaction.status === 'completed' ? '#10b981' : transaction.status === 'rejected' ? '#ef4444' : '#f59e0b'}" text-anchor="middle">
               ${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
             </text>
           ` : ''}
           
           <!-- Campaign Info if available -->
           ${transaction.campaign ? `
-            <text x="900" y="380" font-family="Arial, sans-serif" font-size="32" fill="#888">Campaign</text>
-            <text x="900" y="440" font-family="Arial, sans-serif" font-size="36" font-weight="600" fill="#fff">${transaction.campaign.title}</text>
-            <text x="900" y="490" font-family="Arial, sans-serif" font-size="28" fill="#888">${transaction.campaign.brand_name}</text>
+            ${brandLogoBase64 ? `<image href="${brandLogoBase64}" x="900" y="300" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>` : ''}
+            <text x="900" y="${brandLogoBase64 ? '430' : '360'}" font-size="32" fill="#888">Campaign</text>
+            <text x="900" y="${brandLogoBase64 ? '480' : '420'}" font-size="36" font-weight="600" fill="#fff">${transaction.campaign.title}</text>
           ` : ''}
           
           <!-- Transaction ID -->
-          <text x="1520" y="760" font-family="Arial, sans-serif" font-size="24" fill="#555" text-anchor="end">${transaction.id.slice(0, 8)}...${transaction.id.slice(-8)}</text>
+          <text x="1520" y="760" font-size="24" fill="#555" text-anchor="end">${transaction.id.slice(0, 8)}...${transaction.id.slice(-8)}</text>
         </svg>
       `;
 
