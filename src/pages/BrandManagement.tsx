@@ -808,801 +808,98 @@ export default function BrandManagement({
         {/* Campaign Selector */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 font-instrument tracking-tight">{selectedCampaign?.title}</h1>
-            {campaigns.length > 1 && <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-                <SelectTrigger className="w-[280px] bg-card border">
-                  <SelectValue placeholder="Select campaign" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border z-50">
-                  {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="hover:bg-accent focus:bg-accent">
-                      {campaign.title}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>}
+            <h1 className="text-3xl font-bold text-foreground mb-2 font-instrument tracking-tight">Shortimize Analytics</h1>
           </div>
-          
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="bg-card border">
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-accent">
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger value="creators" className="data-[state=active]:bg-accent">
-              Users
-              <Badge variant="secondary" className="ml-2">
-                {approvedSubmissions.length}
-              </Badge>
-            </TabsTrigger>
-            {showVideosTab && <TabsTrigger value="videos" className="data-[state=active]:bg-accent">
-                Videos
-              </TabsTrigger>}
-            <TabsTrigger value="shortimize" className="data-[state=active]:bg-accent">
-              Shortimize
-            </TabsTrigger>
-            <TabsTrigger value="applications" className="data-[state=active]:bg-accent">
-              Applications
-              {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-accent">
-              Settings
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-4">
-            {/* Campaign Performance Overview */}
-            <Card className="bg-card border">
-              
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
-                    <div className="text-2xl font-bold font-chakra">
-                      {(() => {
-                      // Group by account and sum views across all date ranges
-                      const accountViews = analytics.reduce((acc, a) => {
-                        const key = `${a.platform}-${a.account_username}`;
-                        acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
-                        return acc;
-                      }, {} as Record<string, number>);
-                      return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
-                    })()}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">Total Views</div>
-                  </div>
-                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
-                    <div className="text-2xl font-bold font-chakra">
-                      {(() => {
-                      // Get unique accounts
-                      const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
-                      return uniqueAccounts.size;
-                    })()}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">Total Accounts</div>
-                  </div>
-                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
-                    <div className="text-2xl font-bold font-chakra">
-                      ${Number(selectedCampaign?.budget_used || 0).toFixed(2)}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
-                      Budget Used
-                      {isAdmin && <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground hover:text-foreground hover:bg-accent p-0" onClick={handleEditBudgetUsed} title="Edit budget used">
-                          <Edit className="h-3 w-3" />
-                        </Button>}
-                    </div>
-                  </div>
-                  <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
-                    <div className="text-2xl font-bold font-chakra">
-                      ${effectiveCPM.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">Effective CPM</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {showImportButton && <div className="flex justify-end gap-2">
-                <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
-              </div>}
-            
-            {/* Account Analytics Table */}
-            {showAnalyticsTable && <CampaignAnalyticsTable campaignId={selectedCampaignId} onPaymentComplete={fetchSubmissions} />}
-            
-            
-            {/* Matching Dialog */}
-            <MatchAccountsDialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen} campaignId={selectedCampaignId} onMatchComplete={fetchSubmissions} />
-
-            {/* Charts Section - Only show if analytics data exists */}
-            {analytics.length > 0}
-          </TabsContent>
-
-          {/* Creators Tab */}
-          <TabsContent value="creators">
-            <Card className="bg-card border">
-              <CardHeader className="pb-4 border-b border-border space-y-4">
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-instrument tracking-tight">
-                    Active Creators
-                    <Badge variant="secondary" className="ml-2">
-                      {approvedSubmissions.length}
-                    </Badge>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={exportToCSV} disabled={approvedSubmissions.length === 0} className="flex items-center gap-2 border-0">
-                    <Download className="h-4 w-4" />
-                    Export CSV
-                  </Button>
-                </CardTitle>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="text" placeholder="Search by name or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {approvedSubmissions.length === 0 ? <div className="text-center py-12">
-                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                    <p className="text-muted-foreground text-sm">No active creators yet</p>
-                  </div> : <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-b border-border hover:bg-transparent">
-                          <TableHead className="text-muted-foreground font-medium">Creator</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">
-                            <button onClick={() => {
-                          if (accountSortOrder === null) setAccountSortOrder('desc');else if (accountSortOrder === 'desc') setAccountSortOrder('asc');else setAccountSortOrder(null);
-                        }} className="flex items-center gap-2 hover:text-foreground transition-colors">
-                              Linked Accounts
-                              {accountSortOrder === null && <ArrowUpDown className="h-4 w-4" />}
-                              {accountSortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
-                              {accountSortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
-                            </button>
-                          </TableHead>
-                          <TableHead className="text-muted-foreground font-medium">
-                            <button onClick={() => {
-                          if (sortOrder === null) setSortOrder('desc');else if (sortOrder === 'desc') setSortOrder('asc');else setSortOrder(null);
-                        }} className="flex items-center gap-2 hover:text-foreground transition-colors">
-                              Total Paid
-                              {sortOrder === null && <ArrowUpDown className="h-4 w-4" />}
-                              {sortOrder === 'desc' && <ArrowDown className="h-4 w-4" />}
-                              {sortOrder === 'asc' && <ArrowUp className="h-4 w-4" />}
-                            </button>
-                          </TableHead>
-                          <TableHead className="text-muted-foreground font-medium text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {approvedSubmissions.map(submission => {
-                      const getPlatformIcon = (platform: string) => {
-                        switch (platform.toLowerCase()) {
-                          case 'tiktok':
-                            return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
-                          case 'instagram':
-                            return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
-                          case 'youtube':
-                            return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
-                          default:
-                            return null;
-                        }
-                      };
-                      return <TableRow key={submission.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                              {/* Creator Column */}
-                              <TableCell className="py-4">
-                                <div className="flex items-center gap-3 cursor-pointer group" onClick={async () => {
-                            // Fetch campaign-specific payment data
-                            const {
-                              data: transactions
-                            } = await supabase.from('wallet_transactions').select('amount').eq('user_id', submission.creator_id).eq('type', 'earning').eq('status', 'completed').filter('metadata->>campaign_id', 'eq', selectedCampaignId);
-                            const totalPaid = transactions?.reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0;
-
-                            // Count videos for this campaign
-                            const {
-                              count: videoCount
-                            } = await supabase.from('campaign_videos').select('*', {
-                              count: 'exact',
-                              head: true
-                            }).eq('creator_id', submission.creator_id).eq('campaign_id', selectedCampaignId);
-                            setSelectedUser({
-                              ...submission,
-                              total_paid: totalPaid,
-                              video_count: videoCount || 0
-                            });
-                            setIsUserDialogOpen(true);
-                          }}>
-                                  {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-10 h-10 rounded-full object-cover ring-2 ring-border" /> : <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center ring-2 ring-border">
-                                      <span className="text-primary font-semibold text-lg">
-                                        {submission.profiles?.username?.charAt(0).toUpperCase() || 'U'}
-                                      </span>
-                                    </div>}
-                                  <div className="space-y-1">
-                                    <p className="font-semibold text-foreground group-hover:underline transition-all">
-                                      {submission.profiles?.username || "Unknown"}
-                                    </p>
-                                    {/* Trust Score */}
-                                    {submission.profiles?.trust_score && submission.profiles.trust_score > 0 && <div className="flex items-center gap-2">
-                                        <span className="text-xs text-muted-foreground tracking-[-0.5px]">Trust:</span>
-                                        <div className="flex items-center gap-1">
-                                          <span className="text-xs font-bold text-foreground tracking-[-0.5px]">
-                                            {submission.profiles.trust_score}%
-                                          </span>
-                                          <div className="flex items-center gap-0.5">
-                                            {(() => {
-                                      const {
-                                        count,
-                                        color
-                                      } = getTrustScoreDiamonds(submission.profiles.trust_score);
-                                      return [...Array(count)].map((_, i) => <Diamond key={i} className={`w-2.5 h-2.5 ${color}`} />);
-                                    })()}
-                                          </div>
-                                        </div>
-                                      </div>}
-                                  </div>
-                                </div>
-                              </TableCell>
-
-                              {/* Linked Accounts Column */}
-                              <TableCell className="py-4">
-                                {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? <div className="flex flex-wrap gap-1.5">
-                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#0d0d0d] hover:bg-[#1a1a1a] transition-colors text-xs group">
-                                        {getPlatformIcon(account.platform)}
-                                        <span className="font-medium text-foreground group-hover:underline transition-all">
-                                          {account.username}
-                                        </span>
-                                        {account.follower_count > 0 && <span className="text-muted-foreground">
-                                            {account.follower_count.toLocaleString()}
-                                          </span>}
-                                      </a>)}
-                                  </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
-                              </TableCell>
-
-                              {/* Total Paid Column */}
-                              <TableCell className="py-4">
-                                {(() => {
-                            const creatorTransactions = transactions.filter(txn => txn.user_id === submission.creator_id);
-                            const totalPaid = creatorTransactions.reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
-                            return <div className="font-semibold text-foreground">
-                                      ${totalPaid.toFixed(2)}
-                                    </div>;
-                          })()}
-                              </TableCell>
-
-                              {/* Actions Column */}
-                              <TableCell className="py-4">
-                                <div className="flex justify-center">
-                                  <Button variant="ghost" size="sm" onClick={() => {
-                              setUserToKick(submission);
-                              setKickDialogOpen(true);
-                            }} className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors">
-                                    <Hammer className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>;
-                    })}
-                      </TableBody>
-                    </Table>
-                  </div>}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Applications Tab */}
-          <TabsContent value="applications">
-            <Card className="bg-[#202020] border-0">
-              <CardHeader className="pb-4 space-y-4 bg-[#0C0C0C]">
-                <CardTitle className="flex items-center gap-2">
-                  
-                  Pending Applications
-                  <Badge variant="secondary" className="ml-2">
-                    {pendingSubmissions.length}
-                  </Badge>
-                </CardTitle>
-                
-              </CardHeader>
-              <CardContent className="space-y-3 bg-[#0C0C0C]">
-                {pendingSubmissions.length === 0 ? <div className="text-center py-8">
-                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                    <p className="text-muted-foreground text-sm">No pending applications</p>
-                  </div> : <div className="space-y-3">
-                    {pendingSubmissions.map(submission => {
-                  const getPlatformIcon = (platform: string) => {
-                    switch (platform.toLowerCase()) {
-                      case 'tiktok':
-                        return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
-                      case 'instagram':
-                        return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
-                      case 'youtube':
-                        return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
-                      default:
-                        return null;
-                    }
-                  };
-                  return <Card key={submission.id} className="bg-[#1a1a1a] overflow-hidden rounded-xl transition-all">
-                          <CardContent className="p-0">
-                            <div className="p-5">
-                              {/* Application Q&A Section */}
-                              {submission.application_answers && submission.application_answers.length > 0 && <div className="mb-4 space-y-3">
-                                  {submission.application_answers.map((qa, index) => <div key={index} className="bg-white/5 rounded-lg p-3">
-                                      <p className="text-xs font-medium text-white/80 mb-1.5">{qa.question}</p>
-                                      <p className="text-sm text-white/90">{qa.answer}</p>
-                                    </div>)}
-                                </div>}
-
-                              {/* Header Section */}
-                              <div className="flex items-start justify-between gap-4 mb-4">
-                                <div className="flex items-start gap-3 flex-1">
-                                  {/* Avatar */}
-                                  <div className="flex-shrink-0">
-                                    {submission.profiles?.avatar_url ? <img src={submission.profiles.avatar_url} alt={submission.profiles.username} className="w-14 h-14 rounded-full object-cover" /> : <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
-                                        <Users className="h-7 w-7 text-primary" />
-                                      </div>}
-                                  </div>
-
-                                  {/* Creator Info */}
-                                  <div className="flex-1">
-                                    <h3 className="font-semibold text-white text-lg mb-1">
-                                      {submission.profiles?.username || "Unknown"}
-                                    </h3>
-                                    <div className="flex items-center gap-2 text-xs text-white/60">
-                                      <span>Applied {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  })}</span>
-                                      
-                                    
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex gap-2 flex-shrink-0">
-                                  <Button size="sm" onClick={() => handleApplicationAction(submission.id, "approved")} className="bg-green-500/20 hover:bg-green-500/30 text-green-400 h-9 px-4" disabled={processingSubmissionId === submission.id}>
-                                    {processingSubmissionId === submission.id ? <>
-                                        <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
-                                        Processing...
-                                      </> : <>
-                                        <Check className="h-4 w-4 mr-1.5" />
-                                        Approve
-                                      </>}
-                                  </Button>
-                                  <Button size="sm" variant="outline" onClick={() => handleApplicationAction(submission.id, "rejected")} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-0 h-9 px-4" disabled={processingSubmissionId === submission.id}>
-                                    <X className="h-4 w-4 mr-1.5" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {/* Social Accounts */}
-                              {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 && <div className="mb-4">
-                                  <h4 className="text-xs font-medium text-white/60 mb-2">Linked Accounts</h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {submission.profiles.social_accounts.map(account => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all group">
-                                        {getPlatformIcon(account.platform)}
-                                        <span className="text-sm font-medium text-white group-hover:underline">
-                                          @{account.username}
-                                        </span>
-                                        {account.follower_count > 0 && <Badge variant="secondary" className="ml-1 bg-white/10 text-white/70 text-xs">
-                                            {account.follower_count.toLocaleString()}
-                                          </Badge>}
-                                      </a>)}
-                                  </div>
-                                </div>}
-
-                            </div>
-                          </CardContent>
-                        </Card>;
-                })}
-                  </div>}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings">
-            <Card className="bg-[#202020] ">
-              <CardHeader>
-                <CardTitle className="text-white">Brand Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {!isAdmin && <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                    <p className="text-yellow-500 text-sm">
-                      Only administrators can edit brand settings
-                    </p>
-                  </div>}
-
-                <div className="space-y-2">
-                  <Label htmlFor="brand-type" className="text-white">
-                    Brand Type
-                  </Label>
-                  <Select value={brandType} onValueChange={setBrandType} disabled={!isAdmin}>
-                    <SelectTrigger className="bg-[#191919] border-white/10 text-white">
-                      <SelectValue placeholder="Select brand type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#2a2a2a] border-white/10">
-                      <SelectItem value="Standard" className="text-white hover:bg-white/10">
-                        Standard
-                      </SelectItem>
-                      <SelectItem value="DWY" className="text-white hover:bg-white/10">
-                        DWY (Do With You)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-white/60">
-                    DWY brands have access to the Training portal
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="assets-url" className="text-white">
-                    Assets Page URL
-                  </Label>
-                  <Input id="assets-url" type="url" placeholder="https://example.com/assets" value={assetsUrl} onChange={e => setAssetsUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white" disabled={!isAdmin} />
-                  <p className="text-sm text-white/60">
-                    This URL will be embedded when users visit the Assets page
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="home-url" className="text-white">
-                    Home Page HTML (DWY Brands Only)
-                  </Label>
-                  <Textarea id="home-url" placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />' value={homeUrl} onChange={e => setHomeUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white font-mono min-h-[120px]" disabled={!isAdmin} />
-                  <p className="text-sm text-white/60">
-                    For DWY brands, paste HTML code (like iframe) to embed on the Home page instead of the default dashboard
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="account-url" className="text-white">
-                    Invoice Page URL
-                  </Label>
-                  <Input id="account-url" type="url" placeholder="https://example.com/invoices" value={accountUrl} onChange={e => setAccountUrl(e.target.value)} className="bg-[#191919] border-white/10 text-white" disabled={!isAdmin} />
-                  <p className="text-sm text-white/60">
-                    This URL will be embedded in the Invoices tab
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="shortimize-api-key" className="text-white">
-                    Shortimize API Key
-                  </Label>
-                  <Input id="shortimize-api-key" type="password" placeholder="Enter your Shortimize API key" value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="bg-[#191919] border-white/10 text-white font-mono" disabled={!isAdmin} />
-                  <p className="text-sm text-white/60">
-                    API key used for Shortimize integration and analytics tracking
-                  </p>
-                </div>
-
-                <Button onClick={handleSaveUrls} disabled={savingUrls || !isAdmin} className="bg-primary hover:bg-primary/90">
-                  {savingUrls ? "Saving..." : "Save Settings"}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Shortimize Tab */}
-          <TabsContent value="shortimize">
-            <Card className="bg-card border">
-              <CardHeader className="pb-4 border-b border-border">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
-                  <Button 
-                    onClick={fetchShortimizeAccounts} 
-                    disabled={!shortimizeApiKey || loadingShortimize}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
-                    {loadingShortimize ? 'Loading...' : 'Fetch Accounts'}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {!shortimizeApiKey ? (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground text-sm">Please configure Shortimize API key in Settings</p>
-                  </div>
-                ) : shortimizeAccounts.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                    <p className="text-muted-foreground text-sm">No accounts loaded. Click "Fetch Accounts" to load data.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-b border-border hover:bg-transparent">
-                          <TableHead className="text-muted-foreground font-medium">Username</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Platform</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Followers</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Total Views</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Total Likes</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Videos</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Median Views</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Last Upload</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {shortimizeAccounts.map((account) => (
-                          <TableRow key={account.account_id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                            <TableCell className="py-4">
-                              <a 
-                                href={account.account_link} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-foreground hover:underline font-medium"
-                              >
-                                @{account.username}
-                              </a>
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <Badge variant="secondary" className="capitalize">
-                                {account.platform}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="py-4 text-foreground">
-                              {account.latest_followers_count?.toLocaleString() || 'N/A'}
-                            </TableCell>
-                            <TableCell className="py-4 text-foreground">
-                              {account.total_views?.toLocaleString() || '0'}
-                            </TableCell>
-                            <TableCell className="py-4 text-foreground">
-                              {account.total_likes?.toLocaleString() || '0'}
-                            </TableCell>
-                            <TableCell className="py-4 text-foreground">
-                              {account.total_videos_tracked || '0'}
-                            </TableCell>
-                            <TableCell className="py-4 text-foreground">
-                              {account.median_views?.toLocaleString() || '0'}
-                            </TableCell>
-                            <TableCell className="py-4 text-muted-foreground text-sm">
-                              {account.last_uploaded_at ? new Date(account.last_uploaded_at).toLocaleDateString() : 'N/A'}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Videos Tab */}
-          {showVideosTab && <TabsContent value="videos">
-              <VideosTab campaignId={selectedCampaignId} isAdmin={isAdmin} approvedCreators={approvedSubmissions} />
-            </TabsContent>}
-        </Tabs>
-
-        {/* Manage Campaign Dialog */}
-        {selectedCampaign && <CreateCampaignDialog brandId={brandId} brandName={slug || ""} campaign={selectedCampaign} open={manageCampaignOpen} onOpenChange={setManageCampaignOpen} onSuccess={fetchCampaigns} onDelete={() => setDeleteDialogOpen(true)} />}
-
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent className="bg-[#202020] border-white/10">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-white">Delete Campaign?</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
-                This will permanently delete <strong className="text-white">{selectedCampaign?.title}</strong> and
-                all associated submissions. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteCampaign} className="bg-destructive hover:bg-destructive/90">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Edit Budget Used Dialog */}
-        <AlertDialog open={editBudgetDialogOpen} onOpenChange={setEditBudgetDialogOpen}>
-          <AlertDialogContent className="bg-[#2a2a2a] border-white/10">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-white">Edit Budget Used</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
-                Update the used budget for this campaign.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="budget-used" className="text-white">
-                  Budget Used ($)
-                </Label>
-                <Input id="budget-used" type="number" step="0.01" min="0" value={editingBudgetUsed} onChange={e => setEditingBudgetUsed(e.target.value)} className="bg-[#191919] border-white/10 text-white" placeholder="0.00" />
-                <p className="text-sm text-white/40">
-                  Total budget: ${selectedCampaign?.budget || 0}
+        {/* Shortimize Accounts Section */}
+        <Card className="bg-card border">
+          <CardHeader className="pb-4 border-b border-border">
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
+              <Button 
+                onClick={fetchShortimizeAccounts} 
+                disabled={!shortimizeApiKey || loadingShortimize}
+                variant="outline"
+                size="sm"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
+                {loadingShortimize ? 'Loading...' : 'Refresh Data'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {!shortimizeApiKey ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-sm">Please configure Shortimize API key in Brand Settings</p>
+              </div>
+            ) : shortimizeAccounts.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground text-sm">
+                  {loadingShortimize ? 'Loading accounts...' : 'No accounts found'}
                 </p>
               </div>
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleSaveBudgetUsed} className="bg-primary hover:bg-primary/90">
-                Save Changes
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Delete All Analytics Dialog */}
-        <AlertDialog open={deleteAnalyticsDialogOpen} onOpenChange={setDeleteAnalyticsDialogOpen}>
-          <AlertDialogContent className="bg-[#202020] border-white/10">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-white">Delete All Analytics?</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
-                This will permanently delete all analytics data for this campaign. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteAllAnalytics} className="bg-destructive hover:bg-destructive/90">
-                Delete All
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Payment Dialog */}
-        <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-          <DialogContent className="bg-[#202020] border-white/10">
-            <DialogHeader>
-              <DialogTitle className="text-white">Pay Creator</DialogTitle>
-              <DialogDescription className="text-white/60">
-                Enter the amount to pay to {selectedUserForPayment?.profiles?.username}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="payment-amount" className="text-white">Amount ($)</Label>
-                <Input id="payment-amount" type="number" step="0.01" min="0" placeholder="0.00" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} className="bg-[#191919] border-white/10 text-white" />
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b border-border hover:bg-transparent">
+                      <TableHead className="text-muted-foreground font-medium">Username</TableHead>
+                      <TableHead className="text-muted-foreground font-medium">Platform</TableHead>
+                      <TableHead className="text-muted-foreground font-medium">Followers</TableHead>
+                      <TableHead className="text-muted-foreground font-medium">Total Views</TableHead>
+                      <TableHead className="text-muted-foreground font-medium">Total Likes</TableHead>
+                      <TableHead className="text-muted-foreground font-medium">Videos</TableHead>
+                      <TableHead className="text-muted-foreground font-medium">Median Views</TableHead>
+                      <TableHead className="text-muted-foreground font-medium">Last Upload</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {shortimizeAccounts.map((account) => (
+                      <TableRow key={account.account_id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                        <TableCell className="py-4">
+                          <a 
+                            href={account.account_link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-foreground hover:underline font-medium"
+                          >
+                            @{account.username}
+                          </a>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <Badge variant="secondary" className="capitalize">
+                            {account.platform}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-4 text-foreground">
+                          {account.latest_followers_count?.toLocaleString() || 'N/A'}
+                        </TableCell>
+                        <TableCell className="py-4 text-foreground">
+                          {account.total_views?.toLocaleString() || '0'}
+                        </TableCell>
+                        <TableCell className="py-4 text-foreground">
+                          {account.total_likes?.toLocaleString() || '0'}
+                        </TableCell>
+                        <TableCell className="py-4 text-foreground">
+                          {account.total_videos_tracked || '0'}
+                        </TableCell>
+                        <TableCell className="py-4 text-foreground">
+                          {account.median_views?.toLocaleString() || '0'}
+                        </TableCell>
+                        <TableCell className="py-4 text-muted-foreground text-sm">
+                          {account.last_uploaded_at ? new Date(account.last_uploaded_at).toLocaleDateString() : 'N/A'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handlePayCreator} className="bg-green-500 hover:bg-green-600">
-                Confirm Payment
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Kick User Confirmation Dialog */}
-        <AlertDialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
-          <AlertDialogContent className="bg-[#202020] border-white/10">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-white">Remove User from Campaign?</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
-                Are you sure you want to remove {userToKick?.profiles?.username} from this campaign? This action will mark their submission as withdrawn.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleKickUser} className="bg-destructive hover:bg-destructive/90">
-                Remove User
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
-
-      {/* User Details Dialog */}
-      <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
-        <DialogContent className="bg-[#0a0a0a] max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">Creator Details</DialogTitle>
-          </DialogHeader>
-          
-          {selectedUser && <div className="space-y-6 mt-4">
-              {/* User Profile Section */}
-              <div className="flex items-center gap-4 pb-6">
-                {selectedUser.profiles?.avatar_url ? <img src={selectedUser.profiles.avatar_url} alt={selectedUser.profiles.username} className="w-20 h-20 rounded-full object-cover" /> : <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-primary font-semibold text-3xl">
-                      {selectedUser.profiles?.username?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  </div>}
-                
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-1">
-                    {selectedUser.profiles?.username || "Unknown User"}
-                  </h3>
-                  {selectedUser.profiles?.email && <p className="text-sm text-muted-foreground">{selectedUser.profiles.email}</p>}
-                  
-                  {/* Trust Score */}
-                  {selectedUser.profiles?.trust_score && selectedUser.profiles.trust_score > 0 && <div className="flex items-center gap-2 mt-2">
-                      <span className="text-sm text-muted-foreground tracking-[-0.5px]">Trust Score:</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-bold text-white tracking-[-0.5px]">
-                          {selectedUser.profiles.trust_score}%
-                        </span>
-                        <div className="flex items-center gap-0.5">
-                          {(() => {
-                      const {
-                        count,
-                        color
-                      } = getTrustScoreDiamonds(selectedUser.profiles.trust_score);
-                      return [...Array(count)].map((_, i) => <Diamond key={i} className={`w-3 h-3 ${color}`} />);
-                    })()}
-                        </div>
-                      </div>
-                    </div>}
-                </div>
-              </div>
-
-              {/* Social Accounts Section */}
-              {selectedUser.profiles?.social_accounts && selectedUser.profiles.social_accounts.length > 0 && <div>
-                  <h4 className="text-sm font-semibold text-white mb-3">Connected Accounts</h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    {selectedUser.profiles.social_accounts.map((account: any) => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group">
-                        <div className="flex items-center gap-3">
-                          {(() => {
-                    switch (account.platform.toLowerCase()) {
-                      case 'tiktok':
-                        return <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />;
-                      case 'instagram':
-                        return <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />;
-                      case 'youtube':
-                        return <img src={youtubeLogo} alt="YouTube" className="w-5 h-5" />;
-                      default:
-                        return null;
-                    }
-                  })()}
-                          <div>
-                            <p className="font-medium text-white group-hover:underline">
-                              @{account.username}
-                            </p>
-                            <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
-                          </div>
-                        </div>
-                        {account.follower_count > 0 && <span className="text-sm font-semibold text-white">
-                            {account.follower_count.toLocaleString()} followers
-                          </span>}
-                      </a>)}
-                  </div>
-                </div>}
-
-              {/* Campaign Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-[#111111]">
-                  <p className="text-xs text-muted-foreground mb-1">Total Paid</p>
-                  <p className="text-xl font-bold text-white">
-                    ${selectedUser.total_paid?.toFixed(2) || '0.00'}
-                  </p>
-                </div>
-                <div className="p-4 rounded-lg bg-[#111111]">
-                  <p className="text-xs text-muted-foreground mb-1">Videos Submitted</p>
-                  <p className="text-xl font-bold text-white">
-                    {selectedUser.video_count || 0}
-                  </p>
-                </div>
-              </div>
-
-              {/* Application Status */}
-              {selectedUser.status && <div className="p-4 rounded-lg bg-[#111111]">
-                  <p className="text-xs text-muted-foreground mb-2">Application Status</p>
-                  <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize" style={{
-                backgroundColor: selectedUser.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : selectedUser.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                color: selectedUser.status === 'approved' ? 'rgb(34, 197, 94)' : selectedUser.status === 'rejected' ? 'rgb(239, 68, 68)' : 'rgb(234, 179, 8)'
-              }}>
-                      {selectedUser.status}
-                    </div>
-                    {selectedUser.status === 'approved' && selectedUser.submitted_at && <div className="text-xs text-muted-foreground">
-                        {format(new Date(selectedUser.submitted_at), 'MMM d, yyyy')}
-                      </div>}
-                  </div>
-                </div>}
-            </div>}
-        </DialogContent>
-      </Dialog>
     </div>;
 }
