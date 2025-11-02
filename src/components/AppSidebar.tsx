@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 const menuItems = [
   {
@@ -90,8 +91,8 @@ export function AppSidebar() {
     <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background px-3 md:px-6">
       {/* Logo */}
       <div className="hidden md:flex items-center gap-2">
-        <img src={newLogo} alt="Logo" className="h-[34px] w-[34px] rounded-lg" />
-        <span 
+        <OptimizedImage src={newLogo} alt="Logo" className="h-[34px] w-[34px] rounded-lg object-cover" />
+        <span
           className="font-geist font-bold tracking-tighter-custom"
           style={{
             color: theme === 'light' ? '#000000' : '#FFFFFF',
