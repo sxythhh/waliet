@@ -80,42 +80,41 @@ export function VideoHistoryDialog({
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Total Views</p>
+                  <p className="text-sm text-muted-foreground">Latest Views</p>
                   <p className="text-2xl font-bold">
-                    {historyData.reduce((sum, d) => sum + d.views, 0).toLocaleString()}
+                    {historyData[historyData.length - 1]?.views.toLocaleString()}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Total Likes</p>
+                  <p className="text-sm text-muted-foreground">Latest Likes</p>
                   <p className="text-2xl font-bold">
-                    {historyData.reduce((sum, d) => sum + d.likes, 0).toLocaleString()}
+                    {historyData[historyData.length - 1]?.likes.toLocaleString()}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Total Comments</p>
+                  <p className="text-sm text-muted-foreground">Latest Comments</p>
                   <p className="text-2xl font-bold">
-                    {historyData.reduce((sum, d) => sum + d.comments, 0).toLocaleString()}
+                    {historyData[historyData.length - 1]?.comments.toLocaleString()}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Total Shares</p>
+                  <p className="text-sm text-muted-foreground">Latest Shares</p>
                   <p className="text-2xl font-bold">
-                    {historyData.reduce((sum, d) => sum + d.shares, 0).toLocaleString()}
+                    {historyData[historyData.length - 1]?.shares.toLocaleString()}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Total Engagements</p>
+                  <p className="text-sm text-muted-foreground">Latest Engagements</p>
                   <p className="text-2xl font-bold">
-                    {historyData.reduce((sum, d) => sum + d.engagements, 0).toLocaleString()}
+                    {historyData[historyData.length - 1]?.engagements.toLocaleString()}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Avg. Engagement Rate</p>
+                  <p className="text-sm text-muted-foreground">Latest Engagement Rate</p>
                   <p className="text-2xl font-bold">
-                    {(
-                      (historyData.reduce((sum, d) => sum + d.engagements, 0) /
-                        historyData.reduce((sum, d) => sum + d.views, 0)) * 100
-                    ).toFixed(2)}%
+                    {historyData[historyData.length - 1]?.views > 0 
+                      ? ((historyData[historyData.length - 1].engagements / historyData[historyData.length - 1].views) * 100).toFixed(2)
+                      : '0.00'}%
                   </p>
                 </div>
               </div>
