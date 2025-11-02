@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -53,6 +54,9 @@ interface Profile {
   twitter_avatar: string | null;
   twitter_connected_at: string | null;
   referral_code: string | null;
+  content_languages: string[] | null;
+  content_styles: string[] | null;
+  content_niches: string[] | null;
 }
 interface SocialAccount {
   id: string;
@@ -370,7 +374,10 @@ export function ProfileTab() {
         country: profile.country,
         city: profile.city,
         phone_number: profile.phone_number,
-        avatar_url: cleanAvatarUrl
+        avatar_url: cleanAvatarUrl,
+        content_languages: profile.content_languages,
+        content_styles: profile.content_styles,
+        content_niches: profile.content_niches
       }).eq("id", session.user.id);
       if (error) {
         console.error('Profile update error:', error);
@@ -631,6 +638,114 @@ export function ProfileTab() {
 
       {/* Stats Overview */}
       
+
+      {/* Content Preferences */}
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle className="text-lg">Content Preferences</CardTitle>
+          <CardDescription>Tell us about the content you create</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Languages */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Languages I post in</Label>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {['English', 'Spanish', 'French', 'German', 'Portuguese', 'Italian', 'Dutch', 'Polish', 'Turkish', 'Japanese', 'Korean', 'Chinese', 'Arabic', 'Hindi', 'Other'].map((language) => (
+                <div key={language} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`lang-${language}`}
+                    checked={profile.content_languages?.includes(language) || false}
+                    onCheckedChange={(checked) => {
+                      const current = profile.content_languages || [];
+                      setProfile({
+                        ...profile,
+                        content_languages: checked
+                          ? [...current, language]
+                          : current.filter(l => l !== language)
+                      });
+                    }}
+                  />
+                  <label
+                    htmlFor={`lang-${language}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {language}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Content Styles */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Video className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Content styles I create</Label>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {['UGC', 'Clipping', 'AI Generated', 'Slideshows', 'Written Content', 'Voiceovers', 'Product Reviews', 'Tutorials', 'Vlogs', 'Animation', 'Live Streams', 'Podcasts'].map((style) => (
+                <div key={style} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`style-${style}`}
+                    checked={profile.content_styles?.includes(style) || false}
+                    onCheckedChange={(checked) => {
+                      const current = profile.content_styles || [];
+                      setProfile({
+                        ...profile,
+                        content_styles: checked
+                          ? [...current, style]
+                          : current.filter(s => s !== style)
+                      });
+                    }}
+                  />
+                  <label
+                    htmlFor={`style-${style}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {style}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Content Niches */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Type className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Content niches & topics</Label>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {['Gaming', 'Tech', 'Fashion', 'Beauty', 'Fitness', 'Food', 'Travel', 'Finance', 'Education', 'Comedy', 'Music', 'Sports', 'Lifestyle', 'Business', 'Health', 'Art', 'Science', 'News'].map((niche) => (
+                <div key={niche} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`niche-${niche}`}
+                    checked={profile.content_niches?.includes(niche) || false}
+                    onCheckedChange={(checked) => {
+                      const current = profile.content_niches || [];
+                      setProfile({
+                        ...profile,
+                        content_niches: checked
+                          ? [...current, niche]
+                          : current.filter(n => n !== niche)
+                      });
+                    }}
+                  />
+                  <label
+                    htmlFor={`niche-${niche}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {niche}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Edit Profile */}
       <Card className="bg-card">
