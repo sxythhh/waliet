@@ -326,7 +326,7 @@ export function CampaignsTab() {
       {/* Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Join Discord Card */}
-        <div className="bg-muted rounded-2xl p-6 space-y-2 hover:bg-muted/80 transition-colors cursor-pointer">
+        <div className="bg-card border border-border rounded-2xl p-6 space-y-2 hover:bg-muted/50 transition-colors cursor-pointer">
           <div className="flex items-center gap-3">
             <img src={discordIconNew} alt="Discord" className="w-6 h-6" />
             <h3 className="text-lg font-semibold">Join Discord</h3>
@@ -338,7 +338,7 @@ export function CampaignsTab() {
 
         {/* Connect Account Card */}
         <div 
-          className="bg-muted rounded-2xl p-6 space-y-2 hover:bg-muted/80 transition-colors cursor-pointer"
+          className="bg-card border border-border rounded-2xl p-6 space-y-2 hover:bg-muted/50 transition-colors cursor-pointer"
           onClick={() => setAddAccountDialogOpen(true)}
         >
           <div className="flex items-center gap-3">
@@ -352,7 +352,7 @@ export function CampaignsTab() {
 
         {/* Manage Earnings Card */}
         <div 
-          className="bg-muted rounded-2xl p-6 space-y-2 hover:bg-muted/80 transition-colors cursor-pointer"
+          className="bg-card border border-border rounded-2xl p-6 space-y-2 hover:bg-muted/50 transition-colors cursor-pointer"
           onClick={() => navigate("/dashboard?tab=wallet")}
         >
           <div className="flex items-center gap-3">
