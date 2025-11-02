@@ -498,15 +498,26 @@ export function ProfileTab() {
                   <p className="text-sm font-medium text-muted-foreground">Your Referral Code</p>
                   <p className="text-lg font-geist font-semibold tracking-tighter-custom">{profile.referral_code}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyReferralCode}
-                  className="gap-2 bg-muted border-0 hover:bg-accent"
-                >
-                  <Copy className="h-4 w-4" />
-                  Copy
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyReferralCode}
+                    className="gap-2 bg-muted border-0 hover:bg-accent"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/referrals')}
+                    className="gap-2 bg-muted border-0 hover:bg-accent"
+                  >
+                    View Referrals
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
