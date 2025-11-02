@@ -429,7 +429,7 @@ export function ProfileTab() {
                 variant="outline"
                 size="icon"
                 onClick={handleCopyProfileUrl}
-                className="h-9 w-9 bg-[#131313] border-0 hover:bg-[#1a1a1a]"
+                className="h-9 w-9 bg-muted border-0 hover:bg-accent"
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -437,7 +437,7 @@ export function ProfileTab() {
                 variant="outline"
                 size="icon"
                 onClick={handleOpenProfile}
-                className="h-9 w-9 bg-[#131313] border-0 hover:bg-[#1a1a1a]"
+                className="h-9 w-9 bg-muted border-0 hover:bg-accent"
               >
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
@@ -456,7 +456,7 @@ export function ProfileTab() {
                   variant="outline"
                   size="sm"
                   onClick={handleCopyReferralCode}
-                  className="gap-2 bg-[#131313] border-0 hover:bg-[#1a1a1a]"
+                  className="gap-2 bg-muted border-0 hover:bg-accent"
                 >
                   <Copy className="h-4 w-4" />
                   Copy
@@ -520,15 +520,15 @@ export function ProfileTab() {
               return format(submittedDate, "MMM d, yyyy 'at' h:mm a");
             };
             const submissionTimestamp = getSubmissionTimestamp();
-            return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#131313]">
+            return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-muted">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
-                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent border-t w-fit" style={{ borderTopColor: '#3b3b3b' }}>
+                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-card hover:bg-accent transition-colors cursor-pointer border border-border w-fit">
                         {getPlatformIcon(account.platform)}
                         <span className="font-medium">{account.username}</span>
                       </div>
                       
                       {/* Link icon separator - hidden on mobile */}
-                      {connectedCampaigns.length > 0 && <Link2 className="hidden sm:block h-3.5 w-3.5 text-white/40 flex-shrink-0" />}
+                      {connectedCampaigns.length > 0 && <Link2 className="hidden sm:block h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />}
                       
                       {/* Display connected campaigns */}
                       {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-2">
@@ -538,7 +538,7 @@ export function ProfileTab() {
                               {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-3.5 h-3.5 rounded object-cover" />}
                               <span style={{
                       letterSpacing: '-0.3px'
-                    }} className="font-medium text-slate-50">{campaign.title}</span>
+                    }} className="font-medium text-foreground">{campaign.title}</span>
                             </div>)}
                         </div>}
                     </div>
