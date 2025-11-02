@@ -255,20 +255,74 @@ export default function BrandManagement({
       }
 
       const accountsData = Array.isArray(data) ? data : [];
-      setShortimizeAccounts(accountsData);
       
-      // Cache the data
-      const timestamp = new Date().toISOString();
-      setLastAccountsFetch(new Date(timestamp));
-      localStorage.setItem(ACCOUNTS_CACHE_KEY, JSON.stringify({
-        data: accountsData,
-        timestamp
-      }));
+      // If we have a selected campaign, match accounts with campaign participants
+      if (selectedCampaignId && accountsData.length > 0) {
+        // Fetch social accounts connected to this campaign
+        const { data: socialAccounts, error: socialError } = await supabase
+          .from('social_account_campaigns')
+          .select(`
+            social_accounts!inner (
+              id,
+              username,
+              platform,
+              user_id,
+              profiles!inner (
+                id,
+                username,
+                avatar_url
+              )
+            )
+          `)
+          .eq('campaign_id', selectedCampaignId);
 
-      toast.success(`Loaded ${accountsData.length} Shortimize accounts`);
+        if (socialError) {
+          console.error('Error fetching social accounts:', socialError);
+        }
+
+        // Create a map for matching
+        const socialAccountMap = new Map();
+        socialAccounts?.forEach((item: any) => {
+          const sa = item.social_accounts;
+          const key = `${sa.username.toLowerCase()}_${sa.platform.toLowerCase()}`;
+          socialAccountMap.set(key, sa.profiles);
+        });
+
+        // Match Shortimize accounts with social accounts
+        const matchedAccounts = accountsData.map(account => {
+          const key = `${account.username.toLowerCase()}_${account.platform.toLowerCase()}`;
+          const matchedProfile = socialAccountMap.get(key);
+          return {
+            ...account,
+            matched_user: matchedProfile || null
+          };
+        });
+
+        setShortimizeAccounts(matchedAccounts);
+        
+        // Cache the matched data
+        const timestamp = new Date().toISOString();
+        setLastAccountsFetch(new Date(timestamp));
+        localStorage.setItem(ACCOUNTS_CACHE_KEY, JSON.stringify({
+          data: matchedAccounts,
+          timestamp
+        }));
+      } else {
+        setShortimizeAccounts(accountsData);
+        
+        // Cache the data
+        const timestamp = new Date().toISOString();
+        setLastAccountsFetch(new Date(timestamp));
+        localStorage.setItem(ACCOUNTS_CACHE_KEY, JSON.stringify({
+          data: accountsData,
+          timestamp
+        }));
+      }
+      
+      toast.success(`Loaded ${accountsData.length} accounts`);
     } catch (error: any) {
-      console.error("Error fetching Shortimize accounts:", error);
-      toast.error(error.message || "Failed to load Shortimize accounts");
+      console.error('Error fetching Shortimize accounts:', error);
+      toast.error(error.message || 'Failed to load accounts');
     } finally {
       setLoadingShortimize(false);
     }
@@ -1315,6 +1369,7 @@ export default function BrandManagement({
                         <TableHeader>
                           <TableRow className="border-b border-border hover:bg-transparent">
                             <TableHead className="text-muted-foreground font-medium">Username</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Matched User</TableHead>
                             <TableHead className="text-muted-foreground font-medium">Platform</TableHead>
                             <TableHead className="text-muted-foreground font-medium">Followers</TableHead>
                             <TableHead className="text-muted-foreground font-medium">Total Views</TableHead>
@@ -1336,6 +1391,22 @@ export default function BrandManagement({
                                 >
                                   @{account.username}
                                 </a>
+                              </TableCell>
+                              <TableCell className="py-4">
+                                {account.matched_user ? (
+                                  <div className="flex items-center gap-2">
+                                    {account.matched_user.avatar_url && (
+                                      <img 
+                                        src={account.matched_user.avatar_url} 
+                                        alt={account.matched_user.username}
+                                        className="w-6 h-6 rounded-full"
+                                      />
+                                    )}
+                                    <span className="font-medium text-sm">{account.matched_user.username}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">Not matched</span>
+                                )}
                               </TableCell>
                               <TableCell className="py-4">
                                 <Badge variant="secondary" className="capitalize">
