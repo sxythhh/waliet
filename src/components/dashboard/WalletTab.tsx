@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
@@ -91,6 +92,8 @@ export function WalletTab() {
   const [availableCampaigns, setAvailableCampaigns] = useState<Array<{ id: string; title: string; brand_name: string }>>([]);
   const [earningsChartPeriod, setEarningsChartPeriod] = useState<'1D' | '1W' | '1M' | 'ALL'>('1W');
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const {
     toast
   } = useToast();
@@ -872,88 +875,210 @@ export function WalletTab() {
             </div>}
         </CardHeader>
         <CardContent>
-          {transactions.length === 0 ? <div className="text-center py-8">
+          {transactions.length === 0 ? (
+            <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
-            </div> : <div className="space-y-3 max-h-[400px] overflow-y-auto">
-              {transactions.filter(transaction => {
-            // Filter by type
-            if (typeFilter !== "all" && transaction.type !== typeFilter) {
-              return false;
-            }
-            // Filter by status
-            if (statusFilter !== "all" && transaction.status !== statusFilter) {
-              return false;
-            }
-            // Filter by campaign
-            if (campaignFilter !== "all") {
-              if (!transaction.campaign || transaction.campaign.id !== campaignFilter) {
-                return false;
-              }
-            }
-            return true;
-          }).map(transaction => <div key={transaction.id} onClick={() => {
-            setSelectedTransaction(transaction);
-            setTransactionSheetOpen(true);
-          }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-muted dark:bg-background hover:bg-muted/80 dark:hover:bg-muted/20 gap-3">
-                  <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="text-sm font-bold font-instrument flex items-center gap-2" style={{
-                    letterSpacing: '-0.5px'
-                  }}>
-                          {transaction.type === 'earning' ? <>
-                              Payment for 
-                              {transaction.campaign && <span className="inline-flex items-center gap-1.5">
-                                  <span className="flex-shrink-0 w-5 h-5 rounded bg-background border border-border flex items-center justify-center overflow-hidden">
-                                    {transaction.campaign.brand_logo_url ? <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" /> : <span className="text-[10px] font-semibold text-muted-foreground">
-                                        {transaction.campaign.brand_name?.charAt(0).toUpperCase() || 'C'}
-                                      </span>}
-                                  </span>
-                                  {transaction.campaign.title}
-                                </span>}
-                            </> : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
-                        </p>
-                        {transaction.status && <Badge variant="outline" className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500 bg-green-500/5' : transaction.status === 'in_transit' ? 'text-blue-500 bg-blue-500/5' : transaction.status === 'rejected' ? 'text-red-500 bg-red-500/5' : 'text-yellow-500 bg-yellow-500/5'}`} style={{
-                    letterSpacing: '-0.5px'
-                  }}>
-                            {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
-                            {transaction.status === 'pending' && <Clock className="h-2.5 w-2.5" />}
-                            {transaction.status === 'completed' && <Check className="h-2.5 w-2.5" />}
-                            {transaction.status === 'rejected' && <X className="h-2.5 w-2.5" />}
-                            {transaction.status === 'in_transit' ? 'In Transit' : transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
-                          </Badge>}
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 text-xs text-foreground/50 mb-1">
-                        <Clock className="h-3 w-3" />
-                        <span style={{
-                    letterSpacing: '-0.5px'
-                  }}>
-                          {(() => {
-                      const now = new Date();
-                      const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
-                      if (diffInHours < 24) {
-                        if (diffInHours < 1) {
-                          const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
-                          return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border border-border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                      <TableHead className="font-semibold">Details</TableHead>
+                      <TableHead className="font-semibold text-right">Amount</TableHead>
+                      <TableHead className="font-semibold text-right">Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions
+                      .filter(transaction => {
+                        // Filter by type
+                        if (typeFilter !== "all" && transaction.type !== typeFilter) {
+                          return false;
                         }
-                        return `${diffInHours}h ago`;
-                      }
-                      return format(transaction.date, 'MMM dd, yyyy / HH:mm');
-                    })()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className={`text-lg font-bold whitespace-nowrap sm:ml-4 self-end sm:self-auto ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : transaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`} style={{
-              fontFamily: 'Geist, sans-serif',
-              letterSpacing: '-0.5px',
-              fontWeight: 700
-            }}>
-                    {transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
-                  </div>
-                </div>)}
-            </div>}
+                        // Filter by status
+                        if (statusFilter !== "all" && transaction.status !== statusFilter) {
+                          return false;
+                        }
+                        // Filter by campaign
+                        if (campaignFilter !== "all") {
+                          if (!transaction.campaign || transaction.campaign.id !== campaignFilter) {
+                            return false;
+                          }
+                        }
+                        return true;
+                      })
+                      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                      .map(transaction => (
+                        <TableRow 
+                          key={transaction.id}
+                          onClick={() => {
+                            setSelectedTransaction(transaction);
+                            setTransactionSheetOpen(true);
+                          }}
+                          className="cursor-pointer hover:bg-muted/50"
+                        >
+                          <TableCell>
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-semibold" style={{ letterSpacing: '-0.5px' }}>
+                                  {transaction.type === 'earning' ? (
+                                    <>
+                                      Payment for 
+                                      {transaction.campaign && (
+                                        <span className="inline-flex items-center gap-1.5 ml-1">
+                                          <span className="flex-shrink-0 w-4 h-4 rounded bg-background border border-border flex items-center justify-center overflow-hidden">
+                                            {transaction.campaign.brand_logo_url ? (
+                                              <img 
+                                                src={transaction.campaign.brand_logo_url} 
+                                                alt={transaction.campaign.brand_name} 
+                                                className="w-full h-full object-cover" 
+                                              />
+                                            ) : (
+                                              <span className="text-[8px] font-semibold text-muted-foreground">
+                                                {transaction.campaign.brand_name?.charAt(0).toUpperCase() || 'C'}
+                                              </span>
+                                            )}
+                                          </span>
+                                          {transaction.campaign.title}
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : transaction.type === 'balance_correction' ? (
+                                    'Balance Correction'
+                                  ) : transaction.type === 'referral' ? (
+                                    'Referral Bonus'
+                                  ) : transaction.type === 'transfer_sent' ? (
+                                    'Transfer Sent'
+                                  ) : transaction.type === 'transfer_received' ? (
+                                    'Transfer Received'
+                                  ) : (
+                                    'Withdrawal'
+                                  )}
+                                </p>
+                                {transaction.status && (
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-[9px] font-semibold tracking-wider px-2 py-0.5 border-0 flex items-center gap-1 ${
+                                      transaction.status === 'completed' 
+                                        ? 'text-green-500 bg-green-500/5' 
+                                        : transaction.status === 'in_transit' 
+                                        ? 'text-blue-500 bg-blue-500/5' 
+                                        : transaction.status === 'rejected' 
+                                        ? 'text-red-500 bg-red-500/5' 
+                                        : 'text-yellow-500 bg-yellow-500/5'
+                                    }`}
+                                    style={{ letterSpacing: '-0.5px' }}
+                                  >
+                                    {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
+                                    {transaction.status === 'pending' && <Clock className="h-2.5 w-2.5" />}
+                                    {transaction.status === 'completed' && <Check className="h-2.5 w-2.5" />}
+                                    {transaction.status === 'rejected' && <X className="h-2.5 w-2.5" />}
+                                    {transaction.status === 'in_transit' 
+                                      ? 'In Transit' 
+                                      : transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()
+                                    }
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span 
+                              className={`text-base font-bold whitespace-nowrap ${
+                                transaction.status === 'rejected' 
+                                  ? 'text-red-500' 
+                                  : transaction.status === 'pending' 
+                                  ? 'text-yellow-500' 
+                                  : transaction.type === 'earning' || transaction.type === 'transfer_received' 
+                                  ? 'text-green-500' 
+                                  : transaction.type === 'balance_correction' 
+                                  ? 'text-orange-500' 
+                                  : 'text-red-500'
+                              }`}
+                              style={{
+                                fontFamily: 'Geist, sans-serif',
+                                letterSpacing: '-0.5px',
+                                fontWeight: 700
+                              }}
+                            >
+                              {transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : transaction.amount < 0 ? '-' : '+'}
+                              ${Math.abs(transaction.amount).toFixed(2)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="text-sm text-muted-foreground whitespace-nowrap" style={{ letterSpacing: '-0.5px' }}>
+                              {(() => {
+                                const now = new Date();
+                                const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
+                                if (diffInHours < 24) {
+                                  if (diffInHours < 1) {
+                                    const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
+                                    return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
+                                  }
+                                  return `${diffInHours}h ago`;
+                                }
+                                return format(transaction.date, 'MMM dd, yyyy');
+                              })()}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
+                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                    return true;
+                  }).length)} - {Math.min(currentPage * itemsPerPage, transactions.filter(transaction => {
+                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                    return true;
+                  }).length)} of {transactions.filter(transaction => {
+                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                    return true;
+                  }).length}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="gap-1"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
+                      if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                      if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                      if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                      return true;
+                    }).length}
+                    className="gap-1"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
