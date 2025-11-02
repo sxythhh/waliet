@@ -393,11 +393,23 @@ export default function BrandManagement({
 
       if (profileError) throw profileError;
 
-      // Map profiles to transactions
+      // Fetch analytics to get Shortimize account info
+      const { data: analyticsData, error: analyticsError } = await supabase
+        .from("campaign_account_analytics")
+        .select('user_id, account_username, platform')
+        .eq('campaign_id', selectedCampaignId)
+        .in('user_id', userIds);
+
+      if (analyticsError) console.error('Error fetching analytics:', analyticsError);
+
+      // Map profiles and analytics to transactions
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const analyticsMap = new Map(analyticsData?.map(a => [a.user_id, a]) || []);
+      
       const enrichedTransactions = transactions.map(tx => ({
         ...tx,
-        profiles: profileMap.get(tx.user_id) || null
+        profiles: profileMap.get(tx.user_id) || null,
+        shortimize_account: analyticsMap.get(tx.user_id) || null
       }));
 
       setCampaignTransactions(enrichedTransactions);
@@ -1375,6 +1387,7 @@ export default function BrandManagement({
                         <TableHeader>
                           <TableRow>
                             <TableHead>User</TableHead>
+                            <TableHead>Shortimize Account</TableHead>
                             <TableHead>Type</TableHead>
                             <TableHead>Amount</TableHead>
                             <TableHead>Status</TableHead>
@@ -1396,6 +1409,18 @@ export default function BrandManagement({
                                   )}
                                   <span className="font-medium">{txn.profiles?.username || 'Unknown'}</span>
                                 </div>
+                              </TableCell>
+                              <TableCell>
+                                {txn.shortimize_account ? (
+                                  <div className="flex flex-col gap-1">
+                                    <span className="font-medium">@{txn.shortimize_account.account_username}</span>
+                                    <Badge variant="secondary" className="capitalize w-fit">
+                                      {txn.shortimize_account.platform}
+                                    </Badge>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">Not matched</span>
+                                )}
                               </TableCell>
                               <TableCell className="capitalize">{txn.type}</TableCell>
                               <TableCell className="font-semibold">
