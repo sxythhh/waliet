@@ -161,31 +161,31 @@ export default function BrandManagement({
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
   const fetchShortimizeAccounts = async () => {
-    if (!shortimizeApiKey) {
-      toast.error("Shortimize API key not configured");
+    if (!brandId) {
+      toast.error("Brand not loaded");
       return;
     }
 
     setLoadingShortimize(true);
     try {
-      const response = await fetch("https://api.shortimize.com/accounts", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${shortimizeApiKey}`,
-          "Content-Type": "application/json"
-        }
+      const { data, error } = await supabase.functions.invoke('fetch-shortimize-accounts', {
+        body: { brandId }
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status}`);
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || 'Failed to call edge function');
       }
 
-      const data = await response.json();
-      setShortimizeAccounts(data);
-      toast.success("Shortimize accounts loaded");
-    } catch (error) {
+      if (!data || data.error) {
+        throw new Error(data?.error || 'Failed to fetch accounts');
+      }
+
+      setShortimizeAccounts(Array.isArray(data) ? data : []);
+      toast.success(`Loaded ${Array.isArray(data) ? data.length : 0} Shortimize accounts`);
+    } catch (error: any) {
       console.error("Error fetching Shortimize accounts:", error);
-      toast.error("Failed to load Shortimize accounts");
+      toast.error(error.message || "Failed to load Shortimize accounts");
     } finally {
       setLoadingShortimize(false);
     }
