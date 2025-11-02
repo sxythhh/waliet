@@ -10,13 +10,14 @@ import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard,
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, BarChart } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Bar, BarChart } from "recharts";
 import { format, subDays, subMonths, subYears, startOfWeek } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
@@ -781,7 +782,7 @@ export function WalletTab() {
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <Tooltip 
+                  <RechartsTooltip 
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
@@ -1089,19 +1090,55 @@ export function WalletTab() {
       <Card className="bg-card border-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-lg font-semibold">Payout Methods</CardTitle>
-          <Button onClick={() => setDialogOpen(true)} size="sm" disabled={payoutMethods.length >= 3} className="bg-primary hover:bg-primary/90 text-primary-foreground border-0">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Method {payoutMethods.length >= 3 ? "(Max 3)" : ""}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button 
+                    onClick={() => setDialogOpen(true)} 
+                    size="sm" 
+                    disabled={payoutMethods.length >= 3 || !wallet?.balance || wallet.balance === 0} 
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Method {payoutMethods.length >= 3 ? "(Max 3)" : ""}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {(!wallet?.balance || wallet.balance === 0) && (
+                <TooltipContent>
+                  <p>You can connect a payout method to cash out when your balance is above $0</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </CardHeader>
         <CardContent className="space-y-3">
           {payoutMethods.length === 0 ? <div className="text-center py-8">
               
               <p className="text-sm text-muted-foreground mb-3">No payout methods</p>
-              <Button onClick={() => setDialogOpen(true)} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground border-0">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Method
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button 
+                        onClick={() => setDialogOpen(true)} 
+                        size="sm" 
+                        disabled={!wallet?.balance || wallet.balance === 0}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Method
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {(!wallet?.balance || wallet.balance === 0) && (
+                    <TooltipContent>
+                      <p>You can connect a payout method to cash out when your balance is above $0</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </div> : payoutMethods.map(method => {
           const getMethodLabel = () => {
             switch (method.method) {
