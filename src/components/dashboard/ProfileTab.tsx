@@ -13,6 +13,7 @@ import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, You
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
@@ -57,6 +58,7 @@ interface Profile {
   content_languages: string[] | null;
   content_styles: string[] | null;
   content_niches: string[] | null;
+  hide_from_leaderboard: boolean;
 }
 interface SocialAccount {
   id: string;
@@ -379,7 +381,8 @@ export function ProfileTab() {
         avatar_url: cleanAvatarUrl,
         content_languages: profile.content_languages,
         content_styles: profile.content_styles,
-        content_niches: profile.content_niches
+        content_niches: profile.content_niches,
+        hide_from_leaderboard: profile.hide_from_leaderboard
       }).eq("id", session.user.id);
       if (error) {
         console.error('Profile update error:', error);
@@ -882,6 +885,23 @@ export function ProfileTab() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Privacy Settings */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="hide-leaderboard" className="text-sm font-medium">Hide from Leaderboard</Label>
+                  <p className="text-xs text-muted-foreground">
+                    When enabled, your name will not appear on the public leaderboard
+                  </p>
+                </div>
+                <Switch
+                  id="hide-leaderboard"
+                  checked={profile.hide_from_leaderboard}
+                  onCheckedChange={(checked) => setProfile({ ...profile, hide_from_leaderboard: checked })}
+                />
+              </div>
             </div>
 
             {/* Avatar Upload Section */}

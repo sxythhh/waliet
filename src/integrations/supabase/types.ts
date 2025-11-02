@@ -1029,6 +1029,7 @@ export type Database = {
           discord_username: string | null
           email: string | null
           full_name: string | null
+          hide_from_leaderboard: boolean
           id: string
           phone_number: string | null
           referral_code: string | null
@@ -1066,6 +1067,7 @@ export type Database = {
           discord_username?: string | null
           email?: string | null
           full_name?: string | null
+          hide_from_leaderboard?: boolean
           id: string
           phone_number?: string | null
           referral_code?: string | null
@@ -1103,6 +1105,7 @@ export type Database = {
           discord_username?: string | null
           email?: string | null
           full_name?: string | null
+          hide_from_leaderboard?: boolean
           id?: string
           phone_number?: string | null
           referral_code?: string | null

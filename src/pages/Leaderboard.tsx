@@ -92,8 +92,9 @@ export default function Leaderboard() {
 
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, username, full_name, avatar_url")
-      .in("id", userIds);
+      .select("id, username, full_name, avatar_url, hide_from_leaderboard")
+      .in("id", userIds)
+      .eq("hide_from_leaderboard", false);
 
     // Combine and sort
     const leaderboardData: LeaderboardUser[] = profiles?.map((profile) => ({
