@@ -110,11 +110,11 @@ export default function Leaderboard() {
     // Find current user in full leaderboard
     const currentUser = leaderboardData.find(u => u.id === currentUserId);
     if (currentUser) {
-      // If user is in top 100, show their actual rank
+      // If user is in top 20, show their actual rank
       // If not, we'll show "-"
-      setCurrentUserStats(currentUser.rank <= 100 ? currentUser : {
+      setCurrentUserStats(currentUser.rank <= 20 ? currentUser : {
         ...currentUser,
-        rank: -1 // Special value to indicate outside top 100
+        rank: -1 // Special value to indicate outside top 20
       });
     } else {
       // User has no earnings in this period
@@ -136,7 +136,7 @@ export default function Leaderboard() {
       }
     }
 
-    setLeaderboard(leaderboardData.slice(0, 100)); // Only show top 100
+    setLeaderboard(leaderboardData.slice(0, 20)); // Only show top 20
     setLoading(false);
   };
 
@@ -218,7 +218,7 @@ export default function Leaderboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-semibold">Rankings</CardTitle>
               <div className="flex gap-8 text-sm font-medium">
-                <span className="text-muted-foreground">Profit/Loss</span>
+                <span className="text-muted-foreground">Earnings</span>
               </div>
             </div>
           </CardHeader>
@@ -242,7 +242,7 @@ export default function Leaderboard() {
                 {filteredLeaderboard.map((user) => (
                   <div
                     key={user.id}
-                    className={`flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors ${
+                    className={`flex items-center gap-4 p-4 transition-colors ${
                       user.id === currentUserId ? 'bg-primary/5' : ''
                     }`}
                   >
@@ -279,9 +279,9 @@ export default function Leaderboard() {
 
                     {/* Earnings */}
                     <div className="text-right">
-                      <Badge className={`${getRankBadgeColor(user.rank)} font-bold`}>
+                      <span className="text-lg font-bold text-green-500">
                         +${user.total_earnings.toFixed(2)}
-                      </Badge>
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -329,20 +329,16 @@ export default function Leaderboard() {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {currentUserStats.rank === -1 
-                      ? "Keep earning to reach the top 100!" 
+                      ? "Keep earning to reach the top 20!" 
                       : "Your ranking"}
                   </p>
                 </div>
 
                 {/* Earnings */}
                 <div className="text-right">
-                  <Badge className={`${
-                    currentUserStats.rank <= 3 && currentUserStats.rank > 0
-                      ? getRankBadgeColor(currentUserStats.rank)
-                      : 'bg-primary text-primary-foreground'
-                  } font-bold`}>
+                  <span className="text-lg font-bold text-green-500">
                     {currentUserStats.total_earnings > 0 ? '+' : ''}${currentUserStats.total_earnings.toFixed(2)}
-                  </Badge>
+                  </span>
                 </div>
               </div>
             </div>
