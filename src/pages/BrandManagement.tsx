@@ -197,30 +197,33 @@ export default function BrandManagement({
   };
 
   const fetchVideos = async (collection: string) => {
-    if (!shortimizeApiKey || !collection.trim()) {
+    if (!brandId || !collection.trim()) {
       toast.error('Please enter a collection name');
       return;
     }
 
     setLoadingVideos(true);
     try {
-      const encodedCollection = encodeURIComponent(collection.trim());
-      const response = await fetch(`https://api.shortimize.com/videos?collections=${encodedCollection}&limit=100`, {
-        headers: {
-          'Authorization': `Bearer ${shortimizeApiKey}`
-        }
+      const { data, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
+        body: { brandId, collectionName: collection }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch videos');
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || 'Failed to call edge function');
       }
 
-      const result = await response.json();
-      setVideos(result.data || []);
-      toast.success(`Loaded ${result.data?.length || 0} videos`);
-    } catch (error) {
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        setVideos([]);
+        toast.info('No videos found for this collection');
+        return;
+      }
+
+      setVideos(Array.isArray(data) ? data : []);
+      toast.success(`Loaded ${Array.isArray(data) ? data.length : 0} videos`);
+    } catch (error: any) {
       console.error('Error fetching videos:', error);
-      toast.error('Failed to load videos');
+      toast.error(error.message || 'Failed to load videos');
     } finally {
       setLoadingVideos(false);
     }
