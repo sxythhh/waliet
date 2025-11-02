@@ -402,7 +402,7 @@ export function CampaignsTab() {
                           setSelectedAccount(account);
                           setManageAccountDialogOpen(true);
                         }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:bg-accent transition-colors cursor-pointer border border-border"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:brightness-95 transition-colors cursor-pointer border border-border"
                       >
                         <div className="w-4 h-4">
                           <img src={getPlatformIcon(account.platform) || ''} alt={account.platform} className="w-full h-full" />
