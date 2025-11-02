@@ -95,7 +95,8 @@ export function AppSidebar() {
           className="font-geist font-bold tracking-tighter-custom"
           style={{
             color: theme === 'light' ? '#000000' : '#FFFFFF',
-            fontSize: '21px'
+            fontSize: '18px',
+            marginLeft: '-4px'
           }}
         >
           VIRALITY
