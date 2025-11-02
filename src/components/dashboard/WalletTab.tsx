@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, Hourglass, ArrowRightLeft } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -88,6 +88,7 @@ export function WalletTab() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [earningsChartPeriod, setEarningsChartPeriod] = useState<'1D' | '1W' | '1M' | 'ALL'>('1W');
+  const [isBalanceVisible, setIsBalanceVisible] = useState(true);
   const {
     toast
   } = useToast();
@@ -742,11 +743,21 @@ export function WalletTab() {
                   </Button>)}
               </div>
             </div>
-            <p className="text-3xl font-bold font-geist mb-3" style={{
-            letterSpacing: '-0.3px'
-          }}>
-              ${wallet?.total_earned?.toFixed(2) || "0.00"}
-            </p>
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-3xl font-bold font-geist" style={{
+              letterSpacing: '-0.3px'
+            }}>
+                {isBalanceVisible ? `$${wallet?.total_earned?.toFixed(2) || "0.00"}` : "••••••"}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+                className="h-8 w-8 p-0 hover:bg-muted"
+              >
+                {isBalanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </Button>
+            </div>
             
             {/* Mini Earnings Chart */}
             <div className="h-20 -mx-2">
@@ -775,16 +786,16 @@ export function WalletTab() {
             <p className="text-3xl font-bold font-geist mb-4" style={{
             letterSpacing: '-0.3px'
           }}>
-              ${wallet?.balance?.toFixed(2) || "0.00"}
+              {isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}
             </p>
             <Separator className="my-4" />
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-muted-foreground font-medium">Available Balance</span>
-              <span className="text-lg font-semibold">${wallet?.balance?.toFixed(2) || "0.00"}</span>
+              <span className="text-lg font-semibold">{isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground font-medium">In Transit</span>
-              <span className="text-lg font-semibold">${pendingWithdrawals.toFixed(2)}</span>
+              <span className="text-lg font-semibold">{isBalanceVisible ? `$${pendingWithdrawals.toFixed(2)}` : "••••••"}</span>
             </div>
           </CardContent>
         </Card>
