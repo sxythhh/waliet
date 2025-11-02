@@ -163,12 +163,79 @@ export default function BrandManagement({
   const [collectionName, setCollectionName] = useState("");
   const [videos, setVideos] = useState<any[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
+  const [lastVideosFetch, setLastVideosFetch] = useState<Date | null>(null);
+  const [lastAccountsFetch, setLastAccountsFetch] = useState<Date | null>(null);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
-  const fetchShortimizeAccounts = async () => {
+
+  // Cache management constants
+  const CACHE_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
+  const ACCOUNTS_CACHE_KEY = `shortimize_accounts_${brandId}`;
+  const VIDEOS_CACHE_KEY = `shortimize_videos_${brandId}`;
+
+  // Helper to check if cache is still valid
+  const isCacheValid = (timestamp: string | null) => {
+    if (!timestamp) return false;
+    const cacheTime = new Date(timestamp).getTime();
+    const now = Date.now();
+    return (now - cacheTime) < CACHE_DURATION_MS;
+  };
+
+  // Load cached data on mount
+  useEffect(() => {
+    if (brandId) {
+      // Load cached accounts
+      const cachedAccounts = localStorage.getItem(ACCOUNTS_CACHE_KEY);
+      if (cachedAccounts) {
+        try {
+          const { data, timestamp } = JSON.parse(cachedAccounts);
+          if (isCacheValid(timestamp)) {
+            setShortimizeAccounts(data);
+            setLastAccountsFetch(new Date(timestamp));
+          }
+        } catch (e) {
+          console.error('Error loading cached accounts:', e);
+        }
+      }
+
+      // Load cached videos
+      const cachedVideos = localStorage.getItem(VIDEOS_CACHE_KEY);
+      if (cachedVideos) {
+        try {
+          const { data, timestamp, collection } = JSON.parse(cachedVideos);
+          if (isCacheValid(timestamp)) {
+            setVideos(data);
+            setCollectionName(collection);
+            setLastVideosFetch(new Date(timestamp));
+          }
+        } catch (e) {
+          console.error('Error loading cached videos:', e);
+        }
+      }
+    }
+  }, [brandId]);
+  const fetchShortimizeAccounts = async (forceRefresh = false) => {
     if (!brandId) {
       toast.error("Brand not loaded");
       return;
+    }
+
+    // Check cache first unless force refresh
+    if (!forceRefresh) {
+      const cachedAccounts = localStorage.getItem(ACCOUNTS_CACHE_KEY);
+      if (cachedAccounts) {
+        try {
+          const { data, timestamp } = JSON.parse(cachedAccounts);
+          if (isCacheValid(timestamp)) {
+            setShortimizeAccounts(data);
+            setLastAccountsFetch(new Date(timestamp));
+            toast.info('Loaded accounts from cache');
+            return;
+          }
+        } catch (e) {
+          console.error('Error loading cached accounts:', e);
+        }
+      }
     }
 
     setLoadingShortimize(true);
@@ -186,8 +253,18 @@ export default function BrandManagement({
         throw new Error(data?.error || 'Failed to fetch accounts');
       }
 
-      setShortimizeAccounts(Array.isArray(data) ? data : []);
-      toast.success(`Loaded ${Array.isArray(data) ? data.length : 0} Shortimize accounts`);
+      const accountsData = Array.isArray(data) ? data : [];
+      setShortimizeAccounts(accountsData);
+      
+      // Cache the data
+      const timestamp = new Date().toISOString();
+      setLastAccountsFetch(new Date(timestamp));
+      localStorage.setItem(ACCOUNTS_CACHE_KEY, JSON.stringify({
+        data: accountsData,
+        timestamp
+      }));
+
+      toast.success(`Loaded ${accountsData.length} Shortimize accounts`);
     } catch (error: any) {
       console.error("Error fetching Shortimize accounts:", error);
       toast.error(error.message || "Failed to load Shortimize accounts");
@@ -196,10 +273,28 @@ export default function BrandManagement({
     }
   };
 
-  const fetchVideos = async (collection: string) => {
+  const fetchVideos = async (collection: string, forceRefresh = false) => {
     if (!brandId || !collection.trim()) {
       toast.error('Please enter a collection name');
       return;
+    }
+
+    // Check cache first unless force refresh
+    if (!forceRefresh) {
+      const cachedVideos = localStorage.getItem(VIDEOS_CACHE_KEY);
+      if (cachedVideos) {
+        try {
+          const { data, timestamp, collection: cachedCollection } = JSON.parse(cachedVideos);
+          if (cachedCollection === collection && isCacheValid(timestamp)) {
+            setVideos(data);
+            setLastVideosFetch(new Date(timestamp));
+            toast.info('Loaded videos from cache');
+            return;
+          }
+        } catch (e) {
+          console.error('Error loading cached videos:', e);
+        }
+      }
     }
 
     setLoadingVideos(true);
@@ -219,8 +314,19 @@ export default function BrandManagement({
         return;
       }
 
-      setVideos(Array.isArray(data) ? data : []);
-      toast.success(`Loaded ${Array.isArray(data) ? data.length : 0} videos`);
+      const videosData = Array.isArray(data) ? data : [];
+      setVideos(videosData);
+      
+      // Cache the data
+      const timestamp = new Date().toISOString();
+      setLastVideosFetch(new Date(timestamp));
+      localStorage.setItem(VIDEOS_CACHE_KEY, JSON.stringify({
+        data: videosData,
+        timestamp,
+        collection
+      }));
+
+      toast.success(`Loaded ${videosData.length} videos`);
     } catch (error: any) {
       console.error('Error fetching videos:', error);
       toast.error(error.message || 'Failed to load videos');
@@ -261,8 +367,9 @@ export default function BrandManagement({
   }, [slug]);
 
   useEffect(() => {
-    if (isManagementPage && brandId && shortimizeApiKey) {
-      fetchShortimizeAccounts();
+    if (isManagementPage && brandId && shortimizeApiKey && shortimizeAccounts.length === 0) {
+      // Only fetch if we don't have cached data
+      fetchShortimizeAccounts(false);
     }
   }, [isManagementPage, brandId, shortimizeApiKey]);
   useEffect(() => {
@@ -967,13 +1074,29 @@ export default function BrandManagement({
                       placeholder="Enter collection name"
                       value={collectionName}
                       onChange={(e) => setCollectionName(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && fetchVideos(collectionName)}
+                      onKeyPress={(e) => e.key === 'Enter' && fetchVideos(collectionName, false)}
                       className="bg-background border"
                     />
-                    <Button onClick={() => fetchVideos(collectionName)} disabled={loadingVideos}>
+                    <Button onClick={() => fetchVideos(collectionName, false)} disabled={loadingVideos}>
                       {loadingVideos ? "Loading..." : "Fetch Videos"}
                     </Button>
+                    {videos.length > 0 && (
+                      <Button 
+                        onClick={() => fetchVideos(collectionName, true)} 
+                        disabled={loadingVideos}
+                        variant="outline"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${loadingVideos ? 'animate-spin' : ''}`} />
+                        Refresh
+                      </Button>
+                    )}
                   </div>
+                  
+                  {lastVideosFetch && (
+                    <p className="text-xs text-muted-foreground">
+                      Last updated: {lastVideosFetch.toLocaleString()}
+                    </p>
+                  )}
 
                   {videos.length > 0 && (
                     <div className="border rounded-lg overflow-hidden">
@@ -1028,9 +1151,16 @@ export default function BrandManagement({
               <Card className="bg-card border">
                 <CardHeader className="pb-4 border-b border-border">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
+                    <div>
+                      <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
+                      {lastAccountsFetch && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Last updated: {lastAccountsFetch.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
                     <Button 
-                      onClick={fetchShortimizeAccounts} 
+                      onClick={() => fetchShortimizeAccounts(true)} 
                       disabled={!shortimizeApiKey || loadingShortimize}
                       variant="outline"
                       size="sm"
