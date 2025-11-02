@@ -864,9 +864,7 @@ export function WalletTab() {
           }).map(transaction => <div key={transaction.id} onClick={() => {
             setSelectedTransaction(transaction);
             setTransactionSheetOpen(true);
-          }} style={{
-            backgroundColor: '#0d0d0d'
-           }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#131313] gap-3">
+          }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-muted hover:bg-accent gap-3">
                   <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -1030,9 +1028,9 @@ export function WalletTab() {
           };
           const cryptoLogo = getCryptoLogo();
           const networkLogo = getNetworkLogo();
-          return <div key={method.id} className="relative overflow-hidden rounded-xl bg-neutral-900/50">
+          return <div key={method.id} className="relative overflow-hidden rounded-xl bg-muted">
                   
-                  <div className="relative flex items-center justify-between p-4 bg-[#0d0d0d]">
+                  <div className="relative flex items-center justify-between p-4 bg-card">
                     <div className="flex items-center gap-4 flex-1">
                       {method.method !== 'crypto' && cryptoLogo}
                       <div className="flex-1 min-w-0">
@@ -1074,9 +1072,9 @@ export function WalletTab() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="payout-amount">Amount ($)</Label>
-              <Input id="payout-amount" type="number" min="20" step="0.01" max={wallet?.balance || 0} placeholder="20.00" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} className="bg-[#171717] border-transparent text-white placeholder:text-white/40 h-14 text-lg font-medium focus-visible:ring-primary/50" />
+              <Input id="payout-amount" type="number" min="20" step="0.01" max={wallet?.balance || 0} placeholder="20.00" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} className="bg-muted border-transparent placeholder:text-muted-foreground h-14 text-lg font-medium focus-visible:ring-primary/50" />
               <div className="flex gap-2 flex-wrap">
-                {[20, 50, 100, 500].map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-[#1a1a1a] hover:bg-[#252525]">
+                {[20, 50, 100, 500].map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-muted hover:bg-accent">
                     ${amount}
                   </Button>)}
               </div>
@@ -1088,7 +1086,7 @@ export function WalletTab() {
             <div className="space-y-2">
               <Label htmlFor="payout-method">Payment Method</Label>
               <Select value={selectedPayoutMethod} onValueChange={setSelectedPayoutMethod}>
-                <SelectTrigger id="payout-method" className="bg-[#171717] border-transparent text-white h-14 text-lg">
+                <SelectTrigger id="payout-method" className="bg-muted border-transparent h-14 text-lg">
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1182,7 +1180,7 @@ export function WalletTab() {
         <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto">
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Header */}
-              <div className="p-6 pb-8 border-b sticky top-0 z-10" style={{ backgroundColor: '#080808' }}>
+              <div className="p-6 pb-8 border-b sticky top-0 z-10 bg-background">
                 {/* Close button and Logo on same line */}
                 <div className="flex items-center justify-between mb-6">
                   
@@ -1222,7 +1220,7 @@ export function WalletTab() {
               {/* Details */}
               <div className="flex-1 p-6 space-y-6">
                 {/* Date and Status */}
-                <div className="flex items-center justify-between p-4 rounded-lg bg-[#1a1a1a]/30">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
                   <span className="text-sm text-muted-foreground">
                     {format(selectedTransaction.date, 'MMMM dd yyyy, hh:mm a')}
                   </span>
@@ -1235,7 +1233,7 @@ export function WalletTab() {
                 </div>
 
                 {/* Transaction Metadata - Account & Views */}
-                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined || selectedTransaction.campaign) && <div className="p-4 rounded-lg border border-border bg-[#1a1a1a]/30">
+                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined || selectedTransaction.campaign) && <div className="p-4 rounded-lg border border-border bg-muted">
                     <div className="space-y-3">
                       {/* Campaign Info */}
                       {selectedTransaction.campaign && <div className="flex items-center gap-3">
@@ -1288,7 +1286,7 @@ export function WalletTab() {
                   </div>}
 
                 {/* Transfer Details - P2P */}
-                {(selectedTransaction.type === 'transfer_sent' || selectedTransaction.type === 'transfer_received') && selectedTransaction.metadata && <div className="p-4 rounded-lg border border-border bg-[#1a1a1a]/30">
+                {(selectedTransaction.type === 'transfer_sent' || selectedTransaction.type === 'transfer_received') && selectedTransaction.metadata && <div className="p-4 rounded-lg border border-border bg-muted">
                     <h4 className="font-semibold text-sm mb-3">Transfer Information</h4>
                     <div className="space-y-3">
                       {selectedTransaction.type === 'transfer_sent' && selectedTransaction.metadata.recipient_username && <div className="flex items-center gap-3">
