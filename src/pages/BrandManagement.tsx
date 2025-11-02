@@ -1202,6 +1202,60 @@ export default function BrandManagement({
           </div>
         </div>
 
+        {/* Campaign Metrics Cards */}
+        {selectedCampaign && !isManagementPage && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <Card className="border">
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground mb-1">Total Budget</p>
+                <p className="text-2xl font-bold text-foreground">
+                  ${selectedCampaign.budget?.toLocaleString() || '0'}
+                </p>
+              </div>
+            </Card>
+            <Card className="border">
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground mb-1">Budget Used</p>
+                <p className="text-2xl font-bold text-foreground">
+                  ${selectedCampaign.budget_used?.toLocaleString() || '0'}
+                </p>
+              </div>
+            </Card>
+            <Card className="border">
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground mb-1">Budget Remaining</p>
+                <p className="text-2xl font-bold text-foreground">
+                  ${((selectedCampaign.budget || 0) - (selectedCampaign.budget_used || 0)).toLocaleString()}
+                </p>
+              </div>
+            </Card>
+            <Card className="border">
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground mb-1">RPM Rate</p>
+                <p className="text-2xl font-bold text-foreground">
+                  ${selectedCampaign.rpm_rate?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+            </Card>
+            <Card className="border">
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground mb-1">Creators</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {approvedSubmissions.length}
+                </p>
+              </div>
+            </Card>
+            <Card className="border">
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground mb-1">Status</p>
+                <p className="text-2xl font-bold text-foreground capitalize">
+                  {selectedCampaign.status}
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Conditional Content Based on Page Type */}
         {isManagementPage ? (
           // Management Page: Tabs with Analytics, Videos, Users, Payouts
