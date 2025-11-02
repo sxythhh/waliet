@@ -736,7 +736,7 @@ export function WalletTab() {
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold text-foreground">💰 Your Earnings</p>
               <div className="flex gap-1">
-                {(['1D', '1W', '1M', 'ALL'] as const).map(period => <Button key={period} variant="ghost" size="sm" onClick={() => setEarningsChartPeriod(period)} className={`h-7 px-2 text-xs font-semibold ${earningsChartPeriod === period ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                {(['1D', '1W', '1M', 'ALL'] as const).map(period => <Button key={period} variant="ghost" size="sm" onClick={() => setEarningsChartPeriod(period)} className={`h-7 px-2 text-xs font-semibold ${earningsChartPeriod === period ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-primary hover:text-primary-foreground'}`}>
                     {period}
                   </Button>)}
               </div>
