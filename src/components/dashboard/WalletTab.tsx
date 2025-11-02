@@ -87,6 +87,8 @@ export function WalletTab() {
   const [p2pTransferDialogOpen, setP2pTransferDialogOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [campaignFilter, setCampaignFilter] = useState<string>("all");
+  const [availableCampaigns, setAvailableCampaigns] = useState<Array<{ id: string; title: string; brand_name: string }>>([]);
   const [earningsChartPeriod, setEarningsChartPeriod] = useState<'1D' | '1W' | '1M' | 'ALL'>('1W');
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
   const {
@@ -331,6 +333,15 @@ export function WalletTab() {
     // Calculate total pending and in-transit withdrawals
     const pendingAmount = payoutRequests?.filter(pr => pr.status === 'pending' || pr.status === 'in_transit').reduce((sum, pr) => sum + Number(pr.amount), 0) || 0;
     setPendingWithdrawals(pendingAmount);
+    
+    // Extract unique campaigns for filter dropdown
+    const uniqueCampaigns = Array.from(campaignsMap.values()).map(c => ({
+      id: c.id,
+      title: c.title,
+      brand_name: c.brand_name
+    }));
+    setAvailableCampaigns(uniqueCampaigns);
+    
     const allTransactions: Transaction[] = [];
     if (walletTransactions) {
       walletTransactions.forEach(txn => {
@@ -843,6 +854,21 @@ export function WalletTab() {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
+              {availableCampaigns.length > 0 && (
+                <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px] bg-muted/50 border-0">
+                    <SelectValue placeholder="Campaign" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="all">All Campaigns</SelectItem>
+                    {availableCampaigns.map((campaign) => (
+                      <SelectItem key={campaign.id} value={campaign.id}>
+                        {campaign.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>}
         </CardHeader>
         <CardContent>
@@ -857,6 +883,12 @@ export function WalletTab() {
             // Filter by status
             if (statusFilter !== "all" && transaction.status !== statusFilter) {
               return false;
+            }
+            // Filter by campaign
+            if (campaignFilter !== "all") {
+              if (!transaction.campaign || transaction.campaign.id !== campaignFilter) {
+                return false;
+              }
             }
             return true;
           }).map(transaction => <div key={transaction.id} onClick={() => {
