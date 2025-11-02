@@ -223,7 +223,7 @@ export default function BrandManagement({
       return;
     }
 
-    if (!accountsCollectionName.trim()) {
+    if (!accountsCollectionName?.trim()) {
       toast.error("Please enter a collection name");
       return;
     }
@@ -1355,7 +1355,7 @@ export default function BrandManagement({
                       />
                       <Button 
                         onClick={() => fetchShortimizeAccounts(true)} 
-                        disabled={!shortimizeApiKey || loadingShortimize || !accountsCollectionName.trim()}
+                        disabled={!shortimizeApiKey || loadingShortimize || !accountsCollectionName?.trim()}
                         variant="outline"
                         size="sm"
                       >
