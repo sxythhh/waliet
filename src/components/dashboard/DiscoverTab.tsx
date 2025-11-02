@@ -40,7 +40,6 @@ interface Campaign {
     logo_url: string;
   };
 }
-
 interface BountyCampaign {
   id: string;
   title: string;
@@ -93,7 +92,6 @@ export function DiscoverTab() {
     } = await supabase.auth.getUser();
     let joinedCampaignIds: string[] = [];
     let appliedBountyIds: string[] = [];
-    
     if (user) {
       // Get campaigns user has already joined or has pending applications for
       const {
@@ -120,7 +118,6 @@ export function DiscoverTab() {
       `).in("status", ["active", "ended"]).order("created_at", {
       ascending: false
     });
-    
     if (!error && data) {
       const availableCampaigns = data.filter(campaign => !joinedCampaignIds.includes(campaign.id));
       const campaignsWithBrandLogo = availableCampaigns.map(campaign => ({
@@ -145,27 +142,19 @@ export function DiscoverTab() {
       `).in("status", ["active", "ended"]).order("created_at", {
       ascending: false
     });
-
     if (!bountiesError && bountiesData) {
       const availableBounties = bountiesData.filter(bounty => !appliedBountyIds.includes(bounty.id));
       setBounties(availableBounties as BountyCampaign[]);
     }
-
     setLoading(false);
   };
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesPlatform = !selectedPlatform || campaign.platforms && campaign.platforms.some(p => p.toLowerCase() === selectedPlatform.toLowerCase());
-    const matchesSearch = !searchQuery || 
-      campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      campaign.brand_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      campaign.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || 
-      (statusFilter === "active" && campaign.status !== "ended") ||
-      (statusFilter === "ended" && campaign.status === "ended");
+    const matchesSearch = !searchQuery || campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) || campaign.brand_name.toLowerCase().includes(searchQuery.toLowerCase()) || campaign.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || statusFilter === "active" && campaign.status !== "ended" || statusFilter === "ended" && campaign.status === "ended";
     const matchesInfiniteBudget = !hideInfiniteBudget || !campaign.is_infinite_budget;
     const matchesLowBudget = !hideLowBudget || campaign.budget >= 1000;
     const matchesEnded = !hideEnded || campaign.status !== "ended";
-    
     return matchesPlatform && matchesSearch && matchesStatus && matchesInfiniteBudget && matchesLowBudget && matchesEnded;
   });
 
@@ -178,7 +167,7 @@ export function DiscoverTab() {
     // Featured campaigns always come first
     if (a.is_featured && !b.is_featured) return -1;
     if (!a.is_featured && b.is_featured) return 1;
-    
+
     // Then apply the selected sorting
     if (sortBy === "newest") {
       return new Date(b.start_date || b.created_at).getTime() - new Date(a.start_date || a.created_at).getTime();
@@ -256,27 +245,15 @@ export function DiscoverTab() {
             {/* Search Input */}
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search campaigns..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-11 bg-muted border-transparent"
-              />
+              <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-11 bg-muted border-transparent" />
             </div>
 
             {/* Filter and Bookmark Icons */}
             <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setFiltersOpen(!filtersOpen)}
-                className="h-11 w-11 bg-muted hover:bg-muted/80"
-              >
+              <Button variant="ghost" size="icon" onClick={() => setFiltersOpen(!filtersOpen)} className="h-11 w-11 bg-muted hover:bg-muted/80">
                 <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-11 w-11 bg-muted hover:bg-muted/80">
-                <Bookmark className="h-5 w-5 text-muted-foreground" />
-              </Button>
+              
             </div>
 
             {/* Platform Pills - Desktop Divider */}
@@ -284,59 +261,23 @@ export function DiscoverTab() {
 
             {/* Platform Filter Pills */}
             <div className="flex gap-2 flex-wrap">
-              <Button 
-                variant="ghost" 
-                onClick={() => setSelectedPlatform(null)} 
-                className={`h-9 px-4 rounded-full transition-colors ${
-                  selectedPlatform === null 
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
+              <Button variant="ghost" onClick={() => setSelectedPlatform(null)} className={`h-9 px-4 rounded-full transition-colors ${selectedPlatform === null ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
                 All
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setSelectedPlatform(selectedPlatform === "TikTok" ? null : "TikTok")} 
-                className={`h-9 w-9 p-0 rounded-full transition-colors ${
-                  selectedPlatform === "TikTok" 
-                    ? 'bg-primary hover:bg-primary/90' 
-                    : 'bg-muted hover:bg-muted/80'
-                }`}
-                title="TikTok"
-              >
+              <Button variant="ghost" onClick={() => setSelectedPlatform(selectedPlatform === "TikTok" ? null : "TikTok")} className={`h-9 w-9 p-0 rounded-full transition-colors ${selectedPlatform === "TikTok" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="TikTok">
                 <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setSelectedPlatform(selectedPlatform === "Instagram" ? null : "Instagram")} 
-                className={`h-9 w-9 p-0 rounded-full transition-colors ${
-                  selectedPlatform === "Instagram" 
-                    ? 'bg-primary hover:bg-primary/90' 
-                    : 'bg-muted hover:bg-muted/80'
-                }`}
-                title="Instagram"
-              >
+              <Button variant="ghost" onClick={() => setSelectedPlatform(selectedPlatform === "Instagram" ? null : "Instagram")} className={`h-9 w-9 p-0 rounded-full transition-colors ${selectedPlatform === "Instagram" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="Instagram">
                 <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setSelectedPlatform(selectedPlatform === "YouTube" ? null : "YouTube")} 
-                className={`h-9 w-9 p-0 rounded-full transition-colors ${
-                  selectedPlatform === "YouTube" 
-                    ? 'bg-primary hover:bg-primary/90' 
-                    : 'bg-muted hover:bg-muted/80'
-                }`}
-                title="YouTube"
-              >
+              <Button variant="ghost" onClick={() => setSelectedPlatform(selectedPlatform === "YouTube" ? null : "YouTube")} className={`h-9 w-9 p-0 rounded-full transition-colors ${selectedPlatform === "YouTube" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="YouTube">
                 <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
           {/* Second Row: Sort, Frequency, Status, and Hide Options */}
-          {filtersOpen && (
-            <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center flex-wrap">
+          {filtersOpen && <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center flex-wrap">
               {/* Sort By */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
@@ -390,40 +331,27 @@ export function DiscoverTab() {
               {/* Hide Options */}
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <Checkbox 
-                    id="hide-infinite" 
-                    checked={hideInfiniteBudget}
-                    onCheckedChange={(checked) => setHideInfiniteBudget(checked as boolean)}
-                  />
+                  <Checkbox id="hide-infinite" checked={hideInfiniteBudget} onCheckedChange={checked => setHideInfiniteBudget(checked as boolean)} />
                   <Label htmlFor="hide-infinite" className="text-sm text-muted-foreground cursor-pointer">
                     Hide infinite budget?
                   </Label>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Checkbox 
-                    id="hide-low-budget" 
-                    checked={hideLowBudget}
-                    onCheckedChange={(checked) => setHideLowBudget(checked as boolean)}
-                  />
+                  <Checkbox id="hide-low-budget" checked={hideLowBudget} onCheckedChange={checked => setHideLowBudget(checked as boolean)} />
                   <Label htmlFor="hide-low-budget" className="text-sm text-muted-foreground cursor-pointer">
                     Hide low budget?
                   </Label>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Checkbox 
-                    id="hide-ended" 
-                    checked={hideEnded}
-                    onCheckedChange={(checked) => setHideEnded(checked as boolean)}
-                  />
+                  <Checkbox id="hide-ended" checked={hideEnded} onCheckedChange={checked => setHideEnded(checked as boolean)} />
                   <Label htmlFor="hide-ended" className="text-sm text-muted-foreground cursor-pointer">
                     Hide ended?
                   </Label>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
 
         {/* Campaigns and Bounties Grid */}
@@ -438,30 +366,25 @@ export function DiscoverTab() {
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
           </div> : <div className="space-y-8">
-            {sortedCampaigns.length > 0 && (
-              <div className="space-y-3">
+            {sortedCampaigns.length > 0 && <div className="space-y-3">
                 <h2 className="text-lg font-semibold text-foreground">Campaigns</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {sortedCampaigns.map(campaign => {
-          const budgetUsed = campaign.budget_used || 0;
-          const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-          const handleCampaignClick = () => {
-            if (campaign.status !== "ended") {
-              setSelectedCampaign(campaign);
-              setSheetOpen(true);
-            }
-          };
-          const isEnded = campaign.status === "ended";
-          return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
+              const budgetUsed = campaign.budget_used || 0;
+              const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+              const handleCampaignClick = () => {
+                if (campaign.status !== "ended") {
+                  setSelectedCampaign(campaign);
+                  setSheetOpen(true);
+                }
+              };
+              const isEnded = campaign.status === "ended";
+              return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
                   {/* Gradient overlay for ended campaigns */}
                   {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                   {/* Banner Image */}
                   {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                      <OptimizedImage 
-                        src={campaign.banner_url} 
-                        alt={campaign.title} 
-                        className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
-                      />
+                      <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                       {isEnded && <div className="absolute top-2 right-2 z-20">
                           <span className="text-red-500 text-xs font-medium px-2 py-1 bg-red-500/10 rounded">
                             Ended
@@ -502,10 +425,10 @@ export function DiscoverTab() {
 
                           {/* Animated Infinite Progress Bar */}
                           <div className="relative h-1.5 rounded-full overflow-hidden" style={{
-                    background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
-                    backgroundSize: '20px 20px',
-                    animation: 'slide 1s linear infinite'
-                  }} />
+                        background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
+                        backgroundSize: '20px 20px',
+                        animation: 'slide 1s linear infinite'
+                      }} />
 
                           <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                             <span>No budget limit</span>
@@ -525,8 +448,8 @@ export function DiscoverTab() {
                           {/* Progress Bar */}
                           <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
                             <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                      width: `${budgetPercentage}%`
-                    }} />
+                          width: `${budgetPercentage}%`
+                        }} />
                           </div>
 
                           <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
@@ -536,57 +459,39 @@ export function DiscoverTab() {
                     </div>
                   </CardContent>
                 </Card>;
-        })}
+            })}
                 </div>
-              </div>
-            )}
+              </div>}
 
-            {bounties.length > 0 && (
-              <div className="space-y-3">
+            {bounties.length > 0 && <div className="space-y-3">
                 <h2 className="text-lg font-semibold text-foreground">Bounties</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                   {bounties.map(bounty => {
-                    const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-                    const isFull = spotsRemaining <= 0;
-                    const isEnded = bounty.status === "ended";
-
-                    return (
-                      <Card
-                        key={bounty.id}
-                        className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative ${isEnded ? "opacity-60" : "cursor-pointer"}`}
-                        onClick={() => {
-                          if (!isEnded) {
-                            setSelectedBounty(bounty);
-                            setBountySheetOpen(true);
-                          }
-                        }}
-                      >
+              const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+              const isFull = spotsRemaining <= 0;
+              const isEnded = bounty.status === "ended";
+              return <Card key={bounty.id} className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative ${isEnded ? "opacity-60" : "cursor-pointer"}`} onClick={() => {
+                if (!isEnded) {
+                  setSelectedBounty(bounty);
+                  setBountySheetOpen(true);
+                }
+              }}>
                         {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                         
-                        {bounty.banner_url && (
-                          <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                            <OptimizedImage
-                              src={bounty.banner_url}
-                              alt={bounty.title}
-                              className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                            />
-                            {isEnded && (
-                              <div className="absolute top-2 right-2 z-20">
+                        {bounty.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                            <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                            {isEnded && <div className="absolute top-2 right-2 z-20">
                                 <span className="text-red-500 text-xs font-medium px-2 py-1 bg-muted rounded">
                                   Ended
                                 </span>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                              </div>}
+                          </div>}
                         
                         <CardContent className="p-4 flex-1 flex flex-col gap-3">
                           <div className="flex items-start gap-2.5">
-                            {bounty.brands?.logo_url && (
-                              <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
+                            {bounty.brands?.logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
                                 <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
-                              </div>
-                            )}
+                              </div>}
                             <div className="flex-1 min-w-0">
                               <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
                                 {bounty.title}
@@ -614,25 +519,18 @@ export function DiscoverTab() {
                             </div>
                           </div>
                         </CardContent>
-                      </Card>
-                    );
-                  })}
+                      </Card>;
+            })}
                 </div>
-              </div>
-            )}
+              </div>}
           </div>}
       </div>
 
       <JoinCampaignSheet campaign={selectedCampaign} open={sheetOpen} onOpenChange={setSheetOpen} />
       
-      <ApplyToBountySheet
-        open={bountySheetOpen}
-        onOpenChange={setBountySheetOpen}
-        bounty={selectedBounty}
-        onSuccess={() => {
-          setBountySheetOpen(false);
-          fetchCampaigns();
-        }}
-      />
+      <ApplyToBountySheet open={bountySheetOpen} onOpenChange={setBountySheetOpen} bounty={selectedBounty} onSuccess={() => {
+      setBountySheetOpen(false);
+      fetchCampaigns();
+    }} />
     </div>;
 }
