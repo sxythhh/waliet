@@ -112,10 +112,12 @@ interface Submission {
 }
 export default function BrandManagement({
   showVideosTab = true,
-  showImportButton = true
+  showImportButton = true,
+  showAnalyticsTable = false
 }: {
   showVideosTab?: boolean;
   showImportButton?: boolean;
+  showAnalyticsTable?: boolean;
 }) {
   const {
     slug
@@ -868,7 +870,13 @@ export default function BrandManagement({
                 <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
               </div>}
             
-            {/* Imported Analytics Data */}
+            {/* Account Analytics Table */}
+            {showAnalyticsTable && (
+              <CampaignAnalyticsTable 
+                campaignId={selectedCampaignId}
+                onPaymentComplete={fetchSubmissions}
+              />
+            )}
             
             
             {/* Matching Dialog */}
