@@ -341,7 +341,7 @@ export function CampaignsTab() {
               </div>
 
               {/* Budget Section - Redesigned */}
-              <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
+              <div className="rounded-lg p-2.5 space-y-1.5 bg-muted">
                 <div className="flex items-baseline justify-between">
                   <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
                     {campaign.is_infinite_budget ? <>
@@ -355,7 +355,7 @@ export function CampaignsTab() {
                 </div>
                 
                 {/* Progress Bar */}
-                <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                <div className="relative h-1.5 rounded-full overflow-hidden bg-muted/50">
                   {campaign.is_infinite_budget ? <div className="absolute inset-0 animate-pulse" style={{
                 background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
                 backgroundSize: '200% 200%',
@@ -380,8 +380,7 @@ export function CampaignsTab() {
                           setSelectedAccount(account);
                           setManageAccountDialogOpen(true);
                         }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent border-t"
-                        style={{ borderTopColor: '#3b3b3b' }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:bg-accent transition-colors cursor-pointer border border-border"
                       >
                         <div className="w-4 h-4">
                           {account.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
@@ -429,7 +428,7 @@ export function CampaignsTab() {
                   <Button variant="ghost" size="sm" onClick={e => {
               e.stopPropagation();
               setDialogOpen(true);
-            }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-[#5966f2] font-semibold">
+            }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Link Account
                   </Button>
