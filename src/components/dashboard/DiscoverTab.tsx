@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -24,6 +27,7 @@ interface Campaign {
   rpm_rate: number;
   status: string;
   start_date: string | null;
+  created_at: string;
   banner_url: string | null;
   platforms: string[];
   slug: string;
@@ -62,7 +66,13 @@ export function DiscoverTab() {
   const [bounties, setBounties] = useState<BountyCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<string>("popular");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [frequency, setFrequency] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("active");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [hideInfiniteBudget, setHideInfiniteBudget] = useState(false);
+  const [hideLowBudget, setHideLowBudget] = useState(false);
+  const [hideEnded, setHideEnded] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedBounty, setSelectedBounty] = useState<BountyCampaign | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -144,7 +154,18 @@ export function DiscoverTab() {
   };
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesPlatform = !selectedPlatform || campaign.platforms && campaign.platforms.some(p => p.toLowerCase() === selectedPlatform.toLowerCase());
-    return matchesPlatform;
+    const matchesSearch = !searchQuery || 
+      campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      campaign.brand_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      campaign.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || 
+      (statusFilter === "active" && campaign.status !== "ended") ||
+      (statusFilter === "ended" && campaign.status === "ended");
+    const matchesInfiniteBudget = !hideInfiniteBudget || !campaign.is_infinite_budget;
+    const matchesLowBudget = !hideLowBudget || campaign.budget >= 1000;
+    const matchesEnded = !hideEnded || campaign.status !== "ended";
+    
+    return matchesPlatform && matchesSearch && matchesStatus && matchesInfiniteBudget && matchesLowBudget && matchesEnded;
   });
 
   // Separate active and ended campaigns
@@ -158,13 +179,27 @@ export function DiscoverTab() {
     if (!a.is_featured && b.is_featured) return 1;
     
     // Then apply the selected sorting
-    if (sortBy === "budget") {
+    if (sortBy === "newest") {
+      return new Date(b.start_date || b.created_at).getTime() - new Date(a.start_date || a.created_at).getTime();
+    }
+    if (sortBy === "oldest") {
+      return new Date(a.start_date || a.created_at).getTime() - new Date(b.start_date || b.created_at).getTime();
+    }
+    if (sortBy === "budget-high") {
       const budgetRemainingA = a.budget - (a.budget_used || 0);
       const budgetRemainingB = b.budget - (b.budget_used || 0);
       return budgetRemainingB - budgetRemainingA;
     }
-    if (sortBy === "rpm") {
+    if (sortBy === "budget-low") {
+      const budgetRemainingA = a.budget - (a.budget_used || 0);
+      const budgetRemainingB = b.budget - (b.budget_used || 0);
+      return budgetRemainingA - budgetRemainingB;
+    }
+    if (sortBy === "rpm-high") {
       return b.rpm_rate - a.rpm_rate;
+    }
+    if (sortBy === "rpm-low") {
+      return a.rpm_rate - b.rpm_rate;
     }
     if (sortBy === "popular") {
       return (b.budget_used || 0) - (a.budget_used || 0);
@@ -174,13 +209,27 @@ export function DiscoverTab() {
 
   // Sort ended campaigns using the same logic
   const sortedEndedCampaigns = [...endedCampaigns].sort((a, b) => {
-    if (sortBy === "budget") {
+    if (sortBy === "newest") {
+      return new Date(b.start_date || b.created_at).getTime() - new Date(a.start_date || a.created_at).getTime();
+    }
+    if (sortBy === "oldest") {
+      return new Date(a.start_date || a.created_at).getTime() - new Date(b.start_date || b.created_at).getTime();
+    }
+    if (sortBy === "budget-high") {
       const budgetRemainingA = a.budget - (a.budget_used || 0);
       const budgetRemainingB = b.budget - (b.budget_used || 0);
       return budgetRemainingB - budgetRemainingA;
     }
-    if (sortBy === "rpm") {
+    if (sortBy === "budget-low") {
+      const budgetRemainingA = a.budget - (a.budget_used || 0);
+      const budgetRemainingB = b.budget - (b.budget_used || 0);
+      return budgetRemainingA - budgetRemainingB;
+    }
+    if (sortBy === "rpm-high") {
       return b.rpm_rate - a.rpm_rate;
+    }
+    if (sortBy === "rpm-low") {
+      return a.rpm_rate - b.rpm_rate;
     }
     if (sortBy === "popular") {
       return (b.budget_used || 0) - (a.budget_used || 0);
@@ -200,30 +249,172 @@ export function DiscoverTab() {
       {/* Content with padding */}
       <div className="px-6 space-y-4">
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[200px] h-11 border-transparent bg-muted">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="popular">Most Popular</SelectItem>
-              <SelectItem value="budget">Budget Remaining</SelectItem>
-              <SelectItem value="rpm">Highest RPM</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex gap-2">
-            <Button variant={selectedPlatform === null ? "default" : "outline"} onClick={() => setSelectedPlatform(null)} className={`h-11 px-4 border-0 ${selectedPlatform === null ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`}>
-              All
-            </Button>
-            <Button variant={selectedPlatform === "TikTok" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "TikTok" ? null : "TikTok")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "TikTok" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="TikTok">
-              <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />
-            </Button>
-            <Button variant={selectedPlatform === "Instagram" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "Instagram" ? null : "Instagram")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "Instagram" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="Instagram">
-              <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />
-            </Button>
-            <Button variant={selectedPlatform === "YouTube" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "YouTube" ? null : "YouTube")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "YouTube" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="YouTube">
-              <img src={youtubeLogo} alt="YouTube" className="w-5 h-5" />
-            </Button>
+        <div className="space-y-4">
+          {/* First Row: Search and Platform Filters */}
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search campaigns..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-11 bg-muted border-transparent"
+              />
+            </div>
+
+            {/* Filter and Bookmark Icons */}
+            <div className="flex gap-2">
+              <Button variant="ghost" size="icon" className="h-11 w-11 bg-muted hover:bg-muted/80">
+                <SlidersHorizontal className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-11 w-11 bg-muted hover:bg-muted/80">
+                <Bookmark className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Platform Pills - Desktop Divider */}
+            <div className="hidden sm:block h-6 w-px bg-border" />
+
+            {/* Platform Filter Pills */}
+            <div className="flex gap-2 flex-wrap">
+              <Button 
+                variant="ghost" 
+                onClick={() => setSelectedPlatform(null)} 
+                className={`h-9 px-4 rounded-full transition-colors ${
+                  selectedPlatform === null 
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                All
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setSelectedPlatform(selectedPlatform === "TikTok" ? null : "TikTok")} 
+                className={`h-9 w-9 p-0 rounded-full transition-colors ${
+                  selectedPlatform === "TikTok" 
+                    ? 'bg-primary hover:bg-primary/90' 
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                title="TikTok"
+              >
+                <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setSelectedPlatform(selectedPlatform === "Instagram" ? null : "Instagram")} 
+                className={`h-9 w-9 p-0 rounded-full transition-colors ${
+                  selectedPlatform === "Instagram" 
+                    ? 'bg-primary hover:bg-primary/90' 
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                title="Instagram"
+              >
+                <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setSelectedPlatform(selectedPlatform === "YouTube" ? null : "YouTube")} 
+                className={`h-9 w-9 p-0 rounded-full transition-colors ${
+                  selectedPlatform === "YouTube" 
+                    ? 'bg-primary hover:bg-primary/90' 
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+                title="YouTube"
+              >
+                <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Second Row: Sort, Frequency, Status, and Hide Options */}
+          <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center flex-wrap">
+            {/* Sort By */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[140px] h-9 border-transparent bg-muted">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="oldest">Oldest</SelectItem>
+                  <SelectItem value="popular">Most Popular</SelectItem>
+                  <SelectItem value="budget-high">Budget (High-Low)</SelectItem>
+                  <SelectItem value="budget-low">Budget (Low-High)</SelectItem>
+                  <SelectItem value="rpm-high">RPM (High-Low)</SelectItem>
+                  <SelectItem value="rpm-low">RPM (Low-High)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Frequency (placeholder for future feature) */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Frequency:</span>
+              <Select value={frequency} onValueChange={setFrequency}>
+                <SelectTrigger className="w-[100px] h-9 border-transparent bg-muted">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[110px] h-9 border-transparent bg-muted">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="ended">Ended</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Hide Options */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="hide-infinite" 
+                  checked={hideInfiniteBudget}
+                  onCheckedChange={(checked) => setHideInfiniteBudget(checked as boolean)}
+                />
+                <Label htmlFor="hide-infinite" className="text-sm text-muted-foreground cursor-pointer">
+                  Hide infinite budget?
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="hide-low-budget" 
+                  checked={hideLowBudget}
+                  onCheckedChange={(checked) => setHideLowBudget(checked as boolean)}
+                />
+                <Label htmlFor="hide-low-budget" className="text-sm text-muted-foreground cursor-pointer">
+                  Hide low budget?
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="hide-ended" 
+                  checked={hideEnded}
+                  onCheckedChange={(checked) => setHideEnded(checked as boolean)}
+                />
+                <Label htmlFor="hide-ended" className="text-sm text-muted-foreground cursor-pointer">
+                  Hide ended?
+                </Label>
+              </div>
+            </div>
           </div>
         </div>
 
