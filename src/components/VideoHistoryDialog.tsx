@@ -80,40 +80,40 @@ export function VideoHistoryDialog({
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Latest Views</p>
+                  <p className="text-sm text-muted-foreground">Current Views</p>
                   <p className="text-2xl font-bold">
-                    {historyData[historyData.length - 1]?.views.toLocaleString()}
+                    {video.views?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Latest Likes</p>
+                  <p className="text-sm text-muted-foreground">Current Likes</p>
                   <p className="text-2xl font-bold">
-                    {historyData[historyData.length - 1]?.likes.toLocaleString()}
+                    {video.likes?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Latest Comments</p>
+                  <p className="text-sm text-muted-foreground">Current Comments</p>
                   <p className="text-2xl font-bold">
-                    {historyData[historyData.length - 1]?.comments.toLocaleString()}
+                    {video.comments?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Latest Shares</p>
+                  <p className="text-sm text-muted-foreground">Current Shares</p>
                   <p className="text-2xl font-bold">
-                    {historyData[historyData.length - 1]?.shares.toLocaleString()}
+                    {video.shares?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Latest Engagements</p>
+                  <p className="text-sm text-muted-foreground">Current Engagements</p>
                   <p className="text-2xl font-bold">
-                    {historyData[historyData.length - 1]?.engagements.toLocaleString()}
+                    {video.engagements?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Latest Engagement Rate</p>
+                  <p className="text-sm text-muted-foreground">Engagement Rate</p>
                   <p className="text-2xl font-bold">
-                    {historyData[historyData.length - 1]?.views > 0 
-                      ? ((historyData[historyData.length - 1].engagements / historyData[historyData.length - 1].views) * 100).toFixed(2)
+                    {video.views > 0 
+                      ? ((video.engagements / video.views) * 100).toFixed(2)
                       : '0.00'}%
                   </p>
                 </div>
