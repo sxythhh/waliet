@@ -1398,6 +1398,7 @@ export default function BrandManagement({
                             <TableHead className="text-right">Likes</TableHead>
                             <TableHead className="text-right">Comments</TableHead>
                             <TableHead className="text-right">Shares</TableHead>
+                            <TableHead className="text-right">Est. Payout</TableHead>
                             <TableHead>Link</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -1416,6 +1417,9 @@ export default function BrandManagement({
                               <TableCell className="text-right">{video.latest_likes?.toLocaleString() || 0}</TableCell>
                               <TableCell className="text-right">{video.latest_comments?.toLocaleString() || 0}</TableCell>
                               <TableCell className="text-right">{video.latest_shares?.toLocaleString() || 0}</TableCell>
+                              <TableCell className="text-right font-medium text-primary">
+                                ${(((video.latest_views || 0) / 1000) * (selectedCampaign?.rpm_rate || 0)).toFixed(2)}
+                              </TableCell>
                               <TableCell onClick={(e) => e.stopPropagation()}>
                                 {video.ad_link && (
                                   <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
