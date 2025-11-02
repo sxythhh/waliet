@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const menuItems = [
   {
@@ -133,7 +134,8 @@ export function AppSidebar() {
       </div>
 
       {/* User Profile */}
-      <div className="hidden md:flex items-center">
+      <div className="hidden md:flex items-center gap-2">
+        <NotificationBell />
         <Popover>
           <PopoverTrigger asChild>
             <button className="cursor-pointer">
