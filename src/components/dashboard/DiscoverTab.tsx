@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, DollarSign, Video, Users } from "lucide-react";
+import { DollarSign, Video, Users } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
@@ -62,7 +61,6 @@ export function DiscoverTab() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [bounties, setBounties] = useState<BountyCampaign[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("popular");
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -145,9 +143,8 @@ export function DiscoverTab() {
     setLoading(false);
   };
   const filteredCampaigns = campaigns.filter(campaign => {
-    const matchesSearch = campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) || campaign.brand_name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPlatform = !selectedPlatform || campaign.platforms && campaign.platforms.some(p => p.toLowerCase() === selectedPlatform.toLowerCase());
-    return matchesSearch && matchesPlatform;
+    return matchesPlatform;
   });
 
   // Separate active and ended campaigns
@@ -202,12 +199,8 @@ export function DiscoverTab() {
 
       {/* Content with padding */}
       <div className="px-6 space-y-4">
-        {/* Search and Filters */}
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative sm:max-w-xs flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="h-11 pl-10 placeholder:tracking-tight border-transparent focus-visible:border-primary focus-visible:border-2 transition-none" />
-          </div>
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[200px] h-11 border-transparent bg-muted">
               <SelectValue placeholder="Sort by" />
