@@ -181,7 +181,7 @@ export default function Referrals() {
             {referredUsers.length === 0 ? (
               <div className="text-center py-12">
                 <img 
-                  src={theme === "dark" ? voteIconDark : voteIconLight}
+                  src={theme === "dark" ? voteIconLight : voteIconDark}
                   alt=""
                   className="mx-auto h-12 w-12 mb-4"
                 />
