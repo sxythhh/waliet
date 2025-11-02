@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -411,8 +412,53 @@ export function ProfileTab() {
   };
 
   if (loading || !profile) {
-    return <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading profile...</p>
+    return <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
+        {/* Profile Header Skeleton */}
+        <Card className="bg-card border-0">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-7 w-32" />
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-10 rounded-lg" />
+                <Skeleton className="h-10 w-10 rounded-lg" />
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <Skeleton className="w-24 h-24 rounded-full" />
+              <div className="flex-1 space-y-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Social Accounts Skeleton */}
+        <Card className="bg-card border-0">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-7 w-40" />
+              <Skeleton className="h-10 w-32 rounded-lg" />
+            </div>
+            <div className="grid gap-3">
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stats Skeleton */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+        </div>
       </div>;
   }
   return <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
