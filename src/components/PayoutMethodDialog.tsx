@@ -110,7 +110,7 @@ export default function PayoutMethodDialog({
   };
   const isMaxMethodsReached = currentMethodCount >= 3;
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] bg-[#0a0a0a] border-[#1a1a1a] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] bg-card border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             {isMaxMethodsReached ? "Maximum Methods Reached" : "Add Payout Method"}
