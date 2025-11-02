@@ -209,7 +209,7 @@ export function DiscoverTab() {
             <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="h-11 pl-10 placeholder:tracking-tight border-transparent focus-visible:border-blue-500 focus-visible:border-2 transition-none" />
           </div>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[200px] h-11 border-transparent bg-[#0F0F0F]">
+            <SelectTrigger className="w-[200px] h-11 border-transparent bg-muted">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -219,16 +219,16 @@ export function DiscoverTab() {
             </SelectContent>
           </Select>
           <div className="flex gap-2">
-            <Button variant={selectedPlatform === null ? "default" : "outline"} onClick={() => setSelectedPlatform(null)} className={`h-11 px-4 border-0 ${selectedPlatform === null ? 'bg-blue-500 hover:bg-blue-600' : 'bg-[#0F0F0F] hover:bg-[#0F0F0F]/80'}`}>
+            <Button variant={selectedPlatform === null ? "default" : "outline"} onClick={() => setSelectedPlatform(null)} className={`h-11 px-4 border-0 ${selectedPlatform === null ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`}>
               All
             </Button>
-            <Button variant={selectedPlatform === "TikTok" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "TikTok" ? null : "TikTok")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "TikTok" ? 'bg-blue-500 hover:bg-blue-600' : 'bg-[#0F0F0F] hover:bg-[#0F0F0F]/80'}`} title="TikTok">
+            <Button variant={selectedPlatform === "TikTok" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "TikTok" ? null : "TikTok")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "TikTok" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="TikTok">
               <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />
             </Button>
-            <Button variant={selectedPlatform === "Instagram" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "Instagram" ? null : "Instagram")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "Instagram" ? 'bg-blue-500 hover:bg-blue-600' : 'bg-[#0F0F0F] hover:bg-[#0F0F0F]/80'}`} title="Instagram">
+            <Button variant={selectedPlatform === "Instagram" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "Instagram" ? null : "Instagram")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "Instagram" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="Instagram">
               <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />
             </Button>
-            <Button variant={selectedPlatform === "YouTube" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "YouTube" ? null : "YouTube")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "YouTube" ? 'bg-blue-500 hover:bg-blue-600' : 'bg-[#0F0F0F] hover:bg-[#0F0F0F]/80'}`} title="YouTube">
+            <Button variant={selectedPlatform === "YouTube" ? "default" : "outline"} onClick={() => setSelectedPlatform(selectedPlatform === "YouTube" ? null : "YouTube")} className={`h-11 w-11 p-0 border-0 ${selectedPlatform === "YouTube" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="YouTube">
               <img src={youtubeLogo} alt="YouTube" className="w-5 h-5" />
             </Button>
           </div>
@@ -271,12 +271,12 @@ export function DiscoverTab() {
                         className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
                       />
                       {isEnded && <div className="absolute top-2 right-2 z-20">
-                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-[#1a1a1a] rounded">
+                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-muted rounded">
                             Ended
                           </span>
                         </div>}
                       {!isEnded && campaign.is_featured && <div className="absolute top-2 right-2 z-20">
-                          <span className="text-primary text-xs font-medium px-2 py-1 bg-[#1a1a1a]/90 backdrop-blur-sm rounded border">
+                          <span className="text-primary text-xs font-medium px-2 py-1 bg-muted/90 backdrop-blur-sm rounded border">
                             Featured
                           </span>
                         </div>}
@@ -298,7 +298,7 @@ export function DiscoverTab() {
                     </div>
 
                     {/* Budget Section */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
+                    <div className="rounded-lg p-2.5 space-y-1.5 bg-muted">
                       {campaign.is_infinite_budget ? <>
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
@@ -331,7 +331,7 @@ export function DiscoverTab() {
                           </div>
 
                           {/* Progress Bar */}
-                          <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                          <div className="relative h-1.5 rounded-full overflow-hidden bg-muted/50">
                             <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                       width: `${budgetPercentage}%`
                     }} />
@@ -380,7 +380,7 @@ export function DiscoverTab() {
                             />
                             {isEnded && (
                               <div className="absolute top-2 right-2 z-20">
-                                <span className="text-red-500 text-xs font-medium px-2 py-1 bg-[#1a1a1a] rounded">
+                                <span className="text-red-500 text-xs font-medium px-2 py-1 bg-muted rounded">
                                   Ended
                                 </span>
                               </div>
