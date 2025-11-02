@@ -156,8 +156,41 @@ export default function BrandManagement({
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [manageCampaignOpen, setManageCampaignOpen] = useState(false);
+  const [shortimizeAccounts, setShortimizeAccounts] = useState<any[]>([]);
+  const [loadingShortimize, setLoadingShortimize] = useState(false);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
+  const fetchShortimizeAccounts = async () => {
+    if (!shortimizeApiKey) {
+      toast.error("Shortimize API key not configured");
+      return;
+    }
+
+    setLoadingShortimize(true);
+    try {
+      const response = await fetch("https://api.shortimize.com/accounts", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${shortimizeApiKey}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setShortimizeAccounts(data);
+      toast.success("Shortimize accounts loaded");
+    } catch (error) {
+      console.error("Error fetching Shortimize accounts:", error);
+      toast.error("Failed to load Shortimize accounts");
+    } finally {
+      setLoadingShortimize(false);
+    }
+  };
+
   const exportToCSV = () => {
     const csvData = approvedSubmissions.map(submission => {
       const linkedAccounts = submission.profiles?.social_accounts?.map(acc => `${acc.platform}:@${acc.username}`).join('; ') || 'None';
@@ -799,6 +832,9 @@ export default function BrandManagement({
             {showVideosTab && <TabsTrigger value="videos" className="data-[state=active]:bg-accent">
                 Videos
               </TabsTrigger>}
+            <TabsTrigger value="shortimize" className="data-[state=active]:bg-accent">
+              Shortimize
+            </TabsTrigger>
             <TabsTrigger value="applications" className="data-[state=active]:bg-accent">
               Applications
               {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
@@ -1233,6 +1269,94 @@ export default function BrandManagement({
                 <Button onClick={handleSaveUrls} disabled={savingUrls || !isAdmin} className="bg-primary hover:bg-primary/90">
                   {savingUrls ? "Saving..." : "Save Settings"}
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Shortimize Tab */}
+          <TabsContent value="shortimize">
+            <Card className="bg-card border">
+              <CardHeader className="pb-4 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
+                  <Button 
+                    onClick={fetchShortimizeAccounts} 
+                    disabled={!shortimizeApiKey || loadingShortimize}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
+                    {loadingShortimize ? 'Loading...' : 'Fetch Accounts'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {!shortimizeApiKey ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-sm">Please configure Shortimize API key in Settings</p>
+                  </div>
+                ) : shortimizeAccounts.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                    <p className="text-muted-foreground text-sm">No accounts loaded. Click "Fetch Accounts" to load data.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-border hover:bg-transparent">
+                          <TableHead className="text-muted-foreground font-medium">Username</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Platform</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Followers</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Total Views</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Total Likes</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Videos</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Median Views</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Last Upload</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {shortimizeAccounts.map((account) => (
+                          <TableRow key={account.account_id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                            <TableCell className="py-4">
+                              <a 
+                                href={account.account_link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-foreground hover:underline font-medium"
+                              >
+                                @{account.username}
+                              </a>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <Badge variant="secondary" className="capitalize">
+                                {account.platform}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="py-4 text-foreground">
+                              {account.latest_followers_count?.toLocaleString() || 'N/A'}
+                            </TableCell>
+                            <TableCell className="py-4 text-foreground">
+                              {account.total_views?.toLocaleString() || '0'}
+                            </TableCell>
+                            <TableCell className="py-4 text-foreground">
+                              {account.total_likes?.toLocaleString() || '0'}
+                            </TableCell>
+                            <TableCell className="py-4 text-foreground">
+                              {account.total_videos_tracked || '0'}
+                            </TableCell>
+                            <TableCell className="py-4 text-foreground">
+                              {account.median_views?.toLocaleString() || '0'}
+                            </TableCell>
+                            <TableCell className="py-4 text-muted-foreground text-sm">
+                              {account.last_uploaded_at ? new Date(account.last_uploaded_at).toLocaleDateString() : 'N/A'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
