@@ -162,6 +162,13 @@ export function AppSidebar() {
               {/* Menu Items */}
               <div className="space-y-1">
                 <button 
+                  className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                  onClick={() => navigate("/referrals")}
+                >
+                  <span className="font-medium text-sm">Referrals</span>
+                </button>
+
+                <button 
                   className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
                   onClick={() => window.open("https://discord.gg/your-discord", "_blank")}
                 >
