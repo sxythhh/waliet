@@ -894,7 +894,7 @@ export function WalletTab() {
           }).map(transaction => <div key={transaction.id} onClick={() => {
             setSelectedTransaction(transaction);
             setTransactionSheetOpen(true);
-          }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-muted hover:bg-muted/80 gap-3">
+          }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-muted dark:bg-background hover:bg-muted/80 dark:hover:bg-muted/20 gap-3">
                   <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
