@@ -7,9 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTheme } from "next-themes";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -57,6 +61,21 @@ export function CampaignsTab() {
   const {
     toast
   } = useToast();
+  const { theme } = useTheme();
+
+  const getPlatformIcon = (platform: string) => {
+    const isLightMode = theme === "light";
+    switch (platform.toLowerCase()) {
+      case 'tiktok':
+        return isLightMode ? tiktokLogoBlack : tiktokLogo;
+      case 'instagram':
+        return isLightMode ? instagramLogoBlack : instagramLogo;
+      case 'youtube':
+        return isLightMode ? youtubeLogoBlack : youtubeLogo;
+      default:
+        return null;
+    }
+  };
   useEffect(() => {
     fetchCampaigns();
   }, []);
@@ -383,9 +402,7 @@ export function CampaignsTab() {
                         className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:bg-accent transition-colors cursor-pointer border border-border"
                       >
                         <div className="w-4 h-4">
-                          {account.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
-                          {account.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
-                          {account.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
+                          <img src={getPlatformIcon(account.platform) || ''} alt={account.platform} className="w-full h-full" />
                         </div>
                         <span className="font-medium">{account.username}</span>
                       </div>)}
@@ -550,9 +567,7 @@ export function CampaignsTab() {
           onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)}
           platformIcon={
             <div className="w-4 h-4">
-              {selectedAccount.platform.toLowerCase() === 'tiktok' && <img src={tiktokLogo} alt="TikTok" className="w-full h-full" />}
-              {selectedAccount.platform.toLowerCase() === 'instagram' && <img src={instagramLogo} alt="Instagram" className="w-full h-full" />}
-              {selectedAccount.platform.toLowerCase() === 'youtube' && <img src={youtubeLogo} alt="YouTube" className="w-full h-full" />}
+              <img src={getPlatformIcon(selectedAccount.platform) || ''} alt={selectedAccount.platform} className="w-full h-full" />
             </div>
           }
         />
