@@ -496,7 +496,7 @@ export function ProfileTab() {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">Your Referral Code</p>
-                  <p className="text-lg font-mono font-semibold tracking-wider">{profile.referral_code}</p>
+                  <p className="text-lg font-geist font-semibold tracking-tighter-custom">{profile.referral_code}</p>
                 </div>
                 <Button
                   variant="outline"
