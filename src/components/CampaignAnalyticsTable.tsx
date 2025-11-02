@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
-import instagramLogo from "@/assets/instagram-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 
 const getTrustScoreDiamonds = (score: number) => {

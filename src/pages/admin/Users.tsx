@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
-import instagramLogo from "@/assets/instagram-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 
 interface User {

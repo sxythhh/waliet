@@ -9,7 +9,7 @@ import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
-import instagramLogo from "@/assets/instagram-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Skeleton } from "@/components/ui/skeleton";

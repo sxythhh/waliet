@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
-import instagramLogo from "@/assets/instagram-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 interface UserProfile {
   id: string;

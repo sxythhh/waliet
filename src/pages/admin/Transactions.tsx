@@ -14,7 +14,7 @@ import { Search, DollarSign, Calendar as CalendarIcon, User, ArrowUpRight, Arrow
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
-import instagramLogo from "@/assets/instagram-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.png";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 interface Transaction {

@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link2, ArrowRight } from "lucide-react";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
-import instagramLogo from "@/assets/instagram-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 interface Profile {
