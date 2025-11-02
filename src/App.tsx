@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { BrandSidebar } from "@/components/BrandSidebar";
+
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,6 @@ import Dashboard from "./pages/Dashboard";
 import CampaignDetail from "./pages/CampaignDetail";
 import CampaignJoin from "./pages/CampaignJoin";
 import CampaignPreview from "./pages/CampaignPreview";
-import BrandDashboard from "./pages/BrandDashboard";
 import BrandManagement from "./pages/BrandManagement";
 import BrandAssets from "./pages/BrandAssets";
 import BrandLibrary from "./pages/BrandLibrary";
@@ -77,12 +76,9 @@ function BrandLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <BrandSidebar />
-        <main className="flex-1">{children}</main>
-      </div>
-    </SidebarProvider>;
+  return <div className="flex min-h-screen w-full">
+      <main className="flex-1">{children}</main>
+    </div>;
 }
 function AdminLayout({
   children
@@ -140,7 +136,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
           <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
           <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
-          <Route path="/brand/:slug" element={<BrandLayout><BrandDashboard /></BrandLayout>} />
+          <Route path="/brand/:slug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
           <Route path="/brand/:slug/management" element={<BrandLayout><BrandManagement /></BrandLayout>} />
           <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
           <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
