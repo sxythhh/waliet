@@ -447,7 +447,7 @@ export function CampaignsTab() {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3 py-4">
-          <Button variant="ghost" className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-accent/50" onClick={() => {
+          <Button variant="ghost" className="group w-full justify-start h-auto py-4 px-4 border-0 hover:bg-accent/50" onClick={() => {
             setDialogOpen(false);
             navigate("/dashboard?tab=profile");
           }}>
@@ -456,15 +456,15 @@ export function CampaignsTab() {
                 <Link2 className="h-5 w-5 text-primary" />
               </div>
               <div className="text-left">
-                <div className="font-semibold">Link Existing Account</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="font-semibold group-hover:text-white">Link Existing Account</div>
+                <div className="text-xs text-muted-foreground group-hover:text-white/80">
                   Use an account you've already connected
                 </div>
               </div>
             </div>
           </Button>
           
-          <Button variant="ghost" className="w-full justify-start h-auto py-4 px-4 border-0 hover:bg-accent/50" onClick={() => {
+          <Button variant="ghost" className="group w-full justify-start h-auto py-4 px-4 border-0 hover:bg-accent/50" onClick={() => {
             setDialogOpen(false);
             setAddAccountDialogOpen(true);
           }}>
@@ -473,8 +473,8 @@ export function CampaignsTab() {
                 <UserPlus className="h-5 w-5 text-primary" />
               </div>
               <div className="text-left">
-                <div className="font-semibold">Add New Account</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="font-semibold group-hover:text-white">Add New Account</div>
+                <div className="text-xs text-muted-foreground group-hover:text-white/80">
                   Connect and verify a new social account
                 </div>
               </div>
