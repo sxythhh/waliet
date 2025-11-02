@@ -786,21 +786,24 @@ export default function BrandManagement({
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="bg-[#0C0C0C] border">
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-card">
+          <TabsList className="bg-card border">
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-accent">
               Analytics
             </TabsTrigger>
-            <TabsTrigger value="creators" className="data-[state=active]:bg-card">
-              Creators
+            <TabsTrigger value="creators" className="data-[state=active]:bg-accent">
+              Users
+              <Badge variant="secondary" className="ml-2">
+                {approvedSubmissions.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="applications" className="data-[state=active]:bg-card">
+            {showVideosTab && <TabsTrigger value="videos" className="data-[state=active]:bg-accent">
+                Videos
+              </TabsTrigger>}
+            <TabsTrigger value="applications" className="data-[state=active]:bg-accent">
               Applications
               {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
             </TabsTrigger>
-            {showVideosTab && <TabsTrigger value="videos" className="data-[state=active]:bg-card">
-                Videos
-              </TabsTrigger>}
-            <TabsTrigger value="settings" className="data-[state=active]:bg-card">
+            <TabsTrigger value="settings" className="data-[state=active]:bg-accent">
               Settings
             </TabsTrigger>
           </TabsList>
