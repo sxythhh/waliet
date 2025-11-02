@@ -769,6 +769,21 @@ export function WalletTab() {
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
+                        return (
+                          <div className="bg-popover border border-border rounded-lg shadow-lg p-3">
+                            <p className="text-xs text-muted-foreground mb-1">{payload[0].payload.date}</p>
+                            <p className="text-sm font-semibold">${value.toFixed(2)}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                    cursor={{ stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '3 3' }}
+                  />
                   <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} fill="url(#earningsGradient)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
