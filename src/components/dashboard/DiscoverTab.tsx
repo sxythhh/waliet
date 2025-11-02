@@ -515,7 +515,7 @@ export function DiscoverTab() {
                           </div>
 
                           {/* Progress Bar */}
-                          <div className="relative h-1.5 rounded-full overflow-hidden bg-muted border border-border/50">
+                          <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
                             <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                       width: `${budgetPercentage}%`
                     }} />
