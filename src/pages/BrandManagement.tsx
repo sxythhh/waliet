@@ -160,6 +160,9 @@ export default function BrandManagement({
   const [manageCampaignOpen, setManageCampaignOpen] = useState(false);
   const [shortimizeAccounts, setShortimizeAccounts] = useState<any[]>([]);
   const [loadingShortimize, setLoadingShortimize] = useState(false);
+  const [collectionName, setCollectionName] = useState("");
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
   const fetchShortimizeAccounts = async () => {
@@ -190,6 +193,36 @@ export default function BrandManagement({
       toast.error(error.message || "Failed to load Shortimize accounts");
     } finally {
       setLoadingShortimize(false);
+    }
+  };
+
+  const fetchVideos = async (collection: string) => {
+    if (!shortimizeApiKey || !collection.trim()) {
+      toast.error('Please enter a collection name');
+      return;
+    }
+
+    setLoadingVideos(true);
+    try {
+      const encodedCollection = encodeURIComponent(collection.trim());
+      const response = await fetch(`https://api.shortimize.com/videos?collections=${encodedCollection}&limit=100`, {
+        headers: {
+          'Authorization': `Bearer ${shortimizeApiKey}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch videos');
+      }
+
+      const result = await response.json();
+      setVideos(result.data || []);
+      toast.success(`Loaded ${result.data?.length || 0} videos`);
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      toast.error('Failed to load videos');
+    } finally {
+      setLoadingVideos(false);
     }
   };
 
@@ -865,10 +898,64 @@ export default function BrandManagement({
                 <CardHeader>
                   <CardTitle className="font-instrument tracking-tight">Campaign Videos</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground text-sm">Videos coming soon</p>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter collection name"
+                      value={collectionName}
+                      onChange={(e) => setCollectionName(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && fetchVideos(collectionName)}
+                      className="bg-background border"
+                    />
+                    <Button onClick={() => fetchVideos(collectionName)} disabled={loadingVideos}>
+                      {loadingVideos ? "Loading..." : "Fetch Videos"}
+                    </Button>
                   </div>
+
+                  {videos.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Username</TableHead>
+                            <TableHead>Platform</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Uploaded</TableHead>
+                            <TableHead className="text-right">Views</TableHead>
+                            <TableHead className="text-right">Likes</TableHead>
+                            <TableHead className="text-right">Comments</TableHead>
+                            <TableHead className="text-right">Shares</TableHead>
+                            <TableHead>Link</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {videos.map((video, index) => (
+                            <TableRow key={video.ad_id || index}>
+                              <TableCell className="font-medium">{video.username}</TableCell>
+                              <TableCell className="capitalize">{video.platform}</TableCell>
+                              <TableCell className="max-w-xs truncate">{video.title || '-'}</TableCell>
+                              <TableCell>{video.uploaded_at ? new Date(video.uploaded_at).toLocaleDateString() : '-'}</TableCell>
+                              <TableCell className="text-right">{video.latest_views?.toLocaleString() || 0}</TableCell>
+                              <TableCell className="text-right">{video.latest_likes?.toLocaleString() || 0}</TableCell>
+                              <TableCell className="text-right">{video.latest_comments?.toLocaleString() || 0}</TableCell>
+                              <TableCell className="text-right">{video.latest_shares?.toLocaleString() || 0}</TableCell>
+                              <TableCell>
+                                {video.ad_link && (
+                                  <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                    View
+                                  </a>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {videos.length === 0 && !loadingVideos && collectionName && (
+                    <p className="text-muted-foreground text-center py-8">No videos found for this collection</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
