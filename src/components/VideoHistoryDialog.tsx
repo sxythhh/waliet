@@ -82,38 +82,38 @@ export function VideoHistoryDialog({
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Current Views</p>
                   <p className="text-2xl font-bold">
-                    {video.views?.toLocaleString() || '0'}
+                    {video.latest_views?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Current Likes</p>
                   <p className="text-2xl font-bold">
-                    {video.likes?.toLocaleString() || '0'}
+                    {video.latest_likes?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Current Comments</p>
                   <p className="text-2xl font-bold">
-                    {video.comments?.toLocaleString() || '0'}
+                    {video.latest_comments?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Current Shares</p>
                   <p className="text-2xl font-bold">
-                    {video.shares?.toLocaleString() || '0'}
+                    {video.latest_shares?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Current Engagements</p>
                   <p className="text-2xl font-bold">
-                    {video.engagements?.toLocaleString() || '0'}
+                    {video.latest_engagements?.toLocaleString() || '0'}
                   </p>
                 </div>
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Engagement Rate</p>
                   <p className="text-2xl font-bold">
-                    {video.views > 0 
-                      ? ((video.engagements / video.views) * 100).toFixed(2)
+                    {(video.latest_views || 0) > 0 
+                      ? (((video.latest_engagements || 0) / video.latest_views) * 100).toFixed(2)
                       : '0.00'}%
                   </p>
                 </div>
