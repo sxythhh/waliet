@@ -774,7 +774,7 @@ export function WalletTab() {
                       if (active && payload && payload.length) {
                         const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
                         return (
-                          <div className="bg-popover border border-border rounded-lg shadow-lg p-3">
+                          <div className="bg-popover border border-border rounded-lg shadow-lg p-3 font-geist tracking-tighter-custom">
                             <p className="text-xs text-muted-foreground mb-1">{payload[0].payload.date}</p>
                             <p className="text-sm font-semibold">${value.toFixed(2)}</p>
                           </div>
