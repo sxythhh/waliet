@@ -110,8 +110,27 @@ export function AppSidebar() {
               className={`flex flex-col items-center justify-center gap-0.5 md:gap-1 w-14 h-12 md:w-auto md:h-auto md:px-6 md:py-2 rounded-lg transition-colors ${
                 isActive 
                   ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  : theme === 'light' 
+                    ? 'text-muted-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
+              style={
+                !isActive && theme === 'light'
+                  ? {
+                      ['--hover-bg' as any]: '#F0F0F0',
+                    }
+                  : undefined
+              }
+              onMouseEnter={(e) => {
+                if (!isActive && theme === 'light') {
+                  e.currentTarget.style.backgroundColor = '#F0F0F0';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive && theme === 'light') {
+                  e.currentTarget.style.backgroundColor = '';
+                }
+              }}
             >
               {item.tab === "campaigns" ? (
                 <WebStoriesIcon className="h-4 w-4 md:h-5 md:w-5" />
