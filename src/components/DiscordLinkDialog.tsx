@@ -109,7 +109,7 @@ export function DiscordLinkDialog({ userId, discordUsername, discordAvatar, onSu
           <Button 
             variant="ghost"
             size="sm" 
-            className="gap-2 font-geist tracking-tight font-semibold bg-muted/50 hover:bg-muted border-0 text-[#5765F2]"
+            className="gap-2 font-geist tracking-tight font-semibold bg-muted/50 hover:bg-muted border-0 text-[#5765F2] dark:bg-muted/50 dark:hover:bg-muted dark:text-[#5765F2] light:bg-[#5765F2] light:hover:bg-[#5765F2]/90 light:text-white"
           >
             <img src={discordIcon} alt="Discord" className="w-4 h-4" />
             Connect Discord
