@@ -887,10 +887,70 @@ export default function BrandManagement({
                 <CardHeader>
                   <CardTitle className="font-instrument tracking-tight">Campaign Analytics</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground text-sm">Analytics coming soon</p>
-                  </div>
+                <CardContent className="space-y-4">
+                  {videos.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <Card className="bg-accent/50 border-accent">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Eye className="h-8 w-8 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Total Views</p>
+                              <p className="text-2xl font-bold">
+                                {videos.reduce((sum, v) => sum + (Number(v.latest_views) || 0), 0).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="bg-accent/50 border-accent">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <TrendingUp className="h-8 w-8 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Total Likes</p>
+                              <p className="text-2xl font-bold">
+                                {videos.reduce((sum, v) => sum + (Number(v.latest_likes) || 0), 0).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="bg-accent/50 border-accent">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Users className="h-8 w-8 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Total Videos</p>
+                              <p className="text-2xl font-bold">{videos.length}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="bg-accent/50 border-accent">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <DollarSign className="h-8 w-8 text-primary" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Avg Engagement</p>
+                              <p className="text-2xl font-bold">
+                                {videos.length > 0 ? (
+                                  ((videos.reduce((sum, v) => sum + (Number(v.latest_likes) || 0) + (Number(v.latest_comments) || 0) + (Number(v.latest_shares) || 0), 0) / videos.length)).toFixed(1)
+                                ) : 0}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground text-sm">Fetch videos from the Videos tab to see analytics</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -916,106 +976,44 @@ export default function BrandManagement({
                   </div>
 
                   {videos.length > 0 && (
-                    <>
-                      {/* Stats Summary */}
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <Card className="bg-accent/50 border-accent">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3">
-                              <Eye className="h-8 w-8 text-primary" />
-                              <div>
-                                <p className="text-sm text-muted-foreground">Total Views</p>
-                                <p className="text-2xl font-bold">
-                                  {videos.reduce((sum, v) => sum + (Number(v.latest_views) || 0), 0).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-accent/50 border-accent">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3">
-                              <TrendingUp className="h-8 w-8 text-primary" />
-                              <div>
-                                <p className="text-sm text-muted-foreground">Total Likes</p>
-                                <p className="text-2xl font-bold">
-                                  {videos.reduce((sum, v) => sum + (Number(v.latest_likes) || 0), 0).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-accent/50 border-accent">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3">
-                              <Users className="h-8 w-8 text-primary" />
-                              <div>
-                                <p className="text-sm text-muted-foreground">Total Videos</p>
-                                <p className="text-2xl font-bold">{videos.length}</p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-accent/50 border-accent">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3">
-                              <DollarSign className="h-8 w-8 text-primary" />
-                              <div>
-                                <p className="text-sm text-muted-foreground">Avg Engagement</p>
-                                <p className="text-2xl font-bold">
-                                  {videos.length > 0 ? (
-                                    ((videos.reduce((sum, v) => sum + (Number(v.latest_likes) || 0) + (Number(v.latest_comments) || 0) + (Number(v.latest_shares) || 0), 0) / videos.length)).toFixed(1)
-                                  ) : 0}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-
-                      {/* Videos Table */}
-                      <div className="border rounded-lg overflow-hidden">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Username</TableHead>
-                              <TableHead>Platform</TableHead>
-                              <TableHead>Title</TableHead>
-                              <TableHead>Uploaded</TableHead>
-                              <TableHead className="text-right">Views</TableHead>
-                              <TableHead className="text-right">Likes</TableHead>
-                              <TableHead className="text-right">Comments</TableHead>
-                              <TableHead className="text-right">Shares</TableHead>
-                              <TableHead>Link</TableHead>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Username</TableHead>
+                            <TableHead>Platform</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Uploaded</TableHead>
+                            <TableHead className="text-right">Views</TableHead>
+                            <TableHead className="text-right">Likes</TableHead>
+                            <TableHead className="text-right">Comments</TableHead>
+                            <TableHead className="text-right">Shares</TableHead>
+                            <TableHead>Link</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {videos.map((video, index) => (
+                            <TableRow key={video.ad_id || index}>
+                              <TableCell className="font-medium">{video.username}</TableCell>
+                              <TableCell className="capitalize">{video.platform}</TableCell>
+                              <TableCell className="max-w-xs truncate">{video.title || '-'}</TableCell>
+                              <TableCell>{video.uploaded_at ? new Date(video.uploaded_at).toLocaleDateString() : '-'}</TableCell>
+                              <TableCell className="text-right">{video.latest_views?.toLocaleString() || 0}</TableCell>
+                              <TableCell className="text-right">{video.latest_likes?.toLocaleString() || 0}</TableCell>
+                              <TableCell className="text-right">{video.latest_comments?.toLocaleString() || 0}</TableCell>
+                              <TableCell className="text-right">{video.latest_shares?.toLocaleString() || 0}</TableCell>
+                              <TableCell>
+                                {video.ad_link && (
+                                  <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                    View
+                                  </a>
+                                )}
+                              </TableCell>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {videos.map((video, index) => (
-                              <TableRow key={video.ad_id || index}>
-                                <TableCell className="font-medium">{video.username}</TableCell>
-                                <TableCell className="capitalize">{video.platform}</TableCell>
-                                <TableCell className="max-w-xs truncate">{video.title || '-'}</TableCell>
-                                <TableCell>{video.uploaded_at ? new Date(video.uploaded_at).toLocaleDateString() : '-'}</TableCell>
-                                <TableCell className="text-right">{video.latest_views?.toLocaleString() || 0}</TableCell>
-                                <TableCell className="text-right">{video.latest_likes?.toLocaleString() || 0}</TableCell>
-                                <TableCell className="text-right">{video.latest_comments?.toLocaleString() || 0}</TableCell>
-                                <TableCell className="text-right">{video.latest_shares?.toLocaleString() || 0}</TableCell>
-                                <TableCell>
-                                  {video.ad_link && (
-                                    <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                      View
-                                    </a>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   )}
 
                   {videos.length === 0 && !loadingVideos && collectionName && (
