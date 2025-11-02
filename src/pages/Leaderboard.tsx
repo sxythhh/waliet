@@ -25,6 +25,7 @@ export default function Leaderboard() {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('week');
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserStats, setCurrentUserStats] = useState<LeaderboardUser | null>(null);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -106,7 +107,36 @@ export default function Leaderboard() {
       user.rank = index + 1;
     });
 
-    setLeaderboard(leaderboardData);
+    // Find current user in full leaderboard
+    const currentUser = leaderboardData.find(u => u.id === currentUserId);
+    if (currentUser) {
+      // If user is in top 100, show their actual rank
+      // If not, we'll show "-"
+      setCurrentUserStats(currentUser.rank <= 100 ? currentUser : {
+        ...currentUser,
+        rank: -1 // Special value to indicate outside top 100
+      });
+    } else {
+      // User has no earnings in this period
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url")
+        .eq("id", currentUserId)
+        .single();
+      
+      if (profile) {
+        setCurrentUserStats({
+          id: profile.id,
+          username: profile.username || "You",
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          total_earnings: 0,
+          rank: -1
+        });
+      }
+    }
+
+    setLeaderboard(leaderboardData.slice(0, 100)); // Only show top 100
     setLoading(false);
   };
 
@@ -134,7 +164,7 @@ export default function Leaderboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-32">
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>
@@ -260,6 +290,65 @@ export default function Leaderboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Floating Current User Card */}
+      {currentUserStats && (
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 z-50">
+          <div className="container mx-auto px-4 py-3 max-w-5xl">
+            <div className="bg-primary/5 border-2 border-primary/20 rounded-lg p-4">
+              <div className="flex items-center gap-4">
+                {/* Rank */}
+                <div className="w-12 flex items-center justify-center">
+                  {currentUserStats.rank === -1 ? (
+                    <span className="text-lg font-bold text-muted-foreground">—</span>
+                  ) : (
+                    getRankIcon(currentUserStats.rank) || (
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {currentUserStats.rank}
+                      </span>
+                    )
+                  )}
+                </div>
+
+                {/* Avatar and Name */}
+                <Avatar className="h-12 w-12 border-2 border-primary">
+                  <AvatarImage src={currentUserStats.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {currentUserStats.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold truncate">
+                      {currentUserStats.full_name || currentUserStats.username}
+                    </p>
+                    <Badge variant="outline" className="text-xs bg-primary text-primary-foreground border-primary">
+                      You
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {currentUserStats.rank === -1 
+                      ? "Keep earning to reach the top 100!" 
+                      : "Your ranking"}
+                  </p>
+                </div>
+
+                {/* Earnings */}
+                <div className="text-right">
+                  <Badge className={`${
+                    currentUserStats.rank <= 3 && currentUserStats.rank > 0
+                      ? getRankBadgeColor(currentUserStats.rank)
+                      : 'bg-primary text-primary-foreground'
+                  } font-bold`}>
+                    {currentUserStats.total_earnings > 0 ? '+' : ''}${currentUserStats.total_earnings.toFixed(2)}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
