@@ -645,103 +645,115 @@ export function ProfileTab() {
           <CardTitle className="text-lg">Content Preferences</CardTitle>
           <CardDescription>Tell us about the content you create</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           {/* Languages */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-muted-foreground" />
               <Label className="text-sm font-medium">Languages I post in</Label>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {['English', 'Spanish', 'French', 'German', 'Portuguese', 'Italian', 'Dutch', 'Polish', 'Turkish', 'Japanese', 'Korean', 'Chinese', 'Arabic', 'Hindi', 'Other'].map((language) => (
-                <div key={language} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`lang-${language}`}
-                    checked={profile.content_languages?.includes(language) || false}
-                    onCheckedChange={(checked) => {
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {['English', 'Spanish', 'French', 'German', 'Portuguese', 'Italian', 'Dutch', 'Polish', 'Turkish', 'Japanese', 'Korean', 'Chinese', 'Arabic', 'Hindi', 'Other'].map((language) => {
+                const isSelected = profile.content_languages?.includes(language) || false;
+                return (
+                  <button
+                    key={language}
+                    type="button"
+                    onClick={() => {
                       const current = profile.content_languages || [];
                       setProfile({
                         ...profile,
-                        content_languages: checked
-                          ? [...current, language]
-                          : current.filter(l => l !== language)
+                        content_languages: isSelected
+                          ? current.filter(l => l !== language)
+                          : [...current, language]
                       });
                     }}
-                  />
-                  <label
-                    htmlFor={`lang-${language}`}
-                    className="text-sm cursor-pointer"
+                    className={`
+                      px-4 py-3 rounded-lg text-sm font-medium transition-all
+                      ${isSelected 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'bg-muted hover:bg-muted/80 border border-border'
+                      }
+                    `}
                   >
                     {language}
-                  </label>
-                </div>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Content Styles */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
               <Video className="h-4 w-4 text-muted-foreground" />
               <Label className="text-sm font-medium">Content styles I create</Label>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {['UGC', 'Clipping', 'AI Generated', 'Slideshows', 'Written Content', 'Voiceovers', 'Product Reviews', 'Tutorials', 'Vlogs', 'Animation', 'Live Streams', 'Podcasts'].map((style) => (
-                <div key={style} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`style-${style}`}
-                    checked={profile.content_styles?.includes(style) || false}
-                    onCheckedChange={(checked) => {
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {['UGC', 'Clipping', 'AI Generated', 'Slideshows', 'Written Content', 'Voiceovers', 'Product Reviews', 'Tutorials', 'Vlogs', 'Animation', 'Live Streams', 'Podcasts'].map((style) => {
+                const isSelected = profile.content_styles?.includes(style) || false;
+                return (
+                  <button
+                    key={style}
+                    type="button"
+                    onClick={() => {
                       const current = profile.content_styles || [];
                       setProfile({
                         ...profile,
-                        content_styles: checked
-                          ? [...current, style]
-                          : current.filter(s => s !== style)
+                        content_styles: isSelected
+                          ? current.filter(s => s !== style)
+                          : [...current, style]
                       });
                     }}
-                  />
-                  <label
-                    htmlFor={`style-${style}`}
-                    className="text-sm cursor-pointer"
+                    className={`
+                      px-4 py-3 rounded-lg text-sm font-medium transition-all
+                      ${isSelected 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'bg-muted hover:bg-muted/80 border border-border'
+                      }
+                    `}
                   >
                     {style}
-                  </label>
-                </div>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Content Niches */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
               <Type className="h-4 w-4 text-muted-foreground" />
               <Label className="text-sm font-medium">Content niches & topics</Label>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {['Gaming', 'Tech', 'Fashion', 'Beauty', 'Fitness', 'Food', 'Travel', 'Finance', 'Education', 'Comedy', 'Music', 'Sports', 'Lifestyle', 'Business', 'Health', 'Art', 'Science', 'News'].map((niche) => (
-                <div key={niche} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`niche-${niche}`}
-                    checked={profile.content_niches?.includes(niche) || false}
-                    onCheckedChange={(checked) => {
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {['Gaming', 'Tech', 'Fashion', 'Beauty', 'Fitness', 'Food', 'Travel', 'Finance', 'Education', 'Comedy', 'Music', 'Sports', 'Lifestyle', 'Business', 'Health', 'Art', 'Science', 'News'].map((niche) => {
+                const isSelected = profile.content_niches?.includes(niche) || false;
+                return (
+                  <button
+                    key={niche}
+                    type="button"
+                    onClick={() => {
                       const current = profile.content_niches || [];
                       setProfile({
                         ...profile,
-                        content_niches: checked
-                          ? [...current, niche]
-                          : current.filter(n => n !== niche)
+                        content_niches: isSelected
+                          ? current.filter(n => n !== niche)
+                          : [...current, niche]
                       });
                     }}
-                  />
-                  <label
-                    htmlFor={`niche-${niche}`}
-                    className="text-sm cursor-pointer"
+                    className={`
+                      px-4 py-3 rounded-lg text-sm font-medium transition-all
+                      ${isSelected 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'bg-muted hover:bg-muted/80 border border-border'
+                      }
+                    `}
                   >
                     {niche}
-                  </label>
-                </div>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </CardContent>
