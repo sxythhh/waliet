@@ -1179,13 +1179,6 @@ export function WalletTab() {
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Header */}
               <div className="p-6 pb-8 border-b sticky top-0 z-10 bg-background">
-                {/* Close button and Logo on same line */}
-                <div className="flex items-center justify-between mb-6">
-                  
-                  <img src={wordmarkLogo} alt="Virality" className="h-12" />
-                  <div className="w-8" />
-                </div>
-
                 {/* Icon */}
                 
 
