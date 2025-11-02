@@ -1030,6 +1030,7 @@ export type Database = {
           phone_number: string | null
           referral_code: string | null
           referral_earnings: number | null
+          referred_by: string | null
           successful_referrals: number | null
           total_earnings: number | null
           total_referrals: number | null
@@ -1063,6 +1064,7 @@ export type Database = {
           phone_number?: string | null
           referral_code?: string | null
           referral_earnings?: number | null
+          referred_by?: string | null
           successful_referrals?: number | null
           total_earnings?: number | null
           total_referrals?: number | null
@@ -1096,6 +1098,7 @@ export type Database = {
           phone_number?: string | null
           referral_code?: string | null
           referral_earnings?: number | null
+          referred_by?: string | null
           successful_referrals?: number | null
           total_earnings?: number | null
           total_referrals?: number | null

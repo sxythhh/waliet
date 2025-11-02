@@ -1,5 +1,5 @@
 import { Layers, Dock, Compass, Coins, ArrowUpRight, LogOut } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 import newLogo from "@/assets/new-logo.png";
 import discordIcon from "@/assets/discord-icon.png";
@@ -40,6 +40,7 @@ const menuItems = [
 export function AppSidebar() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const currentTab = searchParams.get("tab") || "campaigns";
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -102,7 +103,8 @@ export function AppSidebar() {
       {/* Navigation Items */}
       <div className="flex items-center gap-0.5 md:gap-1">
         {menuItems.map(item => {
-          const isActive = currentTab === item.tab;
+          // Only highlight if we're on /dashboard route, not other routes like /referrals
+          const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
           return (
             <button
               key={item.title}
