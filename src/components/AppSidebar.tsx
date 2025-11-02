@@ -89,9 +89,10 @@ export function AppSidebar() {
       <div className="hidden md:flex items-center gap-2">
         <img src={newLogo} alt="Logo" className="h-10 w-10 rounded-lg" />
         <span 
-          className="text-2xl font-geist font-bold tracking-tighter-custom"
+          className="font-geist font-bold tracking-tighter-custom"
           style={{
-            color: theme === 'light' ? '#000000' : '#FFFFFF'
+            color: theme === 'light' ? '#000000' : '#FFFFFF',
+            fontSize: '21px'
           }}
         >
           VIRALITY
