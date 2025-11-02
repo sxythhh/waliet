@@ -88,14 +88,14 @@ export function AppSidebar() {
       {/* Logo */}
       <div className="hidden md:flex items-center gap-2">
         <img src={newLogo} alt="Logo" className="h-10 w-10 rounded-lg" />
-        <img 
-          src={wordmarkLogo} 
-          alt="Wordmark" 
-          className="h-8"
+        <span 
+          className="text-2xl font-geist font-bold tracking-tighter-custom"
           style={{
-            filter: theme === 'light' ? 'brightness(0)' : 'none'
+            color: theme === 'light' ? '#000000' : '#FFFFFF'
           }}
-        />
+        >
+          VIRALITY
+        </span>
       </div>
 
       {/* Navigation Items */}
