@@ -65,7 +65,7 @@ export function NotificationBell() {
       .limit(20);
 
     if (!error && data) {
-      setNotifications(data);
+      setNotifications(data as Notification[]);
       setUnreadCount(data.filter(n => !n.read).length);
     }
   };
@@ -119,8 +119,8 @@ export function NotificationBell() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="relative cursor-pointer p-2 hover:bg-accent rounded-lg transition-colors">
-          <Bell className="h-5 w-5" />
+        <button className="relative cursor-pointer p-2 hover:bg-muted rounded-lg transition-colors">
+          <Bell className="h-5 w-5 text-muted-foreground" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
