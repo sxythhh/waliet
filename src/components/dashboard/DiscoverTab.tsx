@@ -474,7 +474,7 @@ export function DiscoverTab() {
                           <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                         </div>}
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline">
+                        <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 group-hover:after:scale-x-100 group-hover:after:origin-bottom-left">
                           {campaign.title}
                         </h3>
                         <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
