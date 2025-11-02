@@ -116,6 +116,7 @@ export function ProfileTab() {
     username: string;
   } | null>(null);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [savingPreferences, setSavingPreferences] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     toast
@@ -426,6 +427,60 @@ export function ProfileTab() {
       description: "Referral code copied to clipboard",
     });
   };
+
+  const handleSavePreferences = async () => {
+    if (!profile) return;
+    setSavingPreferences(true);
+    
+    try {
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "You must be logged in to save preferences"
+        });
+        setSavingPreferences(false);
+        return;
+      }
+
+      const {
+        error
+      } = await supabase.from("profiles").update({
+        content_languages: profile.content_languages,
+        content_styles: profile.content_styles,
+        content_niches: profile.content_niches
+      }).eq("id", session.user.id);
+
+      if (error) {
+        console.error('Preferences update error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save preferences"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Content preferences saved successfully"
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred"
+      });
+    } finally {
+      setSavingPreferences(false);
+    }
+  };
+
 
   if (loading || !profile) {
     return <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
@@ -768,6 +823,17 @@ export function ProfileTab() {
                 );
               })}
             </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex justify-end pt-4 border-t">
+            <Button 
+              onClick={handleSavePreferences} 
+              disabled={savingPreferences}
+              className="gap-2"
+            >
+              {savingPreferences ? "Saving..." : "Save Preferences"}
+            </Button>
           </div>
             </CardContent>
           </CollapsibleContent>
