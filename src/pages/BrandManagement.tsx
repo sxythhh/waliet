@@ -720,7 +720,7 @@ export default function BrandManagement() {
   const totalViews = (Object.values(accountViews) as number[]).reduce((sum, views) => sum + views, 0);
   const budgetUsed = Number(selectedCampaign?.budget_used || 0);
   const effectiveCPM = totalViews > 0 ? budgetUsed / totalViews * 1000 : 0;
-  if (loading || adminLoading) {
+  if (loading) {
     return <div className="min-h-screen p-8 bg-[#0C0C0C]">
         <div className="max-w-7xl mx-auto space-y-6">
           <Skeleton className="h-10 w-64 bg-[#1a1a1a]" />
