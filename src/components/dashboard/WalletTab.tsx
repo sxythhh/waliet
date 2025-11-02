@@ -862,8 +862,8 @@ export function WalletTab() {
           {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <>
-              <div className="rounded-md border border-border overflow-hidden">
-                <Table>
+              <div className="rounded-md border border-border overflow-x-auto">
+                <Table className="min-w-[600px]">
                   <TableHeader>
                     <TableRow className="bg-muted/50 hover:bg-muted/50">
                       <TableHead className="font-semibold">Details</TableHead>
@@ -956,7 +956,7 @@ export function WalletTab() {
               </div>
               
               {/* Pagination Controls */}
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
                 <p className="text-sm text-muted-foreground">
                   Showing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
                 if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
@@ -975,18 +975,18 @@ export function WalletTab() {
                 return true;
               }).length}
                 </p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="gap-1">
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="gap-1 flex-1 sm:flex-none">
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
                 if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
                 if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
                 if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
                 return true;
-              }).length} className="gap-1">
-                    Next
+              }).length} className="gap-1 flex-1 sm:flex-none">
+                    <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
