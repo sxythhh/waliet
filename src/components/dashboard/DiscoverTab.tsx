@@ -391,9 +391,7 @@ export function DiscoverTab() {
                           </span>
                         </div>}
                       {!isEnded && campaign.is_featured && <div className="absolute top-2 right-2 z-20">
-                          <span className="text-primary text-xs font-medium px-2 py-1 bg-muted/90 backdrop-blur-sm rounded border">
-                            Featured
-                          </span>
+                          
                         </div>}
                     </div>}
 
