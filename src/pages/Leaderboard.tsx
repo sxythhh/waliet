@@ -28,9 +28,14 @@ export default function Leaderboard() {
   const [currentUserStats, setCurrentUserStats] = useState<LeaderboardUser | null>(null);
 
   useEffect(() => {
-    fetchLeaderboard();
     fetchCurrentUser();
-  }, [timePeriod]);
+  }, []);
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchLeaderboard();
+    }
+  }, [timePeriod, currentUserId]);
 
   const fetchCurrentUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
