@@ -30,7 +30,7 @@ interface ConnectedAccount {
 export function ConnectedAccountsTab() {
   const [connections, setConnections] = useState<ConnectedAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const { theme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
 
   useEffect(() => {
     fetchConnections();
@@ -80,7 +80,7 @@ export function ConnectedAccountsTab() {
   };
 
   const getPlatformIcon = (platform: string) => {
-    const isLightMode = theme === "light";
+    const isLightMode = resolvedTheme === "light" || (theme === "light");
     switch (platform.toLowerCase()) {
       case "tiktok":
         return isLightMode ? tiktokLogoBlack : tiktokLogo;

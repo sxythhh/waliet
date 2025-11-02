@@ -61,10 +61,10 @@ export function JoinCampaignSheet({
   const [submitting, setSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
   
   const getPlatformIcon = (platform: string) => {
-    const isLightMode = theme === "light";
+    const isLightMode = resolvedTheme === "light" || (theme === "light");
     switch (platform.toLowerCase()) {
       case "tiktok":
         return isLightMode ? tiktokLogoBlack : tiktokLogo;
