@@ -139,7 +139,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
           <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
           <Route path="/brand/:slug" element={<BrandLayout><BrandManagement showVideosTab={true} showImportButton={true} showAnalyticsTable={true} isManagementPage={false} /></BrandLayout>} />
-          <Route path="/brand/management/:slug" element={<BrandLayout><BrandManagement showVideosTab={false} showImportButton={false} showAnalyticsTable={false} isManagementPage={true} /></BrandLayout>} />
+          <Route path="/brand/management/:campaignSlug" element={<BrandLayout><BrandManagement showVideosTab={false} showImportButton={false} showAnalyticsTable={false} isManagementPage={true} /></BrandLayout>} />
           <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
           <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
           <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />

@@ -122,7 +122,7 @@ export default function BrandManagement({
   isManagementPage?: boolean;
 }) {
   const {
-    slug
+    campaignSlug
   } = useParams();
   const {
     isAdmin,
@@ -133,6 +133,8 @@ export default function BrandManagement({
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [campaignTransactions, setCampaignTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [brandId, setBrandId] = useState<string>("");
@@ -362,9 +364,44 @@ export default function BrandManagement({
     document.body.removeChild(link);
     toast.success('CSV exported successfully');
   };
+  const fetchCampaignTransactions = async () => {
+    if (!selectedCampaignId) return;
+    
+    setLoadingTransactions(true);
+    try {
+      const { data, error } = await supabase
+        .from("wallet_transactions")
+        .select(`
+          *,
+          profiles:user_id (
+            id,
+            username,
+            avatar_url
+          )
+        `)
+        .contains('metadata', { campaign_id: selectedCampaignId })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setCampaignTransactions(data || []);
+    } catch (error) {
+      console.error("Error fetching campaign transactions:", error);
+      toast.error("Failed to load transactions");
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
   useEffect(() => {
     fetchCampaigns();
-  }, [slug]);
+  }, [campaignSlug]);
+
+  useEffect(() => {
+    if (isManagementPage && selectedCampaignId) {
+      fetchCampaignTransactions();
+    }
+  }, [isManagementPage, selectedCampaignId]);
 
   useEffect(() => {
     if (isManagementPage && brandId && shortimizeApiKey && shortimizeAccounts.length === 0) {
@@ -451,33 +488,95 @@ export default function BrandManagement({
     }
   };
   const fetchCampaigns = async () => {
-    if (!slug) return;
+    if (!campaignSlug && !isManagementPage) return;
+    
     try {
-      const {
-        data: brandData,
-        error: brandError
-      } = await supabase.from("brands").select("id, assets_url, home_url, account_url, brand_type, shortimize_api_key").eq("slug", slug).maybeSingle();
-      if (brandError) throw brandError;
-      if (!brandData) return;
-      setBrandId(brandData.id);
-      setAssetsUrl(brandData.assets_url || "");
-      setHomeUrl(brandData.home_url || "");
-      setAccountUrl(brandData.account_url || "");
-      setBrandType(brandData.brand_type || "");
-      setShortimizeApiKey(brandData.shortimize_api_key || "");
-      const {
-        data,
-        error
-      } = await supabase.from("campaigns").select("id, title, description, budget, budget_used, rpm_rate, status, banner_url, preview_url, analytics_url, guidelines, allowed_platforms, application_questions, slug, embed_url, is_private, access_code, requires_application, is_infinite_budget, is_featured").eq("brand_id", brandData.id).order("created_at", {
-        ascending: false
-      });
-      if (error) throw error;
-      setCampaigns((data || []).map(c => ({
-        ...c,
-        application_questions: Array.isArray(c.application_questions) ? c.application_questions : []
-      })));
-      if (data && data.length > 0) {
-        setSelectedCampaignId(data[0].id);
+      if (isManagementPage && campaignSlug) {
+        // Management page: fetch by campaign slug
+        const { data: campaignData, error: campaignError } = await supabase
+          .from("campaigns")
+          .select(`
+            id, 
+            title, 
+            description, 
+            budget, 
+            budget_used, 
+            rpm_rate, 
+            status, 
+            banner_url, 
+            preview_url, 
+            analytics_url, 
+            guidelines, 
+            allowed_platforms, 
+            application_questions, 
+            slug, 
+            embed_url, 
+            is_private, 
+            access_code, 
+            requires_application, 
+            is_infinite_budget, 
+            is_featured,
+            brand_id,
+            brands!campaigns_brand_id_fkey (
+              id, 
+              assets_url, 
+              home_url, 
+              account_url, 
+              brand_type, 
+              shortimize_api_key
+            )
+          `)
+          .eq("slug", campaignSlug)
+          .maybeSingle();
+
+        if (campaignError) throw campaignError;
+        if (!campaignData) return;
+
+        const brandData = campaignData.brands;
+        setBrandId(brandData.id);
+        setAssetsUrl(brandData.assets_url || "");
+        setHomeUrl(brandData.home_url || "");
+        setAccountUrl(brandData.account_url || "");
+        setBrandType(brandData.brand_type || "");
+        setShortimizeApiKey(brandData.shortimize_api_key || "");
+
+        setCampaigns([{
+          ...campaignData,
+          application_questions: Array.isArray(campaignData.application_questions) ? campaignData.application_questions : []
+        }]);
+        setSelectedCampaignId(campaignData.id);
+      } else {
+        // Regular brand dashboard: fetch by brand slug
+        const { data: brandData, error: brandError } = await supabase
+          .from("brands")
+          .select("id, assets_url, home_url, account_url, brand_type, shortimize_api_key")
+          .eq("slug", campaignSlug)
+          .maybeSingle();
+
+        if (brandError) throw brandError;
+        if (!brandData) return;
+
+        setBrandId(brandData.id);
+        setAssetsUrl(brandData.assets_url || "");
+        setHomeUrl(brandData.home_url || "");
+        setAccountUrl(brandData.account_url || "");
+        setBrandType(brandData.brand_type || "");
+        setShortimizeApiKey(brandData.shortimize_api_key || "");
+
+        const { data, error } = await supabase
+          .from("campaigns")
+          .select("id, title, description, budget, budget_used, rpm_rate, status, banner_url, preview_url, analytics_url, guidelines, allowed_platforms, application_questions, slug, embed_url, is_private, access_code, requires_application, is_infinite_budget, is_featured")
+          .eq("brand_id", brandData.id)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setCampaigns((data || []).map(c => ({
+          ...c,
+          application_questions: Array.isArray(c.application_questions) ? c.application_questions : []
+        })));
+        if (data && data.length > 0) {
+          setSelectedCampaignId(data[0].id);
+        }
       }
     } catch (error) {
       console.error("Error fetching campaigns:", error);
@@ -1247,12 +1346,67 @@ export default function BrandManagement({
             <TabsContent value="payouts">
               <Card className="bg-card border">
                 <CardHeader>
-                  <CardTitle className="font-instrument tracking-tight">Payouts</CardTitle>
+                  <CardTitle className="font-instrument tracking-tight">Campaign Payouts</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground text-sm">Payouts coming soon</p>
-                  </div>
+                  {loadingTransactions ? (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground text-sm">Loading transactions...</p>
+                    </div>
+                  ) : campaignTransactions.length > 0 ? (
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Date</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {campaignTransactions.map((txn) => (
+                            <TableRow key={txn.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {txn.profiles?.avatar_url && (
+                                    <img 
+                                      src={txn.profiles.avatar_url} 
+                                      alt={txn.profiles.username}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  <span className="font-medium">{txn.profiles?.username || 'Unknown'}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="capitalize">{txn.type}</TableCell>
+                              <TableCell className="font-semibold">
+                                ${Number(txn.amount).toFixed(2)}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={txn.status === 'completed' ? 'default' : 'secondary'}>
+                                  {txn.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="max-w-xs truncate">
+                                {txn.description || '-'}
+                              </TableCell>
+                              <TableCell>
+                                {new Date(txn.created_at).toLocaleDateString()}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <DollarSign className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground text-sm">No transactions found for this campaign</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
