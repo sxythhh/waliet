@@ -796,7 +796,7 @@ export function WalletTab() {
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3 mb-2">
               
-              <p className="text-sm font-semibold text-slate-50">Current Balance</p>
+              <p className="text-sm font-semibold text-slate-50">💵 Current Balance</p>
             </div>
             <p className="text-3xl font-bold font-geist mb-4" style={{
             letterSpacing: '-0.3px'
