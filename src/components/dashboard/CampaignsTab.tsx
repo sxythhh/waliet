@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
@@ -320,7 +320,52 @@ export function CampaignsTab() {
         </Button>
       </div>;
   }
-  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
+  return (
+    <div className="space-y-6">
+      {/* Action Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Join Discord Card */}
+        <div className="bg-muted rounded-2xl p-6 space-y-2 hover:bg-muted/80 transition-colors cursor-pointer">
+          <div className="flex items-center gap-3">
+            <MessageCircle className="w-6 h-6" />
+            <h3 className="text-lg font-semibold">Join Discord</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Get help or be the first to know about new campaigns.
+          </p>
+        </div>
+
+        {/* Connect Account Card */}
+        <div 
+          className="bg-muted rounded-2xl p-6 space-y-2 hover:bg-muted/80 transition-colors cursor-pointer"
+          onClick={() => setAddAccountDialogOpen(true)}
+        >
+          <div className="flex items-center gap-3">
+            <Plus className="w-6 h-6" />
+            <h3 className="text-lg font-semibold">Connect account</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Connect your social accounts to join campaigns.
+          </p>
+        </div>
+
+        {/* Manage Earnings Card */}
+        <div 
+          className="bg-muted rounded-2xl p-6 space-y-2 hover:bg-muted/80 transition-colors cursor-pointer"
+          onClick={() => navigate("/dashboard?tab=wallet")}
+        >
+          <div className="flex items-center gap-3">
+            <Wallet className="w-6 h-6" />
+            <h3 className="text-lg font-semibold">Manage earnings</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Set up your wallet and cash out earnings.
+          </p>
+        </div>
+      </div>
+
+      {/* Campaigns Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
       {campaigns.map(campaign => {
       const budgetUsed = campaign.budget_used || 0;
       const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
@@ -589,5 +634,7 @@ export function CampaignsTab() {
       </>
     )}
     
-    </div>;
+      </div>
+    </div>
+  );
 }
