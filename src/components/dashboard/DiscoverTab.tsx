@@ -206,7 +206,7 @@ export function DiscoverTab() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative sm:max-w-xs flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="h-11 pl-10 placeholder:tracking-tight border-transparent focus-visible:border-blue-500 focus-visible:border-2 transition-none" />
+            <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="h-11 pl-10 placeholder:tracking-tight border-transparent focus-visible:border-primary focus-visible:border-2 transition-none" />
           </div>
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[200px] h-11 border-transparent bg-muted">
