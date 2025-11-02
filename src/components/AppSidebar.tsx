@@ -95,12 +95,99 @@ export function AppSidebar() {
         <OptimizedImage src={newLogo} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
         <div className="flex items-center gap-3">
           <NotificationBell />
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-            <AvatarFallback className="bg-muted text-muted-foreground">
-              {getInitial()}
-            </AvatarFallback>
-          </Avatar>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="cursor-pointer">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                  <AvatarFallback className="bg-muted text-muted-foreground">
+                    {getInitial()}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-0 bg-card" align="end">
+              <div className="p-4 space-y-3">
+                {/* User Info */}
+                <div>
+                  <h3 className="text-xl font-bold mb-1">{displayName}</h3>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                </div>
+
+                {/* Settings Button */}
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1" 
+                    variant="secondary"
+                    onClick={() => handleTabClick("profile")}
+                  >
+                    Settings
+                  </Button>
+                  <ThemeToggle />
+                </div>
+
+                {/* Menu Items */}
+                <div className="space-y-1">
+                  <button 
+                    className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                    onClick={() => navigate("/leaderboard")}
+                  >
+                    <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
+                    <span className="font-medium text-sm">Leaderboard</span>
+                  </button>
+
+                  <button 
+                    className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                    onClick={() => navigate("/referrals")}
+                  >
+                    <img src={moneyIcon} alt="Money" className="w-5 h-5" />
+                    <span className="font-medium text-sm">Referrals</span>
+                  </button>
+
+                  <button 
+                    className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                    onClick={() => window.open("https://discord.gg/your-discord", "_blank")}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
+                      <span className="font-medium text-sm">Discord</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
+
+                  <button 
+                    className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                    onClick={() => window.open("https://forms.gle/your-feedback-form", "_blank")}
+                  >
+                    <span className="font-medium text-sm">Give feedback</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
+
+                  <button 
+                    className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                    onClick={() => window.open("https://support.example.com", "_blank")}
+                  >
+                    <span className="font-medium text-sm">Support</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
+
+                  <button 
+                    className="w-full flex items-center gap-2 px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                    onClick={handleSignOut}
+                  >
+                    <span className="font-medium text-sm">Log out</span>
+                  </button>
+                </div>
+
+                {/* Footer Links */}
+                <div className="pt-4 border-t flex gap-4 text-sm text-muted-foreground">
+                  <button className="hover:text-foreground transition-colors">Privacy</button>
+                  <button className="hover:text-foreground transition-colors">Terms</button>
+                  <button className="hover:text-foreground transition-colors">Clipper Terms</button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </header>
 
