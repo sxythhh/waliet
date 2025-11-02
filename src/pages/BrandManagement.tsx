@@ -1203,7 +1203,7 @@ export default function BrandManagement({
         </div>
 
         {/* Campaign Metrics Cards */}
-        {selectedCampaign && !isManagementPage && (
+        {selectedCampaign && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <Card className="border">
               <div className="p-4">
