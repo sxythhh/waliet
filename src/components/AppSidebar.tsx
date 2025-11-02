@@ -1,4 +1,4 @@
-import { Airplay, Dock, Compass, Coins, ArrowUpRight, LogOut } from "lucide-react";
+import { Layers, Dock, Compass, Coins, ArrowUpRight, LogOut } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 import discordIcon from "@/assets/discord-icon.png";
@@ -14,7 +14,7 @@ const menuItems = [
   {
     title: "Campaigns",
     tab: "campaigns",
-    icon: Airplay
+    icon: Layers
   },
   {
     title: "Wallet",
