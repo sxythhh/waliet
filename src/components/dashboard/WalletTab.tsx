@@ -900,7 +900,7 @@ export function WalletTab() {
                         }}>
                                   {transaction.type === 'earning' ? <>
                                       Payment for 
-                                      {transaction.campaign && <span className="inline-flex items-center gap-1.5 ml-1">
+                                      {transaction.campaign && <span className="inline-flex items-center gap-1.5 ml-1 align-middle">
                                           <span className="flex-shrink-0 w-4 h-4 rounded bg-background border border-border flex items-center justify-center overflow-hidden">
                                             {transaction.campaign.brand_logo_url ? <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" /> : <span className="text-[8px] font-semibold text-muted-foreground">
                                                 {transaction.campaign.brand_name?.charAt(0).toUpperCase() || 'C'}
