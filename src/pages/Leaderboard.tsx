@@ -172,45 +172,44 @@ export default function Leaderboard() {
         </div>
 
         {/* Filters */}
-        <Card className="mb-6 border-0 bg-card">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  variant={timePeriod === 'week' ? 'default' : 'outline'}
-                  onClick={() => setTimePeriod('week')}
-                  size="sm"
-                >
-                  This Week
-                </Button>
-                <Button
-                  variant={timePeriod === 'month' ? 'default' : 'outline'}
-                  onClick={() => setTimePeriod('month')}
-                  size="sm"
-                >
-                  This Month
-                </Button>
-                <Button
-                  variant={timePeriod === 'all' ? 'default' : 'outline'}
-                  onClick={() => setTimePeriod('all')}
-                  size="sm"
-                >
-                  All Time
-                </Button>
-              </div>
+        <div className="mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-muted/30 p-3 rounded-lg">
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={timePeriod === 'week' ? 'default' : 'secondary'}
+              onClick={() => setTimePeriod('week')}
+              size="sm"
+              className="h-8 px-3"
+            >
+              Week
+            </Button>
+            <Button
+              variant={timePeriod === 'month' ? 'default' : 'secondary'}
+              onClick={() => setTimePeriod('month')}
+              size="sm"
+              className="h-8 px-3"
+            >
+              Month
+            </Button>
+            <Button
+              variant={timePeriod === 'all' ? 'default' : 'secondary'}
+              onClick={() => setTimePeriod('all')}
+              size="sm"
+              className="h-8 px-3"
+            >
+              All Time
+            </Button>
+          </div>
 
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="relative w-full sm:w-52">
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search by name"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 text-sm bg-background border-border"
+            />
+          </div>
+        </div>
 
         {/* Leaderboard Table */}
         <Card className="border-0 bg-card">
