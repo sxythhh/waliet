@@ -369,22 +369,39 @@ export default function BrandManagement({
     
     setLoadingTransactions(true);
     try {
-      const { data, error } = await supabase
+      // First fetch transactions
+      const { data: transactions, error: txError } = await supabase
         .from("wallet_transactions")
-        .select(`
-          *,
-          profiles!wallet_transactions_user_id_fkey (
-            id,
-            username,
-            avatar_url
-          )
-        `)
+        .select('*')
         .contains('metadata', { campaign_id: selectedCampaignId })
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (txError) throw txError;
 
-      setCampaignTransactions(data || []);
+      if (!transactions || transactions.length === 0) {
+        setCampaignTransactions([]);
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(transactions.map(t => t.user_id).filter(Boolean))];
+
+      // Fetch profiles for those users
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profileError) throw profileError;
+
+      // Map profiles to transactions
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const enrichedTransactions = transactions.map(tx => ({
+        ...tx,
+        profiles: profileMap.get(tx.user_id) || null
+      }));
+
+      setCampaignTransactions(enrichedTransactions);
     } catch (error) {
       console.error("Error fetching campaign transactions:", error);
       toast.error("Failed to load transactions");
