@@ -121,9 +121,8 @@ export default function BrandManagement({
   showAnalyticsTable?: boolean;
   isManagementPage?: boolean;
 }) {
-  const {
-    campaignSlug
-  } = useParams();
+  const params = useParams();
+  const slug = isManagementPage ? params.campaignSlug : params.slug;
   const {
     isAdmin,
     loading: adminLoading
@@ -412,7 +411,7 @@ export default function BrandManagement({
 
   useEffect(() => {
     fetchCampaigns();
-  }, [campaignSlug]);
+  }, [slug]);
 
   useEffect(() => {
     if (isManagementPage && selectedCampaignId) {
@@ -505,10 +504,10 @@ export default function BrandManagement({
     }
   };
   const fetchCampaigns = async () => {
-    if (!campaignSlug && !isManagementPage) return;
+    if (!slug && !isManagementPage) return;
     
     try {
-      if (isManagementPage && campaignSlug) {
+      if (isManagementPage && slug) {
         // Management page: fetch by campaign slug
         const { data: campaignData, error: campaignError } = await supabase
           .from("campaigns")
@@ -543,7 +542,7 @@ export default function BrandManagement({
               shortimize_api_key
             )
           `)
-          .eq("slug", campaignSlug)
+          .eq("slug", slug)
           .maybeSingle();
 
         if (campaignError) throw campaignError;
@@ -567,7 +566,7 @@ export default function BrandManagement({
         const { data: brandData, error: brandError } = await supabase
           .from("brands")
           .select("id, assets_url, home_url, account_url, brand_type, shortimize_api_key")
-          .eq("slug", campaignSlug)
+          .eq("slug", slug)
           .maybeSingle();
 
         if (brandError) throw brandError;
