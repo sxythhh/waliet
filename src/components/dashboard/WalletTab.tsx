@@ -729,15 +729,6 @@ export function WalletTab() {
     'TW': 'This Week'
   };
   return <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header with Main Balance */}
-      <div className="flex items-center justify-between py-0">
-        <div className="flex gap-2">
-          
-          <Button onClick={handleRequestPayout} size="lg" className="py-0 my-0 border-t border-primary/30 font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
-            Withdraw Balance
-          </Button>
-        </div>
-      </div>
 
       {/* Balance Cards - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -814,10 +805,13 @@ export function WalletTab() {
               <span className="text-sm text-muted-foreground font-medium">Available Balance</span>
               <span className="text-lg font-semibold">{isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}</span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-muted-foreground font-medium">In Transit</span>
               <span className="text-lg font-semibold">{isBalanceVisible ? `$${pendingWithdrawals.toFixed(2)}` : "••••••"}</span>
             </div>
+            <Button onClick={handleRequestPayout} className="w-full font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
+              Withdraw Balance
+            </Button>
           </CardContent>
         </Card>
       </div>
