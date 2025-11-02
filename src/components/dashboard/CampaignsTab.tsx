@@ -12,7 +12,7 @@ import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
-import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.svg";
 import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Button } from "@/components/ui/button";
