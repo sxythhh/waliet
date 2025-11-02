@@ -89,9 +89,25 @@ export function AppSidebar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background px-3 md:px-6">
-      {/* Logo */}
-      <div className="hidden md:flex items-center gap-2">
+    <>
+      {/* Mobile Header - Top */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4 border-b">
+        <OptimizedImage src={newLogo} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+          <Avatar className="w-8 h-8">
+            <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+            <AvatarFallback className="bg-muted text-muted-foreground">
+              {getInitial()}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      </header>
+
+      {/* Bottom Navigation / Desktop Top Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background px-3 md:px-6">
+        {/* Logo - Desktop Only */}
+        <div className="hidden md:flex items-center gap-2">
         <OptimizedImage src={newLogo} alt="Logo" className="h-[34px] w-[34px] rounded-lg object-cover" />
         <span
           className="font-geist font-bold tracking-tighter-custom"
@@ -230,6 +246,7 @@ export function AppSidebar() {
           </PopoverContent>
         </Popover>
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }

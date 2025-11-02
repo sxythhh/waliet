@@ -56,7 +56,7 @@ export default function Dashboard() {
       tab: value
     });
   };
-  return <div className={currentTab === "discover" || currentTab === "referrals" || currentTab === "notifications" || currentTab === "training" ? "" : "px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-4 sm:space-y-6 md:space-y-8"}>
+  return <div className={currentTab === "discover" || currentTab === "referrals" || currentTab === "notifications" || currentTab === "training" ? "pt-14 md:pt-0" : "pt-14 md:pt-0 px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 space-y-4 sm:space-y-6 md:space-y-8"}>
       {/* Header - Only show on campaigns tab */}
       {currentTab === "campaigns"}
 
