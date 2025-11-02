@@ -50,7 +50,7 @@ export function AllCampaignsTab() {
   const [joinedCampaignIds, setJoinedCampaignIds] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { theme, resolvedTheme } = useTheme();
+  const { theme } = useTheme();
 
   useEffect(() => {
     fetchCampaigns();
@@ -154,7 +154,9 @@ export function AllCampaignsTab() {
   };
 
   const getPlatformIcon = (platform: string) => {
-    const isLightMode = resolvedTheme === "light" || (theme === "light");
+    const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const isLightMode = theme === "light" || (theme === "system" && systemIsLight);
+    
     switch (platform.toLowerCase()) {
       case 'tiktok':
         return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className="w-4 h-4" />;

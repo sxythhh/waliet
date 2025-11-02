@@ -61,10 +61,13 @@ export function CampaignsTab() {
   const {
     toast
   } = useToast();
-  const { theme, resolvedTheme } = useTheme();
+  const { theme } = useTheme();
 
   const getPlatformIcon = (platform: string) => {
-    const isLightMode = resolvedTheme === "light" || (theme === "light");
+    // Check if system preference is light when theme is "system"
+    const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const isLightMode = theme === "light" || (theme === "system" && systemIsLight);
+    
     switch (platform.toLowerCase()) {
       case 'tiktok':
         return isLightMode ? tiktokLogoBlack : tiktokLogo;

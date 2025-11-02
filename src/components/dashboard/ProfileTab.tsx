@@ -90,7 +90,7 @@ interface Campaign {
 }
 export function ProfileTab() {
   const navigate = useNavigate();
-  const { theme, resolvedTheme } = useTheme();
+  const { theme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [joinedCampaigns, setJoinedCampaigns] = useState<Campaign[]>([]);
@@ -224,7 +224,9 @@ export function ProfileTab() {
   };
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-4 w-4";
-    const isLightMode = resolvedTheme === "light" || (theme === "light");
+    const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const isLightMode = theme === "light" || (theme === "system" && systemIsLight);
+    
     switch (platform.toLowerCase()) {
       case "tiktok":
         return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={iconClass} />;
