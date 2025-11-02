@@ -100,6 +100,8 @@ export function WalletTab() {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const {
     toast
   } = useToast();
@@ -567,9 +569,9 @@ export function WalletTab() {
   };
   const generateTransactionImage = async (transaction: Transaction) => {
     try {
-      // Create SVG
+      // Create SVG with higher resolution
       const svg = `
-        <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+        <svg width="1600" height="800" xmlns="http://www.w3.org/2000/svg">
           <!-- Background gradient -->
           <defs>
             <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -577,44 +579,44 @@ export function WalletTab() {
               <stop offset="100%" style="stop-color:#0f0f1e;stop-opacity:1" />
             </linearGradient>
           </defs>
-          <rect width="800" height="400" fill="url(#bgGradient)" rx="20"/>
+          <rect width="1600" height="800" fill="url(#bgGradient)" rx="40"/>
           
           <!-- Logo -->
-          <text x="40" y="50" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff">Virality</text>
+          <text x="80" y="100" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#fff">Virality</text>
           
           <!-- Transaction Type -->
-          <text x="40" y="100" font-family="Arial, sans-serif" font-size="16" fill="#888">Transaction Type</text>
-          <text x="40" y="130" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff">
+          <text x="80" y="200" font-family="Arial, sans-serif" font-size="32" fill="#888">Transaction Type</text>
+          <text x="80" y="260" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#fff">
             ${transaction.type === 'earning' ? 'Payment' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
           </text>
           
           <!-- Amount -->
-          <text x="40" y="180" font-family="Arial, sans-serif" font-size="16" fill="#888">Amount</text>
-          <text x="40" y="220" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="${transaction.type === 'earning' || transaction.type === 'transfer_received' ? '#10b981' : '#ef4444'}">
+          <text x="80" y="360" font-family="Arial, sans-serif" font-size="32" fill="#888">Amount</text>
+          <text x="80" y="440" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="${transaction.type === 'earning' || transaction.type === 'transfer_received' ? '#10b981' : '#ef4444'}">
             ${transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : '-'}$${Math.abs(transaction.amount).toFixed(2)}
           </text>
           
           <!-- Date -->
-          <text x="40" y="280" font-family="Arial, sans-serif" font-size="16" fill="#888">Date</text>
-          <text x="40" y="310" font-family="Arial, sans-serif" font-size="18" fill="#fff">${format(transaction.date, 'MMMM dd, yyyy')}</text>
+          <text x="80" y="560" font-family="Arial, sans-serif" font-size="32" fill="#888">Date</text>
+          <text x="80" y="620" font-family="Arial, sans-serif" font-size="36" fill="#fff">${format(transaction.date, 'MMMM dd, yyyy')}</text>
           
           <!-- Status Badge -->
           ${transaction.status ? `
-            <rect x="40" y="330" width="120" height="30" fill="${transaction.status === 'completed' ? '#10b98120' : transaction.status === 'rejected' ? '#ef444420' : '#f59e0b20'}" rx="8"/>
-            <text x="100" y="352" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="${transaction.status === 'completed' ? '#10b981' : transaction.status === 'rejected' ? '#ef4444' : '#f59e0b'}" text-anchor="middle">
+            <rect x="80" y="660" width="240" height="60" fill="${transaction.status === 'completed' ? '#10b98120' : transaction.status === 'rejected' ? '#ef444420' : '#f59e0b20'}" rx="16"/>
+            <text x="200" y="704" font-family="Arial, sans-serif" font-size="28" font-weight="600" fill="${transaction.status === 'completed' ? '#10b981' : transaction.status === 'rejected' ? '#ef4444' : '#f59e0b'}" text-anchor="middle">
               ${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
             </text>
           ` : ''}
           
           <!-- Campaign Info if available -->
           ${transaction.campaign ? `
-            <text x="450" y="180" font-family="Arial, sans-serif" font-size="16" fill="#888">Campaign</text>
-            <text x="450" y="210" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#fff">${transaction.campaign.title}</text>
-            <text x="450" y="235" font-family="Arial, sans-serif" font-size="14" fill="#888">${transaction.campaign.brand_name}</text>
+            <text x="900" y="360" font-family="Arial, sans-serif" font-size="32" fill="#888">Campaign</text>
+            <text x="900" y="420" font-family="Arial, sans-serif" font-size="36" font-weight="600" fill="#fff">${transaction.campaign.title}</text>
+            <text x="900" y="470" font-family="Arial, sans-serif" font-size="28" fill="#888">${transaction.campaign.brand_name}</text>
           ` : ''}
           
           <!-- Transaction ID -->
-          <text x="640" y="380" font-family="Arial, sans-serif" font-size="12" fill="#555" text-anchor="end">${transaction.id.slice(0, 8)}...${transaction.id.slice(-8)}</text>
+          <text x="1520" y="760" font-family="Arial, sans-serif" font-size="24" fill="#555" text-anchor="end">${transaction.id.slice(0, 8)}...${transaction.id.slice(-8)}</text>
         </svg>
       `;
 
@@ -623,8 +625,8 @@ export function WalletTab() {
       
       // Create canvas to convert to PNG
       const canvas = document.createElement('canvas');
-      canvas.width = 800;
-      canvas.height = 400;
+      canvas.width = 1600;
+      canvas.height = 800;
       const ctx = canvas.getContext('2d');
       
       if (!ctx) return;
@@ -636,22 +638,10 @@ export function WalletTab() {
         ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
         
-        // Convert to PNG and download
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-          
-          const downloadUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.download = `virality-transaction-${transaction.id.slice(0, 8)}.png`;
-          link.href = downloadUrl;
-          link.click();
-          URL.revokeObjectURL(downloadUrl);
-          
-          toast({
-            title: "Transaction Image Downloaded",
-            description: "Your transaction image has been saved successfully"
-          });
-        }, 'image/png');
+        // Convert to data URL and show dialog
+        const imageDataUrl = canvas.toDataURL('image/png');
+        setGeneratedImageUrl(imageDataUrl);
+        setShareDialogOpen(true);
       };
       
       img.src = url;
@@ -663,6 +653,34 @@ export function WalletTab() {
         description: "Failed to generate transaction image"
       });
     }
+  };
+
+  const handleDownloadImage = () => {
+    if (!generatedImageUrl) return;
+    
+    const link = document.createElement('a');
+    link.download = `virality-transaction-${Date.now()}.png`;
+    link.href = generatedImageUrl;
+    link.click();
+    
+    toast({
+      title: "Transaction Image Downloaded",
+      description: "Your transaction image has been saved successfully"
+    });
+  };
+
+  const handleShareOnX = () => {
+    if (!generatedImageUrl) return;
+    
+    // Open Twitter share dialog
+    const tweetText = encodeURIComponent("Check out my Virality transaction! 💰");
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
+    window.open(twitterUrl, '_blank', 'width=550,height=420');
+    
+    toast({
+      title: "Share on X",
+      description: "Opening X share dialog. You can attach the downloaded image to your post."
+    });
   };
 
   const handleConfirmPayout = async () => {
@@ -1687,5 +1705,48 @@ export function WalletTab() {
       fetchWallet();
       fetchTransactions();
     }} />
+
+      {/* Share Transaction Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Share Transaction</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Generated Image */}
+            {generatedImageUrl && (
+              <div className="rounded-lg overflow-hidden border border-border">
+                <img 
+                  src={generatedImageUrl} 
+                  alt="Transaction" 
+                  className="w-full h-auto"
+                />
+              </div>
+            )}
+            
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={handleDownloadImage}
+                className="gap-2"
+              >
+                <Copy className="h-4 w-4" />
+                Download Image
+              </Button>
+              <Button
+                onClick={handleShareOnX}
+                className="gap-2 bg-black hover:bg-black/90 text-white"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                Share on X
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>;
 }
