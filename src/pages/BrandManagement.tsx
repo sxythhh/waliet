@@ -811,7 +811,7 @@ export default function BrandManagement({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2 font-instrument tracking-tight">
-              {isManagementPage ? 'Shortimize Analytics' : selectedCampaign?.title}
+              {isManagementPage ? 'Brand Management' : selectedCampaign?.title}
             </h1>
             {!isManagementPage && campaigns.length > 1 && <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
                 <SelectTrigger className="w-[280px] bg-card border">
@@ -828,93 +828,155 @@ export default function BrandManagement({
 
         {/* Conditional Content Based on Page Type */}
         {isManagementPage ? (
-          // Management Page: Only Shortimize Table
-        <Card className="bg-card border">
-          <CardHeader className="pb-4 border-b border-border">
-            <div className="flex items-center justify-between">
-              <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
-              <Button 
-                onClick={fetchShortimizeAccounts} 
-                disabled={!shortimizeApiKey || loadingShortimize}
-                variant="outline"
-                size="sm"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
-                {loadingShortimize ? 'Loading...' : 'Refresh Data'}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {!shortimizeApiKey ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground text-sm">Please configure Shortimize API key in Brand Settings</p>
-              </div>
-            ) : shortimizeAccounts.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground text-sm">
-                  {loadingShortimize ? 'Loading accounts...' : 'No accounts found'}
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b border-border hover:bg-transparent">
-                      <TableHead className="text-muted-foreground font-medium">Username</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Platform</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Followers</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Total Views</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Total Likes</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Videos</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Median Views</TableHead>
-                      <TableHead className="text-muted-foreground font-medium">Last Upload</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {shortimizeAccounts.map((account) => (
-                      <TableRow key={account.account_id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                        <TableCell className="py-4">
-                          <a 
-                            href={account.account_link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-foreground hover:underline font-medium"
-                          >
-                            @{account.username}
-                          </a>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <Badge variant="secondary" className="capitalize">
-                            {account.platform}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="py-4 text-foreground">
-                          {account.latest_followers_count?.toLocaleString() || 'N/A'}
-                        </TableCell>
-                        <TableCell className="py-4 text-foreground">
-                          {account.total_views?.toLocaleString() || '0'}
-                        </TableCell>
-                        <TableCell className="py-4 text-foreground">
-                          {account.total_likes?.toLocaleString() || '0'}
-                        </TableCell>
-                        <TableCell className="py-4 text-foreground">
-                          {account.total_videos_tracked || '0'}
-                        </TableCell>
-                        <TableCell className="py-4 text-foreground">
-                          {account.median_views?.toLocaleString() || '0'}
-                        </TableCell>
-                        <TableCell className="py-4 text-muted-foreground text-sm">
-                          {account.last_uploaded_at ? new Date(account.last_uploaded_at).toLocaleDateString() : 'N/A'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          // Management Page: Tabs with Analytics, Videos, Users, Payouts
+          <Tabs defaultValue="analytics" className="w-full">
+            <TabsList className="bg-card border">
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-accent">
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="videos" className="data-[state=active]:bg-accent">
+                Videos
+              </TabsTrigger>
+              <TabsTrigger value="users" className="data-[state=active]:bg-accent">
+                Users
+              </TabsTrigger>
+              <TabsTrigger value="payouts" className="data-[state=active]:bg-accent">
+                Payouts
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics">
+              <Card className="bg-card border">
+                <CardHeader>
+                  <CardTitle className="font-instrument tracking-tight">Campaign Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-sm">Analytics coming soon</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Videos Tab */}
+            <TabsContent value="videos">
+              <Card className="bg-card border">
+                <CardHeader>
+                  <CardTitle className="font-instrument tracking-tight">Campaign Videos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-sm">Videos coming soon</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Users Tab - Shortimize Accounts */}
+            <TabsContent value="users">
+              <Card className="bg-card border">
+                <CardHeader className="pb-4 border-b border-border">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
+                    <Button 
+                      onClick={fetchShortimizeAccounts} 
+                      disabled={!shortimizeApiKey || loadingShortimize}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
+                      {loadingShortimize ? 'Loading...' : 'Refresh Data'}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {!shortimizeApiKey ? (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground text-sm">Please configure Shortimize API key in Brand Settings</p>
+                    </div>
+                  ) : shortimizeAccounts.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground text-sm">
+                        {loadingShortimize ? 'Loading accounts...' : 'No accounts found'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-b border-border hover:bg-transparent">
+                            <TableHead className="text-muted-foreground font-medium">Username</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Platform</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Followers</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Total Views</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Total Likes</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Videos</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Median Views</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Last Upload</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {shortimizeAccounts.map((account) => (
+                            <TableRow key={account.account_id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                              <TableCell className="py-4">
+                                <a 
+                                  href={account.account_link} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-foreground hover:underline font-medium"
+                                >
+                                  @{account.username}
+                                </a>
+                              </TableCell>
+                              <TableCell className="py-4">
+                                <Badge variant="secondary" className="capitalize">
+                                  {account.platform}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="py-4 text-foreground">
+                                {account.latest_followers_count?.toLocaleString() || 'N/A'}
+                              </TableCell>
+                              <TableCell className="py-4 text-foreground">
+                                {account.total_views?.toLocaleString() || '0'}
+                              </TableCell>
+                              <TableCell className="py-4 text-foreground">
+                                {account.total_likes?.toLocaleString() || '0'}
+                              </TableCell>
+                              <TableCell className="py-4 text-foreground">
+                                {account.total_videos_tracked || '0'}
+                              </TableCell>
+                              <TableCell className="py-4 text-foreground">
+                                {account.median_views?.toLocaleString() || '0'}
+                              </TableCell>
+                              <TableCell className="py-4 text-muted-foreground text-sm">
+                                {account.last_uploaded_at ? new Date(account.last_uploaded_at).toLocaleDateString() : 'N/A'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Payouts Tab */}
+            <TabsContent value="payouts">
+              <Card className="bg-card border">
+                <CardHeader>
+                  <CardTitle className="font-instrument tracking-tight">Payouts</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-sm">Payouts coming soon</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         ) : (
           // Brand Page: Full Tabs with All Features
           <Tabs defaultValue="analytics" className="w-full">
