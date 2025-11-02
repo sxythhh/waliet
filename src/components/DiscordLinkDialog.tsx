@@ -104,16 +104,18 @@ export function DiscordLinkDialog({ userId, discordUsername, discordAvatar, onSu
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="ghost"
-          size="sm" 
-          className={`gap-2 font-geist tracking-tight font-semibold bg-muted/50 hover:bg-muted border-0 ${!isLinked ? 'text-[#5765F2]' : ''}`}
-        >
-          {!isLinked && <img src={discordIcon} alt="Discord" className="w-4 h-4" />}
-          {isLinked ? "Manage Discord" : "Connect Discord"}
-        </Button>
-      </DialogTrigger>
+      {!isLinked && (
+        <DialogTrigger asChild>
+          <Button 
+            variant="ghost"
+            size="sm" 
+            className="gap-2 font-geist tracking-tight font-semibold bg-muted/50 hover:bg-muted border-0 text-[#5765F2]"
+          >
+            <img src={discordIcon} alt="Discord" className="w-4 h-4" />
+            Connect Discord
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="bg-[#0b0b0b] border">
         <DialogHeader>
           <DialogTitle>

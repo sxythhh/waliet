@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -883,6 +883,34 @@ export function ProfileTab() {
                       Connected {profile.discord_connected_at && formatDistanceToNow(new Date(profile.discord_connected_at), { addSuffix: true })}
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={async () => {
+                      try {
+                        const { error } = await supabase.functions.invoke('discord-oauth', {
+                          body: { action: 'disconnect', userId: profile.id }
+                        });
+
+                        if (error) throw error;
+
+                        toast({
+                          title: "Success!",
+                          description: "Discord account unlinked successfully."
+                        });
+                        fetchProfile();
+                      } catch (error: any) {
+                        toast({
+                          variant: "destructive",
+                          title: "Error",
+                          description: error.message || "Failed to unlink Discord account."
+                        });
+                      }
+                    }}
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Unlink className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
             </div>
