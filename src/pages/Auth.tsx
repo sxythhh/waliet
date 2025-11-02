@@ -212,15 +212,15 @@ export default function Auth() {
   };
   if (isRecoveryMode) {
     return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-        <Card className="w-full max-w-md border bg-[#0b0b0b]">
-          <CardHeader className="text-center space-y-1 bg-[#0b0b0b]">
+        <Card className="w-full max-w-md border bg-card">
+          <CardHeader className="text-center space-y-1 bg-card">
             <div className="flex justify-center">
               <img src={viralityLogo} alt="Virality Logo" className="h-12 w-auto" />
             </div>
             <CardTitle className="text-2xl font-semibold tracking-tight">Reset Password</CardTitle>
             <CardDescription>Enter your new password below</CardDescription>
           </CardHeader>
-          <CardContent className="bg-[#0b0b0b]">
+          <CardContent className="bg-card">
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password" className="text-sm font-medium">New Password</Label>
@@ -234,7 +234,7 @@ export default function Auth() {
                     required
                     disabled={loading}
                     minLength={6}
-                    className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10"
+                    className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10"
                   />
                   <button
                     type="button"
@@ -255,8 +255,8 @@ export default function Auth() {
   }
 
   return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md border bg-[#0b0b0b]">
-        <CardHeader className="text-center space-y-1 pb-0 bg-[#0b0b0b] mt-2">
+      <Card className="w-full max-w-md border bg-card">
+        <CardHeader className="text-center space-y-1 pb-0 bg-card mt-2">
           <div className="flex justify-center">
             <img src={viralityLogo} alt="Virality Logo" className="h-12 w-auto" />
           </div>
@@ -265,7 +265,7 @@ export default function Auth() {
           </div>
         </CardHeader>
         
-        <CardContent className="bg-[#0b0b0b]">
+        <CardContent className="bg-card">
           <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50">
               <TabsTrigger value="signin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sign In</TabsTrigger>
@@ -276,13 +276,13 @@ export default function Auth() {
               <form onSubmit={handleSignIn} className="space-y-3">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
-                    <Input id="signin-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
+                    <Input id="signin-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
                     <div className="relative">
-                      <Input id="signin-password" type={showSignInPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
+                      <Input id="signin-password" type={showSignInPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
                       <button
                         type="button"
                         onClick={() => setShowSignInPassword(!showSignInPassword)}
@@ -297,7 +297,7 @@ export default function Auth() {
                           Forgot password?
                         </button>
                       </DialogTrigger>
-                      <DialogContent className="bg-[#0b0b0b] border">
+                      <DialogContent className="bg-card border">
                         <DialogHeader>
                           <DialogTitle>Reset Password</DialogTitle>
                           <DialogDescription>
@@ -315,7 +315,7 @@ export default function Auth() {
                               onChange={(e) => setResetEmail(e.target.value)}
                               required
                               disabled={loading}
-                              className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary"
+                              className="h-11 bg-background border-2 border-transparent focus-visible:border-primary"
                             />
                           </div>
                           <Button 
@@ -341,18 +341,18 @@ export default function Auth() {
               <form onSubmit={handleSignUp} className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="signup-username" className="text-sm font-medium">Username</Label>
-                  <Input id="signup-username" type="text" placeholder="creator123" value={username} onChange={e => setUsername(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
+                  <Input id="signup-username" type="text" placeholder="creator123" value={username} onChange={e => setUsername(e.target.value)} required disabled={loading} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
-                  <Input id="signup-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
+                  <Input id="signup-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors" />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
                   <div className="relative">
-                    <Input id="signup-password" type={showSignUpPassword ? "text" : "password"} placeholder="Create secure password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
+                    <Input id="signup-password" type={showSignUpPassword ? "text" : "password"} placeholder="Create secure password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
                     <button
                       type="button"
                       onClick={() => setShowSignUpPassword(!showSignUpPassword)}
