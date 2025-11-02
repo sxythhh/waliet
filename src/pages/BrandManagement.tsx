@@ -221,6 +221,12 @@ export default function BrandManagement({
   useEffect(() => {
     fetchCampaigns();
   }, [slug]);
+
+  useEffect(() => {
+    if (brandId && shortimizeApiKey) {
+      fetchShortimizeAccounts();
+    }
+  }, [brandId, shortimizeApiKey]);
   useEffect(() => {
     if (selectedCampaignId) {
       fetchSubmissions();
