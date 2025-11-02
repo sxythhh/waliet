@@ -8,7 +8,7 @@ import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
-import tiktokLogo from "@/assets/tiktok-logo.svg";
+import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";

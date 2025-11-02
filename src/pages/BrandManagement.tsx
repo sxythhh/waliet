@@ -26,7 +26,7 @@ import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
 import { VideosTab } from "@/components/brand/VideosTab";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { VideoHistoryDialog } from "@/components/VideoHistoryDialog";
-import tiktokLogo from "@/assets/tiktok-logo.svg";
+import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Skeleton } from "@/components/ui/skeleton";

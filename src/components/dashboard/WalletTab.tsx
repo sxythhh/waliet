@@ -21,7 +21,7 @@ import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
-import tiktokLogo from "@/assets/tiktok-logo.svg";
+import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import { Skeleton } from "@/components/ui/skeleton";
