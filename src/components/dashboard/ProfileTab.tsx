@@ -587,7 +587,7 @@ export function ProfileTab() {
             const submissionTimestamp = getSubmissionTimestamp();
             return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-muted">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
-                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-card hover:bg-accent transition-colors cursor-pointer border border-border w-fit">
+                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-card hover:brightness-95 transition-colors cursor-pointer border border-border w-fit">
                         {getPlatformIcon(account.platform)}
                         <span className="font-medium">{account.username}</span>
                       </div>
