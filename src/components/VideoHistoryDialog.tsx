@@ -58,13 +58,13 @@ export function VideoHistoryDialog({
             <TabsContent value="chart" className="space-y-4">
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={historyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                  <LineChart data={[...historyData].reverse()}>
                     <XAxis 
                       dataKey="date" 
                       tickFormatter={(value) => new Date(value).toLocaleDateString()}
+                      stroke="hsl(var(--muted-foreground))"
                     />
-                    <YAxis />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip 
                       labelFormatter={(value) => new Date(value).toLocaleDateString()}
                       formatter={(value: number) => value.toLocaleString()}
