@@ -93,7 +93,7 @@ interface Submission {
     social_accounts: SocialAccount[];
   };
 }
-export default function BrandManagement() {
+export default function BrandManagement({ showVideosTab = true }: { showVideosTab?: boolean }) {
   const {
     slug
   } = useParams();
@@ -787,6 +787,11 @@ export default function BrandManagement() {
               Applications
               {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
             </TabsTrigger>
+            {showVideosTab && (
+              <TabsTrigger value="videos" className="data-[state=active]:bg-card">
+                Videos
+              </TabsTrigger>
+            )}
             <TabsTrigger value="settings" className="data-[state=active]:bg-card">
               Settings
             </TabsTrigger>
@@ -1312,6 +1317,13 @@ export default function BrandManagement() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Videos Tab */}
+          {showVideosTab && (
+            <TabsContent value="videos">
+              <VideosTab campaignId={selectedCampaignId} isAdmin={isAdmin} approvedCreators={approvedSubmissions} />
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Manage Campaign Dialog */}
