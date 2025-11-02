@@ -25,6 +25,7 @@ import { ImportCampaignStatsDialog } from "@/components/ImportCampaignStatsDialo
 import { MatchAccountsDialog } from "@/components/MatchAccountsDialog";
 import { VideosTab } from "@/components/brand/VideosTab";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
+import { VideoHistoryDialog } from "@/components/VideoHistoryDialog";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
@@ -167,6 +168,10 @@ export default function BrandManagement({
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [lastVideosFetch, setLastVideosFetch] = useState<Date | null>(null);
   const [lastAccountsFetch, setLastAccountsFetch] = useState<Date | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [videoHistoryOpen, setVideoHistoryOpen] = useState(false);
+  const [videoHistory, setVideoHistory] = useState<any[] | null>(null);
+  const [loadingVideoHistory, setLoadingVideoHistory] = useState(false);
   const sidebar = useSidebar();
   const isMobile = useIsMobile();
 
@@ -396,6 +401,46 @@ export default function BrandManagement({
       toast.error(error.message || 'Failed to load videos');
     } finally {
       setLoadingVideos(false);
+    }
+  };
+
+  const fetchVideoHistory = async (video: any) => {
+    if (!brandId || !video.ad_id) {
+      toast.error('Unable to fetch video history');
+      return;
+    }
+
+    setSelectedVideo(video);
+    setVideoHistoryOpen(true);
+    setLoadingVideoHistory(true);
+    setVideoHistory(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-video-history', {
+        body: { 
+          brandId, 
+          adId: video.ad_id,
+          // Optional: Add date range if needed
+          // startDate: '2024-01-01',
+          // endDate: '2024-12-31'
+        }
+      });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || 'Failed to call edge function');
+      }
+
+      if (!data || data.error) {
+        throw new Error(data?.error || 'Failed to fetch video history');
+      }
+
+      setVideoHistory(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      console.error('Error fetching video history:', error);
+      toast.error(error.message || 'Failed to load video history');
+    } finally {
+      setLoadingVideoHistory(false);
     }
   };
 
@@ -1129,7 +1174,8 @@ export default function BrandManagement({
         <div className="text-foreground">No campaigns found</div>
       </div>;
   }
-  return <div className="min-h-screen p-4 md:p-8 bg-background">
+  return (
+    <div className="min-h-screen p-4 md:p-8 bg-background">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Mobile Menu Button */}
         <div className="md:hidden">
@@ -1303,7 +1349,11 @@ export default function BrandManagement({
                         </TableHeader>
                         <TableBody>
                           {videos.map((video, index) => (
-                            <TableRow key={video.ad_id || index}>
+                            <TableRow 
+                              key={video.ad_id || index}
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => fetchVideoHistory(video)}
+                            >
                               <TableCell className="font-medium">{video.username}</TableCell>
                               <TableCell className="capitalize">{video.platform}</TableCell>
                               <TableCell className="max-w-xs truncate">{video.title || '-'}</TableCell>
@@ -1312,7 +1362,7 @@ export default function BrandManagement({
                               <TableCell className="text-right">{video.latest_likes?.toLocaleString() || 0}</TableCell>
                               <TableCell className="text-right">{video.latest_comments?.toLocaleString() || 0}</TableCell>
                               <TableCell className="text-right">{video.latest_shares?.toLocaleString() || 0}</TableCell>
-                              <TableCell>
+                              <TableCell onClick={(e) => e.stopPropagation()}>
                                 {video.ad_link && (
                                   <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                                     View
@@ -1669,5 +1719,15 @@ export default function BrandManagement({
         )}
 
       </div>
-    </div>;
+
+      {/* Video History Dialog */}
+      <VideoHistoryDialog
+        open={videoHistoryOpen}
+        onOpenChange={setVideoHistoryOpen}
+        video={selectedVideo}
+        historyData={videoHistory}
+        loading={loadingVideoHistory}
+      />
+    </div>
+  );
 }
