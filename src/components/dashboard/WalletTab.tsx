@@ -656,9 +656,9 @@ export function WalletTab() {
           
           <!-- Campaign Info if available -->
           ${transaction.campaign ? `
-            ${brandLogoBase64 ? `<image href="${brandLogoBase64}" x="900" y="300" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>` : ''}
-            <text x="900" y="${brandLogoBase64 ? '430' : '360'}" font-size="32" fill="#888">Campaign</text>
-            <text x="900" y="${brandLogoBase64 ? '480' : '420'}" font-size="36" font-weight="600" fill="#fff">${transaction.campaign.title}</text>
+            <text x="900" y="380" font-size="32" fill="#888">Campaign</text>
+            ${brandLogoBase64 ? `<image href="${brandLogoBase64}" x="900" y="400" width="60" height="60" preserveAspectRatio="xMidYMid meet"/>` : ''}
+            <text x="${brandLogoBase64 ? '975' : '900'}" y="445" font-size="36" font-weight="600" fill="#fff">${transaction.campaign.title}</text>
           ` : ''}
           
           <!-- Transaction ID -->
