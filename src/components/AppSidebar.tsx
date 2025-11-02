@@ -79,7 +79,7 @@ export function AppSidebar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:px-6">
+    <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background px-3 md:px-6">
       {/* Logo */}
       <div className="hidden md:flex items-center">
         <img src={wordmarkLogo} alt="Logo" className="h-12" />
