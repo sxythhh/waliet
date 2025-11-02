@@ -4,6 +4,7 @@ import wordmarkLogo from "@/assets/wordmark-logo.png";
 import newLogo from "@/assets/new-logo.png";
 import discordIcon from "@/assets/discord-icon.png";
 import trophyIcon from "@/assets/trophy-icon.png";
+import moneyIcon from "@/assets/money-icon.png";
 import { WebStoriesIcon } from "@/components/WebStoriesIcon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -176,6 +177,7 @@ export function AppSidebar() {
                   className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity"
                   onClick={() => navigate("/referrals")}
                 >
+                  <img src={moneyIcon} alt="Money" className="w-5 h-5" />
                   <span className="font-medium text-sm">Referrals</span>
                 </button>
 
