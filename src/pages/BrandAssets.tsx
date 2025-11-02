@@ -2,23 +2,19 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoadmapView } from "@/components/brand/RoadmapView";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function BrandAssets() {
   const { slug } = useParams();
+  const { user } = useAuth();
   const [assetsUrl, setAssetsUrl] = useState<string | null>(null);
   const [brandType, setBrandType] = useState<string | null>(null);
   const [brandId, setBrandId] = useState<string | null>(null);
   const [brandName, setBrandName] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const sidebar = useSidebar();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchBrand = async () => {
@@ -67,22 +63,12 @@ export default function BrandAssets() {
   if (brandType === "DWY" && brandId) {
     return (
       <div className="min-h-screen w-full bg-[#0C0C0C]">
-        {/* Header with Menu and Create Campaign */}
-        <div className="p-4 flex items-center justify-between">
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => sidebar.setOpenMobile(true)}
-              className="text-white/60 hover:text-white hover:bg-white/10"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          )}
-          <div className={isMobile ? "" : "ml-auto"}>
+        {/* Header with Create Campaign - only show for authenticated users */}
+        {user && (
+          <div className="p-4 flex items-center justify-end">
             <CreateCampaignDialog brandId={brandId} brandName={brandName} onSuccess={() => {}} />
           </div>
-        </div>
+        )}
         <RoadmapView brandId={brandId} />
       </div>
     );
@@ -104,20 +90,12 @@ export default function BrandAssets() {
 
   return (
     <div className="h-screen w-full bg-[#0C0C0C] flex flex-col">
-      {/* Header with Menu and Create Campaign */}
-      <div className="p-4 flex items-center justify-between md:justify-end">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => sidebar.setOpenMobile(true)}
-          className="md:hidden text-white/60 hover:text-white hover:bg-white/10"
-        >
-          <Menu className="h-6 w-6" />
-        </Button>
-        {brandId && (
+      {/* Header with Create Campaign - only show for authenticated users */}
+      {user && brandId && (
+        <div className="p-4 flex items-center justify-end">
           <CreateCampaignDialog brandId={brandId} brandName={brandName} onSuccess={() => {}} />
-        )}
-      </div>
+        </div>
+      )}
       <iframe
         src={assetsUrl}
         className="w-full flex-1 border-0"
