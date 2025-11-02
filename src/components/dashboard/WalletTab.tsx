@@ -736,7 +736,7 @@ export function WalletTab() {
         <Card className="bg-card border-0">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-slate-50">💰 Your Earnings</p>
+              <p className="text-sm font-semibold text-foreground">💰 Your Earnings</p>
               <div className="flex gap-1">
                 {(['1D', '1W', '1M', 'ALL'] as const).map(period => <Button key={period} variant="ghost" size="sm" onClick={() => setEarningsChartPeriod(period)} className={`h-7 px-2 text-xs font-semibold ${earningsChartPeriod === period ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
                     {period}
@@ -796,7 +796,7 @@ export function WalletTab() {
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3 mb-2">
               
-              <p className="text-sm font-semibold text-slate-50">💵 Current Balance</p>
+              <p className="text-sm font-semibold text-foreground">💵 Current Balance</p>
             </div>
             <p className="text-3xl font-bold font-geist mb-4" style={{
             letterSpacing: '-0.3px'
