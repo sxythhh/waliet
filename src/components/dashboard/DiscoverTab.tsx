@@ -264,7 +264,7 @@ export function DiscoverTab() {
                         className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
                       />
                       {isEnded && <div className="absolute top-2 right-2 z-20">
-                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-muted rounded">
+                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-red-500/10 rounded">
                             Ended
                           </span>
                         </div>}
