@@ -820,7 +820,7 @@ export function WalletTab() {
       <Card className="bg-card border-0">
         <CardHeader className="px-[24px] pt-4 pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 gap-3">
           <CardTitle className="text-lg font-semibold py-[10px]">Transactions</CardTitle>
-          {transactions.length > 0 && <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {transactions.length > 0 && <div className="hidden sm:flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-full sm:w-[180px] bg-muted/50 border-0">
                   <SelectValue placeholder="Transaction Type" />
