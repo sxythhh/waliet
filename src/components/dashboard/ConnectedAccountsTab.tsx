@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { useTheme } from "next-themes";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
-import instagramLogo from "@/assets/instagram-logo.svg";
+import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.svg";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.svg";
