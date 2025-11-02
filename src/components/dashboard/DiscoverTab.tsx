@@ -329,28 +329,7 @@ export function DiscoverTab() {
               </div>
 
               {/* Hide Options */}
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <Checkbox id="hide-infinite" checked={hideInfiniteBudget} onCheckedChange={checked => setHideInfiniteBudget(checked as boolean)} />
-                  <Label htmlFor="hide-infinite" className="text-sm text-muted-foreground cursor-pointer">
-                    Hide infinite budget?
-                  </Label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Checkbox id="hide-low-budget" checked={hideLowBudget} onCheckedChange={checked => setHideLowBudget(checked as boolean)} />
-                  <Label htmlFor="hide-low-budget" className="text-sm text-muted-foreground cursor-pointer">
-                    Hide low budget?
-                  </Label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Checkbox id="hide-ended" checked={hideEnded} onCheckedChange={checked => setHideEnded(checked as boolean)} />
-                  <Label htmlFor="hide-ended" className="text-sm text-muted-foreground cursor-pointer">
-                    Hide ended?
-                  </Label>
-                </div>
-              </div>
+              
             </div>}
         </div>
 
