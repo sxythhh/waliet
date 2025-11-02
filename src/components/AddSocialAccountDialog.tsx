@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.png";
 import xLogo from "@/assets/x-logo.png";
+import xLogoLight from "@/assets/x-logo-light.png";
 import { z } from "zod";
 
 // Helper function to extract username from URL based on platform
@@ -92,6 +94,7 @@ export function AddSocialAccountDialog({
   const [accountLink, setAccountLink] = useState("");
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   const handleXOAuth = async () => {
     const REDIRECT_URI = `${window.location.origin}/x/callback`;
@@ -237,7 +240,7 @@ export function AddSocialAccountDialog({
       case "youtube":
         return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
       case "twitter":
-        return <img src={xLogo} alt="X" className={iconClass} />;
+        return <img src={theme === "light" ? xLogoLight : xLogo} alt="X" className={iconClass} />;
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
