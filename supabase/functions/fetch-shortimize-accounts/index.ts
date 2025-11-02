@@ -22,7 +22,7 @@ serve(async (req) => {
       }
     );
 
-    const { brandId, collections } = await req.json();
+    const { brandId, collectionName } = await req.json();
 
     if (!brandId) {
       return new Response(
@@ -45,10 +45,10 @@ serve(async (req) => {
       );
     }
 
-    // Build the URL with optional collections parameter
+    // Build the URL with optional collection parameter
     let url = 'https://api.shortimize.com/accounts';
-    if (collections) {
-      url += `?collections=${encodeURIComponent(collections)}`;
+    if (collectionName) {
+      url += `?collections=${encodeURIComponent(collectionName)}`;
     }
 
     // Call Shortimize API

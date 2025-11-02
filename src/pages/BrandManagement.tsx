@@ -162,6 +162,7 @@ export default function BrandManagement({
   const [shortimizeAccounts, setShortimizeAccounts] = useState<any[]>([]);
   const [loadingShortimize, setLoadingShortimize] = useState(false);
   const [collectionName, setCollectionName] = useState("");
+  const [accountsCollectionName, setAccountsCollectionName] = useState("");
   const [videos, setVideos] = useState<any[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [lastVideosFetch, setLastVideosFetch] = useState<Date | null>(null);
@@ -185,20 +186,6 @@ export default function BrandManagement({
   // Load cached data on mount
   useEffect(() => {
     if (brandId) {
-      // Load cached accounts
-      const cachedAccounts = localStorage.getItem(ACCOUNTS_CACHE_KEY);
-      if (cachedAccounts) {
-        try {
-          const { data, timestamp } = JSON.parse(cachedAccounts);
-          if (isCacheValid(timestamp)) {
-            setShortimizeAccounts(data);
-            setLastAccountsFetch(new Date(timestamp));
-          }
-        } catch (e) {
-          console.error('Error loading cached accounts:', e);
-        }
-      }
-
       // Load cached videos
       const cachedVideos = localStorage.getItem(VIDEOS_CACHE_KEY);
       if (cachedVideos) {
@@ -213,6 +200,21 @@ export default function BrandManagement({
           console.error('Error loading cached videos:', e);
         }
       }
+
+      // Load cached accounts
+      const cachedAccounts = localStorage.getItem(ACCOUNTS_CACHE_KEY);
+      if (cachedAccounts) {
+        try {
+          const { data, timestamp, collection } = JSON.parse(cachedAccounts);
+          if (isCacheValid(timestamp)) {
+            setShortimizeAccounts(data);
+            setAccountsCollectionName(collection);
+            setLastAccountsFetch(new Date(timestamp));
+          }
+        } catch (e) {
+          console.error('Error loading cached accounts:', e);
+        }
+      }
     }
   }, [brandId]);
   const fetchShortimizeAccounts = async (forceRefresh = false) => {
@@ -221,13 +223,18 @@ export default function BrandManagement({
       return;
     }
 
+    if (!accountsCollectionName.trim()) {
+      toast.error("Please enter a collection name");
+      return;
+    }
+
     // Check cache first unless force refresh
     if (!forceRefresh) {
       const cachedAccounts = localStorage.getItem(ACCOUNTS_CACHE_KEY);
       if (cachedAccounts) {
         try {
-          const { data, timestamp } = JSON.parse(cachedAccounts);
-          if (isCacheValid(timestamp)) {
+          const { data, timestamp, collection } = JSON.parse(cachedAccounts);
+          if (collection === accountsCollectionName && isCacheValid(timestamp)) {
             setShortimizeAccounts(data);
             setLastAccountsFetch(new Date(timestamp));
             toast.info('Loaded accounts from cache');
@@ -242,7 +249,7 @@ export default function BrandManagement({
     setLoadingShortimize(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-shortimize-accounts', {
-        body: { brandId }
+        body: { brandId, collectionName: accountsCollectionName }
       });
 
       if (error) {
@@ -305,7 +312,8 @@ export default function BrandManagement({
         setLastAccountsFetch(new Date(timestamp));
         localStorage.setItem(ACCOUNTS_CACHE_KEY, JSON.stringify({
           data: matchedAccounts,
-          timestamp
+          timestamp,
+          collection: accountsCollectionName
         }));
       } else {
         setShortimizeAccounts(accountsData);
@@ -315,7 +323,8 @@ export default function BrandManagement({
         setLastAccountsFetch(new Date(timestamp));
         localStorage.setItem(ACCOUNTS_CACHE_KEY, JSON.stringify({
           data: accountsData,
-          timestamp
+          timestamp,
+          collection: accountsCollectionName
         }));
       }
       
@@ -486,10 +495,7 @@ export default function BrandManagement({
   }, [isManagementPage, selectedCampaignId]);
 
   useEffect(() => {
-    if (isManagementPage && brandId && shortimizeApiKey && shortimizeAccounts.length === 0) {
-      // Only fetch if we don't have cached data
-      fetchShortimizeAccounts(false);
-    }
+    // Removed auto-fetch on mount - users should manually load with collection name
   }, [isManagementPage, brandId, shortimizeApiKey]);
   useEffect(() => {
     if (selectedCampaignId) {
@@ -1331,8 +1337,8 @@ export default function BrandManagement({
             <TabsContent value="users">
               <Card className="bg-card border">
                 <CardHeader className="pb-4 border-b border-border">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
                       <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
                       {lastAccountsFetch && (
                         <p className="text-xs text-muted-foreground mt-1">
@@ -1340,15 +1346,23 @@ export default function BrandManagement({
                         </p>
                       )}
                     </div>
-                    <Button 
-                      onClick={() => fetchShortimizeAccounts(true)} 
-                      disabled={!shortimizeApiKey || loadingShortimize}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
-                      {loadingShortimize ? 'Loading...' : 'Refresh Data'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Collection name..."
+                        value={accountsCollectionName}
+                        onChange={(e) => setAccountsCollectionName(e.target.value)}
+                        className="w-64"
+                      />
+                      <Button 
+                        onClick={() => fetchShortimizeAccounts(true)} 
+                        disabled={!shortimizeApiKey || loadingShortimize || !accountsCollectionName.trim()}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
+                        {loadingShortimize ? 'Loading...' : 'Load Accounts'}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
