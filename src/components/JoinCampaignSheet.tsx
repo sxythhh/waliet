@@ -8,9 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, ArrowUp, Plus } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { useTheme } from "next-themes";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 interface Campaign {
@@ -57,14 +61,17 @@ export function JoinCampaignSheet({
   const [submitting, setSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  
   const getPlatformIcon = (platform: string) => {
+    const isLightMode = theme === "light";
     switch (platform.toLowerCase()) {
       case "tiktok":
-        return tiktokLogo;
+        return isLightMode ? tiktokLogoBlack : tiktokLogo;
       case "instagram":
-        return instagramLogo;
+        return isLightMode ? instagramLogoBlack : instagramLogo;
       case "youtube":
-        return youtubeLogo;
+        return isLightMode ? youtubeLogoBlack : youtubeLogo;
       default:
         return null;
     }

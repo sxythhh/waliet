@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Search, SlidersHorizontal } from "lucide-react";
+import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,9 @@ import {
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 
 interface Campaign {
   id: string;
@@ -46,6 +50,7 @@ export function AllCampaignsTab() {
   const [joinedCampaignIds, setJoinedCampaignIds] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   useEffect(() => {
     fetchCampaigns();
@@ -149,13 +154,14 @@ export function AllCampaignsTab() {
   };
 
   const getPlatformIcon = (platform: string) => {
+    const isLightMode = theme === "light";
     switch (platform.toLowerCase()) {
       case 'tiktok':
-        return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />;
+        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className="w-4 h-4" />;
       case 'instagram':
-        return <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />;
+        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className="w-4 h-4" />;
       case 'youtube':
-        return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />;
+        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className="w-4 h-4" />;
       default:
         return null;
     }

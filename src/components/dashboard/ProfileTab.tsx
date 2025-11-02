@@ -20,9 +20,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PhoneInput } from "@/components/PhoneInput";
 import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
+import { useTheme } from "next-themes";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 interface Profile {
   id: string;
@@ -86,6 +90,7 @@ interface Campaign {
 }
 export function ProfileTab() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [joinedCampaigns, setJoinedCampaigns] = useState<Campaign[]>([]);
@@ -219,13 +224,14 @@ export function ProfileTab() {
   };
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-4 w-4";
+    const isLightMode = theme === "light";
     switch (platform.toLowerCase()) {
       case "tiktok":
-        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
+        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={iconClass} />;
       case "instagram":
-        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
+        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className={iconClass} />;
       case "youtube":
-        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
+        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className={iconClass} />;
       default:
         return null;
     }

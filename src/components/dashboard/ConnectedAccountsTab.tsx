@@ -4,9 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { useTheme } from "next-themes";
 import tiktokLogo from "@/assets/tiktok-logo.svg";
 import instagramLogo from "@/assets/instagram-logo.svg";
 import youtubeLogo from "@/assets/youtube-logo.svg";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 
 interface ConnectedAccount {
   id: string;
@@ -26,6 +30,7 @@ interface ConnectedAccount {
 export function ConnectedAccountsTab() {
   const [connections, setConnections] = useState<ConnectedAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
 
   useEffect(() => {
     fetchConnections();
@@ -75,13 +80,14 @@ export function ConnectedAccountsTab() {
   };
 
   const getPlatformIcon = (platform: string) => {
+    const isLightMode = theme === "light";
     switch (platform.toLowerCase()) {
       case "tiktok":
-        return tiktokLogo;
+        return isLightMode ? tiktokLogoBlack : tiktokLogo;
       case "instagram":
-        return instagramLogo;
+        return isLightMode ? instagramLogoBlack : instagramLogo;
       case "youtube":
-        return youtubeLogo;
+        return isLightMode ? youtubeLogoBlack : youtubeLogo;
       default:
         return null;
     }
