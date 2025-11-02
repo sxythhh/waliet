@@ -155,7 +155,7 @@ export default function PayoutMethodDialog({
           }].map(method => {
             const Icon = method.icon;
             const isActive = selectedMethod === method.id;
-            return <button key={method.id} onClick={() => setSelectedMethod(method.id as any)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? "bg-[#1a1a1a]" : "bg-[#0f0f0f] hover:bg-[#151515]"}`}>
+            return <button key={method.id} onClick={() => setSelectedMethod(method.id as any)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? "bg-muted" : "bg-background hover:bg-muted/50"}`}>
                     {method.isLogo ? <img src={(isActive && method.iconActive ? method.iconActive : Icon) as string} alt={method.label} className="h-4 w-4" /> : <Icon className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />}
                     <span className={`text-sm font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
                       {method.label}
@@ -165,7 +165,7 @@ export default function PayoutMethodDialog({
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 bg-[#0f0f0f] rounded-xl p-6">
+            <div className="flex-1 bg-background rounded-xl p-6">
               {selectedMethod === "crypto" && <div className="space-y-6">
                   <div>
                     <Label className="font-medium text-muted-foreground mb-4 block" style={{
@@ -175,7 +175,7 @@ export default function PayoutMethodDialog({
                       SELECT CURRENCY
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
-                      {cryptoCurrencies.map(currency => <button key={currency.id} type="button" onClick={() => setSelectedCurrency(currency.id)} className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 justify-center ${selectedCurrency === currency.id ? "bg-primary/10 text-primary border-primary/30" : "bg-[#1a1a1a] text-muted-foreground border-transparent hover:border-transparent"}`}>
+                      {cryptoCurrencies.map(currency => <button key={currency.id} type="button" onClick={() => setSelectedCurrency(currency.id)} className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 justify-center ${selectedCurrency === currency.id ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-transparent hover:border-transparent"}`}>
                           <img src={currency.logo} alt={currency.name} className="h-5 w-5" />
                           {currency.name}
                         </button>)}
@@ -190,7 +190,7 @@ export default function PayoutMethodDialog({
                       SELECT NETWORK
                     </Label>
                     <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
-                      <SelectTrigger className="h-12 bg-[#1a1a1a] border-transparent">
+                      <SelectTrigger className="h-12 bg-muted border-transparent">
                         <SelectValue>
                           {selectedNetwork && <div className="flex items-center gap-3">
                               <img src={cryptoNetworks.find(n => n.id === selectedNetwork)?.logo} alt={cryptoNetworks.find(n => n.id === selectedNetwork)?.name} className="h-5 w-5" />
@@ -198,8 +198,8 @@ export default function PayoutMethodDialog({
                             </div>}
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1a1a1a] border-transparent">
-                        {cryptoNetworks.map(network => <SelectItem key={network.id} value={network.id} className="focus:bg-[#2a2a2a]">
+                      <SelectContent className="bg-muted border-transparent">
+                        {cryptoNetworks.map(network => <SelectItem key={network.id} value={network.id} className="focus:bg-accent">
                             <div className="flex items-center gap-3">
                               <img src={network.logo} alt={network.name} className="h-5 w-5" />
                               <span>{network.name}</span>
@@ -216,7 +216,7 @@ export default function PayoutMethodDialog({
               }}>
                       WALLET ADDRESS
                     </Label>
-                    <Input id="wallet-address" placeholder="Enter your wallet address" value={walletAddress} onChange={e => setWalletAddress(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                    <Input id="wallet-address" placeholder="Enter your wallet address" value={walletAddress} onChange={e => setWalletAddress(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                   </div>
                 </div>}
 
@@ -227,7 +227,7 @@ export default function PayoutMethodDialog({
             }}>
                     PAYPAL EMAIL
                   </Label>
-                  <Input id="paypal-email" type="email" placeholder="your.email@example.com" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                  <Input id="paypal-email" type="email" placeholder="your.email@example.com" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                 </div>}
 
               {selectedMethod === "upi" && <div className="space-y-3">
@@ -237,7 +237,7 @@ export default function PayoutMethodDialog({
             }}>
                     UPI ID
                   </Label>
-                  <Input id="upi-id" type="text" placeholder="yourname@okaxis" value={upiId} onChange={e => setUpiId(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                  <Input id="upi-id" type="text" placeholder="yourname@okaxis" value={upiId} onChange={e => setUpiId(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                 </div>}
 
               {selectedMethod === "revolut" && <div className="space-y-3">
@@ -247,7 +247,7 @@ export default function PayoutMethodDialog({
             }}>
                     REVTAG
                   </Label>
-                  <Input id="revolut-tag" placeholder="@yourtag" value={revolutTag} onChange={e => setRevolutTag(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                  <Input id="revolut-tag" placeholder="@yourtag" value={revolutTag} onChange={e => setRevolutTag(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                 </div>}
 
               {selectedMethod === "debit" && <div className="space-y-4">
@@ -258,7 +258,7 @@ export default function PayoutMethodDialog({
               }}>
                       CARD NUMBER
                     </Label>
-                    <Input id="card-number" placeholder="Enter your debit card number" value={cardNumber} onChange={e => setCardNumber(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                    <Input id="card-number" placeholder="Enter your debit card number" value={cardNumber} onChange={e => setCardNumber(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                   </div>
                   <div className="space-y-3">
                     <Label htmlFor="legal-name" className="font-medium text-muted-foreground" style={{
@@ -267,7 +267,7 @@ export default function PayoutMethodDialog({
               }}>
                       LEGAL NAME
                     </Label>
-                    <Input id="legal-name" placeholder="Full name as it appears on card" value={legalName} onChange={e => setLegalName(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                    <Input id="legal-name" placeholder="Full name as it appears on card" value={legalName} onChange={e => setLegalName(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                   </div>
                   <div className="space-y-3">
                     <Label htmlFor="address" className="font-medium text-muted-foreground" style={{
@@ -276,14 +276,14 @@ export default function PayoutMethodDialog({
               }}>
                       ADDRESS
                     </Label>
-                    <Input id="address" placeholder="Your full billing address" value={address} onChange={e => setAddress(e.target.value)} className="h-12 bg-[#1a1a1a] border-transparent focus:bg-[#0f0f0f] focus:border-transparent" />
+                    <Input id="address" placeholder="Your full billing address" value={address} onChange={e => setAddress(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                   </div>
                 </div>}
             </div>
           </div>}
 
-        {!isMaxMethodsReached && <div className="flex gap-3 pt-6 border-t border-[#1a1a1a]">
-            <Button variant="outline" className="flex-1 h-12 bg-[#0f0f0f] border-[#2a2a2a] hover:bg-[#1a1a1a]" onClick={() => onOpenChange(false)}>
+        {!isMaxMethodsReached && <div className="flex gap-3 pt-6 border-t border-border">
+            <Button variant="outline" className="flex-1 h-12 bg-background border-border hover:bg-muted" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "upi" && !upiId || selectedMethod === "revolut" && !revolutTag || selectedMethod === "debit" && (!cardNumber || !legalName || !address)}>
@@ -291,8 +291,8 @@ export default function PayoutMethodDialog({
             </Button>
           </div>}
 
-        {isMaxMethodsReached && <div className="flex justify-end pt-4 border-t border-[#1a1a1a]">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="bg-[#0f0f0f] border-[#2a2a2a] hover:bg-[#1a1a1a]">
+        {isMaxMethodsReached && <div className="flex justify-end pt-4 border-t border-border">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="bg-background border-border hover:bg-muted">
               Close
             </Button>
           </div>}
