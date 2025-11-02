@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import viralityLogo from "@/assets/virality-logo.webp";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -564,6 +565,106 @@ export function WalletTab() {
     setPayoutAmount(wallet.balance.toString());
     setPayoutDialogOpen(true);
   };
+  const generateTransactionImage = async (transaction: Transaction) => {
+    try {
+      // Create SVG
+      const svg = `
+        <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background gradient -->
+          <defs>
+            <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#0f0f1e;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <rect width="800" height="400" fill="url(#bgGradient)" rx="20"/>
+          
+          <!-- Logo -->
+          <text x="40" y="50" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff">Virality</text>
+          
+          <!-- Transaction Type -->
+          <text x="40" y="100" font-family="Arial, sans-serif" font-size="16" fill="#888">Transaction Type</text>
+          <text x="40" y="130" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff">
+            ${transaction.type === 'earning' ? 'Payment' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
+          </text>
+          
+          <!-- Amount -->
+          <text x="40" y="180" font-family="Arial, sans-serif" font-size="16" fill="#888">Amount</text>
+          <text x="40" y="220" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="${transaction.type === 'earning' || transaction.type === 'transfer_received' ? '#10b981' : '#ef4444'}">
+            ${transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : '-'}$${Math.abs(transaction.amount).toFixed(2)}
+          </text>
+          
+          <!-- Date -->
+          <text x="40" y="280" font-family="Arial, sans-serif" font-size="16" fill="#888">Date</text>
+          <text x="40" y="310" font-family="Arial, sans-serif" font-size="18" fill="#fff">${format(transaction.date, 'MMMM dd, yyyy')}</text>
+          
+          <!-- Status Badge -->
+          ${transaction.status ? `
+            <rect x="40" y="330" width="120" height="30" fill="${transaction.status === 'completed' ? '#10b98120' : transaction.status === 'rejected' ? '#ef444420' : '#f59e0b20'}" rx="8"/>
+            <text x="100" y="352" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="${transaction.status === 'completed' ? '#10b981' : transaction.status === 'rejected' ? '#ef4444' : '#f59e0b'}" text-anchor="middle">
+              ${transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+            </text>
+          ` : ''}
+          
+          <!-- Campaign Info if available -->
+          ${transaction.campaign ? `
+            <text x="450" y="180" font-family="Arial, sans-serif" font-size="16" fill="#888">Campaign</text>
+            <text x="450" y="210" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#fff">${transaction.campaign.title}</text>
+            <text x="450" y="235" font-family="Arial, sans-serif" font-size="14" fill="#888">${transaction.campaign.brand_name}</text>
+          ` : ''}
+          
+          <!-- Transaction ID -->
+          <text x="640" y="380" font-family="Arial, sans-serif" font-size="12" fill="#555" text-anchor="end">${transaction.id.slice(0, 8)}...${transaction.id.slice(-8)}</text>
+        </svg>
+      `;
+
+      // Convert SVG to blob
+      const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      
+      // Create canvas to convert to PNG
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) return;
+      
+      const img = new Image();
+      const url = URL.createObjectURL(svgBlob);
+      
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        
+        // Convert to PNG and download
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = `virality-transaction-${transaction.id.slice(0, 8)}.png`;
+          link.href = downloadUrl;
+          link.click();
+          URL.revokeObjectURL(downloadUrl);
+          
+          toast({
+            title: "Transaction Image Downloaded",
+            description: "Your transaction image has been saved successfully"
+          });
+        }, 'image/png');
+      };
+      
+      img.src = url;
+    } catch (error) {
+      console.error('Error generating image:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to generate transaction image"
+      });
+    }
+  };
+
   const handleConfirmPayout = async () => {
     if (isSubmittingPayout) return; // Prevent duplicate submissions
 
@@ -869,6 +970,7 @@ export function WalletTab() {
                       <TableHead className="font-semibold">Details</TableHead>
                       <TableHead className="font-semibold text-right">Amount</TableHead>
                       <TableHead className="font-semibold text-right">Date</TableHead>
+                      <TableHead className="font-semibold text-right w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -932,25 +1034,38 @@ export function WalletTab() {
                               ${Math.abs(transaction.amount).toFixed(2)}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right">
-                            <span className="text-sm text-muted-foreground whitespace-nowrap" style={{
-                      letterSpacing: '-0.5px'
-                    }}>
-                              {(() => {
-                        const now = new Date();
-                        const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
-                        if (diffInHours < 24) {
-                          if (diffInHours < 1) {
-                            const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
-                            return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
-                          }
-                          return `${diffInHours}h ago`;
-                        }
-                        return format(transaction.date, 'MMM dd, yyyy');
-                      })()}
-                            </span>
-                          </TableCell>
-                        </TableRow>)}
+                           <TableCell className="text-right">
+                             <span className="text-sm text-muted-foreground whitespace-nowrap" style={{
+                       letterSpacing: '-0.5px'
+                     }}>
+                               {(() => {
+                         const now = new Date();
+                         const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
+                         if (diffInHours < 24) {
+                           if (diffInHours < 1) {
+                             const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
+                             return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
+                           }
+                           return `${diffInHours}h ago`;
+                         }
+                         return format(transaction.date, 'MMM dd, yyyy');
+                       })()}
+                             </span>
+                           </TableCell>
+                           <TableCell className="text-right">
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 generateTransactionImage(transaction);
+                               }}
+                               className="h-8 w-8"
+                             >
+                               <Share2 className="h-4 w-4" />
+                             </Button>
+                           </TableCell>
+                         </TableRow>)}
                   </TableBody>
                 </Table>
               </div>
