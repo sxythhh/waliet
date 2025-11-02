@@ -1,6 +1,7 @@
 import { Layers, Dock, Compass, Coins, ArrowUpRight, LogOut } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
+import newLogo from "@/assets/new-logo.png";
 import discordIcon from "@/assets/discord-icon.png";
 import { WebStoriesIcon } from "@/components/WebStoriesIcon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/components/ThemeProvider";
 
 const menuItems = [
   {
@@ -40,6 +42,7 @@ export function AppSidebar() {
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "campaigns";
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
 
@@ -83,8 +86,16 @@ export function AppSidebar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background px-3 md:px-6">
       {/* Logo */}
-      <div className="hidden md:flex items-center">
-        <img src={wordmarkLogo} alt="Logo" className="h-12" />
+      <div className="hidden md:flex items-center gap-2">
+        <img src={newLogo} alt="Logo" className="h-10 w-10 rounded-lg" />
+        <img 
+          src={wordmarkLogo} 
+          alt="Wordmark" 
+          className="h-8"
+          style={{
+            filter: theme === 'light' ? 'brightness(0)' : 'none'
+          }}
+        />
       </div>
 
       {/* Navigation Items */}
