@@ -244,7 +244,7 @@ export function DiscoverTab() {
             <Skeleton className="h-[350px] rounded-lg" />
           </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
-            <p className="text-slate-50 font-medium">No campaigns or bounties found</p>
+            <p className="text-foreground font-medium">No campaigns or bounties found</p>
           </div> : <div className="space-y-8">
             {sortedCampaigns.length > 0 && (
               <div className="space-y-3">

@@ -718,13 +718,11 @@ export function WalletTab() {
       {/* Header with Main Balance */}
       <div className="flex items-center justify-between py-0">
         <div className="flex gap-2">
-          <Button onClick={() => setP2pTransferDialogOpen(true)} size="lg" variant="outline" className="py-0 my-0 border-0 bg-white/10 hover:bg-white/20 text-white font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 1}>
+          <Button onClick={() => setP2pTransferDialogOpen(true)} size="lg" variant="outline" className="py-0 my-0 border-0 bg-muted hover:bg-accent font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 1}>
             <ArrowRightLeft className="mr-2 h-4 w-4" />
             Transfer Money
           </Button>
-          <Button onClick={handleRequestPayout} size="lg" className="py-0 my-0 border-t font-geist tracking-tighter-custom" style={{
-          borderTopColor: '#4b85f7'
-        }} disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
+          <Button onClick={handleRequestPayout} size="lg" className="py-0 my-0 border-t border-primary/30 font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
             Withdraw Balance
           </Button>
         </div>
@@ -934,7 +932,7 @@ export function WalletTab() {
       <Card className="bg-card border-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-lg font-semibold">Payout Methods</CardTitle>
-          <Button onClick={() => setDialogOpen(true)} size="sm" disabled={payoutMethods.length >= 3} className="bg-primary hover:bg-primary/90 text-white border-0">
+          <Button onClick={() => setDialogOpen(true)} size="sm" disabled={payoutMethods.length >= 3} className="bg-primary hover:bg-primary/90 text-primary-foreground border-0">
             <Plus className="mr-2 h-4 w-4" />
             Add Method {payoutMethods.length >= 3 ? "(Max 3)" : ""}
           </Button>
@@ -943,7 +941,7 @@ export function WalletTab() {
           {payoutMethods.length === 0 ? <div className="text-center py-8">
               
               <p className="text-sm text-muted-foreground mb-3">No payout methods</p>
-              <Button onClick={() => setDialogOpen(true)} size="sm" className="bg-primary hover:bg-primary/90 text-white border-0">
+              <Button onClick={() => setDialogOpen(true)} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground border-0">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Method
               </Button>
@@ -1038,7 +1036,7 @@ export function WalletTab() {
                           <p className="text-base font-semibold text-foreground">
                             {getMethodLabel()}
                           </p>
-                          {method.method.includes('crypto') && <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-transparent text-white border-0 flex items-center gap-1.5 normal-case hover:bg-transparent">
+                          {method.method.includes('crypto') && <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-transparent text-foreground border-0 flex items-center gap-1.5 normal-case hover:bg-transparent">
                               {networkLogo && <img src={networkLogo} alt="Network logo" className="h-3 w-3" />}
                               {getBadgeText()}
                             </Badge>}
@@ -1202,7 +1200,7 @@ export function WalletTab() {
                           {selectedTransaction.status === 'completed' ? <Check className="w-8 h-8 text-green-500" /> : selectedTransaction.status === 'in_transit' ? <TrendingUp className="w-8 h-8 text-blue-500" /> : <Hourglass className="w-8 h-8 text-orange-500" />}
                         </div>
                       </div>
-                      <p className="text-white font-bold font-chakra" style={{
+                      <p className="text-foreground font-bold font-chakra" style={{
                   letterSpacing: '-0.3px'
                 }}>
                         {selectedTransaction.status === 'completed' ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!` : selectedTransaction.status === 'in_transit' ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!` : `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
