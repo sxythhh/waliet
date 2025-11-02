@@ -15,6 +15,7 @@ import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.svg";
 import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
+import discordIconNew from "@/assets/discord-icon-new.png";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -327,7 +328,7 @@ export function CampaignsTab() {
         {/* Join Discord Card */}
         <div className="bg-muted rounded-2xl p-6 space-y-2 hover:bg-muted/80 transition-colors cursor-pointer">
           <div className="flex items-center gap-3">
-            <MessageCircle className="w-6 h-6" />
+            <img src={discordIconNew} alt="Discord" className="w-6 h-6" />
             <h3 className="text-lg font-semibold">Join Discord</h3>
           </div>
           <p className="text-sm text-muted-foreground">
