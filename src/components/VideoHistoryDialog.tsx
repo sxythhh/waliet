@@ -1,5 +1,6 @@
+import * as React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,6 +30,8 @@ export function VideoHistoryDialog({
   historyData,
   loading
 }: VideoHistoryDialogProps) {
+  const [activeMetric, setActiveMetric] = React.useState<'views' | 'likes' | 'comments' | 'shares'>('views');
+  
   if (!video) return null;
 
   return (
@@ -55,26 +58,142 @@ export function VideoHistoryDialog({
               <TabsTrigger value="table">Table</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="chart" className="space-y-4">
-              <div className="h-[300px]">
+            <TabsContent value="chart" className="space-y-6">
+              {/* Metric Selector */}
+              <div className="flex gap-2 flex-wrap">
+                <button 
+                  onClick={() => setActiveMetric('views')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeMetric === 'views' 
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' 
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  Views
+                </button>
+                <button 
+                  onClick={() => setActiveMetric('likes')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeMetric === 'likes' 
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  Likes
+                </button>
+                <button 
+                  onClick={() => setActiveMetric('comments')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeMetric === 'comments' 
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  Comments
+                </button>
+                <button 
+                  onClick={() => setActiveMetric('shares')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeMetric === 'shares' 
+                      ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  Shares
+                </button>
+              </div>
+
+              <div className="h-[400px] bg-black/30 rounded-xl p-4 border border-white/5">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={[...historyData].reverse()}>
+                  <AreaChart data={[...historyData].reverse()}>
+                    <defs>
+                      <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorLikes" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorComments" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorShares" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
                     <XAxis 
                       dataKey="date" 
-                      tickFormatter={(value) => new Date(value).toLocaleDateString()}
-                      stroke="hsl(var(--muted-foreground))"
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      stroke="#666"
+                      tick={{ fill: '#666', fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
                     />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <YAxis 
+                      stroke="#666"
+                      tick={{ fill: '#666', fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(value) => value.toLocaleString()}
+                    />
                     <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#0a0a0a', 
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        padding: '8px 12px'
+                      }}
                       labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                      formatter={(value: number) => value.toLocaleString()}
+                      formatter={(value: number) => [value.toLocaleString(), activeMetric.charAt(0).toUpperCase() + activeMetric.slice(1)]}
                     />
-                    <Legend />
-                    <Line type="monotone" dataKey="views" stroke="#8884d8" strokeWidth={2} />
-                    <Line type="monotone" dataKey="likes" stroke="#82ca9d" strokeWidth={2} />
-                    <Line type="monotone" dataKey="comments" stroke="#ffc658" strokeWidth={2} />
-                    <Line type="monotone" dataKey="shares" stroke="#ff7c7c" strokeWidth={2} />
-                  </LineChart>
+                    {activeMetric === 'views' && (
+                      <Area 
+                        type="monotone" 
+                        dataKey="views" 
+                        stroke="#a855f7" 
+                        strokeWidth={2.5}
+                        fill="url(#colorViews)"
+                        dot={false}
+                        activeDot={{ r: 4, fill: '#a855f7' }}
+                      />
+                    )}
+                    {activeMetric === 'likes' && (
+                      <Area 
+                        type="monotone" 
+                        dataKey="likes" 
+                        stroke="#10b981" 
+                        strokeWidth={2.5}
+                        fill="url(#colorLikes)"
+                        dot={false}
+                        activeDot={{ r: 4, fill: '#10b981' }}
+                      />
+                    )}
+                    {activeMetric === 'comments' && (
+                      <Area 
+                        type="monotone" 
+                        dataKey="comments" 
+                        stroke="#06b6d4" 
+                        strokeWidth={2.5}
+                        fill="url(#colorComments)"
+                        dot={false}
+                        activeDot={{ r: 4, fill: '#06b6d4' }}
+                      />
+                    )}
+                    {activeMetric === 'shares' && (
+                      <Area 
+                        type="monotone" 
+                        dataKey="shares" 
+                        stroke="#f97316" 
+                        strokeWidth={2.5}
+                        fill="url(#colorShares)"
+                        dot={false}
+                        activeDot={{ r: 4, fill: '#f97316' }}
+                      />
+                    )}
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
 
