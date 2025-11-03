@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
-import { NotificationBell } from "@/components/NotificationBell";
 
 const menuItems = [
   {
@@ -94,7 +93,6 @@ export function AppSidebar() {
       <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4 border-b">
         <OptimizedImage src={newLogo} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
         <div className="flex items-center gap-3">
-          <NotificationBell />
           <Popover>
             <PopoverTrigger asChild>
               <button className="cursor-pointer">
@@ -238,7 +236,6 @@ export function AppSidebar() {
 
       {/* User Profile */}
       <div className="hidden md:flex items-center gap-2">
-        <NotificationBell />
         <Popover>
           <PopoverTrigger asChild>
             <button className="cursor-pointer">
