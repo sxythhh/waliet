@@ -1379,21 +1379,22 @@ export default function BrandManagement({
 
                   {videos.length > 0 && (
                     <div className="border rounded-lg overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Username</TableHead>
-                            <TableHead>Platform</TableHead>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Uploaded</TableHead>
-                            <TableHead className="text-right">Views</TableHead>
-                            <TableHead className="text-right">Likes</TableHead>
-                            <TableHead className="text-right">Comments</TableHead>
-                            <TableHead className="text-right">Shares</TableHead>
-                            <TableHead className="text-right">Est. Payout</TableHead>
-                            <TableHead>Link</TableHead>
-                          </TableRow>
-                        </TableHeader>
+                      <div className="overflow-x-auto">
+                        <Table className="min-w-[800px]">
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="min-w-[120px]">Username</TableHead>
+                              <TableHead className="min-w-[100px]">Platform</TableHead>
+                              <TableHead className="min-w-[200px]">Title</TableHead>
+                              <TableHead className="min-w-[100px]">Uploaded</TableHead>
+                              <TableHead className="text-right min-w-[80px]">Views</TableHead>
+                              <TableHead className="text-right min-w-[80px]">Likes</TableHead>
+                              <TableHead className="text-right min-w-[100px]">Comments</TableHead>
+                              <TableHead className="text-right min-w-[80px]">Shares</TableHead>
+                              <TableHead className="text-right min-w-[100px]">Est. Payout</TableHead>
+                              <TableHead className="min-w-[80px]">Link</TableHead>
+                            </TableRow>
+                          </TableHeader>
                         <TableBody>
                           {videos.map((video, index) => (
                             <TableRow 
@@ -1423,6 +1424,7 @@ export default function BrandManagement({
                           ))}
                         </TableBody>
                       </Table>
+                      </div>
                     </div>
                   )}
 
