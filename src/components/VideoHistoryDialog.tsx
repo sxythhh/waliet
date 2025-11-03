@@ -30,7 +30,16 @@ export function VideoHistoryDialog({
   historyData,
   loading
 }: VideoHistoryDialogProps) {
-  const [activeMetric, setActiveMetric] = React.useState<'views' | 'likes' | 'comments' | 'shares'>('views');
+  const [visibleMetrics, setVisibleMetrics] = React.useState({
+    views: true,
+    likes: true,
+    comments: true,
+    shares: true
+  });
+
+  const toggleMetric = (metric: keyof typeof visibleMetrics) => {
+    setVisibleMetrics(prev => ({ ...prev, [metric]: !prev[metric] }));
+  };
   
   if (!video) return null;
 
@@ -59,44 +68,44 @@ export function VideoHistoryDialog({
             </TabsList>
 
             <TabsContent value="chart" className="space-y-6">
-              {/* Metric Selector */}
+              {/* Metric Toggles */}
               <div className="flex gap-2 flex-wrap">
                 <button 
-                  onClick={() => setActiveMetric('views')}
+                  onClick={() => toggleMetric('views')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeMetric === 'views' 
+                    visibleMetrics.views
                       ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' 
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      : 'bg-muted/30 text-muted-foreground/50 border border-muted/30'
                   }`}
                 >
                   Views
                 </button>
                 <button 
-                  onClick={() => setActiveMetric('likes')}
+                  onClick={() => toggleMetric('likes')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeMetric === 'likes' 
+                    visibleMetrics.likes
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      : 'bg-muted/30 text-muted-foreground/50 border border-muted/30'
                   }`}
                 >
                   Likes
                 </button>
                 <button 
-                  onClick={() => setActiveMetric('comments')}
+                  onClick={() => toggleMetric('comments')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeMetric === 'comments' 
+                    visibleMetrics.comments
                       ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      : 'bg-muted/30 text-muted-foreground/50 border border-muted/30'
                   }`}
                 >
                   Comments
                 </button>
                 <button 
-                  onClick={() => setActiveMetric('shares')}
+                  onClick={() => toggleMetric('shares')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeMetric === 'shares' 
+                    visibleMetrics.shares
                       ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      : 'bg-muted/30 text-muted-foreground/50 border border-muted/30'
                   }`}
                 >
                   Shares
@@ -108,29 +117,34 @@ export function VideoHistoryDialog({
                   <AreaChart data={[...historyData].reverse()}>
                     <defs>
                       <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.2}/>
                         <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
                       </linearGradient>
                       <linearGradient id="colorLikes" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
                         <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                       </linearGradient>
                       <linearGradient id="colorComments" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.2}/>
                         <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
                       </linearGradient>
                       <linearGradient id="colorShares" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.2}/>
                         <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <XAxis 
                       dataKey="date" 
-                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      }}
                       stroke="#666"
                       tick={{ fill: '#666', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
+                      interval="preserveStartEnd"
+                      minTickGap={50}
                     />
                     <YAxis 
                       stroke="#666"
@@ -147,9 +161,12 @@ export function VideoHistoryDialog({
                         padding: '8px 12px'
                       }}
                       labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                      formatter={(value: number) => [value.toLocaleString(), activeMetric.charAt(0).toUpperCase() + activeMetric.slice(1)]}
+                      formatter={(value: number, name: string) => [
+                        value.toLocaleString(), 
+                        name.charAt(0).toUpperCase() + name.slice(1)
+                      ]}
                     />
-                    {activeMetric === 'views' && (
+                    {visibleMetrics.views && (
                       <Area 
                         type="monotone" 
                         dataKey="views" 
@@ -160,7 +177,7 @@ export function VideoHistoryDialog({
                         activeDot={{ r: 4, fill: '#a855f7' }}
                       />
                     )}
-                    {activeMetric === 'likes' && (
+                    {visibleMetrics.likes && (
                       <Area 
                         type="monotone" 
                         dataKey="likes" 
@@ -171,7 +188,7 @@ export function VideoHistoryDialog({
                         activeDot={{ r: 4, fill: '#10b981' }}
                       />
                     )}
-                    {activeMetric === 'comments' && (
+                    {visibleMetrics.comments && (
                       <Area 
                         type="monotone" 
                         dataKey="comments" 
@@ -182,7 +199,7 @@ export function VideoHistoryDialog({
                         activeDot={{ r: 4, fill: '#06b6d4' }}
                       />
                     )}
-                    {activeMetric === 'shares' && (
+                    {visibleMetrics.shares && (
                       <Area 
                         type="monotone" 
                         dataKey="shares" 
