@@ -185,7 +185,7 @@ export default function BrandManagement({
     if (!timestamp) return false;
     const cacheTime = new Date(timestamp).getTime();
     const now = Date.now();
-    return now - cacheTime < CACHE_DURATION_MS;
+    return (now - cacheTime) < CACHE_DURATION_MS;
   };
 
   // Load cached data on mount
@@ -195,11 +195,7 @@ export default function BrandManagement({
       const cachedVideos = localStorage.getItem(VIDEOS_CACHE_KEY);
       if (cachedVideos) {
         try {
-          const {
-            data,
-            timestamp,
-            collection
-          } = JSON.parse(cachedVideos);
+          const { data, timestamp, collection } = JSON.parse(cachedVideos);
           if (isCacheValid(timestamp)) {
             setVideos(data);
             setCollectionName(collection);
@@ -214,11 +210,7 @@ export default function BrandManagement({
       const cachedAccounts = localStorage.getItem(ACCOUNTS_CACHE_KEY);
       if (cachedAccounts) {
         try {
-          const {
-            data,
-            timestamp,
-            collection
-          } = JSON.parse(cachedAccounts);
+          const { data, timestamp, collection } = JSON.parse(cachedAccounts);
           if (isCacheValid(timestamp)) {
             setShortimizeAccounts(data);
             setAccountsCollectionName(collection);
@@ -235,6 +227,7 @@ export default function BrandManagement({
       toast.error("Brand not loaded");
       return;
     }
+
     if (!accountsCollectionName?.trim()) {
       toast.error("Please enter a collection name");
       return;
@@ -245,11 +238,7 @@ export default function BrandManagement({
       const cachedAccounts = localStorage.getItem(ACCOUNTS_CACHE_KEY);
       if (cachedAccounts) {
         try {
-          const {
-            data,
-            timestamp,
-            collection
-          } = JSON.parse(cachedAccounts);
+          const { data, timestamp, collection } = JSON.parse(cachedAccounts);
           if (collection === accountsCollectionName && isCacheValid(timestamp)) {
             setShortimizeAccounts(data);
             setLastAccountsFetch(new Date(timestamp));
@@ -261,33 +250,30 @@ export default function BrandManagement({
         }
       }
     }
+
     setLoadingShortimize(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('fetch-shortimize-accounts', {
-        body: {
-          brandId,
-          collectionName: accountsCollectionName
-        }
+      const { data, error } = await supabase.functions.invoke('fetch-shortimize-accounts', {
+        body: { brandId, collectionName: accountsCollectionName }
       });
+
       if (error) {
         console.error("Edge function error:", error);
         throw new Error(error.message || 'Failed to call edge function');
       }
+
       if (!data || data.error) {
         throw new Error(data?.error || 'Failed to fetch accounts');
       }
-      const accountsData = Array.isArray(data) ? data : [];
 
+      const accountsData = Array.isArray(data) ? data : [];
+      
       // If we have a selected campaign, match accounts with campaign participants
       if (selectedCampaignId && accountsData.length > 0) {
         // Fetch social accounts connected to this campaign
-        const {
-          data: socialAccounts,
-          error: socialError
-        } = await supabase.from('social_account_campaigns').select(`
+        const { data: socialAccounts, error: socialError } = await supabase
+          .from('social_account_campaigns')
+          .select(`
             social_accounts!inner (
               id,
               username,
@@ -299,7 +285,9 @@ export default function BrandManagement({
                 avatar_url
               )
             )
-          `).eq('campaign_id', selectedCampaignId);
+          `)
+          .eq('campaign_id', selectedCampaignId);
+
         if (socialError) {
           console.error('Error fetching social accounts:', socialError);
         }
@@ -321,8 +309,9 @@ export default function BrandManagement({
             matched_user: matchedProfile || null
           };
         });
-        setShortimizeAccounts(matchedAccounts);
 
+        setShortimizeAccounts(matchedAccounts);
+        
         // Cache the matched data
         const timestamp = new Date().toISOString();
         setLastAccountsFetch(new Date(timestamp));
@@ -333,7 +322,7 @@ export default function BrandManagement({
         }));
       } else {
         setShortimizeAccounts(accountsData);
-
+        
         // Cache the data
         const timestamp = new Date().toISOString();
         setLastAccountsFetch(new Date(timestamp));
@@ -343,6 +332,7 @@ export default function BrandManagement({
           collection: accountsCollectionName
         }));
       }
+      
       toast.success(`Loaded ${accountsData.length} accounts`);
     } catch (error: any) {
       console.error('Error fetching Shortimize accounts:', error);
@@ -351,6 +341,7 @@ export default function BrandManagement({
       setLoadingShortimize(false);
     }
   };
+
   const fetchVideos = async (collection: string, forceRefresh = false) => {
     if (!brandId || !collection.trim()) {
       toast.error('Please enter a collection name');
@@ -362,11 +353,7 @@ export default function BrandManagement({
       const cachedVideos = localStorage.getItem(VIDEOS_CACHE_KEY);
       if (cachedVideos) {
         try {
-          const {
-            data,
-            timestamp,
-            collection: cachedCollection
-          } = JSON.parse(cachedVideos);
+          const { data, timestamp, collection: cachedCollection } = JSON.parse(cachedVideos);
           if (cachedCollection === collection && isCacheValid(timestamp)) {
             setVideos(data);
             setLastVideosFetch(new Date(timestamp));
@@ -378,29 +365,27 @@ export default function BrandManagement({
         }
       }
     }
+
     setLoadingVideos(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('fetch-shortimize-videos', {
-        body: {
-          brandId,
-          collectionName: collection
-        }
+      const { data, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
+        body: { brandId, collectionName: collection }
       });
+
       if (error) {
         console.error("Edge function error:", error);
         throw new Error(error.message || 'Failed to call edge function');
       }
-      if (!data || Array.isArray(data) && data.length === 0) {
+
+      if (!data || (Array.isArray(data) && data.length === 0)) {
         setVideos([]);
         toast.info('No videos found for this collection');
         return;
       }
+
       const videosData = Array.isArray(data) ? data : [];
       setVideos(videosData);
-
+      
       // Cache the data
       const timestamp = new Date().toISOString();
       setLastVideosFetch(new Date(timestamp));
@@ -409,6 +394,7 @@ export default function BrandManagement({
         timestamp,
         collection
       }));
+
       toast.success(`Loaded ${videosData.length} videos`);
     } catch (error: any) {
       console.error('Error fetching videos:', error);
@@ -417,35 +403,38 @@ export default function BrandManagement({
       setLoadingVideos(false);
     }
   };
+
   const fetchVideoHistory = async (video: any) => {
     if (!brandId || !video.ad_id) {
       toast.error('Unable to fetch video history');
       return;
     }
+
     setSelectedVideo(video);
     setVideoHistoryOpen(true);
     setLoadingVideoHistory(true);
     setVideoHistory(null);
+
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('fetch-video-history', {
-        body: {
-          brandId,
-          adId: video.ad_id
+      const { data, error } = await supabase.functions.invoke('fetch-video-history', {
+        body: { 
+          brandId, 
+          adId: video.ad_id,
           // Optional: Add date range if needed
           // startDate: '2024-01-01',
           // endDate: '2024-12-31'
         }
       });
+
       if (error) {
         console.error("Edge function error:", error);
         throw new Error(error.message || 'Failed to call edge function');
       }
+
       if (!data || data.error) {
         throw new Error(data?.error || 'Failed to fetch video history');
       }
+
       setVideoHistory(Array.isArray(data) ? data : []);
     } catch (error: any) {
       console.error('Error fetching video history:', error);
@@ -454,6 +443,7 @@ export default function BrandManagement({
       setLoadingVideoHistory(false);
     }
   };
+
   const exportToCSV = () => {
     const csvData = approvedSubmissions.map(submission => {
       const linkedAccounts = submission.profiles?.social_accounts?.map(acc => `${acc.platform}:@${acc.username}`).join('; ') || 'None';
@@ -483,18 +473,18 @@ export default function BrandManagement({
   };
   const fetchCampaignTransactions = async () => {
     if (!selectedCampaignId) return;
+    
     setLoadingTransactions(true);
     try {
       // First fetch transactions
-      const {
-        data: transactions,
-        error: txError
-      } = await supabase.from("wallet_transactions").select('*').contains('metadata', {
-        campaign_id: selectedCampaignId
-      }).order('created_at', {
-        ascending: false
-      });
+      const { data: transactions, error: txError } = await supabase
+        .from("wallet_transactions")
+        .select('*')
+        .contains('metadata', { campaign_id: selectedCampaignId })
+        .order('created_at', { ascending: false });
+
       if (txError) throw txError;
+
       if (!transactions || transactions.length === 0) {
         setCampaignTransactions([]);
         return;
@@ -504,27 +494,32 @@ export default function BrandManagement({
       const userIds = [...new Set(transactions.map(t => t.user_id).filter(Boolean))];
 
       // Fetch profiles for those users
-      const {
-        data: profiles,
-        error: profileError
-      } = await supabase.from("profiles").select('id, username, avatar_url').in('id', userIds);
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
       if (profileError) throw profileError;
 
       // Fetch analytics to get Shortimize account info
-      const {
-        data: analyticsData,
-        error: analyticsError
-      } = await supabase.from("campaign_account_analytics").select('user_id, account_username, platform').eq('campaign_id', selectedCampaignId).in('user_id', userIds);
+      const { data: analyticsData, error: analyticsError } = await supabase
+        .from("campaign_account_analytics")
+        .select('user_id, account_username, platform')
+        .eq('campaign_id', selectedCampaignId)
+        .in('user_id', userIds);
+
       if (analyticsError) console.error('Error fetching analytics:', analyticsError);
 
       // Map profiles and analytics to transactions
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
       const analyticsMap = new Map(analyticsData?.map(a => [a.user_id, a]) || []);
+      
       const enrichedTransactions = transactions.map(tx => ({
         ...tx,
         profiles: profileMap.get(tx.user_id) || null,
         shortimize_account: analyticsMap.get(tx.user_id) || null
       }));
+
       setCampaignTransactions(enrichedTransactions);
     } catch (error) {
       console.error("Error fetching campaign transactions:", error);
@@ -533,14 +528,17 @@ export default function BrandManagement({
       setLoadingTransactions(false);
     }
   };
+
   useEffect(() => {
     fetchCampaigns();
   }, [slug]);
+
   useEffect(() => {
     if (isManagementPage && selectedCampaignId) {
       fetchCampaignTransactions();
     }
   }, [isManagementPage, selectedCampaignId]);
+
   useEffect(() => {
     // Removed auto-fetch on mount - users should manually load with collection name
   }, [isManagementPage, brandId, shortimizeApiKey]);
@@ -624,13 +622,13 @@ export default function BrandManagement({
   };
   const fetchCampaigns = async () => {
     if (!slug && !isManagementPage) return;
+    
     try {
       if (isManagementPage && slug) {
         // Management page: fetch by campaign slug
-        const {
-          data: campaignData,
-          error: campaignError
-        } = await supabase.from("campaigns").select(`
+        const { data: campaignData, error: campaignError } = await supabase
+          .from("campaigns")
+          .select(`
             id, 
             title, 
             description, 
@@ -660,9 +658,13 @@ export default function BrandManagement({
               brand_type, 
               shortimize_api_key
             )
-          `).eq("slug", slug).maybeSingle();
+          `)
+          .eq("slug", slug)
+          .maybeSingle();
+
         if (campaignError) throw campaignError;
         if (!campaignData) return;
+
         const brandData = campaignData.brands;
         setBrandId(brandData.id);
         setAssetsUrl(brandData.assets_url || "");
@@ -670,6 +672,7 @@ export default function BrandManagement({
         setAccountUrl(brandData.account_url || "");
         setBrandType(brandData.brand_type || "");
         setShortimizeApiKey(brandData.shortimize_api_key || "");
+
         setCampaigns([{
           ...campaignData,
           application_questions: Array.isArray(campaignData.application_questions) ? campaignData.application_questions : []
@@ -677,24 +680,28 @@ export default function BrandManagement({
         setSelectedCampaignId(campaignData.id);
       } else {
         // Regular brand dashboard: fetch by brand slug
-        const {
-          data: brandData,
-          error: brandError
-        } = await supabase.from("brands").select("id, assets_url, home_url, account_url, brand_type, shortimize_api_key").eq("slug", slug).maybeSingle();
+        const { data: brandData, error: brandError } = await supabase
+          .from("brands")
+          .select("id, assets_url, home_url, account_url, brand_type, shortimize_api_key")
+          .eq("slug", slug)
+          .maybeSingle();
+
         if (brandError) throw brandError;
         if (!brandData) return;
+
         setBrandId(brandData.id);
         setAssetsUrl(brandData.assets_url || "");
         setHomeUrl(brandData.home_url || "");
         setAccountUrl(brandData.account_url || "");
         setBrandType(brandData.brand_type || "");
         setShortimizeApiKey(brandData.shortimize_api_key || "");
-        const {
-          data,
-          error
-        } = await supabase.from("campaigns").select("id, title, description, budget, budget_used, rpm_rate, status, banner_url, preview_url, analytics_url, guidelines, allowed_platforms, application_questions, slug, embed_url, is_private, access_code, requires_application, is_infinite_budget, is_featured").eq("brand_id", brandData.id).order("created_at", {
-          ascending: false
-        });
+
+        const { data, error } = await supabase
+          .from("campaigns")
+          .select("id, title, description, budget, budget_used, rpm_rate, status, banner_url, preview_url, analytics_url, guidelines, allowed_platforms, application_questions, slug, embed_url, is_private, access_code, requires_application, is_infinite_budget, is_featured")
+          .eq("brand_id", brandData.id)
+          .order("created_at", { ascending: false });
+
         if (error) throw error;
         setCampaigns((data || []).map(c => ({
           ...c,
@@ -1167,7 +1174,8 @@ export default function BrandManagement({
         <div className="text-foreground">No campaigns found</div>
       </div>;
   }
-  return <div className="min-h-screen p-4 md:p-8 bg-[#060605]">
+  return (
+    <div className="min-h-screen p-4 md:p-8 bg-[#060605]">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Mobile Menu Button */}
         <div className="md:hidden">
@@ -1195,12 +1203,55 @@ export default function BrandManagement({
         </div>
 
         {/* Campaign Metrics Cards */}
-        {selectedCampaign}
+        {selectedCampaign && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Combined Budget Card */}
+            <Card className="border">
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground mb-2">Budget Overview</p>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs text-muted-foreground">Total</span>
+                    <span className="text-lg font-semibold">${selectedCampaign.budget?.toLocaleString() || '0'}</span>
+                  </div>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs text-muted-foreground">Used</span>
+                    <span className="text-lg font-semibold">${selectedCampaign.budget_used?.toLocaleString() || '0'}</span>
+                  </div>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs text-muted-foreground">Remaining</span>
+                    <span className="text-lg font-semibold">${((selectedCampaign.budget || 0) - (selectedCampaign.budget_used || 0)).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* RPM Rate Card */}
+            <Card className="border">
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground mb-2">RPM Rate</p>
+                <p className="text-lg font-semibold">
+                  ${selectedCampaign.rpm_rate?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+            </Card>
+
+            {/* Creators Card */}
+            <Card className="border">
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground mb-2">Creators</p>
+                <p className="text-lg font-semibold">
+                  {approvedSubmissions.length}
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Conditional Content Based on Page Type */}
-        {isManagementPage ?
-      // Management Page: Tabs with Analytics, Videos, Users, Payouts
-      <Tabs defaultValue="analytics" className="w-full">
+        {isManagementPage ? (
+          // Management Page: Tabs with Analytics, Videos, Users, Payouts
+          <Tabs defaultValue="analytics" className="w-full">
             <TabsList className="bg-card border">
               <TabsTrigger value="analytics" className="data-[state=active]:bg-accent">
                 Analytics
@@ -1223,7 +1274,8 @@ export default function BrandManagement({
                   <CardTitle className="font-instrument tracking-tight">Campaign Analytics</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {videos.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {videos.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <Card className="bg-accent/50 border-accent">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
@@ -1271,15 +1323,20 @@ export default function BrandManagement({
                             <div>
                               <p className="text-sm text-muted-foreground">Avg Engagement</p>
                               <p className="text-2xl font-bold">
-                                {videos.length > 0 ? (videos.reduce((sum, v) => sum + (Number(v.latest_likes) || 0) + (Number(v.latest_comments) || 0) + (Number(v.latest_shares) || 0), 0) / videos.length).toFixed(1) : 0}
+                                {videos.length > 0 ? (
+                                  ((videos.reduce((sum, v) => sum + (Number(v.latest_likes) || 0) + (Number(v.latest_comments) || 0) + (Number(v.latest_shares) || 0), 0) / videos.length)).toFixed(1)
+                                ) : 0}
                               </p>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                    </div> : <div className="text-center py-12">
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
                       <p className="text-muted-foreground text-sm">Fetch videos from the Videos tab to see analytics</p>
-                    </div>}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1292,21 +1349,36 @@ export default function BrandManagement({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-2">
-                    <Input placeholder="Enter collection name" value={collectionName} onChange={e => setCollectionName(e.target.value)} onKeyPress={e => e.key === 'Enter' && fetchVideos(collectionName, false)} className="bg-background border" />
+                    <Input
+                      placeholder="Enter collection name"
+                      value={collectionName}
+                      onChange={(e) => setCollectionName(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && fetchVideos(collectionName, false)}
+                      className="bg-background border"
+                    />
                     <Button onClick={() => fetchVideos(collectionName, false)} disabled={loadingVideos}>
                       {loadingVideos ? "Loading..." : "Fetch Videos"}
                     </Button>
-                    {videos.length > 0 && <Button onClick={() => fetchVideos(collectionName, true)} disabled={loadingVideos} variant="outline">
+                    {videos.length > 0 && (
+                      <Button 
+                        onClick={() => fetchVideos(collectionName, true)} 
+                        disabled={loadingVideos}
+                        variant="outline"
+                      >
                         <RefreshCw className={`h-4 w-4 mr-2 ${loadingVideos ? 'animate-spin' : ''}`} />
                         Refresh
-                      </Button>}
+                      </Button>
+                    )}
                   </div>
                   
-                  {lastVideosFetch && <p className="text-xs text-muted-foreground">
+                  {lastVideosFetch && (
+                    <p className="text-xs text-muted-foreground">
                       Last updated: {lastVideosFetch.toLocaleString()}
-                    </p>}
+                    </p>
+                  )}
 
-                  {videos.length > 0 && <div className="border rounded-lg overflow-hidden">
+                  {videos.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden">
                       <div className="overflow-x-auto">
                         <Table className="min-w-[800px]">
                           <TableHeader>
@@ -1324,7 +1396,12 @@ export default function BrandManagement({
                             </TableRow>
                           </TableHeader>
                         <TableBody>
-                          {videos.map((video, index) => <TableRow key={video.ad_id || index} className="cursor-pointer hover:bg-muted/50" onClick={() => fetchVideoHistory(video)}>
+                          {videos.map((video, index) => (
+                            <TableRow 
+                              key={video.ad_id || index}
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => fetchVideoHistory(video)}
+                            >
                               <TableCell className="font-medium">{video.username}</TableCell>
                               <TableCell className="capitalize">{video.platform}</TableCell>
                               <TableCell className="max-w-xs truncate">{video.title || '-'}</TableCell>
@@ -1334,20 +1411,26 @@ export default function BrandManagement({
                               <TableCell className="text-right">{video.latest_comments?.toLocaleString() || 0}</TableCell>
                               <TableCell className="text-right">{video.latest_shares?.toLocaleString() || 0}</TableCell>
                               <TableCell className="text-right font-medium text-primary">
-                                ${((video.latest_views || 0) / 1000 * (selectedCampaign?.rpm_rate || 0)).toFixed(2)}
+                                ${(((video.latest_views || 0) / 1000) * (selectedCampaign?.rpm_rate || 0)).toFixed(2)}
                               </TableCell>
-                              <TableCell onClick={e => e.stopPropagation()}>
-                                {video.ad_link && <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                              <TableCell onClick={(e) => e.stopPropagation()}>
+                                {video.ad_link && (
+                                  <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                                     View
-                                  </a>}
+                                  </a>
+                                )}
                               </TableCell>
-                            </TableRow>)}
+                            </TableRow>
+                          ))}
                         </TableBody>
                       </Table>
                       </div>
-                    </div>}
+                    </div>
+                  )}
 
-                  {videos.length === 0 && !loadingVideos && collectionName && <p className="text-muted-foreground text-center py-8">No videos found for this collection</p>}
+                  {videos.length === 0 && !loadingVideos && collectionName && (
+                    <p className="text-muted-foreground text-center py-8">No videos found for this collection</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1359,13 +1442,25 @@ export default function BrandManagement({
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1">
                       <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
-                      {lastAccountsFetch && <p className="text-xs text-muted-foreground mt-1">
+                      {lastAccountsFetch && (
+                        <p className="text-xs text-muted-foreground mt-1">
                           Last updated: {lastAccountsFetch.toLocaleString()}
-                        </p>}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Input placeholder="Collection name..." value={accountsCollectionName} onChange={e => setAccountsCollectionName(e.target.value)} className="w-64" />
-                      <Button onClick={() => fetchShortimizeAccounts(true)} disabled={!shortimizeApiKey || loadingShortimize || !accountsCollectionName?.trim()} variant="outline" size="sm">
+                      <Input
+                        placeholder="Collection name..."
+                        value={accountsCollectionName}
+                        onChange={(e) => setAccountsCollectionName(e.target.value)}
+                        className="w-64"
+                      />
+                      <Button 
+                        onClick={() => fetchShortimizeAccounts(true)} 
+                        disabled={!shortimizeApiKey || loadingShortimize || !accountsCollectionName?.trim()}
+                        variant="outline"
+                        size="sm"
+                      >
                         <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
                         {loadingShortimize ? 'Loading...' : 'Load Accounts'}
                       </Button>
@@ -1373,14 +1468,19 @@ export default function BrandManagement({
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {!shortimizeApiKey ? <div className="text-center py-12">
+                  {!shortimizeApiKey ? (
+                    <div className="text-center py-12">
                       <p className="text-muted-foreground text-sm">Please configure Shortimize API key in Brand Settings</p>
-                    </div> : shortimizeAccounts.length === 0 ? <div className="text-center py-12">
+                    </div>
+                  ) : shortimizeAccounts.length === 0 ? (
+                    <div className="text-center py-12">
                       <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                       <p className="text-muted-foreground text-sm">
                         {loadingShortimize ? 'Loading accounts...' : 'No accounts found'}
                       </p>
-                    </div> : <div className="overflow-x-auto">
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-b border-border hover:bg-transparent">
@@ -1396,17 +1496,33 @@ export default function BrandManagement({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {shortimizeAccounts.map(account => <TableRow key={account.account_id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                          {shortimizeAccounts.map((account) => (
+                            <TableRow key={account.account_id} className="border-b border-border hover:bg-muted/50 transition-colors">
                               <TableCell className="py-4">
-                                <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="text-foreground hover:underline font-medium">
+                                <a 
+                                  href={account.account_link} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-foreground hover:underline font-medium"
+                                >
                                   @{account.username}
                                 </a>
                               </TableCell>
                               <TableCell className="py-4">
-                                {account.matched_user ? <div className="flex items-center gap-2">
-                                    {account.matched_user.avatar_url && <img src={account.matched_user.avatar_url} alt={account.matched_user.username} className="w-6 h-6 rounded-full" />}
+                                {account.matched_user ? (
+                                  <div className="flex items-center gap-2">
+                                    {account.matched_user.avatar_url && (
+                                      <img 
+                                        src={account.matched_user.avatar_url} 
+                                        alt={account.matched_user.username}
+                                        className="w-6 h-6 rounded-full"
+                                      />
+                                    )}
                                     <span className="font-medium text-sm">{account.matched_user.username}</span>
-                                  </div> : <span className="text-muted-foreground text-sm">Not matched</span>}
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">Not matched</span>
+                                )}
                               </TableCell>
                               <TableCell className="py-4">
                                 <Badge variant="secondary" className="capitalize">
@@ -1431,10 +1547,12 @@ export default function BrandManagement({
                               <TableCell className="py-4 text-muted-foreground text-sm">
                                 {account.last_uploaded_at ? new Date(account.last_uploaded_at).toLocaleDateString() : 'N/A'}
                               </TableCell>
-                            </TableRow>)}
+                            </TableRow>
+                          ))}
                         </TableBody>
                       </Table>
-                    </div>}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1446,9 +1564,12 @@ export default function BrandManagement({
                   <CardTitle className="font-instrument tracking-tight">Campaign Payouts</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {loadingTransactions ? <div className="text-center py-12">
+                  {loadingTransactions ? (
+                    <div className="text-center py-12">
                       <p className="text-muted-foreground text-sm">Loading transactions...</p>
-                    </div> : campaignTransactions.length > 0 ? <div className="border rounded-lg overflow-hidden">
+                    </div>
+                  ) : campaignTransactions.length > 0 ? (
+                    <div className="border rounded-lg overflow-hidden">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -1462,20 +1583,31 @@ export default function BrandManagement({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {campaignTransactions.map(txn => <TableRow key={txn.id}>
+                          {campaignTransactions.map((txn) => (
+                            <TableRow key={txn.id}>
                               <TableCell>
                                 <div className="flex items-center gap-2">
-                                  {txn.profiles?.avatar_url && <img src={txn.profiles.avatar_url} alt={txn.profiles.username} className="w-8 h-8 rounded-full" />}
+                                  {txn.profiles?.avatar_url && (
+                                    <img 
+                                      src={txn.profiles.avatar_url} 
+                                      alt={txn.profiles.username}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                                   <span className="font-medium">{txn.profiles?.username || 'Unknown'}</span>
                                 </div>
                               </TableCell>
                               <TableCell>
-                                {txn.shortimize_account ? <div className="flex flex-col gap-1">
+                                {txn.shortimize_account ? (
+                                  <div className="flex flex-col gap-1">
                                     <span className="font-medium">@{txn.shortimize_account.account_username}</span>
                                     <Badge variant="secondary" className="capitalize w-fit">
                                       {txn.shortimize_account.platform}
                                     </Badge>
-                                  </div> : <span className="text-muted-foreground text-sm">Not matched</span>}
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">Not matched</span>
+                                )}
                               </TableCell>
                               <TableCell className="capitalize">{txn.type}</TableCell>
                               <TableCell className="font-semibold">
@@ -1492,19 +1624,24 @@ export default function BrandManagement({
                               <TableCell>
                                 {new Date(txn.created_at).toLocaleDateString()}
                               </TableCell>
-                            </TableRow>)}
+                            </TableRow>
+                          ))}
                         </TableBody>
                       </Table>
-                    </div> : <div className="text-center py-12">
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
                       <DollarSign className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                       <p className="text-muted-foreground text-sm">No transactions found for this campaign</p>
-                    </div>}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs> :
-      // Brand Page: Full Tabs with All Features
-      <Tabs defaultValue="analytics" className="w-full">
+          </Tabs>
+        ) : (
+          // Brand Page: Full Tabs with All Features
+          <Tabs defaultValue="analytics" className="w-full">
             <TabsList className="bg-card border">
               <TabsTrigger value="analytics" className="data-[state=active]:bg-accent">
                 Analytics
@@ -1535,22 +1672,22 @@ export default function BrandManagement({
                     <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
                       <div className="text-2xl font-bold font-chakra">
                         {(() => {
-                      const accountViews = analytics.reduce((acc, a) => {
-                        const key = `${a.platform}-${a.account_username}`;
-                        acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
-                        return acc;
-                      }, {} as Record<string, number>);
-                      return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
-                    })()}
+                        const accountViews = analytics.reduce((acc, a) => {
+                          const key = `${a.platform}-${a.account_username}`;
+                          acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
+                          return acc;
+                        }, {} as Record<string, number>);
+                        return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
+                      })()}
                       </div>
                       <div className="text-sm text-muted-foreground mt-1">Total Views</div>
                     </div>
                     <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
                       <div className="text-2xl font-bold font-chakra">
                         {(() => {
-                      const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
-                      return uniqueAccounts.size;
-                    })()}
+                        const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
+                        return uniqueAccounts.size;
+                      })()}
                       </div>
                       <div className="text-sm text-muted-foreground mt-1">Total Accounts</div>
                     </div>
@@ -1630,11 +1767,19 @@ export default function BrandManagement({
             {showVideosTab && <TabsContent value="videos">
                 <VideosTab campaignId={selectedCampaignId} isAdmin={isAdmin} approvedCreators={approvedSubmissions} />
               </TabsContent>}
-          </Tabs>}
+          </Tabs>
+        )}
 
       </div>
 
       {/* Video History Dialog */}
-      <VideoHistoryDialog open={videoHistoryOpen} onOpenChange={setVideoHistoryOpen} video={selectedVideo} historyData={videoHistory} loading={loadingVideoHistory} />
-    </div>;
+      <VideoHistoryDialog
+        open={videoHistoryOpen}
+        onOpenChange={setVideoHistoryOpen}
+        video={selectedVideo}
+        historyData={videoHistory}
+        loading={loadingVideoHistory}
+      />
+    </div>
+  );
 }
