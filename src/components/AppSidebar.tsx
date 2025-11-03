@@ -179,9 +179,18 @@ export function AppSidebar() {
 
                 {/* Footer Links */}
                 <div className="pt-4 border-t flex gap-4 text-sm text-muted-foreground">
-                  <button className="hover:text-foreground transition-colors">Privacy</button>
-                  <button className="hover:text-foreground transition-colors">Terms</button>
-                  <button className="hover:text-foreground transition-colors">Clipper Terms</button>
+                  <button 
+                    className="hover:text-foreground transition-colors"
+                    onClick={() => window.open("https://virality.cc/privacy-policy", "_blank")}
+                  >
+                    Privacy
+                  </button>
+                  <button 
+                    className="hover:text-foreground transition-colors"
+                    onClick={() => window.open("https://virality.cc/terms", "_blank")}
+                  >
+                    Terms
+                  </button>
                 </div>
               </div>
             </PopoverContent>
@@ -320,12 +329,21 @@ export function AppSidebar() {
                 </button>
               </div>
 
-              {/* Footer Links */}
-              <div className="pt-4 border-t flex gap-4 text-sm text-muted-foreground">
-                <button className="hover:text-foreground transition-colors">Privacy</button>
-                <button className="hover:text-foreground transition-colors">Terms</button>
-                <button className="hover:text-foreground transition-colors">Clipper Terms</button>
-              </div>
+               {/* Footer Links */}
+               <div className="pt-4 border-t flex gap-4 text-sm text-muted-foreground">
+                 <button 
+                   className="hover:text-foreground transition-colors"
+                   onClick={() => window.open("https://virality.cc/privacy-policy", "_blank")}
+                 >
+                   Privacy
+                 </button>
+                 <button 
+                   className="hover:text-foreground transition-colors"
+                   onClick={() => window.open("https://virality.cc/terms", "_blank")}
+                 >
+                   Terms
+                 </button>
+               </div>
             </div>
           </PopoverContent>
         </Popover>
