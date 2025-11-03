@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign, Copy, Package } from "lucide-react";
+import { Pencil, Trash2, Search, TrendingUp, Calendar, DollarSign, Copy, Package, Plus } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 interface Campaign {
   id: string;
   title: string;
@@ -44,15 +46,37 @@ export default function AdminCampaigns() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [brands, setBrands] = useState<{ id: string; name: string; logo_url: string | null }[]>([]);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("");
+  const [selectedBrandName, setSelectedBrandName] = useState<string>("");
   const {
     toast
   } = useToast();
   useEffect(() => {
     fetchCampaigns();
+    fetchBrands();
   }, []);
   useEffect(() => {
     filterCampaigns();
   }, [searchQuery, campaigns]);
+  const fetchBrands = async () => {
+    const { data, error } = await supabase
+      .from("brands")
+      .select("id, name, logo_url")
+      .order("name");
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch brands"
+      });
+    } else {
+      setBrands(data || []);
+    }
+  };
+
   const fetchCampaigns = async () => {
     setLoading(true);
     const {
@@ -111,6 +135,22 @@ export default function AdminCampaigns() {
     setSelectedCampaign(campaign);
     setEditDialogOpen(true);
   };
+
+  const handleCreateCampaign = () => {
+    if (!selectedBrandId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a brand"
+      });
+      return;
+    }
+    const brand = brands.find(b => b.id === selectedBrandId);
+    if (brand) {
+      setSelectedBrandName(brand.name);
+      setCreateDialogOpen(true);
+    }
+  };
   
   const handleDeleteCampaign = async () => {
     if (!selectedCampaign) return;
@@ -155,7 +195,43 @@ export default function AdminCampaigns() {
 
       {/* Campaigns Gallery */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Campaigns ({filteredCampaigns.length})</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Campaigns ({filteredCampaigns.length})</h2>
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Campaign
+            </Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Campaign</DialogTitle>
+                <DialogDescription>Select a brand for the new campaign</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        <div className="flex items-center gap-2">
+                          {brand.logo_url && (
+                            <img src={brand.logo_url} alt={brand.name} className="w-5 h-5 rounded object-cover" />
+                          )}
+                          {brand.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleCreateCampaign} className="w-full">
+                  Continue
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
         {filteredCampaigns.length === 0 ? <Card className="bg-card border-0">
             <CardContent className="py-12 text-center text-muted-foreground">
               No campaigns found
@@ -254,6 +330,28 @@ export default function AdminCampaigns() {
             fetchCampaigns();
           }}
           onDelete={handleDeleteCampaign}
+          trigger={null}
+        />
+      )}
+
+      {/* Create Dialog */}
+      {selectedBrandId && selectedBrandName && (
+        <CreateCampaignDialog
+          brandId={selectedBrandId}
+          brandName={selectedBrandName}
+          open={createDialogOpen && !!selectedBrandName}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedBrandId("");
+              setSelectedBrandName("");
+            }
+          }}
+          onSuccess={() => {
+            setCreateDialogOpen(false);
+            setSelectedBrandId("");
+            setSelectedBrandName("");
+            fetchCampaigns();
+          }}
           trigger={null}
         />
       )}
