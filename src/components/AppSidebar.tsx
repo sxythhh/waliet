@@ -153,21 +153,21 @@ export function AppSidebar() {
                     <ArrowUpRight className="w-4 h-4" />
                   </button>
 
-                  <button 
-                    className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
-                    onClick={() => window.open("https://forms.gle/your-feedback-form", "_blank")}
-                  >
-                    <span className="font-medium text-sm">Give feedback</span>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </button>
+                <button 
+                  className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                  onClick={() => window.open("https://virality.cc/feedback", "_blank")}
+                >
+                  <span className="font-medium text-sm">Give feedback</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
 
-                  <button 
-                    className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
-                    onClick={() => window.open("https://support.example.com", "_blank")}
-                  >
-                    <span className="font-medium text-sm">Support</span>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </button>
+                <button 
+                  className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                  onClick={() => window.open("https://virality.cc/help", "_blank")}
+                >
+                  <span className="font-medium text-sm">Support</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
 
                   <button 
                     className="w-full flex items-center gap-2 px-0 py-2 text-left hover:opacity-70 transition-opacity"
@@ -307,7 +307,7 @@ export function AppSidebar() {
 
                 <button 
                   className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
-                  onClick={() => window.open("https://forms.gle/your-feedback-form", "_blank")}
+                  onClick={() => window.open("https://virality.cc/feedback", "_blank")}
                 >
                   <span className="font-medium text-sm">Give feedback</span>
                   <ArrowUpRight className="w-4 h-4" />
@@ -315,7 +315,7 @@ export function AppSidebar() {
 
                 <button 
                   className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
-                  onClick={() => window.open("https://support.example.com", "_blank")}
+                  onClick={() => window.open("https://virality.cc/help", "_blank")}
                 >
                   <span className="font-medium text-sm">Support</span>
                   <ArrowUpRight className="w-4 h-4" />
