@@ -142,16 +142,16 @@ export function AppSidebar() {
                     <span className="font-medium text-sm">Referrals</span>
                   </button>
 
-                  <button 
-                    className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
-                    onClick={() => window.open("https://discord.gg/your-discord", "_blank")}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
-                      <span className="font-medium text-sm">Discord</span>
-                    </div>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </button>
+                <button 
+                  className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
+                  onClick={() => window.open("https://discord.gg/virality", "_blank")}
+                >
+                  <div className="flex items-center gap-3">
+                    <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
+                    <span className="font-medium text-sm">Discord</span>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
 
                 <button 
                   className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
@@ -296,7 +296,7 @@ export function AppSidebar() {
 
                 <button 
                   className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity"
-                  onClick={() => window.open("https://discord.gg/your-discord", "_blank")}
+                  onClick={() => window.open("https://discord.gg/virality", "_blank")}
                 >
                   <div className="flex items-center gap-3">
                     <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
