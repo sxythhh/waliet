@@ -1,5 +1,8 @@
 project_id = "upiypxzjaagithghxayv"
 
+[functions.get-campaign-users]
+verify_jwt = false
+
 [functions.send-password-reset]
 verify_jwt = false
 
