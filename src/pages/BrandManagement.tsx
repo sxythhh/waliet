@@ -1156,7 +1156,7 @@ export default function BrandManagement({
   const budgetUsed = Number(selectedCampaign?.budget_used || 0);
   const effectiveCPM = totalViews > 0 ? budgetUsed / totalViews * 1000 : 0;
   if (loading) {
-    return <div className="min-h-screen p-8 bg-[#0C0C0C]">
+    return <div className="min-h-screen p-8 bg-[#060605]">
         <div className="max-w-7xl mx-auto space-y-6">
           <Skeleton className="h-10 w-64 bg-[#1a1a1a]" />
           <Skeleton className="h-12 w-full max-w-xs bg-[#1a1a1a]" />
@@ -1170,12 +1170,12 @@ export default function BrandManagement({
       </div>;
   }
   if (campaigns.length === 0) {
-    return <div className="min-h-screen p-8 bg-background flex items-center justify-center">
+    return <div className="min-h-screen p-8 bg-[#060605] flex items-center justify-center">
         <div className="text-foreground">No campaigns found</div>
       </div>;
   }
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-background">
+    <div className="min-h-screen p-4 md:p-8 bg-[#060605]">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Mobile Menu Button */}
         <div className="md:hidden">
