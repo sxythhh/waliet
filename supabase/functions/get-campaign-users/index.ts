@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
         id,
         creator_id,
         status,
-        created_at,
+        submitted_at,
         application_answers,
         profiles:creator_id (
           id,
@@ -79,8 +79,8 @@ Deno.serve(async (req) => {
 
     // Map social accounts by user_id
     const socialAccountsByUser = socialAccounts?.reduce((acc, sa) => {
-      const account = sa.social_accounts;
-      if (account) {
+      const account = sa.social_accounts as any;
+      if (account && !Array.isArray(account)) {
         if (!acc[account.user_id]) {
           acc[account.user_id] = [];
         }
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       user_id: submission.creator_id,
       submission_id: submission.id,
       status: submission.status,
-      joined_at: submission.created_at,
+      joined_at: submission.submitted_at,
       application_answers: submission.application_answers,
       profile: submission.profiles,
       social_accounts: socialAccountsByUser[submission.creator_id] || [],
@@ -121,10 +121,10 @@ Deno.serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in get-campaign-users:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: error?.message || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
