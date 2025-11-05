@@ -96,16 +96,27 @@ Deno.serve(async (req) => {
       return acc;
     }, {} as Record<string, any[]>) || {};
 
-    // Format response
-    const users = submissions?.map(submission => ({
-      user_id: submission.creator_id,
-      submission_id: submission.id,
-      status: submission.status,
-      joined_at: submission.submitted_at,
-      application_answers: submission.application_answers,
-      profile: submission.profiles,
-      social_accounts: socialAccountsByUser[submission.creator_id] || [],
-    })) || [];
+    // Format response and deduplicate by user_id (keep most recent submission)
+    const userMap = new Map();
+    submissions?.forEach(submission => {
+      const userId = submission.creator_id;
+      const existingUser = userMap.get(userId);
+      
+      // Keep the most recent submission per user
+      if (!existingUser || new Date(submission.submitted_at) > new Date(existingUser.joined_at)) {
+        userMap.set(userId, {
+          user_id: userId,
+          submission_id: submission.id,
+          status: submission.status,
+          joined_at: submission.submitted_at,
+          application_answers: submission.application_answers,
+          profile: submission.profiles,
+          social_accounts: socialAccountsByUser[userId] || [],
+        });
+      }
+    });
+    
+    const users = Array.from(userMap.values());
 
     console.log(`Found ${users.length} users for campaign ${campaignId}`);
 
