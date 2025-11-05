@@ -11,12 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid, Menu, DollarSign, Video, Users, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BrandSidebar } from "@/components/BrandSidebar";
 interface Brand {
   id: string;
   name: string;
@@ -58,13 +59,8 @@ interface BountyCampaign {
   created_at: string;
 }
 export default function BrandDashboard() {
-  const {
-    slug
-  } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
-  const {
-    toggleSidebar
-  } = useSidebar();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [bounties, setBounties] = useState<BountyCampaign[]>([]);
@@ -76,16 +72,12 @@ export default function BrandDashboard() {
   const [createBountyOpen, setCreateBountyOpen] = useState(false);
   const [selectedBounty, setSelectedBounty] = useState<{ id: string; title: string; maxAccepted: number; currentAccepted: number } | null>(null);
   const [applicationsSheetOpen, setApplicationsSheetOpen] = useState(false);
-  const sidebar = useSidebar();
   const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
   const handleViewChange = (value: string) => {
     const newView = value as "campaigns" | "bounties" | "home";
     setActiveView(newView);
-
-    // Auto-hide sidebar when switching to Home view
-    if (newView === "home" && sidebar.state !== "collapsed") {
-      toggleSidebar();
-    }
   };
   const fetchBrandData = async () => {
     if (!slug) return;
@@ -207,16 +199,18 @@ export default function BrandDashboard() {
 
   // If only one view is available, set it as active
   const effectiveView = !hasHomeEmbed ? "campaigns" : !hasCampaigns ? "home" : activeView;
-  return <div className="min-h-screen bg-background">
+  
+  return (
+    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      <div className="min-h-screen flex w-full bg-background">
+        <BrandSidebar />
+        <div className="flex-1 min-w-0">
       {/* Header - Hide when showing home embed */}
       {effectiveView !== "home" && (
         <>
           <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => isMobile ? sidebar.setOpenMobile(true) : toggleSidebar()} className="text-muted-foreground hover:text-foreground hover:bg-accent">
-                  {isMobile ? <Menu className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
-                </Button>
                 <h1 className="text-2xl font-bold text-foreground font-instrument tracking-tight">
                   {brand.name}
                 </h1>
@@ -475,5 +469,8 @@ export default function BrandDashboard() {
             currentAccepted={selectedBounty.currentAccepted}
           />
         )}
-    </div>;
+        </div>
+      </div>
+    </SidebarProvider>
+  );
 }
