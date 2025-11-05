@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.get-campaign-transactions]
 verify_jwt = false
 
+[functions.get-campaign-applications]
+verify_jwt = false
+
 [functions.create-campaign-payment]
 verify_jwt = true
 
