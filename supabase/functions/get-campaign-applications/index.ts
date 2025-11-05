@@ -38,7 +38,6 @@ Deno.serve(async (req) => {
         application_answers,
         submitted_at,
         reviewed_at,
-        reviewed_by,
         created_at,
         updated_at
       `)
