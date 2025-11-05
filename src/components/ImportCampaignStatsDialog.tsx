@@ -166,11 +166,11 @@ export function ImportCampaignStatsDialog({
         }
 
         if (records.length > 0) {
-          // Insert records - allow multiple date ranges per account
+          // Upsert records - update if same account/platform exists for this campaign
           const { data, error } = await supabase
             .from("campaign_account_analytics")
             .upsert(records, { 
-              onConflict: 'id',
+              onConflict: 'campaign_id,account_username,platform',
               ignoreDuplicates: false
             });
 
