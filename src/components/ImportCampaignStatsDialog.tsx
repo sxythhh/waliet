@@ -116,9 +116,29 @@ export function ImportCampaignStatsDialog({
       
       // Process in batches
       const batchSize = 10;
+      
+      type AnalyticsRecord = {
+        campaign_id: string;
+        account_username: string;
+        account_link: string | null;
+        platform: string;
+        total_videos: number;
+        total_views: number;
+        total_likes: number;
+        total_comments: number;
+        average_engagement_rate: number;
+        outperforming_video_rate: number;
+        average_video_views: number;
+        posts_last_7_days: any;
+        last_tracked: string | null;
+        amount_of_videos_tracked: string | null;
+        start_date: string;
+        end_date: string;
+      };
+      
       for (let i = 0; i < dataLines.length; i += batchSize) {
         const batch = dataLines.slice(i, i + batchSize);
-        const records = [];
+        const records: AnalyticsRecord[] = [];
 
         for (const line of batch) {
           const values = parseCSVLine(line);
@@ -166,10 +186,20 @@ export function ImportCampaignStatsDialog({
         }
 
         if (records.length > 0) {
+          // Deduplicate records within this batch based on unique key (campaign_id, account_username, platform)
+          // Keep the last occurrence of each duplicate
+          const deduplicatedRecords = records.reduce((acc, record) => {
+            const key = `${record.campaign_id}|${record.account_username}|${record.platform}`;
+            acc.set(key, record); // This will overwrite any previous record with same key
+            return acc;
+          }, new Map<string, AnalyticsRecord>());
+          
+          const uniqueRecords = Array.from(deduplicatedRecords.values());
+          
           // Upsert records - update if same account/platform exists for this campaign
           const { data, error } = await supabase
             .from("campaign_account_analytics")
-            .upsert(records, { 
+            .upsert(uniqueRecords, { 
               onConflict: 'campaign_id,account_username,platform',
               ignoreDuplicates: false
             });
@@ -178,7 +208,7 @@ export function ImportCampaignStatsDialog({
             console.error("Error inserting batch:", error);
             toast.error(`Error in batch: ${error.message}`);
           } else {
-            successCount += records.length;
+            successCount += uniqueRecords.length;
           }
         }
 
