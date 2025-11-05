@@ -170,8 +170,8 @@ export function ImportCampaignStatsDialog({
           const { data, error } = await supabase
             .from("campaign_account_analytics")
             .upsert(records, { 
-              onConflict: 'campaign_id,account_username,platform,start_date,end_date',
-              ignoreDuplicates: false // Update if same date range exists
+              onConflict: 'id',
+              ignoreDuplicates: false
             });
 
           if (error) {
