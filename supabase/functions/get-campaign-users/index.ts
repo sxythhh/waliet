@@ -42,7 +42,12 @@ Deno.serve(async (req) => {
           username,
           full_name,
           email,
-          avatar_url
+          avatar_url,
+          trust_score,
+          successful_referrals,
+          referral_earnings,
+          account_type,
+          phone_number
         )
       `)
       .eq('campaign_id', campaignId)
