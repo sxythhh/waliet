@@ -1087,6 +1087,46 @@ export default function BrandManagement({
       toast.error("Failed to remove user from campaign");
     }
   };
+
+  const handleApproveSubmission = async (submissionId: string) => {
+    setProcessingSubmissionId(submissionId);
+    try {
+      const { error } = await supabase
+        .from("campaign_submissions")
+        .update({ status: "approved" })
+        .eq("id", submissionId);
+
+      if (error) throw error;
+
+      toast.success("Application approved");
+      fetchSubmissions();
+    } catch (error) {
+      console.error("Error approving submission:", error);
+      toast.error("Failed to approve application");
+    } finally {
+      setProcessingSubmissionId(null);
+    }
+  };
+
+  const handleRejectSubmission = async (submissionId: string) => {
+    setProcessingSubmissionId(submissionId);
+    try {
+      const { error } = await supabase
+        .from("campaign_submissions")
+        .update({ status: "rejected" })
+        .eq("id", submissionId);
+
+      if (error) throw error;
+
+      toast.success("Application rejected");
+      fetchSubmissions();
+    } catch (error) {
+      console.error("Error rejecting submission:", error);
+      toast.error("Failed to reject application");
+    } finally {
+      setProcessingSubmissionId(null);
+    }
+  };
   const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
 
   // Filter and sort approved submissions
@@ -1755,7 +1795,98 @@ export default function BrandManagement({
 
             {/* Applications Tab */}
             <TabsContent value="applications">
-              {/* Keep existing applications content */}
+              <Card className="bg-card border">
+                <CardHeader className="pb-4 border-b border-border">
+                  <CardTitle className="flex items-center gap-2 font-instrument tracking-tight">
+                    Pending Applications
+                    <Badge variant="secondary" className="ml-2">
+                      {pendingSubmissions.length}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {pendingSubmissions.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground text-sm">No pending applications</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="font-medium text-muted-foreground">Creator</TableHead>
+                            <TableHead className="font-medium text-muted-foreground">Platform</TableHead>
+                            <TableHead className="font-medium text-muted-foreground">Submitted</TableHead>
+                            <TableHead className="font-medium text-muted-foreground">Application</TableHead>
+                            <TableHead className="text-right font-medium text-muted-foreground">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pendingSubmissions.map((submission) => (
+                            <TableRow key={submission.id} className="border-b border-border hover:bg-accent/50">
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                                    {submission.profiles?.username?.[0]?.toUpperCase() || '?'}
+                                  </div>
+                                  <span className="font-medium">
+                                    {submission.profiles?.username || 'Unknown'}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{submission.platform}</Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {format(new Date(submission.submitted_at), 'MMM dd, yyyy')}
+                              </TableCell>
+                              <TableCell>
+                                {submission.application_answers && Object.keys(submission.application_answers).length > 0 ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedUser(submission);
+                                      setIsUserDialogOpen(true);
+                                    }}
+                                  >
+                                    View Answers
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">No answers</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleApproveSubmission(submission.id)}
+                                    disabled={processingSubmissionId === submission.id}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleRejectSubmission(submission.id)}
+                                    disabled={processingSubmissionId === submission.id}
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Settings Tab */}
