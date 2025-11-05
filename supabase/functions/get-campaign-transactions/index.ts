@@ -40,14 +40,7 @@ Deno.serve(async (req) => {
         description,
         metadata,
         created_at,
-        created_by,
-        profiles:user_id (
-          id,
-          username,
-          full_name,
-          email,
-          avatar_url
-        )
+        created_by
       `)
       .eq('type', 'earning')
       .order('created_at', { ascending: false });
@@ -61,6 +54,23 @@ Deno.serve(async (req) => {
     const campaignTransactions = transactions?.filter(tx => 
       tx.metadata?.campaign_id === campaignId
     ) || [];
+
+    // Fetch profiles for the users in these transactions
+    const userIds = [...new Set(campaignTransactions.map(tx => tx.user_id))];
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, full_name, email, avatar_url')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+    }
+
+    // Map profiles by user_id
+    const profilesByUserId = profiles?.reduce((acc, profile) => {
+      acc[profile.id] = profile;
+      return acc;
+    }, {} as Record<string, any>) || {};
 
     console.log(`Found ${campaignTransactions.length} transactions for campaign ${campaignId}`);
 
@@ -79,7 +89,7 @@ Deno.serve(async (req) => {
           metadata: tx.metadata,
           created_at: tx.created_at,
           created_by: tx.created_by,
-          profile: tx.profiles,
+          profile: profilesByUserId[tx.user_id] || null,
         })),
       }),
       { 
