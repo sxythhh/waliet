@@ -72,6 +72,29 @@ Deno.serve(async (req) => {
       return acc;
     }, {} as Record<string, any>) || {};
 
+    // Fetch social accounts for the transactions
+    const socialAccountIds = campaignTransactions
+      .map(tx => tx.metadata?.social_account_id)
+      .filter(id => id);
+    
+    let socialAccountsByIdMap: Record<string, any> = {};
+    
+    if (socialAccountIds.length > 0) {
+      const { data: socialAccounts, error: socialAccountsError } = await supabase
+        .from('social_accounts')
+        .select('id, username, account_link, platform')
+        .in('id', socialAccountIds);
+
+      if (socialAccountsError) {
+        console.error('Error fetching social accounts:', socialAccountsError);
+      }
+
+      socialAccountsByIdMap = socialAccounts?.reduce((acc, account) => {
+        acc[account.id] = account;
+        return acc;
+      }, {} as Record<string, any>) || {};
+    }
+
     console.log(`Found ${campaignTransactions.length} transactions for campaign ${campaignId}`);
 
     return new Response(
@@ -90,6 +113,9 @@ Deno.serve(async (req) => {
           created_at: tx.created_at,
           created_by: tx.created_by,
           profile: profilesByUserId[tx.user_id] || null,
+          social_account: tx.metadata?.social_account_id 
+            ? socialAccountsByIdMap[tx.metadata.social_account_id] || null 
+            : null,
         })),
       }),
       { 
