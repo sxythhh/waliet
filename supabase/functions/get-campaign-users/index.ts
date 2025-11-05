@@ -82,6 +82,29 @@ Deno.serve(async (req) => {
       console.error('Error fetching social accounts:', socialError);
     }
 
+    // Fetch campaign earnings for these users
+    const { data: transactions, error: transactionsError } = await supabase
+      .from('wallet_transactions')
+      .select('user_id, amount, metadata')
+      .eq('type', 'earning')
+      .in('user_id', userIds);
+
+    if (transactionsError) {
+      console.error('Error fetching transactions:', transactionsError);
+    }
+
+    // Calculate campaign earnings by user
+    const campaignEarningsByUser = transactions?.reduce((acc, tx) => {
+      const txCampaignId = tx.metadata?.campaign_id;
+      if (txCampaignId === campaignId) {
+        if (!acc[tx.user_id]) {
+          acc[tx.user_id] = 0;
+        }
+        acc[tx.user_id] += Number(tx.amount);
+      }
+      return acc;
+    }, {} as Record<string, number>) || {};
+
     // Map social accounts by user_id
     const socialAccountsByUser = socialAccounts?.reduce((acc, sa) => {
       const account = sa.social_accounts as any;
@@ -117,6 +140,7 @@ Deno.serve(async (req) => {
           application_answers: submission.application_answers,
           profile: submission.profiles,
           social_accounts: socialAccountsByUser[userId] || [],
+          campaign_earnings: campaignEarningsByUser[userId] || 0,
         });
       }
     });
