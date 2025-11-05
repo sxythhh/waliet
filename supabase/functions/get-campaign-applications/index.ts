@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch campaign submissions (applications)
+    // Fetch campaign submissions (applications) - only pending ones
     const { data: applications, error: applicationsError } = await supabase
       .from('campaign_submissions')
       .select(`
@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
         reviewed_at
       `)
       .eq('campaign_id', campaign_id)
+      .eq('status', 'pending')
       .order('submitted_at', { ascending: false });
 
     if (applicationsError) {
