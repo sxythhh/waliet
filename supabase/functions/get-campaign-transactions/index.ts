@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch transactions for this campaign
+    // Fetch transactions for this campaign (exclude reverted transactions)
     const { data: transactions, error: transactionsError } = await supabase
       .from('wallet_transactions')
       .select(`
@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
         created_by
       `)
       .eq('type', 'earning')
+      .neq('status', 'reverted')
       .order('created_at', { ascending: false });
 
     if (transactionsError) {
