@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
         creator_id,
         status,
         submitted_at,
-        updated_at,
         application_answers,
         profiles:creator_id (
           id,
@@ -138,7 +137,6 @@ Deno.serve(async (req) => {
           submission_id: submission.id,
           status: submission.status,
           joined_at: submission.submitted_at,
-          accepted_at: submission.status === 'approved' ? submission.updated_at : null,
           application_answers: submission.application_answers,
           profile: submission.profiles,
           social_accounts: socialAccountsByUser[userId] || [],
