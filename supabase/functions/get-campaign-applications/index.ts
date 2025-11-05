@@ -37,9 +37,7 @@ Deno.serve(async (req) => {
         status,
         application_answers,
         submitted_at,
-        reviewed_at,
-        created_at,
-        updated_at
+        reviewed_at
       `)
       .eq('campaign_id', campaign_id)
       .order('submitted_at', { ascending: false });
