@@ -1737,7 +1737,7 @@ export default function BrandManagement({
                       </div>
                       <div className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
                         Budget Used
-                        {isAdmin && <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground hover:text-foreground hover:bg-accent p-0" onClick={handleEditBudgetUsed} title="Edit budget used">
+                        {isAdmin && <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-accent" onClick={handleEditBudgetUsed} title="Edit budget used">
                             <Edit className="h-3 w-3" />
                           </Button>}
                       </div>
