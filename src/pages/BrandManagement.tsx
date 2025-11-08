@@ -1903,6 +1903,38 @@ export default function BrandManagement({
 
       </div>
 
+      {/* Edit Budget Dialog */}
+      <Dialog open={editBudgetDialogOpen} onOpenChange={setEditBudgetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Budget Used</DialogTitle>
+            <DialogDescription>
+              Update the budget used for this campaign
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Budget Used ($)</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={editingBudgetUsed}
+                onChange={(e) => setEditingBudgetUsed(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditBudgetDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveBudgetUsed}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Video History Dialog */}
       <VideoHistoryDialog
         open={videoHistoryOpen}
