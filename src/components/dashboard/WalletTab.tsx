@@ -764,12 +764,19 @@ export function WalletTab() {
     } = await supabase.auth.getSession();
     if (!session) return;
 
+    const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+    if (!selectedMethod) return;
+
+    // Set submitting state BEFORE any async operations to prevent race conditions
+    setIsSubmittingPayout(true);
+
     // Check for existing pending/in-transit withdrawal requests
     const {
       data: existingRequests,
       error: checkError
     } = await supabase.from("payout_requests").select("id").eq("user_id", session.user.id).in("status", ["pending", "in_transit"]);
     if (checkError) {
+      setIsSubmittingPayout(false);
       toast({
         variant: "destructive",
         title: "Error",
@@ -778,6 +785,7 @@ export function WalletTab() {
       return;
     }
     if (existingRequests && existingRequests.length > 0) {
+      setIsSubmittingPayout(false);
       toast({
         variant: "destructive",
         title: "Pending Withdrawal Exists",
@@ -785,9 +793,6 @@ export function WalletTab() {
       });
       return;
     }
-    const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
-    if (!selectedMethod) return;
-    setIsSubmittingPayout(true);
     try {
       const balance_before = wallet.balance;
       const balance_after = wallet.balance - amount;
@@ -858,6 +863,18 @@ export function WalletTab() {
       fetchWallet();
       fetchTransactions();
     } catch (error: any) {
+      // Rollback wallet update if transaction failed
+      const {
+        error: rollbackError
+      } = await supabase.from("wallets").update({
+        balance: wallet.balance,
+        total_withdrawn: wallet.total_withdrawn
+      }).eq("id", wallet.id);
+      
+      if (rollbackError) {
+        console.error('Failed to rollback wallet update:', rollbackError);
+      }
+
       toast({
         variant: "destructive",
         title: "Error",
