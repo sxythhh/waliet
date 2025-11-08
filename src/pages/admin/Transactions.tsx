@@ -79,13 +79,13 @@ export default function Transactions() {
   };
   const fetchTransactions = async () => {
     try {
-      // Fetch all transactions without limit to ensure we get everything
+      // Fetch all transactions - Supabase has default pagination, so we need to specify a large range
       const {
         data: txData,
         error: txError
       } = await supabase.from("wallet_transactions").select("*").order("created_at", {
         ascending: false
-      });
+      }).range(0, 9999);
       if (txError) throw txError;
 
       // Fetch user profiles separately
