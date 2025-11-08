@@ -62,13 +62,13 @@ export function CampaignsTab() {
   const {
     toast
   } = useToast();
-  const { theme } = useTheme();
-
+  const {
+    theme
+  } = useTheme();
   const getPlatformIcon = (platform: string) => {
     // Check if system preference is light when theme is "system"
     const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const isLightMode = theme === "light" || (theme === "system" && systemIsLight);
-    
+    const isLightMode = theme === "light" || theme === "system" && systemIsLight;
     switch (platform.toLowerCase()) {
       case 'tiktok':
         return isLightMode ? tiktokLogoBlack : tiktokLogo;
@@ -190,13 +190,9 @@ export function CampaignsTab() {
       if (!user) return;
 
       // Get the submission to find the platform
-      const { data: submission } = await supabase
-        .from("campaign_submissions")
-        .select("platform")
-        .eq("campaign_id", selectedCampaignId)
-        .eq("creator_id", user.id)
-        .eq("status", "pending")
-        .single();
+      const {
+        data: submission
+      } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).eq("status", "pending").single();
 
       // Update submission status to withdrawn
       const {
@@ -208,22 +204,13 @@ export function CampaignsTab() {
 
       // Also remove the social account campaign link
       if (submission?.platform) {
-        const { data: socialAccount } = await supabase
-          .from("social_accounts")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("platform", submission.platform)
-          .single();
-
+        const {
+          data: socialAccount
+        } = await supabase.from("social_accounts").select("id").eq("user_id", user.id).eq("platform", submission.platform).single();
         if (socialAccount) {
-          await supabase
-            .from("social_account_campaigns")
-            .delete()
-            .eq("social_account_id", socialAccount.id)
-            .eq("campaign_id", selectedCampaignId);
+          await supabase.from("social_account_campaigns").delete().eq("social_account_id", socialAccount.id).eq("campaign_id", selectedCampaignId);
         }
       }
-
       toast({
         title: "Application withdrawn",
         description: "Your application has been successfully withdrawn"
@@ -243,45 +230,42 @@ export function CampaignsTab() {
       setSelectedCampaignId(null);
     }
   };
-
   const handleLeaveCampaign = async () => {
     if (!selectedCampaignId) return;
-    
     setLeavingCampaign(true);
-    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Please sign in to leave campaign",
+          description: "Please sign in to leave campaign"
         });
         return;
       }
 
       // 1. Update all campaign submissions to 'withdrawn'
-      const { error: submissionError } = await supabase
-        .from("campaign_submissions")
-        .update({ status: 'withdrawn' })
-        .eq("campaign_id", selectedCampaignId)
-        .eq("creator_id", user.id)
-        .neq("status", "withdrawn");
-
+      const {
+        error: submissionError
+      } = await supabase.from("campaign_submissions").update({
+        status: 'withdrawn'
+      }).eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).neq("status", "withdrawn");
       if (submissionError) throw submissionError;
 
       // 2. Unlink all social accounts from this campaign
-      const { error: accountError } = await supabase
-        .from("social_accounts")
-        .update({ campaign_id: null })
-        .eq("campaign_id", selectedCampaignId)
-        .eq("user_id", user.id);
-
+      const {
+        error: accountError
+      } = await supabase.from("social_accounts").update({
+        campaign_id: null
+      }).eq("campaign_id", selectedCampaignId).eq("user_id", user.id);
       if (accountError) throw accountError;
-
       toast({
         title: "Left Campaign",
-        description: "You have successfully left this campaign",
+        description: "You have successfully left this campaign"
       });
 
       // Refresh campaigns list
@@ -291,7 +275,7 @@ export function CampaignsTab() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to leave campaign. Please try again.",
+        description: "Failed to leave campaign. Please try again."
       });
     } finally {
       setLeavingCampaign(false);
@@ -299,18 +283,15 @@ export function CampaignsTab() {
       setSelectedCampaignId(null);
     }
   };
-
   if (loading) {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
+    return <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
         <Skeleton className="h-[350px] rounded-lg" />
         <Skeleton className="h-[350px] rounded-lg" />
         <Skeleton className="h-[350px] rounded-lg" />
         <Skeleton className="h-[350px] rounded-lg" />
         <Skeleton className="h-[350px] rounded-lg" />
         <Skeleton className="h-[350px] rounded-lg" />
-      </div>
-    );
+      </div>;
   }
   if (campaigns.length === 0) {
     return <div className="text-center py-12 flex flex-col items-center gap-4">
@@ -321,63 +302,28 @@ export function CampaignsTab() {
         </Button>
       </div>;
   }
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Action Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Join Discord Card */}
-        <div className="bg-card border border-border rounded-2xl p-6 space-y-2 hover:bg-muted/50 transition-colors cursor-pointer">
-          <div className="flex items-center gap-3">
-            <img src={discordIconNew} alt="Discord" className="w-6 h-6" />
-            <h3 className="text-lg font-semibold">Join Discord</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Get help or be the first to know about new campaigns.
-          </p>
-        </div>
-
-        {/* Connect Account Card */}
-        <div 
-          className="bg-card border border-border rounded-2xl p-6 space-y-2 hover:bg-muted/50 transition-colors cursor-pointer"
-          onClick={() => setAddAccountDialogOpen(true)}
-        >
-          <div className="flex items-center gap-3">
-            <Plus className="w-6 h-6" />
-            <h3 className="text-lg font-semibold">Connect account</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Connect your social accounts to join campaigns.
-          </p>
-        </div>
-
-        {/* Manage Earnings Card */}
-        <div 
-          className="bg-card border border-border rounded-2xl p-6 space-y-2 hover:bg-muted/50 transition-colors cursor-pointer"
-          onClick={() => navigate("/dashboard?tab=wallet")}
-        >
-          <div className="flex items-center gap-3">
-            <Wallet className="w-6 h-6" />
-            <h3 className="text-lg font-semibold">Manage earnings</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Set up your wallet and cash out earnings.
-          </p>
-        </div>
-      </div>
+      
 
       {/* Campaigns Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
       {campaigns.map(campaign => {
-      const budgetUsed = campaign.budget_used || 0;
-      const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-      const isPending = campaign.submission_status === 'pending';
-      const isEnded = campaign.status === 'ended';
-      return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : isEnded ? 'opacity-75 cursor-pointer' : 'cursor-pointer'}`} onClick={() => {
-        console.log('Campaign clicked:', { id: campaign.id, status: campaign.submission_status, isPending, isEnded });
-        if (!isPending && !isEnded) {
-          navigate(`/campaign/${campaign.id}`);
-        }
-      }}>
+        const budgetUsed = campaign.budget_used || 0;
+        const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+        const isPending = campaign.submission_status === 'pending';
+        const isEnded = campaign.status === 'ended';
+        return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : isEnded ? 'opacity-75 cursor-pointer' : 'cursor-pointer'}`} onClick={() => {
+          console.log('Campaign clicked:', {
+            id: campaign.id,
+            status: campaign.submission_status,
+            isPending,
+            isEnded
+          });
+          if (!isPending && !isEnded) {
+            navigate(`/campaign/${campaign.id}`);
+          }
+        }}>
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
@@ -425,12 +371,12 @@ export function CampaignsTab() {
                 {/* Progress Bar */}
                 <div className="relative h-1.5 rounded-full overflow-hidden bg-muted/50">
                   {campaign.is_infinite_budget ? <div className="absolute inset-0 animate-pulse" style={{
-                background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
-                backgroundSize: '200% 200%',
-                animation: 'slide 2s linear infinite'
-              }} /> : <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                width: `${budgetPercentage}%`
-              }} />}
+                  background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
+                  backgroundSize: '200% 200%',
+                  animation: 'slide 2s linear infinite'
+                }} /> : <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                  width: `${budgetPercentage}%`
+                }} />}
                 </div>
                 
                 {!campaign.is_infinite_budget && <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
@@ -441,15 +387,11 @@ export function CampaignsTab() {
               {/* Connected Accounts */}
               {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div className="pt-1">
                   <div className="flex flex-wrap gap-1.5">
-                    {campaign.connected_accounts.map(account => <div 
-                        key={account.id} 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedAccount(account);
-                          setManageAccountDialogOpen(true);
-                        }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:brightness-95 transition-colors cursor-pointer border border-border"
-                      >
+                    {campaign.connected_accounts.map(account => <div key={account.id} onClick={e => {
+                  e.stopPropagation();
+                  setSelectedAccount(account);
+                  setManageAccountDialogOpen(true);
+                }} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:brightness-95 transition-colors cursor-pointer border border-border">
                         <div className="w-4 h-4">
                           <img src={getPlatformIcon(account.platform) || ''} alt={account.platform} className="w-full h-full" />
                         </div>
@@ -474,34 +416,34 @@ export function CampaignsTab() {
                     </span>
                   </div>
                   <Button variant="ghost" size="sm" onClick={e => {
-              e.stopPropagation();
-              setSelectedCampaignId(campaign.id);
-              setWithdrawDialogOpen(true);
-            }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
+                e.stopPropagation();
+                setSelectedCampaignId(campaign.id);
+                setWithdrawDialogOpen(true);
+              }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
                     <X className="w-3.5 h-3.5 mr-1.5" />
                     Withdraw Application
                   </Button>
                 </div> : isEnded ? <div className="mt-auto pt-2">
                   <Button variant="ghost" size="sm" onClick={e => {
-              e.stopPropagation();
-              setSelectedCampaignId(campaign.id);
-              setLeaveCampaignDialogOpen(true);
-            }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
+                e.stopPropagation();
+                setSelectedCampaignId(campaign.id);
+                setLeaveCampaignDialogOpen(true);
+              }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
                     <LogOut className="w-3.5 h-3.5 mr-1.5" />
                     Leave Campaign
                   </Button>
                 </div> : <div className="mt-auto pt-2">
                   <Button variant="ghost" size="sm" onClick={e => {
-              e.stopPropagation();
-              setDialogOpen(true);
-            }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+                e.stopPropagation();
+                setDialogOpen(true);
+              }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Link Account
                   </Button>
                 </div>}
             </CardContent>
           </Card>;
-    })}
+      })}
     
     {/* Link Account Options Dialog */}
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -514,9 +456,9 @@ export function CampaignsTab() {
         </DialogHeader>
         <div className="grid gap-3 py-4">
           <Button variant="ghost" className="group w-full justify-start h-auto py-4 px-4 border-0 hover:bg-accent/50" onClick={() => {
-            setDialogOpen(false);
-            navigate("/dashboard?tab=profile");
-          }}>
+              setDialogOpen(false);
+              navigate("/dashboard?tab=profile");
+            }}>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <Link2 className="h-5 w-5 text-primary" />
@@ -531,9 +473,9 @@ export function CampaignsTab() {
           </Button>
           
           <Button variant="ghost" className="group w-full justify-start h-auto py-4 px-4 border-0 hover:bg-accent/50" onClick={() => {
-            setDialogOpen(false);
-            setAddAccountDialogOpen(true);
-          }}>
+              setDialogOpen(false);
+              setAddAccountDialogOpen(true);
+            }}>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <UserPlus className="h-5 w-5 text-primary" />
@@ -585,10 +527,7 @@ export function CampaignsTab() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={handleLeaveCampaign}
-            className="bg-destructive hover:bg-destructive/90"
-          >
+          <AlertDialogAction onClick={handleLeaveCampaign} className="bg-destructive hover:bg-destructive/90">
             {leavingCampaign ? "Leaving..." : "Leave Campaign"}
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -597,45 +536,22 @@ export function CampaignsTab() {
     
     <AddSocialAccountDialog open={addAccountDialogOpen} onOpenChange={setAddAccountDialogOpen} onSuccess={fetchCampaigns} />
     
-    {selectedAccount && (
-      <>
-        <ManageAccountDialog
-          open={manageAccountDialogOpen}
-          onOpenChange={setManageAccountDialogOpen}
-          account={{
-            id: selectedAccount.id,
-            username: selectedAccount.username,
-            platform: selectedAccount.platform,
-            account_link: null
-          }}
-          demographicStatus={null}
-          daysUntilNext={null}
-          lastSubmissionDate={null}
-          nextSubmissionDate={null}
-          onUpdate={fetchCampaigns}
-          onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)}
-          platformIcon={
-            <div className="w-6 h-6">
+    {selectedAccount && <>
+        <ManageAccountDialog open={manageAccountDialogOpen} onOpenChange={setManageAccountDialogOpen} account={{
+          id: selectedAccount.id,
+          username: selectedAccount.username,
+          platform: selectedAccount.platform,
+          account_link: null
+        }} demographicStatus={null} daysUntilNext={null} lastSubmissionDate={null} nextSubmissionDate={null} onUpdate={fetchCampaigns} onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)} platformIcon={<div className="w-6 h-6">
               <img src={getPlatformIcon(selectedAccount.platform) || ''} alt={selectedAccount.platform} className="w-full h-full" />
-            </div>
-          }
-        />
+            </div>} />
         
-        <SubmitDemographicsDialog
-          open={submitDemographicsDialogOpen}
-          onOpenChange={setSubmitDemographicsDialogOpen}
-          socialAccountId={selectedAccount.id}
-          platform={selectedAccount.platform}
-          username={selectedAccount.username}
-          onSuccess={() => {
-            setSubmitDemographicsDialogOpen(false);
-            fetchCampaigns();
-          }}
-        />
-      </>
-    )}
+        <SubmitDemographicsDialog open={submitDemographicsDialogOpen} onOpenChange={setSubmitDemographicsDialogOpen} socialAccountId={selectedAccount.id} platform={selectedAccount.platform} username={selectedAccount.username} onSuccess={() => {
+          setSubmitDemographicsDialogOpen(false);
+          fetchCampaigns();
+        }} />
+      </>}
     
       </div>
-    </div>
-  );
+    </div>;
 }
