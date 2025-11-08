@@ -394,7 +394,7 @@ export default function AdminUsers() {
       error
     } = await supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", {
       ascending: false
-    }).limit(10);
+    });
     
     if (error) {
       toast({
