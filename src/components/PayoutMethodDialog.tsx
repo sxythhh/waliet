@@ -46,7 +46,7 @@ export default function PayoutMethodDialog({
   onSave,
   currentMethodCount
 }: PayoutMethodDialogProps) {
-  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise" | "revolut" | "debit" | "upi">("crypto");
+  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise" | "upi">("crypto");
   const [selectedCurrency, setSelectedCurrency] = useState(cryptoCurrencies[0].id);
   const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
@@ -58,14 +58,6 @@ export default function PayoutMethodDialog({
   const [accountNumber, setAccountNumber] = useState("");
   const [routingNumber, setRoutingNumber] = useState("");
   const [accountHolderName, setAccountHolderName] = useState("");
-
-  // Revolut fields
-  const [revolutTag, setRevolutTag] = useState("");
-
-  // Debit card fields
-  const [cardNumber, setCardNumber] = useState("");
-  const [legalName, setLegalName] = useState("");
-  const [address, setAddress] = useState("");
   const handleSave = () => {
     if (selectedMethod === "crypto") {
       if (!walletAddress) return;
@@ -84,28 +76,12 @@ export default function PayoutMethodDialog({
       onSave("upi", {
         upi_id: upiId
       });
-    } else if (selectedMethod === "revolut") {
-      if (!revolutTag) return;
-      onSave("revolut", {
-        revtag: revolutTag
-      });
-    } else if (selectedMethod === "debit") {
-      if (!cardNumber || !legalName || !address) return;
-      onSave("debit", {
-        cardNumber,
-        legalName,
-        address
-      });
     }
 
     // Reset all fields
     setWalletAddress("");
     setPaypalEmail("");
     setUpiId("");
-    setRevolutTag("");
-    setCardNumber("");
-    setLegalName("");
-    setAddress("");
     onOpenChange(false);
   };
   const isMaxMethodsReached = currentMethodCount >= 3;
@@ -141,16 +117,6 @@ export default function PayoutMethodDialog({
             id: "upi",
             icon: Landmark,
             label: "UPI",
-            isLogo: false
-          }, {
-            id: "revolut",
-            icon: Landmark,
-            label: "Revolut",
-            isLogo: false
-          }, {
-            id: "debit",
-            icon: CreditCard,
-            label: "Debit Card",
             isLogo: false
           }].map(method => {
             const Icon = method.icon;
@@ -239,46 +205,6 @@ export default function PayoutMethodDialog({
                   </Label>
                   <Input id="upi-id" type="text" placeholder="yourname@okaxis" value={upiId} onChange={e => setUpiId(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                 </div>}
-
-              {selectedMethod === "revolut" && <div className="space-y-3">
-                  <Label htmlFor="revolut-tag" className="font-medium text-muted-foreground" style={{
-              fontSize: '11px',
-              letterSpacing: '-0.5px'
-            }}>
-                    REVTAG
-                  </Label>
-                  <Input id="revolut-tag" placeholder="@yourtag" value={revolutTag} onChange={e => setRevolutTag(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
-                </div>}
-
-              {selectedMethod === "debit" && <div className="space-y-4">
-                  <div className="space-y-3">
-                    <Label htmlFor="card-number" className="font-medium text-muted-foreground" style={{
-                fontSize: '11px',
-                letterSpacing: '-0.5px'
-              }}>
-                      CARD NUMBER
-                    </Label>
-                    <Input id="card-number" placeholder="Enter your debit card number" value={cardNumber} onChange={e => setCardNumber(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
-                  </div>
-                  <div className="space-y-3">
-                    <Label htmlFor="legal-name" className="font-medium text-muted-foreground" style={{
-                fontSize: '11px',
-                letterSpacing: '-0.5px'
-              }}>
-                      LEGAL NAME
-                    </Label>
-                    <Input id="legal-name" placeholder="Full name as it appears on card" value={legalName} onChange={e => setLegalName(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
-                  </div>
-                  <div className="space-y-3">
-                    <Label htmlFor="address" className="font-medium text-muted-foreground" style={{
-                fontSize: '11px',
-                letterSpacing: '-0.5px'
-              }}>
-                      ADDRESS
-                    </Label>
-                    <Input id="address" placeholder="Your full billing address" value={address} onChange={e => setAddress(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
-                  </div>
-                </div>}
             </div>
           </div>}
 
@@ -286,7 +212,7 @@ export default function PayoutMethodDialog({
             <Button variant="outline" className="flex-1 h-12 bg-background border-border hover:bg-muted" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "upi" && !upiId || selectedMethod === "revolut" && !revolutTag || selectedMethod === "debit" && (!cardNumber || !legalName || !address)}>
+            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "upi" && !upiId}>
               Add Method
             </Button>
           </div>}
