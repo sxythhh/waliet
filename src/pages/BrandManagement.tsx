@@ -1787,7 +1787,76 @@ export default function BrandManagement({
                       <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                       <p className="text-muted-foreground text-sm">No active creators yet</p>
                     </div> : <div className="overflow-x-auto">
-                      {/* Full creators table code here - keeping existing implementation */}
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="font-medium text-muted-foreground">Creator</TableHead>
+                            <TableHead className="font-medium text-muted-foreground">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setAccountSortOrder(accountSortOrder === 'desc' ? 'asc' : accountSortOrder === 'asc' ? null : 'desc')}
+                                className="h-auto p-0 hover:bg-transparent"
+                              >
+                                Linked Accounts
+                                {accountSortOrder && <span className="ml-1">{accountSortOrder === 'desc' ? '↓' : '↑'}</span>}
+                              </Button>
+                            </TableHead>
+                            <TableHead className="font-medium text-muted-foreground">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : sortOrder === 'asc' ? null : 'desc')}
+                                className="h-auto p-0 hover:bg-transparent"
+                              >
+                                Total Paid
+                                {sortOrder && <span className="ml-1">{sortOrder === 'desc' ? '↓' : '↑'}</span>}
+                              </Button>
+                            </TableHead>
+                            <TableHead className="font-medium text-muted-foreground">Joined</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {approvedSubmissions.map((submission) => {
+                            const totalPaid = transactions.filter(txn => txn.user_id === submission.creator_id).reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
+                            const linkedAccounts = submission.profiles?.social_accounts || [];
+                            
+                            return (
+                              <TableRow key={submission.id} className="border-b border-border hover:bg-accent/50">
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                                      {submission.profiles?.username?.[0]?.toUpperCase() || '?'}
+                                    </div>
+                                    <span className="font-medium">
+                                      {submission.profiles?.username || 'Unknown'}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {linkedAccounts.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1">
+                                      {linkedAccounts.map((account: any, idx: number) => (
+                                        <Badge key={idx} variant="outline" className="text-xs">
+                                          {account.platform}: {account.username}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted-foreground text-sm">No accounts</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <span className="font-medium">${totalPaid.toFixed(2)}</span>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">
+                                  {format(new Date(submission.submitted_at), 'MMM dd, yyyy')}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
                     </div>}
                 </CardContent>
               </Card>
