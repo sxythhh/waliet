@@ -123,7 +123,6 @@ export default function Transactions() {
       }
       const formattedTransactions = txData?.map((tx: any) => {
         const campaignId = tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata ? (tx.metadata as any).campaign_id : undefined;
-        console.log('Transaction:', tx.id, 'Campaign ID:', campaignId, 'Logo URL:', campaignsMap[campaignId]?.brand_logo_url);
         return {
           id: tx.id,
           user_id: tx.user_id,
@@ -139,6 +138,13 @@ export default function Transactions() {
           campaign_logo_url: campaignId ? campaignsMap[campaignId]?.brand_logo_url : undefined
         };
       }) || [];
+      
+      console.log(`Loaded ${formattedTransactions.length} total transactions`);
+      console.log('Date range:', formattedTransactions.length > 0 ? {
+        earliest: formattedTransactions[formattedTransactions.length - 1]?.created_at,
+        latest: formattedTransactions[0]?.created_at
+      } : 'No transactions');
+      
       setTransactions(formattedTransactions);
     } catch (error: any) {
       console.error("Error fetching transactions:", error);
@@ -286,15 +292,20 @@ export default function Transactions() {
 
     // Date range filter
     let matchesDateRange = true;
-    const txDate = new Date(tx.created_at);
-    if (dateFrom) {
-      matchesDateRange = txDate >= dateFrom;
+    if (dateFrom || dateTo) {
+      const txDate = new Date(tx.created_at);
+      if (dateFrom) {
+        const startOfDay = new Date(dateFrom);
+        startOfDay.setHours(0, 0, 0, 0);
+        matchesDateRange = txDate >= startOfDay;
+      }
+      if (dateTo && matchesDateRange) {
+        const endOfDay = new Date(dateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        matchesDateRange = txDate <= endOfDay;
+      }
     }
-    if (dateTo && matchesDateRange) {
-      const endOfDay = new Date(dateTo);
-      endOfDay.setHours(23, 59, 59, 999);
-      matchesDateRange = txDate <= endOfDay;
-    }
+    
     return matchesSearch && matchesCampaign && matchesType && matchesAmount && matchesDateRange;
   });
   const getStatusBadge = (status: string) => {
