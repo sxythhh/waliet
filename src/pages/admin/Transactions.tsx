@@ -79,17 +79,36 @@ export default function Transactions() {
   };
   const fetchTransactions = async () => {
     try {
-      // Fetch all transactions - Supabase has default pagination, so we need to specify a large range
-      const {
-        data: txData,
-        error: txError
-      } = await supabase.from("wallet_transactions").select("*").order("created_at", {
-        ascending: false
-      }).range(0, 9999);
-      if (txError) throw txError;
+      // Fetch ALL transactions by increasing the range beyond the default 1000 limit
+      let allTransactions: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+
+      // Keep fetching until we get all transactions
+      while (hasMore) {
+        const {
+          data: txData,
+          error: txError
+        } = await supabase
+          .from("wallet_transactions")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .range(from, from + batchSize - 1);
+
+        if (txError) throw txError;
+        
+        if (txData && txData.length > 0) {
+          allTransactions = [...allTransactions, ...txData];
+          from += batchSize;
+          hasMore = txData.length === batchSize; // Continue if we got a full batch
+        } else {
+          hasMore = false;
+        }
+      }
 
       // Fetch user profiles separately
-      const userIds = txData?.map(tx => tx.user_id).filter((id): id is string => !!id) || [];
+      const userIds = allTransactions?.map(tx => tx.user_id).filter((id): id is string => !!id) || [];
       const uniqueUserIds = [...new Set(userIds)];
       let profilesMap: Record<string, any> = {};
       if (uniqueUserIds.length > 0) {
@@ -101,10 +120,9 @@ export default function Transactions() {
           [profile.id]: profile
         }), {} as Record<string, any>) || {};
       }
-      if (txError) throw txError;
 
       // Fetch campaign names if metadata contains campaign_id
-      const campaignIds = txData?.filter(tx => tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata).map(tx => (tx.metadata as any).campaign_id) || [];
+      const campaignIds = allTransactions?.filter(tx => tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata).map(tx => (tx.metadata as any).campaign_id) || [];
       let campaignsMap: Record<string, {
         title: string;
         brand_logo_url?: string;
@@ -121,7 +139,7 @@ export default function Transactions() {
           }
         }), {}) || {};
       }
-      const formattedTransactions = txData?.map((tx: any) => {
+      const formattedTransactions = allTransactions?.map((tx: any) => {
         const campaignId = tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata ? (tx.metadata as any).campaign_id : undefined;
         return {
           id: tx.id,
