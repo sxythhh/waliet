@@ -82,9 +82,9 @@ export default function Transactions() {
       const {
         data: txData,
         error: txError
-      } = await supabase.from("wallet_transactions").select("*").order("created_at", {
+      } = await supabase.from("wallet_transactions").select("*", { count: 'exact' }).order("created_at", {
         ascending: false
-      });
+      }).limit(10000);
       if (txError) throw txError;
 
       // Fetch user profiles separately
