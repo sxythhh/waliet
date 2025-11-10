@@ -592,21 +592,35 @@ export default function BrandManagement({
   };
   const fetchTransactions = async () => {
     try {
+      // Fetch all earning and balance_correction transactions
       const {
         data,
         error
-      } = await supabase.from("wallet_transactions").select("*").eq('metadata->>campaign_id', selectedCampaignId).in('type', ['earning', 'balance_correction']).order('created_at', {
+      } = await supabase.from("wallet_transactions").select("*").in('type', ['earning', 'balance_correction']).order('created_at', {
         ascending: false
       });
       if (error) throw error;
 
+      // Filter by campaign_id in metadata (handle both formats)
+      const campaignTransactions = data?.filter((txn: any) => {
+        const metadata = txn.metadata || {};
+        return metadata.campaign_id === selectedCampaignId;
+      }) || [];
+
       // Fetch user profiles separately
-      if (data && data.length > 0) {
-        const userIds = [...new Set(data.map((t: any) => t.user_id))];
-        const {
-          data: profiles
-        } = await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds);
-        const transactionsWithProfiles = data.map((txn: any) => ({
+      if (campaignTransactions.length > 0) {
+        const userIds = [...new Set(campaignTransactions.map((t: any) => t.user_id).filter(Boolean))];
+        
+        let profiles = [];
+        if (userIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("id, username, avatar_url")
+            .in("id", userIds);
+          profiles = profilesData || [];
+        }
+        
+        const transactionsWithProfiles = campaignTransactions.map((txn: any) => ({
           ...txn,
           profiles: profiles?.find((p: any) => p.id === txn.user_id)
         }));

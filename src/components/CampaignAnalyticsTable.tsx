@@ -144,7 +144,9 @@ export function CampaignAnalyticsTable({
   const [selectedUserForDetails, setSelectedUserForDetails] = useState<AnalyticsData | null>(null);
   const [userSocialAccounts, setUserSocialAccounts] = useState<any[]>([]);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
+  const [transactionsCurrentPage, setTransactionsCurrentPage] = useState(1);
   const itemsPerPage = 20;
+  const transactionsPerPage = 20;
   useEffect(() => {
     fetchAnalytics();
     fetchCampaignRPM();
@@ -778,6 +780,14 @@ export function CampaignAnalyticsTable({
   });
   const totalPages = Math.ceil(filteredAnalytics.length / itemsPerPage);
   const paginatedAnalytics = filteredAnalytics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  
+  // Transaction pagination
+  const totalTransactionPages = Math.ceil(transactions.length / transactionsPerPage);
+  const paginatedTransactions = transactions.slice(
+    (transactionsCurrentPage - 1) * transactionsPerPage, 
+    transactionsCurrentPage * transactionsPerPage
+  );
+  
   const platforms = Array.from(new Set(analytics.map(a => a.platform)));
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -1137,7 +1147,7 @@ export function CampaignAnalyticsTable({
                 </TableRow>
               </TableHeader>
                 <TableBody>
-                {transactions.map(txn => {
+                {paginatedTransactions.map(txn => {
                   const metadata = txn.metadata || {};
                   const platformIcon = getPlatformIcon(metadata.platform || '');
                   const isBalanceCorrection = txn.type === 'balance_correction';
@@ -1213,15 +1223,62 @@ export function CampaignAnalyticsTable({
                             </TooltipProvider>}
                         </TableCell>
                       </TableRow>;
-                })}
-                </TableBody>
-              </Table>
-            </div>
-          {transactions.length === 0 && <div className="text-center py-12 text-muted-foreground">
-                No transactions yet
-              </div>}
-          </CardContent>
-        </Card>}
+                 })}
+                 </TableBody>
+               </Table>
+             </div>
+           {paginatedTransactions.length === 0 && transactions.length === 0 && <div className="text-center py-12 text-muted-foreground">
+                 No transactions yet
+               </div>}
+           </CardContent>
+           
+           {/* Transaction Pagination */}
+           {totalTransactionPages > 1 && (
+             <div className="px-3 py-3 border-t border-border">
+               <Pagination>
+                 <PaginationContent className="gap-1">
+                   <PaginationItem>
+                     <PaginationPrevious 
+                       onClick={() => setTransactionsCurrentPage(p => Math.max(1, p - 1))} 
+                       className={transactionsCurrentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} 
+                       style={{ backgroundColor: 'transparent' }} 
+                     />
+                   </PaginationItem>
+                   
+                   {Array.from({ length: totalTransactionPages }, (_, i) => i + 1).map(page => {
+                     if (page === 1 || page === totalTransactionPages || (page >= transactionsCurrentPage - 1 && page <= transactionsCurrentPage + 1)) {
+                       return (
+                         <PaginationItem key={page}>
+                           <PaginationLink 
+                             onClick={() => setTransactionsCurrentPage(page)} 
+                             isActive={transactionsCurrentPage === page} 
+                             className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md border border-transparent" 
+                             style={{ backgroundColor: transactionsCurrentPage === page ? '#202020' : 'transparent' }}
+                           >
+                             <span className={transactionsCurrentPage === page ? "text-white font-medium" : "text-white/50"}>
+                               {page}
+                             </span>
+                           </PaginationLink>
+                         </PaginationItem>
+                       );
+                     } else if (page === transactionsCurrentPage - 2 || page === transactionsCurrentPage + 2) {
+                       return <PaginationItem key={page}><span className="text-white/30 px-2">...</span></PaginationItem>;
+                     }
+                     return null;
+                   })}
+                   
+                   <PaginationItem>
+                     <PaginationNext 
+                       onClick={() => setTransactionsCurrentPage(p => Math.min(totalTransactionPages, p + 1))} 
+                       className={transactionsCurrentPage === totalTransactionPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} 
+                       style={{ backgroundColor: 'transparent' }} 
+                     />
+                   </PaginationItem>
+                 </PaginationContent>
+               </Pagination>
+             </div>
+           )}
+         </Card>}
 
       {/* Pagination */}
       {!showTransactions && totalPages > 1 && <div className="flex justify-center mt-4">
