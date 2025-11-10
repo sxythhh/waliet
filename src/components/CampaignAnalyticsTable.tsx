@@ -1140,6 +1140,8 @@ export function CampaignAnalyticsTable({
                 {transactions.map(txn => {
                   const metadata = txn.metadata || {};
                   const platformIcon = getPlatformIcon(metadata.platform || '');
+                  const isBalanceCorrection = txn.type === 'balance_correction';
+                  
                   return <TableRow key={txn.id} className="border-border hover:bg-muted/50">
                         <TableCell className="text-muted-foreground text-sm bg-card py-3">
                           {new Date(txn.created_at).toLocaleDateString('en-US', {
@@ -1149,30 +1151,44 @@ export function CampaignAnalyticsTable({
                       })}
                         </TableCell>
                         <TableCell className="bg-card py-3">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage src={txn.profiles?.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
-                                {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-foreground text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
-                          </div>
+                          {isBalanceCorrection ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                Budget Adjustment
+                              </Badge>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage src={txn.profiles?.avatar_url || undefined} />
+                                <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                                  {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-foreground text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="bg-card py-3">
-                          <div className="flex items-center gap-2">
-                            {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
-                            <span className="text-foreground/80 text-sm">@{metadata.account_username || 'N/A'}</span>
-                          </div>
+                          {isBalanceCorrection ? (
+                            <span className="text-foreground/60 text-sm italic">
+                              {txn.description || 'Manual adjustment'}
+                            </span>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
+                              <span className="text-foreground/80 text-sm">@{metadata.account_username || 'N/A'}</span>
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="text-foreground/80 text-right text-sm bg-card py-3" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
                     }}>
-                          {metadata.views?.toLocaleString() || '0'}
+                          {isBalanceCorrection ? '-' : (metadata.views?.toLocaleString() || '0')}
                         </TableCell>
-                        <TableCell className="text-green-400 text-right font-semibold text-sm bg-card py-3">
-                          +${Number(txn.amount).toFixed(2)}
+                        <TableCell className={`text-right font-semibold text-sm bg-card py-3 ${Number(txn.amount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
                         </TableCell>
                         <TableCell className="bg-card py-3">
                           <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
