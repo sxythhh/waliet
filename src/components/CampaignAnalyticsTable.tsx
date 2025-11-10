@@ -129,7 +129,7 @@ export function CampaignAnalyticsTable({
     platform: string;
     account_username: string;
   }>>([]);
-  const [showTransactions, setShowTransactions] = useState(false);
+  const [activeTab, setActiveTab] = useState<'analytics' | 'transactions' | 'budget'>('analytics');
   const [selectedDateRange, setSelectedDateRange] = useState<string>("all");
   const [dateRanges, setDateRanges] = useState<Array<{
     start: string;
@@ -782,8 +782,17 @@ export function CampaignAnalyticsTable({
   const paginatedAnalytics = filteredAnalytics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
   // Transaction pagination
-  const totalTransactionPages = Math.ceil(transactions.length / transactionsPerPage);
-  const paginatedTransactions = transactions.slice(
+  const earningTransactions = transactions.filter(txn => txn.type === 'earning');
+  const budgetTransactions = transactions.filter(txn => txn.type === 'balance_correction');
+  
+  const totalTransactionPages = Math.ceil(earningTransactions.length / transactionsPerPage);
+  const paginatedTransactions = earningTransactions.slice(
+    (transactionsCurrentPage - 1) * transactionsPerPage, 
+    transactionsCurrentPage * transactionsPerPage
+  );
+  
+  const totalBudgetPages = Math.ceil(budgetTransactions.length / transactionsPerPage);
+  const paginatedBudgetTransactions = budgetTransactions.slice(
     (transactionsCurrentPage - 1) * transactionsPerPage, 
     transactionsCurrentPage * transactionsPerPage
   );
@@ -861,36 +870,50 @@ export function CampaignAnalyticsTable({
         {/* Navigation Tabs */}
         <div className="flex items-center border-b border-white/10">
           <button 
-            onClick={() => setShowTransactions(false)} 
+            onClick={() => { setActiveTab('analytics'); setTransactionsCurrentPage(1); }} 
             className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-              !showTransactions 
+              activeTab === 'analytics'
                 ? "text-white" 
                 : "text-white/60 hover:text-white"
             }`}
           >
             Analytics
-            {!showTransactions && (
+            {activeTab === 'analytics' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
           <button 
-            onClick={() => setShowTransactions(true)} 
+            onClick={() => { setActiveTab('transactions'); setTransactionsCurrentPage(1); }} 
             className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
-              showTransactions 
+              activeTab === 'transactions'
                 ? "text-white" 
                 : "text-white/60 hover:text-white"
             }`}
           >
             <Receipt className="h-4 w-4" />
-            Transactions ({transactions.length})
-            {showTransactions && (
+            Transactions ({earningTransactions.length})
+            {activeTab === 'transactions' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          <button 
+            onClick={() => { setActiveTab('budget'); setTransactionsCurrentPage(1); }} 
+            className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
+              activeTab === 'budget'
+                ? "text-white" 
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            <DollarSign className="h-4 w-4" />
+            Budget ({budgetTransactions.length})
+            {activeTab === 'budget' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
         </div>
 
         {/* CSV Period Selector */}
-        {!showTransactions && dateRanges.length > 0 && <div className="flex items-center gap-2 mb-4 mt-4">
+        {activeTab === 'analytics' && dateRanges.length > 0 && <div className="flex items-center gap-2 mb-4 mt-4">
               <Label className="text-muted-foreground text-sm">CSV Period:</Label>
               <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
                 <SelectTrigger className="w-[200px] bg-muted border">
@@ -924,7 +947,7 @@ export function CampaignAnalyticsTable({
             </div>}
 
         {/* Filters and Table */}
-        {!showTransactions && <Card className="bg-card border">
+        {activeTab === 'analytics' && <Card className="bg-card border">
           <CardHeader className="px-3 py-3 border-b border-border">
             <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
               <CardTitle className="text-sm font-instrument tracking-tight">Account Analytics</CardTitle>
@@ -1128,7 +1151,7 @@ export function CampaignAnalyticsTable({
       </Card>}
 
         {/* Transactions History */}
-        {showTransactions && <Card className="bg-card border">
+        {activeTab === 'transactions' && <Card className="bg-card border">
           <CardHeader className="px-3 py-3 border-b border-border">
             <CardTitle className="text-foreground text-sm">Transaction History</CardTitle>
           </CardHeader>
@@ -1150,7 +1173,6 @@ export function CampaignAnalyticsTable({
                 {paginatedTransactions.map(txn => {
                   const metadata = txn.metadata || {};
                   const platformIcon = getPlatformIcon(metadata.platform || '');
-                  const isBalanceCorrection = txn.type === 'balance_correction';
                   
                   return <TableRow key={txn.id} className="border-border hover:bg-muted/50">
                         <TableCell className="text-muted-foreground text-sm bg-card py-3">
@@ -1161,44 +1183,30 @@ export function CampaignAnalyticsTable({
                       })}
                         </TableCell>
                         <TableCell className="bg-card py-3">
-                          {isBalanceCorrection ? (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                Budget Adjustment
-                              </Badge>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage src={txn.profiles?.avatar_url || undefined} />
-                                <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
-                                  {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-foreground text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={txn.profiles?.avatar_url || undefined} />
+                              <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                                {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-foreground text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="bg-card py-3">
-                          {isBalanceCorrection ? (
-                            <span className="text-foreground/60 text-sm italic">
-                              {txn.description || 'Manual adjustment'}
-                            </span>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
-                              <span className="text-foreground/80 text-sm">@{metadata.account_username || 'N/A'}</span>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
+                            <span className="text-foreground/80 text-sm">@{metadata.account_username || 'N/A'}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="text-foreground/80 text-right text-sm bg-card py-3" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500
                     }}>
-                          {isBalanceCorrection ? '-' : (metadata.views?.toLocaleString() || '0')}
+                          {metadata.views?.toLocaleString() || '0'}
                         </TableCell>
-                        <TableCell className={`text-right font-semibold text-sm bg-card py-3 ${Number(txn.amount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
+                        <TableCell className="text-green-400 text-right font-semibold text-sm bg-card py-3">
+                          +${Number(txn.amount).toFixed(2)}
                         </TableCell>
                         <TableCell className="bg-card py-3">
                           <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
@@ -1223,7 +1231,7 @@ export function CampaignAnalyticsTable({
                             </TooltipProvider>}
                         </TableCell>
                       </TableRow>;
-                 })}
+                })}
                  </TableBody>
                </Table>
              </div>
@@ -1280,8 +1288,111 @@ export function CampaignAnalyticsTable({
            )}
          </Card>}
 
+        {/* Budget Adjustments */}
+        {activeTab === 'budget' && <Card className="bg-card border">
+          <CardHeader className="px-3 py-3 border-b border-border">
+            <CardTitle className="text-foreground text-sm">Budget Adjustments</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Date</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Type</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Description</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 text-right bg-card">Amount</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+                <TableBody>
+                {paginatedBudgetTransactions.map(txn => {
+                  return <TableRow key={txn.id} className="border-border hover:bg-muted/50">
+                        <TableCell className="text-muted-foreground text-sm bg-card py-3">
+                          {new Date(txn.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                        </TableCell>
+                        <TableCell className="bg-card py-3">
+                          <Badge variant="outline" className="text-xs">
+                            Budget Adjustment
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="bg-card py-3">
+                          <span className="text-foreground/80 text-sm">
+                            {txn.description || 'Manual budget adjustment'}
+                          </span>
+                        </TableCell>
+                        <TableCell className={`text-right font-semibold text-sm bg-card py-3 ${Number(txn.amount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="bg-card py-3">
+                          <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
+                            {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>;
+                })}
+                 </TableBody>
+               </Table>
+             </div>
+           {paginatedBudgetTransactions.length === 0 && budgetTransactions.length === 0 && <div className="text-center py-12 text-muted-foreground">
+                 No budget adjustments yet
+               </div>}
+           </CardContent>
+           
+           {/* Budget Pagination */}
+           {totalBudgetPages > 1 && (
+             <div className="px-3 py-3 border-t border-border">
+               <Pagination>
+                 <PaginationContent className="gap-1">
+                   <PaginationItem>
+                     <PaginationPrevious 
+                       onClick={() => setTransactionsCurrentPage(p => Math.max(1, p - 1))} 
+                       className={transactionsCurrentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} 
+                       style={{ backgroundColor: 'transparent' }} 
+                     />
+                   </PaginationItem>
+                   
+                   {Array.from({ length: totalBudgetPages }, (_, i) => i + 1).map(page => {
+                     if (page === 1 || page === totalBudgetPages || (page >= transactionsCurrentPage - 1 && page <= transactionsCurrentPage + 1)) {
+                       return (
+                         <PaginationItem key={page}>
+                           <PaginationLink 
+                             onClick={() => setTransactionsCurrentPage(page)} 
+                             isActive={transactionsCurrentPage === page} 
+                             className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md border border-transparent" 
+                             style={{ backgroundColor: transactionsCurrentPage === page ? '#202020' : 'transparent' }}
+                           >
+                             <span className={transactionsCurrentPage === page ? "text-white font-medium" : "text-white/50"}>
+                               {page}
+                             </span>
+                           </PaginationLink>
+                         </PaginationItem>
+                       );
+                     } else if (page === transactionsCurrentPage - 2 || page === transactionsCurrentPage + 2) {
+                       return <PaginationItem key={page}><span className="text-white/30 px-2">...</span></PaginationItem>;
+                     }
+                     return null;
+                   })}
+                   
+                   <PaginationItem>
+                     <PaginationNext 
+                       onClick={() => setTransactionsCurrentPage(p => Math.min(totalBudgetPages, p + 1))} 
+                       className={transactionsCurrentPage === totalBudgetPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} 
+                       style={{ backgroundColor: 'transparent' }} 
+                     />
+                   </PaginationItem>
+                 </PaginationContent>
+               </Pagination>
+             </div>
+           )}
+         </Card>}
+
       {/* Pagination */}
-      {!showTransactions && totalPages > 1 && <div className="flex justify-center mt-4">
+      {activeTab === 'analytics' && totalPages > 1 && <div className="flex justify-center mt-4">
           <Pagination>
             <PaginationContent className="gap-1">
               <PaginationItem>
