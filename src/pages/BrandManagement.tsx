@@ -597,7 +597,7 @@ export default function BrandManagement({
         error
       } = await supabase.from("wallet_transactions").select("*").contains('metadata', {
         campaign_id: selectedCampaignId
-      }).eq('type', 'earning').order('created_at', {
+      }).in('type', ['earning', 'balance_correction']).order('created_at', {
         ascending: false
       });
       if (error) throw error;
