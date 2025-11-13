@@ -1331,7 +1331,13 @@ export function CampaignAnalyticsTable({
                         <TableCell className="bg-card py-3">
                           <div className="flex items-center gap-2">
                             {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
-                            <span className="text-foreground/80 text-sm">@{metadata.account_username || 'N/A'}</span>
+                            <span className="text-foreground/80 text-sm">
+                              {metadata.account_username 
+                                ? `@${metadata.account_username}` 
+                                : txn.type === 'balance_correction' 
+                                  ? 'Balance Correction' 
+                                  : 'N/A'}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell className="text-foreground/80 text-right text-sm bg-card py-3" style={{
