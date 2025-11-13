@@ -782,8 +782,17 @@ export function CampaignAnalyticsTable({
   const paginatedAnalytics = filteredAnalytics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
   // Transaction pagination
+  console.log('Total transactions received:', transactions.length);
+  console.log('Transaction types breakdown:', transactions.reduce((acc, t) => {
+    acc[t.type] = (acc[t.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>));
+  
   const earningTransactions = transactions.filter(txn => txn.type === 'earning');
   const budgetTransactions = transactions.filter(txn => txn.type === 'balance_correction');
+  
+  console.log('Earning transactions count:', earningTransactions.length);
+  console.log('Budget transactions count:', budgetTransactions.length);
   
   const totalTransactionPages = Math.ceil(earningTransactions.length / transactionsPerPage);
   const paginatedTransactions = earningTransactions.slice(
