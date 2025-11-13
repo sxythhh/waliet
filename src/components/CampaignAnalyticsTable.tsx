@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -131,6 +131,8 @@ export function CampaignAnalyticsTable({
   }>>([]);
   const [activeTab, setActiveTab] = useState<'analytics' | 'transactions' | 'budget'>('analytics');
   const [transactionFilter, setTransactionFilter] = useState<'all' | 'earning' | 'balance_correction'>('all');
+  const [exportStartDate, setExportStartDate] = useState<string>('');
+  const [exportEndDate, setExportEndDate] = useState<string>('');
   const [selectedDateRange, setSelectedDateRange] = useState<string>("all");
   const [dateRanges, setDateRanges] = useState<Array<{
     start: string;
@@ -551,6 +553,67 @@ export function CampaignAnalyticsTable({
       console.error("Error fetching transactions:", error);
     }
   };
+  
+  const exportTransactionsToCSV = () => {
+    let transactionsToExport = filteredTransactions;
+    
+    // Apply date range filter if dates are set
+    if (exportStartDate || exportEndDate) {
+      transactionsToExport = transactionsToExport.filter(txn => {
+        const txnDate = new Date(txn.created_at);
+        const startDate = exportStartDate ? new Date(exportStartDate) : null;
+        const endDate = exportEndDate ? new Date(exportEndDate + 'T23:59:59') : null;
+        
+        if (startDate && txnDate < startDate) return false;
+        if (endDate && txnDate > endDate) return false;
+        return true;
+      });
+    }
+    
+    if (transactionsToExport.length === 0) {
+      toast.error("No transactions to export for the selected criteria");
+      return;
+    }
+    
+    // Create CSV header
+    const headers = ['Date', 'User', 'Account', 'Platform', 'Views', 'Amount', 'Type', 'Status', 'Description'];
+    
+    // Create CSV rows
+    const rows = transactionsToExport.map(txn => {
+      const metadata = txn.metadata || {};
+      return [
+        new Date(txn.created_at).toLocaleDateString('en-US'),
+        txn.profiles?.username || 'Unknown',
+        metadata.account_username || 'N/A',
+        metadata.platform || 'N/A',
+        metadata.views || '0',
+        txn.amount,
+        txn.type === 'balance_correction' ? 'Budget Adjustment' : 'Earning',
+        txn.status,
+        txn.description || ''
+      ];
+    });
+    
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `transactions_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success(`Exported ${transactionsToExport.length} transactions to CSV`);
+  };
+  
   const handlePayUser = async () => {
     if (!selectedUser?.user_id) {
       toast.error("No user selected");
@@ -1165,7 +1228,7 @@ export function CampaignAnalyticsTable({
 
         {/* Transactions History */}
         {activeTab === 'transactions' && <Card className="bg-card border">
-          <CardHeader className="px-3 py-3 border-b border-border">
+          <CardHeader className="px-3 py-3 border-b border-border space-y-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-foreground text-sm">Transaction History</CardTitle>
               <div className="flex gap-2">
@@ -1194,6 +1257,37 @@ export function CampaignAnalyticsTable({
                   Budget Adjustments ({transactions.filter(t => t.type === 'balance_correction').length})
                 </Button>
               </div>
+            </div>
+            
+            {/* Export Controls */}
+            <div className="flex items-center gap-3 pt-2 border-t border-border">
+              <div className="flex items-center gap-2 flex-1">
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Date Range:</Label>
+                <Input
+                  type="date"
+                  value={exportStartDate}
+                  onChange={(e) => setExportStartDate(e.target.value)}
+                  className="h-8 max-w-[150px]"
+                  placeholder="Start date"
+                />
+                <span className="text-muted-foreground">to</span>
+                <Input
+                  type="date"
+                  value={exportEndDate}
+                  onChange={(e) => setExportEndDate(e.target.value)}
+                  className="h-8 max-w-[150px]"
+                  placeholder="End date"
+                />
+              </div>
+              <Button
+                onClick={exportTransactionsToCSV}
+                size="sm"
+                variant="outline"
+                className="h-8 gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -1329,11 +1423,50 @@ export function CampaignAnalyticsTable({
            )}
          </Card>}
 
-        {/* Budget Adjustments */}
-        {activeTab === 'budget' && <Card className="bg-card border">
-          <CardHeader className="px-3 py-3 border-b border-border">
-            <CardTitle className="text-foreground text-sm">Budget Adjustments</CardTitle>
-          </CardHeader>
+         {/* Budget Adjustments */}
+         {activeTab === 'budget' && <Card className="bg-card border">
+           <CardHeader className="px-3 py-3 border-b border-border space-y-3">
+             <CardTitle className="text-foreground text-sm">Budget Adjustments</CardTitle>
+             
+             {/* Export Controls */}
+             <div className="flex items-center gap-3 pt-2 border-t border-border">
+               <div className="flex items-center gap-2 flex-1">
+                 <Label className="text-sm text-muted-foreground whitespace-nowrap">Date Range:</Label>
+                 <Input
+                   type="date"
+                   value={exportStartDate}
+                   onChange={(e) => setExportStartDate(e.target.value)}
+                   className="h-8 max-w-[150px]"
+                   placeholder="Start date"
+                 />
+                 <span className="text-muted-foreground">to</span>
+                 <Input
+                   type="date"
+                   value={exportEndDate}
+                   onChange={(e) => setExportEndDate(e.target.value)}
+                   className="h-8 max-w-[150px]"
+                   placeholder="End date"
+                 />
+               </div>
+               <Button
+                 onClick={() => {
+                   // Set filter to budget corrections only for export
+                   const originalFilter = transactionFilter;
+                   setTransactionFilter('balance_correction');
+                   setTimeout(() => {
+                     exportTransactionsToCSV();
+                     setTransactionFilter(originalFilter);
+                   }, 0);
+                 }}
+                 size="sm"
+                 variant="outline"
+                 className="h-8 gap-2"
+               >
+                 <Download className="h-4 w-4" />
+                 Export CSV
+               </Button>
+             </div>
+           </CardHeader>
           <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
