@@ -130,6 +130,7 @@ export function CampaignAnalyticsTable({
     account_username: string;
   }>>([]);
   const [activeTab, setActiveTab] = useState<'analytics' | 'transactions' | 'budget'>('analytics');
+  const [transactionFilter, setTransactionFilter] = useState<'all' | 'earning' | 'balance_correction'>('all');
   const [selectedDateRange, setSelectedDateRange] = useState<string>("all");
   const [dateRanges, setDateRanges] = useState<Array<{
     start: string;
@@ -528,8 +529,13 @@ export function CampaignAnalyticsTable({
           data: analyticsData
         } = await supabase.from("campaign_account_analytics").select("id, last_payment_amount").in("id", analyticsIds);
 
-        // Filter out transactions where the analytics record shows no payment (reverted)
+        // Filter out earning transactions where the analytics record shows no payment (reverted)
+        // But keep all balance_correction transactions regardless
         const activeTransactions = campaignTransactions.filter(txn => {
+          // Always keep balance corrections
+          if (txn.type === 'balance_correction') return true;
+          
+          // For earning transactions, check if they've been reverted
           const analytics = analyticsData?.find(a => a.id === (txn.metadata as any)?.analytics_id);
           return analytics && analytics.last_payment_amount > 0;
         });
@@ -785,16 +791,19 @@ export function CampaignAnalyticsTable({
   const totalPages = Math.ceil(filteredAnalytics.length / itemsPerPage);
   const paginatedAnalytics = filteredAnalytics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
-  // Transaction pagination
-  const earningTransactions = transactions.filter(txn => txn.type === 'earning');
-  const budgetTransactions = transactions.filter(txn => txn.type === 'balance_correction');
-  
-  const totalTransactionPages = Math.ceil(earningTransactions.length / transactionsPerPage);
-  const paginatedTransactions = earningTransactions.slice(
+  // Transaction pagination with filter
+  const filteredTransactions = transactionFilter === 'all' 
+    ? transactions 
+    : transactions.filter(txn => txn.type === transactionFilter);
+    
+  const totalTransactionPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
+  const paginatedTransactions = filteredTransactions.slice(
     (transactionsCurrentPage - 1) * transactionsPerPage, 
     transactionsCurrentPage * transactionsPerPage
   );
   
+  // Budget tab pagination (separate from transactions tab)
+  const budgetTransactions = transactions.filter(txn => txn.type === 'balance_correction');
   const totalBudgetPages = Math.ceil(budgetTransactions.length / transactionsPerPage);
   const paginatedBudgetTransactions = budgetTransactions.slice(
     (transactionsCurrentPage - 1) * transactionsPerPage, 
@@ -895,7 +904,7 @@ export function CampaignAnalyticsTable({
             }`}
           >
             <Receipt className="h-4 w-4" />
-            Transactions ({earningTransactions.length})
+            Transactions ({transactions.filter(t => t.type === 'earning').length})
             {activeTab === 'transactions' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
@@ -1157,7 +1166,35 @@ export function CampaignAnalyticsTable({
         {/* Transactions History */}
         {activeTab === 'transactions' && <Card className="bg-card border">
           <CardHeader className="px-3 py-3 border-b border-border">
-            <CardTitle className="text-foreground text-sm">Transaction History</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-foreground text-sm">Transaction History</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant={transactionFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTransactionFilter('all')}
+                  className="h-8"
+                >
+                  All ({transactions.length})
+                </Button>
+                <Button
+                  variant={transactionFilter === 'earning' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTransactionFilter('earning')}
+                  className="h-8"
+                >
+                  Earnings ({transactions.filter(t => t.type === 'earning').length})
+                </Button>
+                <Button
+                  variant={transactionFilter === 'balance_correction' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTransactionFilter('balance_correction')}
+                  className="h-8"
+                >
+                  Budget Adjustments ({transactions.filter(t => t.type === 'balance_correction').length})
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
           <div className="overflow-x-auto">
