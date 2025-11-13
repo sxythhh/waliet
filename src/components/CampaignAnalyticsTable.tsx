@@ -1346,8 +1346,8 @@ export function CampaignAnalyticsTable({
                     }}>
                           {metadata.views?.toLocaleString() || '0'}
                         </TableCell>
-                        <TableCell className="text-green-400 text-right font-semibold text-sm bg-card py-3">
-                          +${Number(txn.amount).toFixed(2)}
+                        <TableCell className={`text-right font-semibold text-sm bg-card py-3 ${Number(txn.amount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {Number(txn.amount) >= 0 ? '+' : ''}{`$${Number(txn.amount).toFixed(2)}`}
                         </TableCell>
                         <TableCell className="bg-card py-3">
                           <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
