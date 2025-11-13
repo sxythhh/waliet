@@ -601,17 +601,12 @@ export default function BrandManagement({
       });
       if (error) throw error;
 
-      console.log('All transactions fetched:', data?.length);
       console.log('Selected campaign ID:', selectedCampaignId);
 
       // Filter by campaign_id in metadata (handle both formats)
       const campaignTransactions = data?.filter((txn: any) => {
         const metadata = txn.metadata || {};
-        const matches = metadata.campaign_id === selectedCampaignId;
-        if (matches) {
-          console.log('Matched transaction:', txn.type, txn.amount, metadata.campaign_id);
-        }
-        return matches;
+        return metadata.campaign_id === selectedCampaignId;
       }) || [];
 
       console.log('Campaign transactions after filter:', campaignTransactions.length);
@@ -635,10 +630,8 @@ export default function BrandManagement({
           profiles: profiles?.find((p: any) => p.id === txn.user_id)
         }));
         setTransactions(transactionsWithProfiles);
-        console.log('Final transactions set:', transactionsWithProfiles.length);
       } else {
         setTransactions([]);
-        console.log('No transactions found for campaign');
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);

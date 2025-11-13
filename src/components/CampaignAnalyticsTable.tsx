@@ -504,28 +504,32 @@ export function CampaignAnalyticsTable({
       const {
         data,
         error
-      } = await supabase.from("wallet_transactions").select("*").contains('metadata', {
-        campaign_id: campaignId
-      }).in('type', ['earning', 'balance_correction']).order('created_at', {
+      } = await supabase.from("wallet_transactions").select("*").in('type', ['earning', 'balance_correction']).order('created_at', {
         ascending: false
       });
       if (error) throw error;
 
+      // Filter by campaign_id in metadata (handle both formats)
+      const campaignTransactions = data?.filter((txn: any) => {
+        const metadata = txn.metadata || {};
+        return metadata.campaign_id === campaignId;
+      }) || [];
+
       // Fetch user profiles separately
-      if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(t => t.user_id))];
+      if (campaignTransactions && campaignTransactions.length > 0) {
+        const userIds = [...new Set(campaignTransactions.map(t => t.user_id))];
         const {
           data: profiles
         } = await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds);
 
         // Fetch analytics records to check if transactions have been reverted
-        const analyticsIds = data.map(t => (t.metadata as any)?.analytics_id).filter(Boolean);
+        const analyticsIds = campaignTransactions.map(t => (t.metadata as any)?.analytics_id).filter(Boolean);
         const {
           data: analyticsData
         } = await supabase.from("campaign_account_analytics").select("id, last_payment_amount").in("id", analyticsIds);
 
         // Filter out transactions where the analytics record shows no payment (reverted)
-        const activeTransactions = data.filter(txn => {
+        const activeTransactions = campaignTransactions.filter(txn => {
           const analytics = analyticsData?.find(a => a.id === (txn.metadata as any)?.analytics_id);
           return analytics && analytics.last_payment_amount > 0;
         });
@@ -782,17 +786,8 @@ export function CampaignAnalyticsTable({
   const paginatedAnalytics = filteredAnalytics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
   // Transaction pagination
-  console.log('Total transactions received:', transactions.length);
-  console.log('Transaction types breakdown:', transactions.reduce((acc, t) => {
-    acc[t.type] = (acc[t.type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>));
-  
   const earningTransactions = transactions.filter(txn => txn.type === 'earning');
   const budgetTransactions = transactions.filter(txn => txn.type === 'balance_correction');
-  
-  console.log('Earning transactions count:', earningTransactions.length);
-  console.log('Budget transactions count:', budgetTransactions.length);
   
   const totalTransactionPages = Math.ceil(earningTransactions.length / transactionsPerPage);
   const paginatedTransactions = earningTransactions.slice(
