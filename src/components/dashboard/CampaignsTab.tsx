@@ -260,13 +260,46 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
       }).eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).neq("status", "withdrawn");
       if (submissionError) throw submissionError;
 
-      // 2. Unlink all social accounts from this campaign
+      // 2. Get all linked social accounts before unlinking
+      const {
+        data: linkedAccounts
+      } = await supabase.from("social_account_campaigns").select("social_account_id, social_accounts(id)").eq("campaign_id", selectedCampaignId).eq("social_accounts.user_id", user.id);
+
+      // 3. Stop tracking in Shortimize for each linked account
+      if (linkedAccounts && linkedAccounts.length > 0) {
+        for (const link of linkedAccounts) {
+          try {
+            console.log('Stopping Shortimize tracking for account...');
+            const { error: untrackError } = await supabase.functions.invoke('untrack-shortimize-account', {
+              body: {
+                campaignId: selectedCampaignId,
+                socialAccountId: link.social_account_id
+              }
+            });
+            
+            if (untrackError) {
+              console.error('Error stopping tracking:', untrackError);
+            }
+          } catch (error) {
+            console.error('Error calling untrack function:', error);
+          }
+        }
+      }
+
+      // 4. Unlink all social accounts from this campaign in junction table
+      const {
+        error: unlinkError
+      } = await supabase.from("social_account_campaigns").delete().eq("campaign_id", selectedCampaignId).in("social_account_id", linkedAccounts?.map(l => l.social_account_id) || []);
+      if (unlinkError) throw unlinkError;
+
+      // 5. Clear campaign_id from social_accounts table (legacy field)
       const {
         error: accountError
       } = await supabase.from("social_accounts").update({
         campaign_id: null
       }).eq("campaign_id", selectedCampaignId).eq("user_id", user.id);
       if (accountError) throw accountError;
+      
       toast({
         title: "Left Campaign",
         description: "You have successfully left this campaign"
