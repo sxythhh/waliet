@@ -61,7 +61,7 @@ export default function CampaignDetail() {
       }
 
       // Check if user has an approved submission for this campaign
-      // Add a small retry mechanism for cases where approval just happened
+      // Use limit(1) to handle cases where there might be duplicate submissions
       let submissionData = null;
       let retries = 0;
       const maxRetries = 3;
@@ -75,6 +75,7 @@ export default function CampaignDetail() {
           .eq("campaign_id", id)
           .eq("creator_id", user.id)
           .eq("status", "approved")
+          .limit(1)
           .maybeSingle();
         
         console.log(`Retry ${retries + 1}:`, { found: !!data, data });
@@ -97,6 +98,7 @@ export default function CampaignDetail() {
           .eq("campaign_id", id)
           .eq("creator_id", user.id)
           .eq("status", "pending")
+          .limit(1)
           .maybeSingle();
 
         console.log('Access denied - no approved submission found', { 
@@ -117,6 +119,25 @@ export default function CampaignDetail() {
       }
 
       setSubmission(submissionData);
+
+      // Clean up duplicate submissions (keep only the oldest one)
+      const { data: allSubmissions } = await supabase
+        .from("campaign_submissions")
+        .select("id, submitted_at")
+        .eq("campaign_id", id)
+        .eq("creator_id", user.id)
+        .eq("status", "approved")
+        .order("submitted_at", { ascending: true });
+      
+      if (allSubmissions && allSubmissions.length > 1) {
+        // Keep the first (oldest) submission, delete the rest
+        const duplicateIds = allSubmissions.slice(1).map(s => s.id);
+        await supabase
+          .from("campaign_submissions")
+          .delete()
+          .in("id", duplicateIds);
+        console.log('Cleaned up duplicate submissions:', duplicateIds);
+      }
 
       // Fetch campaign only if user has access
       const { data: campaignData, error: campaignError } = await supabase
