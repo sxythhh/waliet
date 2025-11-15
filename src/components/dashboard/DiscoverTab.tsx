@@ -115,7 +115,7 @@ export function DiscoverTab() {
         brands (
           logo_url
         )
-      `).in("status", ["active", "ended"]).order("created_at", {
+      `).in("status", ["active", "ended"]).eq("is_private", false).order("created_at", {
       ascending: false
     });
     if (!error && data) {
