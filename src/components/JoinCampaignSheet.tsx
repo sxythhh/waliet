@@ -252,6 +252,27 @@ export function JoinCampaignSheet({
         });
       }
 
+      // Track accounts in Shortimize if auto-approved
+      if (!campaign.requires_application && submissionsCreated > 0) {
+        try {
+          console.log('Tracking accounts in Shortimize...');
+          const { error: trackError } = await supabase.functions.invoke('track-campaign-user', {
+            body: {
+              campaignId: campaign.id,
+              userId: user.id
+            }
+          });
+          
+          if (trackError) {
+            console.error('Error tracking accounts:', trackError);
+          } else {
+            console.log('Successfully tracked accounts in Shortimize');
+          }
+        } catch (error) {
+          console.error('Error calling track function:', error);
+        }
+      }
+
       // Send Discord notification if submissions were created
       if (submissionsCreated > 0) {
         try {
