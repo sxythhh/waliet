@@ -108,12 +108,37 @@ export function ManageAccountDialog({
   const handleLink = async (campaignId: string) => {
     try {
       const {
+        data: { user }
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
+
+      const {
         error
       } = await supabase.from('social_account_campaigns').insert({
         social_account_id: account.id,
         campaign_id: campaignId
       });
       if (error) throw error;
+
+      // Track account in Shortimize
+      try {
+        console.log('Tracking account in Shortimize...');
+        const { error: trackError } = await supabase.functions.invoke('track-campaign-user', {
+          body: {
+            campaignId: campaignId,
+            userId: user.id
+          }
+        });
+        
+        if (trackError) {
+          console.error('Error tracking account:', trackError);
+        } else {
+          console.log('Successfully tracked account in Shortimize');
+        }
+      } catch (error) {
+        console.error('Error calling track function:', error);
+      }
+
       toast({
         title: "Success",
         description: "Campaign linked successfully"
