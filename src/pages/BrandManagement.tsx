@@ -2001,7 +2001,7 @@ export default function BrandManagement({
                         <TableHeader>
                           <TableRow className="hover:bg-transparent border-b border-border">
                             <TableHead className="font-medium text-muted-foreground">Creator</TableHead>
-                            <TableHead className="font-medium text-muted-foreground">Platform</TableHead>
+                            <TableHead className="font-medium text-muted-foreground">Linked Accounts</TableHead>
                             <TableHead className="font-medium text-muted-foreground">Submitted</TableHead>
                             <TableHead className="font-medium text-muted-foreground">Application</TableHead>
                             <TableHead className="text-right font-medium text-muted-foreground">Actions</TableHead>
@@ -2021,7 +2021,27 @@ export default function BrandManagement({
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline">{submission.platform}</Badge>
+                                <div className="flex flex-col gap-2">
+                                  {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
+                                    submission.profiles.social_accounts.map((account: any) => (
+                                      <div key={account.id} className="flex items-center gap-2">
+                                        {getPlatformIcon(account.platform) && (
+                                          <img 
+                                            src={getPlatformIcon(account.platform)!} 
+                                            alt={account.platform} 
+                                            className="h-4 w-4 object-contain"
+                                          />
+                                        )}
+                                        <span className="text-sm font-medium">@{account.username}</span>
+                                        <Badge variant="secondary" className="text-xs">
+                                          {account.follower_count?.toLocaleString() || 0} followers
+                                        </Badge>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <span className="text-muted-foreground text-sm">No accounts linked</span>
+                                  )}
+                                </div>
                               </TableCell>
                               <TableCell className="text-muted-foreground">
                                 {format(new Date(submission.submitted_at), 'MMM dd, yyyy')}
