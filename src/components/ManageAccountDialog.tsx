@@ -56,6 +56,7 @@ export function ManageAccountDialog({
   const [connectedCampaigns, setConnectedCampaigns] = useState<ConnectedCampaign[]>([]);
   const [availableCampaigns, setAvailableCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
+  const [linkingCampaignId, setLinkingCampaignId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const fetchCampaigns = async () => {
     if (!account) return;
@@ -106,6 +107,7 @@ export function ManageAccountDialog({
     }
   };
   const handleLink = async (campaignId: string) => {
+    setLinkingCampaignId(campaignId);
     try {
       const {
         data: { user }
@@ -152,6 +154,8 @@ export function ManageAccountDialog({
         title: "Error",
         description: "Failed to link campaign"
       });
+    } finally {
+      setLinkingCampaignId(null);
     }
   };
   const handleUnlink = async (connectionId: string, campaignId: string) => {
@@ -315,9 +319,15 @@ export function ManageAccountDialog({
                             <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
                           </div>
                         </div>
-                        <Button variant="secondary" size="sm" onClick={() => handleLink(campaign.id)} className="bg-muted border-0">
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          onClick={() => handleLink(campaign.id)} 
+                          disabled={linkingCampaignId === campaign.id}
+                          className="bg-muted border-0"
+                        >
                           <Link2 className="h-4 w-4 mr-1" />
-                          Link
+                          {linkingCampaignId === campaign.id ? 'Linking...' : 'Link'}
                         </Button>
                       </div>)}
                   </div>
