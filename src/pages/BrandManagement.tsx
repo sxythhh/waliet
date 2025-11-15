@@ -1170,7 +1170,10 @@ export default function BrandManagement({
     try {
       const { error } = await supabase
         .from("campaign_submissions")
-        .update({ status: "approved" })
+        .update({ 
+          status: "approved",
+          reviewed_at: new Date().toISOString()
+        })
         .eq("id", submissionId);
 
       if (error) throw error;
