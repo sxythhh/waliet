@@ -106,6 +106,7 @@ interface Submission {
   views: number;
   earnings: number;
   submitted_at: string;
+  reviewed_at: string | null;
   creator_id: string;
   platform: string;
   content_url: string;
@@ -785,6 +786,7 @@ export default function BrandManagement({
           views,
           earnings,
           submitted_at,
+          reviewed_at,
           creator_id,
           platform,
           content_url,
@@ -1250,6 +1252,20 @@ export default function BrandManagement({
   })();
   const pendingSubmissions = submissions.filter(s => {
     if (s.status !== "pending") return false;
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const username = s.profiles?.username?.toLowerCase() || "";
+      const accountUsernames = s.profiles?.social_accounts?.map((acc: any) => acc.username?.toLowerCase() || "").join(" ") || "";
+      return username.includes(query) || accountUsernames.includes(query);
+    }
+    return true;
+  });
+
+  // Filter historical (approved/rejected/withdrawn) submissions
+  const historicalSubmissions = submissions.filter(s => {
+    if (s.status === "pending") return false;
 
     // Filter by search query
     if (searchQuery.trim()) {
@@ -2092,6 +2108,71 @@ export default function BrandManagement({
                   )}
                 </CardContent>
               </Card>
+
+              {/* Historical Applications */}
+              {historicalSubmissions.length > 0 && (
+                <Card className="bg-card border mt-6">
+                  <CardHeader className="pb-4 border-b border-border">
+                    <CardTitle className="flex items-center gap-2 font-instrument tracking-tight">
+                      Application History
+                      <Badge variant="secondary" className="ml-2">
+                        {historicalSubmissions.length}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="font-medium text-muted-foreground">Creator</TableHead>
+                            <TableHead className="font-medium text-muted-foreground">Status</TableHead>
+                            <TableHead className="font-medium text-muted-foreground">Submitted</TableHead>
+                            <TableHead className="font-medium text-muted-foreground">Reviewed</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {historicalSubmissions.map((submission) => (
+                            <TableRow key={submission.id} className="border-b border-border hover:bg-accent/50">
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                                    {submission.profiles?.username?.[0]?.toUpperCase() || '?'}
+                                  </div>
+                                  <span className="font-medium">
+                                    {submission.profiles?.username || 'Unknown'}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={
+                                    submission.status === 'approved' ? 'default' : 
+                                    submission.status === 'rejected' ? 'destructive' : 
+                                    'secondary'
+                                  }
+                                  className="capitalize"
+                                >
+                                  {submission.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {format(new Date(submission.submitted_at), 'MMM dd, yyyy')}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {submission.reviewed_at 
+                                  ? format(new Date(submission.reviewed_at), 'MMM dd, yyyy')
+                                  : '-'
+                                }
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Settings Tab */}
