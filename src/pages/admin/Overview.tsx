@@ -5,6 +5,8 @@ import { WorkTab } from "@/components/admin/WorkTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { SalesTab } from "@/components/admin/SalesTab";
 import { ReferralsTab } from "@/components/admin/ReferralsTab";
+import { ApiActivityTab } from "@/components/admin/ApiActivityTab";
+
 export default function AdminOverview() {
   const [activeTab, setActiveTab] = useState("warmap");
   return <div className="w-full h-full p-6">
@@ -22,6 +24,9 @@ export default function AdminOverview() {
             </TabsTrigger>
             <TabsTrigger value="referrals" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
               Referrals
+            </TabsTrigger>
+            <TabsTrigger value="api" className="rounded-full px-6 data-[state=active]:bg-[#1C1C1C]">
+              API Activity
             </TabsTrigger>
           </TabsList>
 
@@ -43,6 +48,10 @@ export default function AdminOverview() {
 
           <TabsContent value="referrals" className="mt-0">
             <ReferralsTab />
+          </TabsContent>
+
+          <TabsContent value="api" className="mt-0">
+            <ApiActivityTab />
           </TabsContent>
         </Tabs>
       </div>
