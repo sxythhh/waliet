@@ -67,7 +67,7 @@ export default function Dashboard() {
         
         
         <TabsContent value="campaigns" className="mt-0 space-y-8">
-          <CampaignsTab />
+          <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />
         </TabsContent>
         
         <TabsContent value="discover" className="mt-0">
