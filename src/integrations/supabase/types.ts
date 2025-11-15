@@ -313,6 +313,8 @@ export type Database = {
           assets_url: string | null
           brand_type: string | null
           business_details: Json | null
+          collection_id: string | null
+          collection_name: string | null
           created_at: string
           description: string | null
           home_url: string | null
@@ -331,6 +333,8 @@ export type Database = {
           assets_url?: string | null
           brand_type?: string | null
           business_details?: Json | null
+          collection_id?: string | null
+          collection_name?: string | null
           created_at?: string
           description?: string | null
           home_url?: string | null
@@ -349,6 +353,8 @@ export type Database = {
           assets_url?: string | null
           brand_type?: string | null
           business_details?: Json | null
+          collection_id?: string | null
+          collection_name?: string | null
           created_at?: string
           description?: string | null
           home_url?: string | null

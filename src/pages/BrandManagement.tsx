@@ -154,6 +154,8 @@ export default function BrandManagement({
   const [homeUrl, setHomeUrl] = useState("");
   const [accountUrl, setAccountUrl] = useState("");
   const [shortimizeApiKey, setShortimizeApiKey] = useState("");
+  const [brandCollectionId, setBrandCollectionId] = useState("");
+  const [brandCollectionName, setBrandCollectionName] = useState("");
   const [savingUrls, setSavingUrls] = useState(false);
   const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
@@ -704,7 +706,9 @@ export default function BrandManagement({
               home_url, 
               account_url, 
               brand_type, 
-              shortimize_api_key
+              shortimize_api_key,
+              collection_id,
+              collection_name
             )
           `)
           .eq("slug", slug)
@@ -721,6 +725,8 @@ export default function BrandManagement({
         setAccountUrl(brandData.account_url || "");
         setBrandType(brandData.brand_type || "");
         setShortimizeApiKey(brandData.shortimize_api_key || "");
+        setBrandCollectionId(brandData.collection_id || "");
+        setBrandCollectionName(brandData.collection_name || "");
 
         setCampaigns([{
           ...campaignData,
@@ -894,7 +900,9 @@ export default function BrandManagement({
         home_url: homeUrl || null,
         account_url: accountUrl || null,
         brand_type: brandType || null,
-        shortimize_api_key: shortimizeApiKey || null
+        shortimize_api_key: shortimizeApiKey || null,
+        collection_id: brandCollectionId || null,
+        collection_name: brandCollectionName || null
       }).eq("id", brandId);
       if (error) throw error;
       toast.success("Settings updated successfully");
@@ -2070,6 +2078,28 @@ export default function BrandManagement({
                       <p className="text-sm text-muted-foreground mt-2">
                         This API key is used to fetch analytics data from Shortimize for this brand.
                       </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="collection-id">Collection ID</Label>
+                      <Input
+                        id="collection-id"
+                        value={brandCollectionId}
+                        onChange={(e) => setBrandCollectionId(e.target.value)}
+                        placeholder="Enter collection ID"
+                        className="mt-2 bg-card border"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="collection-name">Collection Name</Label>
+                      <Input
+                        id="collection-name"
+                        value={brandCollectionName}
+                        onChange={(e) => setBrandCollectionName(e.target.value)}
+                        placeholder="Enter collection name"
+                        className="mt-2 bg-card border"
+                      />
                     </div>
 
                     <div>
