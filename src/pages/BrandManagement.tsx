@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -123,6 +123,7 @@ export default function BrandManagement({
   isManagementPage?: boolean;
 }) {
   const params = useParams();
+  const navigate = useNavigate();
   const slug = isManagementPage ? params.campaignSlug : params.slug;
   const {
     isAdmin,
@@ -130,6 +131,8 @@ export default function BrandManagement({
   } = useAdminCheck();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+  const [allBrands, setAllBrands] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -530,6 +533,10 @@ export default function BrandManagement({
   };
 
   useEffect(() => {
+    fetchAllBrands();
+  }, []);
+
+  useEffect(() => {
     fetchCampaigns();
   }, [slug]);
 
@@ -637,6 +644,21 @@ export default function BrandManagement({
       console.error("Error fetching transactions:", error);
     }
   };
+  const fetchAllBrands = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("brands")
+        .select("id, name, slug")
+        .eq("is_active", true)
+        .order("name");
+
+      if (error) throw error;
+      setAllBrands(data || []);
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+    }
+  };
+
   const fetchCampaigns = async () => {
     if (!slug && !isManagementPage) return;
     
@@ -668,7 +690,8 @@ export default function BrandManagement({
             is_featured,
             brand_id,
             brands!campaigns_brand_id_fkey (
-              id, 
+              id,
+              name,
               assets_url, 
               home_url, 
               account_url, 
@@ -684,6 +707,7 @@ export default function BrandManagement({
 
         const brandData = campaignData.brands;
         setBrandId(brandData.id);
+        setCurrentBrandName(brandData.name);
         setAssetsUrl(brandData.assets_url || "");
         setHomeUrl(brandData.home_url || "");
         setAccountUrl(brandData.account_url || "");
@@ -699,7 +723,7 @@ export default function BrandManagement({
         // Regular brand dashboard: fetch by brand slug
         const { data: brandData, error: brandError } = await supabase
           .from("brands")
-          .select("id, assets_url, home_url, account_url, brand_type, shortimize_api_key")
+          .select("id, name, assets_url, home_url, account_url, brand_type, shortimize_api_key")
           .eq("slug", slug)
           .maybeSingle();
 
@@ -707,6 +731,7 @@ export default function BrandManagement({
         if (!brandData) return;
 
         setBrandId(brandData.id);
+        setCurrentBrandName(brandData.name);
         setAssetsUrl(brandData.assets_url || "");
         setHomeUrl(brandData.home_url || "");
         setAccountUrl(brandData.account_url || "");
@@ -1242,10 +1267,33 @@ export default function BrandManagement({
         </div>
         {/* Campaign Selector */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 font-instrument tracking-tight">
-              {isManagementPage ? 'Brand Management' : selectedCampaign?.title}
-            </h1>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-foreground font-instrument tracking-tight">
+                {isManagementPage ? 'Brand Management' : currentBrandName}
+              </h1>
+              {!isManagementPage && allBrands.length > 1 && (
+                <Select 
+                  value={slug} 
+                  onValueChange={(newSlug) => navigate(`/brand/${newSlug}`)}
+                >
+                  <SelectTrigger className="w-[200px] bg-card border">
+                    <SelectValue placeholder="Switch brand" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border z-50">
+                    {allBrands.map(brand => (
+                      <SelectItem 
+                        key={brand.id} 
+                        value={brand.slug} 
+                        className="hover:bg-accent focus:bg-accent"
+                      >
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
             {!isManagementPage && campaigns.length > 1 && <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
                 <SelectTrigger className="w-[280px] bg-card border">
                   <SelectValue placeholder="Select campaign" />
