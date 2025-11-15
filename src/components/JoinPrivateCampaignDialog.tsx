@@ -37,7 +37,7 @@ export function JoinPrivateCampaignDialog({
         return;
       }
 
-      // Check if user already joined
+      // Check if user already joined (excluding withdrawn submissions)
       const {
         data: {
           user
@@ -46,7 +46,7 @@ export function JoinPrivateCampaignDialog({
       if (user) {
         const {
           data: existingSubmission
-        } = await supabase.from("campaign_submissions").select("id, status").eq("campaign_id", campaign.id).eq("creator_id", user.id).maybeSingle();
+        } = await supabase.from("campaign_submissions").select("id, status").eq("campaign_id", campaign.id).eq("creator_id", user.id).neq("status", "withdrawn").maybeSingle();
         if (existingSubmission) {
           if (existingSubmission.status === "approved") {
             toast.error("You've already joined this campaign");
