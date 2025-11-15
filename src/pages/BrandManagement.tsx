@@ -2025,7 +2025,84 @@ export default function BrandManagement({
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              {/* Keep existing settings content */}
+              <Card className="border">
+                <CardHeader>
+                  <CardTitle className="text-xl font-instrument">Campaign Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="shortimize-key">Shortimize API Key</Label>
+                      <Input
+                        id="shortimize-key"
+                        type="password"
+                        value={shortimizeApiKey}
+                        onChange={(e) => setShortimizeApiKey(e.target.value)}
+                        placeholder="Enter your Shortimize API key"
+                        className="mt-2 bg-card border"
+                      />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        This API key is used to fetch analytics data from Shortimize for this brand.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="assets-url">Assets URL</Label>
+                      <Input
+                        id="assets-url"
+                        value={assetsUrl}
+                        onChange={(e) => setAssetsUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="mt-2 bg-card border"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="home-url">Home URL</Label>
+                      <Input
+                        id="home-url"
+                        value={homeUrl}
+                        onChange={(e) => setHomeUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="mt-2 bg-card border"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="account-url">Account URL</Label>
+                      <Input
+                        id="account-url"
+                        value={accountUrl}
+                        onChange={(e) => setAccountUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="mt-2 bg-card border"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="brand-type">Brand Type</Label>
+                      <Select value={brandType} onValueChange={setBrandType}>
+                        <SelectTrigger id="brand-type" className="mt-2 bg-card border">
+                          <SelectValue placeholder="Select brand type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card border z-50">
+                          <SelectItem value="dwy">DWY (Done With You)</SelectItem>
+                          <SelectItem value="dfy">DFY (Done For You)</SelectItem>
+                          <SelectItem value="standard">Standard</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button 
+                      onClick={handleSaveUrls} 
+                      disabled={savingUrls}
+                      className="w-full md:w-auto"
+                    >
+                      {savingUrls ? "Saving..." : "Save Settings"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Videos Tab */}
