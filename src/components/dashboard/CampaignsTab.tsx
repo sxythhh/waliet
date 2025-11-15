@@ -42,7 +42,11 @@ interface Campaign {
     username: string;
   }>;
 }
-export function CampaignsTab() {
+interface CampaignsTabProps {
+  onOpenPrivateDialog: () => void;
+}
+
+export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -297,14 +301,24 @@ export function CampaignsTab() {
     return <div className="text-center py-12 flex flex-col items-center gap-4">
         <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
         <p className="text-foreground font-medium">You haven't joined any campaigns yet</p>
-        <Button onClick={() => navigate("/dashboard?tab=discover")} className="mt-2 bg-primary hover:bg-primary/90">
-          Discover Campaigns
-        </Button>
+        <div className="flex gap-2 mt-2">
+          <Button onClick={() => navigate("/dashboard?tab=discover")} className="bg-primary hover:bg-primary/90">
+            Discover Campaigns
+          </Button>
+          <Button onClick={onOpenPrivateDialog} variant="outline">
+            Join Private Campaign
+          </Button>
+        </div>
       </div>;
   }
   return <div className="space-y-6">
-      {/* Action Cards */}
-      
+      {/* Header with Actions */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">My Campaigns</h2>
+        <Button onClick={onOpenPrivateDialog} variant="outline" size="sm">
+          Join Private Campaign
+        </Button>
+      </div>
 
       {/* Campaigns Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
