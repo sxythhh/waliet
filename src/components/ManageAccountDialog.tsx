@@ -72,8 +72,18 @@ export function ManageAccountDialog({
       // Fetch campaigns the user has approved submissions for
       const {
         data: submissions
-      } = await supabase.from('campaign_submissions').select('campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))').eq('creator_id', user.id).eq('status', 'approved');
-      const approvedCampaigns = submissions?.map(s => s.campaigns).filter(Boolean) as Campaign[] || [];
+      } = await supabase.from('campaign_submissions').select('campaign_id').eq('creator_id', user.id).eq('status', 'approved');
+      
+      // Get unique campaign IDs
+      const uniqueCampaignIds = [...new Set(submissions?.map(s => s.campaign_id) || [])];
+      
+      // Fetch campaign details for unique campaigns
+      const { data: campaignsData } = await supabase
+        .from('campaigns')
+        .select('id, title, brand_name, brand_logo_url, brands(logo_url)')
+        .in('id', uniqueCampaignIds);
+      
+      const approvedCampaigns = campaignsData || [];
 
       // Fetch campaigns already connected to this social account
       const {
