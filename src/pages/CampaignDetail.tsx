@@ -187,13 +187,12 @@ export default function CampaignDetail() {
         return;
       }
 
-      // 1. Update all campaign submissions to 'withdrawn'
+      // 1. Delete all campaign submissions
       const { error: submissionError } = await supabase
         .from("campaign_submissions")
-        .update({ status: 'withdrawn' })
+        .delete()
         .eq("campaign_id", id)
-        .eq("creator_id", user.id)
-        .neq("status", "withdrawn");
+        .eq("creator_id", user.id);
 
       if (submissionError) throw submissionError;
 
