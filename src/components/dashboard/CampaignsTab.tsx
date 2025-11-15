@@ -198,12 +198,10 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
         data: submission
       } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).eq("status", "pending").single();
 
-      // Update submission status to withdrawn
+      // Delete submission
       const {
         error
-      } = await supabase.from("campaign_submissions").update({
-        status: 'withdrawn'
-      }).eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).eq("status", "pending");
+      } = await supabase.from("campaign_submissions").delete().eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).eq("status", "pending");
       if (error) throw error;
 
       // Also remove the social account campaign link
@@ -252,12 +250,10 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
         return;
       }
 
-      // 1. Update all campaign submissions to 'withdrawn'
+      // 1. Delete all campaign submissions
       const {
         error: submissionError
-      } = await supabase.from("campaign_submissions").update({
-        status: 'withdrawn'
-      }).eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).neq("status", "withdrawn");
+      } = await supabase.from("campaign_submissions").delete().eq("campaign_id", selectedCampaignId).eq("creator_id", user.id);
       if (submissionError) throw submissionError;
 
       // 2. Get all linked social accounts before unlinking
