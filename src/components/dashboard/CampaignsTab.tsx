@@ -193,25 +193,26 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get the submission to find the platform
-      const {
-        data: submission
-      } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).eq("status", "pending").single();
-
       // Delete submission
       const {
         error
       } = await supabase.from("campaign_submissions").delete().eq("campaign_id", selectedCampaignId).eq("creator_id", user.id).eq("status", "pending");
       if (error) throw error;
 
-      // Also remove the social account campaign link
-      if (submission?.platform) {
-        const {
-          data: socialAccount
-        } = await supabase.from("social_accounts").select("id").eq("user_id", user.id).eq("platform", submission.platform).single();
-        if (socialAccount) {
-          await supabase.from("social_account_campaigns").delete().eq("social_account_id", socialAccount.id).eq("campaign_id", selectedCampaignId);
-        }
+      // Get ALL user's social accounts
+      const { data: userAccounts } = await supabase
+        .from("social_accounts")
+        .select("id")
+        .eq("user_id", user.id);
+
+      // Remove ALL social account campaign links for this campaign and user
+      if (userAccounts && userAccounts.length > 0) {
+        const accountIds = userAccounts.map(acc => acc.id);
+        await supabase
+          .from("social_account_campaigns")
+          .delete()
+          .eq("campaign_id", selectedCampaignId)
+          .in("social_account_id", accountIds);
       }
       toast({
         title: "Application withdrawn",
