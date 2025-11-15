@@ -154,12 +154,32 @@ export function ManageAccountDialog({
       });
     }
   };
-  const handleUnlink = async (connectionId: string) => {
+  const handleUnlink = async (connectionId: string, campaignId: string) => {
     try {
       const {
         error
       } = await supabase.from('social_account_campaigns').delete().eq('id', connectionId);
       if (error) throw error;
+
+      // Stop tracking in Shortimize
+      try {
+        console.log('Stopping Shortimize tracking...');
+        const { error: untrackError } = await supabase.functions.invoke('untrack-shortimize-account', {
+          body: {
+            campaignId: campaignId,
+            socialAccountId: account.id
+          }
+        });
+        
+        if (untrackError) {
+          console.error('Error stopping tracking:', untrackError);
+        } else {
+          console.log('Successfully stopped tracking in Shortimize');
+        }
+      } catch (error) {
+        console.error('Error calling untrack function:', error);
+      }
+
       toast({
         title: "Success",
         description: "Campaign unlinked successfully"
@@ -274,7 +294,7 @@ export function ManageAccountDialog({
                           <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleUnlink(campaign.connection_id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                      <Button variant="ghost" size="sm" onClick={() => handleUnlink(campaign.connection_id, campaign.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
                         <Unlink className="h-4 w-4" />
                       </Button>
                     </div>)}
