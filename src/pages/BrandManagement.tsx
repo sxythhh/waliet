@@ -860,6 +860,23 @@ export default function BrandManagement({
               submissionId
             }
           });
+          
+          // Track user's accounts in Shortimize
+          const submission = submissions.find(s => s.id === submissionId);
+          if (submission && selectedCampaignId) {
+            try {
+              await supabase.functions.invoke("track-campaign-user", {
+                body: {
+                  campaignId: selectedCampaignId,
+                  userId: submission.creator_id
+                }
+              });
+              console.log("Account tracked in Shortimize");
+            } catch (trackError) {
+              console.error("Error tracking account in Shortimize:", trackError);
+              // Don't fail the approval if tracking fails
+            }
+          }
         } catch (emailError) {
           console.error("Error sending approval email:", emailError);
           // Don't fail the whole operation if email fails
