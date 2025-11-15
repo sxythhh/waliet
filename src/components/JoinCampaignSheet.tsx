@@ -154,6 +154,9 @@ export function JoinCampaignSheet({
       const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
       console.log('Submission status:', submissionStatus);
 
+      // Delete any withdrawn submissions to start fresh
+      await supabase.from("campaign_submissions").delete().eq("campaign_id", campaign.id).eq("creator_id", user.id).eq("status", "withdrawn");
+
       // Check for existing submissions first (excluding withdrawn)
       const {
         data: existingData
@@ -187,43 +190,22 @@ export function JoinCampaignSheet({
         })) || [];
         const contentUrl = account.account_link || `pending-${Date.now()}-${accountId}`;
 
-        // Check if there's a withdrawn submission we can reuse (match by content_url to avoid unique constraint)
+        // Create new submission
+        const submissionData = {
+          campaign_id: campaign.id,
+          creator_id: user.id,
+          platform: account.platform,
+          content_url: contentUrl,
+          status: submissionStatus,
+          application_answers: formattedAnswers
+        };
+        console.log('Inserting submission:', submissionData);
         const {
-          data: withdrawnSubmission
-        } = await supabase.from("campaign_submissions").select("id").eq("campaign_id", campaign.id).eq("creator_id", user.id).eq("content_url", contentUrl).eq("status", "withdrawn").maybeSingle();
-        if (withdrawnSubmission) {
-          // Update the withdrawn submission instead of creating new one
-          console.log('Updating withdrawn submission:', withdrawnSubmission.id);
-          const {
-            error: updateError
-          } = await supabase.from("campaign_submissions").update({
-            status: submissionStatus,
-            application_answers: formattedAnswers,
-            content_url: contentUrl,
-            submitted_at: new Date().toISOString()
-          }).eq("id", withdrawnSubmission.id);
-          if (updateError) {
-            console.error('Update error:', updateError);
-            throw updateError;
-          }
-        } else {
-          // Create new submission
-          const submissionData = {
-            campaign_id: campaign.id,
-            creator_id: user.id,
-            platform: account.platform,
-            content_url: contentUrl,
-            status: submissionStatus,
-            application_answers: formattedAnswers
-          };
-          console.log('Inserting submission:', submissionData);
-          const {
-            error: submissionError
-          } = await supabase.from("campaign_submissions").insert(submissionData);
-          if (submissionError) {
-            console.error('Submission error:', submissionError);
-            throw submissionError;
-          }
+          error: submissionError
+        } = await supabase.from("campaign_submissions").insert(submissionData);
+        if (submissionError) {
+          console.error('Submission error:', submissionError);
+          throw submissionError;
         }
 
         // Link the social account to the campaign (check if link exists first)
