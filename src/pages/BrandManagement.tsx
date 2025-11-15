@@ -30,7 +30,7 @@ import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
-const getTrustScoreDiamonds = (score: number) => {
+  const getTrustScoreDiamonds = (score: number) => {
   if (score < 20) {
     return {
       count: 1,
@@ -62,6 +62,14 @@ const getTrustScoreDiamonds = (score: number) => {
       color: 'fill-emerald-500 text-emerald-500'
     };
   }
+};
+
+const getPlatformIcon = (platform: string) => {
+  const platformLower = platform.toLowerCase();
+  if (platformLower === 'tiktok') return tiktokLogo;
+  if (platformLower === 'instagram') return instagramLogo;
+  if (platformLower === 'youtube') return youtubeLogo;
+  return null;
 };
 interface Campaign {
   id: string;
@@ -1900,12 +1908,30 @@ export default function BrandManagement({
                                 </TableCell>
                                 <TableCell>
                                   {linkedAccounts.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1">
-                                      {linkedAccounts.map((account: any, idx: number) => (
-                                        <Badge key={idx} variant="outline" className="text-xs">
-                                          {account.platform}: {account.username}
-                                        </Badge>
-                                      ))}
+                                    <div className="flex flex-wrap gap-3">
+                                      {linkedAccounts.map((account: any, idx: number) => {
+                                        const platformIcon = getPlatformIcon(account.platform);
+                                        return (
+                                          <a
+                                            key={idx}
+                                            href={account.account_link || '#'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 group"
+                                          >
+                                            {platformIcon && (
+                                              <img 
+                                                src={platformIcon} 
+                                                alt={account.platform}
+                                                className="w-4 h-4 object-contain"
+                                              />
+                                            )}
+                                            <span className="text-sm group-hover:underline">
+                                              {account.username}
+                                            </span>
+                                          </a>
+                                        );
+                                      })}
                                     </div>
                                   ) : (
                                     <span className="text-muted-foreground text-sm">No accounts</span>
