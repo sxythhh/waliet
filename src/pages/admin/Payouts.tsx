@@ -539,7 +539,10 @@ export default function AdminPayouts() {
       </Badge>;
   };
   const getPayoutMethodIcon = (method: string, details?: any) => {
-    console.log('Payout method:', method, 'Details:', details);
+    console.log('=== PAYOUT METHOD DEBUG ===');
+    console.log('Method:', method);
+    console.log('Details:', JSON.stringify(details, null, 2));
+    console.log('========================');
     if (method === 'paypal') {
       return <img src="/src/assets/paypal-logo.svg" alt="PayPal" className="h-5 w-5" />;
     } else if (method === 'wise') {
