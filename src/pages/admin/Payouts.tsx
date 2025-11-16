@@ -630,6 +630,29 @@ export default function AdminPayouts() {
                             <p className="text-2xl font-bold text-success">
                               ${Number(request.amount).toFixed(2)}
                             </p>
+                            {(() => {
+                              const amount = Number(request.amount);
+                              const isPayPal = request.payout_method === 'paypal';
+                              let netAmount;
+                              
+                              if (isPayPal) {
+                                const fee = amount * 0.06;
+                                netAmount = amount - fee;
+                              } else {
+                                const percentageFee = amount * 0.0075;
+                                const afterPercentage = amount - percentageFee;
+                                netAmount = afterPercentage - 1;
+                              }
+                              
+                              return (
+                                <div className="mt-2 pt-2 border-t border-border/50">
+                                  <p className="text-xs text-muted-foreground mb-0.5">They'll Receive</p>
+                                  <p className="text-base font-bold text-primary">
+                                    ${netAmount.toFixed(2)}
+                                  </p>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
 
