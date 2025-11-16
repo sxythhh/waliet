@@ -1448,6 +1448,43 @@ export function WalletTab() {
                   </>;
             })()}
             </div>
+
+            {/* Fee Breakdown and Net Amount */}
+            {payoutAmount && parseFloat(payoutAmount) >= 20 && (() => {
+              const amount = parseFloat(payoutAmount);
+              const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+              const isPayPal = selectedMethod?.method === 'paypal';
+              
+              let netAmount;
+              let feeAmount;
+              
+              if (isPayPal) {
+                feeAmount = amount * 0.06;
+                netAmount = amount - feeAmount;
+              } else {
+                const percentageFee = amount * 0.0075;
+                feeAmount = percentageFee + 1;
+                netAmount = amount - percentageFee - 1;
+              }
+              
+              return (
+                <div className="p-4 bg-card rounded-lg border border-border space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Withdrawal amount</span>
+                    <span className="font-medium">${amount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Processing fee</span>
+                    <span className="font-medium text-red-400">-${feeAmount.toFixed(2)}</span>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex justify-between">
+                    <span className="font-semibold">You'll receive</span>
+                    <span className="font-bold text-lg text-primary">${netAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <DialogFooter>
