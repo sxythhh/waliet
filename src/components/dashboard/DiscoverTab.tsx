@@ -238,12 +238,12 @@ export function DiscoverTab() {
             {/* Search Input */}
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-11 bg-muted border-transparent" />
+              <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-11 bg-card border-transparent" />
             </div>
 
             {/* Filter and Bookmark Icons */}
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setFiltersOpen(!filtersOpen)} className="h-11 w-11 bg-muted hover:bg-muted/80">
+              <Button variant="ghost" size="icon" onClick={() => setFiltersOpen(!filtersOpen)} className="h-11 w-11 bg-card hover:bg-card/80">
                 <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
               </Button>
               
