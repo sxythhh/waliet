@@ -262,7 +262,7 @@ export function DiscoverTab() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[140px] h-9 border-transparent bg-muted">
+                  <SelectTrigger className="w-[140px] h-9 border-transparent bg-card">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -281,7 +281,7 @@ export function DiscoverTab() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Frequency:</span>
                 <Select value={frequency} onValueChange={setFrequency}>
-                  <SelectTrigger className="w-[100px] h-9 border-transparent bg-muted">
+                  <SelectTrigger className="w-[100px] h-9 border-transparent bg-card">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -297,7 +297,7 @@ export function DiscoverTab() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[110px] h-9 border-transparent bg-muted">
+                  <SelectTrigger className="w-[110px] h-9 border-transparent bg-card">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
