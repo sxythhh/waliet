@@ -96,7 +96,9 @@ interface Campaign {
 }
 export function ProfileTab() {
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const {
+    theme
+  } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [joinedCampaigns, setJoinedCampaigns] = useState<Campaign[]>([]);
@@ -233,8 +235,7 @@ export function ProfileTab() {
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-4 w-4";
     const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const isLightMode = theme === "light" || (theme === "system" && systemIsLight);
-    
+    const isLightMode = theme === "light" || theme === "system" && systemIsLight;
     switch (platform.toLowerCase()) {
       case "tiktok":
         return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={iconClass} />;
@@ -409,32 +410,27 @@ export function ProfileTab() {
     }
   };
   const profileUrl = `${window.location.origin}/${profile?.username}`;
-  
   const handleCopyProfileUrl = () => {
     navigator.clipboard.writeText(profileUrl);
     toast({
       title: "Copied!",
-      description: "Profile URL copied to clipboard",
+      description: "Profile URL copied to clipboard"
     });
   };
-
   const handleOpenProfile = () => {
     window.open(`/${profile?.username}`, '_blank');
   };
-
   const handleCopyReferralCode = () => {
     if (!profile?.referral_code) return;
     navigator.clipboard.writeText(profile.referral_code);
     toast({
       title: "Copied!",
-      description: "Referral code copied to clipboard",
+      description: "Referral code copied to clipboard"
     });
   };
-
   const handleSavePreferences = async () => {
     if (!profile) return;
     setSavingPreferences(true);
-    
     try {
       const {
         data: {
@@ -450,7 +446,6 @@ export function ProfileTab() {
         setSavingPreferences(false);
         return;
       }
-
       const {
         error
       } = await supabase.from("profiles").update({
@@ -458,7 +453,6 @@ export function ProfileTab() {
         content_styles: profile.content_styles,
         content_niches: profile.content_niches
       }).eq("id", session.user.id);
-
       if (error) {
         console.error('Preferences update error:', error);
         toast({
@@ -483,8 +477,6 @@ export function ProfileTab() {
       setSavingPreferences(false);
     }
   };
-
-
   if (loading || !profile) {
     return <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
         {/* Profile Header Skeleton */}
@@ -545,56 +537,34 @@ export function ProfileTab() {
               <p className="text-sm text-muted-foreground">virality.gg/{profile.username}</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCopyProfileUrl}
-                className="h-9 w-9 bg-muted border-0 hover:bg-accent"
-              >
+              <Button variant="outline" size="icon" onClick={handleCopyProfileUrl} className="h-9 w-9 bg-muted border-0 hover:bg-accent">
                 <Copy className="h-4 w-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleOpenProfile}
-                className="h-9 w-9 bg-muted border-0 hover:bg-accent"
-              >
+              <Button variant="outline" size="icon" onClick={handleOpenProfile} className="h-9 w-9 bg-muted border-0 hover:bg-accent">
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
           
           {/* Referral Code Section */}
-          {profile.referral_code && (
-            <div className="pt-4 border-t border-border">
+          {profile.referral_code && <div className="pt-4 border-t border-border">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">Your Referral Code</p>
                   <p className="text-lg font-geist font-semibold tracking-tighter-custom">{profile.referral_code}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyReferralCode}
-                    className="gap-2 bg-muted border-0 hover:bg-accent"
-                  >
+                  <Button variant="outline" size="sm" onClick={handleCopyReferralCode} className="gap-2 bg-muted border-0 hover:bg-accent">
                     <Copy className="h-4 w-4" />
                     Copy
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate('/referrals')}
-                    className="gap-2 bg-muted border-0 hover:bg-accent"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => navigate('/referrals')} className="gap-2 bg-muted border-0 hover:bg-accent">
                     View Referrals
                     <ArrowUpRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </CardContent>
       </Card>
 
@@ -700,147 +670,7 @@ export function ProfileTab() {
 
       {/* Content Preferences */}
       <Collapsible open={preferencesOpen} onOpenChange={setPreferencesOpen}>
-        <Card className="bg-card">
-          <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">Content Preferences</CardTitle>
-                  <CardDescription>Tell us about the content you create</CardDescription>
-                </div>
-                <ChevronDown 
-                  className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${preferencesOpen ? 'rotate-180' : ''}`}
-                />
-              </div>
-            </CardHeader>
-          </CollapsibleTrigger>
-          
-          <CollapsibleContent className="transition-all duration-300 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-            <CardContent className="space-y-8 pt-0">
-          {/* Languages */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-medium">Languages I post in</Label>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              {['English', 'Spanish', 'French', 'German', 'Portuguese', 'Italian', 'Dutch', 'Polish', 'Turkish', 'Japanese', 'Korean', 'Chinese', 'Arabic', 'Hindi', 'Other'].map((language) => {
-                const isSelected = profile.content_languages?.includes(language) || false;
-                return (
-                  <button
-                    key={language}
-                    type="button"
-                    onClick={() => {
-                      const current = profile.content_languages || [];
-                      setProfile({
-                        ...profile,
-                        content_languages: isSelected
-                          ? current.filter(l => l !== language)
-                          : [...current, language]
-                      });
-                    }}
-                    className={`
-                      px-4 py-3 rounded-lg text-sm font-medium transition-all
-                      ${isSelected 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                        : 'bg-muted hover:bg-muted/80 border border-border'
-                      }
-                    `}
-                  >
-                    {language}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Content Styles */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Video className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-medium">Content styles I create</Label>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              {['UGC', 'Clipping', 'AI Generated', 'Slideshows', 'Written Content', 'Voiceovers', 'Product Reviews', 'Tutorials', 'Vlogs', 'Animation', 'Live Streams', 'Podcasts'].map((style) => {
-                const isSelected = profile.content_styles?.includes(style) || false;
-                return (
-                  <button
-                    key={style}
-                    type="button"
-                    onClick={() => {
-                      const current = profile.content_styles || [];
-                      setProfile({
-                        ...profile,
-                        content_styles: isSelected
-                          ? current.filter(s => s !== style)
-                          : [...current, style]
-                      });
-                    }}
-                    className={`
-                      px-4 py-3 rounded-lg text-sm font-medium transition-all
-                      ${isSelected 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                        : 'bg-muted hover:bg-muted/80 border border-border'
-                      }
-                    `}
-                  >
-                    {style}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Content Niches */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Type className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-medium">Content niches & topics</Label>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              {['Gaming', 'Tech', 'Fashion', 'Beauty', 'Fitness', 'Food', 'Travel', 'Finance', 'Education', 'Comedy', 'Music', 'Sports', 'Lifestyle', 'Business', 'Health', 'Art', 'Science', 'News'].map((niche) => {
-                const isSelected = profile.content_niches?.includes(niche) || false;
-                return (
-                  <button
-                    key={niche}
-                    type="button"
-                    onClick={() => {
-                      const current = profile.content_niches || [];
-                      setProfile({
-                        ...profile,
-                        content_niches: isSelected
-                          ? current.filter(n => n !== niche)
-                          : [...current, niche]
-                      });
-                    }}
-                    className={`
-                      px-4 py-3 rounded-lg text-sm font-medium transition-all
-                      ${isSelected 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                        : 'bg-muted hover:bg-muted/80 border border-border'
-                      }
-                    `}
-                  >
-                    {niche}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <div className="flex justify-end pt-4 border-t">
-            <Button 
-              onClick={handleSavePreferences} 
-              disabled={savingPreferences}
-              className="gap-2"
-            >
-              {savingPreferences ? "Saving..." : "Save Preferences"}
-            </Button>
-          </div>
-            </CardContent>
-          </CollapsibleContent>
-        </Card>
+        
       </Collapsible>
 
       {/* Edit Profile */}
@@ -860,59 +690,50 @@ export function ProfileTab() {
                     Connect your Discord account to access community features
                   </p>
                 </div>
-                <DiscordLinkDialog 
-                  userId={profile.id}
-                  discordUsername={profile.discord_username || undefined}
-                  discordAvatar={profile.discord_avatar || undefined}
-                  onSuccess={fetchProfile}
-                />
+                <DiscordLinkDialog userId={profile.id} discordUsername={profile.discord_username || undefined} discordAvatar={profile.discord_avatar || undefined} onSuccess={fetchProfile} />
               </div>
-              {profile.discord_username && (
-                <div className="p-3 rounded-lg bg-muted/20 border border-border flex items-center gap-3">
-                  {profile.discord_avatar && (
-                    <Avatar className="h-10 w-10">
+              {profile.discord_username && <div className="p-3 rounded-lg bg-muted/20 border border-border flex items-center gap-3">
+                  {profile.discord_avatar && <Avatar className="h-10 w-10">
                       <AvatarImage src={profile.discord_avatar} />
                       <AvatarFallback>
                         {profile.discord_username.charAt(0).toUpperCase()}
                       </AvatarFallback>
-                    </Avatar>
-                  )}
+                    </Avatar>}
                   <div className="flex-1">
                     <div className="font-medium text-sm">{profile.discord_username}</div>
                     <div className="text-xs text-muted-foreground">
-                      Connected {profile.discord_connected_at && formatDistanceToNow(new Date(profile.discord_connected_at), { addSuffix: true })}
+                      Connected {profile.discord_connected_at && formatDistanceToNow(new Date(profile.discord_connected_at), {
+                    addSuffix: true
+                  })}
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={async () => {
-                      try {
-                        const { error } = await supabase.functions.invoke('discord-oauth', {
-                          body: { action: 'disconnect', userId: profile.id }
-                        });
-
-                        if (error) throw error;
-
-                        toast({
-                          title: "Success!",
-                          description: "Discord account unlinked successfully."
-                        });
-                        fetchProfile();
-                      } catch (error: any) {
-                        toast({
-                          variant: "destructive",
-                          title: "Error",
-                          description: error.message || "Failed to unlink Discord account."
-                        });
-                      }
-                    }}
-                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
+                  <Button variant="ghost" size="icon" onClick={async () => {
+                try {
+                  const {
+                    error
+                  } = await supabase.functions.invoke('discord-oauth', {
+                    body: {
+                      action: 'disconnect',
+                      userId: profile.id
+                    }
+                  });
+                  if (error) throw error;
+                  toast({
+                    title: "Success!",
+                    description: "Discord account unlinked successfully."
+                  });
+                  fetchProfile();
+                } catch (error: any) {
+                  toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: error.message || "Failed to unlink Discord account."
+                  });
+                }
+              }} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
                     <Unlink className="h-4 w-4" />
                   </Button>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Privacy Settings */}
@@ -924,11 +745,10 @@ export function ProfileTab() {
                     When enabled, your name will not appear on the public leaderboard
                   </p>
                 </div>
-                <Switch
-                  id="hide-leaderboard"
-                  checked={profile.hide_from_leaderboard}
-                  onCheckedChange={(checked) => setProfile({ ...profile, hide_from_leaderboard: checked })}
-                />
+                <Switch id="hide-leaderboard" checked={profile.hide_from_leaderboard} onCheckedChange={checked => setProfile({
+                ...profile,
+                hide_from_leaderboard: checked
+              })} />
               </div>
             </div>
 
@@ -985,14 +805,10 @@ export function ProfileTab() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-                  <PhoneInput
-                    value={profile.phone_number || ""}
-                    onChange={(value) => setProfile({
-                      ...profile,
-                      phone_number: value
-                    })}
-                    placeholder="Enter phone number"
-                  />
+                  <PhoneInput value={profile.phone_number || ""} onChange={value => setProfile({
+                  ...profile,
+                  phone_number: value
+                })} placeholder="Enter phone number" />
                 </div>
 
                 <div className="space-y-2">
@@ -1017,17 +833,10 @@ export function ProfileTab() {
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
-                <Textarea 
-                  id="bio" 
-                  value={profile.bio || ""} 
-                  onChange={e => setProfile({
-                    ...profile,
-                    bio: e.target.value
-                  })} 
-                  placeholder="Tell us about yourself..."
-                  className="bg-background focus-visible:bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none text-sm min-h-[100px] resize-none"
-                  maxLength={500}
-                />
+                <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
+                ...profile,
+                bio: e.target.value
+              })} placeholder="Tell us about yourself..." className="bg-background focus-visible:bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none text-sm min-h-[100px] resize-none" maxLength={500} />
                 <p className="text-xs text-muted-foreground">
                   {profile.bio?.length || 0}/500 characters
                 </p>
