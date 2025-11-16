@@ -675,11 +675,16 @@ export default function AdminPayouts() {
                               <div 
                                 className="flex items-center gap-2 cursor-pointer hover:bg-muted/20 rounded px-2 py-1 -ml-2 transition-colors group"
                                 onClick={() => {
-                                  const textToCopy = request.payout_method === 'crypto' 
-                                    ? (request.payout_details?.address || request.payout_details?.wallet_address || '')
-                                    : request.payout_method === 'upi'
-                                    ? (request.payout_details?.upi_id || '')
-                                    : (request.payout_details?.email || request.payout_details?.account_number || '');
+                                  let textToCopy = '';
+                                  if (request.payout_method === 'crypto') {
+                                    textToCopy = request.payout_details?.address || request.payout_details?.wallet_address || '';
+                                  } else if (request.payout_method === 'upi') {
+                                    textToCopy = request.payout_details?.upi_id || '';
+                                  } else if (request.payout_method === 'wise') {
+                                    textToCopy = request.payout_details?.account_holder_name || request.payout_details?.email || '';
+                                  } else {
+                                    textToCopy = request.payout_details?.email || request.payout_details?.account_number || '';
+                                  }
                                   
                                   navigator.clipboard.writeText(textToCopy);
                                   toast({
@@ -693,6 +698,8 @@ export default function AdminPayouts() {
                                     ? (request.payout_details?.address || request.payout_details?.wallet_address || 'N/A')
                                     : request.payout_method === 'upi'
                                     ? (request.payout_details?.upi_id || 'N/A')
+                                    : request.payout_method === 'wise'
+                                    ? (request.payout_details?.account_holder_name || request.payout_details?.email || 'N/A')
                                     : (request.payout_details?.email || request.payout_details?.account_number || 'N/A')}
                                 </p>
                                 <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
