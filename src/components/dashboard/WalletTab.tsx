@@ -1462,9 +1462,12 @@ export function WalletTab() {
                 feeAmount = amount * 0.06;
                 netAmount = amount - feeAmount;
               } else {
+                // First apply 0.75% fee
                 const percentageFee = amount * 0.0075;
+                const afterPercentage = amount - percentageFee;
+                // Then subtract $1
+                netAmount = afterPercentage - 1;
                 feeAmount = percentageFee + 1;
-                netAmount = amount - percentageFee - 1;
               }
               
               return (
