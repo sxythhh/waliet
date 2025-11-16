@@ -253,20 +253,7 @@ export function DiscoverTab() {
             <div className="hidden sm:block h-6 w-px bg-border" />
 
             {/* Platform Filter Pills */}
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="ghost" onClick={() => setSelectedPlatform(null)} className={`h-9 px-4 rounded-full transition-colors ${selectedPlatform === null ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
-                All
-              </Button>
-              <Button variant="ghost" onClick={() => setSelectedPlatform(selectedPlatform === "TikTok" ? null : "TikTok")} className={`h-9 w-9 p-0 rounded-full transition-colors ${selectedPlatform === "TikTok" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="TikTok">
-                <img src={tiktokLogo} alt="TikTok" className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" onClick={() => setSelectedPlatform(selectedPlatform === "Instagram" ? null : "Instagram")} className={`h-9 w-9 p-0 rounded-full transition-colors ${selectedPlatform === "Instagram" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="Instagram">
-                <img src={instagramLogo} alt="Instagram" className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" onClick={() => setSelectedPlatform(selectedPlatform === "YouTube" ? null : "YouTube")} className={`h-9 w-9 p-0 rounded-full transition-colors ${selectedPlatform === "YouTube" ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'}`} title="YouTube">
-                <img src={youtubeLogo} alt="YouTube" className="w-4 h-4" />
-              </Button>
-            </div>
+            
           </div>
 
           {/* Second Row: Sort, Frequency, Status, and Hide Options */}
@@ -342,16 +329,16 @@ export function DiscoverTab() {
                 <h2 className="text-lg font-semibold text-foreground">Campaigns</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {sortedCampaigns.map(campaign => {
-              const budgetUsed = campaign.budget_used || 0;
-              const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-              const handleCampaignClick = () => {
-                if (campaign.status !== "ended") {
-                  setSelectedCampaign(campaign);
-                  setSheetOpen(true);
-                }
-              };
-              const isEnded = campaign.status === "ended";
-              return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
+            const budgetUsed = campaign.budget_used || 0;
+            const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+            const handleCampaignClick = () => {
+              if (campaign.status !== "ended") {
+                setSelectedCampaign(campaign);
+                setSheetOpen(true);
+              }
+            };
+            const isEnded = campaign.status === "ended";
+            return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
                   {/* Gradient overlay for ended campaigns */}
                   {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                   {/* Banner Image */}
@@ -395,10 +382,10 @@ export function DiscoverTab() {
 
                           {/* Animated Infinite Progress Bar */}
                           <div className="relative h-1.5 rounded-full overflow-hidden" style={{
-                        background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
-                        backgroundSize: '20px 20px',
-                        animation: 'slide 1s linear infinite'
-                      }} />
+                      background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
+                      backgroundSize: '20px 20px',
+                      animation: 'slide 1s linear infinite'
+                    }} />
 
                           <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                             <span>No budget limit</span>
@@ -418,8 +405,8 @@ export function DiscoverTab() {
                           {/* Progress Bar */}
                           <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
                             <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                          width: `${budgetPercentage}%`
-                        }} />
+                        width: `${budgetPercentage}%`
+                      }} />
                           </div>
 
                           <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
@@ -429,7 +416,7 @@ export function DiscoverTab() {
                     </div>
                   </CardContent>
                 </Card>;
-            })}
+          })}
                 </div>
               </div>}
 
@@ -437,15 +424,15 @@ export function DiscoverTab() {
                 <h2 className="text-lg font-semibold text-foreground">Bounties</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                   {bounties.map(bounty => {
-              const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-              const isFull = spotsRemaining <= 0;
-              const isEnded = bounty.status === "ended";
-              return <Card key={bounty.id} className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative ${isEnded ? "opacity-60" : "cursor-pointer"}`} onClick={() => {
-                if (!isEnded) {
-                  setSelectedBounty(bounty);
-                  setBountySheetOpen(true);
-                }
-              }}>
+            const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+            const isFull = spotsRemaining <= 0;
+            const isEnded = bounty.status === "ended";
+            return <Card key={bounty.id} className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative ${isEnded ? "opacity-60" : "cursor-pointer"}`} onClick={() => {
+              if (!isEnded) {
+                setSelectedBounty(bounty);
+                setBountySheetOpen(true);
+              }
+            }}>
                         {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                         
                         {bounty.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
@@ -490,7 +477,7 @@ export function DiscoverTab() {
                           </div>
                         </CardContent>
                       </Card>;
-            })}
+          })}
                 </div>
               </div>}
           </div>}
