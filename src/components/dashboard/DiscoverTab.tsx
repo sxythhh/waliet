@@ -370,7 +370,7 @@ export function DiscoverTab() {
                     </div>
 
                     {/* Budget Section */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-muted">
+                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
                       {campaign.is_infinite_budget ? <>
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
