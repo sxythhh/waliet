@@ -27,72 +27,75 @@ export function ApiActivityTab() {
   const fetchApiActivity = async () => {
     try {
       setLoading(true);
+      const allLogs: ApiLog[] = [];
 
-      // Fetch recent database logs
-      const { data: dbLogs } = await supabase.rpc('supabase_analytics_query', {
-        query: `
-          select id, postgres_logs.timestamp, event_message, parsed.error_severity 
-          from postgres_logs
-          cross join unnest(metadata) as m
-          cross join unnest(m.parsed) as parsed
-          where postgres_logs.timestamp > extract(epoch from now() - interval '1 hour') * 1000000
-          order by timestamp desc
-          limit 50
-        `
-      });
+      // Fetch wallet transactions
+      const { data: transactions } = await supabase
+        .from("wallet_transactions")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-      // Fetch recent auth logs
-      const { data: authLogs } = await supabase.rpc('supabase_analytics_query', {
-        query: `
-          select id, auth_logs.timestamp, event_message, metadata.level, metadata.status, metadata.path
-          from auth_logs
-          cross join unnest(metadata) as metadata
-          where auth_logs.timestamp > extract(epoch from now() - interval '1 hour') * 1000000
-          order by timestamp desc
-          limit 50
-        `
-      });
+      if (transactions) {
+        allLogs.push(...transactions.map(t => ({
+          timestamp: new Date(t.created_at).getTime(),
+          type: "Transaction",
+          path: t.description || t.type,
+          status: t.status,
+        })));
+      }
 
-      // Fetch recent edge function logs
-      const { data: edgeLogs } = await supabase.rpc('supabase_analytics_query', {
-        query: `
-          select id, function_edge_logs.timestamp, event_message, response.status_code, request.method, m.function_id, m.execution_time_ms
-          from function_edge_logs
-          cross join unnest(metadata) as m
-          cross join unnest(m.response) as response
-          cross join unnest(m.request) as request
-          where function_edge_logs.timestamp > extract(epoch from now() - interval '1 hour') * 1000000
-          order by timestamp desc
-          limit 50
-        `
-      });
+      // Fetch campaign submissions
+      const { data: submissions } = await supabase
+        .from("campaign_submissions")
+        .select("*")
+        .order("submitted_at", { ascending: false })
+        .limit(20);
 
-      // Combine and format logs
-      const combinedLogs: ApiLog[] = [
-        ...(dbLogs || []).map((log: any) => ({
-          timestamp: log.timestamp,
-          type: 'Database',
-          status: log.error_severity || 'info',
-          path: 'Query',
-        })),
-        ...(authLogs || []).map((log: any) => ({
-          timestamp: log.timestamp,
-          type: 'Auth',
-          status: log.status || log.level,
-          path: log.path,
-        })),
-        ...(edgeLogs || []).map((log: any) => ({
-          timestamp: log.timestamp,
-          type: 'Edge Function',
-          method: log.method,
-          status: log.status_code?.toString(),
-          duration: log.execution_time_ms,
-          function_name: log.function_id,
-        })),
-      ];
+      if (submissions) {
+        allLogs.push(...submissions.map(s => ({
+          timestamp: new Date(s.submitted_at || s.reviewed_at || new Date()).getTime(),
+          type: "Submission",
+          path: "Content submission",
+          status: s.status || "pending",
+        })));
+      }
 
-      combinedLogs.sort((a, b) => b.timestamp - a.timestamp);
-      setLogs(combinedLogs.slice(0, 100));
+      // Fetch bounty applications
+      const { data: applications } = await supabase
+        .from("bounty_applications")
+        .select("*")
+        .order("applied_at", { ascending: false })
+        .limit(20);
+
+      if (applications) {
+        allLogs.push(...applications.map(a => ({
+          timestamp: new Date(a.applied_at).getTime(),
+          type: "Bounty App",
+          path: "Bounty application",
+          status: a.status,
+        })));
+      }
+
+      // Fetch payout requests
+      const { data: payouts } = await supabase
+        .from("payout_requests")
+        .select("*")
+        .order("requested_at", { ascending: false })
+        .limit(20);
+
+      if (payouts) {
+        allLogs.push(...payouts.map(p => ({
+          timestamp: new Date(p.requested_at).getTime(),
+          type: "Payout",
+          path: `${p.payout_method} request`,
+          status: p.status,
+        })));
+      }
+
+      // Sort by timestamp
+      allLogs.sort((a, b) => b.timestamp - a.timestamp);
+      setLogs(allLogs.slice(0, 100));
     } catch (error) {
       console.error("Error fetching API activity:", error);
     } finally {
