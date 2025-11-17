@@ -60,7 +60,7 @@ export function ApplyToBountyDialog({
         .maybeSingle();
 
       if (existing) {
-        toast.error("You've already applied to this boost");
+        toast.error("You've already applied to this bounty");
         setSubmitting(false);
         return;
       }
@@ -95,7 +95,7 @@ export function ApplyToBountyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg bg-[#202020] border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle className="text-xl">Apply to Boost</DialogTitle>
+          <DialogTitle className="text-xl">Apply to Bounty</DialogTitle>
           <DialogDescription className="text-white/60">
             Submit your application for: <span className="font-semibold text-white">{bountyTitle}</span>
           </DialogDescription>
@@ -129,7 +129,7 @@ export function ApplyToBountyDialog({
               id="application_text"
               value={applicationText}
               onChange={(e) => setApplicationText(e.target.value)}
-              placeholder="Tell the brand why you'd be perfect for this boost..."
+              placeholder="Tell the brand why you'd be perfect for this bounty..."
               className="bg-[#191919] border-white/10 text-white min-h-[120px] mt-2"
             />
           </div>

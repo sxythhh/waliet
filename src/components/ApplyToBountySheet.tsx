@@ -83,7 +83,7 @@ export function ApplyToBountySheet({
         .maybeSingle();
 
       if (existing) {
-        toast.error("You've already applied to this boost");
+        toast.error("You've already applied to this bounty");
         setSubmitting(false);
         return;
       }
@@ -161,51 +161,39 @@ export function ApplyToBountySheet({
           </SheetHeader>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Monthly Retainer Card */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/[0.07]">
-              <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg bg-white/5 p-4">
+              <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
+                <DollarSign className="h-4 w-4" />
                 Monthly Retainer
-              </p>
-              <p className="text-3xl font-bold text-white tabular-nums">
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">
                 ${bounty.monthly_retainer.toLocaleString()}
               </p>
             </div>
 
-            {/* Videos Per Month Card */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/[0.07]">
-              <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">
+            <div className="rounded-lg bg-white/5 p-4">
+              <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
+                <Video className="h-4 w-4" />
                 Videos/Month
-              </p>
-              <p className="text-3xl font-bold text-white tabular-nums">
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">
                 {bounty.videos_per_month}
               </p>
             </div>
 
-            {/* Available Positions Card */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 col-span-2 transition-colors hover:bg-white/[0.07]">
-              <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">
+            <div className="rounded-lg bg-white/5 p-4 col-span-2">
+              <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
+                <Users className="h-4 w-4" />
                 Available Positions
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-baseline gap-3">
-                  <p className={`text-3xl font-bold tabular-nums ${
-                    isFull ? 'text-white/60' : 'text-white'
-                  }`}>
-                    {bounty.accepted_creators_count}
-                  </p>
-                  <span className="text-2xl font-medium text-white/30">/</span>
-                  <p className="text-3xl font-bold text-white tabular-nums">
-                    {bounty.max_accepted_creators}
-                  </p>
-                </div>
-                {!isFull ? (
+              </div>
+              <div className="flex items-baseline gap-2">
+                <p className={`text-2xl font-bold tabular-nums ${isFull ? 'text-red-500' : 'text-green-500'}`}>
+                  {bounty.accepted_creators_count} / {bounty.max_accepted_creators}
+                </p>
+                {!isFull && (
                   <span className="text-sm text-white/60">
                     {spotsRemaining} spot{spotsRemaining !== 1 ? 's' : ''} remaining
-                  </span>
-                ) : (
-                  <span className="text-sm text-white/40">
-                    Fully Booked
                   </span>
                 )}
               </div>
@@ -249,7 +237,7 @@ export function ApplyToBountySheet({
                 id="application_text"
                 value={applicationText}
                 onChange={(e) => setApplicationText(e.target.value)}
-                placeholder="Tell the brand why you'd be perfect for this boost..."
+                placeholder="Tell the brand why you'd be perfect for this bounty..."
                 className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[120px] resize-none"
               />
             </div>

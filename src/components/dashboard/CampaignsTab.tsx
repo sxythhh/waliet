@@ -42,33 +42,12 @@ interface Campaign {
     username: string;
   }>;
 }
-
-interface BoostApplication {
-  id: string;
-  video_url: string;
-  application_text: string | null;
-  status: string;
-  applied_at: string;
-  boost_campaigns: {
-    id: string;
-    title: string;
-    monthly_retainer: number;
-    videos_per_month: number;
-    banner_url: string | null;
-    brands?: {
-      name: string;
-      logo_url: string | null;
-    };
-  };
-}
-
 interface CampaignsTabProps {
   onOpenPrivateDialog: () => void;
 }
 
 export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [boostApplications, setBoostApplications] = useState<BoostApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
@@ -107,63 +86,7 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
   };
   useEffect(() => {
     fetchCampaigns();
-    fetchBoostApplications();
   }, []);
-
-  const fetchBoostApplications = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data, error } = await supabase
-        .from('bounty_applications')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('applied_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch boost campaign details for each application
-      const applicationsWithDetails = await Promise.all(
-        (data || []).map(async (app) => {
-          const { data: campaign } = await supabase
-            .from('bounty_campaigns')
-            .select(`
-              id,
-              title,
-              monthly_retainer,
-              videos_per_month,
-              banner_url,
-              brand_id
-            `)
-            .eq('id', app.bounty_campaign_id)
-            .single();
-
-          let brandData = null;
-          if (campaign?.brand_id) {
-            const { data: brand } = await supabase
-              .from('brands')
-              .select('name, logo_url')
-              .eq('id', campaign.brand_id)
-              .single();
-            brandData = brand;
-          }
-
-          return {
-            ...app,
-            boost_campaigns: campaign ? {
-              ...campaign,
-              brands: brandData
-            } : null
-          };
-        })
-      );
-
-      setBoostApplications(applicationsWithDetails.filter(app => app.boost_campaigns) as any);
-    } catch (error: any) {
-      console.error("Error fetching boost applications:", error);
-    }
-  };
   const fetchCampaigns = async () => {
     setLoading(true);
 
@@ -426,85 +349,6 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
           Join Private Campaign
         </Button>
       </div>
-
-      {/* Boost Applications Section */}
-      {boostApplications.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-muted-foreground">Boost Applications</h3>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            {boostApplications.map((application) => (
-              <Card
-                key={application.id}
-                className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border"
-              >
-                {/* Banner Image */}
-                {application.boost_campaigns.banner_url && (
-                  <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                    <img
-                      src={application.boost_campaigns.banner_url}
-                      alt={application.boost_campaigns.title}
-                      className="w-full h-full object-cover object-center"
-                    />
-                  </div>
-                )}
-
-                <CardContent className="p-4 flex-1 flex flex-col gap-3">
-                  {/* Brand Logo + Title */}
-                  <div className="flex items-start gap-3">
-                    {application.boost_campaigns.brands?.logo_url && (
-                      <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
-                        <img
-                          src={application.boost_campaigns.brands.logo_url}
-                          alt={application.boost_campaigns.brands.name || ''}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
-                        {application.boost_campaigns.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground font-semibold">
-                        {application.boost_campaigns.brands?.name}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="rounded-lg bg-muted/50 p-2">
-                      <div className="text-muted-foreground mb-1">Monthly</div>
-                      <div className="font-semibold">${application.boost_campaigns.monthly_retainer.toLocaleString()}</div>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-2">
-                      <div className="text-muted-foreground mb-1">Videos</div>
-                      <div className="font-semibold">{application.boost_campaigns.videos_per_month}/mo</div>
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className="mt-auto pt-2">
-                    <Badge
-                      variant={
-                        application.status === 'accepted'
-                          ? 'default'
-                          : application.status === 'rejected'
-                          ? 'destructive'
-                          : 'secondary'
-                      }
-                      className="w-full justify-center"
-                    >
-                      {application.status === 'pending' && 'Pending Review'}
-                      {application.status === 'accepted' && 'Accepted'}
-                      {application.status === 'rejected' && 'Rejected'}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Campaigns Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">

@@ -100,8 +100,8 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
       });
       setbannerFile(null);
     } catch (error: any) {
-      console.error("Error creating boost:", error);
-      toast.error(error.message || "Failed to create boost campaign");
+      console.error("Error creating bounty:", error);
+      toast.error(error.message || "Failed to create bounty campaign");
     } finally {
       setCreating(false);
     }
@@ -111,7 +111,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#202020] border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle className="text-xl">Create Boost Campaign</DialogTitle>
+          <DialogTitle className="text-xl">Create Bounty Campaign</DialogTitle>
           <DialogDescription className="text-white/60">
             Create a retainer-based campaign where creators apply for monthly positions
           </DialogDescription>
@@ -138,7 +138,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe what this boost entails..."
+                placeholder="Describe what this bounty entails..."
                 className="bg-[#191919] border-white/10 text-white min-h-[100px]"
               />
             </div>
