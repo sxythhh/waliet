@@ -3,12 +3,11 @@ import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
-import { BountyApplicationsSheet } from "@/components/brand/BountyApplicationsSheet";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid, Menu, DollarSign, Video, Users, Eye } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, PanelLeft, ArrowRight, Home, LayoutGrid, Menu, DollarSign, Video, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -70,8 +69,6 @@ export default function BrandDashboard() {
   const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
   const [activeView, setActiveView] = useState<"campaigns" | "bounties" | "home">("home");
   const [createBountyOpen, setCreateBountyOpen] = useState(false);
-  const [selectedBounty, setSelectedBounty] = useState<{ id: string; title: string; maxAccepted: number; currentAccepted: number } | null>(null);
-  const [applicationsSheetOpen, setApplicationsSheetOpen] = useState(false);
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
@@ -331,10 +328,6 @@ export default function BrandDashboard() {
                       <h2 className="text-lg font-semibold text-foreground">Bounties</h2>
                       <BountyCampaignsView 
                         bounties={bounties}
-                        onViewApplications={(bounty) => {
-                          setSelectedBounty(bounty);
-                          setApplicationsSheetOpen(true);
-                        }}
                         onDelete={handleDeleteBountyClick}
                       />
                     </div> : null}
@@ -421,10 +414,6 @@ export default function BrandDashboard() {
           {effectiveView === "bounties" && <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
               <BountyCampaignsView 
                 bounties={bounties}
-                onViewApplications={(bounty) => {
-                  setSelectedBounty(bounty);
-                  setApplicationsSheetOpen(true);
-                }}
                 onDelete={handleDeleteBountyClick}
               />
           </div>}
@@ -457,18 +446,6 @@ export default function BrandDashboard() {
           brandId={brand.id}
           onSuccess={fetchBrandData}
         />
-
-        {/* Bounty Applications Sheet */}
-        {selectedBounty && (
-          <BountyApplicationsSheet
-            open={applicationsSheetOpen}
-            onOpenChange={setApplicationsSheetOpen}
-            bountyId={selectedBounty.id}
-            bountyTitle={selectedBounty.title}
-            maxAccepted={selectedBounty.maxAccepted}
-            currentAccepted={selectedBounty.currentAccepted}
-          />
-        )}
         </div>
       </div>
     </SidebarProvider>

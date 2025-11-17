@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Video, Users, Eye, Trash2 } from "lucide-react";
+import { DollarSign, Video, Users, Trash2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface BountyCampaign {
@@ -22,7 +22,7 @@ interface BountyCampaign {
 
 interface BountyCampaignsViewProps {
   bounties: BountyCampaign[];
-  onViewApplications: (bounty: { id: string; title: string; maxAccepted: number; currentAccepted: number }) => void;
+  onViewApplications?: (bounty: { id: string; title: string; maxAccepted: number; currentAccepted: number }) => void;
   onDelete?: (bounty: BountyCampaign) => void;
 }
 
@@ -46,7 +46,8 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
         return (
           <Card
             key={bounty.id}
-            className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden hover:bg-accent/50"
+            className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden hover:bg-accent/50 cursor-pointer"
+            onClick={() => window.location.href = `/boost/${bounty.id}`}
           >
             {bounty.banner_url && (
               <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
@@ -116,22 +117,6 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
                   </span>
                 </div>
               </div>
-
-              {/* Actions */}
-              <Button
-                onClick={() => onViewApplications({
-                  id: bounty.id,
-                  title: bounty.title,
-                  maxAccepted: bounty.max_accepted_creators,
-                  currentAccepted: bounty.accepted_creators_count
-                })}
-                variant="outline"
-                size="sm"
-                className="w-full mt-auto"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                View Applications
-              </Button>
             </CardContent>
           </Card>
         );
