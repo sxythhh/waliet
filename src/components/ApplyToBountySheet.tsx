@@ -161,42 +161,79 @@ export function ApplyToBountySheet({
           </SheetHeader>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-white/5 p-4">
-              <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
-                <DollarSign className="h-4 w-4" />
+          <div className="grid grid-cols-2 gap-4">
+            {/* Monthly Retainer Card */}
+            <div className="group relative rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10">
+              <div className="flex items-center gap-2 text-primary/80 text-xs font-medium mb-3 uppercase tracking-wider">
+                <div className="p-1.5 rounded-lg bg-primary/10">
+                  <DollarSign className="h-3.5 w-3.5" />
+                </div>
                 Monthly Retainer
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">
+              <p className="text-3xl font-bold text-white tabular-nums tracking-tight">
                 ${bounty.monthly_retainer.toLocaleString()}
               </p>
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </div>
 
-            <div className="rounded-lg bg-white/5 p-4">
-              <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
-                <Video className="h-4 w-4" />
+            {/* Videos Per Month Card */}
+            <div className="group relative rounded-xl bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 p-5 transition-all duration-300 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10">
+              <div className="flex items-center gap-2 text-blue-400/80 text-xs font-medium mb-3 uppercase tracking-wider">
+                <div className="p-1.5 rounded-lg bg-blue-500/10">
+                  <Video className="h-3.5 w-3.5" />
+                </div>
                 Videos/Month
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">
+              <p className="text-3xl font-bold text-white tabular-nums tracking-tight">
                 {bounty.videos_per_month}
               </p>
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </div>
 
-            <div className="rounded-lg bg-white/5 p-4 col-span-2">
-              <div className="flex items-center gap-2 text-white/60 text-xs mb-2">
-                <Users className="h-4 w-4" />
+            {/* Available Positions Card */}
+            <div className={`group relative rounded-xl col-span-2 p-5 transition-all duration-300 ${
+              isFull 
+                ? 'bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent border border-red-500/20 hover:border-red-500/40 hover:shadow-lg hover:shadow-red-500/10' 
+                : 'bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent border border-green-500/20 hover:border-green-500/40 hover:shadow-lg hover:shadow-green-500/10'
+            }`}>
+              <div className={`flex items-center gap-2 text-xs font-medium mb-3 uppercase tracking-wider ${
+                isFull ? 'text-red-400/80' : 'text-green-400/80'
+              }`}>
+                <div className={`p-1.5 rounded-lg ${isFull ? 'bg-red-500/10' : 'bg-green-500/10'}`}>
+                  <Users className="h-3.5 w-3.5" />
+                </div>
                 Available Positions
               </div>
-              <div className="flex items-baseline gap-2">
-                <p className={`text-2xl font-bold tabular-nums ${isFull ? 'text-red-500' : 'text-green-500'}`}>
-                  {bounty.accepted_creators_count} / {bounty.max_accepted_creators}
-                </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-3">
+                  <p className={`text-3xl font-bold tabular-nums tracking-tight ${
+                    isFull ? 'text-red-400' : 'text-green-400'
+                  }`}>
+                    {bounty.accepted_creators_count}
+                  </p>
+                  <span className="text-2xl font-semibold text-white/40">/</span>
+                  <p className="text-2xl font-semibold text-white/60 tabular-nums">
+                    {bounty.max_accepted_creators}
+                  </p>
+                </div>
                 {!isFull && (
-                  <span className="text-sm text-white/60">
-                    {spotsRemaining} spot{spotsRemaining !== 1 ? 's' : ''} remaining
-                  </span>
+                  <div className="px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
+                    <span className="text-sm font-medium text-green-400">
+                      {spotsRemaining} spot{spotsRemaining !== 1 ? 's' : ''} left
+                    </span>
+                  </div>
+                )}
+                {isFull && (
+                  <div className="px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20">
+                    <span className="text-sm font-medium text-red-400">
+                      Fully Booked
+                    </span>
+                  </div>
                 )}
               </div>
+              <div className={`absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ${
+                isFull ? 'from-red-500/5 to-transparent' : 'from-green-500/5 to-transparent'
+              }`} />
             </div>
           </div>
 
