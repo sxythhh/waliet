@@ -11,6 +11,10 @@ import { format } from "date-fns";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
+import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
+import { BountyApplicationsSheet } from "@/components/brand/BountyApplicationsSheet";
 interface Campaign {
   id: string;
   title: string;
@@ -39,6 +43,22 @@ interface Campaign {
   is_infinite_budget: boolean;
   is_featured: boolean;
 }
+interface BountyCampaign {
+  id: string;
+  title: string;
+  description: string | null;
+  monthly_retainer: number;
+  videos_per_month: number;
+  content_style_requirements: string;
+  max_accepted_creators: number;
+  accepted_creators_count: number;
+  start_date: string | null;
+  end_date: string | null;
+  banner_url: string | null;
+  status: string;
+  created_at: string;
+}
+
 export default function AdminCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [filteredCampaigns, setFilteredCampaigns] = useState<Campaign[]>([]);
@@ -50,12 +70,25 @@ export default function AdminCampaigns() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedBrandId, setSelectedBrandId] = useState<string>("");
   const [selectedBrandName, setSelectedBrandName] = useState<string>("");
-  const {
-    toast
-  } = useToast();
+  
+  // Bounty campaigns state
+  const [bountyCampaigns, setBountyCampaigns] = useState<BountyCampaign[]>([]);
+  const [bountyLoading, setBountyLoading] = useState(true);
+  const [createBountyDialogOpen, setCreateBountyDialogOpen] = useState(false);
+  const [selectedBountyBrandId, setSelectedBountyBrandId] = useState<string>("");
+  const [bountyApplicationsOpen, setBountyApplicationsOpen] = useState(false);
+  const [selectedBounty, setSelectedBounty] = useState<{
+    id: string;
+    title: string;
+    maxAccepted: number;
+    currentAccepted: number;
+  } | null>(null);
+  
+  const { toast } = useToast();
   useEffect(() => {
     fetchCampaigns();
     fetchBrands();
+    fetchBountyCampaigns();
   }, []);
   useEffect(() => {
     filterCampaigns();
@@ -109,6 +142,64 @@ export default function AdminCampaigns() {
     }
     setLoading(false);
   };
+  
+  const fetchBountyCampaigns = async () => {
+    setBountyLoading(true);
+    const { data, error } = await supabase
+      .from("bounty_campaigns")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch bounty campaigns"
+      });
+    } else {
+      setBountyCampaigns(data || []);
+    }
+    setBountyLoading(false);
+  };
+
+  const handleDeleteBountyCampaign = async (bounty: BountyCampaign) => {
+    const { error } = await supabase
+      .from("bounty_campaigns")
+      .delete()
+      .eq("id", bounty.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete bounty campaign"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Bounty campaign deleted successfully"
+      });
+      fetchBountyCampaigns();
+    }
+  };
+
+  const handleViewBountyApplications = (bounty: { id: string; title: string; maxAccepted: number; currentAccepted: number }) => {
+    setSelectedBounty(bounty);
+    setBountyApplicationsOpen(true);
+  };
+
+  const handleCreateBountyCampaign = () => {
+    if (!selectedBountyBrandId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a brand"
+      });
+      return;
+    }
+    setCreateBountyDialogOpen(true);
+  };
+
   const filterCampaigns = () => {
     let filtered = searchQuery 
       ? campaigns.filter(campaign => 
@@ -177,44 +268,55 @@ export default function AdminCampaigns() {
     activeCampaigns: campaigns.filter(c => c.status === "active").length,
     totalBudget: campaigns.reduce((sum, c) => sum + Number(c.budget), 0)
   };
-  if (loading) {
+  if (loading || bountyLoading) {
     return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading campaigns...</p>
       </div>;
   }
+  
+  const bountyStats = {
+    totalBounties: bountyCampaigns.length,
+    activeBounties: bountyCampaigns.filter(b => b.status === "active").length,
+    totalSpots: bountyCampaigns.reduce((sum, b) => sum + b.max_accepted_creators, 0),
+    filledSpots: bountyCampaigns.reduce((sum, b) => sum + b.accepted_creators_count, 0)
+  };
+
   return <div className="p-8 space-y-6 px-[27px] py-0">
-      
+      <Tabs defaultValue="rpm" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="rpm">RPM Campaigns</TabsTrigger>
+          <TabsTrigger value="retainer">Retainer Campaigns</TabsTrigger>
+        </TabsList>
 
-      {/* Stats */}
-      
+        {/* RPM Campaigns Tab */}
+        <TabsContent value="rpm" className="space-y-6">
+          {/* Search */}
+          <Card className="bg-card border-0">
+            
+          </Card>
 
-      {/* Search */}
-      <Card className="bg-card border-0">
-        
-      </Card>
-
-      {/* Campaigns Gallery */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Campaigns ({filteredCampaigns.length})</h2>
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <Button onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Campaign
-            </Button>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Campaign</DialogTitle>
-                <DialogDescription>Select a brand for the new campaign</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a brand" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brands.map((brand) => (
-                      <SelectItem key={brand.id} value={brand.id}>
+          {/* Campaigns Gallery */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">RPM Campaigns ({filteredCampaigns.length})</h2>
+              <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create RPM Campaign
+                </Button>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New RPM Campaign</DialogTitle>
+                    <DialogDescription>Select a brand for the new campaign</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id}>
                         <div className="flex items-center gap-2">
                           {brand.logo_url && (
                             <img src={brand.logo_url} alt={brand.name} className="w-5 h-5 rounded object-cover" />
@@ -234,7 +336,7 @@ export default function AdminCampaigns() {
         </div>
         {filteredCampaigns.length === 0 ? <Card className="bg-card border-0">
             <CardContent className="py-12 text-center text-muted-foreground">
-              No campaigns found
+              No RPM campaigns found
             </CardContent>
           </Card> : <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 max-w-7xl">
             {filteredCampaigns.map(campaign => <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border hover:bg-muted/50 cursor-pointer" onClick={() => openEditDialog(campaign)}>
@@ -353,6 +455,86 @@ export default function AdminCampaigns() {
             fetchCampaigns();
           }}
           trigger={null}
+        />
+      )}
+        </TabsContent>
+
+        {/* Retainer Campaigns Tab */}
+        <TabsContent value="retainer" className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Retainer Campaigns ({bountyCampaigns.length})</h2>
+              <Dialog open={createBountyDialogOpen} onOpenChange={setCreateBountyDialogOpen}>
+                <Button onClick={() => setCreateBountyDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Retainer Campaign
+                </Button>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Retainer Campaign</DialogTitle>
+                    <DialogDescription>Select a brand for the new retainer campaign</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <Select value={selectedBountyBrandId} onValueChange={setSelectedBountyBrandId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id}>
+                            <div className="flex items-center gap-2">
+                              {brand.logo_url && (
+                                <img src={brand.logo_url} alt={brand.name} className="w-5 h-5 rounded object-cover" />
+                              )}
+                              {brand.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button onClick={handleCreateBountyCampaign} className="w-full">
+                      Continue
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <BountyCampaignsView
+              bounties={bountyCampaigns}
+              onViewApplications={handleViewBountyApplications}
+              onDelete={handleDeleteBountyCampaign}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Bounty Campaign Dialog */}
+      {selectedBountyBrandId && (
+        <CreateBountyDialog
+          brandId={selectedBountyBrandId}
+          open={createBountyDialogOpen && !!selectedBountyBrandId}
+          onOpenChange={(open) => {
+            setCreateBountyDialogOpen(open);
+            if (!open) setSelectedBountyBrandId("");
+          }}
+          onSuccess={() => {
+            setCreateBountyDialogOpen(false);
+            setSelectedBountyBrandId("");
+            fetchBountyCampaigns();
+          }}
+        />
+      )}
+
+      {/* Bounty Applications Sheet */}
+      {selectedBounty && (
+        <BountyApplicationsSheet
+          open={bountyApplicationsOpen}
+          onOpenChange={setBountyApplicationsOpen}
+          bountyId={selectedBounty.id}
+          bountyTitle={selectedBounty.title}
+          maxAccepted={selectedBounty.maxAccepted}
+          currentAccepted={selectedBounty.currentAccepted}
         />
       )}
     </div>;
