@@ -31,8 +31,8 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
     return (
       <div className="text-center py-12">
         <Users className="h-12 w-12 mx-auto mb-4 opacity-40" />
-        <p className="text-muted-foreground">No bounty campaigns yet</p>
-        <p className="text-sm text-muted-foreground/60 mt-1">Create your first bounty to hire creators on retainer</p>
+        <p className="text-muted-foreground">No boost campaigns yet</p>
+        <p className="text-sm text-muted-foreground/60 mt-1">Create your first boost to hire creators on retainer</p>
       </div>
     );
   }
