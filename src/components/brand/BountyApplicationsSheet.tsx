@@ -144,7 +144,7 @@ export function BountyApplicationsSheet({
         <SheetHeader className="p-6 border-b border-white/10">
           <SheetTitle className="text-xl text-white">{bountyTitle}</SheetTitle>
           <SheetDescription className="text-white/60">
-            Review and manage applications for this bounty campaign
+            Review and manage applications for this boost campaign
           </SheetDescription>
           <div className="flex gap-4 mt-4">
             <div className="flex items-center gap-2 text-sm">
