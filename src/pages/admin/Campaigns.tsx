@@ -285,7 +285,7 @@ export default function AdminCampaigns() {
       <Tabs defaultValue="rpm" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="rpm">RPM Campaigns</TabsTrigger>
-          <TabsTrigger value="retainer">Retainer Campaigns</TabsTrigger>
+          <TabsTrigger value="retainer">Boost Campaigns</TabsTrigger>
         </TabsList>
 
         {/* RPM Campaigns Tab */}
@@ -459,20 +459,20 @@ export default function AdminCampaigns() {
       )}
         </TabsContent>
 
-        {/* Retainer Campaigns Tab */}
+        {/* Boost Campaigns Tab */}
         <TabsContent value="retainer" className="space-y-6">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Retainer Campaigns ({bountyCampaigns.length})</h2>
+              <h2 className="text-xl font-semibold">Boost Campaigns ({bountyCampaigns.length})</h2>
               <Dialog open={createBountyDialogOpen} onOpenChange={setCreateBountyDialogOpen}>
                 <Button onClick={() => setCreateBountyDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Retainer Campaign
+                  Create Boost Campaign
                 </Button>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create New Retainer Campaign</DialogTitle>
-                    <DialogDescription>Select a brand for the new retainer campaign</DialogDescription>
+                    <DialogTitle>Create New Boost Campaign</DialogTitle>
+                    <DialogDescription>Select a brand for the new boost campaign</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 pt-4">
                     <Select value={selectedBountyBrandId} onValueChange={setSelectedBountyBrandId}>

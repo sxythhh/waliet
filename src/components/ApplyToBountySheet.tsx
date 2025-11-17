@@ -83,7 +83,7 @@ export function ApplyToBountySheet({
         .maybeSingle();
 
       if (existing) {
-        toast.error("You've already applied to this bounty");
+        toast.error("You've already applied to this boost");
         setSubmitting(false);
         return;
       }
@@ -249,7 +249,7 @@ export function ApplyToBountySheet({
                 id="application_text"
                 value={applicationText}
                 onChange={(e) => setApplicationText(e.target.value)}
-                placeholder="Tell the brand why you'd be perfect for this bounty..."
+                placeholder="Tell the brand why you'd be perfect for this boost..."
                 className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[120px] resize-none"
               />
             </div>
