@@ -55,15 +55,26 @@ export function BountyApplicationsSheet({
     try {
       const { data, error } = await supabase
         .from('bounty_applications')
-        .select(`
-          *,
-          profiles!user_id (username, avatar_url, full_name)
-        `)
+        .select('*')
         .eq('bounty_campaign_id', bountyId)
         .order('applied_at', { ascending: false });
 
       if (error) throw error;
-      setApplications(data as any || []);
+
+      // Fetch profile data separately for each application
+      const applicationsWithProfiles = await Promise.all(
+        (data || []).map(async (app) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, avatar_url, full_name')
+            .eq('id', app.user_id)
+            .single();
+          
+          return { ...app, profiles: profile };
+        })
+      );
+
+      setApplications(applicationsWithProfiles as any);
     } catch (error: any) {
       console.error("Error fetching applications:", error);
       toast.error("Failed to load applications");
