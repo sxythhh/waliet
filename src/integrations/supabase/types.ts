@@ -1919,6 +1919,7 @@ export type Database = {
         Args: { _profile_id: string; _viewer_id: string }
         Returns: boolean
       }
+      cleanup_demographic_videos: { Args: never; Returns: undefined }
       decrypt_payout_details: {
         Args: { encrypted_details: string; wallet_user_id: string }
         Returns: Json
