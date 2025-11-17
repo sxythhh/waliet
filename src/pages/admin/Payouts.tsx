@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw, Copy } from "lucide-react";
+import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw, Copy, Filter, ArrowUpDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -77,6 +78,11 @@ export default function AdminPayouts() {
   const [transactionsOpen, setTransactionsOpen] = useState(false);
   const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState<PayoutRequest['profiles'] | null>(null);
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'username'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [minAmount, setMinAmount] = useState<string>('');
+  const [maxAmount, setMaxAmount] = useState<string>('');
   const {
     toast
   } = useToast();
@@ -214,11 +220,42 @@ export default function AdminPayouts() {
     }
   };
 
-  // Filter requests locally for instant tab switching
+  // Filter and sort requests locally
   const filteredRequests = useMemo(() => {
-    if (activeTab === 'all') return allRequests;
-    return allRequests.filter(r => r.status === activeTab);
-  }, [allRequests, activeTab]);
+    let filtered = activeTab === 'all' ? allRequests : allRequests.filter(r => r.status === activeTab);
+    
+    // Apply payment method filter
+    if (paymentMethodFilter !== 'all') {
+      filtered = filtered.filter(r => r.payout_method === paymentMethodFilter);
+    }
+    
+    // Apply amount range filter
+    if (minAmount) {
+      filtered = filtered.filter(r => Number(r.amount) >= Number(minAmount));
+    }
+    if (maxAmount) {
+      filtered = filtered.filter(r => Number(r.amount) <= Number(maxAmount));
+    }
+    
+    // Apply sorting
+    filtered = [...filtered].sort((a, b) => {
+      let comparison = 0;
+      
+      if (sortBy === 'date') {
+        comparison = new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime();
+      } else if (sortBy === 'amount') {
+        comparison = Number(a.amount) - Number(b.amount);
+      } else if (sortBy === 'username') {
+        const nameA = (a.profiles?.username || '').toLowerCase();
+        const nameB = (b.profiles?.username || '').toLowerCase();
+        comparison = nameA.localeCompare(nameB);
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    
+    return filtered;
+  }, [allRequests, activeTab, paymentMethodFilter, minAmount, maxAmount, sortBy, sortOrder]);
   const stats = useMemo(() => ({
     pending: allRequests.filter(r => r.status === 'pending').length,
     in_transit: allRequests.filter(r => r.status === 'in_transit').length,
@@ -574,6 +611,116 @@ export default function AdminPayouts() {
       {/* Main Content */}
       <div className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Filter and Sort Controls */}
+          <Card className="mb-6 bg-card border-border">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium">Filters & Sort</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                {/* Payment Method Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Payment Method</Label>
+                  <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Methods</SelectItem>
+                      <SelectItem value="paypal">PayPal</SelectItem>
+                      <SelectItem value="crypto">Crypto</SelectItem>
+                      <SelectItem value="wise">Wise</SelectItem>
+                      <SelectItem value="revolut">Revolut</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Min Amount Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Min Amount ($)</Label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={minAmount}
+                    onChange={(e) => setMinAmount(e.target.value)}
+                    className="bg-background"
+                  />
+                </div>
+
+                {/* Max Amount Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Max Amount ($)</Label>
+                  <Input
+                    type="number"
+                    placeholder="No limit"
+                    value={maxAmount}
+                    onChange={(e) => setMaxAmount(e.target.value)}
+                    className="bg-background"
+                  />
+                </div>
+
+                {/* Sort By */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Sort By</Label>
+                  <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="amount">Amount</SelectItem>
+                      <SelectItem value="username">Username</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sort Order */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Order</Label>
+                  <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="desc">
+                        <div className="flex items-center gap-2">
+                          <ArrowUpDown className="h-3 w-3" />
+                          Descending
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="asc">
+                        <div className="flex items-center gap-2">
+                          <ArrowUpDown className="h-3 w-3 rotate-180" />
+                          Ascending
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Clear Filters Button */}
+              {(paymentMethodFilter !== 'all' || minAmount || maxAmount || sortBy !== 'date' || sortOrder !== 'desc') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setPaymentMethodFilter('all');
+                    setMinAmount('');
+                    setMaxAmount('');
+                    setSortBy('date');
+                    setSortOrder('desc');
+                  }}
+                  className="mt-3 h-8 text-xs"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1.5" />
+                  Clear Filters
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
           <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6 bg-[#111111]">
             <TabsTrigger value="pending" className="gap-2 bg-[#1c1c1c]/0">
               <Clock className="h-4 w-4" />
