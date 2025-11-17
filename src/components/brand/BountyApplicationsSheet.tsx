@@ -57,7 +57,7 @@ export function BountyApplicationsSheet({
         .from('bounty_applications')
         .select(`
           *,
-          profiles!bounty_applications_user_id_fkey (username, avatar_url, full_name)
+          profiles!user_id (username, avatar_url, full_name)
         `)
         .eq('bounty_campaign_id', bountyId)
         .order('applied_at', { ascending: false });
