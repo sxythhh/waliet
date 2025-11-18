@@ -5,6 +5,7 @@ import { DollarSign, Video, Users, Trash2, Copy, Check } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { useState } from "react";
+import { EditBountyDialog } from "./EditBountyDialog";
 
 interface BountyCampaign {
   id: string;
@@ -30,6 +31,7 @@ interface BountyCampaignsViewProps {
 
 export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: BountyCampaignsViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [editingBountyId, setEditingBountyId] = useState<string | null>(null);
 
   const handleCopyUrl = (bountyId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,6 +40,10 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
     setCopiedId(bountyId);
     toast.success("Link copied to clipboard!");
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleCardClick = (bountyId: string) => {
+    setEditingBountyId(bountyId);
   };
 
   if (bounties.length === 0) {
@@ -59,7 +65,8 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
         return (
           <Card
             key={bounty.id}
-            className="bg-card border animate-fade-in flex flex-col overflow-hidden"
+            className="bg-card border animate-fade-in flex flex-col overflow-hidden cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => handleCardClick(bounty.id)}
           >
             {bounty.banner_url && (
               <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
@@ -94,7 +101,10 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
                     size="icon"
                     variant="ghost"
                     className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => onDelete(bounty)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(bounty);
+                    }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
@@ -149,12 +159,15 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
                   <Button
                     size="sm"
                     className="flex-1"
-                    onClick={() => onViewApplications({
-                      id: bounty.id,
-                      title: bounty.title,
-                      maxAccepted: bounty.max_accepted_creators,
-                      currentAccepted: bounty.accepted_creators_count
-                    })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewApplications({
+                        id: bounty.id,
+                        title: bounty.title,
+                        maxAccepted: bounty.max_accepted_creators,
+                        currentAccepted: bounty.accepted_creators_count
+                      });
+                    }}
                   >
                     View Applications
                   </Button>
@@ -164,6 +177,19 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
           </Card>
         );
       })}
+
+      {editingBountyId && (
+        <EditBountyDialog
+          open={!!editingBountyId}
+          onOpenChange={(open) => !open && setEditingBountyId(null)}
+          bountyId={editingBountyId}
+          onSuccess={() => {
+            setEditingBountyId(null);
+            // Trigger parent refresh if needed
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 }
