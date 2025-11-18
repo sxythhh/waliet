@@ -278,10 +278,10 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                   id="blueprint_embed_url"
                   value={formData.blueprint_embed_url || ""}
                   onChange={(e) => setFormData({ ...formData, blueprint_embed_url: e.target.value })}
-                  placeholder="https://example.com/embed/..."
+                  placeholder="https://virality.cc/resources/your-guidelines"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Optional iframe URL to embed campaign blueprint
+                  Full URL with https:// - will be embedded as an iframe on the public boost page
                 </p>
               </div>
             </div>
