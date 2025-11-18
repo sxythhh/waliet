@@ -73,6 +73,7 @@ export type Database = {
           content_style_requirements: string
           created_at: string
           description: string | null
+          discord_guild_id: string | null
           end_date: string | null
           id: string
           max_accepted_creators: number
@@ -91,6 +92,7 @@ export type Database = {
           content_style_requirements: string
           created_at?: string
           description?: string | null
+          discord_guild_id?: string | null
           end_date?: string | null
           id?: string
           max_accepted_creators: number
@@ -109,6 +111,7 @@ export type Database = {
           content_style_requirements?: string
           created_at?: string
           description?: string | null
+          discord_guild_id?: string | null
           end_date?: string | null
           id?: string
           max_accepted_creators?: number
@@ -631,6 +634,7 @@ export type Database = {
           category: string | null
           created_at: string | null
           description: string | null
+          discord_guild_id: string | null
           embed_url: string | null
           end_date: string | null
           guidelines: string | null
@@ -662,6 +666,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          discord_guild_id?: string | null
           embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
@@ -693,6 +698,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          discord_guild_id?: string | null
           embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
@@ -1030,11 +1036,14 @@ export type Database = {
           country: string | null
           created_at: string | null
           demographics_score: number | null
+          discord_access_token: string | null
           discord_avatar: string | null
           discord_connected_at: string | null
           discord_discriminator: string | null
           discord_email: string | null
           discord_id: string | null
+          discord_refresh_token: string | null
+          discord_token_expires_at: string | null
           discord_username: string | null
           email: string | null
           full_name: string | null
@@ -1068,11 +1077,14 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           demographics_score?: number | null
+          discord_access_token?: string | null
           discord_avatar?: string | null
           discord_connected_at?: string | null
           discord_discriminator?: string | null
           discord_email?: string | null
           discord_id?: string | null
+          discord_refresh_token?: string | null
+          discord_token_expires_at?: string | null
           discord_username?: string | null
           email?: string | null
           full_name?: string | null
@@ -1106,11 +1118,14 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           demographics_score?: number | null
+          discord_access_token?: string | null
           discord_avatar?: string | null
           discord_connected_at?: string | null
           discord_discriminator?: string | null
           discord_email?: string | null
           discord_id?: string | null
+          discord_refresh_token?: string | null
+          discord_token_expires_at?: string | null
           discord_username?: string | null
           email?: string | null
           full_name?: string | null
