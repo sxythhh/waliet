@@ -42,6 +42,7 @@ import Discover from "./pages/Discover";
 import Referrals from "./pages/Referrals";
 import Leaderboard from "./pages/Leaderboard";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
+import PublicBounty from "./pages/PublicBounty";
 import { AuthProvider } from "@/contexts/AuthContext";
 const queryClient = new QueryClient();
 function DashboardLayout({
@@ -130,6 +131,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/discover" element={<Discover />} />
           <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
           <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
+          <Route path="/bounty/:id" element={<PublicBounty />} />
           <Route path="/join/:slug" element={<CampaignJoin />} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
           <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
