@@ -1,8 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Video, Users, Trash2 } from "lucide-react";
+import { DollarSign, Video, Users, Trash2, Copy, Check } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface BountyCampaign {
   id: string;
@@ -27,6 +29,17 @@ interface BountyCampaignsViewProps {
 }
 
 export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: BountyCampaignsViewProps) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyUrl = (bountyId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/boost/${bountyId}`;
+    navigator.clipboard.writeText(url);
+    setCopiedId(bountyId);
+    toast.success("Link copied to clipboard!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   if (bounties.length === 0) {
     return (
       <div className="text-center py-12">
@@ -46,15 +59,14 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
         return (
           <Card
             key={bounty.id}
-            className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden hover:bg-accent/50 cursor-pointer"
-            onClick={() => window.location.href = `/boost/${bounty.id}`}
+            className="bg-card border animate-fade-in flex flex-col overflow-hidden"
           >
             {bounty.banner_url && (
               <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <OptimizedImage
                   src={bounty.banner_url}
                   alt={bounty.title}
-                  className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                  className="w-full h-full object-cover object-center"
                 />
               </div>
             )}
@@ -116,6 +128,37 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
                     {bounty.accepted_creators_count} / {bounty.max_accepted_creators}
                   </span>
                 </div>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-2 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={(e) => handleCopyUrl(bounty.id, e)}
+                >
+                  {copiedId === bounty.id ? (
+                    <Check className="h-4 w-4 mr-1" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-1" />
+                  )}
+                  {copiedId === bounty.id ? 'Copied!' : 'Copy Link'}
+                </Button>
+                {onViewApplications && (
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => onViewApplications({
+                      id: bounty.id,
+                      title: bounty.title,
+                      maxAccepted: bounty.max_accepted_creators,
+                      currentAccepted: bounty.accepted_creators_count
+                    })}
+                  >
+                    View Applications
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
