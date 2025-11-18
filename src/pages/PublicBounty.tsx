@@ -74,11 +74,22 @@ const PublicBounty = () => {
 
   const handleApplyClick = () => {
     if (!user) {
+      // Store return URL for redirect after auth
+      sessionStorage.setItem('applyReturnUrl', window.location.pathname);
       navigate("/auth");
       return;
     }
     setShowApplySheet(true);
   };
+
+  // Handle auto-open apply sheet after auth redirect
+  useEffect(() => {
+    const returnUrl = sessionStorage.getItem('applyReturnUrl');
+    if (user && returnUrl === window.location.pathname) {
+      sessionStorage.removeItem('applyReturnUrl');
+      setShowApplySheet(true);
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -103,6 +114,7 @@ const PublicBounty = () => {
   }
 
   const isFull = bounty.accepted_creators_count >= bounty.max_accepted_creators;
+  const availableSpots = bounty.max_accepted_creators - bounty.accepted_creators_count;
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -117,15 +129,49 @@ const PublicBounty = () => {
         title="Campaign Blueprint"
       />
 
-      {/* Floating Apply Button */}
+      {/* Floating Brand Card */}
       {!isFull && (
-        <Button
-          size="lg"
-          className="fixed bottom-8 right-8 z-50 shadow-2xl hover:scale-105 transition-transform"
-          onClick={handleApplyClick}
-        >
-          {user ? "Apply Now" : "Sign In to Apply"}
-        </Button>
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-6 max-w-md w-[90vw] sm:w-full">
+            {/* Brand Info */}
+            <div className="flex items-center gap-4 mb-4 pb-4 border-b border-border/50">
+              {brand?.logo_url && (
+                <img
+                  src={brand.logo_url}
+                  alt={brand.name}
+                  className="h-14 w-14 rounded-xl object-cover ring-2 ring-primary/20"
+                />
+              )}
+              <div className="flex-1">
+                <h3 className="font-bold text-lg">{brand?.name || bounty.title}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {availableSpots} {availableSpots === 1 ? 'spot' : 'spots'} remaining
+                </p>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-primary/5 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground mb-1">Monthly Retainer</p>
+                <p className="text-xl font-bold text-primary">${bounty.monthly_retainer}</p>
+              </div>
+              <div className="bg-primary/5 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground mb-1">Videos/Month</p>
+                <p className="text-xl font-bold text-primary">{bounty.videos_per_month}</p>
+              </div>
+            </div>
+
+            {/* Apply Button */}
+            <Button
+              size="lg"
+              className="w-full shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+              onClick={handleApplyClick}
+            >
+              {user ? "Apply Now" : "Sign In to Apply"}
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Apply Sheet */}
