@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ExternalLink, DollarSign, Video, Users, Calendar } from "lucide-react";
+import { ExternalLink, DollarSign, Video, Users, Calendar, AlertCircle, CheckCircle2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import discordIcon from "@/assets/discord-icon.png";
+import tiktokLogo from "@/assets/tiktok-logo.png";
+import instagramLogo from "@/assets/instagram-logo.png";
 
 interface BountyCampaign {
   id: string;
@@ -44,6 +49,55 @@ export function ApplyToBountySheet({
   const [submitting, setSubmitting] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [applicationText, setApplicationText] = useState("");
+  const [hasConnectedAccounts, setHasConnectedAccounts] = useState(false);
+  const [isCheckingAccounts, setIsCheckingAccounts] = useState(true);
+  const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
+  const [discordConnected, setDiscordConnected] = useState(false);
+  const [userId, setUserId] = useState<string>("");
+  const [showAddSocialDialog, setShowAddSocialDialog] = useState(false);
+  const [showDiscordDialog, setShowDiscordDialog] = useState(false);
+
+  // Check for connected accounts when sheet opens
+  useEffect(() => {
+    if (open) {
+      checkConnectedAccounts();
+    }
+  }, [open]);
+
+  const checkConnectedAccounts = async () => {
+    setIsCheckingAccounts(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      setUserId(session.user.id);
+
+      // Check for social accounts
+      const { data: accounts } = await supabase
+        .from('social_accounts')
+        .select('*')
+        .eq('user_id', session.user.id);
+
+      setSocialAccounts(accounts || []);
+
+      // Check for Discord connection
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('discord_id, discord_username')
+        .eq('id', session.user.id)
+        .single();
+
+      setDiscordConnected(!!profile?.discord_id);
+
+      // User needs at least one social account OR Discord
+      const hasAccounts = (accounts && accounts.length > 0) || !!profile?.discord_id;
+      setHasConnectedAccounts(hasAccounts);
+    } catch (error) {
+      console.error("Error checking accounts:", error);
+    } finally {
+      setIsCheckingAccounts(false);
+    }
+  };
 
   if (!bounty) return null;
 
@@ -115,13 +169,138 @@ export function ApplyToBountySheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side="right" 
-        className="w-full sm:max-w-xl bg-[#0a0a0a] border-l border-white/10 p-0 overflow-y-auto"
-      >
-        {/* Banner Image */}
-        {bounty.banner_url && (
+    <>
+      <AddSocialAccountDialog
+        open={showAddSocialDialog}
+        onOpenChange={setShowAddSocialDialog}
+        onSuccess={checkConnectedAccounts}
+      />
+
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent 
+          side="right" 
+          className="w-full sm:max-w-xl bg-[#0a0a0a] border-l border-white/10 p-0 overflow-y-auto"
+        >
+          {/* Account Connection Required Screen */}
+          {!isCheckingAccounts && !hasConnectedAccounts ? (
+            <div className="p-6 space-y-6">
+              <SheetHeader>
+                <SheetTitle className="text-2xl">Connect Your Account</SheetTitle>
+                <SheetDescription>
+                  To apply for this boost, you must connect at least one social media account OR Discord.
+                </SheetDescription>
+              </SheetHeader>
+
+              <Alert className="bg-yellow-500/10 border-yellow-500/20">
+                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                <AlertDescription className="text-yellow-500/90">
+                  This helps us verify your identity and track your content performance.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-3 text-muted-foreground">Connect Social Media</h3>
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => setShowAddSocialDialog(true)}
+                      className="w-full justify-start gap-3 h-12"
+                      variant="outline"
+                    >
+                      <div className="flex gap-2">
+                        <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />
+                        <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />
+                      </div>
+                      <span>Connect TikTok, Instagram, YouTube or X</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-white/10" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-[#0a0a0a] px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium mb-3 text-muted-foreground">Connect Discord</h3>
+                  <Button
+                    onClick={() => {
+                      const DISCORD_CLIENT_ID = '1358316231341375518';
+                      const REDIRECT_URI = `${window.location.origin}/discord/callback`;
+                      const STATE = btoa(JSON.stringify({ userId }));
+                      
+                      const discordAuthUrl = `https://discord.com/api/oauth2/authorize?` +
+                        `client_id=${DISCORD_CLIENT_ID}&` +
+                        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+                        `response_type=code&` +
+                        `scope=identify%20email&` +
+                        `state=${STATE}`;
+
+                      const popup = window.open(
+                        discordAuthUrl,
+                        'Discord OAuth',
+                        'width=500,height=700'
+                      );
+
+                      const handleMessage = async (event: MessageEvent) => {
+                        if (event.origin !== window.location.origin) return;
+                        
+                        if (event.data.type === 'discord-oauth-success') {
+                          popup?.close();
+                          toast.success("Discord account linked successfully!");
+                          checkConnectedAccounts();
+                        } else if (event.data.type === 'discord-oauth-error') {
+                          popup?.close();
+                          toast.error(event.data.error || "Failed to link Discord account.");
+                        }
+                      };
+
+                      window.addEventListener('message', handleMessage);
+                    }}
+                    className="w-full justify-start gap-3 h-12 bg-[#5765F2] hover:bg-[#5765F2]/90 text-white"
+                  >
+                    <img src={discordIcon} alt="Discord" className="w-5 h-5" />
+                    <span>Connect Discord</span>
+                  </Button>
+                </div>
+
+                {/* Show connected accounts status */}
+                {(socialAccounts.length > 0 || discordConnected) && (
+                  <div className="pt-4 border-t border-white/10 space-y-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Connected Accounts</h3>
+                    {socialAccounts.map((account) => (
+                      <div key={account.id} className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span className="capitalize">{account.platform}</span>
+                        <span className="text-muted-foreground">@{account.username}</span>
+                      </div>
+                    ))}
+                    {discordConnected && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span>Discord Connected</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <Button
+                onClick={checkConnectedAccounts}
+                className="w-full"
+                size="lg"
+              >
+                Continue to Application
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Banner Image */}
+              {bounty.banner_url && (
           <div className="relative w-full h-48 flex-shrink-0 overflow-hidden bg-muted">
             <OptimizedImage
               src={bounty.banner_url}
@@ -273,8 +452,11 @@ export function ApplyToBountySheet({
               </Button>
             </div>
           </form>
-        </div>
-      </SheetContent>
-    </Sheet>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
