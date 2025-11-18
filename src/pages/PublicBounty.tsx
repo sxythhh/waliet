@@ -246,26 +246,28 @@ const PublicBounty = () => {
               </Button>
             )}
           </div>
-
-          {/* Blueprint Embed */}
-          {bounty.blueprint_embed_url && (
-            <div className="pt-6 border-t">
-              <h2 className="text-xl font-semibold mb-4">Campaign Blueprint</h2>
-              <div className="w-full aspect-video rounded-lg overflow-hidden border bg-muted">
-                <iframe
-                  src={bounty.blueprint_embed_url.startsWith('http') 
-                    ? bounty.blueprint_embed_url 
-                    : `https://${bounty.blueprint_embed_url}`}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="Campaign Blueprint"
-                />
-              </div>
-            </div>
-          )}
         </Card>
       </div>
+
+      {/* Blueprint Embed - Full Width */}
+      {bounty.blueprint_embed_url && (
+        <div className="w-full py-8 px-4 bg-muted/30">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl font-semibold mb-4">Campaign Blueprint</h2>
+            <div className="w-full aspect-video rounded-lg overflow-hidden border bg-background shadow-lg">
+              <iframe
+                src={bounty.blueprint_embed_url.startsWith('http') 
+                  ? bounty.blueprint_embed_url 
+                  : `https://${bounty.blueprint_embed_url}`}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="Campaign Blueprint"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {bounty && (
         <ApplyToBountySheet
