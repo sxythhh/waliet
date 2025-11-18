@@ -39,7 +39,8 @@ export default function Auth() {
       }
     }) => {
       if (session && !isRecoveryMode) {
-        navigate("/dashboard");
+        const returnUrl = sessionStorage.getItem('applyReturnUrl');
+        navigate(returnUrl || "/dashboard");
       }
     });
     const {
@@ -50,7 +51,8 @@ export default function Auth() {
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecoveryMode(true);
       } else if (session && !isRecoveryMode) {
-        navigate("/dashboard");
+        const returnUrl = sessionStorage.getItem('applyReturnUrl');
+        navigate(returnUrl || "/dashboard");
       }
     });
     return () => subscription.unsubscribe();
