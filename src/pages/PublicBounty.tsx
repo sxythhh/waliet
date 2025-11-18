@@ -134,7 +134,7 @@ const PublicBounty = () => {
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
           <div className="bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-6 max-w-md w-[90vw] sm:w-full">
             {/* Brand Info */}
-            <div className="flex items-center gap-4 mb-4 pb-4 border-b border-border/50">
+            <div className="flex items-center gap-4 mb-4">
               {brand?.logo_url && (
                 <img
                   src={brand.logo_url}
@@ -147,18 +147,6 @@ const PublicBounty = () => {
                 <p className="text-sm text-muted-foreground">
                   {availableSpots} {availableSpots === 1 ? 'spot' : 'spots'} remaining
                 </p>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-primary/5 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Monthly Retainer</p>
-                <p className="text-xl font-bold text-primary">${bounty.monthly_retainer}</p>
-              </div>
-              <div className="bg-primary/5 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Videos/Month</p>
-                <p className="text-xl font-bold text-primary">{bounty.videos_per_month}</p>
               </div>
             </div>
 
