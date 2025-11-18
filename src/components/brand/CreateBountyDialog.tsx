@@ -41,7 +41,8 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
     payment_schedule: "monthly" as "weekly" | "biweekly" | "monthly",
     additional_requirements: "",
     posting_frequency: "",
-    review_process: ""
+    review_process: "",
+    blueprint_embed_url: ""
   });
 
   const platforms = [
@@ -121,7 +122,8 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
           start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : null,
           end_date: formData.end_date ? format(formData.end_date, 'yyyy-MM-dd') : null,
           banner_url,
-          status: formData.status
+          status: formData.status,
+          blueprint_embed_url: formData.blueprint_embed_url || null
         });
 
       if (error) throw error;
@@ -146,7 +148,8 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
         payment_schedule: "monthly",
         additional_requirements: "",
         posting_frequency: "",
-        review_process: ""
+        review_process: "",
+        blueprint_embed_url: ""
       });
       setbannerFile(null);
       setSelectedPlatforms([]);
@@ -388,6 +391,19 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                 placeholder="Any other requirements (location, language, equipment, previous experience, etc.)"
                 className="min-h-[80px]"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="blueprint_embed_url">Blueprint Embed URL</Label>
+              <Input
+                id="blueprint_embed_url"
+                value={formData.blueprint_embed_url}
+                onChange={(e) => setFormData({ ...formData, blueprint_embed_url: e.target.value })}
+                placeholder="https://example.com/embed/..."
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Optional iframe URL to embed campaign blueprint or additional content
+              </p>
             </div>
           </div>
 

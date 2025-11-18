@@ -68,6 +68,7 @@ export type Database = {
         Row: {
           accepted_creators_count: number
           banner_url: string | null
+          blueprint_embed_url: string | null
           brand_id: string
           content_style_requirements: string
           created_at: string
@@ -85,6 +86,7 @@ export type Database = {
         Insert: {
           accepted_creators_count?: number
           banner_url?: string | null
+          blueprint_embed_url?: string | null
           brand_id: string
           content_style_requirements: string
           created_at?: string
@@ -102,6 +104,7 @@ export type Database = {
         Update: {
           accepted_creators_count?: number
           banner_url?: string | null
+          blueprint_embed_url?: string | null
           brand_id?: string
           content_style_requirements?: string
           created_at?: string

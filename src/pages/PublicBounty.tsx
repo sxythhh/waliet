@@ -23,6 +23,7 @@ interface BountyCampaign {
   start_date: string | null;
   end_date: string | null;
   brand_id: string;
+  blueprint_embed_url: string | null;
 }
 
 interface Brand {
@@ -245,6 +246,22 @@ const PublicBounty = () => {
               </Button>
             )}
           </div>
+
+          {/* Blueprint Embed */}
+          {bounty.blueprint_embed_url && (
+            <div className="pt-6 border-t">
+              <h2 className="text-xl font-semibold mb-4">Campaign Blueprint</h2>
+              <div className="w-full aspect-video rounded-lg overflow-hidden border bg-muted">
+                <iframe
+                  src={bounty.blueprint_embed_url}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Campaign Blueprint"
+                />
+              </div>
+            </div>
+          )}
         </Card>
       </div>
 
