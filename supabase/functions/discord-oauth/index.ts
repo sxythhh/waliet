@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,7 +29,10 @@ serve(async (req) => {
           discord_discriminator: null,
           discord_avatar: null,
           discord_email: null,
-          discord_connected_at: null
+          discord_connected_at: null,
+          discord_access_token: null,
+          discord_refresh_token: null,
+          discord_token_expires_at: null
         })
         .eq('id', userId);
 
@@ -42,7 +44,6 @@ serve(async (req) => {
       );
     }
 
-    // Handle OAuth callback
     if (!code) {
       throw new Error('Authorization code is required');
     }
@@ -72,7 +73,10 @@ serve(async (req) => {
       throw new Error('Failed to exchange authorization code');
     }
 
-    const { access_token } = await tokenResponse.json();
+    const { access_token, refresh_token, expires_in } = await tokenResponse.json();
+
+    // Calculate token expiration
+    const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
     // Fetch user data from Discord
     const userResponse = await fetch('https://discord.com/api/users/@me', {
@@ -87,7 +91,7 @@ serve(async (req) => {
 
     const discordUser = await userResponse.json();
 
-    // Update profile with Discord data
+    // Update profile with Discord data and store encrypted tokens
     const { error: updateError } = await supabaseClient
       .from('profiles')
       .update({
@@ -98,7 +102,10 @@ serve(async (req) => {
           ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
           : null,
         discord_email: discordUser.email,
-        discord_connected_at: new Date().toISOString()
+        discord_connected_at: new Date().toISOString(),
+        discord_access_token: access_token,
+        discord_refresh_token: refresh_token,
+        discord_token_expires_at: expiresAt
       })
       .eq('id', userId);
 

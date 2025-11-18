@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 
 interface Application {
   id: string;
+  user_id: string;
   video_url: string;
   application_text: string;
   status: string;
@@ -92,6 +93,10 @@ export function BountyApplicationsSheet({
 
     setProcessing(applicationId);
     try {
+      // Get the application details
+      const application = applications.find(app => app.id === applicationId);
+      if (!application) throw new Error('Application not found');
+
       const { error } = await supabase
         .from('bounty_applications')
         .update({ status: newStatus })
@@ -99,7 +104,43 @@ export function BountyApplicationsSheet({
 
       if (error) throw error;
 
-      toast.success(`Application ${newStatus}`);
+      // If accepted, try to add user to Discord server
+      if (newStatus === 'accepted') {
+        try {
+          // Get bounty campaign details including discord_guild_id
+          const { data: bounty, error: bountyError } = await supabase
+            .from('bounty_campaigns')
+            .select('discord_guild_id')
+            .eq('id', bountyId)
+            .single();
+
+          if (bountyError) throw bountyError;
+
+          if (bounty?.discord_guild_id) {
+            const { data, error: discordError } = await supabase.functions.invoke('add-to-discord-server', {
+              body: {
+                userId: application.user_id,
+                guildId: bounty.discord_guild_id
+              }
+            });
+
+            if (discordError) {
+              console.error('Failed to add user to Discord server:', discordError);
+              toast.error('Application accepted, but failed to add user to Discord server. They may need to join manually.');
+            } else if (data?.success) {
+              toast.success(`Application accepted! ${data.alreadyMember ? 'User was already in Discord server.' : 'User added to Discord server.'}`);
+            }
+          } else {
+            toast.success('Application accepted');
+          }
+        } catch (discordError: any) {
+          console.error('Discord auto-join error:', discordError);
+          toast.success('Application accepted (Discord auto-join unavailable)');
+        }
+      } else {
+        toast.success(`Application ${newStatus}`);
+      }
+
       fetchApplications();
       
       // Refresh parent to update counts

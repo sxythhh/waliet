@@ -39,7 +39,7 @@ export function DiscordLinkDialog({ userId, discordUsername, discordAvatar, onSu
       `client_id=${DISCORD_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
       `response_type=code&` +
-      `scope=identify%20email&` +
+      `scope=identify%20email%20guilds.join&` +
       `state=${STATE}`;
 
     // Open Discord OAuth in a popup
