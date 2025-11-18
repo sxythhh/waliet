@@ -253,7 +253,9 @@ const PublicBounty = () => {
               <h2 className="text-xl font-semibold mb-4">Campaign Blueprint</h2>
               <div className="w-full aspect-video rounded-lg overflow-hidden border bg-muted">
                 <iframe
-                  src={bounty.blueprint_embed_url}
+                  src={bounty.blueprint_embed_url.startsWith('http') 
+                    ? bounty.blueprint_embed_url 
+                    : `https://${bounty.blueprint_embed_url}`}
                   className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
