@@ -16,7 +16,7 @@ export default {
       fontFamily: {
         'geist': ['Geist', 'sans-serif'],
         'instrument': ['Geist', 'sans-serif'], // Alias for backward compatibility
-        'chakra': ['Chakra Petch', 'sans-serif'],
+        'chakra': ['Geist', 'sans-serif'],
         'clash': ['Clash Grotesk', 'sans-serif'],
       },
       letterSpacing: {
