@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { DiscordOAuthCallback } from "@/components/DiscordOAuthCallback";
 import { XOAuthCallback } from "@/components/XOAuthCallback";
-import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BrandAuth from "./pages/BrandAuth";
 import ResetPassword from "./pages/ResetPassword";
@@ -121,8 +120,7 @@ const App = () => <QueryClientProvider client={queryClient}>
         <Sonner />
         <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
           <Route path="/x/callback" element={<XOAuthCallback />} />
