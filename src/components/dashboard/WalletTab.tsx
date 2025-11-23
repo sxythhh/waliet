@@ -1438,14 +1438,20 @@ export function WalletTab() {
               {(() => {
               const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
               const isPayPal = selectedMethod?.method === 'paypal';
-              return isPayPal ? <>
-                    <p className="text-muted-foreground">24h wait time</p>
-                    <p className="font-medium">6% fee</p>
-                  </> : <>
-                    <p className="text-muted-foreground">2-3 business day wait time</p>
-                    <p className="text-xs text-muted-foreground mb-2">(Payouts will not be operated on Saturday & Sunday)</p>
-                    <p className="font-medium">$1 + 0.75% fee</p>
-                  </>;
+              const isUPI = selectedMethod?.method === 'upi';
+              
+              if (isPayPal || isUPI) {
+                return <>
+                  <p className="text-muted-foreground">24h wait time</p>
+                  <p className="font-medium">No fees</p>
+                </>;
+              }
+              
+              return <>
+                <p className="text-muted-foreground">2-3 business day wait time</p>
+                <p className="text-xs text-muted-foreground mb-2">(Payouts will not be operated on Saturday & Sunday)</p>
+                <p className="font-medium">$1 + 0.75% fee</p>
+              </>;
             })()}
             </div>
 
@@ -1454,13 +1460,15 @@ export function WalletTab() {
               const amount = parseFloat(payoutAmount);
               const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
               const isPayPal = selectedMethod?.method === 'paypal';
+              const isUPI = selectedMethod?.method === 'upi';
               
               let netAmount;
               let feeAmount;
               
-              if (isPayPal) {
-                feeAmount = amount * 0.06;
-                netAmount = amount - feeAmount;
+              if (isPayPal || isUPI) {
+                // No fees for PayPal and UPI
+                feeAmount = 0;
+                netAmount = amount;
               } else {
                 // First apply 0.75% fee
                 const percentageFee = amount * 0.0075;
