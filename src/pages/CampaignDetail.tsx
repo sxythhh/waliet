@@ -269,80 +269,20 @@ export default function CampaignDetail() {
     );
   }
 
-  // Show embed URL if available
-  if (!campaign.embed_url) {
-    return (
-      <>
-        <div className="p-8">
-          <div className="flex items-center justify-between mb-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/dashboard?tab=campaigns")}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Campaigns
-            </Button>
-            
-            <Button
-              variant="ghost"
-              onClick={() => setShowLeaveDialog(true)}
-              disabled={leavingCampaign}
-              className="bg-destructive/10 text-destructive hover:bg-destructive/20"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Leave Campaign
-            </Button>
-          </div>
-          <p className="text-muted-foreground">No embed URL available for this campaign.</p>
-        </div>
-        
-        {/* Leave Campaign Confirmation Dialog */}
-        <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Leave Campaign?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to leave this campaign? This will:
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Withdraw your application</li>
-                  <li>Unlink all connected social accounts</li>
-                  <li>Remove your access to campaign resources</li>
-                </ul>
-                <p className="mt-2">You can always reapply later if the campaign is still active.</p>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleLeaveCampaign}
-                className="bg-destructive hover:bg-destructive/90"
-              >
-                {leavingCampaign ? "Leaving..." : "Leave Campaign"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </>
-    );
-  }
-
   return (
     <div className="h-screen w-full flex flex-col">
-      <div className="p-4 border-b flex items-center justify-between gap-4">
+      <div className="p-4 border-b bg-background flex items-center justify-between gap-4">
         <Button
           variant="ghost"
           onClick={() => navigate("/dashboard?tab=campaigns")}
-          className="bg-[#121212] border-t"
-          style={{ borderTopColor: '#3b3b3b' }}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Return
+          Back to Campaigns
         </Button>
         
         <div className="flex items-center gap-2">
           <Button
             onClick={() => navigate("/dashboard?tab=profile")}
-            className="border-0"
           >
             <Link className="mr-2 h-4 w-4" />
             Link Account
@@ -350,22 +290,118 @@ export default function CampaignDetail() {
           
           <Button
             variant="ghost"
-            size="icon"
             onClick={() => setShowLeaveDialog(true)}
             disabled={leavingCampaign}
             className="bg-destructive/10 text-destructive hover:bg-destructive/20"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="mr-2 h-4 w-4" />
+            Leave Campaign
           </Button>
         </div>
       </div>
-      <div className="flex-1">
-        <iframe
-          src={campaign.embed_url}
-          className="w-full h-full border-0"
-          title={campaign.title}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-        />
+      
+      <div className="flex-1 overflow-auto p-8">
+        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+          {/* Banner */}
+          {campaign.banner_url && (
+            <div className="w-full aspect-video rounded-xl overflow-hidden">
+              <img 
+                src={campaign.banner_url} 
+                alt={campaign.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          
+          {/* Brand Info */}
+          <div className="flex items-center gap-4">
+            {campaign.brand_logo_url && (
+              <img 
+                src={campaign.brand_logo_url} 
+                alt={campaign.brand_name}
+                className="w-16 h-16 rounded-lg object-cover"
+              />
+            )}
+            <div>
+              <h1 className="text-3xl font-bold">{campaign.title}</h1>
+              <p className="text-muted-foreground">{campaign.brand_name}</p>
+            </div>
+          </div>
+
+          {/* Description */}
+          {campaign.description && (
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">About Campaign</h2>
+              <p className="text-muted-foreground whitespace-pre-wrap">{campaign.description}</p>
+            </div>
+          )}
+
+          {/* Campaign Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg border bg-card">
+              <h3 className="font-semibold mb-2">RPM Rate</h3>
+              <p className="text-2xl font-bold">${campaign.rpm_rate}</p>
+              <p className="text-sm text-muted-foreground">per 1,000 views</p>
+            </div>
+            
+            <div className="p-4 rounded-lg border bg-card">
+              <h3 className="font-semibold mb-2">Budget</h3>
+              <p className="text-2xl font-bold">${campaign.budget.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">total campaign budget</p>
+            </div>
+            
+            {campaign.start_date && (
+              <div className="p-4 rounded-lg border bg-card">
+                <h3 className="font-semibold mb-2">Start Date</h3>
+                <p className="text-lg">{new Date(campaign.start_date).toLocaleDateString()}</p>
+              </div>
+            )}
+            
+            {campaign.end_date && (
+              <div className="p-4 rounded-lg border bg-card">
+                <h3 className="font-semibold mb-2">End Date</h3>
+                <p className="text-lg">{new Date(campaign.end_date).toLocaleDateString()}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Allowed Platforms */}
+          {campaign.allowed_platforms && campaign.allowed_platforms.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">Allowed Platforms</h2>
+              <div className="flex flex-wrap gap-2">
+                {campaign.allowed_platforms.map((platform) => (
+                  <span 
+                    key={platform}
+                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium capitalize"
+                  >
+                    {platform}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Guidelines */}
+          {campaign.guidelines && (
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">Guidelines</h2>
+              <div className="p-4 rounded-lg border bg-card">
+                <p className="text-muted-foreground whitespace-pre-wrap">{campaign.guidelines}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Status */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
+              campaign.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'
+            }`}>
+              {campaign.status}
+            </span>
+          </div>
+        </div>
       </div>
       
       {/* Leave Campaign Confirmation Dialog */}
