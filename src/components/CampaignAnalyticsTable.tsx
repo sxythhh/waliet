@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download } from "lucide-react";
+import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -149,16 +149,19 @@ export function CampaignAnalyticsTable({
   const [userSocialAccounts, setUserSocialAccounts] = useState<any[]>([]);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
   const [transactionsCurrentPage, setTransactionsCurrentPage] = useState(1);
+  const [isPaused, setIsPaused] = useState(false);
   const itemsPerPage = 20;
   const transactionsPerPage = 20;
   useEffect(() => {
-    fetchAnalytics();
-    fetchCampaignRPM();
-    fetchTransactions();
+    if (!isPaused) {
+      fetchAnalytics();
+      fetchCampaignRPM();
+      fetchTransactions();
+    }
 
     // Set up optimized real-time subscription - only for relevant demographic submissions
     // We'll refetch analytics only when a submission changes for users in this campaign
-    const demographicChannel = supabase
+    const demographicChannel = isPaused ? null : supabase
       .channel(`demographic-submissions-${campaignId}`)
       .on('postgres_changes', {
         event: '*',
@@ -187,9 +190,11 @@ export function CampaignAnalyticsTable({
       .subscribe();
 
     return () => {
-      supabase.removeChannel(demographicChannel);
+      if (demographicChannel) {
+        supabase.removeChannel(demographicChannel);
+      }
     };
-  }, [campaignId]);
+  }, [campaignId, isPaused]);
   const fetchCampaignRPM = async () => {
     try {
       const {
@@ -1135,6 +1140,24 @@ export function CampaignAnalyticsTable({
                 <Button variant={showPaidOnly ? "default" : "outline"} onClick={() => setShowPaidOnly(!showPaidOnly)} size="sm" className={`h-8 text-sm ${showPaidOnly ? "bg-green-500 hover:bg-green-600" : "bg-muted border hover:bg-accent"}`}>
                   <DollarSign className="h-4 w-4 mr-1" />
                   Paid
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsPaused(!isPaused)} 
+                  size="sm" 
+                  className="h-8 text-sm bg-muted border hover:bg-accent"
+                >
+                  {isPaused ? (
+                    <>
+                      <Play className="h-4 w-4 mr-1" />
+                      Resume
+                    </>
+                  ) : (
+                    <>
+                      <Pause className="h-4 w-4 mr-1" />
+                      Pause
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
