@@ -233,7 +233,8 @@ export function JoinCampaignSheet({
         if (!existingLink) {
           const linkData = {
             social_account_id: accountId,
-            campaign_id: campaign.id
+            campaign_id: campaign.id,
+            user_id: user.id
           };
           console.log('Linking account:', linkData);
           const {

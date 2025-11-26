@@ -112,11 +112,15 @@ export function ManageCampaignsDialog({
 
   const handleLink = async (campaignId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      
       const { error } = await supabase
         .from("social_account_campaigns")
         .insert({
           social_account_id: accountId,
           campaign_id: campaignId,
+          user_id: user.id,
         });
 
       if (error) throw error;

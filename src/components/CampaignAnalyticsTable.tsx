@@ -436,7 +436,8 @@ export function CampaignAnalyticsTable({
         error: linkError
       } = await supabase.from('social_account_campaigns').upsert({
         social_account_id: socialAccountId,
-        campaign_id: campaignId
+        campaign_id: campaignId,
+        user_id: userId
       }, {
         onConflict: 'social_account_id,campaign_id'
       });

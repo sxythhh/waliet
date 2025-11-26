@@ -128,7 +128,8 @@ export function ManageAccountDialog({
         error
       } = await supabase.from('social_account_campaigns').insert({
         social_account_id: account.id,
-        campaign_id: campaignId
+        campaign_id: campaignId,
+        user_id: user.id
       });
       if (error) throw error;
 
