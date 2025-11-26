@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -62,6 +62,24 @@ export function JoinCampaignSheet({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
+
+  // Check authentication when sheet opens
+  useEffect(() => {
+    if (open) {
+      checkAuthentication();
+      loadSocialAccounts();
+    }
+  }, [open]);
+
+  const checkAuthentication = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    } catch (error) {
+      console.error("Error checking authentication:", error);
+      setIsLoggedIn(false);
+    }
+  };
   
   const getPlatformIcon = (platform: string) => {
     const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
@@ -342,16 +360,7 @@ export function JoinCampaignSheet({
   const budgetRemaining = campaign.budget - (campaign.budget_used || 0);
   const budgetPercentage = campaign.budget > 0 ? (campaign.budget_used || 0) / campaign.budget * 100 : 0;
   return <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto" onOpenAutoFocus={async e => {
-      e.preventDefault();
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
-      loadSocialAccounts();
-    }}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         
 
         <div className="mt-6 space-y-6">
