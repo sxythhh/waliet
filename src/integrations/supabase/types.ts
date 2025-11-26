@@ -1464,24 +1464,30 @@ export type Database = {
           campaign_id: string
           connected_at: string
           created_at: string
+          disconnected_at: string | null
           id: string
           social_account_id: string
+          status: string
           user_id: string
         }
         Insert: {
           campaign_id: string
           connected_at?: string
           created_at?: string
+          disconnected_at?: string | null
           id?: string
           social_account_id: string
+          status?: string
           user_id: string
         }
         Update: {
           campaign_id?: string
           connected_at?: string
           created_at?: string
+          disconnected_at?: string | null
           id?: string
           social_account_id?: string
+          status?: string
           user_id?: string
         }
         Relationships: [

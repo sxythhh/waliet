@@ -55,6 +55,7 @@ export function ConnectedAccountsTab() {
         )
       `)
       .eq("social_accounts.user_id", user.id)
+      .eq("status", "active")
       .order("connected_at", { ascending: false });
 
     if (!error && data) {
@@ -67,7 +68,10 @@ export function ConnectedAccountsTab() {
   const handleDisconnect = async (connectionId: string, accountName: string, campaignName: string) => {
     const { error } = await supabase
       .from("social_account_campaigns")
-      .delete()
+      .update({ 
+        status: "disconnected",
+        disconnected_at: new Date().toISOString()
+      })
       .eq("id", connectionId);
 
     if (error) {

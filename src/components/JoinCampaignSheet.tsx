@@ -226,15 +226,18 @@ export function JoinCampaignSheet({
           throw submissionError;
         }
 
-        // Link the social account to the campaign (check if link exists first)
+        // Link the social account to the campaign (check if active link exists first)
         const {
           data: existingLink
-        } = await supabase.from("social_account_campaigns").select("id").eq("social_account_id", accountId).eq("campaign_id", campaign.id).maybeSingle();
+        } = await supabase.from("social_account_campaigns").select("id, status").eq("social_account_id", accountId).eq("campaign_id", campaign.id).maybeSingle();
+        
         if (!existingLink) {
+          // Create new link
           const linkData = {
             social_account_id: accountId,
             campaign_id: campaign.id,
-            user_id: user.id
+            user_id: user.id,
+            status: 'active'
           };
           console.log('Linking account:', linkData);
           const {
@@ -243,6 +246,15 @@ export function JoinCampaignSheet({
           if (linkError) {
             console.error('Link error:', linkError);
             throw linkError;
+          }
+        } else if (existingLink.status !== 'active') {
+          // Reactivate disconnected link
+          const {
+            error: updateError
+          } = await supabase.from("social_account_campaigns").update({ status: 'active', disconnected_at: null }).eq("id", existingLink.id);
+          if (updateError) {
+            console.error('Update error:', updateError);
+            throw updateError;
           }
         }
         submissionsCreated++;

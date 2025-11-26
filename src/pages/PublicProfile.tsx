@@ -128,7 +128,7 @@ export default function PublicProfile() {
                     logo_url
                   )
                 )
-              `).eq("social_account_id", account.id);
+              `).eq("social_account_id", account.id).eq("status", "active");
 
           // Track campaign IDs to pre-fetch
           campaignConnections?.forEach(conn => {

@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
         )
       `)
       .eq('campaign_id', campaignId)
+      .eq('status', 'active')
       .eq('social_accounts.user_id', userId);
 
     if (accountsError) {
