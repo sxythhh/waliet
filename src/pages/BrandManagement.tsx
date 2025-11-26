@@ -300,7 +300,8 @@ export default function BrandManagement({
               )
             )
           `)
-          .eq('campaign_id', selectedCampaignId);
+          .eq('campaign_id', selectedCampaignId)
+          .eq('status', 'active');
 
         if (socialError) {
           console.error('Error fetching social accounts:', socialError);
@@ -827,7 +828,7 @@ export default function BrandManagement({
               account_link,
               user_id
             )
-          `).eq("campaign_id", selectedCampaignId).eq("social_accounts.user_id", submission.creator_id);
+          `).eq("campaign_id", selectedCampaignId).eq("status", "active").eq("social_accounts.user_id", submission.creator_id);
         const accounts = accountLinks?.map((link: any) => link.social_accounts).filter(Boolean) || [];
         return {
           ...submission,
@@ -1147,12 +1148,15 @@ export default function BrandManagement({
       } = await supabase.from("social_accounts").select("id").eq("user_id", userToKick.creator_id);
       if (accountsError) throw accountsError;
 
-      // Unlink all their accounts from this campaign
+      // Disconnect all their accounts from this campaign
       if (socialAccounts && socialAccounts.length > 0) {
         const accountIds = socialAccounts.map(acc => acc.id);
         const {
           error: unlinkError
-        } = await supabase.from("social_account_campaigns").delete().eq("campaign_id", selectedCampaignId).in("social_account_id", accountIds);
+        } = await supabase.from("social_account_campaigns").update({ 
+          status: 'disconnected',
+          disconnected_at: new Date().toISOString()
+        }).eq("campaign_id", selectedCampaignId).in("social_account_id", accountIds);
         if (unlinkError) throw unlinkError;
       }
       toast.success(`Removed ${userToKick.profiles?.username} from campaign`);

@@ -226,7 +226,7 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
           platform,
           username
         )
-      `).in("campaign_id", campaignIds).eq("social_accounts.user_id", user.id);
+      `).in("campaign_id", campaignIds).eq("social_accounts.user_id", user.id).eq("status", "active");
 
     // Group social accounts by campaign_id
     const accountsByCampaign = new Map<string, Array<{
@@ -282,12 +282,15 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
         .select("id")
         .eq("user_id", user.id);
 
-      // Remove ALL social account campaign links for this campaign and user
+      // Disconnect ALL social account campaign links for this campaign and user
       if (userAccounts && userAccounts.length > 0) {
         const accountIds = userAccounts.map(acc => acc.id);
         await supabase
           .from("social_account_campaigns")
-          .delete()
+          .update({ 
+            status: 'disconnected',
+            disconnected_at: new Date().toISOString()
+          })
           .eq("campaign_id", selectedCampaignId)
           .in("social_account_id", accountIds);
       }
@@ -360,10 +363,13 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
         }
       }
 
-      // 4. Unlink all social accounts from this campaign in junction table
+      // 4. Disconnect all social accounts from this campaign in junction table
       const {
         error: unlinkError
-      } = await supabase.from("social_account_campaigns").delete().eq("campaign_id", selectedCampaignId).in("social_account_id", linkedAccounts?.map(l => l.social_account_id) || []);
+      } = await supabase.from("social_account_campaigns").update({ 
+        status: 'disconnected',
+        disconnected_at: new Date().toISOString()
+      }).eq("campaign_id", selectedCampaignId).in("social_account_id", linkedAccounts?.map(l => l.social_account_id) || []);
       if (unlinkError) throw unlinkError;
 
       // 5. Clear campaign_id from social_accounts table (legacy field)

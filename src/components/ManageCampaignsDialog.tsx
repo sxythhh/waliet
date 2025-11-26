@@ -80,7 +80,8 @@ export function ManageCampaignsDialog({
           allowed_platforms
         )
       `)
-      .eq("social_account_id", accountId);
+      .eq("social_account_id", accountId)
+      .eq("status", "active");
 
     const connected = connections?.map((conn: any) => ({
       connection_id: conn.id,
@@ -121,6 +122,7 @@ export function ManageCampaignsDialog({
           social_account_id: accountId,
           campaign_id: campaignId,
           user_id: user.id,
+          status: 'active',
         });
 
       if (error) throw error;
@@ -137,7 +139,10 @@ export function ManageCampaignsDialog({
     try {
       const { error } = await supabase
         .from("social_account_campaigns")
-        .delete()
+        .update({ 
+          status: 'disconnected',
+          disconnected_at: new Date().toISOString()
+        })
         .eq("id", connectionId);
 
       if (error) throw error;

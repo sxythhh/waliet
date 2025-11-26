@@ -261,24 +261,34 @@ export default function CampaignJoin() {
           if (submissionError) throw submissionError;
         }
 
-        // Link the social account to the campaign
+        // Link the social account to the campaign (check if active link exists first)
         const { data: existingLink } = await supabase
           .from("social_account_campaigns")
-          .select("id")
+          .select("id, status")
           .eq("social_account_id", accountId)
           .eq("campaign_id", campaign.id)
           .maybeSingle();
 
         if (!existingLink) {
+          // Create new link
           const { error: linkError } = await supabase
             .from("social_account_campaigns")
             .insert({
               social_account_id: accountId,
               campaign_id: campaign.id,
               user_id: user.id,
+              status: 'active'
             });
 
           if (linkError) throw linkError;
+        } else if (existingLink.status !== 'active') {
+          // Reactivate disconnected link
+          const { error: updateError } = await supabase
+            .from("social_account_campaigns")
+            .update({ status: 'active', disconnected_at: null })
+            .eq("id", existingLink.id);
+
+          if (updateError) throw updateError;
         }
 
         submissionsCreated++;

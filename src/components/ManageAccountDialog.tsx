@@ -93,7 +93,7 @@ export function ManageAccountDialog({
           connected_at,
           campaign_id,
           campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))
-        `).eq('social_account_id', account.id);
+        `).eq('social_account_id', account.id).eq('status', 'active');
       const connected = connections?.map(conn => ({
         ...(conn.campaigns as Campaign),
         connection_id: conn.id,
@@ -129,7 +129,8 @@ export function ManageAccountDialog({
       } = await supabase.from('social_account_campaigns').insert({
         social_account_id: account.id,
         campaign_id: campaignId,
-        user_id: user.id
+        user_id: user.id,
+        status: 'active'
       });
       if (error) throw error;
 
@@ -173,7 +174,10 @@ export function ManageAccountDialog({
     try {
       const {
         error
-      } = await supabase.from('social_account_campaigns').delete().eq('id', connectionId);
+      } = await supabase.from('social_account_campaigns').update({ 
+        status: 'disconnected',
+        disconnected_at: new Date().toISOString()
+      }).eq('id', connectionId);
       if (error) throw error;
 
       // Stop tracking in Shortimize

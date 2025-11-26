@@ -183,7 +183,7 @@ export function ProfileTab() {
                 brand_logo_url,
                 brands(logo_url)
               )
-            `).eq("social_account_id", account.id);
+            `).eq("social_account_id", account.id).eq("status", "active");
         return {
           ...account,
           connected_campaigns: connections?.map(conn => ({

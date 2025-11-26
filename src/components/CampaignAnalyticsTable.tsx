@@ -180,6 +180,7 @@ export function CampaignAnalyticsTable({
           .select('id')
           .eq('campaign_id', campaignId)
           .eq('social_account_id', socialAccountId)
+          .eq('status', 'active')
           .single();
 
         if (isRelevant) {
@@ -242,7 +243,8 @@ export function CampaignAnalyticsTable({
             user_id
           )
         `)
-        .eq("campaign_id", campaignId);
+        .eq("campaign_id", campaignId)
+        .eq("status", "active");
 
       // Create maps for matching by both user_id and username+platform
       // Helper to normalize usernames (remove leading @, trim, lowercase)
@@ -370,7 +372,7 @@ export function CampaignAnalyticsTable({
             follower_count,
             account_link
           )
-        `).eq('campaign_id', campaignId).in('social_accounts.user_id', approvedUserIds);
+        `).eq('campaign_id', campaignId).eq('status', 'active').in('social_accounts.user_id', approvedUserIds);
       if (error) throw error;
 
       // Fetch profile data for each unique user
@@ -432,16 +434,35 @@ export function CampaignAnalyticsTable({
       }
 
       // Link the social account to the campaign if not already linked
-      const {
-        error: linkError
-      } = await supabase.from('social_account_campaigns').upsert({
-        social_account_id: socialAccountId,
-        campaign_id: campaignId,
-        user_id: userId
-      }, {
-        onConflict: 'social_account_id,campaign_id'
-      });
-      if (linkError) throw linkError;
+      // Check if a connection exists (active or disconnected)
+      const { data: existingConnection } = await supabase
+        .from('social_account_campaigns')
+        .select('id, status')
+        .eq('social_account_id', socialAccountId)
+        .eq('campaign_id', campaignId)
+        .single();
+
+      if (existingConnection) {
+        // If connection exists but is disconnected, reactivate it
+        if (existingConnection.status !== 'active') {
+          const { error: updateError } = await supabase
+            .from('social_account_campaigns')
+            .update({ status: 'active', disconnected_at: null })
+            .eq('id', existingConnection.id);
+          if (updateError) throw updateError;
+        }
+      } else {
+        // Create new connection
+        const { error: insertError } = await supabase
+          .from('social_account_campaigns')
+          .insert({
+            social_account_id: socialAccountId,
+            campaign_id: campaignId,
+            user_id: userId,
+            status: 'active'
+          });
+        if (insertError) throw insertError;
+      }
       toast.success("Account successfully linked to user");
       setLinkAccountDialogOpen(false);
       setSelectedAnalyticsAccount(null);
