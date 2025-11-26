@@ -41,6 +41,7 @@ interface DemographicSubmission {
   id: string;
   status: string;
   submitted_at: string;
+  reviewed_at: string | null;
   tier1_percentage: number;
   score: number | null;
 }
@@ -273,7 +274,7 @@ export function CampaignAnalyticsTable({
       const { data: allSubmissions } = allSocialAccountIds.length > 0 
         ? await supabase
             .from("demographic_submissions")
-            .select("id, social_account_id, status, submitted_at, tier1_percentage, score")
+            .select("id, social_account_id, status, submitted_at, reviewed_at, tier1_percentage, score")
             .in("social_account_id", allSocialAccountIds)
             .order("submitted_at", { ascending: false })
         : { data: [] };
@@ -491,17 +492,30 @@ export function CampaignAnalyticsTable({
   const getDemographicStatus = (item: AnalyticsData): 'none' | 'pending' | 'approved' | 'outdated' => {
     if (!item.demographic_submission) return 'none';
     const submission = item.demographic_submission;
-    const submittedDate = new Date(submission.submitted_at);
-    const daysSinceSubmission = Math.floor((Date.now() - submittedDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // If approved, use reviewed_at date for 7-day check
+    if (submission.status === 'approved') {
+      if (submission.reviewed_at) {
+        const reviewedDate = new Date(submission.reviewed_at);
+        const daysSinceReview = Math.floor((Date.now() - reviewedDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // If reviewed within 90 days, it's still valid
+        if (daysSinceReview <= 90) return 'approved';
+        return 'outdated';
+      }
+      return 'approved'; // No reviewed_at date, assume valid
+    }
 
-    // If older than 7 days, needs resubmission
-    if (daysSinceSubmission > 7) return 'outdated';
+    // If pending, use submitted_at for 7-day check
+    if (submission.status === 'pending') {
+      const submittedDate = new Date(submission.submitted_at);
+      const daysSinceSubmission = Math.floor((Date.now() - submittedDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // If pending for more than 7 days, it's outdated
+      if (daysSinceSubmission > 7) return 'outdated';
+      return 'pending';
+    }
 
-    // If pending review
-    if (submission.status === 'pending') return 'pending';
-
-    // If approved and within 7 days
-    if (submission.status === 'approved') return 'approved';
     return 'none';
   };
   const getDemographicIcon = (status: 'none' | 'pending' | 'approved' | 'outdated') => {
