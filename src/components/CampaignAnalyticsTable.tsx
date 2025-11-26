@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
@@ -454,7 +454,33 @@ export function CampaignAnalyticsTable({
         .select("id, platform, username, account_link, follower_count")
         .eq("user_id", item.user_id);
 
-      setUserSocialAccounts(socialAccounts || []);
+      if (socialAccounts && socialAccounts.length > 0) {
+        // Fetch demographic submissions for these accounts
+        const accountIds = socialAccounts.map(acc => acc.id);
+        const { data: submissions } = await supabase
+          .from("demographic_submissions")
+          .select("social_account_id, status, reviewed_at, score, tier1_percentage")
+          .in("social_account_id", accountIds)
+          .order("submitted_at", { ascending: false });
+
+        // Map submissions to accounts (get most recent per account)
+        const submissionsMap = new Map();
+        (submissions || []).forEach(sub => {
+          if (!submissionsMap.has(sub.social_account_id)) {
+            submissionsMap.set(sub.social_account_id, sub);
+          }
+        });
+
+        // Add demographic data to social accounts
+        const accountsWithDemographics = socialAccounts.map(acc => ({
+          ...acc,
+          demographic_submission: submissionsMap.get(acc.id) || null
+        }));
+
+        setUserSocialAccounts(accountsWithDemographics);
+      } else {
+        setUserSocialAccounts([]);
+      }
     } catch (error) {
       console.error("Error fetching user details:", error);
       toast.error("Failed to load user details");
@@ -2072,11 +2098,23 @@ export function CampaignAnalyticsTable({
                               return null;
                           }
                         })()}
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium text-white group-hover:underline">
                             @{account.username}
                           </p>
                           <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                          {account.demographic_submission && account.demographic_submission.status === 'approved' && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-emerald-400">
+                                Score: {account.demographic_submission.score || 'N/A'}
+                              </span>
+                              {account.demographic_submission.reviewed_at && (
+                                <span className="text-xs text-muted-foreground">
+                                  • Reviewed {format(new Date(account.demographic_submission.reviewed_at), 'MMM d, yyyy')}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       {account.follower_count > 0 && (
