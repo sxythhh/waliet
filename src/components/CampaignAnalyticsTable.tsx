@@ -224,42 +224,58 @@ export function CampaignAnalyticsTable({
       // Batch fetch all data at once for better performance
       const userIds = [...new Set((data || []).filter(item => item.user_id).map(item => item.user_id))];
 
-      if (userIds.length === 0) {
-        setAnalytics(data || []);
-        return;
-      }
-
-      // Fetch all required data in parallel for maximum efficiency
-      const [profilesResult, socialAccountsResult] = await Promise.all([
-        supabase.from("profiles").select("id, username, avatar_url").in("id", userIds),
-        supabase.from("social_account_campaigns").select(`
+      // Always fetch ALL social accounts for this campaign to match demographics
+      // This is critical for showing demographics even for unlinked accounts
+      const { data: allCampaignAccounts } = await supabase
+        .from("social_account_campaigns")
+        .select(`
           social_accounts!inner (
             id,
             platform,
             username,
             user_id
           )
-        `).eq("campaign_id", campaignId).in("social_accounts.user_id", userIds)
-      ]);
+        `)
+        .eq("campaign_id", campaignId);
 
-      const profilesMap = new Map((profilesResult.data || []).map(p => [p.id, p]));
-
-      // Create a map for quick lookup: user_id + platform + username -> account
+      // Create maps for matching by both user_id and username+platform
       const socialAccountsMap = new Map();
-      (socialAccountsResult.data || []).forEach((item: any) => {
+      const socialAccountsByUsernameMap = new Map();
+      
+      (allCampaignAccounts || []).forEach((item: any) => {
         const account = item.social_accounts;
-        const key = `${account.user_id}_${account.platform}_${account.username.toLowerCase()}`;
-        socialAccountsMap.set(key, account);
+        
+        // Map by user_id + platform + username (for linked accounts)
+        if (account.user_id) {
+          const key = `${account.user_id}_${account.platform}_${account.username.toLowerCase()}`;
+          socialAccountsMap.set(key, account);
+        }
+        
+        // Also map by platform + username ONLY (for unlinked accounts)
+        const usernameKey = `${account.platform}_${account.username.toLowerCase()}`;
+        socialAccountsByUsernameMap.set(usernameKey, account);
       });
 
       // Get all social account IDs for demographic submissions
-      const socialAccountIds = Array.from(socialAccountsMap.values()).map((acc: any) => acc.id);
+      const allSocialAccountIds = (allCampaignAccounts || []).map((item: any) => item.social_accounts.id);
 
-      // Fetch demographic submissions only if we have social accounts
-      const { data: allSubmissions } = socialAccountIds.length > 0 
-        ? await supabase.from("demographic_submissions").select("id, social_account_id, status, submitted_at, tier1_percentage, score").in("social_account_id", socialAccountIds).order("submitted_at", {
-          ascending: false
-        }) 
+      // Fetch profiles for linked accounts
+      const profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url")
+          .in("id", userIds);
+        (profiles || []).forEach(p => profilesMap.set(p.id, p));
+      }
+
+      // Fetch ALL demographic submissions for accounts in this campaign
+      const { data: allSubmissions } = allSocialAccountIds.length > 0 
+        ? await supabase
+            .from("demographic_submissions")
+            .select("id, social_account_id, status, submitted_at, tier1_percentage, score")
+            .in("social_account_id", allSocialAccountIds)
+            .order("submitted_at", { ascending: false })
         : { data: [] };
 
       // Group submissions by social_account_id and get most recent
@@ -272,18 +288,28 @@ export function CampaignAnalyticsTable({
 
       // Map everything together efficiently
       const analyticsWithProfiles = (data || []).map(item => {
-        if (!item.user_id) {
-          return {
-            ...item,
-            profiles: null,
-            social_account: null,
-            demographic_submission: null
-          };
+        let profile = null;
+        let account = null;
+        let submission = null;
+
+        if (item.user_id) {
+          // Try to match by user_id first (linked accounts)
+          profile = profilesMap.get(item.user_id);
+          const accountKey = `${item.user_id}_${item.platform}_${item.account_username.toLowerCase()}`;
+          account = socialAccountsMap.get(accountKey);
         }
-        const profile = profilesMap.get(item.user_id);
-        const accountKey = `${item.user_id}_${item.platform}_${item.account_username.toLowerCase()}`;
-        const account = socialAccountsMap.get(accountKey);
-        const submission = account ? submissionsMap.get(account.id) : null;
+
+        // If no match by user_id, try matching by username + platform (unlinked accounts)
+        if (!account) {
+          const usernameKey = `${item.platform}_${item.account_username.toLowerCase()}`;
+          account = socialAccountsByUsernameMap.get(usernameKey);
+        }
+
+        // Get demographic submission if we found a matching social account
+        if (account) {
+          submission = submissionsMap.get(account.id);
+        }
+
         return {
           ...item,
           profiles: profile || null,
@@ -291,6 +317,7 @@ export function CampaignAnalyticsTable({
           demographic_submission: submission || null
         };
       });
+
       setAnalytics(analyticsWithProfiles);
     } catch (error) {
       console.error("Error fetching analytics:", error);
