@@ -245,20 +245,24 @@ export function CampaignAnalyticsTable({
         .eq("campaign_id", campaignId);
 
       // Create maps for matching by both user_id and username+platform
+      // Helper to normalize usernames (remove leading @, trim, lowercase)
+      const normalizeUsername = (username: string) => username.trim().replace(/^@+/, '').toLowerCase();
+
       const socialAccountsMap = new Map();
       const socialAccountsByUsernameMap = new Map();
       
       (allCampaignAccounts || []).forEach((item: any) => {
         const account = item.social_accounts;
+        const normalizedUsername = normalizeUsername(account.username);
         
-        // Map by user_id + platform + username (for linked accounts)
+        // Map by user_id + platform + normalized username (for linked accounts)
         if (account.user_id) {
-          const key = `${account.user_id}_${account.platform}_${account.username.toLowerCase()}`;
+          const key = `${account.user_id}_${account.platform}_${normalizedUsername}`;
           socialAccountsMap.set(key, account);
         }
         
-        // Also map by platform + username ONLY (for unlinked accounts)
-        const usernameKey = `${account.platform}_${account.username.toLowerCase()}`;
+        // Also map by platform + normalized username ONLY (for unlinked/unaligned accounts)
+        const usernameKey = `${account.platform}_${normalizedUsername}`;
         socialAccountsByUsernameMap.set(usernameKey, account);
       });
 
@@ -298,16 +302,18 @@ export function CampaignAnalyticsTable({
         let account = null;
         let submission = null;
 
+        const normalizedAnalyticsUsername = normalizeUsername(item.account_username);
+
         if (item.user_id) {
           // Try to match by user_id first (linked accounts)
           profile = profilesMap.get(item.user_id);
-          const accountKey = `${item.user_id}_${item.platform}_${item.account_username.toLowerCase()}`;
+          const accountKey = `${item.user_id}_${item.platform}_${normalizedAnalyticsUsername}`;
           account = socialAccountsMap.get(accountKey);
         }
 
-        // If no match by user_id, try matching by username + platform (unlinked accounts)
+        // If no match by user_id, try matching by username + platform (unlinked or not yet linked in analytics)
         if (!account) {
-          const usernameKey = `${item.platform}_${item.account_username.toLowerCase()}`;
+          const usernameKey = `${item.platform}_${normalizedAnalyticsUsername}`;
           account = socialAccountsByUsernameMap.get(usernameKey);
         }
 
