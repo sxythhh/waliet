@@ -543,7 +543,8 @@ export default function AdminUsers() {
         .from("social_account_campaigns")
         .insert({
           social_account_id: selectedSocialAccountForAdd,
-          campaign_id: selectedCampaignForAdd
+          campaign_id: selectedCampaignForAdd,
+          user_id: selectedUser.id
         });
 
       if (linkError) throw linkError;

@@ -275,6 +275,7 @@ export default function CampaignJoin() {
             .insert({
               social_account_id: accountId,
               campaign_id: campaign.id,
+              user_id: user.id,
             });
 
           if (linkError) throw linkError;

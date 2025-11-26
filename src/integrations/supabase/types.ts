@@ -1466,6 +1466,7 @@ export type Database = {
           created_at: string
           id: string
           social_account_id: string
+          user_id: string
         }
         Insert: {
           campaign_id: string
@@ -1473,6 +1474,7 @@ export type Database = {
           created_at?: string
           id?: string
           social_account_id: string
+          user_id: string
         }
         Update: {
           campaign_id?: string
@@ -1480,6 +1482,7 @@ export type Database = {
           created_at?: string
           id?: string
           social_account_id?: string
+          user_id?: string
         }
         Relationships: [
           {
