@@ -155,15 +155,36 @@ export function CampaignAnalyticsTable({
     fetchCampaignRPM();
     fetchTransactions();
 
-    // Set up real-time subscription for demographic submissions
-    const demographicChannel = supabase.channel('demographic-submissions-changes').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'demographic_submissions'
-    }, payload => {
-      console.log('Demographic submission changed:', payload);
-      fetchAnalytics(); // Refresh analytics when demographics change
-    }).subscribe();
+    // Set up optimized real-time subscription - only for relevant demographic submissions
+    // We'll refetch analytics only when a submission changes for users in this campaign
+    const demographicChannel = supabase
+      .channel(`demographic-submissions-${campaignId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'demographic_submissions'
+      }, async (payload) => {
+        // Check if this submission is relevant to our campaign
+        const newRecord = payload.new as any;
+        const oldRecord = payload.old as any;
+        const socialAccountId = newRecord?.social_account_id || oldRecord?.social_account_id;
+        if (!socialAccountId) return;
+
+        // Check if this social account is in our campaign
+        const { data: isRelevant } = await supabase
+          .from('social_account_campaigns')
+          .select('id')
+          .eq('campaign_id', campaignId)
+          .eq('social_account_id', socialAccountId)
+          .single();
+
+        if (isRelevant) {
+          console.log('Relevant demographic submission changed, refreshing analytics');
+          fetchAnalytics();
+        }
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(demographicChannel);
     };
@@ -203,31 +224,29 @@ export function CampaignAnalyticsTable({
       // Batch fetch all data at once for better performance
       const userIds = [...new Set((data || []).filter(item => item.user_id).map(item => item.user_id))];
 
-      // Fetch all profiles at once
-      const {
-        data: profiles
-      } = userIds.length > 0 ? await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds) : {
-        data: []
-      };
-      const profilesMap = new Map((profiles || []).map(p => [p.id, p]));
+      if (userIds.length === 0) {
+        setAnalytics(data || []);
+        return;
+      }
 
-      // Fetch all social accounts at once
-      const {
-        data: socialAccounts
-      } = userIds.length > 0 ? await supabase.from("social_account_campaigns").select(`
-              social_accounts!inner (
-                id,
-                platform,
-                username,
-                user_id
-              )
-            `).eq("campaign_id", campaignId).in("social_accounts.user_id", userIds) : {
-        data: []
-      };
+      // Fetch all required data in parallel for maximum efficiency
+      const [profilesResult, socialAccountsResult] = await Promise.all([
+        supabase.from("profiles").select("id, username, avatar_url").in("id", userIds),
+        supabase.from("social_account_campaigns").select(`
+          social_accounts!inner (
+            id,
+            platform,
+            username,
+            user_id
+          )
+        `).eq("campaign_id", campaignId).in("social_accounts.user_id", userIds)
+      ]);
+
+      const profilesMap = new Map((profilesResult.data || []).map(p => [p.id, p]));
 
       // Create a map for quick lookup: user_id + platform + username -> account
       const socialAccountsMap = new Map();
-      (socialAccounts || []).forEach((item: any) => {
+      (socialAccountsResult.data || []).forEach((item: any) => {
         const account = item.social_accounts;
         const key = `${account.user_id}_${account.platform}_${account.username.toLowerCase()}`;
         socialAccountsMap.set(key, account);
@@ -236,14 +255,12 @@ export function CampaignAnalyticsTable({
       // Get all social account IDs for demographic submissions
       const socialAccountIds = Array.from(socialAccountsMap.values()).map((acc: any) => acc.id);
 
-      // Fetch all demographic submissions at once
-      const {
-        data: allSubmissions
-      } = socialAccountIds.length > 0 ? await supabase.from("demographic_submissions").select("id, social_account_id, status, submitted_at, tier1_percentage, score").in("social_account_id", socialAccountIds).order("submitted_at", {
-        ascending: false
-      }) : {
-        data: []
-      };
+      // Fetch demographic submissions only if we have social accounts
+      const { data: allSubmissions } = socialAccountIds.length > 0 
+        ? await supabase.from("demographic_submissions").select("id, social_account_id, status, submitted_at, tier1_percentage, score").in("social_account_id", socialAccountIds).order("submitted_at", {
+          ascending: false
+        }) 
+        : { data: [] };
 
       // Group submissions by social_account_id and get most recent
       const submissionsMap = new Map();

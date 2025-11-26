@@ -27,17 +27,36 @@ export function ApiActivityTab() {
   const fetchApiActivity = async () => {
     try {
       setLoading(true);
+      
+      // Fetch all data in parallel with only required fields - much more efficient
+      const [transactionsResult, submissionsResult, applicationsResult, payoutsResult] = await Promise.all([
+        supabase
+          .from("wallet_transactions")
+          .select("created_at, description, type, status")
+          .order("created_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("campaign_submissions")
+          .select("submitted_at, reviewed_at, status")
+          .order("submitted_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("bounty_applications")
+          .select("applied_at, status")
+          .order("applied_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("payout_requests")
+          .select("requested_at, payout_method, status")
+          .order("requested_at", { ascending: false })
+          .limit(20)
+      ]);
+
       const allLogs: ApiLog[] = [];
 
-      // Fetch wallet transactions
-      const { data: transactions } = await supabase
-        .from("wallet_transactions")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (transactions) {
-        allLogs.push(...transactions.map(t => ({
+      // Process transactions
+      if (transactionsResult.data) {
+        allLogs.push(...transactionsResult.data.map(t => ({
           timestamp: new Date(t.created_at).getTime(),
           type: "Transaction",
           path: t.description || t.type,
@@ -45,15 +64,9 @@ export function ApiActivityTab() {
         })));
       }
 
-      // Fetch campaign submissions
-      const { data: submissions } = await supabase
-        .from("campaign_submissions")
-        .select("*")
-        .order("submitted_at", { ascending: false })
-        .limit(20);
-
-      if (submissions) {
-        allLogs.push(...submissions.map(s => ({
+      // Process submissions
+      if (submissionsResult.data) {
+        allLogs.push(...submissionsResult.data.map(s => ({
           timestamp: new Date(s.submitted_at || s.reviewed_at || new Date()).getTime(),
           type: "Submission",
           path: "Content submission",
@@ -61,15 +74,9 @@ export function ApiActivityTab() {
         })));
       }
 
-      // Fetch bounty applications
-      const { data: applications } = await supabase
-        .from("bounty_applications")
-        .select("*")
-        .order("applied_at", { ascending: false })
-        .limit(20);
-
-      if (applications) {
-        allLogs.push(...applications.map(a => ({
+      // Process applications
+      if (applicationsResult.data) {
+        allLogs.push(...applicationsResult.data.map(a => ({
           timestamp: new Date(a.applied_at).getTime(),
           type: "Bounty App",
           path: "Bounty application",
@@ -77,15 +84,9 @@ export function ApiActivityTab() {
         })));
       }
 
-      // Fetch payout requests
-      const { data: payouts } = await supabase
-        .from("payout_requests")
-        .select("*")
-        .order("requested_at", { ascending: false })
-        .limit(20);
-
-      if (payouts) {
-        allLogs.push(...payouts.map(p => ({
+      // Process payouts
+      if (payoutsResult.data) {
+        allLogs.push(...payoutsResult.data.map(p => ({
           timestamp: new Date(p.requested_at).getTime(),
           type: "Payout",
           path: `${p.payout_method} request`,
