@@ -171,6 +171,13 @@ export function CreateCampaignDialog({
     try {
       const bannerUrl = await uploadBanner();
 
+      // Fetch brand logo URL
+      const { data: brandData } = await supabase
+        .from('brands')
+        .select('logo_url')
+        .eq('id', brandId)
+        .single();
+
       // Generate slug from title
       const generateSlug = (title: string, id?: string) => {
         const baseSlug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
@@ -201,6 +208,7 @@ export function CreateCampaignDialog({
         analytics_url: values.analytics_url || null,
         brand_id: brandId,
         brand_name: brandName,
+        brand_logo_url: brandData?.logo_url || null,
         banner_url: bannerUrl,
         status: isCampaignEnded ? "ended" : "active",
         allowed_platforms: values.allowed_platforms,
