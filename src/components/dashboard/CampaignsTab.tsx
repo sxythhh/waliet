@@ -661,47 +661,55 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
     
     {/* Link Account Options Dialog */}
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Link Account to Campaign</DialogTitle>
-          <DialogDescription>
-            Choose how you want to link an account to this campaign
+      <DialogContent className="sm:max-w-lg border-0 bg-gradient-to-b from-background to-muted/20">
+        <DialogHeader className="space-y-3 pb-2">
+          <DialogTitle className="text-2xl font-bold tracking-tight">Link Your Account</DialogTitle>
+          <DialogDescription className="text-base">
+            Choose how you'd like to connect your social media account
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 py-4">
-          <Button variant="ghost" className="group w-full justify-start h-auto py-4 px-4 border-0 hover:bg-accent/50" onClick={() => {
+        <div className="grid gap-4 py-6">
+          <button 
+            onClick={() => {
               setDialogOpen(false);
               navigate("/dashboard?tab=profile");
-            }}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Link2 className="h-5 w-5 text-primary" />
+            }}
+            className="group relative overflow-hidden rounded-2xl border-2 border-border/50 bg-card p-6 text-left transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="relative flex items-start gap-4">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
+                <Link2 className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
               </div>
-              <div className="text-left">
-                <div className="font-semibold group-hover:text-white">Link Existing Account</div>
-                <div className="text-xs text-muted-foreground group-hover:text-white/80">
-                  Use an account you've already connected
-                </div>
+              <div className="flex-1 space-y-1">
+                <h3 className="text-lg font-semibold tracking-tight">Link Existing Account</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Choose from your already connected social media accounts
+                </p>
               </div>
             </div>
-          </Button>
+          </button>
           
-          <Button variant="ghost" className="group w-full justify-start h-auto py-4 px-4 border-0 hover:bg-accent/50" onClick={() => {
+          <button 
+            onClick={() => {
               setDialogOpen(false);
               setAddAccountDialogOpen(true);
-            }}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <UserPlus className="h-5 w-5 text-primary" />
+            }}
+            className="group relative overflow-hidden rounded-2xl border-2 border-border/50 bg-card p-6 text-left transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="relative flex items-start gap-4">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
+                <UserPlus className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
               </div>
-              <div className="text-left">
-                <div className="font-semibold group-hover:text-white">Add New Account</div>
-                <div className="text-xs text-muted-foreground group-hover:text-white/80">
-                  Connect and verify a new social account
-                </div>
+              <div className="flex-1 space-y-1">
+                <h3 className="text-lg font-semibold tracking-tight">Add New Account</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Connect and verify a new social media account
+                </p>
               </div>
             </div>
-          </Button>
+          </button>
         </div>
       </DialogContent>
     </Dialog>
