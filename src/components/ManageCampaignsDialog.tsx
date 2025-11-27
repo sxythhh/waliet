@@ -116,16 +116,40 @@ export function ManageCampaignsDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
-      const { error } = await supabase
+      // Check for existing disconnected record
+      const { data: existingRecord } = await supabase
         .from("social_account_campaigns")
-        .insert({
-          social_account_id: accountId,
-          campaign_id: campaignId,
-          user_id: user.id,
-          status: 'active',
-        });
-
-      if (error) throw error;
+        .select("id")
+        .eq("social_account_id", accountId)
+        .eq("campaign_id", campaignId)
+        .eq("status", "disconnected")
+        .maybeSingle();
+      
+      if (existingRecord) {
+        // Reactivate existing record
+        const { error } = await supabase
+          .from("social_account_campaigns")
+          .update({ 
+            status: 'active',
+            disconnected_at: null,
+            connected_at: new Date().toISOString()
+          })
+          .eq("id", existingRecord.id);
+        
+        if (error) throw error;
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from("social_account_campaigns")
+          .insert({
+            social_account_id: accountId,
+            campaign_id: campaignId,
+            user_id: user.id,
+            status: 'active',
+          });
+        
+        if (error) throw error;
+      }
 
       toast.success("Campaign linked successfully");
       fetchCampaigns();

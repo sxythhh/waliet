@@ -124,15 +124,37 @@ export function ManageAccountDialog({
       } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      const {
-        error
-      } = await supabase.from('social_account_campaigns').insert({
-        social_account_id: account.id,
-        campaign_id: campaignId,
-        user_id: user.id,
-        status: 'active'
-      });
-      if (error) throw error;
+      // Check for existing disconnected record
+      const { data: existingRecord } = await supabase
+        .from('social_account_campaigns')
+        .select('id')
+        .eq('social_account_id', account.id)
+        .eq('campaign_id', campaignId)
+        .eq('status', 'disconnected')
+        .maybeSingle();
+      
+      if (existingRecord) {
+        // Reactivate existing record
+        const { error } = await supabase
+          .from('social_account_campaigns')
+          .update({ 
+            status: 'active',
+            disconnected_at: null,
+            connected_at: new Date().toISOString()
+          })
+          .eq('id', existingRecord.id);
+        
+        if (error) throw error;
+      } else {
+        // Insert new record
+        const { error } = await supabase.from('social_account_campaigns').insert({
+          social_account_id: account.id,
+          campaign_id: campaignId,
+          user_id: user.id,
+          status: 'active'
+        });
+        if (error) throw error;
+      }
 
       // Track account in Shortimize
       try {
