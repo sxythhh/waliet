@@ -22,6 +22,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Skeleton } from "@/components/ui/skeleton";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
+import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
+
 interface Campaign {
   id: string;
   title: string;
@@ -33,9 +35,12 @@ interface Campaign {
   rpm_rate: number;
   status: string;
   start_date: string | null;
+  end_date: string | null;
   banner_url: string | null;
   submission_status?: string;
   is_infinite_budget?: boolean;
+  allowed_platforms: string[] | null;
+  created_at: string;
   connected_accounts?: Array<{
     id: string;
     platform: string;
@@ -78,6 +83,8 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
   const [leavingCampaign, setLeavingCampaign] = useState(false);
   const [manageAccountDialogOpen, setManageAccountDialogOpen] = useState(false);
   const [submitDemographicsDialogOpen, setSubmitDemographicsDialogOpen] = useState(false);
+  const [campaignDetailsDialogOpen, setCampaignDetailsDialogOpen] = useState(false);
+  const [selectedCampaignForDetails, setSelectedCampaignForDetails] = useState<Campaign | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<{
     id: string;
     platform: string;
@@ -527,7 +534,8 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
             isEnded
           });
           if (!isPending && !isEnded) {
-            navigate(`/campaign/${campaign.id}`);
+            setSelectedCampaignForDetails(campaign);
+            setCampaignDetailsDialogOpen(true);
           }
         }}>
             {/* Banner Image - Top Section */}
@@ -758,6 +766,11 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
         }} />
       </>}
     
+      <CampaignDetailsDialog
+        campaign={selectedCampaignForDetails}
+        open={campaignDetailsDialogOpen}
+        onOpenChange={setCampaignDetailsDialogOpen}
+      />
       </div>
     </div>;
 }
