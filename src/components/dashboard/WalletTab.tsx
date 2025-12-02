@@ -574,12 +574,11 @@ export function WalletTab() {
       const logoImg = new Image();
       logoImg.crossOrigin = "anonymous";
       logoImg.src = viralityGhostLogo;
-      
       await new Promise((resolve, reject) => {
         logoImg.onload = resolve;
         logoImg.onerror = reject;
       });
-      
+
       // Convert Virality logo to base64
       const logoCanvas = document.createElement('canvas');
       logoCanvas.width = logoImg.width;
@@ -589,7 +588,7 @@ export function WalletTab() {
         logoCtx.drawImage(logoImg, 0, 0);
       }
       const logoBase64 = logoCanvas.toDataURL('image/png');
-      
+
       // Load and convert brand logo if available
       let brandLogoBase64 = '';
       if (transaction.campaign?.brand_logo_url) {
@@ -597,12 +596,10 @@ export function WalletTab() {
           const brandLogoImg = new Image();
           brandLogoImg.crossOrigin = "anonymous";
           brandLogoImg.src = transaction.campaign.brand_logo_url;
-          
           await new Promise((resolve, reject) => {
             brandLogoImg.onload = resolve;
             brandLogoImg.onerror = () => resolve(null); // Continue without brand logo if it fails
           });
-          
           const brandLogoCanvas = document.createElement('canvas');
           brandLogoCanvas.width = brandLogoImg.width;
           brandLogoCanvas.height = brandLogoImg.height;
@@ -615,7 +612,7 @@ export function WalletTab() {
           console.log('Failed to load brand logo:', e);
         }
       }
-      
+
       // Create SVG with higher resolution and black background
       const svg = `
         <svg width="1600" height="800" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -667,29 +664,27 @@ export function WalletTab() {
       `;
 
       // Convert SVG to blob
-      const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-      
+      const svgBlob = new Blob([svg], {
+        type: 'image/svg+xml;charset=utf-8'
+      });
+
       // Create canvas to convert to PNG
       const canvas = document.createElement('canvas');
       canvas.width = 1600;
       canvas.height = 800;
       const ctx = canvas.getContext('2d');
-      
       if (!ctx) return;
-      
       const img = new Image();
       const url = URL.createObjectURL(svgBlob);
-      
       img.onload = () => {
         ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
-        
+
         // Convert to data URL and show dialog
         const imageDataUrl = canvas.toDataURL('image/png');
         setGeneratedImageUrl(imageDataUrl);
         setShareDialogOpen(true);
       };
-      
       img.src = url;
     } catch (error) {
       console.error('Error generating image:', error);
@@ -700,35 +695,29 @@ export function WalletTab() {
       });
     }
   };
-
   const handleDownloadImage = () => {
     if (!generatedImageUrl) return;
-    
     const link = document.createElement('a');
     link.download = `virality-transaction-${Date.now()}.png`;
     link.href = generatedImageUrl;
     link.click();
-    
     toast({
       title: "Transaction Image Downloaded",
       description: "Your transaction image has been saved successfully"
     });
   };
-
   const handleShareOnX = () => {
     if (!generatedImageUrl) return;
-    
+
     // Open Twitter share dialog
     const tweetText = encodeURIComponent("Check out my Virality transaction! 💰");
     const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
     window.open(twitterUrl, '_blank', 'width=550,height=420');
-    
     toast({
       title: "Share on X",
       description: "Opening X share dialog. You can attach the downloaded image to your post."
     });
   };
-
   const handleConfirmPayout = async () => {
     if (isSubmittingPayout) return; // Prevent duplicate submissions
 
@@ -763,7 +752,6 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-
     const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
     if (!selectedMethod) return;
 
@@ -870,11 +858,9 @@ export function WalletTab() {
         balance: wallet.balance,
         total_withdrawn: wallet.total_withdrawn
       }).eq("id", wallet.id);
-      
       if (rollbackError) {
         console.error('Failed to rollback wallet update:', rollbackError);
       }
-
       toast({
         variant: "destructive",
         title: "Error",
@@ -1117,32 +1103,27 @@ export function WalletTab() {
                           </TableCell>
                            <TableCell className="text-right">
                              <span className="text-sm text-muted-foreground whitespace-nowrap" style={{
-                       letterSpacing: '-0.5px'
-                     }}>
+                      letterSpacing: '-0.5px'
+                    }}>
                                {(() => {
-                         const now = new Date();
-                         const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
-                         if (diffInHours < 24) {
-                           if (diffInHours < 1) {
-                             const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
-                             return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
-                           }
-                           return `${diffInHours}h ago`;
-                         }
-                         return format(transaction.date, 'MMM dd, yyyy');
-                       })()}
+                        const now = new Date();
+                        const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
+                        if (diffInHours < 24) {
+                          if (diffInHours < 1) {
+                            const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
+                            return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
+                          }
+                          return `${diffInHours}h ago`;
+                        }
+                        return format(transaction.date, 'MMM dd, yyyy');
+                      })()}
                              </span>
                            </TableCell>
                            <TableCell className="text-right">
-                             <Button
-                               variant="ghost"
-                               size="icon"
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 generateTransactionImage(transaction);
-                               }}
-                              className="h-8 w-8"
-                            >
+                             <Button variant="ghost" size="icon" onClick={e => {
+                      e.stopPropagation();
+                      generateTransactionImage(transaction);
+                    }} className="h-8 w-8">
                               <Upload className="h-4 w-4" />
                             </Button>
                            </TableCell>
@@ -1439,14 +1420,12 @@ export function WalletTab() {
               const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
               const isPayPal = selectedMethod?.method === 'paypal';
               const isUPI = selectedMethod?.method === 'upi';
-              
               if (isPayPal || isUPI) {
                 return <>
                   <p className="text-muted-foreground">24h wait time</p>
                   <p className="font-medium">No fees</p>
                 </>;
               }
-              
               return <>
                 <p className="text-muted-foreground">2-3 business day wait time</p>
                 <p className="text-xs text-muted-foreground mb-2">(Payouts will not be operated on Saturday & Sunday)</p>
@@ -1457,29 +1436,25 @@ export function WalletTab() {
 
             {/* Fee Breakdown and Net Amount */}
             {payoutAmount && parseFloat(payoutAmount) >= 20 && (() => {
-              const amount = parseFloat(payoutAmount);
-              const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
-              const isPayPal = selectedMethod?.method === 'paypal';
-              const isUPI = selectedMethod?.method === 'upi';
-              
-              let netAmount;
-              let feeAmount;
-              
-              if (isPayPal || isUPI) {
-                // No fees for PayPal and UPI
-                feeAmount = 0;
-                netAmount = amount;
-              } else {
-                // First apply 0.75% fee
-                const percentageFee = amount * 0.0075;
-                const afterPercentage = amount - percentageFee;
-                // Then subtract $1
-                netAmount = afterPercentage - 1;
-                feeAmount = percentageFee + 1;
-              }
-              
-              return (
-                <div className="p-4 bg-card rounded-lg border border-border space-y-2">
+            const amount = parseFloat(payoutAmount);
+            const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+            const isPayPal = selectedMethod?.method === 'paypal';
+            const isUPI = selectedMethod?.method === 'upi';
+            let netAmount;
+            let feeAmount;
+            if (isPayPal || isUPI) {
+              // No fees for PayPal and UPI
+              feeAmount = 0;
+              netAmount = amount;
+            } else {
+              // First apply 0.75% fee
+              const percentageFee = amount * 0.0075;
+              const afterPercentage = amount - percentageFee;
+              // Then subtract $1
+              netAmount = afterPercentage - 1;
+              feeAmount = percentageFee + 1;
+            }
+            return <div className="p-4 bg-card rounded-lg border border-border space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Withdrawal amount</span>
                     <span className="font-medium">${amount.toFixed(2)}</span>
@@ -1493,9 +1468,8 @@ export function WalletTab() {
                     <span className="font-semibold">You'll receive</span>
                     <span className="font-bold text-lg text-primary">${netAmount.toFixed(2)}</span>
                   </div>
-                </div>
-              );
-            })()}
+                </div>;
+          })()}
           </div>
 
           <DialogFooter>
@@ -1795,17 +1769,7 @@ export function WalletTab() {
                 <Separator />
 
                 {/* Additional Info */}
-                <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
-                  <div className="flex items-start gap-3">
-                    <DollarSign className="h-5 w-5 text-primary mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold mb-1">Need Help?</h4>
-                      <p className="text-xs text-muted-foreground">
-                        If you have questions about this transaction, contact our support team with the transaction ID above.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                
               </div>
             </div>}
         </SheetContent>
@@ -1826,32 +1790,19 @@ export function WalletTab() {
           
           <div className="space-y-4">
             {/* Generated Image */}
-            {generatedImageUrl && (
-              <div className="rounded-lg overflow-hidden border border-border">
-                <img 
-                  src={generatedImageUrl} 
-                  alt="Transaction" 
-                  className="w-full h-auto"
-                />
-              </div>
-            )}
+            {generatedImageUrl && <div className="rounded-lg overflow-hidden border border-border">
+                <img src={generatedImageUrl} alt="Transaction" className="w-full h-auto" />
+              </div>}
             
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                onClick={handleDownloadImage}
-                className="gap-2"
-              >
+              <Button variant="outline" onClick={handleDownloadImage} className="gap-2">
                 <Copy className="h-4 w-4" />
                 Download Image
               </Button>
-              <Button
-                onClick={handleShareOnX}
-                className="gap-2 bg-black hover:bg-black/90 text-white"
-              >
+              <Button onClick={handleShareOnX} className="gap-2 bg-black hover:bg-black/90 text-white">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
                 Share on X
               </Button>
