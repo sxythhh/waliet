@@ -23,7 +23,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
-
 interface Campaign {
   id: string;
   title: string;
@@ -47,7 +46,6 @@ interface Campaign {
     username: string;
   }>;
 }
-
 interface BoostApplication {
   id: string;
   video_url: string;
@@ -66,12 +64,12 @@ interface BoostApplication {
     };
   };
 }
-
 interface CampaignsTabProps {
   onOpenPrivateDialog: () => void;
 }
-
-export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
+export function CampaignsTab({
+  onOpenPrivateDialog
+}: CampaignsTabProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [boostApplications, setBoostApplications] = useState<BoostApplication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,56 +114,49 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
     fetchCampaigns();
     fetchBoostApplications();
   }, []);
-
   const fetchBoostApplications = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) return;
-
-      const { data, error } = await supabase
-        .from('bounty_applications')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('applied_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('bounty_applications').select('*').eq('user_id', session.user.id).order('applied_at', {
+        ascending: false
+      });
       if (error) throw error;
 
       // Fetch boost campaign details for each application
-      const applicationsWithDetails = await Promise.all(
-        (data || []).map(async (app) => {
-          const { data: campaign } = await supabase
-            .from('bounty_campaigns')
-            .select(`
+      const applicationsWithDetails = await Promise.all((data || []).map(async app => {
+        const {
+          data: campaign
+        } = await supabase.from('bounty_campaigns').select(`
               id,
               title,
               monthly_retainer,
               videos_per_month,
               banner_url,
               brand_id
-            `)
-            .eq('id', app.bounty_campaign_id)
-            .single();
-
-          let brandData = null;
-          if (campaign?.brand_id) {
-            const { data: brand } = await supabase
-              .from('brands')
-              .select('name, logo_url')
-              .eq('id', campaign.brand_id)
-              .single();
-            brandData = brand;
-          }
-
-          return {
-            ...app,
-            boost_campaigns: campaign ? {
-              ...campaign,
-              brands: brandData
-            } : null
-          };
-        })
-      );
-
+            `).eq('id', app.bounty_campaign_id).single();
+        let brandData = null;
+        if (campaign?.brand_id) {
+          const {
+            data: brand
+          } = await supabase.from('brands').select('name, logo_url').eq('id', campaign.brand_id).single();
+          brandData = brand;
+        }
+        return {
+          ...app,
+          boost_campaigns: campaign ? {
+            ...campaign,
+            brands: brandData
+          } : null
+        };
+      }));
       setBoostApplications(applicationsWithDetails.filter(app => app.boost_campaigns) as any);
     } catch (error: any) {
       console.error("Error fetching boost applications:", error);
@@ -284,22 +275,17 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
       if (error) throw error;
 
       // Get ALL user's social accounts
-      const { data: userAccounts } = await supabase
-        .from("social_accounts")
-        .select("id")
-        .eq("user_id", user.id);
+      const {
+        data: userAccounts
+      } = await supabase.from("social_accounts").select("id").eq("user_id", user.id);
 
       // Disconnect ALL social account campaign links for this campaign and user
       if (userAccounts && userAccounts.length > 0) {
         const accountIds = userAccounts.map(acc => acc.id);
-        await supabase
-          .from("social_account_campaigns")
-          .update({ 
-            status: 'disconnected',
-            disconnected_at: new Date().toISOString()
-          })
-          .eq("campaign_id", selectedCampaignId)
-          .in("social_account_id", accountIds);
+        await supabase.from("social_account_campaigns").update({
+          status: 'disconnected',
+          disconnected_at: new Date().toISOString()
+        }).eq("campaign_id", selectedCampaignId).in("social_account_id", accountIds);
       }
       toast({
         title: "Application withdrawn",
@@ -354,13 +340,14 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
         for (const link of linkedAccounts) {
           try {
             console.log('Stopping Shortimize tracking for account...');
-            const { error: untrackError } = await supabase.functions.invoke('untrack-shortimize-account', {
+            const {
+              error: untrackError
+            } = await supabase.functions.invoke('untrack-shortimize-account', {
               body: {
                 campaignId: selectedCampaignId,
                 socialAccountId: link.social_account_id
               }
             });
-            
             if (untrackError) {
               console.error('Error stopping tracking:', untrackError);
             }
@@ -373,7 +360,7 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
       // 4. Disconnect all social accounts from this campaign in junction table
       const {
         error: unlinkError
-      } = await supabase.from("social_account_campaigns").update({ 
+      } = await supabase.from("social_account_campaigns").update({
         status: 'disconnected',
         disconnected_at: new Date().toISOString()
       }).eq("campaign_id", selectedCampaignId).in("social_account_id", linkedAccounts?.map(l => l.social_account_id) || []);
@@ -386,7 +373,6 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
         campaign_id: null
       }).eq("campaign_id", selectedCampaignId).eq("user_id", user.id);
       if (accountError) throw accountError;
-      
       toast({
         title: "Left Campaign",
         description: "You have successfully left this campaign"
@@ -435,44 +421,27 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
       {/* Header with Actions */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">My Campaigns</h2>
-        <Button onClick={onOpenPrivateDialog} variant="outline" size="sm">
+        <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="border-black/0">
           Join Private Campaign
         </Button>
       </div>
 
       {/* Boost Applications Section */}
-      {boostApplications.length > 0 && (
-        <div className="space-y-3">
+      {boostApplications.length > 0 && <div className="space-y-3">
           <h3 className="text-lg font-semibold text-muted-foreground">Boost Applications</h3>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            {boostApplications.map((application) => (
-              <Card
-                key={application.id}
-                className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border"
-              >
+            {boostApplications.map(application => <Card key={application.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border">
                 {/* Banner Image */}
-                {application.boost_campaigns.banner_url && (
-                  <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                    <img
-                      src={application.boost_campaigns.banner_url}
-                      alt={application.boost_campaigns.title}
-                      className="w-full h-full object-cover object-center"
-                    />
-                  </div>
-                )}
+                {application.boost_campaigns.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                    <img src={application.boost_campaigns.banner_url} alt={application.boost_campaigns.title} className="w-full h-full object-cover object-center" />
+                  </div>}
 
                 <CardContent className="p-4 flex-1 flex flex-col gap-3">
                   {/* Brand Logo + Title */}
                   <div className="flex items-start gap-3">
-                    {application.boost_campaigns.brands?.logo_url && (
-                      <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
-                        <img
-                          src={application.boost_campaigns.brands.logo_url}
-                          alt={application.boost_campaigns.brands.name || ''}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
+                    {application.boost_campaigns.brands?.logo_url && <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
+                        <img src={application.boost_campaigns.brands.logo_url} alt={application.boost_campaigns.brands.name || ''} className="w-full h-full object-cover" />
+                      </div>}
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
                         {application.boost_campaigns.title}
@@ -497,27 +466,16 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
 
                   {/* Status Badge */}
                   <div className="mt-auto pt-2">
-                    <Badge
-                      variant={
-                        application.status === 'accepted'
-                          ? 'default'
-                          : application.status === 'rejected'
-                          ? 'destructive'
-                          : 'secondary'
-                      }
-                      className="w-full justify-center"
-                    >
+                    <Badge variant={application.status === 'accepted' ? 'default' : application.status === 'rejected' ? 'destructive' : 'secondary'} className="w-full justify-center">
                       {application.status === 'pending' && 'Pending Review'}
                       {application.status === 'accepted' && 'Accepted'}
                       {application.status === 'rejected' && 'Rejected'}
                     </Badge>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Campaigns Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
@@ -650,7 +608,7 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
                   <Button variant="ghost" size="sm" onClick={e => {
                 e.stopPropagation();
                 setDialogOpen(true);
-              }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+              }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-md">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Link Account
                   </Button>
@@ -669,13 +627,10 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-6">
-          <button 
-            onClick={() => {
+          <button onClick={() => {
               setDialogOpen(false);
               navigate("/dashboard?tab=profile");
-            }}
-            className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1"
-          >
+            }} className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1">
             <div className="relative flex items-start gap-4">
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                 <Link2 className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
@@ -689,13 +644,10 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
             </div>
           </button>
           
-          <button 
-            onClick={() => {
+          <button onClick={() => {
               setDialogOpen(false);
               setAddAccountDialogOpen(true);
-            }}
-            className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1"
-          >
+            }} className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1">
             <div className="relative flex items-start gap-4">
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                 <UserPlus className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
@@ -772,11 +724,7 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
         }} />
       </>}
     
-      <CampaignDetailsDialog
-        campaign={selectedCampaignForDetails}
-        open={campaignDetailsDialogOpen}
-        onOpenChange={setCampaignDetailsDialogOpen}
-      />
+      <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} />
       </div>
     </div>;
 }
