@@ -286,7 +286,21 @@ export function ManageAccountDialog({
                   {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-destructive" />}
                   {!demographicStatus && <AlertCircle className="h-4 w-4 text-destructive" />}
                 </div>
-                <p className="text-sm text-muted-foreground capitalize">{account.platform}</p>
+                <p className="text-sm text-muted-foreground">
+                  {!demographicStatus ? (
+                    "No demographics submitted - submission required"
+                  ) : demographicStatus === 'pending' ? (
+                    "Demographics under review"
+                  ) : demographicStatus === 'approved' ? (
+                    daysUntilNext !== null && daysUntilNext > 0 ? (
+                      `Demographics approved - next due in ${daysUntilNext} days`
+                    ) : (
+                      "Demographics approved"
+                    )
+                  ) : (
+                    "Demographics rejected - resubmission required"
+                  )}
+                </p>
               </div>
               {account.account_link && <Button variant="secondary" size="sm" onClick={() => window.open(account.account_link!, '_blank')} className="bg-muted border-0">
                   View Profile
