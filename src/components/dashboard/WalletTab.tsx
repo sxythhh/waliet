@@ -1488,38 +1488,10 @@ export function WalletTab() {
         <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto">
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Header */}
-              <div className="p-6 pb-8 border-b sticky top-0 z-10 bg-background">
-                {/* Icon */}
-                
-
-                {/* Type Badge */}
-                
-
-                {/* Amount */}
-                <div className="mb-2">
-                  {selectedTransaction.type === 'withdrawal' ? <>
-                      <div className="flex items-center justify-center mb-3">
-                      <div className={`w-16 h-16 rounded-full ${selectedTransaction.status === 'completed' ? 'bg-green-500/10' : selectedTransaction.status === 'in_transit' ? 'bg-blue-500/10' : 'bg-orange-500/10'} flex items-center justify-center`}>
-                          {selectedTransaction.status === 'completed' ? <Check className="w-8 h-8 text-green-500" /> : selectedTransaction.status === 'in_transit' ? <TrendingUp className="w-8 h-8 text-blue-500" /> : <Hourglass className="w-8 h-8 text-orange-500" />}
-                        </div>
-                      </div>
-                      <p className="text-foreground font-bold font-geist text-center" style={{
-                  letterSpacing: '-0.3px'
-                }}>
-                        {selectedTransaction.status === 'completed' ? `You have received $${Math.abs(selectedTransaction.amount).toFixed(2)}!` : selectedTransaction.status === 'in_transit' ? `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is in transit!` : `Your $${Math.abs(selectedTransaction.amount).toFixed(2)} is on its way!`}
-                      </p>
-                    </> : <div className={`text-5xl font-bold ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? 'text-green-500' : 'text-red-500'}`} style={{
-                fontFamily: 'Geist, sans-serif',
-                letterSpacing: '-0.5px',
-                fontWeight: 700
-              }}>
-                      {selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' ? '+' : '-'}${Math.abs(selectedTransaction.amount).toFixed(2)}
-                    </div>}
-                </div>
-              </div>
+              
 
               {/* Details */}
-              <div className="flex-1 p-6 space-y-6 py-0">
+              <div className="flex-1 p-6 space-y-6 py-[10px]">
                 {/* Date and Status */}
                 <div className="flex items-center justify-between p-4 rounded-lg bg-[#1f1f1f]/0 py-[5px]">
                   <span className="text-sm text-muted-foreground font-medium">
