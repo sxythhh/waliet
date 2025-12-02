@@ -6,11 +6,11 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { useTheme } from "next-themes";
 import tiktokLogo from "@/assets/tiktok-logo.png";
-import instagramLogo from "@/assets/instagram-logo.png";
-import youtubeLogo from "@/assets/youtube-logo.png";
+import instagramLogo from "@/assets/instagram-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-new.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
-import instagramLogoBlack from "@/assets/instagram-logo-black.svg";
-import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
+import instagramLogoBlack from "@/assets/instagram-logo-new.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-new.png";
 
 interface ConnectedAccount {
   id: string;
