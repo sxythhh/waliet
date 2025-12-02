@@ -28,12 +28,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Create admin client to generate reset link
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Generate password reset link
+    // Generate password reset link - always redirect to app.virality.gg
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectTo.replace('/auth', '/reset-password')
+        redirectTo: 'https://app.virality.gg/reset-password'
       }
     });
 
