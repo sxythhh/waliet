@@ -1153,7 +1153,7 @@ export function WalletTab() {
               }).length}
                 </p>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="gap-1 flex-1 sm:flex-none">
+                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="gap-1 flex-1 sm:flex-none border-black/0">
                     <ChevronLeft className="h-4 w-4" />
                     <span className="hidden sm:inline">Previous</span>
                   </Button>
@@ -1162,7 +1162,7 @@ export function WalletTab() {
                 if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
                 if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
                 return true;
-              }).length} className="gap-1 flex-1 sm:flex-none">
+              }).length} className="gap-1 flex-1 sm:flex-none border-black/0">
                     <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
