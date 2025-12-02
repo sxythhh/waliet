@@ -3,8 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import tiktokIcon from "@/assets/tiktok-logo-black.png";
-import instagramIcon from "@/assets/instagram-logo-black.svg";
-import youtubeIcon from "@/assets/youtube-logo-black.png";
+import instagramIcon from "@/assets/instagram-logo-new.png";
+import youtubeIcon from "@/assets/youtube-logo-new.png";
 import xIcon from "@/assets/x-logo.png";
 
 interface Campaign {
