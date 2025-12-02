@@ -1521,7 +1521,7 @@ export function WalletTab() {
               {/* Details */}
               <div className="flex-1 p-6 space-y-6">
                 {/* Date and Status */}
-                <div className="flex items-center justify-between p-4 rounded-lg bg-accent">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/80">
                   <span className="text-sm text-muted-foreground">
                     {format(selectedTransaction.date, 'MMMM dd yyyy, hh:mm a')}
                   </span>
