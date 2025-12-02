@@ -252,7 +252,21 @@ export function DiscoverTab() {
             {/* Platform Pills - Desktop Divider */}
             <div className="hidden sm:block h-6 w-px bg-border" />
 
-            {/* Platform Filter Pills */}
+            {/* Platform Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Platform:</span>
+              <Select value={selectedPlatform || "all"} onValueChange={(value) => setSelectedPlatform(value === "all" ? null : value)}>
+                <SelectTrigger className="w-[130px] h-11 border-transparent bg-card">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Platforms</SelectItem>
+                  <SelectItem value="tiktok">TikTok</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="youtube">YouTube</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
           </div>
 
