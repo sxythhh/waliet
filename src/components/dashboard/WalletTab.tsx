@@ -1030,7 +1030,7 @@ export function WalletTab() {
           {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <>
-              <div className="rounded-md border border-border overflow-x-auto">
+              <div className="rounded-md border border-muted overflow-x-auto m-[3px]">
                 <Table className="min-w-[600px]">
                   <TableHeader>
                     <TableRow>
