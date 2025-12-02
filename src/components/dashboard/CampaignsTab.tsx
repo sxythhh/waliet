@@ -674,9 +674,8 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
               setDialogOpen(false);
               navigate("/dashboard?tab=profile");
             }}
-            className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1"
+            className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
             <div className="relative flex items-start gap-4">
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                 <Link2 className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
@@ -695,9 +694,8 @@ export function CampaignsTab({ onOpenPrivateDialog }: CampaignsTabProps) {
               setDialogOpen(false);
               setAddAccountDialogOpen(true);
             }}
-            className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1"
+            className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
             <div className="relative flex items-start gap-4">
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                 <UserPlus className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
