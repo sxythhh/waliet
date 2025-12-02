@@ -1519,10 +1519,10 @@ export function WalletTab() {
               </div>
 
               {/* Details */}
-              <div className="flex-1 p-6 space-y-6">
+              <div className="flex-1 p-6 space-y-6 py-0">
                 {/* Date and Status */}
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/80">
-                  <span className="text-sm text-muted-foreground">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-[#1f1f1f]/0 py-[5px]">
+                  <span className="text-sm text-muted-foreground font-medium">
                     {format(selectedTransaction.date, 'MMMM dd yyyy, hh:mm a')}
                   </span>
                   {selectedTransaction.status && <Badge variant={selectedTransaction.status === 'completed' ? 'default' : selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize flex items-center gap-1">
@@ -1534,7 +1534,7 @@ export function WalletTab() {
                 </div>
 
                 {/* Transaction Metadata - Account & Views */}
-                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined || selectedTransaction.campaign) && <div className="p-4 rounded-lg border border-border bg-muted">
+                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined || selectedTransaction.campaign) && <div className="p-4 rounded-lg border border-border bg-[#1f1f1f]/0">
                     <div className="space-y-3">
                       {/* Campaign Info */}
                       {selectedTransaction.campaign && <div className="flex items-center gap-3">
