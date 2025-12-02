@@ -297,14 +297,14 @@ export function ManageAccountDialog({
 
             {/* Demographics Section */}
             <div className="space-y-3">
-              <h4 className="font-semibold text-sm">Demographics</h4>
-              
-              {/* Last Submission Date */}
-              {lastSubmissionDate && <div className="text-sm text-muted-foreground">
-                  Last submitted: {formatDistanceToNow(new Date(lastSubmissionDate), {
-                addSuffix: true
-              })}
-                </div>}
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm" style={{ letterSpacing: '-0.5px' }}>Demographics</h4>
+                {lastSubmissionDate && (
+                  <span className="text-xs text-muted-foreground">
+                    Last: {format(new Date(lastSubmissionDate), "MMM d, yyyy")}
+                  </span>
+                )}
+              </div>
               
               {/* Next Submission Date - only show if approved */}
               {demographicStatus === 'approved' && nextSubmissionDate && <div className="text-sm text-muted-foreground">
