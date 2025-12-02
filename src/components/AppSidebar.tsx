@@ -214,7 +214,7 @@ export function AppSidebar() {
               {/* Menu Items */}
               <div className="space-y-1">
                 <button className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity" onClick={() => navigate("/leaderboard")}>
-                  <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
+                  
                   <span className="font-medium text-sm">Leaderboard</span>
                 </button>
 
