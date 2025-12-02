@@ -626,6 +626,10 @@ export function ProfileTab() {
                       <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-card hover:brightness-95 transition-colors cursor-pointer border border-border w-fit">
                         {getPlatformIcon(account.platform)}
                         <span className="font-medium">{account.username}</span>
+                        {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success" />}
+                        {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning" />}
+                        {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive" />}
+                        {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
                       </div>
                       
                       {/* Link icon separator - hidden on mobile */}
