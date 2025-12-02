@@ -16,23 +16,68 @@ export default function ResetPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validSession, setValidSession] = useState(false);
+  const [checking, setChecking] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if there's a valid recovery session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Listen for auth state changes - this catches the PASSWORD_RECOVERY event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Auth event:", event, "Session:", !!session);
+        
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+          if (session) {
+            setValidSession(true);
+            setChecking(false);
+          }
+        } else if (event === "SIGNED_OUT") {
+          setValidSession(false);
+          setChecking(false);
+        }
+      }
+    );
+
+    // Also check for existing session (in case page was refreshed after recovery)
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (session) {
         setValidSession(true);
       } else {
-        toast({
-          variant: "destructive",
-          title: "Invalid or expired link",
-          description: "Please request a new password reset link."
-        });
-        setTimeout(() => navigate("/auth"), 3000);
+        // Check URL hash for error or tokens
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const error = hashParams.get("error");
+        const errorDescription = hashParams.get("error_description");
+        
+        if (error) {
+          toast({
+            variant: "destructive",
+            title: "Invalid or expired link",
+            description: errorDescription || "Please request a new password reset link."
+          });
+          setTimeout(() => navigate("/"), 3000);
+        } else if (!window.location.hash.includes("access_token")) {
+          // No session and no tokens in URL - invalid access
+          toast({
+            variant: "destructive",
+            title: "Invalid link",
+            description: "Please request a new password reset link."
+          });
+          setTimeout(() => navigate("/"), 3000);
+        }
+        // If there are tokens in the hash, the onAuthStateChange will handle it
       }
-    });
+      setChecking(false);
+    };
+
+    // Small delay to let auth state change fire first
+    const timeout = setTimeout(checkSession, 500);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [navigate, toast]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -79,12 +124,14 @@ export default function ResetPassword() {
     }
   };
 
-  if (!validSession) {
+  if (checking || !validSession) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <Card className="w-full max-w-md border bg-[#0b0b0b]">
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">Validating reset link...</p>
+            <p className="text-center text-muted-foreground">
+              {checking ? "Validating reset link..." : "Redirecting..."}
+            </p>
           </CardContent>
         </Card>
       </div>
