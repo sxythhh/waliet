@@ -192,102 +192,102 @@ export function AnalyticsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Accounts</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+      {/* Key metrics - single row on mobile, 4 cols on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Users</CardTitle>
+              <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalAccounts}</div>
-            <p className="text-xs text-muted-foreground">
-              Social accounts
-            </p>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-bold">{analytics.totalUsers}</div>
+            <p className="text-[10px] text-muted-foreground">+{analytics.newUsersThisMonth} this month</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Applications</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Campaigns</CardTitle>
+              <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.pendingApplications}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting review
-            </p>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-bold">{analytics.totalCampaigns}</div>
+            <p className="text-[10px] text-muted-foreground">{analytics.activeCampaigns} active</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Demographics</CardTitle>
-            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Earnings</CardTitle>
+              <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.pendingDemographicReviews}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting verification
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              +{analytics.newUsersThisMonth} this month
-            </p>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-bold">${analytics.totalEarnings.toFixed(0)}</div>
+            <p className="text-[10px] text-muted-foreground">Platform-wide</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Withdrawals</CardTitle>
+              <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalCampaigns}</div>
-            <p className="text-xs text-muted-foreground">
-              {analytics.activeCampaigns} active
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${analytics.totalEarnings.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              Platform-wide
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Withdrawals</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${analytics.totalWithdrawals.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              Paid out
-            </p>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-bold">${analytics.totalWithdrawals.toFixed(0)}</div>
+            <p className="text-[10px] text-muted-foreground">Paid out</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Secondary metrics */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Accounts</CardTitle>
+              <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-bold">{analytics.totalAccounts}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Pending Apps</CardTitle>
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-bold">{analytics.pendingApplications}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Demographics</CardTitle>
+              <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-bold">{analytics.pendingDemographicReviews}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="bg-card border-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-semibold">User Growth</CardTitle>
@@ -318,7 +318,7 @@ export function AnalyticsTab() {
             </DropdownMenu>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
+            <div className="h-[200px] sm:h-[250px] lg:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={userGrowthData}>
                   <defs>
@@ -397,7 +397,7 @@ export function AnalyticsTab() {
             <CardTitle className="text-lg font-semibold">Campaign Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
+            <div className="h-[200px] sm:h-[250px] lg:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={campaignData}>
                   <XAxis 

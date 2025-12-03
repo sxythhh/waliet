@@ -184,93 +184,93 @@ export function ApiActivityTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total Activity</CardDescription>
-            <CardTitle className="text-3xl">{logs.length}</CardTitle>
+    <div className="space-y-4">
+      {/* Summary cards - responsive grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <CardDescription className="text-xs">Activity</CardDescription>
+            <CardTitle className="text-xl">{logs.length}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Transactions</CardDescription>
-            <CardTitle className="text-3xl">
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <CardDescription className="text-xs">Transactions</CardDescription>
+            <CardTitle className="text-xl">
               {logs.filter(l => l.type === 'Transaction').length}
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Account Links</CardDescription>
-            <CardTitle className="text-3xl">
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <CardDescription className="text-xs">Links</CardDescription>
+            <CardTitle className="text-xl">
               {logs.filter(l => l.type === 'Account Link').length}
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Payouts</CardDescription>
-            <CardTitle className="text-3xl">
+        <Card className="bg-card/50">
+          <CardHeader className="p-4 pb-2">
+            <CardDescription className="text-xs">Payouts</CardDescription>
+            <CardTitle className="text-xl">
               {logs.filter(l => l.type === 'Payout').length}
             </CardTitle>
           </CardHeader>
         </Card>
       </div>
 
+      {/* Activity table - scrollable on mobile */}
       <Card>
-        <CardHeader>
-          <CardTitle>Recent API Activity</CardTitle>
-          <CardDescription>Last 100 requests from the past hour</CardDescription>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Recent Activity</CardTitle>
+          <CardDescription className="text-xs">Latest platform events</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {logs.length === 0 ? (
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No recent activity
-                  </TableCell>
+                  <TableHead className="text-xs whitespace-nowrap">Time</TableHead>
+                  <TableHead className="text-xs">Type</TableHead>
+                  <TableHead className="text-xs hidden sm:table-cell">Description</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell">Amount</TableHead>
                 </TableRow>
-              ) : (
-                logs.map((log, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-mono text-sm">
-                      {format(new Date(log.timestamp), "MMM d, HH:mm")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{log.type}</Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[250px] truncate" title={log.description}>
-                      {log.description}
-                      {log.user && <span className="text-muted-foreground ml-1">(@{log.user})</span>}
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-muted-foreground text-xs" title={log.details}>
-                      {log.details || '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusColor(log.status)}>
-                        {log.status || 'N/A'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {log.amount ? `$${log.amount.toFixed(2)}` : '-'}
+              </TableHeader>
+              <TableBody>
+                {logs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      No recent activity
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  logs.slice(0, 50).map((log, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-mono text-xs whitespace-nowrap py-2">
+                        {format(new Date(log.timestamp), "MMM d, HH:mm")}
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">{log.type}</Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate text-xs py-2 hidden sm:table-cell" title={log.description}>
+                        {log.description}
+                        {log.user && <span className="text-muted-foreground ml-1">@{log.user}</span>}
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Badge variant={getStatusColor(log.status)} className="text-[10px] px-1.5 py-0">
+                          {log.status || 'N/A'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs py-2 hidden md:table-cell">
+                        {log.amount ? `$${log.amount.toFixed(2)}` : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
