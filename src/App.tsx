@@ -17,6 +17,7 @@ import BrandAuth from "./pages/BrandAuth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import CampaignDetail from "./pages/CampaignDetail";
+import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import CampaignJoin from "./pages/CampaignJoin";
 import CampaignPreview from "./pages/CampaignPreview";
 import BrandManagement from "./pages/BrandManagement";
@@ -131,6 +132,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
           <Route path="/boost/:id" element={<PublicBoost />} />
           <Route path="/join/:slug" element={<CampaignJoin />} />
+          <Route path="/c/:slug" element={<DashboardLayout><CreatorCampaignDashboard /></DashboardLayout>} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
           <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
           <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
