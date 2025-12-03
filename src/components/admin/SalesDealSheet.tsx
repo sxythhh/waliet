@@ -10,9 +10,7 @@ import { ManageRoadmapDialog } from "@/components/admin/ManageRoadmapDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CalendarDays, DollarSign, TrendingUp, ExternalLink, Trash2 } from "lucide-react";
-
 type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
-
 interface Brand {
   id: string;
   name: string;
@@ -27,7 +25,6 @@ interface Brand {
   is_active: boolean;
   created_at: string;
 }
-
 interface SalesDeal {
   id: string;
   brand_id: string;
@@ -42,35 +39,57 @@ interface SalesDeal {
   lost_reason: string | null;
   brands: Brand;
 }
-
 interface SalesDealSheetProps {
   deal: SalesDeal | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate?: () => void;
 }
-
-const STAGES: { value: SalesStage; label: string; color: string }[] = [
-  { value: 'lead', label: 'Lead', color: 'bg-slate-500' },
-  { value: 'qualified', label: 'Qualified', color: 'bg-blue-500' },
-  { value: 'proposal', label: 'Proposal', color: 'bg-purple-500' },
-  { value: 'negotiation', label: 'Negotiation', color: 'bg-orange-500' },
-  { value: 'won', label: 'Won', color: 'bg-green-500' },
-  { value: 'lost', label: 'Lost', color: 'bg-red-500' },
-];
-
-export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDealSheetProps) {
+const STAGES: {
+  value: SalesStage;
+  label: string;
+  color: string;
+}[] = [{
+  value: 'lead',
+  label: 'Lead',
+  color: 'bg-slate-500'
+}, {
+  value: 'qualified',
+  label: 'Qualified',
+  color: 'bg-blue-500'
+}, {
+  value: 'proposal',
+  label: 'Proposal',
+  color: 'bg-purple-500'
+}, {
+  value: 'negotiation',
+  label: 'Negotiation',
+  color: 'bg-orange-500'
+}, {
+  value: 'won',
+  label: 'Won',
+  color: 'bg-green-500'
+}, {
+  value: 'lost',
+  label: 'Lost',
+  color: 'bg-red-500'
+}];
+export function SalesDealSheet({
+  deal,
+  open,
+  onOpenChange,
+  onUpdate
+}: SalesDealSheetProps) {
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
   const toggleBrandActive = async () => {
     if (!deal.brands) return;
     try {
-      const { error } = await supabase
-        .from("brands")
-        .update({ is_active: !deal.brands.is_active })
-        .eq("id", deal.brands.id);
-      
+      const {
+        error
+      } = await supabase.from("brands").update({
+        is_active: !deal.brands.is_active
+      }).eq("id", deal.brands.id);
       if (error) throw error;
       toast.success(`Brand ${!deal.brands.is_active ? 'activated' : 'deactivated'}`);
       if (onUpdate) onUpdate();
@@ -79,19 +98,15 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
       toast.error("Failed to update brand status");
     }
   };
-
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
   };
-
   const handleDeleteConfirm = async () => {
     if (!deal.brands) return;
     try {
-      const { error } = await supabase
-        .from("brands")
-        .delete()
-        .eq("id", deal.brands.id);
-      
+      const {
+        error
+      } = await supabase.from("brands").delete().eq("id", deal.brands.id);
       if (error) throw error;
       toast.success("Brand deleted successfully");
       if (onUpdate) onUpdate();
@@ -103,7 +118,6 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
       setDeleteDialogOpen(false);
     }
   };
-
   const getBrandTypeBadgeColor = (type: string | null) => {
     switch (type) {
       case "Standard":
@@ -114,13 +128,9 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
         return "";
     }
   };
-
   if (!deal) return null;
-
   const currentStage = STAGES.find(s => s.value === deal.stage);
-
-  return (
-    <>
+  return <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
           <SheetHeader>
@@ -134,11 +144,9 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
                 <div className="flex items-center gap-2 mt-1">
                   <div className={`w-2 h-2 rounded-full ${currentStage?.color}`} />
                   <span className="text-sm text-muted-foreground">{currentStage?.label}</span>
-                  {deal.brands?.brand_type && (
-                    <Badge className={getBrandTypeBadgeColor(deal.brands.brand_type)}>
+                  {deal.brands?.brand_type && <Badge className={getBrandTypeBadgeColor(deal.brands.brand_type)}>
                       {deal.brands.brand_type}
-                    </Badge>
-                  )}
+                    </Badge>}
                 </div>
               </div>
             </div>
@@ -149,48 +157,34 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
             <div className="space-y-4 pb-6 border-b">
               <h3 className="font-semibold text-lg">Brand Information</h3>
               
-              {deal.brands?.description && (
-                <div>
+              {deal.brands?.description && <div>
                   <Label className="text-muted-foreground">Description</Label>
                   <p className="text-sm mt-1">{deal.brands.description}</p>
-                </div>
-              )}
+                </div>}
 
               <div className="grid grid-cols-2 gap-4">
-                {deal.brands?.slug && (
-                  <div>
+                {deal.brands?.slug && <div>
                     <Label className="text-muted-foreground">Slug</Label>
                     <p className="text-sm mt-1 font-mono">{deal.brands.slug}</p>
-                  </div>
-                )}
-                {deal.brands?.created_at && (
-                  <div>
+                  </div>}
+                {deal.brands?.created_at && <div>
                     <Label className="text-muted-foreground">Created</Label>
                     <p className="text-sm mt-1">
-                      {new Date(deal.brands.created_at).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
+                      {new Date(deal.brands.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
                     </p>
-                  </div>
-                )}
+                  </div>}
               </div>
 
 
               {/* Brand Actions - Keep only Edit and View Page here */}
               <div className="flex flex-wrap gap-2 pt-2">
-                {deal.brands?.brand_type === "DWY" && (
-                  <ManageRoadmapDialog brandId={deal.brands.id} brandName={deal.brands.name} />
-                )}
-                {deal.brands && (
-                  <EditBrandDialog brand={deal.brands} onSuccess={onUpdate} />
-                )}
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => window.open(`/brand/${deal.brands?.slug}`, '_blank')}
-                >
+                {deal.brands?.brand_type === "DWY" && <ManageRoadmapDialog brandId={deal.brands.id} brandName={deal.brands.name} />}
+                {deal.brands && <EditBrandDialog brand={deal.brands} onSuccess={onUpdate} />}
+                <Button size="sm" variant="ghost" onClick={() => window.open(`/brand/${deal.brands?.slug}`, '_blank')}>
                   <ExternalLink className="h-4 w-4 mr-1" />
                   View Page
                 </Button>
@@ -198,134 +192,28 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
             </div>
 
             {/* Deal Value & Probability */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Deal Value</Label>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-lg font-semibold">
-                    {deal.deal_value ? `$${deal.deal_value.toLocaleString()}` : 'Not set'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Probability</Label>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-lg font-semibold">
-                    {deal.probability !== null ? `${deal.probability}%` : 'Not set'}
-                  </span>
-                </div>
-              </div>
-            </div>
+            
 
             {/* Dates */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Expected Close Date</Label>
-                {deal.close_date ? (
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4 text-muted-foreground" />
-                    <span>{new Date(deal.close_date).toLocaleDateString('en-US', { 
-                      month: 'long', 
-                      day: 'numeric', 
-                      year: 'numeric' 
-                    })}</span>
-                  </div>
-                ) : (
-                  <span className="text-muted-foreground text-sm">Not set</span>
-                )}
-              </div>
-
-              {deal.stage === 'won' && (
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Won Date</Label>
-                  {deal.won_date ? (
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default" className="bg-green-500">
-                        {new Date(deal.won_date).toLocaleDateString('en-US', { 
-                          month: 'long', 
-                          day: 'numeric', 
-                          year: 'numeric' 
-                        })}
-                      </Badge>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground text-sm">Not set</span>
-                  )}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Next Payment Date</Label>
-                {deal.next_payment_date ? (
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4 text-muted-foreground" />
-                    <span>{new Date(deal.next_payment_date).toLocaleDateString('en-US', { 
-                      month: 'long', 
-                      day: 'numeric', 
-                      year: 'numeric' 
-                    })}</span>
-                  </div>
-                ) : (
-                  <span className="text-muted-foreground text-sm">Not set</span>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Payment Amount</Label>
-                {deal.payment_amount ? (
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-semibold">${deal.payment_amount.toLocaleString()}</span>
-                  </div>
-                ) : (
-                  <span className="text-muted-foreground text-sm">Not set</span>
-                )}
-              </div>
-            </div>
+            
 
             {/* Notes */}
-            <div className="space-y-2">
-              <Label className="text-muted-foreground">Notes</Label>
-              {deal.notes ? (
-                <p className="text-sm whitespace-pre-wrap">{deal.notes}</p>
-              ) : (
-                <span className="text-muted-foreground text-sm">No notes</span>
-              )}
-            </div>
+            
 
             {/* Lost Reason */}
-            {deal.stage === 'lost' && (
-              <div className="space-y-2">
+            {deal.stage === 'lost' && <div className="space-y-2">
                 <Label className="text-muted-foreground">Lost Reason</Label>
-                {deal.lost_reason ? (
-                  <p className="text-sm whitespace-pre-wrap">{deal.lost_reason}</p>
-                ) : (
-                  <span className="text-muted-foreground text-sm">No reason provided</span>
-                )}
-              </div>
-            )}
+                {deal.lost_reason ? <p className="text-sm whitespace-pre-wrap">{deal.lost_reason}</p> : <span className="text-muted-foreground text-sm">No reason provided</span>}
+              </div>}
 
             {/* Danger Zone - Deactivate & Delete at bottom */}
             <div className="space-y-3 pt-6 border-t mt-6">
               <h4 className="text-sm font-medium text-muted-foreground">Danger Zone</h4>
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="destructive"
-                  onClick={toggleBrandActive}
-                  className="flex-1"
-                >
+                <Button size="sm" variant="destructive" onClick={toggleBrandActive} className="flex-1">
                   {deal.brands?.is_active ? 'Deactivate Brand' : 'Activate Brand'}
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="destructive" 
-                  onClick={handleDeleteClick}
-                  className="flex-1"
-                >
+                <Button size="sm" variant="destructive" onClick={handleDeleteClick} className="flex-1">
                   <Trash2 className="h-4 w-4 mr-1" />
                   Delete Brand
                 </Button>
@@ -346,15 +234,11 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteConfirm} 
-              className="bg-destructive hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 }
