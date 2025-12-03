@@ -7,12 +7,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { ManageAccountDialog } from "@/components/ManageAccountDialog";
+import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.png";
 import xLogo from "@/assets/x-logo.png";
+
 interface Campaign {
   id: string;
   title: string;
@@ -29,6 +32,7 @@ interface Campaign {
   allowed_platforms: string[] | null;
   embed_url: string | null;
 }
+
 interface ConnectedAccount {
   id: string;
   platform: string;
@@ -36,6 +40,7 @@ interface ConnectedAccount {
   account_link: string | null;
   connected_at: string;
 }
+
 interface CampaignTransaction {
   id: string;
   amount: number;
@@ -43,6 +48,14 @@ interface CampaignTransaction {
   created_at: string;
   status: string;
 }
+
+interface DemographicInfo {
+  status: 'approved' | 'pending' | 'rejected' | null;
+  daysUntilNext: number | null;
+  lastSubmissionDate: string | null;
+  nextSubmissionDate: Date | null;
+}
+
 const platformIcons: Record<string, string> = {
   tiktok: tiktokLogo,
   instagram: instagramLogo,
@@ -50,30 +63,29 @@ const platformIcons: Record<string, string> = {
   x: xLogo,
   twitter: xLogo
 };
+
 export default function CreatorCampaignDashboard() {
-  const {
-    slug
-  } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
   const [transactions, setTransactions] = useState<CampaignTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<ConnectedAccount | null>(null);
+  const [showManageDialog, setShowManageDialog] = useState(false);
+  const [showDemographicsDialog, setShowDemographicsDialog] = useState(false);
+  const [demographicData, setDemographicData] = useState<Record<string, DemographicInfo>>({});
+
   useEffect(() => {
     fetchCampaignData();
   }, [slug]);
+
   const fetchCampaignData = async () => {
     setLoading(true);
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
           variant: "destructive",
@@ -85,10 +97,12 @@ export default function CreatorCampaignDashboard() {
       }
 
       // Fetch campaign by slug
-      const {
-        data: campaignData,
-        error: campaignError
-      } = await supabase.from("campaigns").select("*").eq("slug", slug).maybeSingle();
+      const { data: campaignData, error: campaignError } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
+      
       if (campaignError) throw campaignError;
       if (!campaignData) {
         toast({
@@ -101,9 +115,15 @@ export default function CreatorCampaignDashboard() {
       }
 
       // Check if user has approved access
-      const {
-        data: submission
-      } = await supabase.from("campaign_submissions").select("id, status").eq("campaign_id", campaignData.id).eq("creator_id", user.id).eq("status", "approved").limit(1).maybeSingle();
+      const { data: submission } = await supabase
+        .from("campaign_submissions")
+        .select("id, status")
+        .eq("campaign_id", campaignData.id)
+        .eq("creator_id", user.id)
+        .eq("status", "approved")
+        .limit(1)
+        .maybeSingle();
+      
       if (!submission) {
         toast({
           variant: "destructive",
@@ -116,9 +136,9 @@ export default function CreatorCampaignDashboard() {
       setCampaign(campaignData as Campaign);
 
       // Fetch connected accounts for this campaign
-      const {
-        data: accountConnections
-      } = await supabase.from("social_account_campaigns").select(`
+      const { data: accountConnections } = await supabase
+        .from("social_account_campaigns")
+        .select(`
           id,
           connected_at,
           social_accounts (
@@ -127,7 +147,11 @@ export default function CreatorCampaignDashboard() {
             username,
             account_link
           )
-        `).eq("campaign_id", campaignData.id).eq("user_id", user.id).eq("status", "active");
+        `)
+        .eq("campaign_id", campaignData.id)
+        .eq("user_id", user.id)
+        .eq("status", "active");
+      
       if (accountConnections) {
         const accounts = accountConnections.filter(ac => ac.social_accounts).map(ac => ({
           id: (ac.social_accounts as any).id,
@@ -137,28 +161,58 @@ export default function CreatorCampaignDashboard() {
           connected_at: ac.connected_at
         }));
         setConnectedAccounts(accounts);
+
+        // Fetch demographic data for all accounts
+        const accountIds = accounts.map(a => a.id);
+        if (accountIds.length > 0) {
+          const { data: demographics } = await supabase
+            .from("demographic_submissions")
+            .select("social_account_id, status, submitted_at")
+            .in("social_account_id", accountIds)
+            .order("submitted_at", { ascending: false });
+
+          const demoMap: Record<string, DemographicInfo> = {};
+          accounts.forEach(account => {
+            const accountDemos = demographics?.filter(d => d.social_account_id === account.id) || [];
+            const latestDemo = accountDemos[0];
+            
+            if (latestDemo) {
+              const submittedDate = new Date(latestDemo.submitted_at);
+              const nextDate = new Date(submittedDate);
+              nextDate.setDate(nextDate.getDate() + 30);
+              const daysUntil = Math.ceil((nextDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              
+              demoMap[account.id] = {
+                status: latestDemo.status as 'approved' | 'pending' | 'rejected',
+                daysUntilNext: latestDemo.status === 'approved' ? Math.max(0, daysUntil) : null,
+                lastSubmissionDate: latestDemo.submitted_at,
+                nextSubmissionDate: latestDemo.status === 'approved' ? nextDate : null
+              };
+            } else {
+              demoMap[account.id] = {
+                status: null,
+                daysUntilNext: null,
+                lastSubmissionDate: null,
+                nextSubmissionDate: null
+              };
+            }
+          });
+          setDemographicData(demoMap);
+        }
       }
 
-      // Fetch transactions for this campaign
-      const {
-        data: txData
-      } = await supabase.from("wallet_transactions").select("id, amount, description, created_at, status").eq("user_id", user.id).eq("type", "earning").neq("status", "reverted").containedBy("metadata", {
-        campaign_id: campaignData.id
-      }).order("created_at", {
-        ascending: false
-      });
-
       // Filter transactions that have this campaign_id in metadata
-      const {
-        data: allTx
-      } = await supabase.from("wallet_transactions").select("id, amount, description, created_at, status, metadata").eq("user_id", user.id).eq("type", "earning").neq("status", "reverted").order("created_at", {
-        ascending: false
-      });
+      const { data: allTx } = await supabase
+        .from("wallet_transactions")
+        .select("id, amount, description, created_at, status, metadata")
+        .eq("user_id", user.id)
+        .eq("type", "earning")
+        .neq("status", "reverted")
+        .order("created_at", { ascending: false });
+      
       if (allTx) {
         const campaignTx = allTx.filter(tx => {
-          const metadata = tx.metadata as {
-            campaign_id?: string;
-          } | null;
+          const metadata = tx.metadata as { campaign_id?: string } | null;
           return metadata?.campaign_id === campaignData.id;
         });
         setTransactions(campaignTx);
@@ -175,11 +229,24 @@ export default function CreatorCampaignDashboard() {
       setLoading(false);
     }
   };
+
   const handleAccountAdded = () => {
     fetchCampaignData();
   };
+
+  const handleManageAccount = (account: ConnectedAccount) => {
+    setSelectedAccount(account);
+    setShowManageDialog(true);
+  };
+
+  const handleSubmitDemographics = () => {
+    setShowManageDialog(false);
+    setShowDemographicsDialog(true);
+  };
+
   if (loading) {
-    return <div className="min-h-screen bg-background">
+    return (
+      <div className="min-h-screen bg-background">
         <div className="border-b">
           <div className="container max-w-6xl mx-auto px-4 py-4">
             <Skeleton className="h-10 w-40" />
@@ -195,28 +262,37 @@ export default function CreatorCampaignDashboard() {
             </div>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
+
   if (!campaign) return null;
-  const daysRemaining = campaign.end_date ? Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
-  return <div className="min-h-screen bg-background">
+
+  const selectedDemoInfo = selectedAccount ? demographicData[selectedAccount.id] : null;
+
+  return (
+    <div className="min-h-screen bg-background">
       <div className="container max-w-6xl mx-auto px-4 py-8">
         <div className="grid gap-8">
           {/* Campaign Header */}
           <div className="flex flex-col md:flex-row gap-6 items-start">
-            {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-20 h-20 rounded-xl object-cover border" />}
+            {campaign.brand_logo_url && (
+              <img 
+                src={campaign.brand_logo_url} 
+                alt={campaign.brand_name} 
+                className="w-20 h-20 rounded-xl object-cover border" 
+              />
+            )}
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl md:text-3xl font-bold">{campaign.title}</h1>
-                
               </div>
               <p className="text-muted-foreground">{campaign.brand_name}</p>
-              {campaign.description && <p className="text-sm text-muted-foreground max-w-2xl">{campaign.description}</p>}
+              {campaign.description && (
+                <p className="text-sm text-muted-foreground max-w-2xl">{campaign.description}</p>
+              )}
             </div>
           </div>
-
-          {/* Stats Grid */}
-          
 
           {/* Connected Accounts */}
           <Card>
@@ -231,13 +307,21 @@ export default function CreatorCampaignDashboard() {
               </Button>
             </CardHeader>
             <CardContent>
-              {connectedAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+              {connectedAccounts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
                   <p>No accounts connected yet</p>
                   <p className="text-sm">Connect a social account to start tracking</p>
-                </div> : <div className="grid gap-3">
-                  {connectedAccounts.map(account => <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {connectedAccounts.map(account => (
+                    <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
                       <div className="flex items-center gap-3">
-                        <img src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok} alt={account.platform} className="w-8 h-8 object-contain" />
+                        <img 
+                          src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok} 
+                          alt={account.platform} 
+                          className="w-8 h-8 object-contain" 
+                        />
                         <div>
                           {account.account_link ? (
                             <a 
@@ -253,16 +337,20 @@ export default function CreatorCampaignDashboard() {
                           )}
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => navigate("/dashboard?tab=accounts")}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="bg-muted hover:bg-muted/80"
+                        onClick={() => handleManageAccount(account)}
+                      >
                         Manage
                       </Button>
-                    </div>)}
-                </div>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
-
-          {/* Platforms */}
-          {campaign.allowed_platforms && campaign.allowed_platforms.length > 0}
 
           {/* Payouts Table */}
           <Card>
@@ -271,10 +359,13 @@ export default function CreatorCampaignDashboard() {
               <CardDescription>Earnings from this campaign</CardDescription>
             </CardHeader>
             <CardContent>
-              {transactions.length === 0 ? <div className="text-center py-6 text-muted-foreground">
+              {transactions.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
                   <p>No payouts yet</p>
                   <p className="text-sm">Your earnings will appear here</p>
-                </div> : <Table>
+                </div>
+              ) : (
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
@@ -283,7 +374,8 @@ export default function CreatorCampaignDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transactions.map(tx => <TableRow key={tx.id}>
+                    {transactions.map(tx => (
+                      <TableRow key={tx.id}>
                         <TableCell className="text-muted-foreground">
                           {format(new Date(tx.created_at), "MMM d, yyyy")}
                         </TableCell>
@@ -291,25 +383,73 @@ export default function CreatorCampaignDashboard() {
                         <TableCell className="text-right font-medium text-green-600">
                           +${tx.amount.toFixed(2)}
                         </TableCell>
-                      </TableRow>)}
+                      </TableRow>
+                    ))}
                   </TableBody>
-                </Table>}
+                </Table>
+              )}
             </CardContent>
           </Card>
 
           {/* Guidelines */}
-          {campaign.guidelines && <Card>
+          {campaign.guidelines && (
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Guidelines</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground whitespace-pre-wrap">{campaign.guidelines}</p>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
         </div>
       </div>
 
       {/* Add Account Dialog */}
-      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={handleAccountAdded} />
-    </div>;
+      <AddSocialAccountDialog 
+        open={showAddAccountDialog} 
+        onOpenChange={setShowAddAccountDialog} 
+        onSuccess={handleAccountAdded} 
+      />
+
+      {/* Manage Account Dialog */}
+      {selectedAccount && (
+        <ManageAccountDialog
+          open={showManageDialog}
+          onOpenChange={setShowManageDialog}
+          account={{
+            id: selectedAccount.id,
+            username: selectedAccount.username,
+            platform: selectedAccount.platform,
+            account_link: selectedAccount.account_link
+          }}
+          demographicStatus={selectedDemoInfo?.status || null}
+          daysUntilNext={selectedDemoInfo?.daysUntilNext || null}
+          lastSubmissionDate={selectedDemoInfo?.lastSubmissionDate || null}
+          nextSubmissionDate={selectedDemoInfo?.nextSubmissionDate || null}
+          onUpdate={fetchCampaignData}
+          onSubmitDemographics={handleSubmitDemographics}
+          platformIcon={
+            <img 
+              src={platformIcons[selectedAccount.platform.toLowerCase()] || platformIcons.tiktok} 
+              alt={selectedAccount.platform} 
+              className="w-6 h-6 object-contain" 
+            />
+          }
+        />
+      )}
+
+      {/* Submit Demographics Dialog */}
+      {selectedAccount && (
+        <SubmitDemographicsDialog
+          open={showDemographicsDialog}
+          onOpenChange={setShowDemographicsDialog}
+          socialAccountId={selectedAccount.id}
+          platform={selectedAccount.platform}
+          username={selectedAccount.username}
+          onSuccess={fetchCampaignData}
+        />
+      )}
+    </div>
+  );
 }
