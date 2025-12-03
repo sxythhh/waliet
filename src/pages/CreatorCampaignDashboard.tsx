@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, ExternalLink, Calendar, DollarSign, Eye, Users } from "lucide-react";
+import { Plus, ExternalLink } from "lucide-react";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.png";
@@ -35,6 +36,14 @@ interface ConnectedAccount {
   account_link: string | null;
   connected_at: string;
 }
+
+interface CampaignTransaction {
+  id: string;
+  amount: number;
+  description: string | null;
+  created_at: string;
+  status: string;
+}
 const platformIcons: Record<string, string> = {
   tiktok: tiktokLogo,
   instagram: instagramLogo,
@@ -52,6 +61,7 @@ export default function CreatorCampaignDashboard() {
   } = useToast();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
+  const [transactions, setTransactions] = useState<CampaignTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   useEffect(() => {
@@ -128,6 +138,33 @@ export default function CreatorCampaignDashboard() {
           connected_at: ac.connected_at
         }));
         setConnectedAccounts(accounts);
+      }
+
+      // Fetch transactions for this campaign
+      const { data: txData } = await supabase
+        .from("wallet_transactions")
+        .select("id, amount, description, created_at, status")
+        .eq("user_id", user.id)
+        .eq("type", "earning")
+        .neq("status", "reverted")
+        .containedBy("metadata", { campaign_id: campaignData.id })
+        .order("created_at", { ascending: false });
+
+      // Filter transactions that have this campaign_id in metadata
+      const { data: allTx } = await supabase
+        .from("wallet_transactions")
+        .select("id, amount, description, created_at, status, metadata")
+        .eq("user_id", user.id)
+        .eq("type", "earning")
+        .neq("status", "reverted")
+        .order("created_at", { ascending: false });
+
+      if (allTx) {
+        const campaignTx = allTx.filter(tx => {
+          const metadata = tx.metadata as { campaign_id?: string } | null;
+          return metadata?.campaign_id === campaignData.id;
+        });
+        setTransactions(campaignTx);
       }
     } catch (error) {
       console.error("Error fetching campaign:", error);
@@ -221,6 +258,45 @@ export default function CreatorCampaignDashboard() {
 
           {/* Platforms */}
           {campaign.allowed_platforms && campaign.allowed_platforms.length > 0}
+
+          {/* Payouts Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Your Payouts</CardTitle>
+              <CardDescription>Earnings from this campaign</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {transactions.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <p>No payouts yet</p>
+                  <p className="text-sm">Your earnings will appear here</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((tx) => (
+                      <TableRow key={tx.id}>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(tx.created_at), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell>{tx.description || "Campaign payout"}</TableCell>
+                        <TableCell className="text-right font-medium text-green-600">
+                          +${tx.amount.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Guidelines */}
           {campaign.guidelines && <Card>
