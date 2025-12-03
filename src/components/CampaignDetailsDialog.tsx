@@ -136,7 +136,8 @@ export function CampaignDetailsDialog({
 
           <div className="text-center">
             <p className="text-xs text-muted-foreground mb-2">Payout</p>
-            <p className="font-bold text-lg">${campaign.rpm_rate.toFixed(2)} cpm</p>
+            <p className="font-bold text-lg">${(campaign.rpm_rate * 1000).toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Per Million</p>
           </div>
         </div>
 
