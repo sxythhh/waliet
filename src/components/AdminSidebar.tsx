@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayoutDashboard, Package, GraduationCap, LogOut, DollarSign, Users, TrendingUp, ChevronLeft, ChevronRight, PieChart, Receipt } from "lucide-react";
+import { LayoutDashboard, Package, LogOut, DollarSign, Users, TrendingUp, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,10 +28,6 @@ const menuItems = [{
   title: "Transactions",
   icon: Receipt,
   path: "/admin/transactions"
-}, {
-  title: "Training Courses",
-  icon: GraduationCap,
-  path: "/admin/courses"
 }];
 export function AdminSidebar() {
   const navigate = useNavigate();
