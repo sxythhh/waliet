@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
+import { Plus, BadgeCheck, Clock, XCircle, AlertCircle } from "lucide-react";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
@@ -314,39 +314,54 @@ export default function CreatorCampaignDashboard() {
                 </div>
               ) : (
                 <div className="grid gap-3">
-                  {connectedAccounts.map(account => (
-                    <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
-                      <div className="flex items-center gap-3">
-                        <img 
-                          src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok} 
-                          alt={account.platform} 
-                          className="w-8 h-8 object-contain" 
-                        />
-                        <div>
-                          {account.account_link ? (
-                            <a 
-                              href={account.account_link} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="font-medium hover:underline cursor-pointer"
-                            >
-                              {account.username}
-                            </a>
-                          ) : (
-                            <p className="font-medium">{account.username}</p>
-                          )}
+                  {connectedAccounts.map(account => {
+                    const demoInfo = demographicData[account.id];
+                    return (
+                      <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok} 
+                            alt={account.platform} 
+                            className="w-8 h-8 object-contain" 
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              {account.account_link ? (
+                                <a 
+                                  href={account.account_link} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="font-medium hover:underline cursor-pointer"
+                                >
+                                  {account.username}
+                                </a>
+                              ) : (
+                                <span className="font-medium">{account.username}</span>
+                              )}
+                              {demoInfo?.status === 'approved' && <BadgeCheck className="h-4 w-4 text-green-500" />}
+                              {demoInfo?.status === 'pending' && <Clock className="h-4 w-4 text-yellow-500" />}
+                              {demoInfo?.status === 'rejected' && <XCircle className="h-4 w-4 text-destructive" />}
+                              {!demoInfo?.status && <AlertCircle className="h-4 w-4 text-destructive" />}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {!demoInfo?.status ? "Demographics required" : 
+                               demoInfo.status === 'pending' ? "Demographics under review" :
+                               demoInfo.status === 'approved' ? "Demographics approved" :
+                               "Demographics rejected"}
+                            </p>
+                          </div>
                         </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="bg-muted hover:bg-muted/80"
+                          onClick={() => handleManageAccount(account)}
+                        >
+                          Manage
+                        </Button>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="bg-muted hover:bg-muted/80"
-                        onClick={() => handleManageAccount(account)}
-                      >
-                        Manage
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
