@@ -150,6 +150,8 @@ export function CampaignAnalyticsTable({
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
   const [transactionsCurrentPage, setTransactionsCurrentPage] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
+  const [demographicDialogOpen, setDemographicDialogOpen] = useState(false);
+  const [selectedAccountForDemo, setSelectedAccountForDemo] = useState<AnalyticsData | null>(null);
   const itemsPerPage = 20;
   const transactionsPerPage = 20;
   useEffect(() => {
@@ -1234,31 +1236,32 @@ export function CampaignAnalyticsTable({
                   const username = item.account_username.startsWith('@') ? item.account_username.slice(1) : item.account_username;
                   return <TableRow key={item.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <TableCell className="py-3 sticky left-0 bg-card z-10">
-                        <div className="flex items-center gap-2">
+                        <div 
+                          className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded-md px-1 py-0.5 -mx-1 transition-colors"
+                          onClick={() => {
+                            setSelectedAccountForDemo(item);
+                            setDemographicDialogOpen(true);
+                          }}
+                        >
                           {platformIcon && <div className="flex-shrink-0 w-5 h-5 rounded-lg bg-muted border flex items-center justify-center p-0.5">
                               <img src={platformIcon} alt={item.platform} className="w-full h-full object-contain" />
                             </div>}
                           <div className="flex items-center gap-1.5">
-                            {item.account_link ? <a href={item.account_link} target="_blank" rel="noopener noreferrer" onClick={e => {
-                            e.preventDefault();
-                            window.open(item.account_link!, '_blank', 'noopener,noreferrer');
-                          }} className="text-foreground hover:underline transition-all font-medium cursor-pointer text-sm truncate max-w-[150px]">
-                                {username}
-                              </a> : <span className="text-foreground font-medium text-sm truncate max-w-[150px]">{username}</span>}
+                            <span className="text-foreground font-medium text-sm truncate max-w-[150px] hover:underline">{username}</span>
                             
-                            {/* Demographic Status Icon */}
-                            {item.user_id && <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex-shrink-0">
-                                      {getDemographicIcon(getDemographicStatus(item))}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="bg-popover border">
-                                    <p className="text-sm">{getDemographicTooltip(getDemographicStatus(item), item.demographic_submission)}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>}
+                            {/* Demographic Status Icon - show for all accounts */}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex-shrink-0">
+                                    {getDemographicIcon(getDemographicStatus(item))}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-popover border">
+                                  <p className="text-sm">{getDemographicTooltip(getDemographicStatus(item), item.demographic_submission)}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </div>
                       </TableCell>
@@ -2314,5 +2317,134 @@ export function CampaignAnalyticsTable({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* Demographic Details Dialog */}
+    <Dialog open={demographicDialogOpen} onOpenChange={setDemographicDialogOpen}>
+      <DialogContent className="bg-card border max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">Demographics Status</DialogTitle>
+        </DialogHeader>
+        
+        {selectedAccountForDemo && (
+          <div className="space-y-4">
+            {/* Account Info */}
+            <div className="flex items-center gap-3 pb-3 border-b">
+              {(() => {
+                const platformIcon = getPlatformIcon(selectedAccountForDemo.platform);
+                return platformIcon && (
+                  <div className="w-8 h-8 rounded-lg bg-muted border flex items-center justify-center p-1">
+                    <img src={platformIcon} alt={selectedAccountForDemo.platform} className="w-full h-full object-contain" />
+                  </div>
+                );
+              })()}
+              <div>
+                <p className="font-medium text-foreground">@{selectedAccountForDemo.account_username}</p>
+                <p className="text-xs text-muted-foreground capitalize">{selectedAccountForDemo.platform}</p>
+              </div>
+              {selectedAccountForDemo.account_link && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-auto"
+                  onClick={() => window.open(selectedAccountForDemo.account_link!, '_blank')}
+                >
+                  <Link2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Demographics Status */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <div className="flex items-center gap-2">
+                  {getDemographicIcon(getDemographicStatus(selectedAccountForDemo))}
+                  <span className="text-sm font-medium capitalize">
+                    {getDemographicStatus(selectedAccountForDemo) === 'none' ? 'Not Submitted' : getDemographicStatus(selectedAccountForDemo)}
+                  </span>
+                </div>
+              </div>
+
+              {selectedAccountForDemo.demographic_submission ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Tier 1 %</span>
+                    <span className="text-sm font-medium">{selectedAccountForDemo.demographic_submission.tier1_percentage}%</span>
+                  </div>
+                  
+                  {selectedAccountForDemo.demographic_submission.score !== null && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Score</span>
+                      <span className="text-sm font-medium">{selectedAccountForDemo.demographic_submission.score}/100</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Submitted</span>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(selectedAccountForDemo.demographic_submission.submitted_at), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+
+                  {selectedAccountForDemo.demographic_submission.reviewed_at && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Reviewed</span>
+                      <span className="text-sm text-muted-foreground">
+                        {format(new Date(selectedAccountForDemo.demographic_submission.reviewed_at), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+                  )}
+
+                  {getDemographicStatus(selectedAccountForDemo) === 'approved' && selectedAccountForDemo.demographic_submission.reviewed_at && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Next Submission</span>
+                      <span className="text-sm text-muted-foreground">
+                        {(() => {
+                          const reviewedDate = new Date(selectedAccountForDemo.demographic_submission.reviewed_at);
+                          const nextDate = new Date(reviewedDate);
+                          nextDate.setDate(nextDate.getDate() + 30);
+                          const daysUntil = Math.ceil((nextDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                          return daysUntil > 0 ? `In ${daysUntil} days` : 'Now';
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                  <p className="text-sm text-red-400">No demographics submitted for this account</p>
+                </div>
+              )}
+
+              {/* Linked User */}
+              {selectedAccountForDemo.user_id && selectedAccountForDemo.profiles && (
+                <div className="pt-3 border-t">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Linked User</span>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage src={selectedAccountForDemo.profiles.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                          {selectedAccountForDemo.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{selectedAccountForDemo.profiles.username}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!selectedAccountForDemo.user_id && (
+                <div className="pt-3 border-t">
+                  <div className="p-2 bg-yellow-500/10 rounded border border-yellow-500/20">
+                    <p className="text-xs text-yellow-400">Account not linked to a user</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   </>;
 }
