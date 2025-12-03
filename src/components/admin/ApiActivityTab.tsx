@@ -253,7 +253,7 @@ export function ApiActivityTab() {
                       <TableCell className="py-2">
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0">{log.type}</Badge>
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-xs py-2 hidden sm:table-cell" title={log.description}>
+                      <TableCell className="text-xs py-2 hidden sm:table-cell">
                         {log.description}
                         {log.user && <span className="text-muted-foreground ml-1">@{log.user}</span>}
                       </TableCell>
