@@ -33,6 +33,7 @@ interface Campaign {
   budget_used?: number;
   rpm_rate: number;
   status: string;
+  slug: string;
   start_date: string | null;
   end_date: string | null;
   banner_url: string | null;
@@ -484,16 +485,9 @@ export function CampaignsTab({
         const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
         const isPending = campaign.submission_status === 'pending';
         const isEnded = campaign.status === 'ended';
-        return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : isEnded ? 'opacity-75 cursor-pointer' : 'cursor-pointer'}`} onClick={() => {
-          console.log('Campaign clicked:', {
-            id: campaign.id,
-            status: campaign.submission_status,
-            isPending,
-            isEnded
-          });
-          if (!isPending && !isEnded) {
-            setSelectedCampaignForDetails(campaign);
-            setCampaignDetailsDialogOpen(true);
+        return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
+          if (!isPending) {
+            navigate(`/c/${campaign.slug}`);
           }
         }}>
             {/* Banner Image - Top Section */}
