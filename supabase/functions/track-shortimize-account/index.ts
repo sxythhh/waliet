@@ -25,15 +25,44 @@ Deno.serve(async (req) => {
       );
     }
 
-    const shortimizeApiKey = Deno.env.get('SHORTIMIZE_API_KEY');
+    let shortimizeApiKey: string | null = null;
+    let finalCollectionNames = collectionNames || [];
+
+    // If campaignId is provided, get the brand's Shortimize API key and collection name
+    if (campaignId) {
+      const { data: campaign, error: campaignError } = await supabaseClient
+        .from('campaigns')
+        .select('brand_id, brands(shortimize_api_key, collection_name)')
+        .eq('id', campaignId)
+        .single();
+
+      if (campaignError) {
+        console.error('Error fetching campaign:', campaignError);
+      } else if (campaign) {
+        const brandData = Array.isArray(campaign.brands) ? campaign.brands[0] : campaign.brands;
+        shortimizeApiKey = brandData?.shortimize_api_key;
+        
+        // Use brand's collection_name if available and no collection names were provided
+        if (brandData?.collection_name && finalCollectionNames.length === 0) {
+          finalCollectionNames = [brandData.collection_name];
+        }
+      }
+    }
+
+    // Fall back to global API key if brand doesn't have one
     if (!shortimizeApiKey) {
+      shortimizeApiKey = Deno.env.get('SHORTIMIZE_API_KEY') || null;
+    }
+
+    if (!shortimizeApiKey) {
+      console.log('No Shortimize API key configured');
       return new Response(
-        JSON.stringify({ error: 'Shortimize API key not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: true, message: 'No Shortimize tracking configured' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Tracking account:', accountUrl);
+    console.log('Tracking account:', accountUrl, 'with collections:', finalCollectionNames);
 
     // Track the account in Shortimize
     const response = await fetch('https://api.shortimize.com/accounts', {
@@ -44,7 +73,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         link: accountUrl,
-        collection_names: collectionNames || [],
+        collection_names: finalCollectionNames,
         tracking_type: trackingType || undefined,
       }),
     });

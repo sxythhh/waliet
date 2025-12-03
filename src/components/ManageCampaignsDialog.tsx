@@ -30,6 +30,7 @@ interface ManageCampaignsDialogProps {
   accountId: string;
   accountUsername: string;
   accountPlatform: string;
+  accountLink?: string | null;
   onUpdate: () => void;
 }
 
@@ -39,6 +40,7 @@ export function ManageCampaignsDialog({
   accountId,
   accountUsername,
   accountPlatform,
+  accountLink,
   onUpdate,
 }: ManageCampaignsDialogProps) {
   const [connectedCampaigns, setConnectedCampaigns] = useState<ConnectedCampaign[]>([]);
@@ -111,6 +113,49 @@ export function ManageCampaignsDialog({
     setLoading(false);
   };
 
+  const trackAccountInShortimize = async (campaignId: string) => {
+    if (!accountLink) {
+      console.log('No account link available for Shortimize tracking');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('track-shortimize-account', {
+        body: {
+          accountUrl: accountLink,
+          campaignId,
+        },
+      });
+
+      if (error) {
+        console.error('Error tracking account in Shortimize:', error);
+      } else {
+        console.log('Shortimize tracking result:', data);
+      }
+    } catch (err) {
+      console.error('Failed to track account in Shortimize:', err);
+    }
+  };
+
+  const untrackAccountFromShortimize = async (campaignId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('untrack-shortimize-account', {
+        body: {
+          campaignId,
+          socialAccountId: accountId,
+        },
+      });
+
+      if (error) {
+        console.error('Error untracking account from Shortimize:', error);
+      } else {
+        console.log('Shortimize untracking result:', data);
+      }
+    } catch (err) {
+      console.error('Failed to untrack account from Shortimize:', err);
+    }
+  };
+
   const handleLink = async (campaignId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -151,6 +196,9 @@ export function ManageCampaignsDialog({
         if (error) throw error;
       }
 
+      // Track account in Shortimize (non-blocking)
+      trackAccountInShortimize(campaignId);
+
       toast.success("Campaign linked successfully");
       fetchCampaigns();
       onUpdate();
@@ -159,7 +207,7 @@ export function ManageCampaignsDialog({
     }
   };
 
-  const handleUnlink = async (connectionId: string, campaignTitle: string) => {
+  const handleUnlink = async (connectionId: string, campaignId: string, campaignTitle: string) => {
     try {
       const { error } = await supabase
         .from("social_account_campaigns")
@@ -170,6 +218,9 @@ export function ManageCampaignsDialog({
         .eq("id", connectionId);
 
       if (error) throw error;
+
+      // Untrack account from Shortimize (non-blocking)
+      untrackAccountFromShortimize(campaignId);
 
       toast.success(`Unlinked from ${campaignTitle}`);
       fetchCampaigns();
@@ -221,7 +272,7 @@ export function ManageCampaignsDialog({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleUnlink(campaign.connection_id, campaign.title)}
+                      onClick={() => handleUnlink(campaign.connection_id, campaign.id, campaign.title)}
                       className="ml-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <X className="w-4 h-4" />
