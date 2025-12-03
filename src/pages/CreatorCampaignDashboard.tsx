@@ -12,7 +12,6 @@ import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
 import youtubeLogo from "@/assets/youtube-logo.png";
 import xLogo from "@/assets/x-logo.png";
-
 interface Campaign {
   id: string;
   title: string;
@@ -29,7 +28,6 @@ interface Campaign {
   allowed_platforms: string[] | null;
   embed_url: string | null;
 }
-
 interface ConnectedAccount {
   id: string;
   platform: string;
@@ -37,90 +35,81 @@ interface ConnectedAccount {
   account_link: string | null;
   connected_at: string;
 }
-
 const platformIcons: Record<string, string> = {
   tiktok: tiktokLogo,
   instagram: instagramLogo,
   youtube: youtubeLogo,
   x: xLogo,
-  twitter: xLogo,
+  twitter: xLogo
 };
-
 export default function CreatorCampaignDashboard() {
-  const { slug } = useParams();
+  const {
+    slug
+  } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-
   useEffect(() => {
     fetchCampaignData();
   }, [slug]);
-
   const fetchCampaignData = async () => {
     setLoading(true);
-    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Please sign in to view this campaign",
+          description: "Please sign in to view this campaign"
         });
         navigate("/");
         return;
       }
 
       // Fetch campaign by slug
-      const { data: campaignData, error: campaignError } = await supabase
-        .from("campaigns")
-        .select("*")
-        .eq("slug", slug)
-        .maybeSingle();
-
+      const {
+        data: campaignData,
+        error: campaignError
+      } = await supabase.from("campaigns").select("*").eq("slug", slug).maybeSingle();
       if (campaignError) throw campaignError;
-      
       if (!campaignData) {
         toast({
           variant: "destructive",
           title: "Campaign not found",
-          description: "This campaign doesn't exist",
+          description: "This campaign doesn't exist"
         });
         navigate("/dashboard");
         return;
       }
 
       // Check if user has approved access
-      const { data: submission } = await supabase
-        .from("campaign_submissions")
-        .select("id, status")
-        .eq("campaign_id", campaignData.id)
-        .eq("creator_id", user.id)
-        .eq("status", "approved")
-        .limit(1)
-        .maybeSingle();
-
+      const {
+        data: submission
+      } = await supabase.from("campaign_submissions").select("id, status").eq("campaign_id", campaignData.id).eq("creator_id", user.id).eq("status", "approved").limit(1).maybeSingle();
       if (!submission) {
         toast({
           variant: "destructive",
           title: "Access Denied",
-          description: "You must be approved to view this campaign",
+          description: "You must be approved to view this campaign"
         });
         navigate("/dashboard");
         return;
       }
-
       setCampaign(campaignData as Campaign);
 
       // Fetch connected accounts for this campaign
-      const { data: accountConnections } = await supabase
-        .from("social_account_campaigns")
-        .select(`
+      const {
+        data: accountConnections
+      } = await supabase.from("social_account_campaigns").select(`
           id,
           connected_at,
           social_accounts (
@@ -129,21 +118,15 @@ export default function CreatorCampaignDashboard() {
             username,
             account_link
           )
-        `)
-        .eq("campaign_id", campaignData.id)
-        .eq("user_id", user.id)
-        .eq("status", "active");
-
+        `).eq("campaign_id", campaignData.id).eq("user_id", user.id).eq("status", "active");
       if (accountConnections) {
-        const accounts = accountConnections
-          .filter(ac => ac.social_accounts)
-          .map(ac => ({
-            id: (ac.social_accounts as any).id,
-            platform: (ac.social_accounts as any).platform,
-            username: (ac.social_accounts as any).username,
-            account_link: (ac.social_accounts as any).account_link,
-            connected_at: ac.connected_at,
-          }));
+        const accounts = accountConnections.filter(ac => ac.social_accounts).map(ac => ({
+          id: (ac.social_accounts as any).id,
+          platform: (ac.social_accounts as any).platform,
+          username: (ac.social_accounts as any).username,
+          account_link: (ac.social_accounts as any).account_link,
+          connected_at: ac.connected_at
+        }));
         setConnectedAccounts(accounts);
       }
     } catch (error) {
@@ -151,21 +134,18 @@ export default function CreatorCampaignDashboard() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load campaign",
+        description: "Failed to load campaign"
       });
       navigate("/dashboard");
     } finally {
       setLoading(false);
     }
   };
-
   const handleAccountAdded = () => {
     fetchCampaignData();
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <div className="border-b">
           <div className="container max-w-6xl mx-auto px-4 py-4">
             <Skeleton className="h-10 w-40" />
@@ -181,29 +161,16 @@ export default function CreatorCampaignDashboard() {
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!campaign) return null;
-
-  const daysRemaining = campaign.end_date 
-    ? Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : null;
-
-  return (
-    <div className="min-h-screen bg-background">
+  const daysRemaining = campaign.end_date ? Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
+  return <div className="min-h-screen bg-background">
       <div className="container max-w-6xl mx-auto px-4 py-8">
         <div className="grid gap-8">
           {/* Campaign Header */}
           <div className="flex flex-col md:flex-row gap-6 items-start">
-            {campaign.brand_logo_url && (
-              <img 
-                src={campaign.brand_logo_url} 
-                alt={campaign.brand_name}
-                className="w-20 h-20 rounded-xl object-cover border"
-              />
-            )}
+            {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-20 h-20 rounded-xl object-cover border" />}
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl md:text-3xl font-bold">{campaign.title}</h1>
@@ -212,70 +179,12 @@ export default function CreatorCampaignDashboard() {
                 </Badge>
               </div>
               <p className="text-muted-foreground">{campaign.brand_name}</p>
-              {campaign.description && (
-                <p className="text-sm text-muted-foreground max-w-2xl">{campaign.description}</p>
-              )}
+              {campaign.description && <p className="text-sm text-muted-foreground max-w-2xl">{campaign.description}</p>}
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <DollarSign className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">${campaign.rpm_rate}</p>
-                    <p className="text-xs text-muted-foreground">RPM Rate</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-green-500/10">
-                    <Eye className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">${campaign.budget.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">Budget</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10">
-                    <Calendar className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{daysRemaining ?? '∞'}</p>
-                    <p className="text-xs text-muted-foreground">Days Left</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10">
-                    <Users className="h-5 w-5 text-purple-500" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{connectedAccounts.length}</p>
-                    <p className="text-xs text-muted-foreground">Connected</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          
 
           {/* Connected Accounts */}
           <Card>
@@ -290,81 +199,44 @@ export default function CreatorCampaignDashboard() {
               </Button>
             </CardHeader>
             <CardContent>
-              {connectedAccounts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+              {connectedAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                   <p>No accounts connected yet</p>
                   <p className="text-sm">Connect a social account to start tracking</p>
-                </div>
-              ) : (
-                <div className="grid gap-3">
-                  {connectedAccounts.map((account) => (
-                    <div 
-                      key={account.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card"
-                    >
+                </div> : <div className="grid gap-3">
+                  {connectedAccounts.map(account => <div key={account.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok}
-                          alt={account.platform}
-                          className="w-8 h-8 object-contain"
-                        />
+                        <img src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok} alt={account.platform} className="w-8 h-8 object-contain" />
                         <div>
                           <p className="font-medium">@{account.username}</p>
                           <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
                         </div>
                       </div>
-                      {account.account_link && (
-                        <Button variant="ghost" size="sm" asChild>
+                      {account.account_link && <Button variant="ghost" size="sm" asChild>
                           <a href={account.account_link} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4" />
                           </a>
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                        </Button>}
+                    </div>)}
+                </div>}
             </CardContent>
           </Card>
 
           {/* Platforms */}
-          {campaign.allowed_platforms && campaign.allowed_platforms.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Allowed Platforms</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {campaign.allowed_platforms.map((platform) => (
-                    <Badge key={platform} variant="outline" className="capitalize">
-                      {platform}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {campaign.allowed_platforms && campaign.allowed_platforms.length > 0}
 
           {/* Guidelines */}
-          {campaign.guidelines && (
-            <Card>
+          {campaign.guidelines && <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Guidelines</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground whitespace-pre-wrap">{campaign.guidelines}</p>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </div>
       </div>
 
       {/* Add Account Dialog */}
-      <AddSocialAccountDialog 
-        open={showAddAccountDialog} 
-        onOpenChange={setShowAddAccountDialog}
-        onSuccess={handleAccountAdded}
-      />
-    </div>
-  );
+      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={handleAccountAdded} />
+    </div>;
 }
