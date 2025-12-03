@@ -36,7 +36,6 @@ interface ConnectedAccount {
   account_link: string | null;
   connected_at: string;
 }
-
 interface CampaignTransaction {
   id: string;
   amount: number;
@@ -141,27 +140,25 @@ export default function CreatorCampaignDashboard() {
       }
 
       // Fetch transactions for this campaign
-      const { data: txData } = await supabase
-        .from("wallet_transactions")
-        .select("id, amount, description, created_at, status")
-        .eq("user_id", user.id)
-        .eq("type", "earning")
-        .neq("status", "reverted")
-        .containedBy("metadata", { campaign_id: campaignData.id })
-        .order("created_at", { ascending: false });
+      const {
+        data: txData
+      } = await supabase.from("wallet_transactions").select("id, amount, description, created_at, status").eq("user_id", user.id).eq("type", "earning").neq("status", "reverted").containedBy("metadata", {
+        campaign_id: campaignData.id
+      }).order("created_at", {
+        ascending: false
+      });
 
       // Filter transactions that have this campaign_id in metadata
-      const { data: allTx } = await supabase
-        .from("wallet_transactions")
-        .select("id, amount, description, created_at, status, metadata")
-        .eq("user_id", user.id)
-        .eq("type", "earning")
-        .neq("status", "reverted")
-        .order("created_at", { ascending: false });
-
+      const {
+        data: allTx
+      } = await supabase.from("wallet_transactions").select("id, amount, description, created_at, status, metadata").eq("user_id", user.id).eq("type", "earning").neq("status", "reverted").order("created_at", {
+        ascending: false
+      });
       if (allTx) {
         const campaignTx = allTx.filter(tx => {
-          const metadata = tx.metadata as { campaign_id?: string } | null;
+          const metadata = tx.metadata as {
+            campaign_id?: string;
+          } | null;
           return metadata?.campaign_id === campaignData.id;
         });
         setTransactions(campaignTx);
@@ -243,7 +240,7 @@ export default function CreatorCampaignDashboard() {
                         <img src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok} alt={account.platform} className="w-8 h-8 object-contain" />
                         <div>
                           <p className="font-medium">@{account.username}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                          
                         </div>
                       </div>
                       {account.account_link && <Button variant="ghost" size="sm" asChild>
@@ -266,13 +263,10 @@ export default function CreatorCampaignDashboard() {
               <CardDescription>Earnings from this campaign</CardDescription>
             </CardHeader>
             <CardContent>
-              {transactions.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
+              {transactions.length === 0 ? <div className="text-center py-6 text-muted-foreground">
                   <p>No payouts yet</p>
                   <p className="text-sm">Your earnings will appear here</p>
-                </div>
-              ) : (
-                <Table>
+                </div> : <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
@@ -281,8 +275,7 @@ export default function CreatorCampaignDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transactions.map((tx) => (
-                      <TableRow key={tx.id}>
+                    {transactions.map(tx => <TableRow key={tx.id}>
                         <TableCell className="text-muted-foreground">
                           {format(new Date(tx.created_at), "MMM d, yyyy")}
                         </TableCell>
@@ -290,11 +283,9 @@ export default function CreatorCampaignDashboard() {
                         <TableCell className="text-right font-medium text-green-600">
                           +${tx.amount.toFixed(2)}
                         </TableCell>
-                      </TableRow>
-                    ))}
+                      </TableRow>)}
                   </TableBody>
-                </Table>
-              )}
+                </Table>}
             </CardContent>
           </Card>
 
