@@ -845,12 +845,26 @@ export function CampaignAnalyticsTable({
         // Don't fail the payment if email fails
       }
       toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
+      
+      // Optimistic update for immediate UI feedback
+      const paymentTimestamp = new Date().toISOString();
+      setAnalytics(prev => prev.map(item => 
+        item.id === selectedUser.id 
+          ? { 
+              ...item, 
+              paid_views: selectedUser.total_views,
+              last_payment_amount: amount,
+              last_payment_date: paymentTimestamp
+            }
+          : item
+      ));
+      
       setPaymentDialogOpen(false);
       setPaymentAmount("");
       setSelectedUser(null);
 
-      // Immediate refresh for instant UI update
-      await Promise.all([fetchAnalytics(), fetchTransactions()]);
+      // Background refresh to sync with database
+      Promise.all([fetchAnalytics(), fetchTransactions()]);
       if (onPaymentComplete) {
         onPaymentComplete();
       }
