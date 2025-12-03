@@ -32,7 +32,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border/50">
+      <div className="p-4">
         <h2 className="text-lg font-semibold tracking-tight">Admin</h2>
       </div>
       
@@ -58,7 +58,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="p-3 border-t border-border/50">
+      <div className="p-3">
         <Button
           onClick={handleSignOut}
           variant="ghost"
@@ -84,7 +84,7 @@ export function AdminSidebar() {
             <Button
               variant="ghost"
               size="icon"
-              className="fixed top-4 left-4 z-50 md:hidden bg-background/80 backdrop-blur-sm border border-border/50"
+              className="fixed top-4 left-4 z-50 md:hidden bg-background/80 backdrop-blur-sm"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -98,7 +98,7 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="hidden md:flex h-screen w-56 flex-col bg-card border-r border-border/50 sticky top-0">
+    <aside className="hidden md:flex h-screen w-56 flex-col bg-card sticky top-0">
       <SidebarContent />
     </aside>
   );
