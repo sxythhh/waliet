@@ -174,9 +174,7 @@ export default function CreatorCampaignDashboard() {
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl md:text-3xl font-bold">{campaign.title}</h1>
-                <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
-                  {campaign.status}
-                </Badge>
+                
               </div>
               <p className="text-muted-foreground">{campaign.brand_name}</p>
               {campaign.description && <p className="text-sm text-muted-foreground max-w-2xl">{campaign.description}</p>}
