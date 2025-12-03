@@ -90,14 +90,10 @@ export default function Transactions() {
         const {
           data: txData,
           error: txError
-        } = await supabase
-          .from("wallet_transactions")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .range(from, from + batchSize - 1);
-
+        } = await supabase.from("wallet_transactions").select("*").order("created_at", {
+          ascending: false
+        }).range(from, from + batchSize - 1);
         if (txError) throw txError;
-        
         if (txData && txData.length > 0) {
           allTransactions = [...allTransactions, ...txData];
           from += batchSize;
@@ -156,13 +152,11 @@ export default function Transactions() {
           campaign_logo_url: campaignId ? campaignsMap[campaignId]?.brand_logo_url : undefined
         };
       }) || [];
-      
       console.log(`Loaded ${formattedTransactions.length} total transactions`);
       console.log('Date range:', formattedTransactions.length > 0 ? {
         earliest: formattedTransactions[formattedTransactions.length - 1]?.created_at,
         latest: formattedTransactions[0]?.created_at
       } : 'No transactions');
-      
       setTransactions(formattedTransactions);
     } catch (error: any) {
       console.error("Error fetching transactions:", error);
@@ -175,12 +169,12 @@ export default function Transactions() {
       setLoading(false);
     }
   };
-
   const fetchUserSocialAccounts = async (userId: string) => {
     setLoadingSocialAccounts(true);
-    const { data, error } = await supabase
-      .from("social_accounts")
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from("social_accounts").select(`
         *,
         social_account_campaigns (
           campaigns (
@@ -195,9 +189,7 @@ export default function Transactions() {
           tier1_percentage,
           submitted_at
         )
-      `)
-      .eq("user_id", userId);
-    
+      `).eq("user_id", userId);
     if (error) {
       toast({
         variant: "destructive",
@@ -210,16 +202,14 @@ export default function Transactions() {
     }
     setLoadingSocialAccounts(false);
   };
-
   const fetchUserTransactions = async (userId: string) => {
     setLoadingTransactions(true);
-    const { data: txData, error } = await supabase
-      .from("wallet_transactions")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-    
+    const {
+      data: txData,
+      error
+    } = await supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", {
+      ascending: false
+    }).limit(10);
     if (error) {
       toast({
         variant: "destructive",
@@ -232,15 +222,12 @@ export default function Transactions() {
     }
     setLoadingTransactions(false);
   };
-
   const fetchUserPaymentMethods = async (userId: string) => {
     setLoadingPaymentMethods(true);
-    const { data, error } = await supabase
-      .from("wallets")
-      .select("payout_method, payout_details")
-      .eq("user_id", userId)
-      .maybeSingle();
-    
+    const {
+      data,
+      error
+    } = await supabase.from("wallets").select("payout_method, payout_details").eq("user_id", userId).maybeSingle();
     if (error) {
       console.error("Error fetching payment methods:", error);
       toast({
@@ -254,22 +241,19 @@ export default function Transactions() {
     }
     setLoadingPaymentMethods(false);
   };
-
   const openUserDetailsDialog = async (userId: string) => {
     // Fetch user profile
-    const { data: userData, error } = await supabase
-      .from("profiles")
-      .select(`
+    const {
+      data: userData,
+      error
+    } = await supabase.from("profiles").select(`
         *,
         wallets (
           balance,
           total_earned,
           total_withdrawn
         )
-      `)
-      .eq("id", userId)
-      .maybeSingle();
-    
+      `).eq("id", userId).maybeSingle();
     if (error || !userData) {
       toast({
         variant: "destructive",
@@ -278,14 +262,12 @@ export default function Transactions() {
       });
       return;
     }
-
     setSelectedUser(userData);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(userId);
     fetchUserTransactions(userId);
     fetchUserPaymentMethods(userId);
   };
-
   const filteredTransactions = transactions.filter(tx => {
     // Search term filter
     const matchesSearch = !searchTerm || tx.id?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.username?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.email?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) || tx.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -323,7 +305,6 @@ export default function Transactions() {
         matchesDateRange = txDate <= endOfDay;
       }
     }
-    
     return matchesSearch && matchesCampaign && matchesType && matchesAmount && matchesDateRange;
   });
   const getStatusBadge = (status: string) => {
@@ -357,7 +338,7 @@ export default function Transactions() {
         </div>
       </div>
 
-      <Card className="p-3 md:p-4 bg-muted/30 border-0">
+      <Card className="p-3 md:p-4 border-0 bg-[#1f1f1f]/0">
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-2">
           <div className="relative w-full md:flex-1 md:min-w-[200px]">
             <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3.5 w-3.5 z-10" />
@@ -433,22 +414,14 @@ export default function Transactions() {
 
       {/* Mobile card view */}
       <div className="md:hidden space-y-2">
-        {loading ? (
-          <Card className="p-6 text-center text-muted-foreground border border-border">
+        {loading ? <Card className="p-6 text-center text-muted-foreground border border-border">
             Loading transactions...
-          </Card>
-        ) : filteredTransactions.length === 0 ? (
-          <Card className="p-6 text-center text-muted-foreground border border-border">
+          </Card> : filteredTransactions.length === 0 ? <Card className="p-6 text-center text-muted-foreground border border-border">
             No transactions found
-          </Card>
-        ) : filteredTransactions.map(tx => (
-          <Card key={tx.id} className="p-3 border border-border">
+          </Card> : filteredTransactions.map(tx => <Card key={tx.id} className="p-3 border border-border">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div className="flex-1 min-w-0">
-                <span 
-                  className="font-medium text-sm cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}
-                >
+                <span className="font-medium text-sm cursor-pointer hover:text-primary transition-colors" onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}>
                   {tx.username || "Unknown"}
                 </span>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -467,13 +440,10 @@ export default function Transactions() {
               {getStatusBadge(tx.status)}
             </div>
 
-            {(tx.campaign_name || tx.description) && (
-              <p className="text-xs text-muted-foreground line-clamp-2">
+            {(tx.campaign_name || tx.description) && <p className="text-xs text-muted-foreground line-clamp-2">
                 {tx.campaign_name || tx.description}
-              </p>
-            )}
-          </Card>
-        ))}
+              </p>}
+          </Card>)}
       </div>
 
       {/* Desktop table view */}
@@ -500,10 +470,7 @@ export default function Transactions() {
                 </TableCell>
               </TableRow> : filteredTransactions.map(tx => <TableRow key={tx.id} className="hover:bg-muted/30">
                   <TableCell className="py-3">
-                    <span 
-                      className="font-medium text-sm cursor-pointer hover:text-primary transition-colors"
-                      onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}
-                    >
+                    <span className="font-medium text-sm cursor-pointer hover:text-primary transition-colors" onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}>
                       {tx.username || "Unknown"}
                     </span>
                   </TableCell>
@@ -522,21 +489,11 @@ export default function Transactions() {
                   </TableCell>
                   <TableCell className="py-3">
                     <div className="flex flex-col gap-1">
-                      {tx.campaign_name && (
-                        <div className="flex items-center gap-2">
+                      {tx.campaign_name && <div className="flex items-center gap-2">
                           {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt={`${tx.campaign_name} logo`} className="h-4 w-4 rounded object-cover" />}
                           <span className="text-sm">{tx.campaign_name}</span>
-                        </div>
-                      )}
-                      {tx.type === "earning" && tx.metadata?.account_username ? (
-                        <span className="text-sm text-muted-foreground">@{tx.metadata.account_username}</span>
-                      ) : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? (
-                        <span className="text-sm text-muted-foreground">To: @{tx.metadata.recipient_username}</span>
-                      ) : tx.type === "transfer_received" && tx.metadata?.sender_username ? (
-                        <span className="text-sm text-muted-foreground">From: @{tx.metadata.sender_username}</span>
-                      ) : !tx.campaign_name && (
-                        <span className="text-sm text-muted-foreground">{tx.description}</span>
-                      )}
+                        </div>}
+                      {tx.type === "earning" && tx.metadata?.account_username ? <span className="text-sm text-muted-foreground">@{tx.metadata.account_username}</span> : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? <span className="text-sm text-muted-foreground">To: @{tx.metadata.recipient_username}</span> : tx.type === "transfer_received" && tx.metadata?.sender_username ? <span className="text-sm text-muted-foreground">From: @{tx.metadata.sender_username}</span> : !tx.campaign_name && <span className="text-sm text-muted-foreground">{tx.description}</span>}
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-right">
@@ -548,30 +505,11 @@ export default function Transactions() {
       </div>
 
       {/* User Details Dialog */}
-      {selectedUser && (
-        <UserDetailsDialog
-          open={userDetailsDialogOpen}
-          onOpenChange={setUserDetailsDialogOpen}
-          user={selectedUser}
-          socialAccounts={userSocialAccounts}
-          loadingSocialAccounts={loadingSocialAccounts}
-          transactions={userTransactions}
-          loadingTransactions={loadingTransactions}
-          paymentMethods={userPaymentMethods}
-          loadingPaymentMethods={loadingPaymentMethods}
-          socialAccountsOpen={socialAccountsOpen}
-          onSocialAccountsOpenChange={setSocialAccountsOpen}
-          transactionsOpen={transactionsOpen}
-          onTransactionsOpenChange={setTransactionsOpen}
-          paymentMethodsOpen={paymentMethodsOpen}
-          onPaymentMethodsOpenChange={setPaymentMethodsOpen}
-          onBalanceUpdated={() => {
-            fetchTransactions();
-            if (selectedUser) {
-              fetchUserTransactions(selectedUser.id);
-            }
-          }}
-        />
-      )}
+      {selectedUser && <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} loadingSocialAccounts={loadingSocialAccounts} transactions={userTransactions} loadingTransactions={loadingTransactions} paymentMethods={userPaymentMethods} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} onBalanceUpdated={() => {
+      fetchTransactions();
+      if (selectedUser) {
+        fetchUserTransactions(selectedUser.id);
+      }
+    }} />}
     </div>;
 }
