@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, ExternalLink } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
@@ -239,15 +239,23 @@ export default function CreatorCampaignDashboard() {
                       <div className="flex items-center gap-3">
                         <img src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok} alt={account.platform} className="w-8 h-8 object-contain" />
                         <div>
-                          <p className="font-medium">{account.username}</p>
-                          
+                          {account.account_link ? (
+                            <a 
+                              href={account.account_link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="font-medium hover:underline cursor-pointer"
+                            >
+                              {account.username}
+                            </a>
+                          ) : (
+                            <p className="font-medium">{account.username}</p>
+                          )}
                         </div>
                       </div>
-                      {account.account_link && <Button variant="ghost" size="sm" asChild>
-                          <a href={account.account_link} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        </Button>}
+                      <Button variant="outline" size="sm" onClick={() => navigate("/dashboard?tab=accounts")}>
+                        Manage
+                      </Button>
                     </div>)}
                 </div>}
             </CardContent>
