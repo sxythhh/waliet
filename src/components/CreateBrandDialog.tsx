@@ -84,65 +84,63 @@ export function CreateBrandDialog({
     setIsSubmitting(true);
     try {
       const logoUrl = await uploadLogo();
-      
-      // Insert brand
-      const { data: brandData, error: brandError } = await supabase
-        .from("brands")
-        .insert({
-          name: values.name,
-          slug: values.slug,
-          logo_url: logoUrl,
-          brand_type: values.brand_type,
-          business_details: {
-            legal_name: values.legal_name,
-            business_address: values.business_address
-          },
-          renewal_date: values.renewal_date
-        })
-        .select()
-        .single();
 
+      // Insert brand
+      const {
+        data: brandData,
+        error: brandError
+      } = await supabase.from("brands").insert({
+        name: values.name,
+        slug: values.slug,
+        logo_url: logoUrl,
+        brand_type: values.brand_type,
+        business_details: {
+          legal_name: values.legal_name,
+          business_address: values.business_address
+        },
+        renewal_date: values.renewal_date
+      }).select().single();
       if (brandError) throw brandError;
 
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
       // Create sales deal for the brand (automatically add to lead stage)
-      const { error: dealError } = await supabase
-        .from("sales_deals")
-        .insert({
-          brand_id: brandData.id,
-          stage: 'lead',
-          owner_id: user.id
-        });
-
+      const {
+        error: dealError
+      } = await supabase.from("sales_deals").insert({
+        brand_id: brandData.id,
+        stage: 'lead',
+        owner_id: user.id
+      });
       if (dealError) {
         console.error("Error creating sales deal:", dealError);
         // Don't fail the whole operation if deal creation fails
       }
 
       // Create brand invitation
-      const { error: inviteError } = await supabase
-        .from("brand_invitations")
-        .insert({
-          brand_id: brandData.id,
-          email: values.email,
-          role: "admin",
-          invited_by: user.id
-        });
-
+      const {
+        error: inviteError
+      } = await supabase.from("brand_invitations").insert({
+        brand_id: brandData.id,
+        email: values.email,
+        role: "admin",
+        invited_by: user.id
+      });
       if (inviteError) throw inviteError;
 
       // Create warmap events for brand onboarding and renewal
-      const warmapEvents = [
-        {
-          title: `${values.name} Onboarding`,
-          event_date: new Date().toISOString().split('T')[0],
-          description: `Onboarding process for ${values.name}`,
-          created_by: user.id
-        }
-      ];
+      const warmapEvents = [{
+        title: `${values.name} Onboarding`,
+        event_date: new Date().toISOString().split('T')[0],
+        description: `Onboarding process for ${values.name}`,
+        created_by: user.id
+      }];
 
       // Add renewal event if renewal date exists
       if (values.renewal_date) {
@@ -153,11 +151,9 @@ export function CreateBrandDialog({
           created_by: user.id
         });
       }
-
-      const { error: warmapError } = await supabase
-        .from("warmap_events")
-        .insert(warmapEvents);
-
+      const {
+        error: warmapError
+      } = await supabase.from("warmap_events").insert(warmapEvents);
       if (warmapError) {
         console.error("Error creating warmap events:", warmapError);
         // Don't fail the whole operation if warmap events fail
@@ -186,7 +182,6 @@ export function CreateBrandDialog({
         console.error("Webhook error:", webhookError);
         // Don't fail the whole operation if webhook fails
       }
-
       toast.success("Brand created successfully!");
       setOpen(false);
       form.reset();
@@ -291,8 +286,8 @@ export function CreateBrandDialog({
 
               {/* Team Member Email */}
               <FormField control={form.control} name="email" render={({
-                field
-              }) => <FormItem>
+              field
+            }) => <FormItem>
                       <FormLabel className="text-xs">Team Member Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="email@example.com" className="h-9 text-sm" {...field} />
@@ -301,40 +296,12 @@ export function CreateBrandDialog({
                     </FormItem>} />
 
               {/* Business Details */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium">Business Details</h4>
-                
-                <FormField control={form.control} name="legal_name" render={({
-                  field
-                }) => <FormItem>
-                        <FormLabel className="text-xs">Legal Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Company Legal Name" className="h-9 text-sm" {...field} />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>} />
-
-                <FormField control={form.control} name="business_address" render={({
-                  field
-                }) => <FormItem>
-                        <FormLabel className="text-xs">Business Address</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Full business address" className="text-sm min-h-[60px]" {...field} />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>} />
-              </div>
+              
 
               {/* Renewal Date */}
               <FormField control={form.control} name="renewal_date" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel className="text-xs">Renewal Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" className="h-9 text-sm" {...field} />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>} />
+              field
+            }) => {}} />
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t">
