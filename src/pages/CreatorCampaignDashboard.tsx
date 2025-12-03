@@ -239,7 +239,7 @@ export default function CreatorCampaignDashboard() {
                       <div className="flex items-center gap-3">
                         <img src={platformIcons[account.platform.toLowerCase()] || platformIcons.tiktok} alt={account.platform} className="w-8 h-8 object-contain" />
                         <div>
-                          <p className="font-medium">@{account.username}</p>
+                          <p className="font-medium">{account.username}</p>
                           
                         </div>
                       </div>
