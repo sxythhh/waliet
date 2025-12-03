@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -109,7 +109,28 @@ export function CreateCampaignDialog({
   const [bannerPreview, setBannerPreview] = useState<string | null>(campaign?.banner_url || null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isCampaignEnded, setIsCampaignEnded] = useState(campaign?.status === "ended");
+  const [shortimizeApiKey, setShortimizeApiKey] = useState("");
+  const [collectionName, setCollectionName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch brand's Shortimize settings when dialog opens
+  useEffect(() => {
+    if (open && brandId) {
+      const fetchBrandSettings = async () => {
+        const { data } = await supabase
+          .from('brands')
+          .select('shortimize_api_key, collection_name')
+          .eq('id', brandId)
+          .single();
+        
+        if (data) {
+          setShortimizeApiKey(data.shortimize_api_key || "");
+          setCollectionName(data.collection_name || "");
+        }
+      };
+      fetchBrandSettings();
+    }
+  }, [open, brandId]);
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
@@ -225,6 +246,20 @@ export function CreateCampaignDialog({
           error
         } = await supabase.from("campaigns").update(campaignData).eq("id", campaign.id);
         if (error) throw error;
+
+        // Update brand's Shortimize settings
+        const { error: brandError } = await supabase
+          .from("brands")
+          .update({
+            shortimize_api_key: shortimizeApiKey || null,
+            collection_name: collectionName || null,
+          })
+          .eq("id", brandId);
+        
+        if (brandError) {
+          console.error("Error updating brand Shortimize settings:", brandError);
+        }
+
         toast.success("Campaign updated successfully!");
       } else {
         // Create new campaign
@@ -232,6 +267,22 @@ export function CreateCampaignDialog({
           error
         } = await supabase.from("campaigns").insert(campaignData);
         if (error) throw error;
+
+        // Update brand's Shortimize settings for new campaigns too
+        if (shortimizeApiKey || collectionName) {
+          const { error: brandError } = await supabase
+            .from("brands")
+            .update({
+              shortimize_api_key: shortimizeApiKey || null,
+              collection_name: collectionName || null,
+            })
+            .eq("id", brandId);
+          
+          if (brandError) {
+            console.error("Error updating brand Shortimize settings:", brandError);
+          }
+        }
+
         toast.success("Campaign created successfully!");
       }
       setOpen(false);
@@ -461,6 +512,43 @@ export function CreateCampaignDialog({
                   </p>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
+
+            {/* Shortimize Integration Settings */}
+            <div className="space-y-4 p-4 bg-[#191919]/50 rounded-lg">
+              <div>
+                <h4 className="text-white font-medium mb-1">Shortimize Integration</h4>
+                <p className="text-xs text-white/40">
+                  Connect to Shortimize for automatic account tracking when creators link their accounts
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Shortimize API Key</label>
+                <Input
+                  type="password"
+                  placeholder="Enter Shortimize API key"
+                  value={shortimizeApiKey}
+                  onChange={(e) => setShortimizeApiKey(e.target.value)}
+                  className="bg-[#191919] text-white placeholder:text-white/40"
+                />
+                <p className="text-xs text-white/40">
+                  Get your API key from your Shortimize dashboard
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Collection Name</label>
+                <Input
+                  placeholder="e.g., Campaign Creators"
+                  value={collectionName}
+                  onChange={(e) => setCollectionName(e.target.value)}
+                  className="bg-[#191919] text-white placeholder:text-white/40"
+                />
+                <p className="text-xs text-white/40">
+                  Accounts will be added to this collection when tracked
+                </p>
+              </div>
+            </div>
 
             <FormField control={form.control} name="allowed_platforms" render={() => <FormItem>
                   <FormLabel className="text-white">Allowed Platforms</FormLabel>
