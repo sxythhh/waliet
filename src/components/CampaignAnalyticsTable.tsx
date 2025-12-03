@@ -230,11 +230,23 @@ export function CampaignAnalyticsTable({
       }).sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime());
       setDateRanges(uniqueRanges);
 
+      // Helper to normalize usernames (remove leading @, trim, lowercase)
+      const normalizeUsername = (username: string) =>
+        username.trim().replace(/^@+/, "").toLowerCase();
+      // Helper to normalize platform values (handle case and spacing differences)
+      const normalizePlatform = (platform: string) =>
+        (platform || "").trim().toLowerCase();
+
       // Batch fetch all data at once for better performance
       const userIds = [...new Set((data || []).filter(item => item.user_id).map(item => item.user_id))];
 
-      // Always fetch ALL social accounts for this campaign to match demographics
-      // This is critical for showing demographics even for unlinked accounts
+      // Get all unique username+platform combinations from analytics for global lookup
+      const analyticsUsernamePlatforms = (data || []).map(item => ({
+        username: normalizeUsername(item.account_username),
+        platform: normalizePlatform(item.platform)
+      }));
+
+      // Fetch social accounts linked to this campaign
       const { data: allCampaignAccounts } = await supabase
         .from("social_account_campaigns")
         .select(`
@@ -249,13 +261,6 @@ export function CampaignAnalyticsTable({
         .eq("status", "active");
 
       // Create maps for matching by both user_id and username+platform
-      // Helper to normalize usernames (remove leading @, trim, lowercase)
-      const normalizeUsername = (username: string) =>
-        username.trim().replace(/^@+/, "").toLowerCase();
-      // Helper to normalize platform values (handle case and spacing differences)
-      const normalizePlatform = (platform: string) =>
-        (platform || "").trim().toLowerCase();
-
       const socialAccountsMap = new Map();
       const socialAccountsByUsernameMap = new Map();
       
@@ -275,8 +280,35 @@ export function CampaignAnalyticsTable({
         socialAccountsByUsernameMap.set(usernameKey, account);
       });
 
-      // Get all social account IDs for demographic submissions
-      const allSocialAccountIds = (allCampaignAccounts || []).map((item: any) => item.social_accounts.id);
+      // Find analytics accounts that don't have a campaign-linked social account
+      const unmatchedUsernames = analyticsUsernamePlatforms.filter(ap => {
+        const usernameKey = `${ap.platform}_${ap.username}`;
+        return !socialAccountsByUsernameMap.has(usernameKey);
+      });
+
+      // Fetch global social accounts for unmatched analytics accounts
+      if (unmatchedUsernames.length > 0) {
+        const { data: globalAccounts } = await supabase
+          .from("social_accounts")
+          .select("id, platform, username, user_id");
+        
+        (globalAccounts || []).forEach(account => {
+          const normalizedUsername = normalizeUsername(account.username);
+          const normalizedPlatform = normalizePlatform(account.platform);
+          const usernameKey = `${normalizedPlatform}_${normalizedUsername}`;
+          
+          // Only add if not already in the map
+          if (!socialAccountsByUsernameMap.has(usernameKey)) {
+            socialAccountsByUsernameMap.set(usernameKey, account);
+          }
+        });
+      }
+
+      // Get all social account IDs for demographic submissions (from both campaign and global matches)
+      const allSocialAccountIds = [...new Set([
+        ...(allCampaignAccounts || []).map((item: any) => item.social_accounts.id),
+        ...Array.from(socialAccountsByUsernameMap.values()).map((acc: any) => acc.id)
+      ])];
 
       // Fetch profiles for linked accounts
       const profilesMap = new Map();
@@ -288,7 +320,7 @@ export function CampaignAnalyticsTable({
         (profiles || []).forEach(p => profilesMap.set(p.id, p));
       }
 
-      // Fetch ALL demographic submissions for accounts in this campaign
+      // Fetch ALL demographic submissions for all matched social accounts
       const { data: allSubmissions } = allSocialAccountIds.length > 0 
         ? await supabase
             .from("demographic_submissions")
@@ -321,7 +353,7 @@ export function CampaignAnalyticsTable({
           account = socialAccountsMap.get(accountKey);
         }
 
-        // If no match by user_id, try matching by username + platform (unlinked or not yet linked in analytics)
+        // If no match by user_id, try matching by username + platform (globally)
         if (!account) {
           const usernameKey = `${normalizedPlatform}_${normalizedAnalyticsUsername}`;
           account = socialAccountsByUsernameMap.get(usernameKey);
