@@ -406,7 +406,7 @@ export function JoinCampaignSheet({
               }}>
                     {campaign.platforms.map(platform => {
                   const platformIcon = getPlatformIcon(platform);
-                  return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
+                  return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-5 h-5" /> : null;
                 })}
                   </span>}
                 </div>}
