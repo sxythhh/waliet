@@ -824,23 +824,28 @@ export default function AdminPayouts() {
                               </p>
                               <div 
                                 className="flex items-center gap-2 cursor-pointer hover:bg-muted/20 rounded px-2 py-1 -ml-2 transition-colors group"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  
                                   let textToCopy = '';
                                   if (request.payout_method === 'crypto') {
-                                    textToCopy = request.payout_details?.address || request.payout_details?.wallet_address || '';
+                                    textToCopy = String(request.payout_details?.address || request.payout_details?.wallet_address || '').trim();
                                   } else if (request.payout_method === 'upi') {
-                                    textToCopy = request.payout_details?.upi_id || '';
+                                    textToCopy = String(request.payout_details?.upi_id || '').trim();
                                   } else if (request.payout_method === 'wise') {
-                                    textToCopy = request.payout_details?.account_holder_name || request.payout_details?.email || '';
+                                    textToCopy = String(request.payout_details?.account_holder_name || request.payout_details?.email || '').trim();
                                   } else {
-                                    textToCopy = request.payout_details?.email || request.payout_details?.account_number || '';
+                                    textToCopy = String(request.payout_details?.email || request.payout_details?.account_number || '').trim();
                                   }
                                   
-                                  navigator.clipboard.writeText(textToCopy);
-                                  toast({
-                                    title: "Copied!",
-                                    description: "Payment details copied to clipboard"
-                                  });
+                                  if (textToCopy) {
+                                    navigator.clipboard.writeText(textToCopy);
+                                    toast({
+                                      title: "Copied!",
+                                      description: "Payment details copied to clipboard"
+                                    });
+                                  }
                                 }}
                               >
                                 <p className="text-sm font-mono truncate flex-1">

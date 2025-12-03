@@ -144,7 +144,9 @@ export function UserDetailsDialog({
   const [isUpdatingTrustScore, setIsUpdatingTrustScore] = useState(false);
   
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
+    const sanitizedText = String(text || '').trim();
+    if (!sanitizedText) return;
+    navigator.clipboard.writeText(sanitizedText);
     toast({
       title: "Copied!",
       description: `${label} copied to clipboard`,
