@@ -65,7 +65,7 @@ export function ConnectedAccountsTab() {
     setLoading(false);
   };
 
-  const handleDisconnect = async (connectionId: string, accountName: string, campaignName: string) => {
+  const handleDisconnect = async (connectionId: string, socialAccountId: string, campaignId: string, accountName: string, campaignName: string) => {
     const { error } = await supabase
       .from("social_account_campaigns")
       .update({ 
@@ -77,6 +77,18 @@ export function ConnectedAccountsTab() {
     if (error) {
       toast.error("Failed to disconnect account");
       return;
+    }
+
+    // Stop tracking in Shortimize (non-blocking)
+    try {
+      await supabase.functions.invoke('untrack-shortimize-account', {
+        body: {
+          campaignId,
+          socialAccountId,
+        },
+      });
+    } catch (err) {
+      console.error('Failed to untrack from Shortimize:', err);
     }
 
     toast.success(`Disconnected ${accountName} from ${campaignName}`);
@@ -189,6 +201,8 @@ export function ConnectedAccountsTab() {
                         onClick={() =>
                           handleDisconnect(
                             campaign.id,
+                            accountId,
+                            campaign.campaign_id,
                             data.account.username,
                             campaign.campaign.title
                           )
