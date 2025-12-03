@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.x-oauth]
 verify_jwt = false
+
+[functions.create-campaign-webhook]
+verify_jwt = false
