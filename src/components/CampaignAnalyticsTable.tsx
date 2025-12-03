@@ -820,36 +820,10 @@ export function CampaignAnalyticsTable({
         budget_used: (campaignData.budget_used || 0) + amount
       }).eq("id", campaignId);
       if (campaignUpdateError) throw campaignUpdateError;
-      // Send email notification
-      try {
-        const {
-          data: userProfile
-        } = await supabase.from("profiles").select("email, full_name, username").eq("id", selectedUser.user_id).single();
-        const {
-          data: campaignData
-        } = await supabase.from("campaigns").select("title").eq("id", campaignId).single();
-        if (userProfile?.email && campaignData?.title) {
-          await supabase.functions.invoke("send-payment-notification", {
-            body: {
-              userId: selectedUser.user_id,
-              userEmail: userProfile.email,
-              userName: userProfile.full_name || userProfile.username,
-              amount: amount,
-              campaignName: campaignData.title,
-              accountUsername: selectedUser.account_username,
-              platform: selectedUser.platform,
-              views: selectedUser.total_views
-            }
-          });
-        }
-      } catch (emailError) {
-        console.error("Error sending payment notification email:", emailError);
-        // Don't fail the payment if email fails
-      }
-      toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
-      
-      // Optimistic update for immediate UI feedback
+      // Optimistic update for immediate UI feedback BEFORE closing dialog
       const paymentTimestamp = new Date().toISOString();
+      const updatedUser = { ...selectedUser };
+      
       setAnalytics(prev => prev.map(item => 
         item.id === selectedUser.id 
           ? { 
@@ -861,19 +835,54 @@ export function CampaignAnalyticsTable({
           : item
       ));
       
+      // Close dialog and reset state immediately
       setPaymentDialogOpen(false);
       setPaymentAmount("");
       setSelectedUser(null);
+      setIsSubmitting(false);
+      
+      toast.success(`Payment of $${amount.toFixed(2)} sent successfully`);
 
-      // Background refresh to sync with database
-      Promise.all([fetchAnalytics(), fetchTransactions()]);
+      // Fire and forget: Send email notification in background (don't await)
+      (async () => {
+        try {
+          const { data: userProfile } = await supabase
+            .from("profiles")
+            .select("email, full_name, username")
+            .eq("id", updatedUser.user_id)
+            .single();
+          const { data: campaignInfo } = await supabase
+            .from("campaigns")
+            .select("title")
+            .eq("id", campaignId)
+            .single();
+          if (userProfile?.email && campaignInfo?.title) {
+            await supabase.functions.invoke("send-payment-notification", {
+              body: {
+                userId: updatedUser.user_id,
+                userEmail: userProfile.email,
+                userName: userProfile.full_name || userProfile.username,
+                amount: amount,
+                campaignName: campaignInfo.title,
+                accountUsername: updatedUser.account_username,
+                platform: updatedUser.platform,
+                views: updatedUser.total_views
+              }
+            });
+          }
+        } catch (emailError) {
+          console.error("Error sending payment notification email:", emailError);
+        }
+      })();
+
+      // Background refresh without blocking UI
+      fetchTransactions();
       if (onPaymentComplete) {
         onPaymentComplete();
       }
     } catch (error) {
       console.error("Error processing payment:", error);
       toast.error("Failed to process payment");
-    } finally {
       setIsSubmitting(false);
     }
   };
