@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, LogOut, Plus, ExternalLink, Calendar, DollarSign, Eye, Users } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, ExternalLink, Calendar, DollarSign, Eye, Users } from "lucide-react";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo.png";
@@ -55,8 +54,6 @@ export default function CreatorCampaignDashboard() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [leavingCampaign, setLeavingCampaign] = useState(false);
-  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
 
   useEffect(() => {
@@ -162,48 +159,6 @@ export default function CreatorCampaignDashboard() {
     }
   };
 
-  const handleLeaveCampaign = async () => {
-    if (!campaign) return;
-    
-    setLeavingCampaign(true);
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Delete submissions
-      await supabase
-        .from("campaign_submissions")
-        .delete()
-        .eq("campaign_id", campaign.id)
-        .eq("creator_id", user.id);
-
-      // Disconnect social accounts
-      await supabase
-        .from("social_account_campaigns")
-        .update({ status: "disconnected", disconnected_at: new Date().toISOString() })
-        .eq("campaign_id", campaign.id)
-        .eq("user_id", user.id);
-
-      toast({
-        title: "Left Campaign",
-        description: "You have successfully left this campaign",
-      });
-
-      navigate("/dashboard?tab=campaigns");
-    } catch (error) {
-      console.error("Error leaving campaign:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to leave campaign",
-      });
-    } finally {
-      setLeavingCampaign(false);
-      setShowLeaveDialog(false);
-    }
-  };
-
   const handleAccountAdded = () => {
     fetchCampaignData();
   };
@@ -238,28 +193,6 @@ export default function CreatorCampaignDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard?tab=campaigns")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowLeaveDialog(true)}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Leave
-            </Button>
-          </div>
-        </div>
-      </div>
-
       <div className="container max-w-6xl mx-auto px-4 py-8">
         <div className="grid gap-8">
           {/* Campaign Header */}
@@ -425,27 +358,6 @@ export default function CreatorCampaignDashboard() {
           )}
         </div>
       </div>
-
-      {/* Leave Dialog */}
-      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Leave Campaign?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will withdraw your application and unlink all connected accounts.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleLeaveCampaign}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {leavingCampaign ? "Leaving..." : "Leave Campaign"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Add Account Dialog */}
       <AddSocialAccountDialog 
