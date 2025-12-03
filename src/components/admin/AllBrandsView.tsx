@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SalesDealSheet } from "@/components/admin/SalesDealSheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 type SalesStage = 'lead' | 'qualified' | 'negotiation' | 'won';
@@ -124,7 +125,7 @@ export function AllBrandsView() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Brand Name</TableHead>
+              <TableHead>Brand</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
@@ -135,10 +136,18 @@ export function AllBrandsView() {
             {brands.map((brand) => (
               <TableRow key={brand.id}>
                 <TableCell 
-                  className="font-medium cursor-pointer hover:text-primary transition-colors"
+                  className="cursor-pointer hover:text-primary transition-colors"
                   onClick={() => handleBrandClick(brand)}
                 >
-                  {brand.name}
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={brand.logo_url || ''} alt={brand.name} />
+                      <AvatarFallback className="text-xs bg-muted">
+                        {brand.name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{brand.name}</span>
+                  </div>
                 </TableCell>
                 <TableCell>
                   {brand.brand_type && (
