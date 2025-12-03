@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, DollarSign, Calendar as CalendarIcon, User, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Search, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -432,173 +432,120 @@ export default function Transactions() {
       </Card>
 
       {/* Mobile card view */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden space-y-2">
         {loading ? (
-          <Card className="p-6 text-center text-muted-foreground">
+          <Card className="p-6 text-center text-muted-foreground border border-border">
             Loading transactions...
           </Card>
         ) : filteredTransactions.length === 0 ? (
-          <Card className="p-6 text-center text-muted-foreground">
+          <Card className="p-6 text-center text-muted-foreground border border-border">
             No transactions found
           </Card>
         ) : filteredTransactions.map(tx => (
-          <Card key={tx.id} className="p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
+          <Card key={tx.id} className="p-3 border border-border">
+            <div className="flex items-start justify-between gap-3 mb-2">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span 
-                    className="font-medium text-sm cursor-pointer hover:text-primary transition-colors truncate"
-                    onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}
-                  >
-                    {tx.username || "Unknown"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-1 ml-5">
-                  <CalendarIcon className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(tx.created_at), "MMM d, yyyy · HH:mm")}
-                  </span>
-                </div>
+                <span 
+                  className="font-medium text-sm cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}
+                >
+                  {tx.username || "Unknown"}
+                </span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {format(new Date(tx.created_at), "MMM d, yyyy · HH:mm")}
+                </p>
               </div>
-              <div className={cn("font-semibold text-sm whitespace-nowrap", tx.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
+              <span className={cn("font-semibold text-sm", tx.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
                 {tx.amount >= 0 ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
-              </div>
+              </span>
             </div>
             
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="secondary" className="text-xs font-medium capitalize px-2.5 py-0.5">
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <Badge variant="outline" className="text-xs capitalize">
                 {tx.type.replace("_", " ")}
               </Badge>
               {getStatusBadge(tx.status)}
             </div>
 
-            <div className="text-sm">
-              {tx.campaign_name && (
-                <div className="flex items-center gap-2 mb-2">
-                  {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt={`${tx.campaign_name} logo`} className="h-5 w-5 rounded object-cover shrink-0" />}
-                  <span className="text-xs font-medium text-muted-foreground truncate">{tx.campaign_name}</span>
-                </div>
-              )}
-              {tx.type === "earning" && tx.metadata?.account_username && tx.metadata?.platform ? (
-                <div className="flex items-center gap-2">
-                  {getPlatformIcon(tx.metadata.platform) && <img src={getPlatformIcon(tx.metadata.platform)} alt={tx.metadata.platform} className="h-4 w-4 shrink-0" />}
-                  <span className="text-sm font-medium truncate">@{tx.metadata.account_username}</span>
-                </div>
-              ) : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? (
-                <div className="flex items-center gap-2">
-                  <ArrowUpRight className="h-4 w-4 text-red-500 shrink-0" />
-                  <span className="text-sm font-medium truncate">To: @{tx.metadata.recipient_username}</span>
-                </div>
-              ) : tx.type === "transfer_received" && tx.metadata?.sender_username ? (
-                <div className="flex items-center gap-2">
-                  <ArrowDownLeft className="h-4 w-4 text-green-500 shrink-0" />
-                  <span className="text-sm font-medium truncate">From: @{tx.metadata.sender_username}</span>
-                </div>
-              ) : (
-                <span className="text-sm text-muted-foreground line-clamp-2">{tx.description}</span>
-              )}
-            </div>
+            {(tx.campaign_name || tx.description) && (
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {tx.campaign_name || tx.description}
+              </p>
+            )}
           </Card>
         ))}
       </div>
 
       {/* Desktop table view */}
-      <Card className="hidden md:block overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[200px]">User & Date</TableHead>
-                <TableHead className="w-[140px]">Amount</TableHead>
-                <TableHead className="w-[120px]">Type</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead className="w-[80px] text-right">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    Loading transactions...
+      <div className="hidden md:block rounded-lg border border-border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent bg-muted/30">
+              <TableHead className="w-[200px] font-medium">User</TableHead>
+              <TableHead className="w-[160px] font-medium">Date</TableHead>
+              <TableHead className="w-[120px] font-medium">Amount</TableHead>
+              <TableHead className="w-[140px] font-medium">Type</TableHead>
+              <TableHead className="font-medium">Details</TableHead>
+              <TableHead className="w-[100px] text-right font-medium">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  Loading transactions...
+                </TableCell>
+              </TableRow> : filteredTransactions.length === 0 ? <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  No transactions found
+                </TableCell>
+              </TableRow> : filteredTransactions.map(tx => <TableRow key={tx.id} className="hover:bg-muted/30">
+                  <TableCell className="py-3">
+                    <span 
+                      className="font-medium text-sm cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}
+                    >
+                      {tx.username || "Unknown"}
+                    </span>
                   </TableCell>
-                </TableRow> : filteredTransactions.length === 0 ? <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    No transactions found
+                  <TableCell className="py-3 text-sm text-muted-foreground">
+                    {format(new Date(tx.created_at), "MMM d, yyyy · HH:mm")}
                   </TableCell>
-                </TableRow> : filteredTransactions.map(tx => <TableRow key={tx.id} className="hover:bg-muted/50">
-                    <TableCell className="py-3">
-                      <div className="flex flex-col gap-1">
+                  <TableCell className="py-3">
+                    <span className={cn("font-semibold text-sm", tx.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
+                      {tx.amount >= 0 ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {tx.type.replace("_", " ")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="flex flex-col gap-1">
+                      {tx.campaign_name && (
                         <div className="flex items-center gap-2">
-                          <User className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span 
-                            className="font-medium text-sm cursor-pointer hover:text-primary transition-colors"
-                            onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}
-                          >
-                            {tx.username || "Unknown"}
-                          </span>
+                          {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt={`${tx.campaign_name} logo`} className="h-4 w-4 rounded object-cover" />}
+                          <span className="text-sm">{tx.campaign_name}</span>
                         </div>
-                        <div className="flex items-center gap-2 ml-5">
-                          <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(tx.created_at), "MMM d, yyyy · HH:mm")}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <div className={cn("inline-flex items-center gap-1.5 font-semibold text-sm", tx.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
-                        <DollarSign className="h-3.5 w-3.5" />
-                        {tx.amount >= 0 ? "+" : ""}{tx.amount.toFixed(2)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <Badge variant="secondary" className="text-xs font-medium capitalize px-2.5 py-0.5 bg-[#000a00]/0">
-                        {tx.type.replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <div className="flex flex-col gap-2">
-                        {tx.campaign_name && <div className="flex items-center gap-2">
-                            {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt={`${tx.campaign_name} logo`} className="h-5 w-5 rounded object-cover" />}
-                            <span className="text-xs font-medium text-muted-foreground">{tx.campaign_name}</span>
-                          </div>}
-                        {tx.type === "earning" && tx.metadata?.account_username && tx.metadata?.platform ? <div className="flex items-center gap-2">
-                            {getPlatformIcon(tx.metadata.platform) && <img src={getPlatformIcon(tx.metadata.platform)} alt={tx.metadata.platform} className="h-4 w-4" />}
-                            <span className="text-sm font-medium">@{tx.metadata.account_username}</span>
-                          </div> : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? <div className="flex items-center gap-2">
-                            <ArrowUpRight className="h-4 w-4 text-red-500" />
-                            <span className="text-sm font-medium">To: @{tx.metadata.recipient_username}</span>
-                            {tx.metadata.note && <span className="text-xs text-muted-foreground">({tx.metadata.note})</span>}
-                          </div> : tx.type === "transfer_received" && tx.metadata?.sender_username ? <div className="flex items-center gap-2">
-                            <ArrowDownLeft className="h-4 w-4 text-green-500" />
-                            <span className="text-sm font-medium">From: @{tx.metadata.sender_username}</span>
-                            {tx.metadata.note && <span className="text-xs text-muted-foreground">({tx.metadata.note})</span>}
-                          </div> : <span className="text-sm text-muted-foreground">{tx.description}</span>}
-                        {(tx.type === "earning" || tx.metadata?.adjustment_type === "manual_budget_update") && (tx.metadata?.campaign_budget_before !== undefined || tx.metadata?.budget_before !== undefined) && (
-                          <div className="mt-2 px-3 py-2 rounded-md bg-muted/30">
-                            <div className="flex items-baseline gap-2 text-xs">
-                              <span className="text-muted-foreground">Budget:</span>
-                              <div className="flex items-baseline gap-1.5 font-mono">
-                                <span className="text-foreground/70">${Number(tx.metadata.budget_before || tx.metadata.campaign_budget_before || 0).toFixed(2)}</span>
-                                <span className="text-muted-foreground/50">→</span>
-                                <span className="text-foreground font-semibold">${Number(tx.metadata.budget_after || tx.metadata.campaign_budget_after || 0).toFixed(2)}</span>
-                                {tx.metadata.campaign_total_budget && (
-                                  <span className="text-muted-foreground/60 ml-1">of ${Number(tx.metadata.campaign_total_budget).toFixed(2)}</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3 text-right">
-                      {getStatusBadge(tx.status)}
-                    </TableCell>
-                  </TableRow>)}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+                      )}
+                      {tx.type === "earning" && tx.metadata?.account_username ? (
+                        <span className="text-sm text-muted-foreground">@{tx.metadata.account_username}</span>
+                      ) : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? (
+                        <span className="text-sm text-muted-foreground">To: @{tx.metadata.recipient_username}</span>
+                      ) : tx.type === "transfer_received" && tx.metadata?.sender_username ? (
+                        <span className="text-sm text-muted-foreground">From: @{tx.metadata.sender_username}</span>
+                      ) : !tx.campaign_name && (
+                        <span className="text-sm text-muted-foreground">{tx.description}</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-right">
+                    {getStatusBadge(tx.status)}
+                  </TableCell>
+                </TableRow>)}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* User Details Dialog */}
       {selectedUser && (
