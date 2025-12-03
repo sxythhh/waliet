@@ -296,12 +296,6 @@ export function CreateBrandDialog({
                     </FormItem>} />
 
               {/* Business Details */}
-              
-
-              {/* Renewal Date */}
-              <FormField control={form.control} name="renewal_date" render={({
-              field
-            }) => {}} />
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t">
