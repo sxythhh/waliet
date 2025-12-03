@@ -165,9 +165,9 @@ export default function CreatorCampaignDashboard() {
         // Fetch demographic data for all accounts
         const accountIds = accounts.map(a => a.id);
         if (accountIds.length > 0) {
-          const { data: demographics } = await supabase
+        const { data: demographics } = await supabase
             .from("demographic_submissions")
-            .select("social_account_id, status, submitted_at")
+            .select("social_account_id, status, submitted_at, reviewed_at")
             .in("social_account_id", accountIds)
             .order("submitted_at", { ascending: false });
 
@@ -177,15 +177,18 @@ export default function CreatorCampaignDashboard() {
             const latestDemo = accountDemos[0];
             
             if (latestDemo) {
-              const submittedDate = new Date(latestDemo.submitted_at);
-              const nextDate = new Date(submittedDate);
+              // Use reviewed_at for approved submissions, submitted_at for pending
+              const baseDate = latestDemo.status === 'approved' && latestDemo.reviewed_at 
+                ? new Date(latestDemo.reviewed_at) 
+                : new Date(latestDemo.submitted_at);
+              const nextDate = new Date(baseDate);
               nextDate.setDate(nextDate.getDate() + 30);
               const daysUntil = Math.ceil((nextDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
               
               demoMap[account.id] = {
                 status: latestDemo.status as 'approved' | 'pending' | 'rejected',
                 daysUntilNext: latestDemo.status === 'approved' ? Math.max(0, daysUntil) : null,
-                lastSubmissionDate: latestDemo.submitted_at,
+                lastSubmissionDate: latestDemo.reviewed_at || latestDemo.submitted_at,
                 nextSubmissionDate: latestDemo.status === 'approved' ? nextDate : null
               };
             } else {
