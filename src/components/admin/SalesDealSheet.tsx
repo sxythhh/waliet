@@ -184,7 +184,7 @@ export function SalesDealSheet({
               <div className="flex flex-wrap gap-2 pt-2">
                 {deal.brands?.brand_type === "DWY" && <ManageRoadmapDialog brandId={deal.brands.id} brandName={deal.brands.name} />}
                 {deal.brands && <EditBrandDialog brand={deal.brands} onSuccess={onUpdate} />}
-                <Button size="sm" variant="ghost" onClick={() => window.open(`/brand/${deal.brands?.slug}`, '_blank')}>
+                <Button size="sm" variant="ghost" onClick={() => window.open(`/brand/${deal.brands?.slug}/account`, '_blank')}>
                   <ExternalLink className="h-4 w-4 mr-1" />
                   View Page
                 </Button>
