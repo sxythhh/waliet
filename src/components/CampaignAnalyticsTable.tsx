@@ -287,21 +287,39 @@ export function CampaignAnalyticsTable({
       });
 
       // Fetch global social accounts for unmatched analytics accounts
+      // Use batched queries to avoid hitting the 1000 row limit
       if (unmatchedUsernames.length > 0) {
-        const { data: globalAccounts } = await supabase
-          .from("social_accounts")
-          .select("id, platform, username, user_id");
+        // Get original (non-normalized) usernames from analytics data for the query
+        // since .in() is case-sensitive
+        const unmatchedOriginalUsernames = [...new Set(
+          (data || [])
+            .filter(item => {
+              const key = `${normalizePlatform(item.platform)}_${normalizeUsername(item.account_username)}`;
+              return !socialAccountsByUsernameMap.has(key);
+            })
+            .map(item => item.account_username.trim().replace(/^@+/, ""))
+        )];
         
-        (globalAccounts || []).forEach(account => {
-          const normalizedUsername = normalizeUsername(account.username);
-          const normalizedPlatform = normalizePlatform(account.platform);
-          const usernameKey = `${normalizedPlatform}_${normalizedUsername}`;
+        // Batch fetch in chunks of 50 to avoid query size limits
+        const batchSize = 50;
+        for (let i = 0; i < unmatchedOriginalUsernames.length; i += batchSize) {
+          const batch = unmatchedOriginalUsernames.slice(i, i + batchSize);
+          const { data: globalAccounts } = await supabase
+            .from("social_accounts")
+            .select("id, platform, username, user_id")
+            .in("username", batch);
           
-          // Only add if not already in the map
-          if (!socialAccountsByUsernameMap.has(usernameKey)) {
-            socialAccountsByUsernameMap.set(usernameKey, account);
-          }
-        });
+          (globalAccounts || []).forEach(account => {
+            const normalizedUsername = normalizeUsername(account.username);
+            const normalizedPlatform = normalizePlatform(account.platform);
+            const usernameKey = `${normalizedPlatform}_${normalizedUsername}`;
+            
+            // Only add if not already in the map
+            if (!socialAccountsByUsernameMap.has(usernameKey)) {
+              socialAccountsByUsernameMap.set(usernameKey, account);
+            }
+          });
+        }
       }
 
       // Get all social account IDs for demographic submissions (from both campaign and global matches)
