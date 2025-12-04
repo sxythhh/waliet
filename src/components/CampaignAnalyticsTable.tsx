@@ -154,6 +154,20 @@ export function CampaignAnalyticsTable({
   const [selectedAccountForDemo, setSelectedAccountForDemo] = useState<AnalyticsData | null>(null);
   const itemsPerPage = 20;
   const transactionsPerPage = 20;
+
+  // Reset state when campaign changes
+  useEffect(() => {
+    setAnalytics([]);
+    setTransactions([]);
+    setLoading(true);
+    setCurrentPage(1);
+    setTransactionsCurrentPage(1);
+    setSearchTerm("");
+    setPlatformFilter("all");
+    setSelectedDateRange("all");
+    setDateRanges([]);
+  }, [campaignId]);
+
   useEffect(() => {
     if (!isPaused) {
       fetchAnalytics();
