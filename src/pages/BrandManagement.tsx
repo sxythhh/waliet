@@ -1397,12 +1397,12 @@ export default function BrandManagement() {
 
             {/* Analytics Tab */}
             <TabsContent value="analytics">
-              <Card className="bg-card border">
-                <CardHeader>
-                  <CardTitle className="font-instrument tracking-tight">Campaign Analytics</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {videos.length > 0 ? (
+              {videos.length > 0 && (
+                <Card className="bg-card border mb-6">
+                  <CardHeader>
+                    <CardTitle className="font-instrument tracking-tight">Video Analytics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <Card className="bg-accent/50 border-accent">
                         <CardContent className="p-4">
@@ -1460,13 +1460,16 @@ export default function BrandManagement() {
                         </CardContent>
                       </Card>
                     </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground text-sm">Fetch videos from the Videos tab to see analytics</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {selectedCampaign && (
+                <CampaignAnalyticsTable 
+                  campaignId={selectedCampaign.id}
+                  onPaymentComplete={() => fetchTransactions()}
+                />
+              )}
             </TabsContent>
 
             {/* Videos Tab */}
