@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow, format } from "date-fns";
 import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
+import { ImportCampaignStatsDialog } from "./ImportCampaignStatsDialog";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
@@ -1154,9 +1155,14 @@ export function CampaignAnalyticsTable({
           <div className="text-center py-8">
             <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Analytics Data</h3>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              No account analytics have been imported for this campaign yet. Use the "Import Stats" feature or connect accounts via Shortimize to start tracking analytics.
+            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-4">
+              No account analytics have been imported for this campaign yet. Import stats from a CSV file or connect accounts via Shortimize to start tracking analytics.
             </p>
+            <ImportCampaignStatsDialog
+              campaignId={campaignId}
+              onImportComplete={fetchAnalytics}
+              onMatchingRequired={() => {}}
+            />
           </div>
         </CardContent>
       </Card>
