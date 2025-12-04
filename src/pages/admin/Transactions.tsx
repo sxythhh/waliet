@@ -450,7 +450,11 @@ export default function Transactions() {
               {getStatusBadge(tx.status)}
             </div>
 
-            {(tx.campaign_name || tx.description) && <p className="text-xs text-muted-foreground line-clamp-2">
+            {tx.type === 'balance_correction' && tx.metadata?.adjustment_type === 'manual_budget_update' && tx.metadata?.campaign_budget_before !== undefined ? (
+              <p className="text-xs text-muted-foreground">
+                ${Number(tx.metadata.campaign_budget_before).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} → ${Number(tx.metadata.campaign_budget_after).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            ) : (tx.campaign_name || tx.description) && <p className="text-xs text-muted-foreground line-clamp-2">
                 {tx.campaign_name || tx.description}
               </p>}
           </Card>)}
@@ -505,7 +509,11 @@ export default function Transactions() {
                           {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt={`${tx.campaign_name} logo`} className="h-4 w-4 rounded object-cover" />}
                           <span className="text-sm">{tx.campaign_name}</span>
                         </div>}
-                      {tx.type === "earning" && tx.metadata?.account_username ? <span className="text-sm text-muted-foreground">@{tx.metadata.account_username}</span> : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? <span className="text-sm text-muted-foreground">To: @{tx.metadata.recipient_username}</span> : tx.type === "transfer_received" && tx.metadata?.sender_username ? <span className="text-sm text-muted-foreground">From: @{tx.metadata.sender_username}</span> : !tx.campaign_name && <span className="text-sm text-muted-foreground">{tx.description}</span>}
+                      {tx.type === 'balance_correction' && tx.metadata?.adjustment_type === 'manual_budget_update' && tx.metadata?.campaign_budget_before !== undefined ? (
+                        <span className="text-sm text-muted-foreground">
+                          ${Number(tx.metadata.campaign_budget_before).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} → ${Number(tx.metadata.campaign_budget_after).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      ) : tx.type === "earning" && tx.metadata?.account_username ? <span className="text-sm text-muted-foreground">@{tx.metadata.account_username}</span> : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? <span className="text-sm text-muted-foreground">To: @{tx.metadata.recipient_username}</span> : tx.type === "transfer_received" && tx.metadata?.sender_username ? <span className="text-sm text-muted-foreground">From: @{tx.metadata.sender_username}</span> : !tx.campaign_name && <span className="text-sm text-muted-foreground">{tx.description}</span>}
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-right">
