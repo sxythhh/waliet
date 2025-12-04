@@ -120,27 +120,16 @@ interface Submission {
     social_accounts: SocialAccount[];
   };
 }
-export default function BrandManagement({
-  showVideosTab = true,
-  showImportButton = true,
-  showAnalyticsTable = false,
-  isManagementPage = false
-}: {
-  showVideosTab?: boolean;
-  showImportButton?: boolean;
-  showAnalyticsTable?: boolean;
-  isManagementPage?: boolean;
-}) {
-  const params = useParams();
+export default function BrandManagement() {
+  const { campaignSlug } = useParams();
   const navigate = useNavigate();
-  const slug = isManagementPage ? params.campaignSlug : params.slug;
   const {
     isAdmin,
     loading: adminLoading
   } = useAdminCheck();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [allCampaigns, setAllCampaigns] = useState<Array<{ id: string; title: string; slug: string }>>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
-  const [allBrands, setAllBrands] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
@@ -547,22 +536,18 @@ export default function BrandManagement({
   };
 
   useEffect(() => {
-    fetchAllBrands();
+    fetchAllCampaigns();
   }, []);
 
   useEffect(() => {
-    fetchCampaigns();
-  }, [slug]);
+    fetchCampaign();
+  }, [campaignSlug]);
 
   useEffect(() => {
-    if (isManagementPage && selectedCampaignId) {
+    if (selectedCampaignId) {
       fetchCampaignTransactions();
     }
-  }, [isManagementPage, selectedCampaignId]);
-
-  useEffect(() => {
-    // Removed auto-fetch on mount - users should manually load with collection name
-  }, [isManagementPage, brandId, shortimizeApiKey]);
+  }, [selectedCampaignId]);
   useEffect(() => {
     if (selectedCampaignId) {
       fetchSubmissions();
@@ -606,7 +591,7 @@ export default function BrandManagement({
       setAnalytics(data || []);
 
       // Refresh campaign data to get updated budget_used
-      fetchCampaigns();
+      fetchCampaign();
     } catch (error) {
       console.error("Error fetching analytics:", error);
     }
@@ -658,122 +643,85 @@ export default function BrandManagement({
       console.error("Error fetching transactions:", error);
     }
   };
-  const fetchAllBrands = async () => {
+  const fetchAllCampaigns = async () => {
     try {
       const { data, error } = await supabase
-        .from("brands")
-        .select("id, name, slug")
-        .eq("is_active", true)
-        .order("name");
+        .from("campaigns")
+        .select("id, title, slug")
+        .order("title");
 
       if (error) throw error;
-      setAllBrands(data || []);
+      setAllCampaigns(data || []);
     } catch (error) {
-      console.error("Error fetching brands:", error);
+      console.error("Error fetching all campaigns:", error);
     }
   };
 
-  const fetchCampaigns = async () => {
-    if (!slug && !isManagementPage) return;
+  const fetchCampaign = async () => {
+    if (!campaignSlug) return;
     
     try {
-      if (isManagementPage && slug) {
-        // Management page: fetch by campaign slug
-        const { data: campaignData, error: campaignError } = await supabase
-          .from("campaigns")
-          .select(`
-            id, 
-            title, 
-            description, 
-            budget, 
-            budget_used, 
-            rpm_rate, 
-            status, 
-            banner_url, 
-            preview_url, 
-            analytics_url, 
-            guidelines, 
-            allowed_platforms, 
-            application_questions, 
-            slug, 
-            embed_url, 
-            is_private, 
-            access_code, 
-            requires_application, 
-            is_infinite_budget, 
-            is_featured,
-            brand_id,
-            brands!campaigns_brand_id_fkey (
-              id,
-              name,
-              assets_url, 
-              home_url, 
-              account_url, 
-              brand_type, 
-              shortimize_api_key,
-              collection_id,
-              collection_name
-            )
-          `)
-          .eq("slug", slug)
-          .maybeSingle();
+      const { data: campaignData, error: campaignError } = await supabase
+        .from("campaigns")
+        .select(`
+          id, 
+          title, 
+          description, 
+          budget, 
+          budget_used, 
+          rpm_rate, 
+          status, 
+          banner_url, 
+          preview_url, 
+          analytics_url, 
+          guidelines, 
+          allowed_platforms, 
+          application_questions, 
+          slug, 
+          embed_url, 
+          is_private, 
+          access_code, 
+          requires_application, 
+          is_infinite_budget, 
+          is_featured,
+          brand_id,
+          brands!campaigns_brand_id_fkey (
+            id,
+            name,
+            assets_url, 
+            home_url, 
+            account_url, 
+            brand_type, 
+            shortimize_api_key,
+            collection_id,
+            collection_name
+          )
+        `)
+        .eq("slug", campaignSlug)
+        .maybeSingle();
 
-        if (campaignError) throw campaignError;
-        if (!campaignData) return;
+      if (campaignError) throw campaignError;
+      if (!campaignData) return;
 
-        const brandData = campaignData.brands;
-        setBrandId(brandData.id);
-        setCurrentBrandName(brandData.name);
-        setAssetsUrl(brandData.assets_url || "");
-        setHomeUrl(brandData.home_url || "");
-        setAccountUrl(brandData.account_url || "");
-        setBrandType(brandData.brand_type || "");
-        setShortimizeApiKey(brandData.shortimize_api_key || "");
-        setBrandCollectionId(brandData.collection_id || "");
-        setBrandCollectionName(brandData.collection_name || "");
+      const brandData = campaignData.brands;
+      setBrandId(brandData.id);
+      setCurrentBrandName(brandData.name);
+      setAssetsUrl(brandData.assets_url || "");
+      setHomeUrl(brandData.home_url || "");
+      setAccountUrl(brandData.account_url || "");
+      setBrandType(brandData.brand_type || "");
+      setShortimizeApiKey(brandData.shortimize_api_key || "");
+      setBrandCollectionId(brandData.collection_id || "");
+      setBrandCollectionName(brandData.collection_name || "");
 
-        setCampaigns([{
-          ...campaignData,
-          application_questions: Array.isArray(campaignData.application_questions) ? campaignData.application_questions : []
-        }]);
-        setSelectedCampaignId(campaignData.id);
-      } else {
-        // Regular brand dashboard: fetch by brand slug
-        const { data: brandData, error: brandError } = await supabase
-          .from("brands")
-          .select("id, name, assets_url, home_url, account_url, brand_type, shortimize_api_key")
-          .eq("slug", slug)
-          .maybeSingle();
-
-        if (brandError) throw brandError;
-        if (!brandData) return;
-
-        setBrandId(brandData.id);
-        setCurrentBrandName(brandData.name);
-        setAssetsUrl(brandData.assets_url || "");
-        setHomeUrl(brandData.home_url || "");
-        setAccountUrl(brandData.account_url || "");
-        setBrandType(brandData.brand_type || "");
-        setShortimizeApiKey(brandData.shortimize_api_key || "");
-
-        const { data, error } = await supabase
-          .from("campaigns")
-          .select("id, title, description, budget, budget_used, rpm_rate, status, banner_url, preview_url, analytics_url, guidelines, allowed_platforms, application_questions, slug, embed_url, is_private, access_code, requires_application, is_infinite_budget, is_featured")
-          .eq("brand_id", brandData.id)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setCampaigns((data || []).map(c => ({
-          ...c,
-          application_questions: Array.isArray(c.application_questions) ? c.application_questions : []
-        })));
-        if (data && data.length > 0) {
-          setSelectedCampaignId(data[0].id);
-        }
-      }
+      setCampaigns([{
+        ...campaignData,
+        application_questions: Array.isArray(campaignData.application_questions) ? campaignData.application_questions : []
+      }]);
+      setSelectedCampaignId(campaignData.id);
     } catch (error) {
-      console.error("Error fetching campaigns:", error);
-      toast.error("Failed to load campaigns");
+      console.error("Error fetching campaign:", error);
+      toast.error("Failed to load campaign");
     } finally {
       setLoading(false);
     }
@@ -904,7 +852,7 @@ export default function BrandManagement({
       } = await supabase.from("campaigns").delete().eq("id", selectedCampaignId);
       if (error) throw error;
       toast.success("Campaign deleted successfully");
-      fetchCampaigns();
+      fetchCampaign();
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting campaign:", error);
@@ -1015,7 +963,7 @@ export default function BrandManagement({
       }
       toast.success("Budget updated successfully");
       setEditBudgetDialogOpen(false);
-      fetchCampaigns();
+      fetchCampaign();
     } catch (error) {
       console.error("Error updating budget:", error);
       toast.error("Failed to update budget");
@@ -1036,7 +984,7 @@ export default function BrandManagement({
     }
   };
   const handleRefresh = () => {
-    fetchCampaigns();
+    fetchCampaign();
     fetchSubmissions();
     fetchAnalytics();
     fetchTransactions();
@@ -1145,7 +1093,7 @@ export default function BrandManagement({
       setPaymentDialogOpen(false);
       setSelectedUserForPayment(null);
       setPaymentAmount("");
-      fetchCampaigns();
+      fetchCampaign();
       fetchTransactions();
       fetchAnalytics();
     } catch (error) {
@@ -1352,40 +1300,33 @@ export default function BrandManagement({
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-foreground font-instrument tracking-tight">
-                {isManagementPage ? 'Brand Management' : currentBrandName}
+                {selectedCampaign?.title || 'Campaign Management'}
               </h1>
-              {!isManagementPage && allBrands.length > 1 && (
+              {allCampaigns.length > 1 && (
                 <Select 
-                  value={slug} 
-                  onValueChange={(newSlug) => navigate(`/brand/${newSlug}`)}
+                  value={campaignSlug} 
+                  onValueChange={(newSlug) => navigate(`/manage/${newSlug}`)}
                 >
-                  <SelectTrigger className="w-[200px] bg-card border">
-                    <SelectValue placeholder="Switch brand" />
+                  <SelectTrigger className="w-[280px] bg-card border">
+                    <SelectValue placeholder="Switch campaign" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border z-50">
-                    {allBrands.map(brand => (
+                    {allCampaigns.map(campaign => (
                       <SelectItem 
-                        key={brand.id} 
-                        value={brand.slug} 
+                        key={campaign.id} 
+                        value={campaign.slug} 
                         className="hover:bg-accent focus:bg-accent"
                       >
-                        {brand.name}
+                        {campaign.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
             </div>
-            {!isManagementPage && campaigns.length > 1 && <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-                <SelectTrigger className="w-[280px] bg-card border">
-                  <SelectValue placeholder="Select campaign" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border z-50">
-                  {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="hover:bg-accent focus:bg-accent">
-                      {campaign.title}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>}
+            {currentBrandName && (
+              <p className="text-sm text-muted-foreground">{currentBrandName}</p>
+            )}
           </div>
         </div>
 
@@ -1435,8 +1376,8 @@ export default function BrandManagement({
           </div>
         )}
 
-        {/* Conditional Content Based on Page Type */}
-        {isManagementPage ? (
+        {/* Main Content */}
+        {selectedCampaign && (
           // Management Page: Tabs with Analytics, Videos, Users, Payouts
           <Tabs defaultValue="analytics" className="w-full">
             <TabsList className="bg-card border">
@@ -1825,497 +1766,6 @@ export default function BrandManagement({
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
-        ) : (
-          // Brand Page: Full Tabs with All Features
-          <Tabs defaultValue="analytics" className="w-full">
-            <TabsList className="bg-card border">
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-accent">
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger value="creators" className="data-[state=active]:bg-accent">
-                Users
-                <Badge variant="secondary" className="ml-2">
-                  {approvedSubmissions.length}
-                </Badge>
-              </TabsTrigger>
-              {showVideosTab && <TabsTrigger value="videos" className="data-[state=active]:bg-accent">
-                  Videos
-                </TabsTrigger>}
-              <TabsTrigger value="applications" className="data-[state=active]:bg-accent">
-                Applications
-                {pendingSubmissions.length > 0 && <Badge className="ml-2 bg-primary">{pendingSubmissions.length}</Badge>}
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-accent">
-                Settings
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Analytics Tab */}
-            <TabsContent value="analytics" className="space-y-4">
-              <Card className="bg-card border">
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
-                      <div className="text-2xl font-bold font-chakra">
-                        {(() => {
-                        const accountViews = analytics.reduce((acc, a) => {
-                          const key = `${a.platform}-${a.account_username}`;
-                          acc[key] = (acc[key] || 0) + (Number(a.total_views) || 0);
-                          return acc;
-                        }, {} as Record<string, number>);
-                        return Object.values(accountViews).reduce((sum: number, views: number) => sum + views, 0).toLocaleString();
-                      })()}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">Total Views</div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
-                      <div className="text-2xl font-bold font-chakra">
-                        {(() => {
-                        const uniqueAccounts = new Set(analytics.map(a => `${a.platform}-${a.account_username}`));
-                        return uniqueAccounts.size;
-                      })()}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">Total Accounts</div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
-                      <div className="text-2xl font-bold font-chakra">
-                        ${Number(selectedCampaign?.budget_used || 0).toFixed(2)}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
-                        Budget Used
-                        {isAdmin && <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-accent" onClick={handleEditBudgetUsed} title="Edit budget used">
-                            <Edit className="h-3 w-3" />
-                          </Button>}
-                      </div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-[#0d0d0d]">
-                      <div className="text-2xl font-bold font-chakra">
-                        ${effectiveCPM.toFixed(2)}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">Effective CPM</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {showImportButton && <div className="flex justify-end gap-2">
-                  <ImportCampaignStatsDialog campaignId={selectedCampaignId} onImportComplete={fetchSubmissions} onMatchingRequired={() => setMatchDialogOpen(true)} />
-                </div>}
-              
-              {showAnalyticsTable && <CampaignAnalyticsTable campaignId={selectedCampaignId} onPaymentComplete={fetchSubmissions} />}
-              
-              <MatchAccountsDialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen} campaignId={selectedCampaignId} onMatchComplete={fetchSubmissions} />
-            </TabsContent>
-
-            {/* Creators Tab - Keeping all existing code */}
-            <TabsContent value="creators">
-              <Card className="bg-card border">
-                <CardHeader className="pb-4 border-b border-border space-y-4">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-instrument tracking-tight">
-                      Active Creators
-                      <Badge variant="secondary" className="ml-2">
-                        {approvedSubmissions.length}
-                      </Badge>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={exportToCSV} disabled={approvedSubmissions.length === 0} className="flex items-center gap-2 border-0">
-                      <Download className="h-4 w-4" />
-                      Export CSV
-                    </Button>
-                  </CardTitle>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="text" placeholder="Search by name or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50" />
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {approvedSubmissions.length === 0 ? <div className="text-center py-12">
-                      <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground text-sm">No active creators yet</p>
-                    </div> : <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="hover:bg-transparent border-b border-border">
-                            <TableHead className="font-medium text-muted-foreground">Creator</TableHead>
-                            <TableHead className="font-medium text-muted-foreground">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setAccountSortOrder(accountSortOrder === 'desc' ? 'asc' : accountSortOrder === 'asc' ? null : 'desc')}
-                                className="h-auto p-0 hover:bg-transparent"
-                              >
-                                Linked Accounts
-                                {accountSortOrder && <span className="ml-1">{accountSortOrder === 'desc' ? '↓' : '↑'}</span>}
-                              </Button>
-                            </TableHead>
-                            <TableHead className="font-medium text-muted-foreground">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : sortOrder === 'asc' ? null : 'desc')}
-                                className="h-auto p-0 hover:bg-transparent"
-                              >
-                                Total Paid
-                                {sortOrder && <span className="ml-1">{sortOrder === 'desc' ? '↓' : '↑'}</span>}
-                              </Button>
-                            </TableHead>
-                            <TableHead className="font-medium text-muted-foreground">Joined</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {approvedSubmissions.map((submission) => {
-                            const totalPaid = transactions.filter(txn => txn.user_id === submission.creator_id).reduce((sum, txn) => sum + Number(txn.amount || 0), 0);
-                            const linkedAccounts = submission.profiles?.social_accounts || [];
-                            
-                            return (
-                              <TableRow key={submission.id} className="border-b border-border hover:bg-accent/50">
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                      {submission.profiles?.username?.[0]?.toUpperCase() || '?'}
-                                    </div>
-                                    <span className="font-medium">
-                                      {submission.profiles?.username || 'Unknown'}
-                                    </span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  {linkedAccounts.length > 0 ? (
-                                    <div className="flex flex-wrap gap-3">
-                                      {linkedAccounts.map((account: any, idx: number) => {
-                                        const platformIcon = getPlatformIcon(account.platform);
-                                        return (
-                                          <a
-                                            key={idx}
-                                            href={account.account_link || '#'}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 group"
-                                          >
-                                            {platformIcon && (
-                                              <img 
-                                                src={platformIcon} 
-                                                alt={account.platform}
-                                                className="w-4 h-4 object-contain"
-                                              />
-                                            )}
-                                            <span className="text-sm group-hover:underline">
-                                              {account.username}
-                                            </span>
-                                          </a>
-                                        );
-                                      })}
-                                    </div>
-                                  ) : (
-                                    <span className="text-muted-foreground text-sm">No accounts</span>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <span className="font-medium">${totalPaid.toFixed(2)}</span>
-                                </TableCell>
-                                <TableCell className="text-muted-foreground">
-                                  {format(new Date(submission.submitted_at), 'MMM dd, yyyy')}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Applications Tab */}
-            <TabsContent value="applications">
-              <Card className="bg-card border">
-                <CardHeader className="pb-4 border-b border-border">
-                  <CardTitle className="flex items-center gap-2 font-instrument tracking-tight">
-                    Pending Applications
-                    <Badge variant="secondary" className="ml-2">
-                      {pendingSubmissions.length}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {pendingSubmissions.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground text-sm">No pending applications</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="hover:bg-transparent border-b border-border">
-                            <TableHead className="font-medium text-muted-foreground">Creator</TableHead>
-                            <TableHead className="font-medium text-muted-foreground">Linked Accounts</TableHead>
-                            <TableHead className="font-medium text-muted-foreground">Submitted</TableHead>
-                            <TableHead className="font-medium text-muted-foreground">Application</TableHead>
-                            <TableHead className="text-right font-medium text-muted-foreground">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {pendingSubmissions.map((submission) => (
-                            <TableRow key={submission.id} className="border-b border-border hover:bg-accent/50">
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                    {submission.profiles?.username?.[0]?.toUpperCase() || '?'}
-                                  </div>
-                                  <span className="font-medium">
-                                    {submission.profiles?.username || 'Unknown'}
-                                  </span>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-col gap-2">
-                                  {submission.profiles?.social_accounts && submission.profiles.social_accounts.length > 0 ? (
-                                    submission.profiles.social_accounts.map((account: any) => (
-                                      <div key={account.id} className="flex items-center gap-2">
-                                        {getPlatformIcon(account.platform) && (
-                                          <img 
-                                            src={getPlatformIcon(account.platform)!} 
-                                            alt={account.platform} 
-                                            className="h-4 w-4 object-contain"
-                                          />
-                                        )}
-                                        <span className="text-sm font-medium">@{account.username}</span>
-                                        <Badge variant="secondary" className="text-xs">
-                                          {account.follower_count?.toLocaleString() || 0} followers
-                                        </Badge>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <span className="text-muted-foreground text-sm">No accounts linked</span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {format(new Date(submission.submitted_at), 'MMM dd, yyyy')}
-                              </TableCell>
-                              <TableCell>
-                                {submission.application_answers && Object.keys(submission.application_answers).length > 0 ? (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedUser(submission);
-                                      setIsUserDialogOpen(true);
-                                    }}
-                                  >
-                                    View Answers
-                                  </Button>
-                                ) : (
-                                  <span className="text-muted-foreground text-sm">No answers</span>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleApproveSubmission(submission.id)}
-                                    disabled={processingSubmissionId === submission.id}
-                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                  >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleRejectSubmission(submission.id)}
-                                    disabled={processingSubmissionId === submission.id}
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Historical Applications */}
-              {historicalSubmissions.length > 0 && (
-                <Card className="bg-card border mt-6">
-                  <CardHeader className="pb-4 border-b border-border">
-                    <CardTitle className="flex items-center gap-2 font-instrument tracking-tight">
-                      Application History
-                      <Badge variant="secondary" className="ml-2">
-                        {historicalSubmissions.length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="hover:bg-transparent border-b border-border">
-                            <TableHead className="font-medium text-muted-foreground">Creator</TableHead>
-                            <TableHead className="font-medium text-muted-foreground">Status</TableHead>
-                            <TableHead className="font-medium text-muted-foreground">Submitted</TableHead>
-                            <TableHead className="font-medium text-muted-foreground">Reviewed</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {historicalSubmissions.map((submission) => (
-                            <TableRow key={submission.id} className="border-b border-border hover:bg-accent/50">
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                    {submission.profiles?.username?.[0]?.toUpperCase() || '?'}
-                                  </div>
-                                  <span className="font-medium">
-                                    {submission.profiles?.username || 'Unknown'}
-                                  </span>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge 
-                                  variant={
-                                    submission.status === 'approved' ? 'default' : 
-                                    submission.status === 'rejected' ? 'destructive' : 
-                                    'secondary'
-                                  }
-                                  className="capitalize"
-                                >
-                                  {submission.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {format(new Date(submission.submitted_at), 'MMM dd, yyyy')}
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {submission.reviewed_at 
-                                  ? format(new Date(submission.reviewed_at), 'MMM dd, yyyy')
-                                  : '-'
-                                }
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            {/* Settings Tab */}
-            <TabsContent value="settings">
-              <Card className="border">
-                <CardHeader>
-                  <CardTitle className="text-xl font-instrument">Campaign Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="shortimize-key">Shortimize API Key</Label>
-                      <Input
-                        id="shortimize-key"
-                        type="password"
-                        value={shortimizeApiKey}
-                        onChange={(e) => setShortimizeApiKey(e.target.value)}
-                        placeholder="Enter your Shortimize API key"
-                        className="mt-2 bg-card border"
-                      />
-                      <p className="text-sm text-muted-foreground mt-2">
-                        This API key is used to fetch analytics data from Shortimize for this brand.
-                      </p>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="collection-id">Collection ID</Label>
-                      <Input
-                        id="collection-id"
-                        value={brandCollectionId}
-                        onChange={(e) => setBrandCollectionId(e.target.value)}
-                        placeholder="Enter collection ID"
-                        className="mt-2 bg-card border"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="collection-name">Collection Name</Label>
-                      <Input
-                        id="collection-name"
-                        value={brandCollectionName}
-                        onChange={(e) => setBrandCollectionName(e.target.value)}
-                        placeholder="Enter collection name"
-                        className="mt-2 bg-card border"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="assets-url">Assets URL</Label>
-                      <Input
-                        id="assets-url"
-                        value={assetsUrl}
-                        onChange={(e) => setAssetsUrl(e.target.value)}
-                        placeholder="https://..."
-                        className="mt-2 bg-card border"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="home-url">Home URL</Label>
-                      <Input
-                        id="home-url"
-                        value={homeUrl}
-                        onChange={(e) => setHomeUrl(e.target.value)}
-                        placeholder="https://..."
-                        className="mt-2 bg-card border"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="account-url">Account URL</Label>
-                      <Input
-                        id="account-url"
-                        value={accountUrl}
-                        onChange={(e) => setAccountUrl(e.target.value)}
-                        placeholder="https://..."
-                        className="mt-2 bg-card border"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="brand-type">Brand Type</Label>
-                      <Select value={brandType} onValueChange={setBrandType}>
-                        <SelectTrigger id="brand-type" className="mt-2 bg-card border">
-                          <SelectValue placeholder="Select brand type" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card border z-50">
-                          <SelectItem value="dwy">DWY (Done With You)</SelectItem>
-                          <SelectItem value="dfy">DFY (Done For You)</SelectItem>
-                          <SelectItem value="standard">Standard</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Button 
-                      onClick={handleSaveUrls} 
-                      disabled={savingUrls}
-                      className="w-full md:w-auto"
-                    >
-                      {savingUrls ? "Saving..." : "Save Settings"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Videos Tab */}
-            {showVideosTab && <TabsContent value="videos">
-                <VideosTab campaignId={selectedCampaignId} isAdmin={isAdmin} approvedCreators={approvedSubmissions} />
-              </TabsContent>}
           </Tabs>
         )}
 

@@ -1,62 +1,45 @@
 import { useState, useEffect } from "react";
-import { Building2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { NavLink, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { OptimizedImage } from "@/components/OptimizedImage";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface Brand {
+interface Campaign {
   id: string;
-  name: string;
+  title: string;
   slug: string;
-  logo_url: string | null;
+  brand_logo_url: string | null;
 }
 
 export function BrandSidebar() {
-  const { slug } = useParams();
+  const { campaignSlug } = useParams();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBrands();
+    fetchCampaigns();
   }, []);
 
-  const fetchBrands = async () => {
+  const fetchCampaigns = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('id, title, slug, brand_logo_url')
+        .order('title');
 
-      // Get brands where user is a member
-      const { data: memberData, error: memberError } = await supabase
-        .from('brand_members')
-        .select('brand_id')
-        .eq('user_id', user.id);
-
-      if (memberError) throw memberError;
-
-      if (memberData && memberData.length > 0) {
-        const brandIds = memberData.map(m => m.brand_id);
-        
-        const { data: brandsData, error: brandsError } = await supabase
-          .from('brands')
-          .select('id, name, slug, logo_url')
-          .in('id', brandIds)
-          .order('name');
-
-        if (brandsError) throw brandsError;
-        setBrands(brandsData || []);
-      }
+      if (error) throw error;
+      setCampaigns(data || []);
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      console.error('Error fetching campaigns:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const isActive = (brandSlug: string) => slug === brandSlug;
+  const isActive = (slug: string) => campaignSlug === slug;
 
   if (loading) {
     return (
@@ -87,29 +70,29 @@ export function BrandSidebar() {
       )}>
         {!isCollapsed && (
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Your Brands
+            Campaigns
           </h2>
         )}
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {brands.map((brand) => {
-          const active = isActive(brand.slug);
+        {campaigns.map((campaign) => {
+          const active = isActive(campaign.slug);
           return (
             <NavLink
-              key={brand.id}
-              to={`/brand/${brand.slug}`}
+              key={campaign.id}
+              to={`/manage/${campaign.slug}`}
               className={cn(
                 "flex items-center rounded-md transition-colors font-medium hover:bg-muted/50",
                 active ? "bg-muted text-foreground" : "text-muted-foreground",
                 isCollapsed ? "justify-center py-3 px-2" : "gap-3 px-3 py-2"
               )}
-              title={isCollapsed ? brand.name : undefined}
+              title={isCollapsed ? campaign.title : undefined}
             >
-              {brand.logo_url ? (
-                <OptimizedImage
-                  src={brand.logo_url}
-                  alt={brand.name}
+              {campaign.brand_logo_url ? (
+                <img
+                  src={campaign.brand_logo_url}
+                  alt={campaign.title}
                   className="h-6 w-6 rounded object-cover shrink-0"
                 />
               ) : (
@@ -120,16 +103,16 @@ export function BrandSidebar() {
                   "text-sm font-sans tracking-tight truncate",
                   active && "font-semibold"
                 )}>
-                  {brand.name}
+                  {campaign.title}
                 </span>
               )}
             </NavLink>
           );
         })}
 
-        {brands.length === 0 && !isCollapsed && (
+        {campaigns.length === 0 && !isCollapsed && (
           <div className="text-sm text-muted-foreground text-center py-8">
-            No brands yet
+            No campaigns yet
           </div>
         )}
       </nav>
