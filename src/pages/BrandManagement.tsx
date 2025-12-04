@@ -160,6 +160,8 @@ export default function BrandManagement({
   const [savingUrls, setSavingUrls] = useState(false);
   const [editBudgetDialogOpen, setEditBudgetDialogOpen] = useState(false);
   const [editingBudgetUsed, setEditingBudgetUsed] = useState("");
+  const [currentBudgetUsed, setCurrentBudgetUsed] = useState<number>(0);
+  const [loadingBudget, setLoadingBudget] = useState(false);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [deleteAnalyticsDialogOpen, setDeleteAnalyticsDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -933,9 +935,30 @@ export default function BrandManagement({
       setSavingUrls(false);
     }
   };
-  const handleEditBudgetUsed = () => {
-    setEditingBudgetUsed(selectedCampaign?.budget_used?.toString() || "0");
+  const handleEditBudgetUsed = async () => {
+    if (!selectedCampaignId) return;
+    setLoadingBudget(true);
     setEditBudgetDialogOpen(true);
+    try {
+      // Fetch fresh budget data from database to avoid stale data issues
+      const { data: freshCampaign, error } = await supabase
+        .from("campaigns")
+        .select("budget_used")
+        .eq("id", selectedCampaignId)
+        .single();
+      
+      if (error) throw error;
+      
+      const freshBudgetUsed = freshCampaign?.budget_used || 0;
+      setCurrentBudgetUsed(freshBudgetUsed);
+      setEditingBudgetUsed(freshBudgetUsed.toString());
+    } catch (error) {
+      console.error("Error fetching budget:", error);
+      toast.error("Failed to fetch current budget");
+      setEditBudgetDialogOpen(false);
+    } finally {
+      setLoadingBudget(false);
+    }
   };
   const handleSaveBudgetUsed = async () => {
     if (!selectedCampaignId) return;
@@ -2307,23 +2330,46 @@ export default function BrandManagement({
               Update the budget used for this campaign
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Budget Used ($)</label>
-              <Input
-                type="number"
-                step="0.01"
-                value={editingBudgetUsed}
-                onChange={(e) => setEditingBudgetUsed(e.target.value)}
-                placeholder="0.00"
-              />
+          {loadingBudget ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Current Budget Used</label>
+                <p className="text-lg font-semibold text-muted-foreground">
+                  ${currentBudgetUsed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">New Budget Used ($)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editingBudgetUsed}
+                  onChange={(e) => setEditingBudgetUsed(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              {editingBudgetUsed && !isNaN(parseFloat(editingBudgetUsed)) && (
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Change: </span>
+                    <span className={parseFloat(editingBudgetUsed) - currentBudgetUsed >= 0 ? "text-green-600" : "text-red-600"}>
+                      {parseFloat(editingBudgetUsed) - currentBudgetUsed >= 0 ? "+" : ""}
+                      ${(parseFloat(editingBudgetUsed) - currentBudgetUsed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditBudgetDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveBudgetUsed}>
+            <Button onClick={handleSaveBudgetUsed} disabled={loadingBudget}>
               Save
             </Button>
           </DialogFooter>
