@@ -276,7 +276,14 @@ export default function Transactions() {
     const matchesCampaign = selectedCampaign === "all" || selectedCampaign === "none" && !tx.metadata?.campaign_id || tx.metadata?.campaign_id === selectedCampaign;
 
     // Type filter
-    const matchesType = selectedType === "all" || tx.type === selectedType;
+    let matchesType = true;
+    if (selectedType === "campaign_budget") {
+      matchesType = tx.type === "balance_correction" && tx.metadata?.adjustment_type === "manual_budget_update";
+    } else if (selectedType === "balance_correction") {
+      matchesType = tx.type === "balance_correction" && tx.metadata?.adjustment_type !== "manual_budget_update";
+    } else if (selectedType !== "all") {
+      matchesType = tx.type === selectedType;
+    }
 
     // Amount filter
     let matchesAmount = true;
@@ -368,6 +375,7 @@ export default function Transactions() {
                 <SelectItem value="earning">Earning</SelectItem>
                 <SelectItem value="withdrawal">Withdrawal</SelectItem>
                 <SelectItem value="balance_correction">Balance Correction</SelectItem>
+                <SelectItem value="campaign_budget">Campaign Budget</SelectItem>
               </SelectContent>
             </Select>
 
@@ -435,7 +443,9 @@ export default function Transactions() {
             
             <div className="flex items-center gap-2 flex-wrap mb-2">
               <Badge variant="outline" className="text-xs capitalize">
-                {tx.type.replace("_", " ")}
+                {tx.type === 'balance_correction' && tx.metadata?.adjustment_type === 'manual_budget_update'
+                  ? 'Campaign Budget'
+                  : tx.type.replace("_", " ")}
               </Badge>
               {getStatusBadge(tx.status)}
             </div>
@@ -484,7 +494,9 @@ export default function Transactions() {
                   </TableCell>
                   <TableCell className="py-3">
                     <Badge variant="outline" className="text-xs capitalize">
-                      {tx.type.replace("_", " ")}
+                      {tx.type === 'balance_correction' && tx.metadata?.adjustment_type === 'manual_budget_update'
+                        ? 'Campaign Budget'
+                        : tx.type.replace("_", " ")}
                     </Badge>
                   </TableCell>
                   <TableCell className="py-3">
