@@ -1148,7 +1148,19 @@ export function CampaignAnalyticsTable({
       </Card>;
   }
   if (analytics.length === 0) {
-    return null;
+    return (
+      <Card className="bg-card border">
+        <CardContent className="p-6">
+          <div className="text-center py-8">
+            <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Analytics Data</h3>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              No account analytics have been imported for this campaign yet. Use the "Import Stats" feature or connect accounts via Shortimize to start tracking analytics.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   return <>
       <div className="space-y-4">
