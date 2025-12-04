@@ -296,6 +296,35 @@ export function CreateBrandDialog({
                     </FormItem>} />
 
               {/* Business Details */}
+              <FormField control={form.control} name="legal_name" render={({
+              field
+            }) => <FormItem>
+                      <FormLabel className="text-xs">Legal Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Legal business name" className="h-9 text-sm" {...field} />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>} />
+
+              <FormField control={form.control} name="business_address" render={({
+              field
+            }) => <FormItem>
+                      <FormLabel className="text-xs">Business Address</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Enter business address" className="text-sm min-h-[60px]" {...field} />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>} />
+
+              <FormField control={form.control} name="renewal_date" render={({
+              field
+            }) => <FormItem>
+                      <FormLabel className="text-xs">Renewal Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" className="h-9 text-sm" {...field} />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>} />
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t">
