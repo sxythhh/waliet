@@ -750,10 +750,7 @@ export default function BrandManagement() {
     } catch (error) {
       console.error("Error fetching all campaigns:", error);
     } finally {
-      // If no campaign slug, stop loading after fetching all campaigns
-      if (!campaignSlug) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
@@ -1383,7 +1380,9 @@ export default function BrandManagement() {
         </div>
       </div>;
   }
-  if (campaigns.length === 0 && !campaignSlug) {
+  
+  // No campaign slug - show campaign selector
+  if (!campaignSlug) {
     return <div className="min-h-screen p-8 bg-[#060605] flex items-center justify-center">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold text-foreground">Select a Campaign</h1>
@@ -1410,6 +1409,7 @@ export default function BrandManagement() {
         </div>
       </div>;
   }
+  
   if (campaigns.length === 0) {
     return <div className="min-h-screen p-8 bg-[#060605] flex items-center justify-center">
         <div className="text-foreground">No campaigns found</div>
