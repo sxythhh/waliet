@@ -725,6 +725,11 @@ export default function BrandManagement() {
       setAllCampaigns(data || []);
     } catch (error) {
       console.error("Error fetching all campaigns:", error);
+    } finally {
+      // If no campaign slug, stop loading after fetching all campaigns
+      if (!campaignSlug) {
+        setLoading(false);
+      }
     }
   };
 
@@ -1351,6 +1356,33 @@ export default function BrandManagement() {
             <Skeleton className="h-24 rounded-lg bg-[#1a1a1a]" />
           </div>
           <Skeleton className="h-96 rounded-lg bg-[#1a1a1a]" />
+        </div>
+      </div>;
+  }
+  if (campaigns.length === 0 && !campaignSlug) {
+    return <div className="min-h-screen p-8 bg-[#060605] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-foreground">Select a Campaign</h1>
+          {allCampaigns.length > 0 ? (
+            <Select onValueChange={(newSlug) => navigate(`/manage/${newSlug}`)}>
+              <SelectTrigger className="w-[320px] bg-card border">
+                <SelectValue placeholder="Choose a campaign to manage" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border z-50">
+                {allCampaigns.map(campaign => (
+                  <SelectItem 
+                    key={campaign.id} 
+                    value={campaign.slug} 
+                    className="hover:bg-accent focus:bg-accent"
+                  >
+                    {campaign.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <p className="text-muted-foreground">No campaigns available</p>
+          )}
         </div>
       </div>;
   }
