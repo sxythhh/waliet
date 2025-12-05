@@ -1336,7 +1336,19 @@ export default function BrandManagement() {
             {/* Combined Budget Card */}
             <Card className="border">
               <div className="p-3">
-                <p className="text-xs text-muted-foreground mb-2">Budget Overview</p>
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-xs text-muted-foreground">Budget Overview</p>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={handleEditBudgetUsed}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <span className="text-xs text-muted-foreground">Total</span>
