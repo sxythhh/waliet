@@ -96,10 +96,16 @@ export default function CreatorCampaignDashboard() {
         return;
       }
 
-      // Fetch campaign by slug
+      // Fetch campaign by slug with brand data
       const { data: campaignData, error: campaignError } = await supabase
         .from("campaigns")
-        .select("*")
+        .select(`
+          *,
+          brands (
+            name,
+            logo_url
+          )
+        `)
         .eq("slug", slug)
         .maybeSingle();
       
@@ -133,7 +139,14 @@ export default function CreatorCampaignDashboard() {
         navigate("/dashboard");
         return;
       }
-      setCampaign(campaignData as Campaign);
+      
+      // Use brand data from join if available
+      const campaignWithBrand = {
+        ...campaignData,
+        brand_name: (campaignData.brands as any)?.name || campaignData.brand_name,
+        brand_logo_url: (campaignData.brands as any)?.logo_url || campaignData.brand_logo_url
+      };
+      setCampaign(campaignWithBrand as Campaign);
 
       // Fetch connected accounts for this campaign
       const { data: accountConnections } = await supabase
