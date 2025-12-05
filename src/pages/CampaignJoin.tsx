@@ -612,7 +612,7 @@ export default function CampaignJoin() {
                       isSelected ? "bg-primary" : "bg-muted"
                     }`}>
                       {platformIcon && (
-                        <img src={platformIcon} alt={account.platform} className="w-5 h-5" />
+                        <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
                       )}
                     </div>
                     <div className="flex-1 text-left">
