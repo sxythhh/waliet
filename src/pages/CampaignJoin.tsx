@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ArrowUp, Plus } from "lucide-react";
+import { ArrowLeft, ArrowUp, Plus, Check, ExternalLink } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
@@ -34,6 +34,7 @@ interface Campaign {
   is_infinite_budget?: boolean;
   brand_id?: string;
   brands?: {
+    name: string;
     logo_url: string;
     slug: string;
   };
@@ -118,6 +119,7 @@ export default function CampaignJoin() {
         .select(`
           *,
           brands (
+            name,
             logo_url,
             slug
           )
@@ -132,9 +134,10 @@ export default function CampaignJoin() {
         return;
       }
 
-      // Add brand logo
+      // Use brand data from join
       const parsedData = {
         ...data,
+        brand_name: data.brands?.name || data.brand_name,
         brand_logo_url: data.brands?.logo_url || data.brand_logo_url,
         application_questions: Array.isArray(data.application_questions) ? data.application_questions : []
       };
@@ -407,7 +410,7 @@ export default function CampaignJoin() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted-foreground">Loading campaign...</div>
       </div>
     );
@@ -415,9 +418,9 @@ export default function CampaignJoin() {
 
   if (!campaign) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl mb-4">Campaign not found</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <p className="text-xl text-foreground">Campaign not found</p>
           <Button onClick={() => navigate("/dashboard?tab=discover")}>
             Browse Campaigns
           </Button>
@@ -431,25 +434,29 @@ export default function CampaignJoin() {
   const questions = campaign.application_questions || [];
 
   return (
-    <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="p-6 border-b bg-background">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard?tab=discover")}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Campaigns
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Minimal Header */}
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/dashboard?tab=discover")}
+            className="gap-2 -ml-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
+        </div>
+      </header>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        <div className="space-y-6">
-          {/* Campaign Banner */}
+      {/* Main Content */}
+      <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+        {/* Campaign Header */}
+        <section className="space-y-6">
+          {/* Banner */}
           {campaign.banner_url && (
-            <div className="relative w-full h-48 rounded-2xl overflow-hidden">
+            <div className="aspect-[2.5/1] w-full rounded-xl overflow-hidden bg-muted">
               <OptimizedImage
                 src={campaign.banner_url}
                 alt={campaign.title}
@@ -458,199 +465,222 @@ export default function CampaignJoin() {
             </div>
           )}
 
-          {/* Brand Info */}
-          <div className="flex items-start gap-3">
-            {campaign.brand_logo_url && (
-              <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-border">
-                <img
-                  src={campaign.brand_logo_url}
-                  alt={campaign.brand_name}
-                  className="w-full h-full object-cover"
-                />
+          {/* Brand & Title */}
+          <div className="flex items-start gap-4">
+            {campaign.brand_logo_url ? (
+              <img
+                src={campaign.brand_logo_url}
+                alt={campaign.brand_name}
+                className="w-14 h-14 rounded-xl object-cover ring-1 ring-border"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center">
+                <span className="text-xl font-bold text-muted-foreground">
+                  {campaign.brand_name.charAt(0)}
+                </span>
               </div>
             )}
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">{campaign.title}</h1>
-              <p className="text-muted-foreground">{campaign.brand_name}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-semibold text-foreground leading-tight">
+                {campaign.title}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {campaign.brand_name}
+              </p>
             </div>
           </div>
 
           {/* Description */}
           {campaign.description && (
-            <div>
-              <p className="text-muted-foreground">{campaign.description}</p>
-            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {campaign.description}
+            </p>
           )}
+        </section>
 
-          {/* Budget & RPM */}
-          {!campaign.is_infinite_budget && (
-            <div className="rounded-lg p-4 space-y-3 bg-muted/50">
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm font-medium">Budget Progress</span>
-                <span className="text-xs text-muted-foreground">
-                  ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
-                </span>
-              </div>
-              <div className="h-2 rounded-full overflow-hidden bg-background">
-                <div
-                  className="h-full bg-primary transition-all duration-700"
-                  style={{ width: `${budgetPercentage}%` }}
-                />
-              </div>
-              <div className="flex justify-between items-center pt-2">
-                <div>
-                  <p className="text-xs text-muted-foreground">RPM Rate</p>
-                  <p className="text-lg font-bold">${campaign.rpm_rate}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Remaining</p>
-                  <p className="text-lg font-bold">${budgetRemaining.toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Campaign Preview Button */}
-          {campaign.preview_url && (
-            <Button
-              variant="outline"
-              className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors"
-              onClick={() => window.open(campaign.preview_url!, '_blank')}
-            >
-              <ArrowUp className="w-4 h-4 mr-2" />
-              <span className="font-medium">View Campaign Details</span>
-            </Button>
-          )}
-
-          {/* Allowed Platforms */}
-          <div>
-            <h4 className="text-sm font-semibold mb-2">Allowed Platforms</h4>
-            <div className="flex gap-2 flex-wrap">
-              {campaign.allowed_platforms.map((platform) => {
-                const platformIcon = getPlatformIcon(platform);
-                return (
-                  <div
-                    key={platform}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-muted border border-border"
-                  >
-                    {platformIcon && (
-                      <img src={platformIcon} alt={platform} className="w-3.5 h-3.5" />
-                    )}
-                    <span className="text-xs font-medium text-foreground capitalize">
-                      {platform}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Account Selection */}
-          <div className="space-y-3">
+        {/* Stats Card */}
+        {!campaign.is_infinite_budget && (
+          <section className="bg-card border rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <Label>Select Social Accounts *</Label>
-              {socialAccounts.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {selectedAccounts.length > 0 && `${selectedAccounts.length} selected • `}
-                  Can select multiple
-                </p>
-              )}
+              <span className="text-sm text-muted-foreground">Budget</span>
+              <span className="text-sm font-medium tabular-nums">
+                ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
+              </span>
             </div>
-            {socialAccounts.length === 0 ? (
-              <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
-                <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
-                <p className="text-sm font-medium text-foreground">No available accounts</p>
-                <Button 
-                  onClick={handleAddAccount} 
-                  size="sm"
-                  className="border-0"
-                  style={{ backgroundColor: '#1F1F1F' }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Account
-                </Button>
+            
+            <div className="h-1.5 rounded-full overflow-hidden bg-muted">
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${Math.min(budgetPercentage, 100)}%` }}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between pt-1">
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">RPM Rate</p>
+                <p className="text-lg font-semibold tabular-nums">${campaign.rpm_rate}</p>
               </div>
-            ) : (
-              <div className="grid gap-2">
-                {socialAccounts.map((account) => {
-                  const platformIcon = getPlatformIcon(account.platform);
-                  const isSelected = selectedAccounts.includes(account.id);
-                  
-                  return (
-                    <button
-                      key={account.id}
-                      type="button"
-                      onClick={() => toggleAccountSelection(account.id)}
-                      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-500/10"
-                          : "border-border hover:border-muted-foreground/50 bg-card"
-                      }`}
-                    >
-                      {platformIcon && (
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isSelected ? "bg-blue-500" : "bg-muted"
-                        }`}>
-                          <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
-                        </div>
-                      )}
-                      <div className="flex-1 text-left">
-                        <p className="font-medium text-sm">{account.username}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
-                      </div>
-                      {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                          <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M5 13l4 4L19 7"></path>
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-                <Button 
-                  onClick={handleAddAccount} 
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Another Account
-                </Button>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground mb-0.5">Remaining</p>
+                <p className="text-lg font-semibold tabular-nums">${budgetRemaining.toLocaleString()}</p>
               </div>
+            </div>
+          </section>
+        )}
+
+        {/* Preview Link */}
+        {campaign.preview_url && (
+          <Button
+            variant="outline"
+            className="w-full justify-between h-11"
+            onClick={() => window.open(campaign.preview_url!, '_blank')}
+          >
+            <span>View Campaign Details</span>
+            <ExternalLink className="w-4 h-4 text-muted-foreground" />
+          </Button>
+        )}
+
+        {/* Platforms */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium text-foreground">Allowed Platforms</h2>
+          <div className="flex gap-2 flex-wrap">
+            {campaign.allowed_platforms.map((platform) => {
+              const platformIcon = getPlatformIcon(platform);
+              return (
+                <div
+                  key={platform}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border"
+                >
+                  {platformIcon && (
+                    <img src={platformIcon} alt={platform} className="w-4 h-4" />
+                  )}
+                  <span className="text-sm capitalize">{platform}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Divider */}
+        <div className="border-t" />
+
+        {/* Account Selection */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-foreground">Select Accounts</h2>
+            {socialAccounts.length > 0 && selectedAccounts.length > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {selectedAccounts.length} selected
+              </span>
             )}
           </div>
+          
+          {socialAccounts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 px-6 rounded-xl border border-dashed bg-muted/30 space-y-4">
+              <img 
+                src={emptyAccountsImage} 
+                alt="No accounts" 
+                className="w-16 h-16 opacity-60" 
+              />
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium">No accounts available</p>
+                <p className="text-xs text-muted-foreground">Add a social account to apply</p>
+              </div>
+              <Button onClick={handleAddAccount} size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Account
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {socialAccounts.map((account) => {
+                const platformIcon = getPlatformIcon(account.platform);
+                const isSelected = selectedAccounts.includes(account.id);
+                
+                return (
+                  <button
+                    key={account.id}
+                    type="button"
+                    onClick={() => toggleAccountSelection(account.id)}
+                    className={`w-full flex items-center gap-3 p-3.5 rounded-xl border transition-colors ${
+                      isSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                      isSelected ? "bg-primary" : "bg-muted"
+                    }`}>
+                      {platformIcon && (
+                        <img src={platformIcon} alt={account.platform} className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium">{account.username}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      isSelected 
+                        ? "border-primary bg-primary" 
+                        : "border-muted-foreground/30"
+                    }`}>
+                      {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                  </button>
+                );
+              })}
+              
+              <Button 
+                onClick={handleAddAccount} 
+                variant="ghost"
+                className="w-full h-11 border border-dashed text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Another Account
+              </Button>
+            </div>
+          )}
+        </section>
 
-          {/* Application Questions */}
-          {campaign.requires_application !== false && questions.length > 0 && (
-            <div className="space-y-4">
-              <Label>Application Questions *</Label>
+        {/* Application Questions */}
+        {campaign.requires_application !== false && questions.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-sm font-medium text-foreground">Application Questions</h2>
+            <div className="space-y-5">
               {questions.map((question, index) => (
                 <div key={index} className="space-y-2">
-                  <Label className="text-sm font-normal">
+                  <Label className="text-sm text-muted-foreground font-normal">
                     {index + 1}. {question}
                   </Label>
                   <Textarea
                     value={answers[index] || ""}
                     onChange={(e) => setAnswers({ ...answers, [index]: e.target.value })}
-                    placeholder="Type your answer here..."
+                    placeholder="Type your answer..."
                     className="min-h-[100px] resize-none"
                   />
                 </div>
               ))}
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Submit Button */}
+        {/* Submit */}
+        <section className="pt-2 pb-8">
           <Button
             onClick={handleSubmit}
             disabled={submitting || selectedAccounts.length === 0}
             className="w-full h-12"
             size="lg"
           >
-            {submitting ? "Submitting..." : `Submit Application${selectedAccounts.length > 1 ? 's' : ''} (${selectedAccounts.length})`}
+            {submitting 
+              ? "Submitting..." 
+              : selectedAccounts.length === 0 
+                ? "Select an account to continue"
+                : `Submit Application${selectedAccounts.length > 1 ? 's' : ''}`
+            }
           </Button>
-        </div>
-      </div>
+        </section>
+      </main>
 
       <AddSocialAccountDialog
         open={showAddAccountDialog}
