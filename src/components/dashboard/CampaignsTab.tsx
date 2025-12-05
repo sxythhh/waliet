@@ -202,13 +202,14 @@ export function CampaignsTab({
       return;
     }
 
-    // Fetch campaigns user has joined with brand logos (including ended campaigns)
+    // Fetch campaigns user has joined with brand data (including ended campaigns)
     const {
       data,
       error
     } = await supabase.from("campaigns").select(`
         *,
         brands (
+          name,
           logo_url
         )
       `).in("id", campaignIds).order("created_at", {
@@ -248,10 +249,11 @@ export function CampaignsTab({
         description: "Failed to fetch campaigns"
       });
     } else {
-      // Add submission status and brand logo to each campaign
+      // Add submission status and brand data to each campaign
       const campaignsWithStatus = (data || []).map(campaign => ({
         ...campaign,
-        brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
+        brand_name: (campaign.brands as any)?.name || campaign.brand_name,
+        brand_logo_url: (campaign.brands as any)?.logo_url || campaign.brand_logo_url,
         submission_status: submissionStatusMap.get(campaign.id),
         connected_accounts: accountsByCampaign.get(campaign.id) || []
       }));
