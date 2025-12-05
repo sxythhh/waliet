@@ -608,16 +608,13 @@ export default function CampaignJoin() {
                         : "border-border hover:bg-muted/50"
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                      isSelected ? "bg-primary" : "bg-muted"
-                    }`}>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center">
                       {platformIcon && (
-                        <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
+                        <img src={platformIcon} alt={account.platform} className="w-10 h-10" />
                       )}
                     </div>
                     <div className="flex-1 text-left">
                       <p className="text-sm font-medium">{account.username}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                       isSelected 
