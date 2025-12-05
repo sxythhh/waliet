@@ -167,6 +167,8 @@ export default function BrandManagement() {
   const [manageCampaignOpen, setManageCampaignOpen] = useState(false);
   const [shortimizeAccounts, setShortimizeAccounts] = useState<any[]>([]);
   const [loadingShortimize, setLoadingShortimize] = useState(false);
+  const [campaignUsers, setCampaignUsers] = useState<any[]>([]);
+  const [loadingCampaignUsers, setLoadingCampaignUsers] = useState(false);
   const [collectionName, setCollectionName] = useState("");
   const [accountsCollectionName, setAccountsCollectionName] = useState("");
   const [videos, setVideos] = useState<any[]>([]);
@@ -346,6 +348,71 @@ export default function BrandManagement() {
     } finally {
       setLoadingShortimize(false);
     }
+  };
+
+  const fetchCampaignUsers = async () => {
+    if (!selectedCampaignId) {
+      toast.error("No campaign selected");
+      return;
+    }
+    setLoadingCampaignUsers(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-campaign-users?campaign_id=${selectedCampaignId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch campaign users');
+      }
+      
+      const result = await response.json();
+      setCampaignUsers(result.users || []);
+      toast.success(`Loaded ${result.users?.length || 0} users`);
+    } catch (error: any) {
+      console.error('Error fetching campaign users:', error);
+      toast.error(error.message || 'Failed to load users');
+    } finally {
+      setLoadingCampaignUsers(false);
+    }
+  };
+
+  const exportCampaignUsers = () => {
+    if (campaignUsers.length === 0) {
+      toast.error('No users to export');
+      return;
+    }
+    
+    const headers = ['Username', 'Email', 'Full Name', 'Phone', 'Status', 'Joined At', 'Platform', 'Social Username', 'Follower Count', 'Campaign Earnings'];
+    const rows = campaignUsers.map(user => {
+      const socialAccount = user.social_accounts?.[0];
+      return [
+        user.profile?.username || '',
+        user.profile?.email || '',
+        user.profile?.full_name || '',
+        user.profile?.phone_number || '',
+        user.status || '',
+        user.joined_at ? new Date(user.joined_at).toLocaleDateString() : '',
+        socialAccount?.platform || '',
+        socialAccount?.username || '',
+        socialAccount?.follower_count || '',
+        user.campaign_earnings || '0'
+      ];
+    });
+    
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `campaign-users-${selectedCampaignId}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Exported users to CSV');
   };
 
   const fetchVideos = async (collection: string, forceRefresh = false) => {
@@ -1578,127 +1645,107 @@ export default function BrandManagement() {
               </Card>
             </TabsContent>
 
-            {/* Users Tab - Shortimize Accounts */}
+            {/* Users Tab - Campaign Users */}
             <TabsContent value="users">
               <Card className="bg-card border">
                 <CardHeader className="pb-4 border-b border-border">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1">
-                      <CardTitle className="font-instrument tracking-tight">Accounts</CardTitle>
-                      {lastAccountsFetch && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Last updated: {lastAccountsFetch.toLocaleString()}
-                        </p>
-                      )}
+                      <CardTitle className="font-instrument tracking-tight">Campaign Users</CardTitle>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {campaignUsers.length} users in this campaign
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <ImportCampaignStatsDialog
-                        campaignId={selectedCampaignId}
-                        onImportComplete={() => {}}
-                        onMatchingRequired={() => setMatchDialogOpen(true)}
-                      />
-                      {shortimizeApiKey && (
-                        <>
-                          <Input
-                            placeholder="Collection name..."
-                            value={accountsCollectionName}
-                            onChange={(e) => setAccountsCollectionName(e.target.value)}
-                            className="w-64"
-                          />
-                          <Button 
-                            onClick={() => fetchShortimizeAccounts(true)} 
-                            disabled={loadingShortimize || !accountsCollectionName?.trim()}
-                            variant="outline"
-                            size="sm"
-                          >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
-                            {loadingShortimize ? 'Loading...' : 'Load Accounts'}
-                          </Button>
-                        </>
-                      )}
+                      <Button 
+                        onClick={fetchCampaignUsers} 
+                        disabled={loadingCampaignUsers}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${loadingCampaignUsers ? 'animate-spin' : ''}`} />
+                        {loadingCampaignUsers ? 'Loading...' : 'Load Users'}
+                      </Button>
+                      <Button 
+                        onClick={exportCampaignUsers} 
+                        disabled={campaignUsers.length === 0}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export CSV
+                      </Button>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {shortimizeAccounts.length === 0 ? (
+                  {campaignUsers.length === 0 ? (
                     <div className="text-center py-12">
                       <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
                       <p className="text-muted-foreground text-sm mb-4">
-                        {loadingShortimize ? 'Loading accounts...' : 'No accounts found'}
+                        {loadingCampaignUsers ? 'Loading users...' : 'No users loaded'}
                       </p>
-                      {!shortimizeApiKey && (
-                        <p className="text-xs text-muted-foreground">
-                          Import accounts via CSV above, or configure Shortimize API key in Brand Settings for live tracking
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Click "Load Users" to fetch users who joined this campaign
+                      </p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-b border-border hover:bg-transparent">
-                            <TableHead className="text-muted-foreground font-medium">Username</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Matched User</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Platform</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Followers</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Total Views</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Total Likes</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Videos</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Median Views</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Last Upload</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">User</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Email</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Phone</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Status</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Social Accounts</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Campaign Earnings</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Joined</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {shortimizeAccounts.map((account) => (
-                            <TableRow key={account.account_id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                          {campaignUsers.map((user) => (
+                            <TableRow key={user.user_id} className="border-b border-border hover:bg-muted/50 transition-colors">
                               <TableCell className="py-4">
-                                <a 
-                                  href={account.account_link} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-foreground hover:underline font-medium"
-                                >
-                                  @{account.username}
-                                </a>
+                                <div className="flex items-center gap-2">
+                                  {user.profile?.avatar_url && (
+                                    <img 
+                                      src={user.profile.avatar_url} 
+                                      alt={user.profile?.username}
+                                      className="w-6 h-6 rounded-full"
+                                    />
+                                  )}
+                                  <span className="font-medium">{user.profile?.username || 'Unknown'}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-4 text-muted-foreground">
+                                {user.profile?.email || '-'}
+                              </TableCell>
+                              <TableCell className="py-4 text-muted-foreground">
+                                {user.profile?.phone_number || '-'}
                               </TableCell>
                               <TableCell className="py-4">
-                                {account.matched_user ? (
-                                  <div className="flex items-center gap-2">
-                                    {account.matched_user.avatar_url && (
-                                      <img 
-                                        src={account.matched_user.avatar_url} 
-                                        alt={account.matched_user.username}
-                                        className="w-6 h-6 rounded-full"
-                                      />
-                                    )}
-                                    <span className="font-medium text-sm">{account.matched_user.username}</span>
-                                  </div>
-                                ) : (
-                                  <span className="text-muted-foreground text-sm">Not matched</span>
-                                )}
-                              </TableCell>
-                              <TableCell className="py-4">
-                                <Badge variant="secondary" className="capitalize">
-                                  {account.platform}
+                                <Badge variant={user.status === 'approved' ? 'default' : 'secondary'}>
+                                  {user.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="py-4 text-foreground">
-                                {account.latest_followers_count?.toLocaleString() || 'N/A'}
+                              <TableCell className="py-4">
+                                <div className="flex flex-wrap gap-1">
+                                  {user.social_accounts?.map((account: any) => (
+                                    <Badge key={account.id} variant="outline" className="text-xs">
+                                      {account.platform}: @{account.username}
+                                    </Badge>
+                                  ))}
+                                  {(!user.social_accounts || user.social_accounts.length === 0) && (
+                                    <span className="text-muted-foreground text-sm">None</span>
+                                  )}
+                                </div>
                               </TableCell>
-                              <TableCell className="py-4 text-foreground">
-                                {account.total_views?.toLocaleString() || '0'}
-                              </TableCell>
-                              <TableCell className="py-4 text-foreground">
-                                {account.total_likes?.toLocaleString() || '0'}
-                              </TableCell>
-                              <TableCell className="py-4 text-foreground">
-                                {account.total_videos_tracked || '0'}
-                              </TableCell>
-                              <TableCell className="py-4 text-foreground">
-                                {account.median_views?.toLocaleString() || '0'}
+                              <TableCell className="py-4 text-foreground font-medium">
+                                ${user.campaign_earnings?.toFixed(2) || '0.00'}
                               </TableCell>
                               <TableCell className="py-4 text-muted-foreground text-sm">
-                                {account.last_uploaded_at ? new Date(account.last_uploaded_at).toLocaleDateString() : 'N/A'}
+                                {user.joined_at ? new Date(user.joined_at).toLocaleDateString() : '-'}
                               </TableCell>
                             </TableRow>
                           ))}
