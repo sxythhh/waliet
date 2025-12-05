@@ -617,9 +617,9 @@ export default function BrandManagement() {
   }, [selectedCampaignId]);
   useEffect(() => {
     if (selectedCampaignId) {
-      fetchSubmissions();
-      fetchAnalytics();
-      fetchTransactions();
+      fetchSubmissions(selectedCampaignId);
+      fetchAnalytics(selectedCampaignId);
+      fetchTransactions(selectedCampaignId);
 
       // Set up real-time subscription for campaign submissions and social account connections
       const submissionsChannel = supabase.channel('campaign-submissions-changes').on('postgres_changes', {
@@ -629,7 +629,7 @@ export default function BrandManagement() {
         filter: `campaign_id=eq.${selectedCampaignId}`
       }, payload => {
         console.log('Submission changed:', payload);
-        fetchSubmissions();
+        fetchSubmissions(selectedCampaignId);
       }).subscribe();
       const accountConnectionsChannel = supabase.channel('social-account-campaigns-changes').on('postgres_changes', {
         event: '*',
@@ -638,7 +638,7 @@ export default function BrandManagement() {
         filter: `campaign_id=eq.${selectedCampaignId}`
       }, payload => {
         console.log('Social account connection changed:', payload);
-        fetchSubmissions();
+        fetchSubmissions(selectedCampaignId);
       }).subscribe();
       return () => {
         supabase.removeChannel(submissionsChannel);
@@ -646,12 +646,14 @@ export default function BrandManagement() {
       };
     }
   }, [selectedCampaignId]);
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (campaignId?: string) => {
+    const targetCampaignId = campaignId || selectedCampaignId;
+    if (!targetCampaignId) return;
     try {
       const {
         data,
         error
-      } = await supabase.from("campaign_account_analytics").select("*").eq("campaign_id", selectedCampaignId).order("total_views", {
+      } = await supabase.from("campaign_account_analytics").select("*").eq("campaign_id", targetCampaignId).order("total_views", {
         ascending: false
       });
       if (error) throw error;
@@ -663,7 +665,9 @@ export default function BrandManagement() {
       console.error("Error fetching analytics:", error);
     }
   };
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (campaignId?: string) => {
+    const targetCampaignId = campaignId || selectedCampaignId;
+    if (!targetCampaignId) return;
     try {
       // Fetch all earning and balance_correction transactions
       const {
@@ -674,12 +678,12 @@ export default function BrandManagement() {
       });
       if (error) throw error;
 
-      console.log('Selected campaign ID:', selectedCampaignId);
+      console.log('Selected campaign ID:', targetCampaignId);
 
       // Filter by campaign_id in metadata (handle both formats)
       const campaignTransactions = data?.filter((txn: any) => {
         const metadata = txn.metadata || {};
-        return metadata.campaign_id === selectedCampaignId;
+        return metadata.campaign_id === targetCampaignId;
       }) || [];
 
       console.log('Campaign transactions after filter:', campaignTransactions.length);
@@ -793,7 +797,9 @@ export default function BrandManagement() {
       setLoading(false);
     }
   };
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = async (campaignId?: string) => {
+    const targetCampaignId = campaignId || selectedCampaignId;
+    if (!targetCampaignId) return;
     try {
       const {
         data,
@@ -816,7 +822,7 @@ export default function BrandManagement() {
             demographics_score, 
             views_score
           )
-        `).eq("campaign_id", selectedCampaignId).order("submitted_at", {
+        `).eq("campaign_id", targetCampaignId).order("submitted_at", {
         ascending: false
       });
       if (error) throw error;
@@ -845,7 +851,7 @@ export default function BrandManagement() {
               account_link,
               user_id
             )
-          `).eq("campaign_id", selectedCampaignId).eq("status", "active").eq("social_accounts.user_id", submission.creator_id);
+          `).eq("campaign_id", targetCampaignId).eq("status", "active").eq("social_accounts.user_id", submission.creator_id);
         const accounts = accountLinks?.map((link: any) => link.social_accounts).filter(Boolean) || [];
         return {
           ...submission,
