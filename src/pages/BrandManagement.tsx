@@ -1584,7 +1584,7 @@ export default function BrandManagement() {
                 <CardHeader className="pb-4 border-b border-border">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1">
-                      <CardTitle className="font-instrument tracking-tight">Shortimize Accounts</CardTitle>
+                      <CardTitle className="font-instrument tracking-tight">Accounts</CardTitle>
                       {lastAccountsFetch && (
                         <p className="text-xs text-muted-foreground mt-1">
                           Last updated: {lastAccountsFetch.toLocaleString()}
@@ -1592,35 +1592,45 @@ export default function BrandManagement() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Input
-                        placeholder="Collection name..."
-                        value={accountsCollectionName}
-                        onChange={(e) => setAccountsCollectionName(e.target.value)}
-                        className="w-64"
+                      <ImportCampaignStatsDialog
+                        campaignId={selectedCampaignId}
+                        onImportComplete={() => {}}
+                        onMatchingRequired={() => setMatchDialogOpen(true)}
                       />
-                      <Button 
-                        onClick={() => fetchShortimizeAccounts(true)} 
-                        disabled={!shortimizeApiKey || loadingShortimize || !accountsCollectionName?.trim()}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
-                        {loadingShortimize ? 'Loading...' : 'Load Accounts'}
-                      </Button>
+                      {shortimizeApiKey && (
+                        <>
+                          <Input
+                            placeholder="Collection name..."
+                            value={accountsCollectionName}
+                            onChange={(e) => setAccountsCollectionName(e.target.value)}
+                            className="w-64"
+                          />
+                          <Button 
+                            onClick={() => fetchShortimizeAccounts(true)} 
+                            disabled={loadingShortimize || !accountsCollectionName?.trim()}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${loadingShortimize ? 'animate-spin' : ''}`} />
+                            {loadingShortimize ? 'Loading...' : 'Load Accounts'}
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {!shortimizeApiKey ? (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground text-sm">Please configure Shortimize API key in Brand Settings</p>
-                    </div>
-                  ) : shortimizeAccounts.length === 0 ? (
+                  {shortimizeAccounts.length === 0 ? (
                     <div className="text-center py-12">
                       <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-muted-foreground text-sm mb-4">
                         {loadingShortimize ? 'Loading accounts...' : 'No accounts found'}
                       </p>
+                      {!shortimizeApiKey && (
+                        <p className="text-xs text-muted-foreground">
+                          Import accounts via CSV above, or configure Shortimize API key in Brand Settings for live tracking
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
