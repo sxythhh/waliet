@@ -387,21 +387,45 @@ export default function BrandManagement() {
       return;
     }
     
-    const headers = ['Username', 'Email', 'Full Name', 'Phone', 'Status', 'Joined At', 'Platform', 'Social Username', 'Follower Count', 'Campaign Earnings'];
-    const rows = campaignUsers.map(user => {
-      const socialAccount = user.social_accounts?.[0];
-      return [
-        user.profile?.username || '',
-        user.profile?.email || '',
-        user.profile?.full_name || '',
-        user.profile?.phone_number || '',
-        user.status || '',
-        user.joined_at ? new Date(user.joined_at).toLocaleDateString() : '',
-        socialAccount?.platform || '',
-        socialAccount?.username || '',
-        socialAccount?.follower_count || '',
-        user.campaign_earnings || '0'
-      ];
+    const headers = ['Username', 'Email', 'Full Name', 'Phone', 'Status', 'Joined At', 'Platform', 'Social Username', 'Account URL', 'Follower Count', 'Campaign Earnings'];
+    const rows: string[][] = [];
+    
+    campaignUsers.forEach(user => {
+      const socialAccounts = user.social_accounts || [];
+      
+      if (socialAccounts.length === 0) {
+        // User has no linked accounts - still export their profile info
+        rows.push([
+          user.profile?.username || '',
+          user.profile?.email || '',
+          user.profile?.full_name || '',
+          user.profile?.phone_number || '',
+          user.status || '',
+          user.joined_at ? new Date(user.joined_at).toLocaleDateString() : '',
+          '',
+          '',
+          '',
+          '',
+          user.campaign_earnings || '0'
+        ]);
+      } else {
+        // Create a row for each linked account
+        socialAccounts.forEach((account: any) => {
+          rows.push([
+            user.profile?.username || '',
+            user.profile?.email || '',
+            user.profile?.full_name || '',
+            user.profile?.phone_number || '',
+            user.status || '',
+            user.joined_at ? new Date(user.joined_at).toLocaleDateString() : '',
+            account.platform || '',
+            account.username || '',
+            account.account_link || '',
+            account.follower_count || '',
+            user.campaign_earnings || '0'
+          ]);
+        });
+      }
     });
     
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
