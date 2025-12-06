@@ -48,13 +48,12 @@ export function MatchAccountsDialog({
 
       if (matchError) throw matchError;
 
-      if (matchStats && matchStats.length > 0) {
-        setStats({
-          matched: matchStats[0].matched_count || 0,
-          unmatched: matchStats[0].unmatched_count || 0,
-          total: matchStats[0].total_count || 0,
-        });
-      }
+      const newStats = {
+        matched: matchStats?.[0]?.matched_count || 0,
+        unmatched: matchStats?.[0]?.unmatched_count || 0,
+        total: matchStats?.[0]?.total_count || 0,
+      };
+      setStats(newStats);
 
       // Fetch detailed results
       const { data: analytics, error: analyticsError } = await supabase
@@ -82,7 +81,7 @@ export function MatchAccountsDialog({
       }));
 
       setMatchResults(results);
-      toast.success(`Matched ${stats.matched} of ${stats.total} accounts`);
+      toast.success(`Matched ${newStats.matched} of ${newStats.total} accounts`);
     } catch (error) {
       console.error('Error matching accounts:', error);
       toast.error('Failed to match accounts');
