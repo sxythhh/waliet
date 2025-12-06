@@ -1054,7 +1054,7 @@ export function CampaignAnalyticsTable({
   const filteredAnalytics = Array.from(uniqueAccounts.values()).filter(item => {
     const matchesSearch = item.account_username.toLowerCase().includes(searchTerm.toLowerCase()) || item.profiles?.username && item.profiles.username.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === "all" || item.platform === platformFilter;
-    const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null;
+    const matchesLinkedFilter = !showLinkedOnly || item.user_id !== null || item.social_account !== null;
     const matchesPaidFilter = !showPaidOnly || item.last_payment_amount && item.last_payment_amount > 0;
     
     return matchesSearch && matchesPlatform && matchesLinkedFilter && matchesPaidFilter;
