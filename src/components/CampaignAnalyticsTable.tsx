@@ -343,13 +343,20 @@ export function CampaignAnalyticsTable({
         ...Array.from(socialAccountsByUsernameMap.values()).map((acc: any) => acc.id)
       ])];
 
-      // Fetch profiles for linked accounts
+      // Collect all user IDs from analytics records AND matched social accounts
+      const allUserIds = [...new Set([
+        ...userIds,
+        ...(allCampaignAccounts || []).filter((item: any) => item.social_accounts?.user_id).map((item: any) => item.social_accounts.user_id),
+        ...Array.from(socialAccountsByUsernameMap.values()).filter((acc: any) => acc.user_id).map((acc: any) => acc.user_id)
+      ])];
+
+      // Fetch profiles for all linked accounts
       const profilesMap = new Map();
-      if (userIds.length > 0) {
+      if (allUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, username, avatar_url")
-          .in("id", userIds);
+          .select("id, username, avatar_url, trust_score")
+          .in("id", allUserIds);
         (profiles || []).forEach(p => profilesMap.set(p.id, p));
       }
 
@@ -390,6 +397,11 @@ export function CampaignAnalyticsTable({
         if (!account) {
           const usernameKey = `${normalizedPlatform}_${normalizedAnalyticsUsername}`;
           account = socialAccountsByUsernameMap.get(usernameKey);
+          
+          // Also get the profile for this matched account if it has a user_id
+          if (account && account.user_id && !profile) {
+            profile = profilesMap.get(account.user_id);
+          }
         }
 
         // Get demographic submission if we found a matching social account
