@@ -217,14 +217,29 @@ export function ImportCampaignStatsDialog({
       }
 
       if (successCount > 0) {
-        toast.success(`Successfully imported ${successCount} records for ${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`);
+        // Auto-match accounts to users after import
+        try {
+          const { data: matchStats, error: matchError } = await supabase
+            .rpc('match_analytics_to_users', { p_campaign_id: campaignId });
+          
+          if (!matchError && matchStats?.[0]) {
+            const matched = matchStats[0].matched_count || 0;
+            const total = matchStats[0].total_count || 0;
+            toast.success(`Imported ${successCount} records, linked ${matched} of ${total} accounts`);
+          } else {
+            toast.success(`Successfully imported ${successCount} records for ${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`);
+          }
+        } catch (matchErr) {
+          console.error('Error matching accounts:', matchErr);
+          toast.success(`Successfully imported ${successCount} records for ${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`);
+        }
+        
         setOpen(false);
         setFile(null);
         setProgress(0);
         setStartDate(undefined);
         setEndDate(undefined);
         onImportComplete();
-        // Trigger account matching
         onMatchingRequired();
       } else {
         toast.error("No records were imported. Please check your CSV format.");
@@ -258,10 +273,26 @@ export function ImportCampaignStatsDialog({
 
       if (data.success) {
         setSyncProgress({ total: data.total, synced: data.synced });
-        toast.success(`Synced ${data.synced} of ${data.total} accounts from Shortimize`);
         
         if (data.errors > 0) {
           toast.warning(`${data.errors} accounts had errors`);
+        }
+        
+        // Auto-match accounts to users after sync
+        try {
+          const { data: matchStats, error: matchError } = await supabase
+            .rpc('match_analytics_to_users', { p_campaign_id: campaignId });
+          
+          if (!matchError && matchStats?.[0]) {
+            const matched = matchStats[0].matched_count || 0;
+            const total = matchStats[0].total_count || 0;
+            toast.success(`Synced ${data.synced} accounts, linked ${matched} of ${total}`);
+          } else {
+            toast.success(`Synced ${data.synced} of ${data.total} accounts from Shortimize`);
+          }
+        } catch (matchErr) {
+          console.error('Error matching accounts:', matchErr);
+          toast.success(`Synced ${data.synced} of ${data.total} accounts from Shortimize`);
         }
         
         onImportComplete();
