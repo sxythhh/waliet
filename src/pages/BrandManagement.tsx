@@ -1835,6 +1835,7 @@ export default function BrandManagement() {
                             <TableHead>Shortimize Account</TableHead>
                             <TableHead>Type</TableHead>
                             <TableHead>Amount</TableHead>
+                            <TableHead>Budget Change</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Description</TableHead>
                             <TableHead>Date</TableHead>
@@ -1870,6 +1871,15 @@ export default function BrandManagement() {
                               <TableCell className="capitalize">{txn.type}</TableCell>
                               <TableCell className="font-semibold">
                                 ${Number(txn.amount).toFixed(2)}
+                              </TableCell>
+                              <TableCell>
+                                {txn.metadata?.campaign_budget_before !== undefined && txn.metadata?.campaign_budget_after !== undefined ? (
+                                  <span className="text-sm">
+                                    ${Number(txn.metadata.campaign_budget_before).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} → ${Number(txn.metadata.campaign_budget_after).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <Badge variant={txn.status === 'completed' ? 'default' : 'secondary'}>
