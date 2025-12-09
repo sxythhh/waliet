@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -1711,108 +1711,106 @@ export function CampaignAnalyticsTable({
          </Card>}
 
          {/* Budget Adjustments */}
-         {activeTab === 'budget' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
-           <CardHeader className="px-4 py-3 space-y-3">
-             <CardTitle className="text-sm font-medium text-foreground">Budget Adjustments</CardTitle>
-             
-             {/* Export Controls */}
-             <div className="flex items-center gap-3 pt-3">
-               <div className="flex items-center gap-2 flex-1">
-                 <Label className="text-sm text-muted-foreground whitespace-nowrap">Export:</Label>
+         {activeTab === 'budget' && <div className="mt-4 space-y-4">
+           {/* Export Controls */}
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-3">
+               <span className="text-sm text-muted-foreground">Date range:</span>
+               <div className="flex items-center gap-2">
                  <Input
                    type="date"
                    value={exportStartDate}
                    onChange={(e) => setExportStartDate(e.target.value)}
-                   className="h-9 max-w-[150px] bg-muted/50 border-0"
-                   placeholder="Start date"
+                   className="h-8 w-[130px] bg-muted/30 border-0 text-sm rounded-lg"
                  />
-                 <span className="text-muted-foreground">to</span>
+                 <span className="text-muted-foreground/60">→</span>
                  <Input
                    type="date"
                    value={exportEndDate}
                    onChange={(e) => setExportEndDate(e.target.value)}
-                   className="h-9 max-w-[150px] bg-muted/50 border-0"
-                   placeholder="End date"
+                   className="h-8 w-[130px] bg-muted/30 border-0 text-sm rounded-lg"
                  />
                </div>
-               <Button
-                 onClick={() => {
-                   const originalFilter = transactionFilter;
-                   setTransactionFilter('balance_correction');
-                   setTimeout(() => {
-                     exportTransactionsToCSV();
-                     setTransactionFilter(originalFilter);
-                   }, 0);
-                 }}
-                 size="sm"
-                 variant="ghost"
-                 className="h-9 gap-2 text-muted-foreground hover:text-foreground"
-               >
-                 <Download className="h-4 w-4" />
-                 Export CSV
-               </Button>
              </div>
-           </CardHeader>
-          <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-0 hover:bg-transparent">
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Date</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Type</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Description</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 text-right bg-card/50">Amount</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-                <TableBody>
-                {paginatedBudgetTransactions.map(txn => {
-                  return <TableRow key={txn.id} className="border-0 hover:bg-muted/30">
-                        <TableCell className="text-muted-foreground text-sm bg-card/50 py-3.5">
-                          {new Date(txn.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                        </TableCell>
-                        <TableCell className="bg-card/50 py-3.5">
-                          <Badge variant="secondary" className="text-xs bg-muted/50 text-muted-foreground border-0">
-                            Budget Adjustment
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="bg-card/50 py-3.5">
-                          <span className="text-muted-foreground text-sm">
-                            {txn.description || 'Manual budget adjustment'}
-                          </span>
-                        </TableCell>
-                        <TableCell className={`text-right font-semibold text-sm bg-card/50 py-3.5 tabular-nums ${Number(txn.amount) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="bg-card/50 py-3.5">
-                          <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
-                            {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>;
-                })}
-                 </TableBody>
-               </Table>
+             <Button
+               onClick={() => {
+                 const originalFilter = transactionFilter;
+                 setTransactionFilter('balance_correction');
+                 setTimeout(() => {
+                   exportTransactionsToCSV();
+                   setTransactionFilter(originalFilter);
+                 }, 0);
+               }}
+               size="sm"
+               variant="ghost"
+               className="h-8 gap-2 text-muted-foreground hover:text-foreground"
+             >
+               <Download className="h-3.5 w-3.5" />
+               Export
+             </Button>
+           </div>
+
+           {/* Budget Adjustments List */}
+           {paginatedBudgetTransactions.length === 0 && budgetTransactions.length === 0 ? (
+             <div className="flex flex-col items-center justify-center py-16 text-center">
+               <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                 <DollarSign className="h-5 w-5 text-muted-foreground/50" />
+               </div>
+               <p className="text-muted-foreground text-sm">No budget adjustments yet</p>
              </div>
-           {paginatedBudgetTransactions.length === 0 && budgetTransactions.length === 0 && <div className="text-center py-12 text-muted-foreground">
-                 No budget adjustments yet
-               </div>}
-           </CardContent>
-           
+           ) : (
+             <div className="space-y-2">
+               {paginatedBudgetTransactions.map(txn => (
+                 <div 
+                   key={txn.id} 
+                   className="flex items-center justify-between p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors"
+                 >
+                   <div className="flex items-center gap-4">
+                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${Number(txn.amount) >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                       {Number(txn.amount) >= 0 ? (
+                         <TrendingUp className="h-4 w-4 text-green-500" />
+                       ) : (
+                         <TrendingDown className="h-4 w-4 text-red-500" />
+                       )}
+                     </div>
+                     <div className="space-y-1">
+                       <p className="text-sm font-medium text-foreground">
+                         {txn.description || 'Manual budget adjustment'}
+                       </p>
+                       <p className="text-xs text-muted-foreground">
+                         {new Date(txn.created_at).toLocaleDateString('en-US', {
+                           weekday: 'short',
+                           month: 'short',
+                           day: 'numeric',
+                           year: 'numeric'
+                         })}
+                       </p>
+                     </div>
+                   </div>
+                   <div className="flex items-center gap-4">
+                     <span className={`text-base font-semibold tabular-nums ${Number(txn.amount) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                       {Number(txn.amount) >= 0 ? '+' : ''}${Math.abs(Number(txn.amount)).toFixed(2)}
+                     </span>
+                     <span className={`text-xs px-2 py-1 rounded-full ${
+                       txn.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'
+                     }`}>
+                       {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
+                     </span>
+                   </div>
+                 </div>
+               ))}
+             </div>
+           )}
+            
            {/* Budget Pagination */}
            {totalBudgetPages > 1 && (
-             <div className="px-3 py-3 border-t border-border">
+             <div className="flex justify-center pt-2">
                <Pagination>
                  <PaginationContent className="gap-1">
                    <PaginationItem>
                      <PaginationPrevious 
                        onClick={() => setTransactionsCurrentPage(p => Math.max(1, p - 1))} 
-                       className={transactionsCurrentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} 
-                       style={{ backgroundColor: 'transparent' }} 
+                       className={`${transactionsCurrentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer"} bg-transparent hover:bg-muted/30`}
                      />
                    </PaginationItem>
                    
@@ -1823,17 +1821,18 @@ export function CampaignAnalyticsTable({
                            <PaginationLink 
                              onClick={() => setTransactionsCurrentPage(page)} 
                              isActive={transactionsCurrentPage === page} 
-                             className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md border border-transparent" 
-                             style={{ backgroundColor: transactionsCurrentPage === page ? '#202020' : 'transparent' }}
+                             className={`cursor-pointer min-w-[36px] h-[36px] rounded-lg ${
+                               transactionsCurrentPage === page 
+                                 ? 'bg-muted/50 text-foreground' 
+                                 : 'bg-transparent text-muted-foreground hover:bg-muted/30'
+                             }`}
                            >
-                             <span className={transactionsCurrentPage === page ? "text-white font-medium" : "text-white/50"}>
-                               {page}
-                             </span>
+                             {page}
                            </PaginationLink>
                          </PaginationItem>
                        );
                      } else if (page === transactionsCurrentPage - 2 || page === transactionsCurrentPage + 2) {
-                       return <PaginationItem key={page}><span className="text-white/30 px-2">...</span></PaginationItem>;
+                       return <PaginationItem key={page}><span className="text-muted-foreground/50 px-2">…</span></PaginationItem>;
                      }
                      return null;
                    })}
@@ -1841,15 +1840,14 @@ export function CampaignAnalyticsTable({
                    <PaginationItem>
                      <PaginationNext 
                        onClick={() => setTransactionsCurrentPage(p => Math.min(totalBudgetPages, p + 1))} 
-                       className={transactionsCurrentPage === totalBudgetPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} 
-                       style={{ backgroundColor: 'transparent' }} 
+                       className={`${transactionsCurrentPage === totalBudgetPages ? "pointer-events-none opacity-30" : "cursor-pointer"} bg-transparent hover:bg-muted/30`}
                      />
                    </PaginationItem>
                  </PaginationContent>
                </Pagination>
              </div>
            )}
-         </Card>}
+         </div>}
 
       {/* Pagination */}
       {activeTab === 'analytics' && totalPages > 1 && <div className="flex justify-center mt-4">
