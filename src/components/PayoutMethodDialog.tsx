@@ -46,12 +46,11 @@ export default function PayoutMethodDialog({
   onSave,
   currentMethodCount
 }: PayoutMethodDialogProps) {
-  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise" | "upi">("crypto");
+  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise">("crypto");
   const [selectedCurrency, setSelectedCurrency] = useState(cryptoCurrencies[0].id);
   const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("");
-  const [upiId, setUpiId] = useState("");
 
   // Bank transfer fields
   const [bankName, setBankName] = useState("");
@@ -71,17 +70,11 @@ export default function PayoutMethodDialog({
       onSave("paypal", {
         email: paypalEmail
       });
-    } else if (selectedMethod === "upi") {
-      if (!upiId) return;
-      onSave("upi", {
-        upi_id: upiId
-      });
     }
 
     // Reset all fields
     setWalletAddress("");
     setPaypalEmail("");
-    setUpiId("");
     onOpenChange(false);
   };
   const isMaxMethodsReached = currentMethodCount >= 3;
@@ -113,11 +106,6 @@ export default function PayoutMethodDialog({
             iconActive: paypalLogoBlue,
             label: "PayPal",
             isLogo: true
-          }, {
-            id: "upi",
-            icon: Landmark,
-            label: "UPI",
-            isLogo: false
           }].map(method => {
             const Icon = method.icon;
             const isActive = selectedMethod === method.id;
@@ -196,15 +184,6 @@ export default function PayoutMethodDialog({
                   <Input id="paypal-email" type="email" placeholder="your.email@example.com" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
                 </div>}
 
-              {selectedMethod === "upi" && <div className="space-y-3">
-                  <Label htmlFor="upi-id" className="font-medium text-muted-foreground" style={{
-              fontSize: '11px',
-              letterSpacing: '-0.5px'
-            }}>
-                    UPI ID
-                  </Label>
-                  <Input id="upi-id" type="text" placeholder="yourname@okaxis" value={upiId} onChange={e => setUpiId(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
-                </div>}
             </div>
           </div>}
 
@@ -212,7 +191,7 @@ export default function PayoutMethodDialog({
             <Button variant="outline" className="flex-1 h-12 bg-background border-border hover:bg-muted" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail || selectedMethod === "upi" && !upiId}>
+            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail}>
               Add Method
             </Button>
           </div>}

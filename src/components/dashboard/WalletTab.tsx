@@ -1419,11 +1419,9 @@ export function WalletTab() {
               {(() => {
               const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
               const isPayPal = selectedMethod?.method === 'paypal';
-              const isUPI = selectedMethod?.method === 'upi';
-              if (isPayPal || isUPI) {
+              if (isPayPal) {
                 return <>
                   <p className="text-muted-foreground">24h wait time</p>
-                  <p className="font-medium">No fees</p>
                 </>;
               }
               return <>
@@ -1439,21 +1437,18 @@ export function WalletTab() {
             const amount = parseFloat(payoutAmount);
             const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
             const isPayPal = selectedMethod?.method === 'paypal';
-            const isUPI = selectedMethod?.method === 'upi';
-            let netAmount;
-            let feeAmount;
-            if (isPayPal || isUPI) {
-              // No fees for PayPal and UPI
-              feeAmount = 0;
-              netAmount = amount;
-            } else {
-              // First apply 0.75% fee
-              const percentageFee = amount * 0.0075;
-              const afterPercentage = amount - percentageFee;
-              // Then subtract $1
-              netAmount = afterPercentage - 1;
-              feeAmount = percentageFee + 1;
+            
+            // Don't show fee breakdown for PayPal
+            if (isPayPal) {
+              return null;
             }
+            
+            // For crypto, show fee breakdown
+            const percentageFee = amount * 0.0075;
+            const afterPercentage = amount - percentageFee;
+            const netAmount = afterPercentage - 1;
+            const feeAmount = percentageFee + 1;
+            
             return <div className="p-4 bg-card rounded-lg border border-border space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Withdrawal amount</span>
