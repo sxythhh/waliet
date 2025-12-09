@@ -1312,6 +1312,11 @@ export function CampaignAnalyticsTable({
                     </>
                   )}
                 </Button>
+                <ImportCampaignStatsDialog
+                  campaignId={campaignId}
+                  onImportComplete={fetchAnalytics}
+                  onMatchingRequired={() => {}}
+                />
               </div>
             </div>
           </CardHeader>
