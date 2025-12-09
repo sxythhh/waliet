@@ -451,15 +451,25 @@ export function CampaignAnalyticsTable({
             follower_count,
             account_link
           )
-        `).eq('campaign_id', campaignId).eq('status', 'active').in('social_accounts.user_id', approvedUserIds);
+        `).eq('campaign_id', campaignId).eq('status', 'active');
       if (error) throw error;
 
+      // Filter to only include accounts from approved users
+      const approvedUserIdsSet = new Set(approvedUserIds);
+      const filteredAccounts = (campaignAccounts || []).filter(
+        (ca: any) => approvedUserIdsSet.has(ca.social_accounts.user_id)
+      );
+
       // Fetch profile data for each unique user
-      const uniqueUserIds = [...new Set(campaignAccounts?.map((ca: any) => ca.social_accounts.user_id))];
-      const profilesPromises = uniqueUserIds.map(userId => supabase.from('profiles').select('username, avatar_url').eq('id', userId).single());
-      const profilesResults = await Promise.all(profilesPromises);
-      const profilesMap = new Map(profilesResults.map((result, index) => [uniqueUserIds[index], result.data]));
-      const users = campaignAccounts?.map((ca: any) => {
+      const uniqueUserIds = [...new Set(filteredAccounts.map((ca: any) => ca.social_accounts.user_id))];
+      
+      // Batch fetch profiles instead of individual requests
+      const { data: profiles } = uniqueUserIds.length > 0
+        ? await supabase.from('profiles').select('id, username, avatar_url').in('id', uniqueUserIds)
+        : { data: [] };
+      
+      const profilesMap = new Map((profiles || []).map(p => [p.id, p]));
+      const users = filteredAccounts.map((ca: any) => {
         const account = ca.social_accounts;
         const profile = profilesMap.get(account.user_id);
         return {
@@ -469,7 +479,7 @@ export function CampaignAnalyticsTable({
           platform: account.platform,
           account_username: account.username
         };
-      }) || [];
+      });
       setAvailableUsers(users);
     } catch (error) {
       console.error("Error fetching available users:", error);
