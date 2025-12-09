@@ -458,19 +458,19 @@ export default function BrandManagement() {
   if (loading) {
     return (
       <div className="min-h-screen flex bg-background">
-        <div className="w-64 h-screen bg-card/50 border-r border-border/50 p-4 space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
+        <div className="hidden md:block w-64 h-screen bg-card/30 p-4 space-y-4 shrink-0">
+          <Skeleton className="h-10 w-full rounded-xl" />
+          <Skeleton className="h-8 w-full rounded-lg" />
+          <Skeleton className="h-8 w-full rounded-lg" />
+          <Skeleton className="h-8 w-full rounded-lg" />
         </div>
-        <div className="flex-1 p-8">
-          <Skeleton className="h-8 w-48 mb-6" />
-          <div className="grid grid-cols-4 gap-4">
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
+        <div className="flex-1 p-6 md:p-8">
+          <Skeleton className="h-8 w-48 mb-6 rounded-lg" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
           </div>
         </div>
       </div>
@@ -496,8 +496,8 @@ export default function BrandManagement() {
       />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 overflow-auto">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <main className="flex-1 p-4 pt-16 md:pt-6 md:p-8 overflow-auto">
+        <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
           {/* Header with Stats */}
           <DashboardHeader 
             campaign={selectedCampaign}

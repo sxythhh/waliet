@@ -41,11 +41,11 @@ export function DashboardHeader({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Budget Overview */}
-        <div className="bg-muted/20 rounded-xl p-4 space-y-3">
+        <div className="bg-muted/20 rounded-xl p-3 md:p-4 space-y-2 md:space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Budget</span>
+            <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wide">Budget</span>
             {isAdmin && onEditBudget && (
               <Button
                 variant="ghost"
@@ -58,7 +58,7 @@ export function DashboardHeader({
             )}
           </div>
           <div className="space-y-1">
-            <p className="text-xl font-semibold text-foreground tabular-nums">
+            <p className="text-lg md:text-xl font-semibold text-foreground tabular-nums">
               ${campaign.budget?.toLocaleString() || '0'}
             </p>
             <div className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export function DashboardHeader({
                   style={{ width: `${Math.min(budgetPercentUsed, 100)}%` }}
                 />
               </div>
-              <span className="text-xs text-muted-foreground tabular-nums">
+              <span className="text-[10px] md:text-xs text-muted-foreground tabular-nums">
                 {budgetPercentUsed.toFixed(0)}%
               </span>
             </div>
@@ -76,39 +76,39 @@ export function DashboardHeader({
         </div>
 
         {/* Budget Used */}
-        <div className="bg-muted/20 rounded-xl p-4 space-y-3">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Used</span>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-orange-500" />
+        <div className="bg-muted/20 rounded-xl p-3 md:p-4 space-y-2 md:space-y-3">
+          <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wide">Used</span>
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-500" />
             </div>
-            <p className="text-xl font-semibold text-foreground tabular-nums">
+            <p className="text-lg md:text-xl font-semibold text-foreground tabular-nums">
               ${campaign.budget_used?.toLocaleString() || '0'}
             </p>
           </div>
         </div>
 
         {/* Remaining */}
-        <div className="bg-muted/20 rounded-xl p-4 space-y-3">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Remaining</span>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-green-500" />
+        <div className="bg-muted/20 rounded-xl p-3 md:p-4 space-y-2 md:space-y-3">
+          <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wide">Remaining</span>
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+              <DollarSign className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500" />
             </div>
-            <p className="text-xl font-semibold text-foreground tabular-nums">
+            <p className="text-lg md:text-xl font-semibold text-foreground tabular-nums">
               ${budgetRemaining.toLocaleString()}
             </p>
           </div>
         </div>
 
         {/* Creators */}
-        <div className="bg-muted/20 rounded-xl p-4 space-y-3">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Creators</span>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Users className="w-4 h-4 text-primary" />
+        <div className="bg-muted/20 rounded-xl p-3 md:p-4 space-y-2 md:space-y-3">
+          <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wide">Creators</span>
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
             </div>
-            <p className="text-xl font-semibold text-foreground tabular-nums">
+            <p className="text-lg md:text-xl font-semibold text-foreground tabular-nums">
               {creatorCount}
             </p>
           </div>
