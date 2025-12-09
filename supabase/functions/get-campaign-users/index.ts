@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch campaign submissions with user profiles and social accounts
+    // Fetch campaign submissions with user profiles
     const { data: submissions, error: submissionsError } = await supabase
       .from('campaign_submissions')
       .select(`
@@ -58,13 +58,16 @@ Deno.serve(async (req) => {
       throw submissionsError;
     }
 
-    // Fetch social accounts linked to this campaign for these users
     const userIds = submissions?.map(s => s.creator_id) || [];
     
-    const { data: socialAccounts, error: socialError } = await supabase
+    // Fetch social account campaigns with their social accounts separately
+    // The nested filter doesn't work, so we fetch all active connections for this campaign
+    // then filter by user in code
+    const { data: socialAccountCampaigns, error: sacError } = await supabase
       .from('social_account_campaigns')
       .select(`
         social_account_id,
+        user_id,
         social_accounts:social_account_id (
           id,
           user_id,
@@ -76,13 +79,19 @@ Deno.serve(async (req) => {
         )
       `)
       .eq('campaign_id', campaignId)
-      .eq('status', 'active')
-      .in('social_accounts.user_id', userIds);
+      .eq('status', 'active');
 
-
-    if (socialError) {
-      console.error('Error fetching social accounts:', socialError);
+    if (sacError) {
+      console.error('Error fetching social account campaigns:', sacError);
     }
+
+    // Filter to only include social accounts for users in this campaign
+    const userIdSet = new Set(userIds);
+    const filteredSocialAccountCampaigns = socialAccountCampaigns?.filter(sac => 
+      userIdSet.has(sac.user_id)
+    ) || [];
+
+    console.log(`Found ${socialAccountCampaigns?.length || 0} total social account connections, ${filteredSocialAccountCampaigns.length} for campaign users`);
 
     // Fetch campaign earnings for these users
     const { data: transactions, error: transactionsError } = await supabase
@@ -108,13 +117,14 @@ Deno.serve(async (req) => {
     }, {} as Record<string, number>) || {};
 
     // Map social accounts by user_id
-    const socialAccountsByUser = socialAccounts?.reduce((acc, sa) => {
-      const account = sa.social_accounts as any;
+    const socialAccountsByUser = filteredSocialAccountCampaigns.reduce((acc, sac) => {
+      const account = sac.social_accounts as any;
       if (account && !Array.isArray(account)) {
-        if (!acc[account.user_id]) {
-          acc[account.user_id] = [];
+        const userId = sac.user_id;
+        if (!acc[userId]) {
+          acc[userId] = [];
         }
-        acc[account.user_id].push({
+        acc[userId].push({
           id: account.id,
           platform: account.platform,
           username: account.username,
@@ -124,7 +134,7 @@ Deno.serve(async (req) => {
         });
       }
       return acc;
-    }, {} as Record<string, any[]>) || {};
+    }, {} as Record<string, any[]>);
 
     // Format response and deduplicate by user_id (keep most recent submission)
     const userMap = new Map();
