@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond, ArrowUpDown, ArrowUp, ArrowDown, Hammer, Search } from "lucide-react";
+import { Check, X, TrendingUp, Users, Eye, DollarSign, Trash2, Edit, RefreshCw, Menu, PanelLeft, Download, Diamond, ArrowUpDown, ArrowUp, ArrowDown, Hammer, Search, User } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
@@ -1705,114 +1705,143 @@ export default function BrandManagement() {
 
             {/* Users Tab - Campaign Users */}
             <TabsContent value="users">
-              <Card className="bg-card border">
-                <CardHeader className="pb-4 border-b border-border">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="font-instrument tracking-tight">Campaign Users</CardTitle>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {campaignUsers.length} users in this campaign
-                      </p>
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Users className="h-4 w-4 text-primary" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        onClick={fetchCampaignUsers} 
-                        disabled={loadingCampaignUsers}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${loadingCampaignUsers ? 'animate-spin' : ''}`} />
-                        {loadingCampaignUsers ? 'Loading...' : 'Load Users'}
-                      </Button>
-                      <Button 
-                        onClick={exportCampaignUsers} 
-                        disabled={campaignUsers.length === 0}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Export CSV
-                      </Button>
+                    <div>
+                      <h3 className="text-sm font-medium text-foreground">Campaign Users</h3>
+                      <p className="text-xs text-muted-foreground">{campaignUsers.length} users</p>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {campaignUsers.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground text-sm mb-4">
-                        {loadingCampaignUsers ? 'Loading users...' : 'No users loaded'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Click "Load Users" to fetch users who joined this campaign
-                      </p>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      onClick={fetchCampaignUsers} 
+                      disabled={loadingCampaignUsers}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-muted-foreground hover:text-foreground"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loadingCampaignUsers ? 'animate-spin' : ''}`} />
+                      {loadingCampaignUsers ? 'Loading...' : 'Refresh'}
+                    </Button>
+                    <Button 
+                      onClick={exportCampaignUsers} 
+                      disabled={campaignUsers.length === 0}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-muted-foreground hover:text-foreground"
+                    >
+                      <Download className="h-3.5 w-3.5 mr-1.5" />
+                      Export
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Users List */}
+                {campaignUsers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                      <Users className="h-5 w-5 text-muted-foreground/50" />
                     </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="border-b border-border hover:bg-transparent">
-                            <TableHead className="text-muted-foreground font-medium">User</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Email</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Phone</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Status</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Social Accounts</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Campaign Earnings</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Joined</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {campaignUsers.map((user) => (
-                            <TableRow key={user.user_id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                              <TableCell className="py-4">
-                                <div className="flex items-center gap-2">
-                                  {user.profile?.avatar_url && (
-                                    <img 
-                                      src={user.profile.avatar_url} 
-                                      alt={user.profile?.username}
-                                      className="w-6 h-6 rounded-full"
-                                    />
-                                  )}
-                                  <span className="font-medium">{user.profile?.username || 'Unknown'}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell className="py-4 text-muted-foreground">
-                                {user.profile?.email || '-'}
-                              </TableCell>
-                              <TableCell className="py-4 text-muted-foreground">
-                                {user.profile?.phone_number || '-'}
-                              </TableCell>
-                              <TableCell className="py-4">
-                                <Badge variant={user.status === 'approved' ? 'default' : 'secondary'}>
-                                  {user.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="py-4">
-                                <div className="flex flex-wrap gap-1">
-                                  {user.social_accounts?.map((account: any) => (
-                                    <Badge key={account.id} variant="outline" className="text-xs">
-                                      {account.platform}: @{account.username}
-                                    </Badge>
-                                  ))}
-                                  {(!user.social_accounts || user.social_accounts.length === 0) && (
-                                    <span className="text-muted-foreground text-sm">None</span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="py-4 text-foreground font-medium">
-                                ${user.campaign_earnings?.toFixed(2) || '0.00'}
-                              </TableCell>
-                              <TableCell className="py-4 text-muted-foreground text-sm">
-                                {user.joined_at ? new Date(user.joined_at).toLocaleDateString() : '-'}
-                              </TableCell>
-                            </TableRow>
+                    <p className="text-muted-foreground text-sm mb-1">
+                      {loadingCampaignUsers ? 'Loading users...' : 'No users loaded'}
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">
+                      Click "Refresh" to fetch campaign users
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {campaignUsers.map((user) => (
+                      <div 
+                        key={user.user_id} 
+                        className="flex items-center justify-between p-3 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors"
+                      >
+                        {/* User Info */}
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {user.profile?.avatar_url ? (
+                              <img 
+                                src={user.profile.avatar_url} 
+                                alt={user.profile?.username}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <User className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-foreground truncate">
+                                {user.profile?.username || 'Unknown'}
+                              </span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                                user.status === 'approved' 
+                                  ? 'bg-green-500/10 text-green-500' 
+                                  : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {user.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                              {user.profile?.email && (
+                                <span className="truncate max-w-[180px]">{user.profile.email}</span>
+                              )}
+                              {user.profile?.phone_number && (
+                                <span>{user.profile.phone_number}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Social Accounts */}
+                        <div className="flex items-center gap-2 px-4">
+                          {user.social_accounts?.slice(0, 3).map((account: any) => (
+                            <span 
+                              key={account.id} 
+                              className="text-xs px-2 py-1 rounded-md bg-muted/50 text-muted-foreground"
+                            >
+                              {account.platform === 'tiktok' && '📱'}
+                              {account.platform === 'instagram' && '📸'}
+                              {account.platform === 'youtube' && '▶️'}
+                              {' '}@{account.username}
+                            </span>
                           ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                          {user.social_accounts && user.social_accounts.length > 3 && (
+                            <span className="text-xs text-muted-foreground">
+                              +{user.social_accounts.length - 3}
+                            </span>
+                          )}
+                          {(!user.social_accounts || user.social_accounts.length === 0) && (
+                            <span className="text-xs text-muted-foreground/50">No accounts</span>
+                          )}
+                        </div>
+
+                        {/* Earnings & Date */}
+                        <div className="flex items-center gap-6 flex-shrink-0">
+                          <div className="text-right">
+                            <span className="text-sm font-semibold text-green-500 tabular-nums">
+                              ${user.campaign_earnings?.toFixed(2) || '0.00'}
+                            </span>
+                          </div>
+                          <div className="text-right min-w-[80px]">
+                            <span className="text-xs text-muted-foreground">
+                              {user.joined_at ? new Date(user.joined_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric'
+                              }) : '-'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </TabsContent>
 
             {/* Payouts Tab */}
