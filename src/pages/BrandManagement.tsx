@@ -1516,7 +1516,11 @@ export default function BrandManagement() {
         {/* Main Content */}
         {selectedCampaign && (
           // Management Page: Tabs with Analytics, Videos, Users, Payouts
-          <Tabs defaultValue="analytics" className="w-full">
+          <Tabs defaultValue="analytics" className="w-full" onValueChange={(value) => {
+            if (value === 'users' && campaignUsers.length === 0 && !loadingCampaignUsers) {
+              fetchCampaignUsers();
+            }
+          }}>
             <TabsList className="bg-card border">
               <TabsTrigger value="analytics" className="data-[state=active]:bg-accent">
                 Analytics
@@ -1803,12 +1807,14 @@ export default function BrandManagement() {
                           {user.social_accounts?.slice(0, 3).map((account: any) => (
                             <span 
                               key={account.id} 
-                              className="text-xs px-2 py-1 rounded-md bg-muted/50 text-muted-foreground"
+                              className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-muted/50 text-muted-foreground"
                             >
-                              {account.platform === 'tiktok' && '📱'}
-                              {account.platform === 'instagram' && '📸'}
-                              {account.platform === 'youtube' && '▶️'}
-                              {' '}@{account.username}
+                              <img 
+                                src={account.platform === 'tiktok' ? tiktokLogo : account.platform === 'instagram' ? instagramLogo : youtubeLogo} 
+                                alt={account.platform}
+                                className="w-3.5 h-3.5 object-contain"
+                              />
+                              @{account.username}
                             </span>
                           ))}
                           {user.social_accounts && user.social_accounts.length > 3 && (
