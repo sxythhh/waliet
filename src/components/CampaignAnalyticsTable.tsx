@@ -1186,65 +1186,58 @@ export function CampaignAnalyticsTable({
         
 
         {/* Navigation Tabs */}
-        <div className="flex items-center border-b border-white/10">
+        <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg w-fit">
           <button 
             onClick={() => { setActiveTab('analytics'); setTransactionsCurrentPage(1); }} 
-            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+            className={`px-4 py-2 text-sm font-medium transition-all rounded-md ${
               activeTab === 'analytics'
-                ? "text-white" 
-                : "text-white/60 hover:text-white"
+                ? "bg-background text-foreground shadow-sm" 
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
             }`}
           >
             Analytics
-            {activeTab === 'analytics' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
           </button>
           <button 
             onClick={() => { setActiveTab('transactions'); setTransactionsCurrentPage(1); }} 
-            className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
+            className={`px-4 py-2 text-sm font-medium transition-all rounded-md flex items-center gap-1.5 ${
               activeTab === 'transactions'
-                ? "text-white" 
-                : "text-white/60 hover:text-white"
+                ? "bg-background text-foreground shadow-sm" 
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
             }`}
           >
             <Receipt className="h-4 w-4" />
-            Transactions ({transactions.filter(t => t.type === 'earning').length})
-            {activeTab === 'transactions' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
+            Transactions
+            <span className="text-xs opacity-60">({transactions.filter(t => t.type === 'earning').length})</span>
           </button>
           <button 
             onClick={() => { setActiveTab('budget'); setTransactionsCurrentPage(1); }} 
-            className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
+            className={`px-4 py-2 text-sm font-medium transition-all rounded-md flex items-center gap-1.5 ${
               activeTab === 'budget'
-                ? "text-white" 
-                : "text-white/60 hover:text-white"
+                ? "bg-background text-foreground shadow-sm" 
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
             }`}
           >
             <DollarSign className="h-4 w-4" />
-            Budget ({budgetTransactions.length})
-            {activeTab === 'budget' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
+            Budget
+            <span className="text-xs opacity-60">({budgetTransactions.length})</span>
           </button>
         </div>
 
         {/* CSV Period Selector */}
-        {activeTab === 'analytics' && dateRanges.length > 0 && <div className="flex items-center gap-2 mb-4 mt-4">
-              <Label className="text-muted-foreground text-sm">CSV Period:</Label>
+        {activeTab === 'analytics' && dateRanges.length > 0 && <div className="flex items-center gap-3 mt-4">
+              <Label className="text-muted-foreground text-sm">Period:</Label>
               <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
-                <SelectTrigger className="w-[200px] bg-muted border">
+                <SelectTrigger className="w-[200px] bg-muted/50 border-0 h-9">
                   <SelectValue placeholder="All periods" />
                 </SelectTrigger>
-                <SelectContent className="bg-card border z-50">
-                  <SelectItem value="all" className="hover:bg-accent focus:bg-accent">All Periods</SelectItem>
-                  {dateRanges.map((range, idx) => <SelectItem key={idx} value={`${range.start}|${range.end}`} className="hover:bg-accent focus:bg-accent">
+                <SelectContent className="bg-popover border-0 shadow-lg">
+                  <SelectItem value="all">All Periods</SelectItem>
+                  {dateRanges.map((range, idx) => <SelectItem key={idx} value={`${range.start}|${range.end}`}>
                       {new Date(range.start).toLocaleDateString()} - {new Date(range.end).toLocaleDateString()}
                     </SelectItem>)}
                 </SelectContent>
               </Select>
-              {selectedDateRange !== "all" && <Button variant="destructive" size="sm" onClick={async () => {
+              {selectedDateRange !== "all" && <Button variant="ghost" size="sm" onClick={async () => {
             const [start, end] = selectedDateRange.split('|');
             try {
               const {
@@ -1258,56 +1251,66 @@ export function CampaignAnalyticsTable({
               console.error("Error deleting CSV period:", error);
               toast.error("Failed to delete CSV period");
             }
-          }} className="bg-destructive/20 hover:bg-destructive/30">
+          }} className="text-destructive hover:text-destructive hover:bg-destructive/10">
                   <Trash2 className="h-4 w-4 mr-1.5" />
                   Delete Period
                 </Button>}
             </div>}
 
         {/* Filters and Table */}
-        {activeTab === 'analytics' && <Card className="bg-card border">
-          <CardHeader className="px-3 py-3 border-b border-border">
-            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
-              <CardTitle className="text-sm font-instrument tracking-tight">Account Analytics</CardTitle>
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        {activeTab === 'analytics' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
+          <CardHeader className="px-4 py-3">
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+              <CardTitle className="text-sm font-medium text-foreground">Account Analytics</CardTitle>
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 
-                <div className="relative flex-1 sm:w-40">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                  <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-7 h-8 bg-muted border text-xs" />
+                <div className="relative flex-1 sm:w-44">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Search accounts..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-9 bg-muted/50 border-0 text-sm" />
                 </div>
                 <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                  <SelectTrigger className="w-full sm:w-28 h-8 bg-muted border text-sm">
+                  <SelectTrigger className="w-full sm:w-32 h-9 bg-muted/50 border-0 text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-card border z-50">
-                    <SelectItem value="all" className="text-sm hover:bg-accent focus:bg-accent">All</SelectItem>
-                    {platforms.map(platform => <SelectItem key={platform} value={platform} className="capitalize text-sm hover:bg-accent focus:bg-accent">
+                  <SelectContent className="bg-popover border-0 shadow-lg">
+                    <SelectItem value="all" className="text-sm">All Platforms</SelectItem>
+                    {platforms.map(platform => <SelectItem key={platform} value={platform} className="capitalize text-sm">
                         {platform}
                       </SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Button variant={showLinkedOnly ? "default" : "outline"} onClick={() => setShowLinkedOnly(!showLinkedOnly)} size="sm" className={`h-8 text-sm ${showLinkedOnly ? "bg-primary" : "bg-muted border hover:bg-accent"}`}>
-                  <Filter className="h-4 w-4 mr-1" />
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowLinkedOnly(!showLinkedOnly)} 
+                  size="sm" 
+                  className={`h-9 text-sm ${showLinkedOnly ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Filter className="h-4 w-4 mr-1.5" />
                   Linked
                 </Button>
-                <Button variant={showPaidOnly ? "default" : "outline"} onClick={() => setShowPaidOnly(!showPaidOnly)} size="sm" className={`h-8 text-sm ${showPaidOnly ? "bg-green-500 hover:bg-green-600" : "bg-muted border hover:bg-accent"}`}>
-                  <DollarSign className="h-4 w-4 mr-1" />
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowPaidOnly(!showPaidOnly)} 
+                  size="sm" 
+                  className={`h-9 text-sm ${showPaidOnly ? "bg-green-500/10 text-green-500" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <DollarSign className="h-4 w-4 mr-1.5" />
                   Paid
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   onClick={() => setIsPaused(!isPaused)} 
                   size="sm" 
-                  className="h-8 text-sm bg-muted border hover:bg-accent"
+                  className={`h-9 text-sm ${isPaused ? "bg-amber-500/10 text-amber-500" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   {isPaused ? (
                     <>
-                      <Play className="h-4 w-4 mr-1" />
+                      <Play className="h-4 w-4 mr-1.5" />
                       Resume
                     </>
                   ) : (
                     <>
-                      <Pause className="h-4 w-4 mr-1" />
+                      <Pause className="h-4 w-4 mr-1.5" />
                       Pause
                     </>
                   )}
@@ -1324,34 +1327,34 @@ export function CampaignAnalyticsTable({
           <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-border hover:bg-transparent">
-                    <TableHead className="text-muted-foreground font-medium text-sm sticky left-0 bg-card z-10 py-3">Account</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">User</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-right cursor-pointer hover:text-foreground transition-colors text-sm whitespace-nowrap py-3 bg-card" onClick={() => handleSort('total_views')}>
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider sticky left-0 bg-card/50 z-10 py-3">Account</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">User</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-right cursor-pointer hover:text-foreground transition-colors text-xs uppercase tracking-wider whitespace-nowrap py-3 bg-card/50" onClick={() => handleSort('total_views')}>
                       <div className="flex items-center justify-end gap-1">
                         Views
-                        {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Time Period</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Last Paid</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-sm w-8 py-3 bg-card"></TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Period</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Last Paid</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs w-8 py-3 bg-card/50"></TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
                 {paginatedAnalytics.map(item => {
                   const platformIcon = getPlatformIcon(item.platform);
                   const username = item.account_username.startsWith('@') ? item.account_username.slice(1) : item.account_username;
-                  return <TableRow key={item.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                      <TableCell className="py-3 sticky left-0 bg-card z-10">
+                  return <TableRow key={item.id} className="border-0 hover:bg-muted/30 transition-colors">
+                      <TableCell className="py-3.5 sticky left-0 bg-card/50 z-10">
                         <div 
-                          className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded-md px-1 py-0.5 -mx-1 transition-colors"
+                          className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => {
                             setSelectedAccountForDemo(item);
                             setDemographicDialogOpen(true);
                           }}
                         >
-                          {platformIcon && <div className="flex-shrink-0 w-5 h-5 rounded-lg bg-muted border flex items-center justify-center p-0.5">
+                          {platformIcon && <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-muted/50 flex items-center justify-center p-1">
                               <img src={platformIcon} alt={item.platform} className="w-full h-full object-contain" />
                             </div>}
                           <div className="flex items-center gap-1.5">
@@ -1373,20 +1376,19 @@ export function CampaignAnalyticsTable({
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 bg-card">
+                      <TableCell className="py-3.5 bg-card/50">
                         {item.user_id && item.profiles ? (
                           <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1.5 cursor-pointer rounded-md px-1.5 py-1" onClick={() => openUserDetailsDialog(item)}>
-                              <Avatar className="h-5 w-5">
+                            <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => openUserDetailsDialog(item)}>
+                              <Avatar className="h-6 w-6">
                                 <AvatarImage src={item.profiles.avatar_url || undefined} />
-                                <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
                                   {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-white text-sm truncate max-w-[90px] hover:underline font-semibold" style={{
-                                letterSpacing: '-0.3px',
-                                fontWeight: 600
-                              }}>{item.profiles.username}</span>
+                              <span className="text-foreground text-sm font-medium truncate max-w-[100px] hover:underline">
+                                {item.profiles.username}
+                              </span>
                             </div>
                             {(() => {
                               // Check if this specific analytics record has been paid
@@ -1396,8 +1398,8 @@ export function CampaignAnalyticsTable({
                               
                               if (isPaidForThisPeriod) {
                                 return (
-                                  <Badge className="bg-green-500/10 text-green-400 hover:bg-green-500/10 border-green-500/20 px-2 py-0.5 text-xs font-medium whitespace-nowrap">
-                                    <DollarSign className="h-3 w-3 mr-0.5" />
+                                  <Badge className="bg-green-500/10 text-green-500 border-0 px-2 py-0.5 text-xs font-medium">
+                                    <Check className="h-3 w-3 mr-1" />
                                     Paid
                                   </Badge>
                                 );
@@ -1406,23 +1408,23 @@ export function CampaignAnalyticsTable({
                             })()}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5 cursor-pointer hover:bg-white/10 rounded-md px-2 py-1.5 border transition-all w-fit" onClick={e => {
-                            e.stopPropagation();
-                            openLinkDialog(item);
-                          }}>
-                            <Link2 className="h-3.5 w-3.5 text-white/60" />
-                            <span className="text-xs text-white/80 font-medium">Link User</span>
-                          </div>
+                          <button 
+                            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm"
+                            onClick={e => {
+                              e.stopPropagation();
+                              openLinkDialog(item);
+                            }}
+                          >
+                            <Link2 className="h-4 w-4" />
+                            <span>Link User</span>
+                          </button>
                         )}
                       </TableCell>
-                      <TableCell className="text-foreground text-right text-sm bg-card py-3" style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500
-                    }}>
+                      <TableCell className="text-foreground text-right text-sm bg-card/50 py-3.5 font-medium tabular-nums">
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm bg-card py-3">
-                        {item.start_date && item.end_date ? <span className="text-xs whitespace-nowrap">
+                      <TableCell className="text-muted-foreground text-sm bg-card/50 py-3.5">
+                        {item.start_date && item.end_date ? <span className="text-sm whitespace-nowrap">
                             {new Date(item.start_date).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric'
@@ -1430,17 +1432,17 @@ export function CampaignAnalyticsTable({
                           month: 'short',
                           day: 'numeric'
                         })}
-                          </span> : <span className="text-xs text-muted-foreground/60">—</span>}
+                          </span> : <span className="text-muted-foreground/50">—</span>}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm bg-card py-3">
-                        {item.last_payment_date ? <span className="text-xs">
+                      <TableCell className="text-muted-foreground text-sm bg-card/50 py-3.5">
+                        {item.last_payment_date ? <span className="text-sm">
                             {formatDistanceToNow(new Date(item.last_payment_date), {
                           addSuffix: true
                         })}
-                          </span> : <span className="text-xs text-muted-foreground/60">—</span>}
+                          </span> : <span className="text-muted-foreground/50">—</span>}
                       </TableCell>
-                      <TableCell className="py-3 bg-card">
-                        <div className="flex items-center gap-1">
+                      <TableCell className="py-3.5 bg-card/50">
+                        <div className="flex items-center gap-0.5">
                           {item.user_id && (
                             <TooltipProvider>
                               <Tooltip>
@@ -1453,7 +1455,7 @@ export function CampaignAnalyticsTable({
                                       setSelectedUser(item);
                                       setPaymentDialogOpen(true);
                                     }} 
-                                    className="h-7 w-7 text-green-400/70 hover:text-green-300 hover:bg-green-500/10 bg-green-500/5"
+                                    className="h-8 w-8 text-green-500 hover:text-green-400 hover:bg-green-500/10"
                                   >
                                     <DollarSign className="h-4 w-4" />
                                   </Button>
@@ -1470,7 +1472,7 @@ export function CampaignAnalyticsTable({
                                 <Button variant="ghost" size="icon" onClick={() => {
                               setDeleteAccountId(item.id);
                               setDeleteDialogOpen(true);
-                            }} className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                            }} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </TooltipTrigger>
@@ -1493,47 +1495,53 @@ export function CampaignAnalyticsTable({
       </Card>}
 
         {/* Transactions History */}
-        {activeTab === 'transactions' && <Card className="bg-card border">
-          <CardHeader className="px-3 py-3 border-b border-border space-y-3">
+        {activeTab === 'transactions' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
+          <CardHeader className="px-4 py-3 space-y-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-foreground text-sm">Transaction History</CardTitle>
-              <div className="flex gap-2">
-                <Button
-                  variant={transactionFilter === 'all' ? 'default' : 'outline'}
-                  size="sm"
+              <CardTitle className="text-sm font-medium text-foreground">Transaction History</CardTitle>
+              <div className="flex gap-1 p-1 bg-muted/30 rounded-lg">
+                <button
                   onClick={() => setTransactionFilter('all')}
-                  className="h-8"
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    transactionFilter === 'all' 
+                      ? "bg-background text-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  All ({transactions.length})
-                </Button>
-                <Button
-                  variant={transactionFilter === 'earning' ? 'default' : 'outline'}
-                  size="sm"
+                  All <span className="text-xs opacity-60">({transactions.length})</span>
+                </button>
+                <button
                   onClick={() => setTransactionFilter('earning')}
-                  className="h-8"
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    transactionFilter === 'earning' 
+                      ? "bg-background text-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  Earnings ({transactions.filter(t => t.type === 'earning').length})
-                </Button>
-                <Button
-                  variant={transactionFilter === 'balance_correction' ? 'default' : 'outline'}
-                  size="sm"
+                  Earnings <span className="text-xs opacity-60">({transactions.filter(t => t.type === 'earning').length})</span>
+                </button>
+                <button
                   onClick={() => setTransactionFilter('balance_correction')}
-                  className="h-8"
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    transactionFilter === 'balance_correction' 
+                      ? "bg-background text-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  Budget Adjustments ({transactions.filter(t => t.type === 'balance_correction').length})
-                </Button>
+                  Budget <span className="text-xs opacity-60">({transactions.filter(t => t.type === 'balance_correction').length})</span>
+                </button>
               </div>
             </div>
             
             {/* Export Controls */}
-            <div className="flex items-center gap-3 pt-2 border-t border-border">
+            <div className="flex items-center gap-3 pt-3">
               <div className="flex items-center gap-2 flex-1">
-                <Label className="text-sm text-muted-foreground whitespace-nowrap">Date Range:</Label>
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Export:</Label>
                 <Input
                   type="date"
                   value={exportStartDate}
                   onChange={(e) => setExportStartDate(e.target.value)}
-                  className="h-8 max-w-[150px]"
+                  className="h-9 max-w-[150px] bg-muted/50 border-0"
                   placeholder="Start date"
                 />
                 <span className="text-muted-foreground">to</span>
@@ -1541,15 +1549,15 @@ export function CampaignAnalyticsTable({
                   type="date"
                   value={exportEndDate}
                   onChange={(e) => setExportEndDate(e.target.value)}
-                  className="h-8 max-w-[150px]"
+                  className="h-9 max-w-[150px] bg-muted/50 border-0"
                   placeholder="End date"
                 />
               </div>
               <Button
                 onClick={exportTransactionsToCSV}
                 size="sm"
-                variant="outline"
-                className="h-8 gap-2"
+                variant="ghost"
+                className="h-9 gap-2 text-muted-foreground hover:text-foreground"
               >
                 <Download className="h-4 w-4" />
                 Export CSV
@@ -1560,14 +1568,14 @@ export function CampaignAnalyticsTable({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-border hover:bg-transparent">
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Date</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">User</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Account</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 text-right bg-card">Views</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 text-right bg-card">Amount</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Status</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 text-center bg-card">Action</TableHead>
+                <TableRow className="border-0 hover:bg-transparent">
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Date</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">User</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Account</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 text-right bg-card/50">Views</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 text-right bg-card/50">Amount</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Status</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 text-center bg-card/50">Action</TableHead>
                 </TableRow>
               </TableHeader>
                 <TableBody>
@@ -1575,29 +1583,29 @@ export function CampaignAnalyticsTable({
                   const metadata = txn.metadata || {};
                   const platformIcon = getPlatformIcon(metadata.platform || '');
                   
-                  return <TableRow key={txn.id} className="border-border hover:bg-muted/50">
-                        <TableCell className="text-muted-foreground text-sm bg-card py-3">
+                  return <TableRow key={txn.id} className="border-0 hover:bg-muted/30">
+                        <TableCell className="text-muted-foreground text-sm bg-card/50 py-3.5">
                           {new Date(txn.created_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
                       })}
                         </TableCell>
-                        <TableCell className="bg-card py-3">
+                        <TableCell className="bg-card/50 py-3.5">
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-5 w-5">
+                            <Avatar className="h-6 w-6">
                               <AvatarImage src={txn.profiles?.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
                                 {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
                             <span className="text-foreground text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="bg-card py-3">
+                        <TableCell className="bg-card/50 py-3.5">
                           <div className="flex items-center gap-2">
                             {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
-                            <span className="text-foreground/80 text-sm">
+                            <span className="text-muted-foreground text-sm">
                               {metadata.account_username 
                                 ? `@${metadata.account_username}` 
                                 : txn.type === 'balance_correction' 
@@ -1606,29 +1614,26 @@ export function CampaignAnalyticsTable({
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-foreground/80 text-right text-sm bg-card py-3" style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500
-                    }}>
+                        <TableCell className="text-foreground text-right text-sm bg-card/50 py-3.5 font-medium tabular-nums">
                           {metadata.views?.toLocaleString() || '0'}
                         </TableCell>
-                        <TableCell className={`text-right font-semibold text-sm bg-card py-3 ${Number(txn.amount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <TableCell className={`text-right font-semibold text-sm bg-card/50 py-3.5 tabular-nums ${Number(txn.amount) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                           {Number(txn.amount) >= 0 ? '+' : ''}{`$${Number(txn.amount).toFixed(2)}`}
                         </TableCell>
-                        <TableCell className="bg-card py-3">
+                        <TableCell className="bg-card/50 py-3.5">
                           <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
                             {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="bg-card py-3 text-center">
+                        <TableCell className="bg-card/50 py-3.5 text-center">
                           {txn.status === 'completed' && txn.type === 'earning' && <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button variant="ghost" size="sm" onClick={() => {
                               setSelectedTransaction(txn);
                               setRevertDialogOpen(true);
-                            }} className="h-7 w-7 p-0 hover:bg-red-500/10 hover:text-red-500">
-                                    <RotateCcw className="h-3.5 w-3.5" />
+                            }} className="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                                    <RotateCcw className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -1696,19 +1701,19 @@ export function CampaignAnalyticsTable({
          </Card>}
 
          {/* Budget Adjustments */}
-         {activeTab === 'budget' && <Card className="bg-card border">
-           <CardHeader className="px-3 py-3 border-b border-border space-y-3">
-             <CardTitle className="text-foreground text-sm">Budget Adjustments</CardTitle>
+         {activeTab === 'budget' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
+           <CardHeader className="px-4 py-3 space-y-3">
+             <CardTitle className="text-sm font-medium text-foreground">Budget Adjustments</CardTitle>
              
              {/* Export Controls */}
-             <div className="flex items-center gap-3 pt-2 border-t border-border">
+             <div className="flex items-center gap-3 pt-3">
                <div className="flex items-center gap-2 flex-1">
-                 <Label className="text-sm text-muted-foreground whitespace-nowrap">Date Range:</Label>
+                 <Label className="text-sm text-muted-foreground whitespace-nowrap">Export:</Label>
                  <Input
                    type="date"
                    value={exportStartDate}
                    onChange={(e) => setExportStartDate(e.target.value)}
-                   className="h-8 max-w-[150px]"
+                   className="h-9 max-w-[150px] bg-muted/50 border-0"
                    placeholder="Start date"
                  />
                  <span className="text-muted-foreground">to</span>
@@ -1716,13 +1721,12 @@ export function CampaignAnalyticsTable({
                    type="date"
                    value={exportEndDate}
                    onChange={(e) => setExportEndDate(e.target.value)}
-                   className="h-8 max-w-[150px]"
+                   className="h-9 max-w-[150px] bg-muted/50 border-0"
                    placeholder="End date"
                  />
                </div>
                <Button
                  onClick={() => {
-                   // Set filter to budget corrections only for export
                    const originalFilter = transactionFilter;
                    setTransactionFilter('balance_correction');
                    setTimeout(() => {
@@ -1731,8 +1735,8 @@ export function CampaignAnalyticsTable({
                    }, 0);
                  }}
                  size="sm"
-                 variant="outline"
-                 className="h-8 gap-2"
+                 variant="ghost"
+                 className="h-9 gap-2 text-muted-foreground hover:text-foreground"
                >
                  <Download className="h-4 w-4" />
                  Export CSV
@@ -1743,38 +1747,38 @@ export function CampaignAnalyticsTable({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-border hover:bg-transparent">
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Date</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Type</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Description</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 text-right bg-card">Amount</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-sm py-3 bg-card">Status</TableHead>
+                <TableRow className="border-0 hover:bg-transparent">
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Date</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Type</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Description</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 text-right bg-card/50">Amount</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Status</TableHead>
                 </TableRow>
               </TableHeader>
                 <TableBody>
                 {paginatedBudgetTransactions.map(txn => {
-                  return <TableRow key={txn.id} className="border-border hover:bg-muted/50">
-                        <TableCell className="text-muted-foreground text-sm bg-card py-3">
+                  return <TableRow key={txn.id} className="border-0 hover:bg-muted/30">
+                        <TableCell className="text-muted-foreground text-sm bg-card/50 py-3.5">
                           {new Date(txn.created_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
                       })}
                         </TableCell>
-                        <TableCell className="bg-card py-3">
-                          <Badge variant="outline" className="text-xs">
+                        <TableCell className="bg-card/50 py-3.5">
+                          <Badge variant="secondary" className="text-xs bg-muted/50 text-muted-foreground border-0">
                             Budget Adjustment
                           </Badge>
                         </TableCell>
-                        <TableCell className="bg-card py-3">
-                          <span className="text-foreground/80 text-sm">
+                        <TableCell className="bg-card/50 py-3.5">
+                          <span className="text-muted-foreground text-sm">
                             {txn.description || 'Manual budget adjustment'}
                           </span>
                         </TableCell>
-                        <TableCell className={`text-right font-semibold text-sm bg-card py-3 ${Number(txn.amount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <TableCell className={`text-right font-semibold text-sm bg-card/50 py-3.5 tabular-nums ${Number(txn.amount) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                           {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
                         </TableCell>
-                        <TableCell className="bg-card py-3">
+                        <TableCell className="bg-card/50 py-3.5">
                           <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
                             {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
                           </Badge>
