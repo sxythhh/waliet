@@ -2,6 +2,7 @@ import { Layers, Dock, Compass, Coins, ArrowUpRight, LogOut } from "lucide-react
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
 import newLogo from "@/assets/new-logo.png";
+import viralityIcon from "@/assets/virality-icon.png";
 import discordIcon from "@/assets/discord-icon.png";
 import trophyIcon from "@/assets/trophy-icon.png";
 import moneyIcon from "@/assets/money-icon.png";
@@ -160,7 +161,7 @@ export function AppSidebar() {
       <nav className="fixed bottom-0 left-0 right-0 md:sticky md:top-0 md:bottom-auto z-10 flex h-14 md:h-16 items-center justify-center md:justify-between bg-background px-3 md:px-6">
         {/* Logo - Desktop Only */}
         <div className="hidden md:flex items-center gap-2">
-        <OptimizedImage src={newLogo} alt="Logo" className="h-[34px] w-[34px] rounded-lg object-cover" />
+        <OptimizedImage src={viralityIcon} alt="Logo" className="h-[34px] w-[34px] rounded-lg object-cover" />
         <span className="font-geist font-bold tracking-tighter-custom" style={{
           color: theme === 'light' ? '#000000' : '#FFFFFF',
           fontSize: '18px',
