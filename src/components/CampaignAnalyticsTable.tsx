@@ -99,13 +99,15 @@ interface CampaignAnalyticsTableProps {
   campaignId: string;
   onPaymentComplete?: () => void;
   view?: 'analytics' | 'transactions' | 'budget';
+  className?: string;
 }
 type SortField = 'total_views' | 'average_video_views' | 'average_engagement_rate' | 'outperforming_video_rate';
 type SortDirection = 'asc' | 'desc';
 export function CampaignAnalyticsTable({
   campaignId,
   onPaymentComplete,
-  view = 'analytics'
+  view = 'analytics',
+  className
 }: CampaignAnalyticsTableProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -1196,7 +1198,7 @@ export function CampaignAnalyticsTable({
     );
   }
   return <>
-      <div className="space-y-4">
+      <div className={`space-y-4 ${className || ''}`}>
         {/* Summary Cards */}
         
 
@@ -1539,16 +1541,16 @@ export function CampaignAnalyticsTable({
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block rounded-xl overflow-hidden bg-card/30">
+            <div className="hidden md:block rounded-xl overflow-hidden bg-card/30 border border-[#141414] dark:border-[#141414]">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-border/30 hover:bg-transparent">
-                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3 pl-4">Date</TableHead>
-                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3">User</TableHead>
-                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3">Account</TableHead>
-                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3 text-right">Views</TableHead>
-                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3 text-right">Amount</TableHead>
-                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3 text-right pr-4">Action</TableHead>
+                  <TableRow className="border-b border-[#141414] dark:border-[#141414] hover:bg-transparent">
+                    <TableHead className="text-foreground font-medium text-xs py-3 pl-4 tracking-[-0.5px]">Date</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs py-3 tracking-[-0.5px]">User</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs py-3 tracking-[-0.5px]">Account</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs py-3 text-right tracking-[-0.5px]">Views</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs py-3 text-right tracking-[-0.5px]">Amount</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs py-3 text-right pr-4 tracking-[-0.5px]">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1560,7 +1562,16 @@ export function CampaignAnalyticsTable({
                     return (
                       <TableRow 
                         key={txn.id} 
-                        className={`hover:bg-muted/20 transition-colors ${!isLast ? 'border-b border-border/20' : 'border-0'}`}
+                        className={`hover:bg-muted/20 transition-colors cursor-pointer ${!isLast ? 'border-b border-[#141414] dark:border-[#141414]' : 'border-0'}`}
+                        onClick={() => {
+                          if (txn.user_id) {
+                            const analyticsItem = analytics.find(a => a.user_id === txn.user_id);
+                            if (analyticsItem) {
+                              setSelectedUserForDetails(analyticsItem);
+                              setUserDetailsDialogOpen(true);
+                            }
+                          }
+                        }}
                       >
                         <TableCell className="py-3 pl-4">
                           <span className="text-muted-foreground text-sm">
