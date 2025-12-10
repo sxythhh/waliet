@@ -86,7 +86,7 @@ export function AppSidebar() {
   return (
     <>
       {/* Mobile Header - Top */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4 border-b border-border/50">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-[#0a0a0a] px-4">
         <OptimizedImage src={newLogo} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
         <div className="flex items-center gap-3">
           <Popover>
@@ -140,17 +140,17 @@ export function AppSidebar() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background/95 backdrop-blur-sm border-t border-border/50 px-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-[#0a0a0a] px-2">
         {menuItems.map(item => {
           const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
           return (
             <button
               key={item.title}
               onClick={() => handleTabClick(item.tab)}
-              className={`flex flex-col items-center justify-center gap-1 w-16 h-12 rounded-xl transition-all ${
+              className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${
                 isActive 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-white' 
+                  : 'text-neutral-500 hover:text-neutral-300'
               }`}
             >
               {item.tab === "campaigns" ? (
@@ -165,31 +165,28 @@ export function AppSidebar() {
       </nav>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-background border-r border-border/50">
+      <aside className="hidden md:flex flex-col w-56 lg:w-64 h-screen sticky top-0 bg-[#0a0a0a] shrink-0">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-5 py-5">
+        <div className="flex items-center gap-2.5 px-4 py-5">
           <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
-          <span 
-            className="font-geist font-bold tracking-tighter-custom text-lg"
-            style={{ color: theme === 'light' ? '#000000' : '#FFFFFF' }}
-          >
+          <span className="font-geist font-bold tracking-tighter-custom text-lg text-white">
             VIRALITY
           </span>
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 px-3 py-2">
-          <div className="space-y-1">
+        <nav className="flex-1 px-2 py-2">
+          <div>
             {menuItems.map(item => {
               const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
               return (
                 <button
                   key={item.title}
                   onClick={() => handleTabClick(item.tab)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors ${
                     isActive 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      ? 'bg-white/10 text-white' 
+                      : 'text-neutral-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   {item.tab === "campaigns" ? (
@@ -204,24 +201,24 @@ export function AppSidebar() {
           </div>
 
           {/* Secondary Links */}
-          <div className="mt-6 pt-6 border-t border-border/50 space-y-1">
+          <div className="mt-4 pt-4 border-t border-white/10">
             <button
               onClick={() => navigate("/leaderboard")}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
             >
               <Trophy className="h-5 w-5" />
               <span>Leaderboard</span>
             </button>
             <button
               onClick={() => navigate("/referrals")}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
             >
               <Gift className="h-5 w-5" />
               <span>Referrals</span>
             </button>
             <button
               onClick={() => window.open("https://discord.gg/virality", "_blank")}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+              className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
@@ -233,46 +230,46 @@ export function AppSidebar() {
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-3 border-t border-border/50">
+        <div className="p-2 border-t border-white/10">
           <Popover>
             <PopoverTrigger asChild>
-              <button className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-all">
+              <button className="w-full flex items-center gap-3 p-2.5 hover:bg-white/5 transition-colors">
                 <Avatar className="w-9 h-9">
                   <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                  <AvatarFallback className="bg-muted text-muted-foreground text-sm">
+                  <AvatarFallback className="bg-neutral-800 text-neutral-300 text-sm">
                     {getInitial()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-medium truncate">{displayName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{displayName}</p>
+                  <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
                 </div>
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-2 bg-card" align="start" side="top">
+            <PopoverContent className="w-56 p-2 bg-[#141414] border-white/10" align="start" side="top">
               <div className="space-y-1">
                 <button
                   onClick={() => handleTabClick("profile")}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:bg-white/5 transition-colors"
                 >
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
                 </button>
                 <div className="flex items-center gap-3 px-3 py-2">
-                  <span className="text-sm flex-1">Theme</span>
+                  <span className="text-sm text-neutral-300 flex-1">Theme</span>
                   <ThemeToggle />
                 </div>
                 <button
                   onClick={() => window.open("https://virality.cc/help", "_blank")}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:bg-white/5 transition-colors"
                 >
                   <HelpCircle className="w-4 h-4" />
                   <span>Support</span>
                 </button>
-                <div className="my-1 border-t border-border/50" />
+                <div className="my-1 border-t border-white/10" />
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Log out</span>
