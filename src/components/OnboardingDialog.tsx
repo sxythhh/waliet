@@ -329,9 +329,9 @@ export function OnboardingDialog({
 
               {/* Progress */}
               <div className="flex items-center gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
-                ))}
+                {Array.from({
+              length: totalSteps
+            }).map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />)}
               </div>
             </div>}
 
@@ -371,9 +371,9 @@ export function OnboardingDialog({
 
               {/* Progress */}
               <div className="flex items-center gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
-                ))}
+                {Array.from({
+              length: totalSteps
+            }).map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />)}
               </div>
             </div>}
 
@@ -390,7 +390,7 @@ export function OnboardingDialog({
                   <div className="flex gap-2">
                     {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-lg transition-all ${selectedPlatform === platform ? "bg-primary" : "bg-muted/30 hover:bg-muted/50"}`}>
                         {getPlatformIcon(platform)}
-                        <span className="text-[10px] font-medium capitalize">{platform === "twitter" ? "X" : platform}</span>
+                        
                       </button>)}
                   </div>
                 </div>
@@ -417,9 +417,9 @@ export function OnboardingDialog({
 
               {/* Progress */}
               <div className="flex items-center gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
-                ))}
+                {Array.from({
+              length: totalSteps
+            }).map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />)}
               </div>
             </div>}
 
@@ -491,9 +491,9 @@ export function OnboardingDialog({
 
               {/* Progress */}
               <div className="flex items-center gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
-                ))}
+                {Array.from({
+              length: totalSteps
+            }).map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />)}
               </div>
             </div>}
 
@@ -551,9 +551,9 @@ export function OnboardingDialog({
 
               {/* Progress */}
               <div className="flex items-center gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
-                ))}
+                {Array.from({
+              length: totalSteps
+            }).map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />)}
               </div>
             </div>}
 
@@ -578,52 +578,48 @@ export function OnboardingDialog({
                 <div className="space-y-2">
                   <Label>Monthly Recurring Revenue</Label>
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      { value: "0-10k", label: "$0-10k" },
-                      { value: "10k-50k", label: "$10k-50k" },
-                      { value: "50k-100k", label: "$50k-100k" },
-                      { value: "100k-500k", label: "$100k-500k" },
-                      { value: "500k+", label: "$500k+" }
-                    ].map(option => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setMrr(option.value)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                          mrr === option.value
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted/40 hover:bg-muted/60 text-foreground"
-                        }`}
-                      >
+                    {[{
+                  value: "0-10k",
+                  label: "$0-10k"
+                }, {
+                  value: "10k-50k",
+                  label: "$10k-50k"
+                }, {
+                  value: "50k-100k",
+                  label: "$50k-100k"
+                }, {
+                  value: "100k-500k",
+                  label: "$100k-500k"
+                }, {
+                  value: "500k+",
+                  label: "$500k+"
+                }].map(option => <button key={option.value} type="button" onClick={() => setMrr(option.value)} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${mrr === option.value ? "bg-primary text-primary-foreground" : "bg-muted/40 hover:bg-muted/60 text-foreground"}`}>
                         {option.label}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Business Type</Label>
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      { value: "saas", label: "SaaS" },
-                      { value: "ecommerce", label: "E-commerce" },
-                      { value: "agency", label: "Agency" },
-                      { value: "consumer", label: "Consumer" },
-                      { value: "other", label: "Other" }
-                    ].map(option => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setBusinessType(option.value)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                          businessType === option.value
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted/40 hover:bg-muted/60 text-foreground"
-                        }`}
-                      >
+                    {[{
+                  value: "saas",
+                  label: "SaaS"
+                }, {
+                  value: "ecommerce",
+                  label: "E-commerce"
+                }, {
+                  value: "agency",
+                  label: "Agency"
+                }, {
+                  value: "consumer",
+                  label: "Consumer"
+                }, {
+                  value: "other",
+                  label: "Other"
+                }].map(option => <button key={option.value} type="button" onClick={() => setBusinessType(option.value)} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${businessType === option.value ? "bg-primary text-primary-foreground" : "bg-muted/40 hover:bg-muted/60 text-foreground"}`}>
                         {option.label}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                 </div>
               </div>
@@ -639,9 +635,9 @@ export function OnboardingDialog({
 
               {/* Progress */}
               <div className="flex items-center gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
-                ))}
+                {Array.from({
+              length: totalSteps
+            }).map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />)}
               </div>
             </div>}
         </div>
