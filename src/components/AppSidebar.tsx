@@ -165,10 +165,7 @@ export function AppSidebar() {
 
           {/* Secondary Links */}
           <div>
-            <button onClick={() => navigate("/leaderboard")} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[#0e0e0e] transition-colors ${location.pathname === '/leaderboard' ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
-              <Medal className={`h-5 w-5 ${location.pathname === '/leaderboard' ? 'text-[#2060df]' : ''}`} />
-              <span className="tracking-[-0.5px]">Leaderboard</span>
-            </button>
+            
             <button onClick={() => navigate("/referrals")} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[#0e0e0e] transition-colors ${location.pathname === '/referrals' ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
               <Gift className={`h-5 w-5 ${location.pathname === '/referrals' ? 'text-[#2060df]' : ''}`} />
               <span className="tracking-[-0.5px]">Referrals</span>
