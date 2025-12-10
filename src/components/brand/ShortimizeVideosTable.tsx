@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink } from "lucide-react";
+import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, User } from "lucide-react";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
@@ -31,10 +33,11 @@ interface ShortimizeVideo {
   creator_name?: string;
 }
 
-interface CreatorMatch {
+interface CreatorInfo {
+  name: string;
+  avatar_url: string | null;
+  user_id: string;
   username: string;
-  platform: string;
-  creator_name: string;
 }
 
 interface ShortimizeVideosTableProps {
@@ -73,13 +76,14 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
 
 export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVideosTableProps) {
   const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
-  const [creatorMatches, setCreatorMatches] = useState<Map<string, string>>(new Map());
+  const [creatorMatches, setCreatorMatches] = useState<Map<string, CreatorInfo>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [sortField, setSortField] = useState<SortField>('uploaded_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 50, total_pages: 0 });
+  const [selectedCreator, setSelectedCreator] = useState<CreatorInfo | null>(null);
 
   const fetchCreatorMatches = async (usernames: string[]) => {
     if (usernames.length === 0) return;
@@ -87,17 +91,22 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
     try {
       const { data, error } = await supabase
         .from('social_accounts')
-        .select('username, platform, user_id, profiles:user_id(full_name, username)')
+        .select('username, platform, user_id, profiles:user_id(full_name, username, avatar_url)')
         .in('username', usernames);
       
       if (error) throw error;
       
-      const matches = new Map<string, string>();
+      const matches = new Map<string, CreatorInfo>();
       data?.forEach((account: any) => {
         const key = `${account.username.toLowerCase()}_${account.platform.toLowerCase()}`;
         const creatorName = account.profiles?.full_name || account.profiles?.username || null;
-        if (creatorName) {
-          matches.set(key, creatorName);
+        if (creatorName && account.user_id) {
+          matches.set(key, {
+            name: creatorName,
+            avatar_url: account.profiles?.avatar_url || null,
+            user_id: account.user_id,
+            username: account.profiles?.username || account.username
+          });
         }
       });
       setCreatorMatches(matches);
@@ -180,7 +189,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
     return `${THUMBNAIL_BASE_URL}/${video.username}/${platformId}_${video.platform}.jpg`;
   };
 
-  const getCreatorName = (video: ShortimizeVideo) => {
+  const getCreatorInfo = (video: ShortimizeVideo): CreatorInfo | null => {
     const key = `${video.username.toLowerCase()}_${video.platform.toLowerCase()}`;
     return creatorMatches.get(key) || null;
   };
@@ -266,20 +275,20 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-table-border">
-              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground w-[300px]">Video</TableHead>
-              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Account</TableHead>
-              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Creator</TableHead>
-              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Upload Date</TableHead>
-              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Views</TableHead>
-              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Likes</TableHead>
-              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Comments</TableHead>
-              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Shares</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-foreground w-[300px]">Video</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-foreground">Account</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-foreground">Creator</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-foreground">Upload Date</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-foreground text-right">Views</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-foreground text-right">Likes</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-foreground text-right">Comments</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-foreground text-right">Shares</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i} className="border-b border-table-border">
+                <TableRow key={i} className="border-b border-table-border dark:bg-[#141414] bg-muted/30">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-16 w-9 rounded" />
@@ -302,61 +311,81 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
                 </TableCell>
               </TableRow>
             ) : (
-              videos.map((video) => (
-                <TableRow key={video.ad_id} className="border-b border-table-border hover:bg-muted/20">
-                  <TableCell>
-                    <a 
-                      href={video.ad_link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 group"
-                    >
-                      <div className="relative h-16 w-9 rounded overflow-hidden bg-muted/50 flex-shrink-0">
-                        {getThumbnailUrl(video) && (
-                          <img 
-                            src={getThumbnailUrl(video)!} 
-                            alt={video.title || 'Video thumbnail'}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        )}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Play className="h-3 w-3 text-white fill-white" />
+              videos.map((video) => {
+                const creatorInfo = getCreatorInfo(video);
+                return (
+                  <TableRow key={video.ad_id} className="border-b border-table-border dark:bg-[#141414] bg-muted/30 hover:bg-muted/50 dark:hover:bg-[#1a1a1a]">
+                    <TableCell>
+                      <a 
+                        href={video.ad_link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 group"
+                      >
+                        <div className="relative h-16 w-9 rounded overflow-hidden bg-muted/50 flex-shrink-0">
+                          {getThumbnailUrl(video) && (
+                            <img 
+                              src={getThumbnailUrl(video)!} 
+                              alt={video.title || 'Video thumbnail'}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Play className="h-3 w-3 text-white fill-white" />
+                          </div>
                         </div>
+                        <span className="text-sm tracking-[-0.5px] line-clamp-2 group-hover:underline transition-all">
+                          {video.title || 'Untitled'}
+                        </span>
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getPlatformIcon(video.platform)}
+                        <span className="text-sm tracking-[-0.5px]">@{video.username.toLowerCase()}</span>
                       </div>
-                      <span className="text-sm tracking-[-0.5px] line-clamp-2 group-hover:text-primary transition-colors">
-                        {video.title || 'Untitled'}
-                      </span>
-                    </a>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getPlatformIcon(video.platform)}
-                      <span className="text-sm tracking-[-0.5px]">@{video.username}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm tracking-[-0.5px] text-muted-foreground">
-                    {getCreatorName(video) || '-'}
-                  </TableCell>
-                  <TableCell className="text-sm tracking-[-0.5px] text-muted-foreground">
-                    {video.uploaded_at ? format(new Date(video.uploaded_at), 'MMM d, yyyy') : '-'}
-                  </TableCell>
-                  <TableCell className="text-sm tracking-[-0.5px] text-right font-medium">
-                    {formatNumber(video.latest_views)}
-                  </TableCell>
-                  <TableCell className="text-sm tracking-[-0.5px] text-right">
-                    {formatNumber(video.latest_likes)}
-                  </TableCell>
-                  <TableCell className="text-sm tracking-[-0.5px] text-right">
-                    {formatNumber(video.latest_comments)}
-                  </TableCell>
-                  <TableCell className="text-sm tracking-[-0.5px] text-right">
-                    {formatNumber(video.latest_shares)}
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                    <TableCell>
+                      {creatorInfo ? (
+                        <button
+                          onClick={() => setSelectedCreator(creatorInfo)}
+                          className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+                        >
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={creatorInfo.avatar_url || ''} alt={creatorInfo.name} />
+                            <AvatarFallback className="text-[10px]">
+                              {creatorInfo.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm tracking-[-0.5px] text-foreground">
+                            {creatorInfo.username.toLowerCase()}
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="text-sm tracking-[-0.5px] text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm tracking-[-0.5px] text-muted-foreground">
+                      {video.uploaded_at ? format(new Date(video.uploaded_at), 'MMM d, yyyy') : '-'}
+                    </TableCell>
+                    <TableCell className="text-sm tracking-[-0.5px] text-right font-medium">
+                      {formatNumber(video.latest_views)}
+                    </TableCell>
+                    <TableCell className="text-sm tracking-[-0.5px] text-right">
+                      {formatNumber(video.latest_likes)}
+                    </TableCell>
+                    <TableCell className="text-sm tracking-[-0.5px] text-right">
+                      {formatNumber(video.latest_comments)}
+                    </TableCell>
+                    <TableCell className="text-sm tracking-[-0.5px] text-right">
+                      {formatNumber(video.latest_shares)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -390,6 +419,38 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
           </div>
         </div>
       )}
+
+      {/* Creator Popup */}
+      <Dialog open={!!selectedCreator} onOpenChange={(open) => !open && setSelectedCreator(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="tracking-[-0.5px]">Creator Profile</DialogTitle>
+          </DialogHeader>
+          {selectedCreator && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={selectedCreator.avatar_url || ''} alt={selectedCreator.name} />
+                <AvatarFallback className="text-2xl">
+                  {selectedCreator.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center">
+                <h3 className="text-lg font-medium tracking-[-0.5px]">{selectedCreator.name}</h3>
+                <p className="text-sm text-muted-foreground tracking-[-0.5px]">@{selectedCreator.username.toLowerCase()}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="tracking-[-0.5px]"
+                onClick={() => window.open(`/u/${selectedCreator.username}`, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View Full Profile
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
