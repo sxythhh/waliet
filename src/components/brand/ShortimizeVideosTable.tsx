@@ -153,7 +153,8 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
   };
 
   useEffect(() => {
-    if (brandId) {
+    // Only fetch when we have both brandId and collectionName to avoid double-fetching
+    if (brandId && collectionName) {
       fetchVideos();
     }
   }, [brandId, collectionName, sortField, sortDirection, pagination.page]);
@@ -202,7 +203,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
       {/* Header with filters */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button onClick={fetchVideos} variant="ghost" size="icon" disabled={isLoading} className="h-8 w-8">
+          <Button type="button" onClick={fetchVideos} variant="ghost" size="icon" disabled={isLoading || !collectionName} className="h-8 w-8">
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
