@@ -202,22 +202,26 @@ export function CampaignsTab({
     }).limit(5);
 
     // Extract campaign IDs from metadata and fetch campaign info
-    const campaignIds = (recentTransactions || [])
-      .map(tx => (tx.metadata as any)?.campaign_id)
-      .filter(Boolean);
-    
-    let campaignMap: Record<string, { brand_logo_url: string | null; brand_name: string }> = {};
+    const campaignIds = (recentTransactions || []).map(tx => (tx.metadata as any)?.campaign_id).filter(Boolean);
+    let campaignMap: Record<string, {
+      brand_logo_url: string | null;
+      brand_name: string;
+    }> = {};
     if (campaignIds.length > 0) {
-      const { data: campaignsData } = await supabase
-        .from("campaigns")
-        .select("id, brand_logo_url, brand_name")
-        .in("id", campaignIds);
+      const {
+        data: campaignsData
+      } = await supabase.from("campaigns").select("id, brand_logo_url, brand_name").in("id", campaignIds);
       campaignMap = (campaignsData || []).reduce((acc, c) => {
-        acc[c.id] = { brand_logo_url: c.brand_logo_url, brand_name: c.brand_name };
+        acc[c.id] = {
+          brand_logo_url: c.brand_logo_url,
+          brand_name: c.brand_name
+        };
         return acc;
-      }, {} as Record<string, { brand_logo_url: string | null; brand_name: string }>);
+      }, {} as Record<string, {
+        brand_logo_url: string | null;
+        brand_name: string;
+      }>);
     }
-
     const activities: RecentActivity[] = (recentTransactions || []).map(tx => {
       const campaignId = (tx.metadata as any)?.campaign_id;
       const campaign = campaignId ? campaignMap[campaignId] : null;
@@ -650,29 +654,23 @@ export function CampaignsTab({
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wide">
                     {new Date(activity.timestamp).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}
                   </span>
                   {activity.amount !== undefined && <span className={`text-sm font-semibold tabular-nums ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
                       {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
                     </span>}
                 </div>
                 <div className="flex items-start gap-3">
-                  {activity.campaignLogo ? (
-                    <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
+                  {activity.campaignLogo ? <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
                       <img src={activity.campaignLogo} alt={activity.campaignName || ''} className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-9 h-9 rounded-lg flex-shrink-0 ring-1 ring-border bg-muted flex items-center justify-center">
+                    </div> : <div className="w-9 h-9 rounded-lg flex-shrink-0 ring-1 ring-border bg-muted flex items-center justify-center">
                       <Wallet className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  )}
+                    </div>}
                   <div className="flex-1 min-w-0">
-                    {activity.campaignName && (
-                      <p className="text-sm font-medium text-foreground truncate mb-0.5">{activity.campaignName}</p>
-                    )}
+                    {activity.campaignName && <p className="text-sm font-medium text-foreground truncate mb-0.5">{activity.campaignName}</p>}
                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{activity.description}</p>
                   </div>
                 </div>
@@ -857,9 +855,9 @@ export function CampaignsTab({
                   <Button variant="ghost" size="sm" onClick={e => {
                   e.stopPropagation();
                   setDialogOpen(true);
-                }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-md text-center border-0">
+                }} className="font-medium font-sans">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
-                    Link Account
+                    Connect Account  
                   </Button>
                 </div>}
             </CardContent>
