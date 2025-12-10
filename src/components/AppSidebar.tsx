@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Users } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User } from "lucide-react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import viralityIcon from "@/assets/virality-icon.png";
@@ -13,6 +13,8 @@ import profileInactive from "@/assets/profile-inactive.svg";
 import profileActive from "@/assets/profile-active.svg";
 import blueprintsInactive from "@/assets/blueprints-inactive.svg";
 import blueprintsActive from "@/assets/blueprints-active.svg";
+import creatorsInactive from "@/assets/creators-inactive.svg";
+import creatorsActive from "@/assets/creators-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -60,7 +62,7 @@ const brandMenuItems = [{
 }, {
   title: "Creators",
   tab: "creators",
-  icon: Users
+  icon: null as any
 }, {
   title: "Profile",
   tab: "profile",
@@ -260,7 +262,10 @@ export function AppSidebar() {
                 </div> : item.tab === "blueprints" ? <div className="relative h-6 w-6">
                   <img src={blueprintsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={blueprintsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : item.tab === "creators" ? <Users className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />}
+                </div> : item.tab === "creators" ? <div className="relative h-6 w-6">
+                  <img src={creatorsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={creatorsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                </div> : <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />}
               <span className="text-[10px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
             </button>;
       })}
@@ -338,7 +343,10 @@ export function AppSidebar() {
                     </div> : item.tab === "blueprints" ? <div className="relative h-6 w-6">
                       <img src={blueprintsInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={blueprintsActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "creators" ? <Users className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />}
+                    </div> : item.tab === "creators" ? <div className="relative h-6 w-6">
+                      <img src={creatorsInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={creatorsActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />}
                   <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">{item.title}</span>
                 </button>;
           })}
