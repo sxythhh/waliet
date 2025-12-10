@@ -340,14 +340,14 @@ export default function Auth() {
                   </button>
                 </div>
                 
-                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-xs font-sans">
+                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-geist" style={{ letterSpacing: '-0.5px' }}>
                   {loading ? "Please wait..." : "Continue"}
                 </Button>
               </form>
             </div>)}
           
           {/* Terms and Conditions */}
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center" style={{ letterSpacing: '-0.3px' }}>
             <p className="text-xs text-muted-foreground leading-relaxed">
               By logging in, you agree to our{" "}
               <a href="https://virality.gg/creator-terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
