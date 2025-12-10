@@ -139,7 +139,7 @@ export function AppSidebar() {
       </nav>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-56 lg:w-64 h-screen sticky top-0 bg-[#0a0a0a] shrink-0">
+      <aside className="hidden md:flex flex-col w-56 lg:w-64 h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414]">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-4 py-5">
           <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
@@ -181,7 +181,7 @@ export function AppSidebar() {
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-2 border-t border-white/10">
+        <div className="p-2">
           <Popover>
             <PopoverTrigger asChild>
               <button className="w-full flex items-center gap-3 p-2.5 hover:bg-white/5 transition-colors">
