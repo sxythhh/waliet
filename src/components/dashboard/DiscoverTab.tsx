@@ -230,7 +230,65 @@ export function DiscoverTab() {
   // Combine: active campaigns first, ended campaigns last
   const sortedCampaigns = [...sortedActiveCampaigns, ...sortedEndedCampaigns];
   const platforms = ["TikTok", "Instagram", "YouTube"];
-  return <div className="px-6 space-y-6">
+  
+  const totalActiveCampaigns = activeCampaigns.length;
+  const totalBounties = bounties.filter(b => b.status !== "ended").length;
+  
+  return <div className="px-6 pt-8 pb-6 space-y-8">
+        {/* Header Section */}
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight">Discover Opportunities</h1>
+          <p className="text-muted-foreground">Find campaigns and bounties that match your content style</p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Card className="bg-card/50 border-0">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Video className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{totalActiveCampaigns}</p>
+                <p className="text-xs text-muted-foreground">Active Campaigns</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/50 border-0">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{totalBounties}</p>
+                <p className="text-xs text-muted-foreground">Open Bounties</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/50 border-0">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{platforms.length}</p>
+                <p className="text-xs text-muted-foreground">Platforms</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/50 border-0">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Bookmark className="h-5 w-5 text-orange-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{sortedActiveCampaigns.filter(c => c.is_featured).length}</p>
+                <p className="text-xs text-muted-foreground">Featured</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Filters */}
         <div className="space-y-4">
           {/* First Row: Search and Platform Filters */}
