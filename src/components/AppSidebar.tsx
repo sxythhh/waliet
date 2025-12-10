@@ -5,6 +5,8 @@ import viralityIcon from "@/assets/virality-icon.png";
 import discordIcon from "@/assets/discord-icon.png";
 import webStoriesInactive from "@/assets/web-stories-inactive.svg";
 import webStoriesActive from "@/assets/web-stories-active.svg";
+import walletInactive from "@/assets/wallet-inactive.svg";
+import walletActive from "@/assets/wallet-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -136,7 +138,9 @@ export function AppSidebar() {
         {menuItems.map(item => {
         const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
         return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
-              {item.tab === "campaigns" ? <img src={isActive ? webStoriesActive : webStoriesInactive} alt="" className="h-5 w-5" /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />}
+              {item.tab === "campaigns" ? <img src={isActive ? webStoriesActive : webStoriesInactive} alt="" className="h-5 w-5" /> : 
+               item.tab === "wallet" ? <img src={isActive ? walletActive : walletInactive} alt="" className="h-5 w-5" /> :
+               <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />}
               <span className="text-[10px] font-medium">{item.title}</span>
             </button>;
       })}
@@ -161,7 +165,9 @@ export function AppSidebar() {
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
             return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-2 px-3 py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`}>
-                  {item.tab === "campaigns" ? <img src={isActive ? webStoriesActive : webStoriesInactive} alt="" className="h-5 w-5" /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} />}
+                  {item.tab === "campaigns" ? <img src={isActive ? webStoriesActive : webStoriesInactive} alt="" className="h-5 w-5" /> : 
+                   item.tab === "wallet" ? <img src={isActive ? walletActive : walletInactive} alt="" className="h-5 w-5" /> :
+                   <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} />}
                   <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">{item.title}</span>
                 </button>;
           })}
