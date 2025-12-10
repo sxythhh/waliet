@@ -40,6 +40,30 @@ type SortDirection = 'asc' | 'desc';
 
 const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
 
+// Extract platform-specific video ID from ad_link
+const extractPlatformId = (adLink: string, platform: string): string | null => {
+  try {
+    if (platform?.toLowerCase() === 'tiktok') {
+      // TikTok: https://www.tiktok.com/@username/video/VIDEO_ID
+      const match = adLink.match(/\/video\/(\d+)/);
+      return match ? match[1] : null;
+    } else if (platform?.toLowerCase() === 'instagram') {
+      // Instagram: https://www.instagram.com/reel/SHORTCODE/ or /p/SHORTCODE/
+      const match = adLink.match(/\/(reel|p)\/([A-Za-z0-9_-]+)/);
+      return match ? match[2] : null;
+    } else if (platform?.toLowerCase() === 'youtube') {
+      // YouTube: https://www.youtube.com/shorts/VIDEO_ID or watch?v=VIDEO_ID
+      const shortsMatch = adLink.match(/\/shorts\/([A-Za-z0-9_-]+)/);
+      if (shortsMatch) return shortsMatch[1];
+      const watchMatch = adLink.match(/[?&]v=([A-Za-z0-9_-]+)/);
+      return watchMatch ? watchMatch[1] : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVideosTableProps) {
   const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,7 +137,9 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
   };
 
   const getThumbnailUrl = (video: ShortimizeVideo) => {
-    return `${THUMBNAIL_BASE_URL}/${video.username}/${video.ad_id}_${video.platform}.jpg`;
+    const platformId = extractPlatformId(video.ad_link, video.platform);
+    if (!platformId) return null;
+    return `${THUMBNAIL_BASE_URL}/${video.username}/${platformId}_${video.platform}.jpg`;
   };
 
   const startIndex = (pagination.page - 1) * pagination.limit + 1;
@@ -193,10 +219,10 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border border-border/50 bg-card/30 overflow-hidden">
+      <div className="rounded-lg bg-card/30 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border/50">
+            <TableRow className="hover:bg-transparent border-b border-border/20">
               <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground w-[300px]">Video</TableHead>
               <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Account</TableHead>
               <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Upload Date</TableHead>
@@ -209,10 +235,10 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
           <TableBody>
             {isLoading ? (
               Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i} className="border-b border-border/30">
+                <TableRow key={i} className="border-b border-border/10">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Skeleton className="h-12 w-[68px] rounded" />
+                      <Skeleton className="h-16 w-9 rounded" />
                       <Skeleton className="h-4 w-32" />
                     </div>
                   </TableCell>
@@ -232,7 +258,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
               </TableRow>
             ) : (
               videos.map((video) => (
-                <TableRow key={video.ad_id} className="border-b border-border/30 hover:bg-muted/20">
+                <TableRow key={video.ad_id} className="border-b border-border/10 hover:bg-muted/20">
                   <TableCell>
                     <a 
                       href={video.ad_link} 
@@ -240,17 +266,19 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 group"
                     >
-                      <div className="relative h-12 w-[68px] rounded overflow-hidden bg-muted/50 flex-shrink-0">
-                        <img 
-                          src={getThumbnailUrl(video)} 
-                          alt={video.title || 'Video thumbnail'}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
+                      <div className="relative h-16 w-9 rounded overflow-hidden bg-muted/50 flex-shrink-0">
+                        {getThumbnailUrl(video) && (
+                          <img 
+                            src={getThumbnailUrl(video)!} 
+                            alt={video.title || 'Video thumbnail'}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
                         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Play className="h-4 w-4 text-white fill-white" />
+                          <Play className="h-3 w-3 text-white fill-white" />
                         </div>
                       </div>
                       <span className="text-sm tracking-[-0.5px] line-clamp-2 group-hover:text-primary transition-colors">
