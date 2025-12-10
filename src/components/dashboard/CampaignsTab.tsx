@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, TrendingUp, Users, Activity, Sparkles, ChevronRight, Clock, CheckCircle2, Bell } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
@@ -615,37 +615,27 @@ export function CampaignsTab({
         </div>}
 
       {/* Recent Activity Section */}
-      {recentActivity.length > 0 && <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Recent Activity</h3>
-            
-          </div>
+      {recentActivity.length > 0 && <div className="space-y-4">
+          <h3 className="text-lg font-semibold tracking-tight" style={{ letterSpacing: '-0.5px' }}>Recent Activity</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recentActivity.slice(0, 6).map(activity => <Card key={activity.id} className="bg-card/50 border-0 hover:bg-card transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2.5 rounded-xl ${activity.amount && activity.amount > 0 ? 'bg-green-500/10' : 'bg-muted/50'}`}>
-                      {activity.amount && activity.amount > 0 ? <TrendingUp className="h-4 w-4 text-green-500" /> : <Activity className="h-4 w-4 text-muted-foreground" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium line-clamp-1">{activity.title}</p>
-                        {activity.amount !== undefined && <p className={`text-sm font-bold whitespace-nowrap ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
-                            {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
-                          </p>}
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{activity.description}</p>
-                      <p className="text-[10px] text-muted-foreground/70 mt-1.5">
-                        {new Date(activity.timestamp).toLocaleDateString('en-US', {
+            {recentActivity.slice(0, 6).map(activity => <div key={activity.id} className="group p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wide">
+                    {activity.title}
+                  </span>
+                  {activity.amount !== undefined && <span className={`text-sm font-semibold tabular-nums ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                      {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
+                    </span>}
+                </div>
+                <p className="text-sm text-foreground/80 line-clamp-2 leading-relaxed">{activity.description}</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-2">
+                  {new Date(activity.timestamp).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric'
                   })}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>)}
+                </p>
+              </div>)}
           </div>
         </div>}
 
