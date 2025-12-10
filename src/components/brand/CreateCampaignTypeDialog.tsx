@@ -32,7 +32,10 @@ export function CreateCampaignTypeDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="gap-2">
+          <Button 
+            className="gap-2 hover:shadow-[0_0_0_3px_#0055ff]"
+            style={{ borderTop: '1px solid #4b85f7' }}
+          >
             <Plus className="h-4 w-4" />
             Create Campaign
           </Button>
