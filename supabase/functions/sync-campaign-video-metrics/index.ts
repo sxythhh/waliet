@@ -19,17 +19,16 @@ serve(async (req) => {
 
     // Check if a specific campaignId was provided
     let specificCampaignId: string | null = null;
+    
+    // Clone the request to read body safely
+    const clonedReq = req.clone();
     try {
-      const bodyText = await req.text();
-      console.log('Received body:', bodyText);
-      if (bodyText) {
-        const body = JSON.parse(bodyText);
-        specificCampaignId = body.campaignId || null;
-        console.log('Parsed campaignId:', specificCampaignId);
-      }
+      const body = await clonedReq.json();
+      console.log('Received body object:', JSON.stringify(body));
+      specificCampaignId = body?.campaignId || null;
+      console.log('Parsed campaignId:', specificCampaignId);
     } catch (e) {
-      console.log('Error parsing body:', e);
-      // No body or invalid JSON, sync all campaigns
+      console.log('No body or parse error - will sync all campaigns');
     }
 
     console.log('Starting campaign video metrics sync...', specificCampaignId ? `for campaign ${specificCampaignId}` : 'for all campaigns');
