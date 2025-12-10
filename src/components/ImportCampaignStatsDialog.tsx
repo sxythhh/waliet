@@ -66,7 +66,10 @@ export function ImportCampaignStatsDialog({
 
   const parseDate = (dateStr: string): string | null => {
     try {
-      const [day, month, year] = dateStr.split('/');
+      if (!dateStr || !dateStr.trim()) return null;
+      const cleanDate = dateStr.trim();
+      const [day, month, year] = cleanDate.split('/').map(s => s.trim());
+      if (!day || !month || !year) return null;
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     } catch {
       return null;
