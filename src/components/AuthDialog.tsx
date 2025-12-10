@@ -166,7 +166,7 @@ export default function AuthDialog({
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md border-0 bg-[#0a0a0a]/98 backdrop-blur-xl shadow-2xl p-0">
-          <div className="p-6 pb-8 bg-black/[0.61]">
+          <div className="p-6 pb-8 bg-black/[0.61] rounded-xl">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex justify-center">
                 <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
@@ -178,9 +178,7 @@ export default function AuthDialog({
                   {/* Creator Sign In Section */}
                   <div className="space-y-4">
                     <div className="text-center">
-                      <p className="text-xs font-semibold font-clash text-muted-foreground uppercase tracking-wide">
-                        Sign in as Creator
-                      </p>
+                      
                     </div>
 
                     <div className="space-y-3">
@@ -213,24 +211,11 @@ export default function AuthDialog({
                   </div>
 
                   {/* Divider */}
-                  <div className="relative my-8">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-muted-foreground/20" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="backdrop-blur-sm px-3 font-medium text-[#484444] bg-[#0d0d0d]">
-                        OR
-                      </span>
-                    </div>
-                  </div>
+                  
 
                   {/* Client Sign In Section */}
                   <div className="space-y-4">
-                    <a href="https://virality.cc/auth" className="flex items-center justify-center w-full h-12 bg-muted/50 hover:bg-muted rounded-md font-semibold font-geist text-sm transition-colors" style={{
-                  letterSpacing: '-0.5px'
-                }}>
-                      Continue to Client Portal
-                    </a>
+                    
                   </div>
                 </> : (/* Email Form */
             <div className="space-y-4">
