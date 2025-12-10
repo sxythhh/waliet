@@ -7,10 +7,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
+import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
-import { Pencil, Users, Plus, BarChart3 } from "lucide-react";
+import { Pencil, Plus, BarChart3 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Campaign {
@@ -60,6 +61,7 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
   const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
   const [createBountyOpen, setCreateBountyOpen] = useState(false);
+  const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
 
   useEffect(() => {
     fetchBrandData();
@@ -178,13 +180,10 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
             {activeCampaigns} active campaign{activeCampaigns !== 1 ? 's' : ''} · ${totalUsed.toLocaleString()} / ${totalBudget.toLocaleString()} budget used
           </p>
         </div>
-        <div className="flex gap-2">
-          <CreateCampaignDialog brandId={brandId} brandName={brandName} onSuccess={fetchBrandData} />
-          <Button onClick={() => setCreateBountyOpen(true)} variant="outline" className="gap-2">
-            <Users className="h-4 w-4" />
-            Create Bounty
-          </Button>
-        </div>
+        <CreateCampaignTypeDialog
+          onSelectClipping={() => setCreateCampaignOpen(true)}
+          onSelectManaged={() => setCreateBountyOpen(true)}
+        />
       </div>
 
       {/* Campaigns Grid */}
@@ -281,17 +280,23 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
       {campaigns.length === 0 && bounties.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-muted-foreground mb-4">No campaigns or bounties yet</p>
-          <div className="flex gap-2">
-            <CreateCampaignDialog brandId={brandId} brandName={brandName} onSuccess={fetchBrandData} />
-            <Button onClick={() => setCreateBountyOpen(true)} variant="outline" className="gap-2">
-              <Users className="h-4 w-4" />
-              Create Bounty
-            </Button>
-          </div>
+          <CreateCampaignTypeDialog
+            onSelectClipping={() => setCreateCampaignOpen(true)}
+            onSelectManaged={() => setCreateBountyOpen(true)}
+          />
         </div>
       )}
 
-      {/* Create Bounty Dialog */}
+      {/* Create Campaign Dialog (Clipping) */}
+      <CreateCampaignDialog
+        brandId={brandId}
+        brandName={brandName}
+        onSuccess={fetchBrandData}
+        open={createCampaignOpen}
+        onOpenChange={setCreateCampaignOpen}
+      />
+
+      {/* Create Bounty Dialog (Managed) */}
       <CreateBountyDialog
         open={createBountyOpen}
         onOpenChange={setCreateBountyOpen}
