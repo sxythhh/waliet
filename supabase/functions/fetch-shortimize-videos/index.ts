@@ -6,6 +6,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Fetch with retry and exponential backoff
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch(url, options);
+    
+    if (response.status === 429) {
+      // Rate limited - wait and retry with exponential backoff
+      const waitTime = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+      console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+      await delay(waitTime);
+      lastError = new Error(`Rate limited after ${maxRetries} attempts`);
+      continue;
+    }
+    
+    return response;
+  }
+  
+  throw lastError || new Error('Max retries exceeded');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -59,7 +84,6 @@ serve(async (req) => {
     params.append('order_direction', orderDirection);
     
     if (collection) {
-      // URLSearchParams already handles encoding, don't double-encode
       params.append('collections', collection.trim());
       console.log('Filtering by collection:', collection.trim());
     } else {
@@ -75,14 +99,15 @@ serve(async (req) => {
       params.append('uploaded_at_end', uploadedAtEnd);
     }
 
-    // Fetch videos from Shortimize API
-    const response = await fetch(
+    // Fetch videos from Shortimize API with retry logic
+    const response = await fetchWithRetry(
       `https://api.shortimize.com/videos?${params.toString()}`,
       {
         headers: {
           'Authorization': `Bearer ${brand.shortimize_api_key}`,
         },
-      }
+      },
+      3
     );
 
     if (!response.ok) {
