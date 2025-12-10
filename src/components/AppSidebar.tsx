@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
-
 interface BrandMembership {
   brand_id: string;
   role: string;
@@ -31,7 +30,6 @@ interface BrandMembership {
     logo_url: string | null;
   };
 }
-
 const menuItems = [{
   title: "Campaigns",
   tab: "campaigns",
@@ -49,7 +47,6 @@ const menuItems = [{
   tab: "profile",
   icon: CircleUser
 }];
-
 export function AppSidebar() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -66,14 +63,12 @@ export function AppSidebar() {
   const [accountType, setAccountType] = useState<string>("creator");
   const [brandMemberships, setBrandMemberships] = useState<BrandMembership[]>([]);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
-
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchBrandMemberships();
     }
   }, [user]);
-
   const fetchProfile = async () => {
     if (!user) return;
     const {
@@ -87,13 +82,11 @@ export function AppSidebar() {
       setDisplayName(user.email || "");
     }
   };
-
   const fetchBrandMemberships = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("brand_members")
-      .select("brand_id, role, brands(name, slug, logo_url)")
-      .eq("user_id", user.id);
+    const {
+      data
+    } = await supabase.from("brand_members").select("brand_id, role, brands(name, slug, logo_url)").eq("user_id", user.id);
     if (data) {
       setBrandMemberships(data as unknown as BrandMembership[]);
     }
@@ -204,7 +197,7 @@ export function AppSidebar() {
         </div>
 
         {/* Workspace Toggle */}
-        <div className="px-3 py-2">
+        <div className="px-0 py-0 rounded-none">
           <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
             <PopoverTrigger asChild>
               <button className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] transition-colors">
@@ -222,43 +215,28 @@ export function AppSidebar() {
             </PopoverTrigger>
             <PopoverContent className="w-[calc(100%-24px)] p-1.5 bg-[#141414] border-[#242424]" align="start" sideOffset={4}>
               <div className="space-y-0.5">
-                <button
-                  onClick={() => {
-                    navigate('/dashboard');
-                    setWorkspaceOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#1f1f1f] transition-colors"
-                >
+                <button onClick={() => {
+                navigate('/dashboard');
+                setWorkspaceOpen(false);
+              }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#1f1f1f] transition-colors">
                   <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                     <User className="w-3 h-3 text-neutral-400" />
                   </div>
                   <span className="text-xs font-medium text-white">Creator Dashboard</span>
                 </button>
-                {brandMemberships.length > 0 && (
-                  <>
+                {brandMemberships.length > 0 && <>
                     <div className="h-px bg-[#242424] my-1" />
                     <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
-                    {brandMemberships.map((membership) => (
-                      <button
-                        key={membership.brand_id}
-                        onClick={() => {
-                          navigate(`/brand/${membership.brands.slug}`);
-                          setWorkspaceOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#1f1f1f] transition-colors"
-                      >
-                        {membership.brands.logo_url ? (
-                          <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
-                        ) : (
-                          <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                    {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => {
+                  navigate(`/brand/${membership.brands.slug}`);
+                  setWorkspaceOpen(false);
+                }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#1f1f1f] transition-colors">
+                        {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                             <Building2 className="w-3 h-3 text-neutral-400" />
-                          </div>
-                        )}
+                          </div>}
                         <span className="text-xs font-medium text-white truncate">{membership.brands.name}</span>
-                      </button>
-                    ))}
-                  </>
-                )}
+                      </button>)}
+                  </>}
               </div>
             </PopoverContent>
           </Popover>
