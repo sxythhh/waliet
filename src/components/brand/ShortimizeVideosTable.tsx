@@ -116,6 +116,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
   };
 
   const fetchVideos = async () => {
+    console.log('[ShortimizeVideosTable] fetchVideos called, brandId:', brandId, 'collectionName:', collectionName);
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
@@ -131,6 +132,8 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
         },
       });
 
+      console.log('[ShortimizeVideosTable] fetch response:', { error, hasData: !!data, videosCount: data?.videos?.length });
+
       if (error) throw error;
 
       if (data.error) {
@@ -140,14 +143,16 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
       const videosData = data.videos || [];
       setVideos(videosData);
       setPagination(prev => ({ ...prev, ...data.pagination }));
+      console.log('[ShortimizeVideosTable] videos set successfully, count:', videosData.length);
       
       // Fetch creator matches for unique usernames
       const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
       await fetchCreatorMatches(uniqueUsernames);
     } catch (error) {
-      console.error('Error fetching videos:', error);
+      console.error('[ShortimizeVideosTable] Error fetching videos:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to fetch videos');
     } finally {
+      console.log('[ShortimizeVideosTable] setting isLoading to false');
       setIsLoading(false);
     }
   };
