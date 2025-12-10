@@ -898,6 +898,148 @@ export function WalletTab() {
   };
   return <div className="space-y-6 max-w-6xl mx-auto">
 
+      {/* Payout Methods - First */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {payoutMethods.map(method => {
+          const getMethodLabel = () => {
+            switch (method.method) {
+              case "paypal":
+                return "PayPal";
+              case "crypto":
+                return "Crypto";
+              case "bank":
+                return "Bank";
+              case "wise":
+                return "Wise";
+              case "revolut":
+                return "Revolut";
+              case "tips":
+                return "TIPS";
+              default:
+                return method.method;
+            }
+          };
+          const getMethodDetails = () => {
+            switch (method.method) {
+              case "paypal":
+                return method.details.email;
+              case "crypto":
+                return `${method.details.address?.slice(0, 6)}...${method.details.address?.slice(-4)}`;
+              case "bank":
+                return `${method.details.bankName} - ****${method.details.accountNumber?.slice(-4)}`;
+              case "wise":
+                return method.details.email;
+              case "revolut":
+                return method.details.email;
+              case "upi":
+                return method.details.upi_id;
+              case "tips":
+                return method.details.username;
+              default:
+                return "N/A";
+            }
+          };
+          const getMethodIcon = () => {
+            switch (method.method) {
+              case "paypal":
+                return <div className="w-10 h-10 rounded-xl bg-[#0070ba]/10 flex items-center justify-center">
+                  <span className="text-lg font-bold text-[#0070ba]">P</span>
+                </div>;
+              case "crypto":
+                const network = method.details?.network?.toLowerCase();
+                const networkLogo = network === 'ethereum' ? ethereumLogo : network === 'optimism' ? optimismLogo : network === 'solana' ? solanaLogo : network === 'polygon' ? polygonLogo : null;
+                return <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center p-2">
+                  {networkLogo ? <img src={networkLogo} alt={network} className="w-full h-full object-contain" /> : <WalletIcon className="h-5 w-5 text-purple-500" />}
+                </div>;
+              case "bank":
+                return <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-emerald-500" />
+                </div>;
+              case "wise":
+                return <div className="w-10 h-10 rounded-xl bg-[#9fe870]/10 flex items-center justify-center">
+                  <span className="text-lg font-bold text-[#9fe870]">W</span>
+                </div>;
+              case "revolut":
+                return <div className="w-10 h-10 rounded-xl bg-[#0075eb]/10 flex items-center justify-center">
+                  <span className="text-lg font-bold text-[#0075eb]">R</span>
+                </div>;
+              default:
+                return <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <WalletIcon className="h-5 w-5 text-muted-foreground" />
+                </div>;
+            }
+          };
+          const getGradientClass = () => {
+            switch (method.method) {
+              case "paypal":
+                return "from-[#0070ba]/5 via-transparent to-transparent";
+              case "crypto":
+                return "from-purple-500/5 via-transparent to-transparent";
+              case "bank":
+                return "from-emerald-500/5 via-transparent to-transparent";
+              case "wise":
+                return "from-[#9fe870]/5 via-transparent to-transparent";
+              case "revolut":
+                return "from-[#0075eb]/5 via-transparent to-transparent";
+              default:
+                return "from-muted/50 via-transparent to-transparent";
+            }
+          };
+          return (
+            <div
+              key={method.id}
+              className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradientClass()} border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg`}
+            >
+              <div className="absolute inset-0 bg-card/80 backdrop-blur-sm" />
+              <div className="relative p-5">
+                <div className="flex items-start justify-between mb-4">
+                  {getMethodIcon()}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteMethod(method.id)}
+                    className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground mb-1">{getMethodLabel()}</p>
+                  <p className="text-xs text-muted-foreground font-medium truncate">{getMethodDetails()}</p>
+                </div>
+                {method.method === 'crypto' && method.details?.network && (
+                  <div className="mt-3 pt-3 border-t border-border/50">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      {method.details.network} Network
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        
+        {/* Add Method Card */}
+        <button
+          onClick={() => setDialogOpen(true)}
+          disabled={payoutMethods.length >= 3}
+          className="group relative overflow-hidden rounded-2xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-all duration-300 min-h-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative h-full flex flex-col items-center justify-center p-5 gap-2">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Plus className="h-5 w-5 text-primary" />
+            </div>
+            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+              Add Method
+            </span>
+            {payoutMethods.length >= 3 && (
+              <span className="text-[10px] text-muted-foreground">Max 3 methods</span>
+            )}
+          </div>
+        </button>
+      </div>
+
       {/* Balance Cards - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Lifetime Earnings Card */}
@@ -1132,157 +1274,7 @@ export function WalletTab() {
         </CardContent>
       </Card>
 
-      {/* Balance Cards */}
-      
-
-      {/* Payout Methods */}
-      <Card className="bg-card border-0">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-lg font-semibold">Payout Methods</CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button onClick={() => setDialogOpen(true)} size="sm" disabled={payoutMethods.length >= 3 || !wallet?.balance || wallet.balance === 0} className="bg-primary hover:bg-primary/90 text-primary-foreground border-0">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Method {payoutMethods.length >= 3 ? "(Max 3)" : ""}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              {(!wallet?.balance || wallet.balance === 0) && <TooltipContent>
-                  <p>You can connect a payout method to cash out when your balance is above $0</p>
-                </TooltipContent>}
-            </Tooltip>
-          </TooltipProvider>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {payoutMethods.length === 0 ? <div className="text-center py-8">
-              
-              <p className="text-sm text-muted-foreground mb-3">No payout methods</p>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button onClick={() => setDialogOpen(true)} size="sm" disabled={!wallet?.balance || wallet.balance === 0} className="bg-primary hover:bg-primary/90 text-primary-foreground border-0">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Method
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {(!wallet?.balance || wallet.balance === 0) && <TooltipContent>
-                      <p>You can connect a payout method to cash out when your balance is above $0</p>
-                    </TooltipContent>}
-                </Tooltip>
-              </TooltipProvider>
-            </div> : payoutMethods.map(method => {
-          const getMethodLabel = () => {
-            switch (method.method) {
-              case "paypal":
-                return "PayPal";
-              case "crypto":
-                return "Crypto";
-              case "bank":
-                return "Bank Transfer";
-              case "wise":
-                return "Wise";
-              case "revolut":
-                return "Revolut";
-              case "upi":
-                return "UPI";
-              case "tips":
-                return "TIPS";
-              default:
-                return method.method;
-            }
-          };
-          const getMethodDetails = () => {
-            switch (method.method) {
-              case "paypal":
-                return method.details.email;
-              case "crypto":
-                return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
-              case "bank":
-                return `${method.details.bankName} - ${method.details.accountNumber?.slice(-4)}`;
-              case "wise":
-                return method.details.email;
-              case "revolut":
-                return method.details.email;
-              case "upi":
-                return method.details.upi_id;
-              case "tips":
-                return method.details.username;
-              default:
-                return "N/A";
-            }
-          };
-          const getBadgeText = () => {
-            switch (method.method) {
-              case "crypto":
-                const network = method.details.network;
-                return network ? network.charAt(0).toUpperCase() + network.slice(1).toLowerCase() : "";
-              case "bank":
-                return "Bank";
-              case "paypal":
-                return "Email";
-              case "wise":
-                return "Email";
-              case "revolut":
-                return "Email";
-              case "tips":
-                return "Username";
-              default:
-                return "";
-            }
-          };
-          const getNetworkLogo = () => {
-            if (method.method !== "crypto") return null;
-            const network = method.details?.network?.toLowerCase();
-            if (network === 'ethereum') return ethereumLogo;
-            if (network === 'optimism') return optimismLogo;
-            if (network === 'solana') return solanaLogo;
-            if (network === 'polygon') return polygonLogo;
-            return null;
-          };
-          const getCryptoLogo = () => {
-            const currency = method.details?.currency?.toLowerCase();
-            const network = method.details?.network?.toLowerCase();
-            if (currency === 'usdc') return usdcLogo;
-            if (network === 'ethereum') return ethereumLogo;
-            if (network === 'optimism') return optimismLogo;
-            if (network === 'solana') return solanaLogo;
-            if (network === 'polygon') return polygonLogo;
-            return null;
-          };
-          const cryptoLogo = getCryptoLogo();
-          const networkLogo = getNetworkLogo();
-          return <div key={method.id} className="relative overflow-hidden rounded-xl bg-muted">
-                  
-                  <div className="relative flex items-center justify-between p-4 bg-card">
-                    <div className="flex items-center gap-4 flex-1">
-                      {method.method !== 'crypto' && cryptoLogo}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <p className="text-base font-semibold text-foreground">
-                            {getMethodLabel()}
-                          </p>
-                          {method.method.includes('crypto') && <Badge variant="secondary" className="text-[10px] font-instrument px-2 py-0.5 bg-transparent text-foreground border-0 flex items-center gap-1.5 normal-case hover:bg-transparent">
-                              {networkLogo && <img src={networkLogo} alt="Network logo" className="h-3 w-3" />}
-                              {getBadgeText()}
-                            </Badge>}
-                        </div>
-                        <p className="text-sm text-muted-foreground font-instrument tracking-tight font-medium truncate">
-                          {getMethodDetails()}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-9 w-9 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors duration-200">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>;
-        })}
-        </CardContent>
-      </Card>
+      {/* Balance Cards - Removed duplicate */}
 
       <PayoutMethodDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleAddPayoutMethod} currentMethodCount={payoutMethods.length} />
 
