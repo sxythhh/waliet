@@ -1027,187 +1027,108 @@ export function WalletTab() {
             </div>}
         </CardHeader>
         <CardContent className="p-4">
-          {transactions.length === 0 ? (
-            <div className="text-center py-12">
+          {transactions.length === 0 ? <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
-            </div>
-          ) : (
-            <>
+            </div> : <>
               <div className="space-y-2">
                 {transactions.filter(transaction => {
-                  if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                  if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                  if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                  return true;
-                }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => (
-                  <div 
-                    key={transaction.id} 
-                    onClick={() => {
-                      setSelectedTransaction(transaction);
-                      setTransactionSheetOpen(true);
-                    }} 
-                    className="flex items-center justify-between p-3 rounded-xl bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-                  >
+              if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+              if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+              if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+              return true;
+            }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => <div key={transaction.id} onClick={() => {
+              setSelectedTransaction(transaction);
+              setTransactionSheetOpen(true);
+            }} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       {/* Icon */}
-                      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center overflow-hidden ${
-                        transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? '' :
-                        transaction.type === 'earning' ? 'bg-green-500/15' :
-                        transaction.type === 'balance_correction' ? 'bg-orange-500/15' :
-                        transaction.type === 'referral' ? 'bg-purple-500/15' :
-                        transaction.type === 'transfer_received' ? 'bg-blue-500/15' :
-                        transaction.type === 'transfer_sent' ? 'bg-red-500/15' :
-                        'bg-red-500/15'
-                      }`}>
-                        {transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? (
-                          <img 
-                            src={transaction.campaign.brand_logo_url} 
-                            alt={transaction.campaign.brand_name || 'Brand'} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : transaction.type === 'earning' ? (
-                          <ArrowDownLeft className="h-4 w-4 text-green-500" />
-                        ) : transaction.type === 'balance_correction' ? (
-                          <RefreshCw className="h-4 w-4 text-orange-500" />
-                        ) : transaction.type === 'referral' ? (
-                          <Gift className="h-4 w-4 text-purple-500" />
-                        ) : transaction.type === 'transfer_received' ? (
-                          <ArrowDownLeft className="h-4 w-4 text-blue-500" />
-                        ) : transaction.type === 'transfer_sent' ? (
-                          <ArrowUpRight className="h-4 w-4 text-red-500" />
-                        ) : (
-                          <ArrowUpRight className="h-4 w-4 text-red-500" />
-                        )}
+                      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center overflow-hidden ${transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? '' : transaction.type === 'earning' ? 'bg-green-500/15' : transaction.type === 'balance_correction' ? 'bg-orange-500/15' : transaction.type === 'referral' ? 'bg-purple-500/15' : transaction.type === 'transfer_received' ? 'bg-blue-500/15' : transaction.type === 'transfer_sent' ? 'bg-red-500/15' : 'bg-red-500/15'}`}>
+                        {transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name || 'Brand'} className="w-full h-full object-cover" /> : transaction.type === 'earning' ? <ArrowDownLeft className="h-4 w-4 text-green-500" /> : transaction.type === 'balance_correction' ? <RefreshCw className="h-4 w-4 text-orange-500" /> : transaction.type === 'referral' ? <Gift className="h-4 w-4 text-purple-500" /> : transaction.type === 'transfer_received' ? <ArrowDownLeft className="h-4 w-4 text-blue-500" /> : transaction.type === 'transfer_sent' ? <ArrowUpRight className="h-4 w-4 text-red-500" /> : <ArrowUpRight className="h-4 w-4 text-red-500" />}
                       </div>
                       
                       {/* Details */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {transaction.type === 'earning' ? (
-                            <>
+                          {transaction.type === 'earning' ? <>
                               Payment
-                              {transaction.campaign && (
-                                <span className="text-muted-foreground font-normal"> · {transaction.campaign.title}</span>
-                              )}
-                            </>
-                          ) : transaction.type === 'balance_correction' ? 'Balance Correction' 
-                            : transaction.type === 'referral' ? 'Referral Bonus' 
-                            : transaction.type === 'transfer_sent' ? 'Transfer Sent' 
-                            : transaction.type === 'transfer_received' ? 'Transfer Received' 
-                            : 'Withdrawal'}
+                              {transaction.campaign && <span className="text-muted-foreground font-normal"> · {transaction.campaign.title}</span>}
+                            </> : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-xs text-muted-foreground">
                             {(() => {
-                              const now = new Date();
-                              const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
-                              if (diffInHours < 24) {
-                                if (diffInHours < 1) {
-                                  const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
-                                  return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
-                                }
-                                return `${diffInHours}h ago`;
-                              }
-                              return format(transaction.date, 'MMM dd, yyyy');
-                            })()}
+                        const now = new Date();
+                        const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
+                        if (diffInHours < 24) {
+                          if (diffInHours < 1) {
+                            const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
+                            return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
+                          }
+                          return `${diffInHours}h ago`;
+                        }
+                        return format(transaction.date, 'MMM dd, yyyy');
+                      })()}
                           </span>
                           <span className="text-muted-foreground/50">·</span>
-                          {transaction.status && (
-                            <span className={`text-xs flex items-center gap-1 ${
-                              transaction.status === 'completed' ? 'text-green-500' : 
-                              transaction.status === 'in_transit' ? 'text-blue-500' : 
-                              transaction.status === 'rejected' ? 'text-red-500' : 
-                              'text-yellow-500'
-                            }`}>
+                          {transaction.status && <span className={`text-xs flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500' : transaction.status === 'in_transit' ? 'text-blue-500' : transaction.status === 'rejected' ? 'text-red-500' : 'text-yellow-500'}`}>
                               {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
                               {transaction.status === 'pending' && <Clock className="h-2.5 w-2.5" />}
                               {transaction.status === 'completed' && <Check className="h-2.5 w-2.5" />}
                               {transaction.status === 'rejected' && <X className="h-2.5 w-2.5" />}
                               {transaction.status === 'in_transit' ? 'In Transit' : transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
-                            </span>
-                          )}
+                            </span>}
                         </div>
                       </div>
                     </div>
                     
                     {/* Amount */}
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`text-sm font-semibold tabular-nums ${
-                        transaction.status === 'rejected' ? 'text-red-500' : 
-                        transaction.status === 'pending' ? 'text-yellow-500' : 
-                        transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : 
-                        transaction.type === 'balance_correction' ? (transaction.amount >= 0 ? 'text-green-500' : 'text-red-500') :
-                        'text-red-500'
-                      }`}>
+                      <span className={`text-sm font-semibold tabular-nums ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : transaction.type === 'balance_correction' ? transaction.amount >= 0 ? 'text-green-500' : 'text-red-500' : 'text-red-500'}`}>
                         {transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : transaction.amount < 0 ? '' : '+'}
                         ${Math.abs(transaction.amount).toFixed(2)}
                       </span>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={e => {
-                          e.stopPropagation();
-                          generateTransactionImage(transaction);
-                        }} 
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      >
-                        <Upload className="h-3.5 w-3.5" />
-                      </Button>
+                      
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
               
               {/* Pagination Controls */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
                 <p className="text-xs text-muted-foreground">
                   Showing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
-                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                    return true;
-                  }).length)} - {Math.min(currentPage * itemsPerPage, transactions.filter(transaction => {
-                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                    return true;
-                  }).length)} of {transactions.filter(transaction => {
-                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                    return true;
-                  }).length}
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length)} - {Math.min(currentPage * itemsPerPage, transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length)} of {transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length}
                 </p>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
-                    disabled={currentPage === 1} 
-                    className="gap-1 flex-1 sm:flex-none text-muted-foreground hover:text-foreground"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="gap-1 flex-1 sm:flex-none text-muted-foreground hover:text-foreground">
                     <ChevronLeft className="h-4 w-4" />
                     <span className="hidden sm:inline">Previous</span>
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setCurrentPage(prev => prev + 1)} 
-                    disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
-                      if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                      if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                      if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                      return true;
-                    }).length} 
-                    className="gap-1 flex-1 sm:flex-none text-muted-foreground hover:text-foreground"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length} className="gap-1 flex-1 sm:flex-none text-muted-foreground hover:text-foreground">
                     <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            </>
-          )}
+            </>}
         </CardContent>
       </Card>
 
@@ -1454,7 +1375,7 @@ export function WalletTab() {
               </Select>
             </div>
 
-            <div className="p-3 bg-neutral-900 rounded-lg text-sm">
+            <div className="p-3 rounded-lg text-sm bg-neutral-900/0">
               {(() => {
               const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
               const isPayPal = selectedMethod?.method === 'paypal';
@@ -1476,18 +1397,17 @@ export function WalletTab() {
             const amount = parseFloat(payoutAmount);
             const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
             const isPayPal = selectedMethod?.method === 'paypal';
-            
+
             // Don't show fee breakdown for PayPal
             if (isPayPal) {
               return null;
             }
-            
+
             // For crypto, show fee breakdown
             const percentageFee = amount * 0.0075;
             const afterPercentage = amount - percentageFee;
             const netAmount = afterPercentage - 1;
             const feeAmount = percentageFee + 1;
-            
             return <div className="p-4 bg-card rounded-lg border border-border space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Withdrawal amount</span>
