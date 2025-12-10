@@ -221,7 +221,7 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
                       />
                     </div>
                   )}
-                  <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
+                  <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight bg-[#f8f8f8] dark:bg-[#0e0e0e] group-hover:bg-[#f0f0f0] dark:group-hover:bg-[#141414] transition-colors">
                     <div className="flex items-start justify-between">
                       <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1 group-hover:underline">
                         {campaign.title}
@@ -251,7 +251,7 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
                     </div>
 
                     {/* Budget Progress */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
+                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card border-t border-[#e0e0e0] dark:border-[#262626]">
                       <div className="flex items-baseline justify-between">
                         <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
                           <span className="text-base font-bold tabular-nums">${usedBudget.toLocaleString()}</span>
