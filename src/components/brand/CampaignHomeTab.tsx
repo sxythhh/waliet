@@ -317,7 +317,7 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         </div>
 
         {topVideos.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {topVideos.map((video, index) => (
               <a
                 key={video.ad_id}
@@ -356,7 +356,7 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
                         {getPlatformIcon(video.platform)}
                         <span className="text-sm font-medium tracking-[-0.5px]">{video.username.toLowerCase()}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground tracking-[-0.5px] line-clamp-3 group-hover:underline">
+                      <p className="text-sm text-foreground tracking-[-0.5px] line-clamp-3 group-hover:underline">
                         {video.title || 'Untitled'}
                       </p>
                       <p className="text-xs text-muted-foreground tracking-[-0.5px]">
