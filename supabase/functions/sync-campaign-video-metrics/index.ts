@@ -20,9 +20,15 @@ serve(async (req) => {
     // Check if a specific campaignId was provided
     let specificCampaignId: string | null = null;
     try {
-      const body = await req.json();
-      specificCampaignId = body.campaignId || null;
-    } catch {
+      const bodyText = await req.text();
+      console.log('Received body:', bodyText);
+      if (bodyText) {
+        const body = JSON.parse(bodyText);
+        specificCampaignId = body.campaignId || null;
+        console.log('Parsed campaignId:', specificCampaignId);
+      }
+    } catch (e) {
+      console.log('Error parsing body:', e);
       // No body or invalid JSON, sync all campaigns
     }
 
