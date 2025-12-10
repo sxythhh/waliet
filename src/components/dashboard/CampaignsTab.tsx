@@ -608,57 +608,73 @@ export function CampaignsTab({
             </Button>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {recommendedCampaigns.map(campaign => (
-              <Card
-                key={campaign.id}
-                className="group bg-card border-2 transition-all duration-300 overflow-hidden cursor-pointer hover:border-primary/50"
-                onClick={() => navigate(`/campaign/preview/${campaign.id}`)}
-              >
-                <div className="flex flex-col sm:flex-row">
-                  {campaign.banner_url && (
-                    <div className="relative w-full sm:w-48 h-32 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
-                      <img
-                        src={campaign.banner_url}
-                        alt={campaign.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black/20" />
-                    </div>
-                  )}
-                  <CardContent className="p-4 flex-1 flex flex-col">
-                    <div className="mb-3">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        {campaign.brand_logo_url && (
-                          <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0">
-                            <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+            {recommendedCampaigns.map(campaign => {
+              const budgetUsed = 0;
+              const budgetPercentage = 0;
+              return (
+                <Card
+                  key={campaign.id}
+                  className="group bg-card border-2 transition-all duration-300 overflow-hidden animate-fade-in cursor-pointer hover:border-primary/50"
+                  onClick={() => navigate(`/campaign/preview/${campaign.id}`)}
+                >
+                  <div className="flex flex-col sm:flex-row">
+                    {campaign.banner_url && (
+                      <div className="relative w-full sm:w-48 h-32 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
+                        <img
+                          src={campaign.banner_url}
+                          alt={campaign.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/20" />
+                      </div>
+                    )}
+                    <CardContent className="p-4 flex-1 flex flex-col">
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          {campaign.brand_logo_url && (
+                            <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0">
+                              <img
+                                src={campaign.brand_logo_url}
+                                alt={campaign.brand_name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            {campaign.brand_name}
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold line-clamp-1 mb-1">
+                          {campaign.title}
+                        </h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">
+                            RPM Rate
+                          </span>
+                          <span className="text-sm font-bold">${campaign.rpm_rate.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <div className="mt-auto pt-2 border-t flex items-center justify-between">
+                        {campaign.allowed_platforms && campaign.allowed_platforms.length > 0 && (
+                          <div className="flex gap-1.5">
+                            {campaign.allowed_platforms.map((platform) => {
+                              const icon = getPlatformIcon(platform);
+                              return icon ? (
+                                <div key={platform} className="w-4 h-4">
+                                  <img src={icon} alt={platform} className="w-full h-full object-contain" />
+                                </div>
+                              ) : null;
+                            })}
                           </div>
                         )}
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          {campaign.brand_name}
-                        </span>
                       </div>
-                      <h3 className="text-base font-bold line-clamp-1 mb-1">{campaign.title}</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mt-auto">
-                      <div>
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">RPM Rate</span>
-                        <span className="text-sm font-bold">${campaign.rpm_rate.toFixed(2)}</span>
-                      </div>
-                      {campaign.allowed_platforms && campaign.allowed_platforms.length > 0 && (
-                        <div className="flex gap-1.5 items-end justify-end">
-                          {campaign.allowed_platforms.map((platform) => {
-                            const icon = getPlatformIcon(platform);
-                            return icon ? (
-                              <img key={platform} src={icon} alt={platform} className="w-4 h-4 object-contain" />
-                            ) : null;
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </div>
-              </Card>
-            ))}
+                    </CardContent>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}
@@ -757,8 +773,10 @@ export function CampaignsTab({
           </div>
         </div>}
 
-      {/* Campaigns Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
+      {/* Your Campaigns */}
+      <div className="space-y-3">
+        <h3 className="text-lg font-semibold">Your Campaigns</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
       {campaigns.map(campaign => {
         const budgetUsed = campaign.budget_used || 0;
         const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
@@ -889,6 +907,8 @@ export function CampaignsTab({
             </CardContent>
           </Card>;
       })}
+        </div>
+      </div>
     
     {/* Link Account Options Dialog */}
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -998,6 +1018,5 @@ export function CampaignsTab({
       </>}
     
       <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} />
-      </div>
     </div>;
 }
