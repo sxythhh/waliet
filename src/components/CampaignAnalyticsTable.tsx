@@ -1214,7 +1214,7 @@ export function CampaignAnalyticsTable({
         </CardContent>
       </Card>;
   }
-  if (analytics.length === 0) {
+  if (analytics.length === 0 && activeTab === 'analytics') {
     return (
       <Card className="bg-card border">
         <CardContent className="p-6">
@@ -1229,6 +1229,21 @@ export function CampaignAnalyticsTable({
               onImportComplete={fetchAnalytics}
               onMatchingRequired={() => {}}
             />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  if (transactions.length === 0 && activeTab === 'transactions') {
+    return (
+      <Card className="bg-card border">
+        <CardContent className="p-6">
+          <div className="text-center py-8">
+            <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Payout Transactions</h3>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              No payments have been made for this campaign yet. Payouts will appear here once creators receive payments.
+            </p>
           </div>
         </CardContent>
       </Card>
