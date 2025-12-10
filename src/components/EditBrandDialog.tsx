@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Pencil, Upload, X, Globe, Link2, FolderOpen } from "lucide-react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -65,6 +66,7 @@ export function EditBrandDialog({
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(brand.logo_url);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isAdmin } = useAdminCheck();
   
   const form = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
@@ -177,9 +179,9 @@ export function EditBrandDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-[#0c0c0c] border-[#1a1a1a]">
+      <DialogContent className="max-w-md bg-white dark:bg-[#080808] border-border dark:border-[#1a1a1a]">
         <DialogHeader className="pb-2">
-          <DialogTitle className="text-lg font-medium text-white">Edit Brand</DialogTitle>
+          <DialogTitle className="text-lg font-medium">Edit Brand</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -187,7 +189,7 @@ export function EditBrandDialog({
             {/* Logo Upload */}
             <div className="flex items-start gap-4">
               {logoPreview ? (
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#1a1a1a] shrink-0">
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted dark:bg-[#1a1a1a] shrink-0">
                   <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
                   <button
                     type="button"
@@ -199,10 +201,10 @@ export function EditBrandDialog({
                 </div>
               ) : (
                 <div 
-                  className="w-20 h-20 border border-dashed border-[#2a2a2a] rounded-xl flex items-center justify-center cursor-pointer hover:border-[#3a3a3a] hover:bg-[#111] transition-all shrink-0"
+                  className="w-20 h-20 border border-dashed border-border dark:border-[#2a2a2a] rounded-xl flex items-center justify-center cursor-pointer hover:border-muted-foreground dark:hover:border-[#3a3a3a] hover:bg-muted/50 dark:hover:bg-[#111] transition-all shrink-0"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Upload className="h-5 w-5 text-[#666]" />
+                  <Upload className="h-5 w-5 text-muted-foreground dark:text-[#666]" />
                 </div>
               )}
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
@@ -213,7 +215,7 @@ export function EditBrandDialog({
                     <FormControl>
                       <Input 
                         placeholder="Brand name" 
-                        className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm"
+                        className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
                         {...field} 
                       />
                     </FormControl>
@@ -225,10 +227,10 @@ export function EditBrandDialog({
                   <FormItem>
                     <FormControl>
                       <div className="flex items-center">
-                        <span className="text-[#666] text-sm pr-1">@</span>
+                        <span className="text-muted-foreground dark:text-[#666] text-sm pr-1">@</span>
                         <Input 
                           placeholder="brand-slug" 
-                          className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm"
+                          className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
                           {...field}
                           onChange={e => {
                             const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
@@ -245,14 +247,14 @@ export function EditBrandDialog({
 
             <FormField control={form.control} name="brand_type" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[#888] text-xs font-normal">Type</FormLabel>
+                <FormLabel className="text-muted-foreground text-xs font-normal">Type</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm">
+                    <SelectTrigger className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-[#111] border-[#1a1a1a]">
+                  <SelectContent className="bg-background dark:bg-[#111] border-border dark:border-[#1a1a1a]">
                     <SelectItem value="Lead">Lead</SelectItem>
                     <SelectItem value="DWY">DWY</SelectItem>
                     <SelectItem value="Client">Client</SelectItem>
@@ -264,11 +266,11 @@ export function EditBrandDialog({
 
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[#888] text-xs font-normal">Description</FormLabel>
+                <FormLabel className="text-muted-foreground text-xs font-normal">Description</FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Brief description..." 
-                    className="bg-[#111] border-[#1a1a1a] text-white text-sm resize-none min-h-[60px]"
+                    className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] text-sm resize-none min-h-[60px]"
                     rows={2}
                     {...field} 
                   />
@@ -277,63 +279,65 @@ export function EditBrandDialog({
               </FormItem>
             )} />
 
-            {/* Links Section */}
-            <div className="space-y-3 pt-2">
-              <p className="text-[#888] text-xs font-normal">Links</p>
-              
-              <FormField control={form.control} name="home_url" render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-[#666] shrink-0" />
-                      <Textarea 
-                        placeholder='Home embed HTML (iframe)' 
-                        className="bg-[#111] border-[#1a1a1a] text-white text-xs font-mono resize-none min-h-[36px]"
-                        rows={1}
-                        {...field} 
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+            {/* Links Section - Admin Only */}
+            {isAdmin && (
+              <div className="space-y-3 pt-2">
+                <p className="text-[#888] text-xs font-normal">Links</p>
+                
+                <FormField control={form.control} name="home_url" render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-[#666] shrink-0" />
+                        <Textarea 
+                          placeholder='Home embed HTML (iframe)' 
+                          className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] text-xs font-mono resize-none min-h-[36px]"
+                          rows={1}
+                          {...field} 
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-              <FormField control={form.control} name="account_url" render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
-                      <Link2 className="h-4 w-4 text-[#666] shrink-0" />
-                      <Input 
-                        placeholder="Account URL" 
-                        className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm"
-                        {...field} 
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+                <FormField control={form.control} name="account_url" render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Link2 className="h-4 w-4 text-[#666] shrink-0" />
+                        <Input 
+                          placeholder="Account URL" 
+                          className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
+                          {...field} 
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-              <FormField control={form.control} name="assets_url" render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
-                      <FolderOpen className="h-4 w-4 text-[#666] shrink-0" />
-                      <Input 
-                        placeholder="Assets URL" 
-                        className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm"
-                        {...field} 
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-            </div>
+                <FormField control={form.control} name="assets_url" render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <FolderOpen className="h-4 w-4 text-[#666] shrink-0" />
+                        <Input 
+                          placeholder="Assets URL" 
+                          className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
+                          {...field} 
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+            )}
 
             <FormField control={form.control} name="show_account_tab" render={({ field }) => (
               <FormItem className="flex items-center justify-between py-2">
-                <FormLabel className="text-[#888] text-xs font-normal cursor-pointer">
+                <FormLabel className="text-muted-foreground text-xs font-normal cursor-pointer">
                   Show account tab in sidebar
                 </FormLabel>
                 <FormControl>
@@ -357,14 +361,14 @@ export function EditBrandDialog({
                 variant="ghost" 
                 onClick={() => setOpen(false)} 
                 disabled={isSubmitting}
-                className="text-[#888] hover:text-white hover:bg-[#1a1a1a]"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-[#1a1a1a]"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="bg-white text-black hover:bg-white/90"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {isSubmitting ? "Saving..." : "Save"}
               </Button>
