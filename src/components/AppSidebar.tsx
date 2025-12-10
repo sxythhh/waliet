@@ -14,53 +14,46 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
-
-const menuItems = [
-  {
-    title: "Campaigns",
-    tab: "campaigns",
-    icon: null as any
-  },
-  {
-    title: "Wallet",
-    tab: "wallet",
-    icon: Dock
-  },
-  {
-    title: "Discover",
-    tab: "discover",
-    icon: Compass
-  },
-  {
-    title: "Profile",
-    tab: "profile",
-    icon: User
-  }
-];
-
+const menuItems = [{
+  title: "Campaigns",
+  tab: "campaigns",
+  icon: null as any
+}, {
+  title: "Wallet",
+  tab: "wallet",
+  icon: Dock
+}, {
+  title: "Discover",
+  tab: "discover",
+  icon: Compass
+}, {
+  title: "Profile",
+  tab: "profile",
+  icon: User
+}];
 export function AppSidebar() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const currentTab = searchParams.get("tab") || "campaigns";
-  const { user } = useAuth();
-  const { theme } = useTheme();
+  const {
+    user
+  } = useAuth();
+  const {
+    theme
+  } = useTheme();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
-
   useEffect(() => {
     if (user) {
       fetchProfile();
     }
   }, [user]);
-
   const fetchProfile = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("avatar_url, full_name, username")
-      .eq("id", user.id)
-      .single();
+    const {
+      data
+    } = await supabase.from("profiles").select("avatar_url, full_name, username").eq("id", user.id).single();
     if (data) {
       setAvatarUrl(data.avatar_url);
       setDisplayName(data.full_name || data.username || user.email || "");
@@ -68,23 +61,18 @@ export function AppSidebar() {
       setDisplayName(user.email || "");
     }
   };
-
   const getInitial = () => {
     return displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
   };
-
   const handleTabClick = (tab: string) => {
     navigate(`/dashboard?tab=${tab}`);
   };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
     toast.success("Logged out successfully");
   };
-
-  return (
-    <>
+  return <>
       {/* Mobile Header - Top */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-[#0a0a0a] px-4">
         <OptimizedImage src={newLogo} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
@@ -142,26 +130,12 @@ export function AppSidebar() {
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-[#0a0a0a] px-2">
         {menuItems.map(item => {
-          const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-          return (
-            <button
-              key={item.title}
-              onClick={() => handleTabClick(item.tab)}
-              className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${
-                isActive 
-                  ? 'text-white' 
-                  : 'text-neutral-500 hover:text-neutral-300'
-              }`}
-            >
-              {item.tab === "campaigns" ? (
-                <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />
-              ) : (
-                <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />
-              )}
+        const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
+        return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+              {item.tab === "campaigns" ? <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />}
               <span className="text-[10px] font-medium">{item.title}</span>
-            </button>
-          );
-        })}
+            </button>;
+      })}
       </nav>
 
       {/* Desktop Sidebar */}
@@ -175,51 +149,28 @@ export function AppSidebar() {
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 px-2 py-2">
+        <nav className="flex-1 py-0 px-0">
           <div>
             {menuItems.map(item => {
-              const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-              return (
-                <button
-                  key={item.title}
-                  onClick={() => handleTabClick(item.tab)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors ${
-                    isActive 
-                      ? 'text-white' 
-                      : 'text-neutral-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {item.tab === "campaigns" ? (
-                    <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />
-                  ) : (
-                    <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />
-                  )}
+            const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
+            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors ${isActive ? 'text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                  {item.tab === "campaigns" ? <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />}
                   <span>{item.title}</span>
-                </button>
-              );
-            })}
+                </button>;
+          })}
           </div>
 
           {/* Secondary Links */}
           <div className="mt-4 pt-4">
-            <button
-              onClick={() => navigate("/leaderboard")}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
+            <button onClick={() => navigate("/leaderboard")} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">
               <Trophy className="h-5 w-5" />
               <span>Leaderboard</span>
             </button>
-            <button
-              onClick={() => navigate("/referrals")}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
+            <button onClick={() => navigate("/referrals")} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">
               <Gift className="h-5 w-5" />
               <span>Referrals</span>
             </button>
-            <button
-              onClick={() => window.open("https://discord.gg/virality", "_blank")}
-              className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
-            >
+            <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-3">
                 <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
                 <span>Discord</span>
@@ -248,10 +199,7 @@ export function AppSidebar() {
             </PopoverTrigger>
             <PopoverContent className="w-56 p-2 bg-[#141414] border-white/10" align="start" side="top">
               <div className="space-y-1">
-                <button
-                  onClick={() => handleTabClick("profile")}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:bg-white/5 transition-colors"
-                >
+                <button onClick={() => handleTabClick("profile")} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:bg-white/5 transition-colors">
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
                 </button>
@@ -259,18 +207,12 @@ export function AppSidebar() {
                   <span className="text-sm text-neutral-300 flex-1">Theme</span>
                   <ThemeToggle />
                 </div>
-                <button
-                  onClick={() => window.open("https://virality.cc/help", "_blank")}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:bg-white/5 transition-colors"
-                >
+                <button onClick={() => window.open("https://virality.cc/help", "_blank")} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:bg-white/5 transition-colors">
                   <HelpCircle className="w-4 h-4" />
                   <span>Support</span>
                 </button>
                 <div className="my-1 border-t border-white/10" />
-                <button
-                  onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-                >
+                <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
                   <LogOut className="w-4 h-4" />
                   <span>Log out</span>
                 </button>
@@ -279,6 +221,5 @@ export function AppSidebar() {
           </Popover>
         </div>
       </aside>
-    </>
-  );
+    </>;
 }
