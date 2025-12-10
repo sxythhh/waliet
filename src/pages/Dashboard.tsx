@@ -14,6 +14,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
+import { CreatorsTab } from "@/components/brand/CreatorsTab";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
@@ -108,11 +109,7 @@ export default function Dashboard() {
         case "blueprints":
           return <BlueprintsTab brandId={currentBrand.id} />;
         case "creators":
-          return (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">Creators management coming soon</p>
-            </div>
-          );
+          return <CreatorsTab brandId={currentBrand.id} />;
         case "profile":
           return <ProfileTab />;
         default:
