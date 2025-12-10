@@ -13,6 +13,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { DiscordOAuthCallback } from "@/components/DiscordOAuthCallback";
 import { XOAuthCallback } from "@/components/XOAuthCallback";
 import Auth from "./pages/Auth";
+import Index from "./pages/Index";
 import BrandAuth from "./pages/BrandAuth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
@@ -121,7 +122,8 @@ const App = () => <QueryClientProvider client={queryClient}>
         <Sonner />
         <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Auth />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
           <Route path="/x/callback" element={<XOAuthCallback />} />
