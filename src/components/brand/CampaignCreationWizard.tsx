@@ -609,7 +609,7 @@ export function CampaignCreationWizard({
                           name="title"
                           render={({ field }) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Campaign Name
                               </FormLabel>
                               <FormControl>
@@ -630,7 +630,7 @@ export function CampaignCreationWizard({
                           name="description"
                           render={({ field }) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Description
                               </FormLabel>
                               <FormControl>
@@ -649,7 +649,7 @@ export function CampaignCreationWizard({
 
                         {/* Banner Upload */}
                         <div className="space-y-2">
-                          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
                             Campaign Banner
                           </label>
                           {bannerPreview ? (
@@ -701,7 +701,7 @@ export function CampaignCreationWizard({
                           name="guidelines"
                           render={({ field }) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Creator Guidelines
                               </FormLabel>
                               <FormControl>
@@ -723,9 +723,9 @@ export function CampaignCreationWizard({
                           name="embed_url"
                           render={({ field }) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Blueprint URL
-                                <span className="text-muted-foreground/50 ml-1 lowercase font-normal">(optional)</span>
+                                <span className="text-muted-foreground/50 ml-1 font-normal">(optional)</span>
                               </FormLabel>
                               <FormControl>
                                 <Input
@@ -870,35 +870,14 @@ export function CampaignCreationWizard({
                   </div>
                 </div>
 
-                {/* Stats Preview */}
-                <div className="p-4 rounded-xl bg-muted/50 dark:bg-[#141414] space-y-4">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>Virality x {brandName}</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground">CPM Campaign</h4>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                      <Eye className="h-3 w-3" />
-                      Views Generated
-                    </div>
-                  </div>
-                  
-                  {/* Mini Chart Placeholder */}
-                  <div className="h-24 flex items-end justify-between gap-1 pt-4">
-                    {[40, 60, 45, 80, 55, 90, 70, 100].map((h, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 bg-primary/20 dark:bg-primary/30 rounded-t"
-                        style={{ height: `${h}%` }}
-                      />
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Jan</span>
-                    <span>Feb</span>
-                    <span>Mar</span>
-                    <span>Apr</span>
-                  </div>
+                {/* Pricing Embed */}
+                <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
+                  <iframe
+                    src="https://joinvirality.com/pickplan-3"
+                    className="w-full border-0"
+                    style={{ height: '450px' }}
+                    title="Pricing Plans"
+                  />
                 </div>
 
                 {/* Enterprise CTA */}
