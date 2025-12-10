@@ -343,32 +343,30 @@ export function AppSidebar() {
                 <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-[calc(100%-24px)] p-1.5 bg-[#141414] border-[#242424]" align="start" sideOffset={4}>
-              <div className="space-y-0.5 max-h-[400px] overflow-y-auto">
+            <PopoverContent className="w-full p-1.5 bg-[#141414] border-0" align="start" sideOffset={4}>
+              <div className="space-y-0.5 max-h-[400px] overflow-y-auto font-inter tracking-[-0.5px]">
                 <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
                   <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                     <User className="w-3 h-3 text-neutral-400" />
                   </div>
-                  <span className="text-xs font-medium text-white">Creator Dashboard</span>
+                  <span className="text-sm font-medium text-white">Creator Dashboard</span>
                 </button>
                 {isAdmin && allBrands.length > 0 && <>
-                    <div className="h-px bg-[#242424] my-1" />
                     <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">All Brands</p>
                     {allBrands.map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
                         {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                             <Building2 className="w-3 h-3 text-neutral-400" />
                           </div>}
-                        <span className="text-xs font-medium text-white truncate">{brand.name}</span>
+                        <span className="text-sm font-medium text-white truncate">{brand.name}</span>
                       </button>)}
                   </>}
                 {!isAdmin && brandMemberships.length > 0 && <>
-                    <div className="h-px bg-[#242424] my-1" />
                     <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
                     {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
                         {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                             <Building2 className="w-3 h-3 text-neutral-400" />
                           </div>}
-                        <span className="text-xs font-medium text-white truncate">{membership.brands.name}</span>
+                        <span className="text-sm font-medium text-white truncate">{membership.brands.name}</span>
                       </button>)}
                   </>}
               </div>
