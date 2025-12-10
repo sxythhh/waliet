@@ -618,9 +618,7 @@ export function CampaignsTab({
       {recentActivity.length > 0 && <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Recent Activity</h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard?tab=wallet")} className="gap-1 text-muted-foreground hover:text-foreground">
-              View all <ChevronRight className="h-4 w-4" />
-            </Button>
+            
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {recentActivity.slice(0, 6).map(activity => <Card key={activity.id} className="bg-card/50 border-0 hover:bg-card transition-colors">
