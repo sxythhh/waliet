@@ -143,26 +143,26 @@ export function AppSidebar() {
         const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
         return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
               {item.tab === "campaigns" ? (
-                <div className="relative h-5 w-5">
-                  <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-5 w-5 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={webStoriesActive} alt="" className={`absolute inset-0 h-5 w-5 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                <div className="relative h-6 w-6">
+                  <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={webStoriesActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div>
               ) : item.tab === "wallet" ? (
-                <div className="relative h-5 w-5">
-                  <img src={walletInactive} alt="" className={`absolute inset-0 h-5 w-5 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={walletActive} alt="" className={`absolute inset-0 h-5 w-5 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                <div className="relative h-6 w-6">
+                  <img src={walletInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={walletActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div>
               ) : item.tab === "discover" ? (
-                <div className="relative h-5 w-5">
-                  <img src={discoverInactive} alt="" className={`absolute inset-0 h-5 w-5 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={discoverActive} alt="" className={`absolute inset-0 h-5 w-5 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                <div className="relative h-6 w-6">
+                  <img src={discoverInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={discoverActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div>
               ) : item.tab === "profile" ? (
-                <div className="relative h-5 w-5">
-                  <img src={profileInactive} alt="" className={`absolute inset-0 h-5 w-5 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={profileActive} alt="" className={`absolute inset-0 h-5 w-5 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                <div className="relative h-6 w-6">
+                  <img src={profileInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={profileActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div>
-              ) : <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />}
+              ) : <item.icon className={`h-6 w-6 ${isActive ? 'text-blue-500' : ''}`} />}
               <span className="text-[10px] font-medium">{item.title}</span>
             </button>;
       })}
@@ -188,26 +188,26 @@ export function AppSidebar() {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
             return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-2 px-3 py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`}>
                   {item.tab === "campaigns" ? (
-                    <div className="relative h-5 w-5">
-                      <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-5 w-5 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={webStoriesActive} alt="" className={`absolute inset-0 h-5 w-5 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    <div className="relative h-6 w-6">
+                      <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={webStoriesActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div>
                   ) : item.tab === "wallet" ? (
-                    <div className="relative h-5 w-5">
-                      <img src={walletInactive} alt="" className={`absolute inset-0 h-5 w-5 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={walletActive} alt="" className={`absolute inset-0 h-5 w-5 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    <div className="relative h-6 w-6">
+                      <img src={walletInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={walletActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div>
                   ) : item.tab === "discover" ? (
-                    <div className="relative h-5 w-5">
-                      <img src={discoverInactive} alt="" className={`absolute inset-0 h-5 w-5 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={discoverActive} alt="" className={`absolute inset-0 h-5 w-5 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    <div className="relative h-6 w-6">
+                      <img src={discoverInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={discoverActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div>
                   ) : item.tab === "profile" ? (
-                    <div className="relative h-5 w-5">
-                      <img src={profileInactive} alt="" className={`absolute inset-0 h-5 w-5 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={profileActive} alt="" className={`absolute inset-0 h-5 w-5 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    <div className="relative h-6 w-6">
+                      <img src={profileInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={profileActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div>
-                  ) : <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} />}
+                  ) : <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />}
                   <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">{item.title}</span>
                 </button>;
           })}
@@ -217,12 +217,12 @@ export function AppSidebar() {
           <div>
             
             <button onClick={() => navigate("/referrals")} className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[#0e0e0e] transition-colors ${location.pathname === '/referrals' ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`}>
-              <Gift className={`h-5 w-5 ${location.pathname === '/referrals' ? 'text-[#2060df]' : ''}`} />
+              <Gift className={`h-6 w-6 ${location.pathname === '/referrals' ? 'text-[#2060df]' : ''}`} />
               <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">Referrals</span>
             </button>
             <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-3 py-2.5 text-[#6f6f6f] hover:text-white hover:bg-[#0e0e0e] transition-colors">
               <div className="flex items-center gap-2">
-                <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
+                <img src={discordIcon} alt="Discord" className="w-6 h-6 rounded" />
                 <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">Discord</span>
               </div>
               <ArrowUpRight className="w-4 h-4 opacity-50" />
