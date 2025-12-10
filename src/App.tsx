@@ -45,123 +45,108 @@ import Leaderboard from "./pages/Leaderboard";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBoost from "./pages/PublicBounty";
 import { AuthProvider } from "@/contexts/AuthContext";
+
 const queryClient = new QueryClient();
-function DashboardLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState<any>(null);
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
-      if (session) {
-        const {
-          data
-        } = await supabase.from("profiles").select("username, avatar_url, full_name").eq("id", session.user.id).single();
-        setProfile(data);
-      }
-    };
-    fetchProfile();
-  }, []);
+
+function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pt-14 pb-20 md:pt-0 md:pb-0">{children}</main>
     </div>
   );
 }
-function BrandLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
-  return <SidebarProvider>
+
+function BrandLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <main className="flex-1">{children}</main>
       </div>
-    </SidebarProvider>;
+    </SidebarProvider>
+  );
 }
-function AdminLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
+
+function AdminLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const {
-    isAdmin,
-    loading
-  } = useAdminCheck();
+  const { isAdmin, loading } = useAdminCheck();
+  
   useEffect(() => {
     if (!loading && !isAdmin) {
       navigate("/dashboard");
     }
   }, [isAdmin, loading, navigate]);
+  
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">
-      <p>Loading...</p>
-    </div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
   }
+  
   if (!isAdmin) {
     return null;
   }
-  return <div className="flex min-h-screen w-full">
+  
+  return (
+    <div className="flex min-h-screen w-full">
       <AdminSidebar />
       <main className="flex-1">{children}</main>
-    </div>;
+    </div>
+  );
 }
-const App = () => <QueryClientProvider client={queryClient}>
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
-          <Route path="/x/callback" element={<XOAuthCallback />} />
-          <Route path="/brand-auth" element={<BrandAuth />} />
-          <Route path="/apply" element={<Apply />} />
-          <Route path="/discover" element={<Discover />} />
-          <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
-          <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
-          <Route path="/boost/:id" element={<PublicBoost />} />
-          <Route path="/join/:slug" element={<CampaignJoin />} />
-          <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
-          <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
-          <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
-          <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
-          <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
-          <Route path="/boost/:id" element={<BrandLayout><BoostCampaignDetail /></BrandLayout>} />
-          <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
-          <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
-          <Route path="/admin/campaigns" element={<AdminLayout><AdminCampaigns /></AdminLayout>} />
-          <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-          <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
-          <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
-          <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
-          <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
-          <Route path="/manage" element={<BrandLayout><BrandManagement /></BrandLayout>} />
-          <Route path="/manage/:campaignSlug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
-          <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
-          <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
-          <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
-          <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
-          <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
-          <Route path="/brand/:slug/training/:courseId" element={<CourseDetail />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="/:username" element={<PublicProfile />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
+            <Route path="/x/callback" element={<XOAuthCallback />} />
+            <Route path="/brand-auth" element={<BrandAuth />} />
+            <Route path="/apply" element={<Apply />} />
+            <Route path="/discover" element={<Discover />} />
+            <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
+            <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
+            <Route path="/boost/:id" element={<PublicBoost />} />
+            <Route path="/join/:slug" element={<CampaignJoin />} />
+            <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
+            <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
+            <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
+            <Route path="/boost/:id" element={<BrandLayout><BoostCampaignDetail /></BrandLayout>} />
+            <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
+            <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
+            <Route path="/admin/campaigns" element={<AdminLayout><AdminCampaigns /></AdminLayout>} />
+            <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+            <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
+            <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
+            <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
+            <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
+            <Route path="/manage" element={<BrandLayout><BrandManagement /></BrandLayout>} />
+            <Route path="/manage/:campaignSlug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
+            <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
+            <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
+            <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
+            <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
+            <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
+            <Route path="/brand/:slug/training/:courseId" element={<CourseDetail />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/:username" element={<PublicProfile />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
-  </QueryClientProvider>;
+  </QueryClientProvider>
+);
+
 export default App;
