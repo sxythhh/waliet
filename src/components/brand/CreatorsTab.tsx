@@ -243,13 +243,12 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       ) : (
         <>
           {/* Desktop Table */}
-          <div className="hidden md:block rounded-xl overflow-hidden bg-card/50">
+          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50">
             <table className="w-full">
               <thead>
                 <tr className="bg-muted/30">
                   <th className="text-left py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Creator</th>
                   <th className="text-left py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Accounts</th>
-                  <th className="text-left py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaigns</th>
                   <th className="text-right py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Views</th>
                   <th className="text-right py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Earnings</th>
                 </tr>
@@ -258,7 +257,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                 {filteredCreators.map((creator) => (
                   <tr
                     key={creator.id}
-                    className="hover:bg-accent/20 transition-colors"
+                    className="hover:bg-[#0a0a0a] transition-colors"
                   >
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
@@ -305,24 +304,6 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                       </div>
                     </td>
 
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {creator.campaigns.slice(0, 2).map((campaign) => (
-                          <span
-                            key={campaign.id}
-                            className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium"
-                          >
-                            {campaign.title}
-                          </span>
-                        ))}
-                        {creator.campaigns.length > 2 && (
-                          <span className="text-xs text-muted-foreground">
-                            +{creator.campaigns.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
                     <td className="py-4 px-5 text-right">
                       <span className="font-semibold tabular-nums text-sm">
                         {formatNumber(creator.total_views)}
@@ -346,8 +327,8 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
             )}
           </div>
 
-          {/* Mobile Cards */}
-          <div className="md:hidden space-y-3">
+          {/* Mobile/Tablet Cards */}
+          <div className="lg:hidden space-y-3">
             {filteredCreators.map((creator) => (
               <div
                 key={creator.id}
@@ -394,18 +375,6 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                       />
                       <span className="text-xs">@{account.username}</span>
                     </Button>
-                  ))}
-                </div>
-
-                {/* Campaigns */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {creator.campaigns.map((campaign) => (
-                    <span
-                      key={campaign.id}
-                      className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium"
-                    >
-                      {campaign.title}
-                    </span>
                   ))}
                 </div>
               </div>
