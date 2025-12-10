@@ -134,7 +134,7 @@ export function CampaignAnalyticsTable({
     account_username: string;
   }>>([]);
   const [activeTab, setActiveTab] = useState<'analytics' | 'transactions' | 'budget'>(view);
-  const [transactionFilter, setTransactionFilter] = useState<'all' | 'earning' | 'balance_correction'>('all');
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportStartDate, setExportStartDate] = useState<string>('');
   const [exportEndDate, setExportEndDate] = useState<string>('');
   const [selectedDateRange, setSelectedDateRange] = useState<string>("all");
@@ -1097,9 +1097,7 @@ export function CampaignAnalyticsTable({
   const paginatedAnalytics = filteredAnalytics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
   // Transaction pagination with filter
-  const filteredTransactions = transactionFilter === 'all' 
-    ? transactions 
-    : transactions.filter(txn => txn.type === transactionFilter);
+  const filteredTransactions = transactions;
     
   const totalTransactionPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
   const paginatedTransactions = filteredTransactions.slice(
@@ -1474,211 +1472,299 @@ export function CampaignAnalyticsTable({
         </CardContent>
       </Card>}
 
-        {/* Transactions History */}
-        {activeTab === 'transactions' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
-          <CardHeader className="px-4 py-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-foreground">Transaction History</CardTitle>
-              <div className="flex gap-1 p-1 bg-muted/30 rounded-lg">
-                <button
-                  onClick={() => setTransactionFilter('all')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    transactionFilter === 'all' 
-                      ? "bg-background text-foreground shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  All <span className="text-xs opacity-60">({transactions.length})</span>
-                </button>
-                <button
-                  onClick={() => setTransactionFilter('earning')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    transactionFilter === 'earning' 
-                      ? "bg-background text-foreground shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Earnings <span className="text-xs opacity-60">({transactions.filter(t => t.type === 'earning').length})</span>
-                </button>
-                <button
-                  onClick={() => setTransactionFilter('balance_correction')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    transactionFilter === 'balance_correction' 
-                      ? "bg-background text-foreground shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Budget <span className="text-xs opacity-60">({transactions.filter(t => t.type === 'balance_correction').length})</span>
-                </button>
-              </div>
-            </div>
-            
-            {/* Export Controls */}
-            <div className="flex items-center gap-3 pt-3">
-              <div className="flex items-center gap-2 flex-1">
-                <Label className="text-sm text-muted-foreground whitespace-nowrap">Export:</Label>
-                <Input
-                  type="date"
-                  value={exportStartDate}
-                  onChange={(e) => setExportStartDate(e.target.value)}
-                  className="h-9 max-w-[150px] bg-muted/50 border-0"
-                  placeholder="Start date"
-                />
-                <span className="text-muted-foreground">to</span>
-                <Input
-                  type="date"
-                  value={exportEndDate}
-                  onChange={(e) => setExportEndDate(e.target.value)}
-                  className="h-9 max-w-[150px] bg-muted/50 border-0"
-                  placeholder="End date"
-                />
-              </div>
+        {/* Transactions View */}
+        {activeTab === 'transactions' && (
+          <>
+            {/* Export Dialog */}
+            <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+              <DialogContent className="sm:max-w-[400px]">
+                <DialogHeader>
+                  <DialogTitle className="font-sans tracking-[-0.5px]">Export Transactions</DialogTitle>
+                  <DialogDescription>
+                    Select a date range to export transactions as CSV.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Start Date</Label>
+                    <Input
+                      type="date"
+                      value={exportStartDate}
+                      onChange={(e) => setExportStartDate(e.target.value)}
+                      className="h-10 bg-muted/30 border-border/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">End Date</Label>
+                    <Input
+                      type="date"
+                      value={exportEndDate}
+                      onChange={(e) => setExportEndDate(e.target.value)}
+                      className="h-10 bg-muted/30 border-border/50"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setExportDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      exportTransactionsToCSV();
+                      setExportDialogOpen(false);
+                    }}
+                    className="gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export CSV
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Header with Export Button */}
+            <div className="flex items-center justify-between mt-4 mb-3">
+              <p className="text-sm text-muted-foreground">
+                {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+              </p>
               <Button
-                onClick={exportTransactionsToCSV}
+                onClick={() => setExportDialogOpen(true)}
                 size="sm"
                 variant="ghost"
-                className="h-9 gap-2 text-muted-foreground hover:text-foreground"
+                className="h-8 gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50"
               >
                 <Download className="h-4 w-4" />
-                Export CSV
+                Export
               </Button>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-0 hover:bg-transparent">
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Date</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">User</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Account</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 text-right bg-card/50">Views</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 text-right bg-card/50">Amount</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Status</TableHead>
-                  <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 text-center bg-card/50">Action</TableHead>
-                </TableRow>
-              </TableHeader>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block rounded-xl overflow-hidden bg-card/30">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-border/30 hover:bg-transparent">
+                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3 pl-4">Date</TableHead>
+                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3">User</TableHead>
+                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3">Account</TableHead>
+                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3 text-right">Views</TableHead>
+                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3 text-right">Amount</TableHead>
+                    <TableHead className="text-muted-foreground/70 font-medium text-xs py-3 text-right pr-4">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
-                {paginatedTransactions.map(txn => {
-                  const metadata = txn.metadata || {};
-                  const platformIcon = getPlatformIcon(metadata.platform || '');
-                  
-                  return <TableRow key={txn.id} className="border-0 hover:bg-muted/30">
-                        <TableCell className="text-muted-foreground text-sm bg-card/50 py-3.5">
-                          {new Date(txn.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
+                  {paginatedTransactions.map((txn, index) => {
+                    const metadata = txn.metadata || {};
+                    const platformIcon = getPlatformIcon(metadata.platform || '');
+                    const isLast = index === paginatedTransactions.length - 1;
+                    
+                    return (
+                      <TableRow 
+                        key={txn.id} 
+                        className={`hover:bg-muted/20 transition-colors ${!isLast ? 'border-b border-border/20' : 'border-0'}`}
+                      >
+                        <TableCell className="py-3 pl-4">
+                          <span className="text-muted-foreground text-sm">
+                            {new Date(txn.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
                         </TableCell>
-                        <TableCell className="bg-card/50 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="h-7 w-7">
                               <AvatarImage src={txn.profiles?.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                                 {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-foreground text-sm font-medium">{txn.profiles?.username || 'Unknown'}</span>
+                            <span className="text-foreground text-sm">{txn.profiles?.username || 'System'}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="bg-card/50 py-3.5">
+                        <TableCell className="py-3">
                           <div className="flex items-center gap-2">
-                            {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4" />}
+                            {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-4 w-4 opacity-70" />}
                             <span className="text-muted-foreground text-sm">
                               {metadata.account_username 
                                 ? `@${metadata.account_username}` 
                                 : txn.type === 'balance_correction' 
-                                  ? 'Balance Correction' 
-                                  : 'N/A'}
+                                  ? 'Budget Adjustment' 
+                                  : '—'}
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-foreground text-right text-sm bg-card/50 py-3.5 font-medium tabular-nums">
-                          {metadata.views?.toLocaleString() || '0'}
+                        <TableCell className="py-3 text-right">
+                          <span className="text-muted-foreground text-sm tabular-nums">
+                            {metadata.views ? metadata.views.toLocaleString() : '—'}
+                          </span>
                         </TableCell>
-                        <TableCell className={`text-right font-semibold text-sm bg-card/50 py-3.5 tabular-nums ${Number(txn.amount) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {Number(txn.amount) >= 0 ? '+' : ''}{`$${Number(txn.amount).toFixed(2)}`}
+                        <TableCell className="py-3 text-right">
+                          <span className={`font-medium text-sm tabular-nums ${Number(txn.amount) >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                            {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
+                          </span>
                         </TableCell>
-                        <TableCell className="bg-card/50 py-3.5">
-                          <Badge variant="secondary" className="text-xs font-medium bg-green-500/10 text-green-500 border-0 px-2 py-0.5">
-                            {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="bg-card/50 py-3.5 text-center">
-                          {txn.status === 'completed' && txn.type === 'earning' && <TooltipProvider>
+                        <TableCell className="py-3 text-right pr-4">
+                          {txn.status === 'completed' && txn.type === 'earning' ? (
+                            <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="sm" onClick={() => {
-                              setSelectedTransaction(txn);
-                              setRevertDialogOpen(true);
-                            }} className="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
-                                    <RotateCcw className="h-4 w-4" />
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => {
+                                      setSelectedTransaction(txn);
+                                      setRevertDialogOpen(true);
+                                    }} 
+                                    className="h-7 w-7 p-0 text-muted-foreground/50 hover:bg-destructive/10 hover:text-destructive"
+                                  >
+                                    <RotateCcw className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   <p>Revert Transaction</p>
                                 </TooltipContent>
                               </Tooltip>
-                            </TooltipProvider>}
+                            </TooltipProvider>
+                          ) : (
+                            <span className="text-muted-foreground/30">—</span>
+                          )}
                         </TableCell>
-                      </TableRow>;
-                })}
-                 </TableBody>
-               </Table>
-             </div>
-           {paginatedTransactions.length === 0 && transactions.length === 0 && <div className="text-center py-12 text-muted-foreground">
-                 No transactions yet
-               </div>}
-           </CardContent>
-           
-           {/* Transaction Pagination */}
-           {totalTransactionPages > 1 && (
-             <div className="px-3 py-3 border-t border-border">
-               <Pagination>
-                 <PaginationContent className="gap-1">
-                   <PaginationItem>
-                     <PaginationPrevious 
-                       onClick={() => setTransactionsCurrentPage(p => Math.max(1, p - 1))} 
-                       className={transactionsCurrentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} 
-                       style={{ backgroundColor: 'transparent' }} 
-                     />
-                   </PaginationItem>
-                   
-                   {Array.from({ length: totalTransactionPages }, (_, i) => i + 1).map(page => {
-                     if (page === 1 || page === totalTransactionPages || (page >= transactionsCurrentPage - 1 && page <= transactionsCurrentPage + 1)) {
-                       return (
-                         <PaginationItem key={page}>
-                           <PaginationLink 
-                             onClick={() => setTransactionsCurrentPage(page)} 
-                             isActive={transactionsCurrentPage === page} 
-                             className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md border border-transparent" 
-                             style={{ backgroundColor: transactionsCurrentPage === page ? '#202020' : 'transparent' }}
-                           >
-                             <span className={transactionsCurrentPage === page ? "text-white font-medium" : "text-white/50"}>
-                               {page}
-                             </span>
-                           </PaginationLink>
-                         </PaginationItem>
-                       );
-                     } else if (page === transactionsCurrentPage - 2 || page === transactionsCurrentPage + 2) {
-                       return <PaginationItem key={page}><span className="text-white/30 px-2">...</span></PaginationItem>;
-                     }
-                     return null;
-                   })}
-                   
-                   <PaginationItem>
-                     <PaginationNext 
-                       onClick={() => setTransactionsCurrentPage(p => Math.min(totalTransactionPages, p + 1))} 
-                       className={transactionsCurrentPage === totalTransactionPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} 
-                       style={{ backgroundColor: 'transparent' }} 
-                     />
-                   </PaginationItem>
-                 </PaginationContent>
-               </Pagination>
-             </div>
-           )}
-         </Card>}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-2">
+              {paginatedTransactions.map((txn) => {
+                const metadata = txn.metadata || {};
+                const platformIcon = getPlatformIcon(metadata.platform || '');
+                
+                return (
+                  <div 
+                    key={txn.id} 
+                    className="p-3.5 rounded-xl bg-card/30 hover:bg-card/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={txn.profiles?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                            {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {txn.profiles?.username || 'System'}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {platformIcon && <img src={platformIcon} alt={metadata.platform} className="h-3 w-3 opacity-60" />}
+                            <span className="text-xs text-muted-foreground truncate">
+                              {metadata.account_username 
+                                ? `@${metadata.account_username}` 
+                                : txn.type === 'balance_correction' 
+                                  ? 'Budget Adjustment' 
+                                  : '—'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className={`text-sm font-semibold tabular-nums ${Number(txn.amount) >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                          {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
+                        </p>
+                        <p className="text-xs text-muted-foreground/60 mt-0.5">
+                          {new Date(txn.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    {metadata.views && (
+                      <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Views</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{metadata.views.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {txn.status === 'completed' && txn.type === 'earning' && (
+                      <div className="mt-2 pt-2 border-t border-border/20">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedTransaction(txn);
+                            setRevertDialogOpen(true);
+                          }} 
+                          className="h-7 w-full text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <RotateCcw className="h-3 w-3 mr-1.5" />
+                          Revert Transaction
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Empty State */}
+            {paginatedTransactions.length === 0 && transactions.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                  <Receipt className="h-5 w-5 text-muted-foreground/50" />
+                </div>
+                <p className="text-muted-foreground text-sm">No transactions yet</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalTransactionPages > 1 && (
+              <div className="flex justify-center pt-4">
+                <Pagination>
+                  <PaginationContent className="gap-1">
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setTransactionsCurrentPage(p => Math.max(1, p - 1))} 
+                        className={`${transactionsCurrentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-muted/50"} transition-colors bg-transparent`}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalTransactionPages }, (_, i) => i + 1).map(page => {
+                      if (page === 1 || page === totalTransactionPages || (page >= transactionsCurrentPage - 1 && page <= transactionsCurrentPage + 1)) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationLink 
+                              onClick={() => setTransactionsCurrentPage(page)} 
+                              isActive={transactionsCurrentPage === page} 
+                              className={`cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-lg border-0 ${
+                                transactionsCurrentPage === page ? 'bg-muted text-foreground' : 'bg-transparent text-muted-foreground hover:bg-muted/50'
+                              }`}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (page === transactionsCurrentPage - 2 || page === transactionsCurrentPage + 2) {
+                        return <PaginationItem key={page}><span className="text-muted-foreground/30 px-2">...</span></PaginationItem>;
+                      }
+                      return null;
+                    })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setTransactionsCurrentPage(p => Math.min(totalTransactionPages, p + 1))} 
+                        className={`${transactionsCurrentPage === totalTransactionPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-muted/50"} transition-colors bg-transparent`}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
+        )}
 
          {/* Budget Adjustments */}
          {activeTab === 'budget' && <div className="mt-4 space-y-4">
@@ -1702,22 +1788,15 @@ export function CampaignAnalyticsTable({
                  />
                </div>
              </div>
-             <Button
-               onClick={() => {
-                 const originalFilter = transactionFilter;
-                 setTransactionFilter('balance_correction');
-                 setTimeout(() => {
-                   exportTransactionsToCSV();
-                   setTransactionFilter(originalFilter);
-                 }, 0);
-               }}
-               size="sm"
-               variant="ghost"
-               className="h-8 gap-2 text-muted-foreground hover:text-foreground"
-             >
-               <Download className="h-3.5 w-3.5" />
-               Export
-             </Button>
+              <Button
+                onClick={exportTransactionsToCSV}
+                size="sm"
+                variant="ghost"
+                className="h-8 gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export
+              </Button>
            </div>
 
            {/* Budget Adjustments List */}
