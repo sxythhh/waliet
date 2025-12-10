@@ -3,10 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus, Users } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { VideosTab } from "@/components/brand/VideosTab";
+import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 
 interface Campaign {
   id: string;
@@ -38,7 +39,7 @@ interface BrandCampaignDetailViewProps {
   campaignId: string;
 }
 
-type DetailTab = "home" | "videos" | "payouts";
+type DetailTab = "home" | "videos" | "creators" | "payouts";
 
 export function BrandCampaignDetailView({
   campaignId
@@ -78,6 +79,7 @@ export function BrandCampaignDetailView({
   const detailTabs = [
     { id: "home" as DetailTab, label: "Home", icon: Home },
     { id: "videos" as DetailTab, label: "Videos", icon: Video },
+    { id: "creators" as DetailTab, label: "Creators", icon: Users },
     { id: "payouts" as DetailTab, label: "Payouts", icon: DollarSign }
   ];
 
@@ -165,7 +167,9 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "videos" && campaign.brand_id ? (
+          {activeDetailTab === "home" && campaign.brand_id ? (
+            <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} />
+          ) : activeDetailTab === "videos" && campaign.brand_id ? (
             <div className="p-4">
               <VideosTab
                 campaignId={campaignId}
@@ -174,10 +178,16 @@ export function BrandCampaignDetailView({
                 approvedCreators={[]}
               />
             </div>
+          ) : activeDetailTab === "creators" ? (
+            <CampaignAnalyticsTable
+              campaignId={campaignId}
+              view="analytics"
+              className="px-[10px] py-0"
+            />
           ) : (
             <CampaignAnalyticsTable
               campaignId={campaignId}
-              view={activeDetailTab === 'payouts' ? 'transactions' : 'analytics'}
+              view="transactions"
               className="px-[10px] py-0"
             />
           )}
