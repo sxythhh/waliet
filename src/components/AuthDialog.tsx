@@ -166,7 +166,7 @@ export default function AuthDialog({
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md border-0 bg-[#0a0a0a]/98 backdrop-blur-xl shadow-2xl p-0">
-          <div className="p-6 pb-8 bg-black/[0.61] rounded-xl">
+          <div className="p-6 pb-8 rounded-xl bg-black/[0.43]">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex justify-center">
                 <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
