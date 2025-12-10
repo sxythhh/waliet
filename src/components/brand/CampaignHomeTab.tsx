@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Play, TrendingUp, TrendingDown } from "lucide-react";
+import { Play, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
@@ -37,6 +37,14 @@ interface StatsData {
   payoutsChange: number;
 }
 
+interface MetricsData {
+  date: string;
+  views: number;
+  likes: number;
+  shares: number;
+  bookmarks: number;
+}
+
 const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
 
 const extractPlatformId = (adLink: string, platform: string): string | null => {
@@ -64,12 +72,15 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
   const [chartMode, setChartMode] = useState<'daily' | 'cumulative'>('cumulative');
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [brand, setBrand] = useState<{ collection_name: string | null } | null>(null);
 
   useEffect(() => {
     fetchData();
+    fetchMetrics();
   }, [campaignId, brandId]);
 
   const fetchData = async () => {
@@ -136,6 +147,45 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       console.error('Error fetching home data:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchMetrics = async () => {
+    try {
+      const { data: metricsData } = await supabase
+        .from('campaign_video_metrics')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .order('recorded_at', { ascending: true });
+
+      if (metricsData && metricsData.length > 0) {
+        const formattedMetrics = metricsData.map(m => ({
+          date: format(new Date(m.recorded_at), 'MMM d'),
+          views: m.total_views,
+          likes: m.total_likes,
+          shares: m.total_shares,
+          bookmarks: m.total_bookmarks,
+        }));
+        setMetricsData(formattedMetrics);
+      }
+    } catch (error) {
+      console.error('Error fetching metrics:', error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Trigger the sync edge function
+      await supabase.functions.invoke('sync-campaign-video-metrics');
+      // Wait a moment then refetch
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await fetchMetrics();
+      await fetchData();
+    } catch (error) {
+      console.error('Error refreshing metrics:', error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -248,60 +298,140 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         </Card>
       </div>
 
-      {/* Chart Area */}
+      {/* Metrics Chart */}
       <Card className="p-4 bg-card/30 border-table-border">
-        <div className="flex items-center justify-end mb-4">
-          <div className="flex items-center gap-0 border border-table-border rounded-md overflow-hidden">
-            <button
-              onClick={() => setChartMode('daily')}
-              className={`px-3 py-1.5 text-xs tracking-[-0.5px] transition-colors ${
-                chartMode === 'daily' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="h-8 px-2"
             >
-              Daily
-            </button>
-            <button
-              onClick={() => setChartMode('cumulative')}
-              className={`px-3 py-1.5 text-xs tracking-[-0.5px] transition-colors ${
-                chartMode === 'cumulative' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Cumulative
-            </button>
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+            <div className="flex items-center gap-0 border border-table-border rounded-md overflow-hidden">
+              <button
+                onClick={() => setChartMode('daily')}
+                className={`px-3 py-1.5 text-xs tracking-[-0.5px] transition-colors ${
+                  chartMode === 'daily' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Daily
+              </button>
+              <button
+                onClick={() => setChartMode('cumulative')}
+                className={`px-3 py-1.5 text-xs tracking-[-0.5px] transition-colors ${
+                  chartMode === 'cumulative' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Cumulative
+              </button>
+            </div>
           </div>
         </div>
+        
+        {/* Legend */}
+        <div className="flex items-center gap-4 mb-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-[#3b82f6]" />
+            <span className="text-muted-foreground">Views</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-[#ef4444]" />
+            <span className="text-muted-foreground">Likes</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-[#22c55e]" />
+            <span className="text-muted-foreground">Shares</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-[#f59e0b]" />
+            <span className="text-muted-foreground">Bookmarks</span>
+          </div>
+        </div>
+
         <div className="h-64">
-          {chartData.length > 0 ? (
+          {metricsData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+              <AreaChart data={metricsData}>
                 <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorLikes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorShares" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorBookmarks" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => formatNumber(value)} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--popover))', 
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px'
-                  }} 
+                  }}
+                  formatter={(value: number) => formatNumber(value)}
                 />
                 <Area
-                  type="monotone"
-                  dataKey={chartMode}
-                  stroke="hsl(var(--primary))"
+                  type="linear"
+                  dataKey="views"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
                   fillOpacity={1}
-                  fill="url(#colorValue)"
+                  fill="url(#colorViews)"
+                />
+                <Area
+                  type="linear"
+                  dataKey="likes"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorLikes)"
+                />
+                <Area
+                  type="linear"
+                  dataKey="shares"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorShares)"
+                />
+                <Area
+                  type="linear"
+                  dataKey="bookmarks"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorBookmarks)"
                 />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex items-center justify-center text-muted-foreground text-sm tracking-[-0.5px]">
-              No data available yet
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm tracking-[-0.5px] gap-2">
+              <p>No metrics data yet</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Fetch Latest
+              </Button>
             </div>
           )}
         </div>
