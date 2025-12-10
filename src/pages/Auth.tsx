@@ -299,16 +299,14 @@ export default function Auth() {
               {/* Client Sign In Section */}
               <div className="space-y-4">
                 <div className="text-center">
-                  <p className="text-xs font-semibold font-geist text-muted-foreground uppercase">
+                  <p className="text-xs font-semibold font-geist uppercase text-primary-foreground">
                     Sign in as Client
                   </p>
                 </div>
                 
-                <a 
-                  href="https://virality.cc/auth" 
-                  className="flex items-center justify-center w-full h-12 bg-muted/50 hover:bg-muted rounded-md font-semibold font-geist text-sm transition-colors"
-                  style={{ letterSpacing: '-0.5px' }}
-                >
+                <a href="https://virality.cc/auth" className="flex items-center justify-center w-full h-12 bg-muted/50 hover:bg-muted rounded-md font-semibold font-geist text-sm transition-colors" style={{
+              letterSpacing: '-0.5px'
+            }}>
                   Continue to Client Portal
                 </a>
               </div>
@@ -340,14 +338,18 @@ export default function Auth() {
                   </button>
                 </div>
                 
-                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-geist" style={{ letterSpacing: '-0.5px' }}>
+                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-geist" style={{
+              letterSpacing: '-0.5px'
+            }}>
                   {loading ? "Please wait..." : "Continue"}
                 </Button>
               </form>
             </div>)}
           
           {/* Terms and Conditions */}
-          <div className="mt-8 text-center" style={{ letterSpacing: '-0.3px' }}>
+          <div className="mt-8 text-center" style={{
+          letterSpacing: '-0.3px'
+        }}>
             <p className="text-xs text-muted-foreground leading-relaxed">
               By logging in, you agree to our{" "}
               <a href="https://virality.gg/creator-terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
