@@ -80,6 +80,7 @@ All colors MUST be HSL.
     --border: 220 13% 91% / 0;
     --input: 220 13% 91%;
     --ring: 235 86% 65%;
+    --table-border: 220 13% 85%;
 
     --radius: 0.75rem;
 
@@ -146,6 +147,7 @@ All colors MUST be HSL.
     --border: 0 0% 14% / 0;
     --input: 220 13% 18%;
     --ring: 235 86% 65%;
+    --table-border: 0 0% 8%;
 
     /* Sidebar */
     --sidebar-background: 0 0% 5%;

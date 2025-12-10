@@ -28,6 +28,13 @@ interface ShortimizeVideo {
   latest_updated_at: string;
   removed: boolean;
   private: boolean;
+  creator_name?: string;
+}
+
+interface CreatorMatch {
+  username: string;
+  platform: string;
+  creator_name: string;
 }
 
 interface ShortimizeVideosTableProps {
@@ -66,12 +73,38 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
 
 export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVideosTableProps) {
   const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
+  const [creatorMatches, setCreatorMatches] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [sortField, setSortField] = useState<SortField>('uploaded_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 50, total_pages: 0 });
+
+  const fetchCreatorMatches = async (usernames: string[]) => {
+    if (usernames.length === 0) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('social_accounts')
+        .select('username, platform, user_id, profiles:user_id(full_name, username)')
+        .in('username', usernames);
+      
+      if (error) throw error;
+      
+      const matches = new Map<string, string>();
+      data?.forEach((account: any) => {
+        const key = `${account.username.toLowerCase()}_${account.platform.toLowerCase()}`;
+        const creatorName = account.profiles?.full_name || account.profiles?.username || null;
+        if (creatorName) {
+          matches.set(key, creatorName);
+        }
+      });
+      setCreatorMatches(matches);
+    } catch (error) {
+      console.error('Error fetching creator matches:', error);
+    }
+  };
 
   const fetchVideos = async () => {
     setIsLoading(true);
@@ -95,8 +128,13 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
         throw new Error(data.error);
       }
 
-      setVideos(data.videos || []);
+      const videosData = data.videos || [];
+      setVideos(videosData);
       setPagination(prev => ({ ...prev, ...data.pagination }));
+      
+      // Fetch creator matches for unique usernames
+      const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
+      await fetchCreatorMatches(uniqueUsernames);
     } catch (error) {
       console.error('Error fetching videos:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to fetch videos');
@@ -140,6 +178,11 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
     const platformId = extractPlatformId(video.ad_link, video.platform);
     if (!platformId) return null;
     return `${THUMBNAIL_BASE_URL}/${video.username}/${platformId}_${video.platform}.jpg`;
+  };
+
+  const getCreatorName = (video: ShortimizeVideo) => {
+    const key = `${video.username.toLowerCase()}_${video.platform.toLowerCase()}`;
+    return creatorMatches.get(key) || null;
   };
 
   const startIndex = (pagination.page - 1) * pagination.limit + 1;
@@ -219,12 +262,13 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
       </div>
 
       {/* Table */}
-      <div className="rounded-lg bg-card/30 overflow-hidden">
+      <div className="rounded-lg bg-card/30 overflow-hidden border border-table-border">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border/20">
+            <TableRow className="hover:bg-transparent border-b border-table-border">
               <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground w-[300px]">Video</TableHead>
               <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Account</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Creator</TableHead>
               <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Upload Date</TableHead>
               <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Views</TableHead>
               <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Likes</TableHead>
@@ -235,7 +279,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
           <TableBody>
             {isLoading ? (
               Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i} className="border-b border-border/10">
+                <TableRow key={i} className="border-b border-table-border">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-16 w-9 rounded" />
@@ -243,6 +287,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
                     </div>
                   </TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
@@ -252,13 +297,13 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
               ))
             ) : videos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
+                <TableCell colSpan={8} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
                   No videos found. Make sure your brand has a Shortimize API key and collection configured.
                 </TableCell>
               </TableRow>
             ) : (
               videos.map((video) => (
-                <TableRow key={video.ad_id} className="border-b border-border/10 hover:bg-muted/20">
+                <TableRow key={video.ad_id} className="border-b border-table-border hover:bg-muted/20">
                   <TableCell>
                     <a 
                       href={video.ad_link} 
@@ -291,6 +336,9 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
                       {getPlatformIcon(video.platform)}
                       <span className="text-sm tracking-[-0.5px]">@{video.username}</span>
                     </div>
+                  </TableCell>
+                  <TableCell className="text-sm tracking-[-0.5px] text-muted-foreground">
+                    {getCreatorName(video) || '-'}
                   </TableCell>
                   <TableCell className="text-sm tracking-[-0.5px] text-muted-foreground">
                     {video.uploaded_at ? format(new Date(video.uploaded_at), 'MMM d, yyyy') : '-'}
