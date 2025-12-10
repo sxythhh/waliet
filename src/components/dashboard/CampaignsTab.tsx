@@ -24,7 +24,6 @@ import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
-
 interface Campaign {
   id: string;
   title: string;
@@ -67,7 +66,6 @@ interface BoostApplication {
     };
   };
 }
-
 interface RecommendedCampaign {
   id: string;
   title: string;
@@ -81,7 +79,6 @@ interface RecommendedCampaign {
   budget_used: number | null;
   is_infinite_budget: boolean | null;
 }
-
 interface RecentActivity {
   id: string;
   type: 'earning' | 'account_connected' | 'campaign_joined';
@@ -90,7 +87,6 @@ interface RecentActivity {
   timestamp: string;
   amount?: number;
 }
-
 interface CampaignsTabProps {
   onOpenPrivateDialog: () => void;
 }
@@ -115,14 +111,17 @@ export function CampaignsTab({
     platform: string;
     username: string;
   } | null>(null);
-  
+
   // New state for dashboard sections
-  const [profile, setProfile] = useState<{ full_name: string | null; username: string; total_earnings: number | null } | null>(null);
+  const [profile, setProfile] = useState<{
+    full_name: string | null;
+    username: string;
+    total_earnings: number | null;
+  } | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [recommendedCampaigns, setRecommendedCampaigns] = useState<RecommendedCampaign[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [connectedAccountsCount, setConnectedAccountsCount] = useState(0);
-  
   const navigate = useNavigate();
   const {
     toast
@@ -150,64 +149,55 @@ export function CampaignsTab({
     fetchBoostApplications();
     fetchDashboardData();
   }, []);
-
   const fetchDashboardData = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) return;
 
     // Fetch profile
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("full_name, username, total_earnings")
-      .eq("id", user.id)
-      .single();
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("full_name, username, total_earnings").eq("id", user.id).single();
     if (profileData) setProfile(profileData);
 
     // Fetch wallet balance
-    const { data: walletData } = await supabase
-      .from("wallets")
-      .select("balance")
-      .eq("user_id", user.id)
-      .single();
+    const {
+      data: walletData
+    } = await supabase.from("wallets").select("balance").eq("user_id", user.id).single();
     if (walletData) setWalletBalance(walletData.balance || 0);
 
     // Fetch connected accounts count
-    const { count } = await supabase
-      .from("social_accounts")
-      .select("*", { count: 'exact', head: true })
-      .eq("user_id", user.id);
+    const {
+      count
+    } = await supabase.from("social_accounts").select("*", {
+      count: 'exact',
+      head: true
+    }).eq("user_id", user.id);
     setConnectedAccountsCount(count || 0);
 
     // Fetch recommended campaigns (public campaigns user hasn't joined)
-    const { data: userSubmissions } = await supabase
-      .from("campaign_submissions")
-      .select("campaign_id")
-      .eq("creator_id", user.id);
-    
+    const {
+      data: userSubmissions
+    } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id);
     const joinedCampaignIds = userSubmissions?.map(s => s.campaign_id) || [];
-    
-    let recommendedQuery = supabase
-      .from("campaigns")
-      .select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget")
-      .eq("status", "active")
-      .eq("is_private", false)
-      .limit(3);
-    
+    let recommendedQuery = supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget").eq("status", "active").eq("is_private", false).limit(3);
     if (joinedCampaignIds.length > 0) {
       recommendedQuery = recommendedQuery.not("id", "in", `(${joinedCampaignIds.join(",")})`);
     }
-    
-    const { data: recommendedData } = await recommendedQuery;
+    const {
+      data: recommendedData
+    } = await recommendedQuery;
     setRecommendedCampaigns(recommendedData || []);
 
     // Fetch recent activity (recent transactions)
-    const { data: recentTransactions } = await supabase
-      .from("wallet_transactions")
-      .select("id, type, amount, description, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(5);
-
+    const {
+      data: recentTransactions
+    } = await supabase.from("wallet_transactions").select("id, type, amount, description, created_at").eq("user_id", user.id).order("created_at", {
+      ascending: false
+    }).limit(5);
     const activities: RecentActivity[] = (recentTransactions || []).map(tx => ({
       id: tx.id,
       type: 'earning' as const,
@@ -535,10 +525,7 @@ export function CampaignsTab({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => navigate("/dashboard?tab=discover")} size="sm" className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            Discover
-          </Button>
+          
           <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
             Join Private
@@ -547,64 +534,10 @@ export function CampaignsTab({
       </div>
 
       {/* Stats Header */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="bg-card border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <DollarSign className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total Earnings</p>
-                <p className="text-lg font-bold">${(profile?.total_earnings || 0).toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <Wallet className="h-4 w-4 text-green-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Balance</p>
-                <p className="text-lg font-bold">${walletBalance.toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <TrendingUp className="h-4 w-4 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Active Campaigns</p>
-                <p className="text-lg font-bold">{campaigns.filter(c => c.status === 'active').length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <Users className="h-4 w-4 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Linked Accounts</p>
-                <p className="text-lg font-bold">{connectedAccountsCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Recommended Campaigns Section */}
-      {recommendedCampaigns.length > 0 && (
-        <div className="space-y-3">
+      {recommendedCampaigns.length > 0 && <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Recommended for You</h3>
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard?tab=discover")} className="gap-1 text-muted-foreground hover:text-foreground">
@@ -613,38 +546,21 @@ export function CampaignsTab({
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {recommendedCampaigns.map(campaign => {
-              const budgetUsed = campaign.budget_used || 0;
-              const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
-              return (
-                <Card 
-                  key={campaign.id} 
-                  className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer"
-                  onClick={() => navigate(`/campaign/preview/${campaign.id}`)}
-                >
+          const budgetUsed = campaign.budget_used || 0;
+          const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+          return <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer" onClick={() => navigate(`/campaign/preview/${campaign.id}`)}>
                   {/* Banner Image */}
-                  {campaign.banner_url && (
-                    <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                      <OptimizedImage 
-                        src={campaign.banner_url} 
-                        alt={campaign.title} 
-                        className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
-                      />
-                    </div>
-                  )}
+                  {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                      <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                    </div>}
 
                   {/* Content Section */}
                   <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
                     {/* Brand Logo + Title */}
                     <div className="flex items-start gap-2.5">
-                      {campaign.brand_logo_url && (
-                        <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
-                          <OptimizedImage 
-                            src={campaign.brand_logo_url} 
-                            alt={campaign.brand_name} 
-                            className="w-full h-full object-cover" 
-                          />
-                        </div>
-                      )}
+                      {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
+                          <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+                        </div>}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline">
                           {campaign.title}
@@ -655,8 +571,7 @@ export function CampaignsTab({
 
                     {/* Budget Section */}
                     <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
-                      {campaign.is_infinite_budget ? (
-                        <>
+                      {campaign.is_infinite_budget ? <>
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
                               <span className="text-base font-bold">
@@ -665,16 +580,14 @@ export function CampaignsTab({
                             </div>
                           </div>
                           <div className="relative h-1.5 rounded-full overflow-hidden" style={{
-                            background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
-                            backgroundSize: '20px 20px',
-                            animation: 'slide 1s linear infinite'
-                          }} />
+                    background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
+                    backgroundSize: '20px 20px',
+                    animation: 'slide 1s linear infinite'
+                  }} />
                           <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                             <span>No budget limit</span>
                           </div>
-                        </>
-                      ) : (
-                        <>
+                        </> : <>
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
                               <span className="text-base font-bold tabular-nums">
@@ -686,28 +599,23 @@ export function CampaignsTab({
                             </div>
                           </div>
                           <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
-                            <div 
-                              className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" 
-                              style={{ width: `${budgetPercentage}%` }} 
-                            />
+                            <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                      width: `${budgetPercentage}%`
+                    }} />
                           </div>
                           <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                             <span className="font-semibold">{budgetPercentage.toFixed(0)}% used</span>
                           </div>
-                        </>
-                      )}
+                        </>}
                     </div>
                   </CardContent>
-                </Card>
-              );
-            })}
+                </Card>;
+        })}
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Recent Activity Section */}
-      {recentActivity.length > 0 && (
-        <div className="space-y-3">
+      {recentActivity.length > 0 && <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Recent Activity</h3>
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard?tab=wallet")} className="gap-1 text-muted-foreground hover:text-foreground">
@@ -715,38 +623,33 @@ export function CampaignsTab({
             </Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recentActivity.slice(0, 6).map(activity => (
-              <Card key={activity.id} className="bg-card/50 border-0 hover:bg-card transition-colors">
+            {recentActivity.slice(0, 6).map(activity => <Card key={activity.id} className="bg-card/50 border-0 hover:bg-card transition-colors">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className={`p-2.5 rounded-xl ${activity.amount && activity.amount > 0 ? 'bg-green-500/10' : 'bg-muted/50'}`}>
-                      {activity.amount && activity.amount > 0 ? (
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Activity className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      {activity.amount && activity.amount > 0 ? <TrendingUp className="h-4 w-4 text-green-500" /> : <Activity className="h-4 w-4 text-muted-foreground" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium line-clamp-1">{activity.title}</p>
-                        {activity.amount !== undefined && (
-                          <p className={`text-sm font-bold whitespace-nowrap ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                        {activity.amount !== undefined && <p className={`text-sm font-bold whitespace-nowrap ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
                             {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
-                          </p>
-                        )}
+                          </p>}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{activity.description}</p>
                       <p className="text-[10px] text-muted-foreground/70 mt-1.5">
-                        {new Date(activity.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {new Date(activity.timestamp).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
                       </p>
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Boost Applications Section */}
       {boostApplications.length > 0 && <div className="space-y-3">
@@ -804,15 +707,15 @@ export function CampaignsTab({
         <h3 className="text-lg font-semibold">Your Campaigns</h3>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
       {campaigns.map(campaign => {
-        const budgetUsed = campaign.budget_used || 0;
-        const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-        const isPending = campaign.submission_status === 'pending';
-        const isEnded = campaign.status === 'ended';
-        return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
-          if (!isPending) {
-            navigate(`/c/${campaign.slug}`);
-          }
-        }}>
+          const budgetUsed = campaign.budget_used || 0;
+          const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+          const isPending = campaign.submission_status === 'pending';
+          const isEnded = campaign.status === 'ended';
+          return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
+            if (!isPending) {
+              navigate(`/c/${campaign.slug}`);
+            }
+          }}>
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
@@ -860,12 +763,12 @@ export function CampaignsTab({
                 {/* Progress Bar */}
                 <div className="relative h-1.5 rounded-full overflow-hidden bg-muted/50">
                   {campaign.is_infinite_budget ? <div className="absolute inset-0 animate-pulse" style={{
-                  background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
-                  backgroundSize: '200% 200%',
-                  animation: 'slide 2s linear infinite'
-                }} /> : <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                  width: `${budgetPercentage}%`
-                }} />}
+                    background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
+                    backgroundSize: '200% 200%',
+                    animation: 'slide 2s linear infinite'
+                  }} /> : <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                    width: `${budgetPercentage}%`
+                  }} />}
                 </div>
                 
                 {!campaign.is_infinite_budget && <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
@@ -877,10 +780,10 @@ export function CampaignsTab({
               {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div className="pt-1">
                   <div className="flex flex-wrap gap-1.5">
                     {campaign.connected_accounts.map(account => <div key={account.id} onClick={e => {
-                  e.stopPropagation();
-                  setSelectedAccount(account);
-                  setManageAccountDialogOpen(true);
-                }} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:brightness-95 transition-colors cursor-pointer border border-[#242424]/0">
+                    e.stopPropagation();
+                    setSelectedAccount(account);
+                    setManageAccountDialogOpen(true);
+                  }} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:brightness-95 transition-colors cursor-pointer border border-[#242424]/0">
                         <div className="w-4 h-4">
                           <img src={getPlatformIcon(account.platform) || ''} alt={account.platform} className="w-full h-full" />
                         </div>
@@ -905,34 +808,34 @@ export function CampaignsTab({
                     </span>
                   </div>
                   <Button variant="ghost" size="sm" onClick={e => {
-                e.stopPropagation();
-                setSelectedCampaignId(campaign.id);
-                setWithdrawDialogOpen(true);
-              }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
+                  e.stopPropagation();
+                  setSelectedCampaignId(campaign.id);
+                  setWithdrawDialogOpen(true);
+                }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
                     <X className="w-3.5 h-3.5 mr-1.5" />
                     Withdraw Application
                   </Button>
                 </div> : isEnded ? <div className="mt-auto pt-2">
                   <Button variant="ghost" size="sm" onClick={e => {
-                e.stopPropagation();
-                setSelectedCampaignId(campaign.id);
-                setLeaveCampaignDialogOpen(true);
-              }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
+                  e.stopPropagation();
+                  setSelectedCampaignId(campaign.id);
+                  setLeaveCampaignDialogOpen(true);
+                }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
                     <LogOut className="w-3.5 h-3.5 mr-1.5" />
                     Leave Campaign
                   </Button>
                 </div> : <div className="mt-auto pt-2">
                   <Button variant="ghost" size="sm" onClick={e => {
-                e.stopPropagation();
-                setDialogOpen(true);
-              }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-md text-center border-0">
+                  e.stopPropagation();
+                  setDialogOpen(true);
+                }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-md text-center border-0">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Link Account
                   </Button>
                 </div>}
             </CardContent>
           </Card>;
-      })}
+        })}
         </div>
       </div>
     
@@ -947,9 +850,9 @@ export function CampaignsTab({
         </DialogHeader>
         <div className="grid gap-4 py-6">
           <button onClick={() => {
-              setDialogOpen(false);
-              navigate("/dashboard?tab=profile");
-            }} className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1">
+            setDialogOpen(false);
+            navigate("/dashboard?tab=profile");
+          }} className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1">
             <div className="relative flex items-start gap-4">
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                 <Link2 className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
@@ -964,9 +867,9 @@ export function CampaignsTab({
           </button>
           
           <button onClick={() => {
-              setDialogOpen(false);
-              setAddAccountDialogOpen(true);
-            }} className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1">
+            setDialogOpen(false);
+            setAddAccountDialogOpen(true);
+          }} className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1">
             <div className="relative flex items-start gap-4">
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                 <UserPlus className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
@@ -1029,18 +932,18 @@ export function CampaignsTab({
     
     {selectedAccount && <>
         <ManageAccountDialog open={manageAccountDialogOpen} onOpenChange={setManageAccountDialogOpen} account={{
-          id: selectedAccount.id,
-          username: selectedAccount.username,
-          platform: selectedAccount.platform,
-          account_link: null
-        }} demographicStatus={null} daysUntilNext={null} lastSubmissionDate={null} nextSubmissionDate={null} onUpdate={fetchCampaigns} onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)} platformIcon={<div className="w-6 h-6">
+        id: selectedAccount.id,
+        username: selectedAccount.username,
+        platform: selectedAccount.platform,
+        account_link: null
+      }} demographicStatus={null} daysUntilNext={null} lastSubmissionDate={null} nextSubmissionDate={null} onUpdate={fetchCampaigns} onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)} platformIcon={<div className="w-6 h-6">
               <img src={getPlatformIcon(selectedAccount.platform) || ''} alt={selectedAccount.platform} className="w-full h-full" />
             </div>} />
         
         <SubmitDemographicsDialog open={submitDemographicsDialogOpen} onOpenChange={setSubmitDemographicsDialogOpen} socialAccountId={selectedAccount.id} platform={selectedAccount.platform} username={selectedAccount.username} onSuccess={() => {
-          setSubmitDemographicsDialogOpen(false);
-          fetchCampaigns();
-        }} />
+        setSubmitDemographicsDialogOpen(false);
+        fetchCampaigns();
+      }} />
       </>}
     
       <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} />
