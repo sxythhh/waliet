@@ -159,9 +159,9 @@ export function AppSidebar() {
           <div>
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
+            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`}>
                   {item.tab === "campaigns" ? <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} />}
-                  <span className="tracking-[-0.5px] text-sm">{item.title}</span>
+                  <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">{item.title}</span>
                 </button>;
           })}
           </div>
@@ -169,14 +169,14 @@ export function AppSidebar() {
           {/* Secondary Links */}
           <div>
             
-            <button onClick={() => navigate("/referrals")} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[#0e0e0e] transition-colors ${location.pathname === '/referrals' ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
+            <button onClick={() => navigate("/referrals")} className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#0e0e0e] transition-colors ${location.pathname === '/referrals' ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`}>
               <Gift className={`h-5 w-5 ${location.pathname === '/referrals' ? 'text-[#2060df]' : ''}`} />
-              <span className="tracking-[-0.5px]">Referrals</span>
+              <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">Referrals</span>
             </button>
-            <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#0e0e0e] transition-colors">
+            <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-3 py-2.5 text-[#6f6f6f] hover:text-white hover:bg-[#0e0e0e] transition-colors">
               <div className="flex items-center gap-3">
                 <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
-                <span className="tracking-[-0.5px]">Discord</span>
+                <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">Discord</span>
               </div>
               <ArrowUpRight className="w-4 h-4 opacity-50" />
             </button>
