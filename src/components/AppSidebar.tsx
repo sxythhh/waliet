@@ -321,11 +321,11 @@ export function AppSidebar() {
         <div className="flex items-center justify-between px-4 py-[10px]">
           <div className="flex items-center gap-2.5">
             <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
-            <span className="font-geist font-bold tracking-tighter-custom text-lg text-white">
+            <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
               VIRALITY
             </span>
           </div>
-          <ThemeToggle className="rounded-none" />
+          <ThemeToggle />
         </div>
 
         {/* Workspace Toggle */}
