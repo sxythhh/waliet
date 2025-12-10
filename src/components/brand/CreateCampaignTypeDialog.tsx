@@ -33,7 +33,7 @@ export function CreateCampaignTypeDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button 
-            className="gap-2 hover:shadow-[0_0_0_3px_#0055ff]"
+            className="gap-2 font-geist tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)]"
             style={{ borderTop: '1px solid #4b85f7' }}
           >
             <Plus className="h-4 w-4" />
