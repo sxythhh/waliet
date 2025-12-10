@@ -98,7 +98,8 @@ export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewP
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="p-[10px] h-full">
+      <div className="flex flex-col h-full border border-[#262626] rounded-[20px] overflow-hidden">
       {/* Header with back button and campaign title */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border">
         <div className="flex items-center gap-3">
@@ -173,6 +174,7 @@ export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewP
           campaignId={campaignId} 
           view={activeDetailTab === 'payouts' ? 'transactions' : 'analytics'}
         />
+      </div>
       </div>
     </div>
   );
