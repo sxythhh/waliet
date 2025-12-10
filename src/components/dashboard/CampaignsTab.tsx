@@ -519,7 +519,7 @@ export function CampaignsTab({
         </div>
       </div>;
   }
-  return <div className="space-y-6">
+  return <div className="space-y-6 pt-6">
       {/* Welcome Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -607,33 +607,56 @@ export function CampaignsTab({
               View all <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {recommendedCampaigns.map(campaign => (
-              <Card 
-                key={campaign.id} 
-                className="group bg-card border cursor-pointer hover:border-primary/50 transition-all"
-                onClick={() => navigate(`/campaigns/${campaign.slug}/preview`)}
+              <Card
+                key={campaign.id}
+                className="group bg-card border-2 transition-all duration-300 overflow-hidden cursor-pointer hover:border-primary/50"
+                onClick={() => navigate(`/campaign/preview/${campaign.id}`)}
               >
-                {campaign.banner_url && (
-                  <div className="h-24 overflow-hidden rounded-t-lg">
-                    <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                  </div>
-                )}
-                <CardContent className="p-3">
-                  <div className="flex items-start gap-2">
-                    {campaign.brand_logo_url && (
-                      <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-8 h-8 rounded-md object-cover ring-1 ring-border" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold line-clamp-1">{campaign.title}</h4>
-                      <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                <div className="flex flex-col sm:flex-row">
+                  {campaign.banner_url && (
+                    <div className="relative w-full sm:w-48 h-32 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
+                      <img
+                        src={campaign.banner_url}
+                        alt={campaign.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/20" />
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                    <span className="text-xs text-muted-foreground">RPM Rate</span>
-                    <span className="text-sm font-semibold text-primary">${campaign.rpm_rate}</span>
-                  </div>
-                </CardContent>
+                  )}
+                  <CardContent className="p-4 flex-1 flex flex-col">
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        {campaign.brand_logo_url && (
+                          <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0">
+                            <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          {campaign.brand_name}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-bold line-clamp-1 mb-1">{campaign.title}</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mt-auto">
+                      <div>
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">RPM Rate</span>
+                        <span className="text-sm font-bold">${campaign.rpm_rate.toFixed(2)}</span>
+                      </div>
+                      {campaign.allowed_platforms && campaign.allowed_platforms.length > 0 && (
+                        <div className="flex gap-1.5 items-end justify-end">
+                          {campaign.allowed_platforms.map((platform) => {
+                            const icon = getPlatformIcon(platform);
+                            return icon ? (
+                              <img key={platform} src={icon} alt={platform} className="w-4 h-4 object-contain" />
+                            ) : null;
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </div>
               </Card>
             ))}
           </div>
@@ -649,42 +672,40 @@ export function CampaignsTab({
               View all <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <Card className="bg-card border">
-            <CardContent className="p-0 divide-y divide-border/50">
-              {recentActivity.map(activity => (
-                <div key={activity.id} className="flex items-center gap-3 p-3">
-                  <div className={`p-2 rounded-lg ${activity.type === 'earning' && activity.amount && activity.amount > 0 ? 'bg-green-500/10' : 'bg-muted'}`}>
-                    {activity.type === 'earning' && activity.amount && activity.amount > 0 ? (
-                      <DollarSign className="h-4 w-4 text-green-500" />
-                    ) : activity.type === 'earning' ? (
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{activity.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{activity.description}</p>
-                  </div>
-                  <div className="text-right">
-                    {activity.amount !== undefined && (
-                      <p className={`text-sm font-semibold ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
-                        {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recentActivity.slice(0, 6).map(activity => (
+              <Card key={activity.id} className="bg-card/50 border-0 hover:bg-card transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2.5 rounded-xl ${activity.amount && activity.amount > 0 ? 'bg-green-500/10' : 'bg-muted/50'}`}>
+                      {activity.amount && activity.amount > 0 ? (
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Activity className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium line-clamp-1">{activity.title}</p>
+                        {activity.amount !== undefined && (
+                          <p className={`text-sm font-bold whitespace-nowrap ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                            {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{activity.description}</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+                        {new Date(activity.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(activity.timestamp).toLocaleDateString()}
-                    </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Header with Actions */}
-      
       {/* Boost Applications Section */}
       {boostApplications.length > 0 && <div className="space-y-3">
           <h3 className="text-lg font-semibold text-muted-foreground">Boost Applications</h3>
