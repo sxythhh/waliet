@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import brandLogo from "@/assets/brand-logo.avif";
+import viralityLogo from "@/assets/virality-logo-new.png";
 
 export default function Index() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -22,12 +22,12 @@ export default function Index() {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">
-              <img src={brandLogo} alt="Virality" className="h-6 w-6" />
-              <span className="text-lg font-clash font-semibold text-foreground tracking-[-0.1em]">VIRALITY</span>
+              <img src={viralityLogo} alt="Virality" className="h-6 w-6" />
+              <span className="text-lg font-clash font-semibold text-foreground">VIRALITY</span>
             </div>
             
             <div className="flex items-center gap-3">
@@ -45,8 +45,8 @@ export default function Index() {
                     </Button>
                   </Link>
                   <Link to="/auth?tab=signup">
-                    <Button size="sm" className="font-medium">
-                      Sign Up
+                    <Button size="sm" className="font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md hover:shadow-lg transition-all duration-300">
+                      Create Account
                     </Button>
                   </Link>
                 </>
