@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, FileText, MoreVertical, Trash2 } from "lucide-react";
+import { Plus, MoreVertical, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -11,13 +11,13 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Blueprint {
   id: string;
   title: string;
   status: string;
+  content: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -39,7 +39,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     setLoading(true);
     const { data, error } = await supabase
       .from("blueprints")
-      .select("id, title, status, created_at, updated_at")
+      .select("id, title, status, content, created_at, updated_at")
       .eq("brand_id", brandId)
       .order("updated_at", { ascending: false });
 
@@ -135,20 +135,29 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
           {blueprints.map((blueprint) => (
             <Card
               key={blueprint.id}
-              className="p-4 cursor-pointer hover:bg-accent/50 transition-colors group"
+              className="cursor-pointer hover:bg-[#0a0a0a] transition-colors group border-0 bg-transparent"
               onClick={() => openBlueprint(blueprint.id)}
             >
-              <div className="flex items-start justify-between">
+              {/* Content Preview Area */}
+              <div 
+                className="mx-[10px] mt-[10px] p-4 rounded-md"
+                style={{ 
+                  backgroundColor: '#181717',
+                  borderTop: '1px solid #312f2f'
+                }}
+              >
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {blueprint.content ? blueprint.content.replace(/<[^>]*>/g, '').slice(0, 150) + '...' : 'No content yet...'}
+                </p>
+              </div>
+
+              {/* Title and Actions */}
+              <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-primary" />
+                  <div className="h-8 w-8 rounded bg-muted flex items-center justify-center text-sm font-medium">
+                    {blueprint.title.charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <h3 className="font-medium">{blueprint.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Updated {format(new Date(blueprint.updated_at), "MMM d, yyyy")}
-                    </p>
-                  </div>
+                  <h3 className="font-medium">{blueprint.title}</h3>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -173,17 +182,6 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-              <div className="mt-3 flex items-center gap-2">
-                <span
-                  className={`text-xs px-2 py-1 rounded-full ${
-                    blueprint.status === "active"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {blueprint.status === "active" ? "Active" : "Draft"}
-                </span>
               </div>
             </Card>
           ))}
