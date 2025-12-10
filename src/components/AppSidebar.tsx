@@ -1,4 +1,4 @@
-import { Layers, Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle } from "lucide-react";
+import { Layers, Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User } from "lucide-react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import viralityIcon from "@/assets/virality-icon.png";
@@ -21,6 +21,17 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
+
+interface BrandMembership {
+  brand_id: string;
+  role: string;
+  brands: {
+    name: string;
+    slug: string;
+    logo_url: string | null;
+  };
+}
+
 const menuItems = [{
   title: "Campaigns",
   tab: "campaigns",
@@ -38,6 +49,7 @@ const menuItems = [{
   tab: "profile",
   icon: CircleUser
 }];
+
 export function AppSidebar() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -51,21 +63,39 @@ export function AppSidebar() {
   } = useTheme();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
+  const [accountType, setAccountType] = useState<string>("creator");
+  const [brandMemberships, setBrandMemberships] = useState<BrandMembership[]>([]);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+
   useEffect(() => {
     if (user) {
       fetchProfile();
+      fetchBrandMemberships();
     }
   }, [user]);
+
   const fetchProfile = async () => {
     if (!user) return;
     const {
       data
-    } = await supabase.from("profiles").select("avatar_url, full_name, username").eq("id", user.id).single();
+    } = await supabase.from("profiles").select("avatar_url, full_name, username, account_type").eq("id", user.id).single();
     if (data) {
       setAvatarUrl(data.avatar_url);
       setDisplayName(data.full_name || data.username || user.email || "");
+      setAccountType(data.account_type || "creator");
     } else {
       setDisplayName(user.email || "");
+    }
+  };
+
+  const fetchBrandMemberships = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("brand_members")
+      .select("brand_id, role, brands(name, slug, logo_url)")
+      .eq("user_id", user.id);
+    if (data) {
+      setBrandMemberships(data as unknown as BrandMembership[]);
     }
   };
   const getInitial = () => {
@@ -171,6 +201,67 @@ export function AppSidebar() {
             </span>
           </div>
           <ThemeToggle />
+        </div>
+
+        {/* Workspace Toggle */}
+        <div className="px-3 py-2">
+          <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
+            <PopoverTrigger asChild>
+              <button className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] transition-colors">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 text-neutral-400" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-medium text-white truncate max-w-[120px]">Creator Dashboard</p>
+                    <p className="text-[10px] text-neutral-500 capitalize">{accountType}</p>
+                  </div>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[calc(100%-24px)] p-1.5 bg-[#141414] border-[#242424]" align="start" sideOffset={4}>
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => {
+                    navigate('/dashboard');
+                    setWorkspaceOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#1f1f1f] transition-colors"
+                >
+                  <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                    <User className="w-3 h-3 text-neutral-400" />
+                  </div>
+                  <span className="text-xs font-medium text-white">Creator Dashboard</span>
+                </button>
+                {brandMemberships.length > 0 && (
+                  <>
+                    <div className="h-px bg-[#242424] my-1" />
+                    <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
+                    {brandMemberships.map((membership) => (
+                      <button
+                        key={membership.brand_id}
+                        onClick={() => {
+                          navigate(`/brand/${membership.brands.slug}`);
+                          setWorkspaceOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#1f1f1f] transition-colors"
+                      >
+                        {membership.brands.logo_url ? (
+                          <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
+                        ) : (
+                          <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                            <Building2 className="w-3 h-3 text-neutral-400" />
+                          </div>
+                        )}
+                        <span className="text-xs font-medium text-white truncate">{membership.brands.name}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Main Navigation */}
