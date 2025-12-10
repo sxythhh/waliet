@@ -105,7 +105,8 @@ serve(async (req) => {
     params.append('order_direction', orderDirection);
     
     if (collection) {
-      params.append('collections', collection.trim());
+      // URL encode the collection name as per Shortimize docs
+      params.append('collections', encodeURIComponent(collection.trim()));
     }
     if (username) {
       params.append('username', username);
@@ -177,10 +178,13 @@ serve(async (req) => {
       
       if (debugResponse.ok) {
         const debugResult = await debugResponse.json();
+        // Get unique collections from sample videos
+        const sampleCollections = [...new Set(
+          debugResult.data?.flatMap((v: any) => v.label_names || []) || []
+        )];
         console.log('[fetch-shortimize-videos] Debug fetch (no collection filter):', {
           totalVideos: debugResult.pagination?.total || 0,
-          // Log the full structure of first video to see available fields
-          firstVideoFields: debugResult.data?.[0] ? Object.keys(debugResult.data[0]) : [],
+          availableCollections: sampleCollections,
           firstVideoSample: debugResult.data?.[0] || null
         });
       }
