@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
+
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
+import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
@@ -60,6 +61,7 @@ export function BrandCampaignsTab({
   const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
   const [createBountyOpen, setCreateBountyOpen] = useState(false);
   const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
+  const [brandLogoUrl, setBrandLogoUrl] = useState<string | undefined>(undefined);
   useEffect(() => {
     fetchBrandData();
   }, [brandId]);
@@ -67,6 +69,17 @@ export function BrandCampaignsTab({
     if (!brandId) return;
     setLoading(true);
     try {
+      // Fetch brand info for logo
+      const { data: brandData } = await supabase
+        .from("brands")
+        .select("logo_url")
+        .eq("id", brandId)
+        .single();
+      
+      if (brandData?.logo_url) {
+        setBrandLogoUrl(brandData.logo_url);
+      }
+
       // Fetch campaigns
       const {
         data: campaignsData,
@@ -234,8 +247,15 @@ export function BrandCampaignsTab({
           <CreateCampaignTypeDialog onSelectClipping={() => setCreateCampaignOpen(true)} onSelectManaged={() => setCreateBountyOpen(true)} />
         </div>}
 
-      {/* Create Campaign Dialog (Clipping) */}
-      <CreateCampaignDialog brandId={brandId} brandName={brandName} onSuccess={fetchBrandData} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />
+      {/* Create Campaign Wizard (Clipping) */}
+      <CampaignCreationWizard 
+        brandId={brandId} 
+        brandName={brandName} 
+        brandLogoUrl={brandLogoUrl}
+        onSuccess={fetchBrandData} 
+        open={createCampaignOpen} 
+        onOpenChange={setCreateCampaignOpen} 
+      />
 
       {/* Create Bounty Dialog (Managed) */}
       <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} onSuccess={fetchBrandData} />
