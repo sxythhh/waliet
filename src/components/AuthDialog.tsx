@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { OnboardingDialog } from "@/components/OnboardingDialog";
 interface AuthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,10 +27,37 @@ export default function AuthDialog({
   const [resetEmail, setResetEmail] = useState("");
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [newUserId, setNewUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const {
     toast
   } = useToast();
+
+  // Check if user needs onboarding
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("account_type, phone_number")
+        .eq("id", session.user.id)
+        .single();
+
+      // Show onboarding if user doesn't have phone number set
+      if (profile && !profile.phone_number) {
+        setNewUserId(session.user.id);
+        setShowOnboarding(true);
+        onOpenChange(false);
+      }
+    };
+
+    if (open) {
+      checkOnboardingStatus();
+    }
+  }, [open, onOpenChange]);
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,11 +90,12 @@ export default function AuthDialog({
         } else if (signUpData.user) {
           await trackReferral(signUpData.user.id);
           toast({
-            title: "Welcome to Virality!",
-            description: "Your account has been created successfully."
+            title: "Account created!",
+            description: "Let's set up your profile."
           });
+          setNewUserId(signUpData.user.id);
           onOpenChange(false);
-          navigate("/dashboard");
+          setShowOnboarding(true);
         }
       } else {
         setLoading(false);
@@ -275,6 +304,15 @@ export default function AuthDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Onboarding Dialog */}
+      {newUserId && (
+        <OnboardingDialog
+          open={showOnboarding}
+          onOpenChange={setShowOnboarding}
+          userId={newUserId}
+        />
+      )}
 
       {/* Password Reset Dialog */}
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
