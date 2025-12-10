@@ -593,130 +593,153 @@ export function CampaignCreationWizard({
 
                   {/* Step 3: Campaign Details */}
                   {currentStep === 3 && (
-                    <div className="space-y-8">
-                      <div className="text-center mb-10">
-                        <h1 className="text-2xl font-bold text-foreground mb-2">
+                    <div className="space-y-6">
+                      <div className="mb-8">
+                        <h1 className="text-xl font-semibold text-foreground tracking-[-0.5px]">
                           Campaign Details
                         </h1>
-                        <p className="text-muted-foreground">
+                        <p className="text-sm text-muted-foreground mt-1">
                           Add the final details for your campaign.
                         </p>
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-foreground">Campaign Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="My Amazing Campaign"
-                                className="bg-background border-border"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="space-y-5">
+                        <FormField
+                          control={form.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Campaign Name
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter campaign name"
+                                  className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0"
+                                  style={{ letterSpacing: '-0.3px' }}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-foreground">Description</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Describe your campaign..."
-                                className="bg-background border-border resize-none"
-                                rows={4}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={form.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Description
+                              </FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Describe your campaign objectives and expectations..."
+                                  className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none"
+                                  style={{ letterSpacing: '-0.3px' }}
+                                  rows={4}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      {/* Banner Upload */}
-                      <div className="space-y-3">
-                        <label className="text-sm font-medium text-foreground">Campaign Banner</label>
-                        {bannerPreview ? (
-                          <div className="relative w-full h-40 rounded-xl overflow-hidden bg-muted">
-                            <img
-                              src={bannerPreview}
-                              alt="Campaign banner"
-                              className="w-full h-full object-cover"
-                            />
-                            <Button
-                              type="button"
-                              size="icon"
-                              className="absolute top-2 right-2 bg-background/80 hover:bg-destructive"
-                              onClick={removeBanner}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="w-full h-40 rounded-xl flex items-center justify-center cursor-pointer hover:bg-muted/70 transition-colors bg-muted/50 dark:bg-[#141414] border-2 border-dashed border-border"
-                            onClick={() => fileInputRef.current?.click()}
-                          >
-                            <div className="text-center">
-                              <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                              <p className="text-sm text-muted-foreground">
-                                Click to upload banner
-                              </p>
+                        {/* Banner Upload */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            Campaign Banner
+                          </label>
+                          {bannerPreview ? (
+                            <div className="relative w-full h-36 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#1a1a1a]">
+                              <img
+                                src={bannerPreview}
+                                alt="Campaign banner"
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-destructive/90 text-white"
+                                onClick={removeBanner}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
-                          </div>
-                        )}
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="hidden"
+                          ) : (
+                            <div
+                              className="w-full h-36 rounded-lg flex items-center justify-center cursor-pointer transition-all bg-[#0a0a0a] border border-dashed border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#0f0f0f]"
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              <div className="text-center">
+                                <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
+                                  <Upload className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <p className="text-sm text-muted-foreground" style={{ letterSpacing: '-0.3px' }}>
+                                  Click to upload
+                                </p>
+                                <p className="text-xs text-muted-foreground/60 mt-1">
+                                  PNG, JPG up to 10MB
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="guidelines"
+                          render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Creator Guidelines
+                              </FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Provide guidelines for creators..."
+                                  className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none"
+                                  style={{ letterSpacing: '-0.3px' }}
+                                  rows={4}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="embed_url"
+                          render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Blueprint URL
+                                <span className="text-muted-foreground/50 ml-1 lowercase font-normal">(optional)</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="https://notion.so/..."
+                                  className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0"
+                                  style={{ letterSpacing: '-0.3px' }}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                       </div>
-
-                      <FormField
-                        control={form.control}
-                        name="guidelines"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-foreground">Creator Guidelines</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Guidelines for creators..."
-                                className="bg-background border-border resize-none"
-                                rows={4}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="embed_url"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-foreground">Blueprint URL (Optional)</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="https://..."
-                                className="bg-background border-border"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
                   )}
                 </form>
