@@ -343,12 +343,15 @@ export function AppSidebar() {
                 <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-1.5 bg-[#141414] border-0" align="start" sideOffset={4}>
+            <PopoverContent className="w-[220px] p-1.5 bg-[#141414] border-0" align="start" sideOffset={4}>
               <div className="space-y-0.5 max-h-[400px] overflow-y-auto font-inter tracking-[-0.5px]">
                 <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
-                  <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
-                    <User className="w-3 h-3 text-neutral-400" />
-                  </div>
+                  <Avatar className="w-5 h-5">
+                    <AvatarImage src={avatarUrl || undefined} />
+                    <AvatarFallback className="bg-[#1f1f1f] text-[10px] text-neutral-400">
+                      {displayName?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                   <span className="text-sm font-medium text-white">Creator Dashboard</span>
                 </button>
                 {isAdmin && allBrands.length > 0 && <>
