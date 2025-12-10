@@ -855,7 +855,7 @@ export function CampaignsTab({
                   <Button variant="ghost" size="sm" onClick={e => {
                   e.stopPropagation();
                   setDialogOpen(true);
-                }} className="font-medium font-sans">
+                }} className="font-medium font-sans text-justify">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Connect Account  
                   </Button>
