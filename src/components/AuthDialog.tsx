@@ -157,7 +157,7 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md border-0 bg-[#111111]/95 backdrop-blur-xl shadow-2xl p-0">
+        <DialogContent className="sm:max-w-md border-0 bg-[#0a0a0a]/98 backdrop-blur-xl shadow-2xl p-0">
           <div className="p-6 pb-8">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex justify-center">
@@ -171,7 +171,7 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                   {/* Creator Sign In Section */}
                   <div className="space-y-4">
                     <div className="text-center">
-                      <p className="text-xs font-semibold font-geist text-muted-foreground uppercase">
+                      <p className="text-xs font-semibold font-clash text-muted-foreground uppercase tracking-wide">
                         Sign in as Creator
                       </p>
                     </div>
