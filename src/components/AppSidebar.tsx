@@ -334,11 +334,23 @@ export function AppSidebar() {
             <PopoverTrigger asChild>
               <button className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] transition-colors">
                 <div className="flex items-center gap-2">
-                  {getWorkspaceIcon()}
-                  <div className="text-left">
-                    <p className="text-xs font-medium text-white truncate max-w-[120px]">{getWorkspaceDisplayName()}</p>
-                    <p className="text-[10px] text-neutral-500 capitalize">{isCreatorMode ? accountType : 'brand'}</p>
-                  </div>
+                  {isCreatorMode ? (
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={avatarUrl || undefined} />
+                      <AvatarFallback className="bg-[#1f1f1f] text-[10px] text-neutral-400">
+                        {displayName?.charAt(0)?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    currentBrandLogo ? (
+                      <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" />
+                    ) : (
+                      <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
+                        <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                      </div>
+                    )
+                  )}
+                  <p className="text-xs font-medium text-white truncate max-w-[120px] tracking-[-0.5px]">{getWorkspaceDisplayName()}</p>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
               </button>
