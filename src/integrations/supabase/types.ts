@@ -629,6 +629,70 @@ export type Database = {
           },
         ]
       }
+      campaign_video_metrics: {
+        Row: {
+          brand_id: string
+          campaign_id: string
+          created_at: string
+          id: string
+          recorded_at: string
+          total_bookmarks: number
+          total_comments: number
+          total_likes: number
+          total_shares: number
+          total_videos: number
+          total_views: number
+        }
+        Insert: {
+          brand_id: string
+          campaign_id: string
+          created_at?: string
+          id?: string
+          recorded_at?: string
+          total_bookmarks?: number
+          total_comments?: number
+          total_likes?: number
+          total_shares?: number
+          total_videos?: number
+          total_views?: number
+        }
+        Update: {
+          brand_id?: string
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          recorded_at?: string
+          total_bookmarks?: number
+          total_comments?: number
+          total_likes?: number
+          total_shares?: number
+          total_videos?: number
+          total_views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_video_metrics_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_video_metrics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_video_metrics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_videos: {
         Row: {
           bot_score: number | null
