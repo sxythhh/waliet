@@ -530,42 +530,7 @@ export function ProfileTab() {
   return <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
       {/* Profile Header */}
       <Card className="bg-card border-0">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-          <div className="space-y-1">
-              <h2 className="text-xl font-semibold">Your Profile</h2>
-              <p className="text-sm text-muted-foreground">virality.gg/{profile.username}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={handleCopyProfileUrl} className="h-9 w-9 bg-muted border-0 hover:bg-accent">
-                <Copy className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleOpenProfile} className="h-9 w-9 bg-muted border-0 hover:bg-accent">
-                <ArrowUpRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {/* Referral Code Section */}
-          {profile.referral_code && <div className="pt-4 border-t border-border">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground">Your Referral Code</p>
-                  <p className="text-lg font-geist font-semibold tracking-tighter-custom">{profile.referral_code}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCopyReferralCode} className="gap-2 bg-muted border-0 hover:bg-accent">
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/referrals')} className="gap-2 bg-muted border-0 hover:bg-accent">
-                    View Referrals
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>}
-        </CardContent>
+        
       </Card>
 
       {/* Connected Accounts */}
