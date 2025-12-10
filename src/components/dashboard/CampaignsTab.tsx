@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface Campaign {
   id: string;
@@ -76,6 +77,9 @@ interface RecommendedCampaign {
   slug: string;
   banner_url: string | null;
   allowed_platforms: string[] | null;
+  budget: number;
+  budget_used: number | null;
+  is_infinite_budget: boolean | null;
 }
 
 interface RecentActivity {
@@ -184,7 +188,7 @@ export function CampaignsTab({
     
     let recommendedQuery = supabase
       .from("campaigns")
-      .select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms")
+      .select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget")
       .eq("status", "active")
       .eq("is_private", false)
       .limit(3);
@@ -607,71 +611,93 @@ export function CampaignsTab({
               View all <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {recommendedCampaigns.map(campaign => {
-              const budgetUsed = 0;
-              const budgetPercentage = 0;
+              const budgetUsed = campaign.budget_used || 0;
+              const budgetPercentage = campaign.budget > 0 ? (budgetUsed / campaign.budget) * 100 : 0;
               return (
-                <Card
-                  key={campaign.id}
-                  className="group bg-card border-2 transition-all duration-300 overflow-hidden animate-fade-in cursor-pointer hover:border-primary/50"
+                <Card 
+                  key={campaign.id} 
+                  className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer"
                   onClick={() => navigate(`/campaign/preview/${campaign.id}`)}
                 >
-                  <div className="flex flex-col sm:flex-row">
-                    {campaign.banner_url && (
-                      <div className="relative w-full sm:w-48 h-32 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
-                        <img
-                          src={campaign.banner_url}
-                          alt={campaign.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-black/20" />
-                      </div>
-                    )}
-                    <CardContent className="p-4 flex-1 flex flex-col">
-                      <div className="mb-3">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          {campaign.brand_logo_url && (
-                            <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0">
-                              <img
-                                src={campaign.brand_logo_url}
-                                alt={campaign.brand_name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            {campaign.brand_name}
-                          </span>
+                  {/* Banner Image */}
+                  {campaign.banner_url && (
+                    <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                      <OptimizedImage 
+                        src={campaign.banner_url} 
+                        alt={campaign.title} 
+                        className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
+                      />
+                    </div>
+                  )}
+
+                  {/* Content Section */}
+                  <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
+                    {/* Brand Logo + Title */}
+                    <div className="flex items-start gap-2.5">
+                      {campaign.brand_logo_url && (
+                        <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
+                          <OptimizedImage 
+                            src={campaign.brand_logo_url} 
+                            alt={campaign.brand_name} 
+                            className="w-full h-full object-cover" 
+                          />
                         </div>
-                        <h3 className="text-base font-bold line-clamp-1 mb-1">
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline">
                           {campaign.title}
                         </h3>
+                        <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">
-                            RPM Rate
-                          </span>
-                          <span className="text-sm font-bold">${campaign.rpm_rate.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <div className="mt-auto pt-2 border-t flex items-center justify-between">
-                        {campaign.allowed_platforms && campaign.allowed_platforms.length > 0 && (
-                          <div className="flex gap-1.5">
-                            {campaign.allowed_platforms.map((platform) => {
-                              const icon = getPlatformIcon(platform);
-                              return icon ? (
-                                <div key={platform} className="w-4 h-4">
-                                  <img src={icon} alt={platform} className="w-full h-full object-contain" />
-                                </div>
-                              ) : null;
-                            })}
+                    </div>
+
+                    {/* Budget Section */}
+                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
+                      {campaign.is_infinite_budget ? (
+                        <>
+                          <div className="flex items-baseline justify-between">
+                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                              <span className="text-base font-bold">
+                                ∞ Unlimited Budget
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </div>
+                          <div className="relative h-1.5 rounded-full overflow-hidden" style={{
+                            background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
+                            backgroundSize: '20px 20px',
+                            animation: 'slide 1s linear infinite'
+                          }} />
+                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                            <span>No budget limit</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-baseline justify-between">
+                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                              <span className="text-base font-bold tabular-nums">
+                                ${budgetUsed.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-muted-foreground font-semibold">
+                                / ${campaign.budget.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
+                            <div 
+                              className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" 
+                              style={{ width: `${budgetPercentage}%` }} 
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                            <span className="font-semibold">{budgetPercentage.toFixed(0)}% used</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
                 </Card>
               );
             })}
