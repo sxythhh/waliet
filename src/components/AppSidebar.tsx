@@ -158,7 +158,7 @@ export function AppSidebar() {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
             return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
                   {item.tab === "campaigns" ? <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} />}
-                  <span className="tracking-[-0.5px]">{item.title}</span>
+                  <span className="tracking-[-0.5px] text-sm">{item.title}</span>
                 </button>;
           })}
           </div>
