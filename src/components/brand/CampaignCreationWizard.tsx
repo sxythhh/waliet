@@ -12,15 +12,11 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  Eye, Target, TrendingUp, ArrowRight, Save, Upload, X, Check, 
-  ExternalLink, ChevronRight
-} from "lucide-react";
+import { Eye, Target, TrendingUp, ArrowRight, Save, Upload, X, Check, ExternalLink, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
-
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   goal: z.enum(["attention", "leads", "conversions"]),
@@ -37,7 +33,7 @@ const campaignSchema = z.object({
   allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
   is_private: z.boolean().default(false),
   access_code: z.string().trim().optional(),
-  requires_application: z.boolean().default(true),
+  requires_application: z.boolean().default(true)
 }).refine(data => {
   if (data.is_private) {
     return data.access_code && data.access_code.length >= 6;
@@ -55,9 +51,7 @@ const campaignSchema = z.object({
   message: "Budget must be a positive number",
   path: ["budget"]
 });
-
 type CampaignFormValues = z.infer<typeof campaignSchema>;
-
 interface CampaignCreationWizardProps {
   brandId: string;
   brandName: string;
@@ -66,49 +60,46 @@ interface CampaignCreationWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const STEPS = [
-  { id: 1, label: "Your Goal" },
-  { id: 2, label: "Budget & Targeting" },
-  { id: 3, label: "Campaign Details" },
-];
-
-const GOALS = [
-  {
-    id: "attention",
-    title: "Attention",
-    description: "Focus on generating (authentic) views and impressions towards your brand/product, based on the content in your blueprint.",
-    icon: Eye,
-  },
-  {
-    id: "leads",
-    title: "Leads",
-    description: "Maximizing view to lead ratio. The focus is less on going viral and more on generating lead intent and customer awareness",
-    icon: Target,
-  },
-  {
-    id: "conversions",
-    title: "Conversions",
-    description: "For serious conversion-focused brands, seeking maximum ROI based on campaign spend.",
-    icon: TrendingUp,
-    enterprise: true,
-  },
-];
-
+const STEPS = [{
+  id: 1,
+  label: "Your Goal"
+}, {
+  id: 2,
+  label: "Budget & Targeting"
+}, {
+  id: 3,
+  label: "Campaign Details"
+}];
+const GOALS = [{
+  id: "attention",
+  title: "Attention",
+  description: "Focus on generating (authentic) views and impressions towards your brand/product, based on the content in your blueprint.",
+  icon: Eye
+}, {
+  id: "leads",
+  title: "Leads",
+  description: "Maximizing view to lead ratio. The focus is less on going viral and more on generating lead intent and customer awareness",
+  icon: Target
+}, {
+  id: "conversions",
+  title: "Conversions",
+  description: "For serious conversion-focused brands, seeking maximum ROI based on campaign spend.",
+  icon: TrendingUp,
+  enterprise: true
+}];
 export function CampaignCreationWizard({
   brandId,
   brandName,
   brandLogoUrl,
   onSuccess,
   open,
-  onOpenChange,
+  onOpenChange
 }: CampaignCreationWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
@@ -125,13 +116,11 @@ export function CampaignCreationWizard({
       allowed_platforms: ["tiktok", "instagram"],
       is_private: false,
       access_code: "",
-      requires_application: true,
+      requires_application: true
     }
   });
-
   const watchedValues = form.watch();
   const selectedGoal = GOALS.find(g => g.id === watchedValues.goal);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -143,7 +132,6 @@ export function CampaignCreationWizard({
       reader.readAsDataURL(file);
     }
   };
-
   const removeBanner = () => {
     setBannerFile(null);
     setBannerPreview(null);
@@ -151,22 +139,22 @@ export function CampaignCreationWizard({
       fileInputRef.current.value = "";
     }
   };
-
   const uploadBanner = async (): Promise<string | null> => {
     if (!bannerFile) return null;
     const fileExt = bannerFile.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
-    const { error: uploadError } = await supabase.storage
-      .from("campaign-banners")
-      .upload(filePath, bannerFile);
+    const {
+      error: uploadError
+    } = await supabase.storage.from("campaign-banners").upload(filePath, bannerFile);
     if (uploadError) throw uploadError;
-    const { data: { publicUrl } } = supabase.storage
-      .from("campaign-banners")
-      .getPublicUrl(filePath);
+    const {
+      data: {
+        publicUrl
+      }
+    } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
     return publicUrl;
   };
-
   const handleNext = async () => {
     if (currentStep === 1) {
       const isValid = await form.trigger("goal");
@@ -176,33 +164,22 @@ export function CampaignCreationWizard({
       if (isValid) setCurrentStep(3);
     }
   };
-
   const handleBack = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
-
   const handleSaveDraft = async () => {
     setIsSubmitting(true);
     try {
       const values = form.getValues();
       const bannerUrl = await uploadBanner();
-
-      const { data: brandData } = await supabase
-        .from('brands')
-        .select('logo_url')
-        .eq('id', brandId)
-        .single();
-
+      const {
+        data: brandData
+      } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
       const generateSlug = (title: string) => {
-        const baseSlug = title.toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .trim() || 'untitled';
+        const baseSlug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim() || 'untitled';
         const randomSuffix = Math.random().toString(36).substring(2, 10);
         return `${baseSlug}-${randomSuffix}`;
       };
-
       const campaignData = {
         title: values.title || "Untitled Campaign",
         description: values.description || null,
@@ -225,12 +202,12 @@ export function CampaignCreationWizard({
         is_private: values.is_private,
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
-        is_featured: false,
+        is_featured: false
       };
-
-      const { error } = await supabase.from("campaigns").insert(campaignData);
+      const {
+        error
+      } = await supabase.from("campaigns").insert(campaignData);
       if (error) throw error;
-
       toast.success("Campaign saved as draft!");
       onOpenChange(false);
       form.reset();
@@ -245,28 +222,18 @@ export function CampaignCreationWizard({
       setIsSubmitting(false);
     }
   };
-
   const onSubmit = async (values: CampaignFormValues) => {
     setIsSubmitting(true);
     try {
       const bannerUrl = await uploadBanner();
-
-      const { data: brandData } = await supabase
-        .from('brands')
-        .select('logo_url')
-        .eq('id', brandId)
-        .single();
-
+      const {
+        data: brandData
+      } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
       const generateSlug = (title: string) => {
-        const baseSlug = title.toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .trim();
+        const baseSlug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
         const randomSuffix = Math.random().toString(36).substring(2, 10);
         return `${baseSlug}-${randomSuffix}`;
       };
-
       const campaignData = {
         title: values.title,
         description: values.description || null,
@@ -289,12 +256,12 @@ export function CampaignCreationWizard({
         is_private: values.is_private,
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
-        is_featured: false,
+        is_featured: false
       };
-
-      const { error } = await supabase.from("campaigns").insert(campaignData);
+      const {
+        error
+      } = await supabase.from("campaigns").insert(campaignData);
       if (error) throw error;
-
       toast.success("Campaign created successfully!");
       onOpenChange(false);
       form.reset();
@@ -309,13 +276,10 @@ export function CampaignCreationWizard({
       setIsSubmitting(false);
     }
   };
-
   const getStepProgress = () => {
-    return (currentStep / STEPS.length) * 100;
+    return currentStep / STEPS.length * 100;
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[1400px] w-[95vw] max-h-[95vh] bg-white dark:bg-[#0a0a0a] border-border p-0 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] h-[85vh]">
           {/* Left Column - Main Content */}
@@ -325,8 +289,7 @@ export function CampaignCreationWizard({
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl mx-auto">
                   {/* Step 1: Goal Selection */}
-                  {currentStep === 1 && (
-                    <div className="space-y-8">
+                  {currentStep === 1 && <div className="space-y-8">
                       <div className="text-center mb-10">
                         <h1 className="text-2xl font-bold text-foreground mb-2">
                           Select Your Campaign Goal
@@ -336,62 +299,37 @@ export function CampaignCreationWizard({
                         </p>
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="goal"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={form.control} name="goal" render={({
+                    field
+                  }) => <FormItem>
                             <FormControl>
                               <div className="space-y-4">
-                                {GOALS.map((goal) => (
-                                  <button
-                                    key={goal.id}
-                                    type="button"
-                                    onClick={() => field.onChange(goal.id)}
-                                    className={`w-full flex items-start gap-4 p-5 rounded-xl border-2 text-left transition-all ${
-                                      field.value === goal.id
-                                        ? "border-primary bg-primary/5"
-                                        : "border-border hover:border-muted-foreground/30 bg-card"
-                                    }`}
-                                  >
+                                {GOALS.map(goal => <button key={goal.id} type="button" onClick={() => field.onChange(goal.id)} className={`w-full flex items-start gap-4 p-5 rounded-xl border-2 text-left transition-all ${field.value === goal.id ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-1">
                                         <h3 className="font-semibold text-lg text-foreground">
                                           {goal.title}
                                         </h3>
-                                        {goal.enterprise && (
-                                          <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                                        {goal.enterprise && <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
                                             Enterprise
-                                          </Badge>
-                                        )}
+                                          </Badge>}
                                       </div>
                                       <p className="text-sm text-muted-foreground leading-relaxed">
                                         {goal.description}
                                       </p>
                                     </div>
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
-                                      field.value === goal.id
-                                        ? "border-primary bg-primary"
-                                        : "border-muted-foreground/30"
-                                    }`}>
-                                      {field.value === goal.id && (
-                                        <Check className="w-3 h-3 text-white" />
-                                      )}
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${field.value === goal.id ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
+                                      {field.value === goal.id && <Check className="w-3 h-3 text-white" />}
                                     </div>
-                                  </button>
-                                ))}
+                                  </button>)}
                               </div>
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
+                          </FormItem>} />
+                    </div>}
 
                   {/* Step 2: Budget & Targeting */}
-                  {currentStep === 2 && (
-                    <div className="space-y-8">
+                  {currentStep === 2 && <div className="space-y-8">
                       <div className="text-center mb-10">
                         <h1 className="text-2xl font-bold text-foreground mb-2">
                           Budget & Targeting
@@ -405,11 +343,9 @@ export function CampaignCreationWizard({
                       <div className="space-y-6 p-6 rounded-xl bg-muted/50 dark:bg-[#141414]">
                         <h3 className="font-semibold text-foreground">Budget Settings</h3>
                         
-                        <FormField
-                          control={form.control}
-                          name="is_infinite_budget"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between">
+                        <FormField control={form.control} name="is_infinite_budget" render={({
+                      field
+                    }) => <FormItem className="flex items-center justify-between">
                               <div>
                                 <FormLabel className="text-foreground">Unlimited Budget</FormLabel>
                                 <p className="text-xs text-muted-foreground">
@@ -417,120 +353,80 @@ export function CampaignCreationWizard({
                                 </p>
                               </div>
                               <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
 
-                        {!watchedValues.is_infinite_budget && (
-                          <FormField
-                            control={form.control}
-                            name="budget"
-                            render={({ field }) => (
-                              <FormItem>
+                        {!watchedValues.is_infinite_budget && <FormField control={form.control} name="budget" render={({
+                      field
+                    }) => <FormItem>
                                 <FormLabel className="text-foreground">Total Budget ($)</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="10000"
-                                    className="bg-background border-border"
-                                    {...field}
-                                  />
+                                  <Input type="number" placeholder="10000" className="bg-background border-border" {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
+                              </FormItem>} />}
 
-                        <FormField
-                          control={form.control}
-                          name="rpm_rate"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="rpm_rate" render={({
+                      field
+                    }) => <FormItem>
                               <FormLabel className="text-foreground">CPM Rate ($)</FormLabel>
                               <p className="text-xs text-muted-foreground mb-2">
                                 Cost per 1,000 views paid to creators
                               </p>
                               <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="5"
-                                  className="bg-background border-border"
-                                  {...field}
-                                />
+                                <Input type="number" placeholder="5" className="bg-background border-border" {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
 
                       {/* Platform Targeting */}
                       <div className="space-y-6 p-6 rounded-xl bg-muted/50 dark:bg-[#141414]">
                         <h3 className="font-semibold text-foreground">Platform Targeting</h3>
                         
-                        <FormField
-                          control={form.control}
-                          name="allowed_platforms"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="allowed_platforms" render={({
+                      field
+                    }) => <FormItem>
                               <FormControl>
                                 <div className="grid grid-cols-3 gap-3">
-                                  {[
-                                    { id: "tiktok", label: "TikTok", logo: tiktokLogo },
-                                    { id: "instagram", label: "Instagram", logo: instagramLogo },
-                                    { id: "youtube", label: "YouTube", logo: youtubeLogo },
-                                  ].map((platform) => {
-                                    const isSelected = field.value.includes(platform.id);
-                                    return (
-                                      <button
-                                        key={platform.id}
-                                        type="button"
-                                        onClick={() => {
-                                          const newValue = isSelected
-                                            ? field.value.filter(p => p !== platform.id)
-                                            : [...field.value, platform.id];
-                                          field.onChange(newValue);
-                                        }}
-                                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                                          isSelected
-                                            ? "border-primary bg-primary/5"
-                                            : "border-border hover:border-muted-foreground/30 bg-background"
-                                        }`}
-                                      >
-                                        <img
-                                          src={platform.logo}
-                                          alt={platform.label}
-                                          className="w-8 h-8 object-contain"
-                                        />
+                                  {[{
+                            id: "tiktok",
+                            label: "TikTok",
+                            logo: tiktokLogo
+                          }, {
+                            id: "instagram",
+                            label: "Instagram",
+                            logo: instagramLogo
+                          }, {
+                            id: "youtube",
+                            label: "YouTube",
+                            logo: youtubeLogo
+                          }].map(platform => {
+                            const isSelected = field.value.includes(platform.id);
+                            return <button key={platform.id} type="button" onClick={() => {
+                              const newValue = isSelected ? field.value.filter(p => p !== platform.id) : [...field.value, platform.id];
+                              field.onChange(newValue);
+                            }} className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30 bg-background"}`}>
+                                        <img src={platform.logo} alt={platform.label} className="w-8 h-8 object-contain" />
                                         <span className="text-sm font-medium text-foreground">
                                           {platform.label}
                                         </span>
-                                      </button>
-                                    );
-                                  })}
+                                      </button>;
+                          })}
                                 </div>
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
 
                       {/* Privacy Settings */}
                       <div className="space-y-6 p-6 rounded-xl bg-muted/50 dark:bg-[#141414]">
                         <h3 className="font-semibold text-foreground">Access Settings</h3>
                         
-                        <FormField
-                          control={form.control}
-                          name="is_private"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between">
+                        <FormField control={form.control} name="is_private" render={({
+                      field
+                    }) => <FormItem className="flex items-center justify-between">
                               <div>
                                 <FormLabel className="text-foreground">Private Campaign</FormLabel>
                                 <p className="text-xs text-muted-foreground">
@@ -538,40 +434,23 @@ export function CampaignCreationWizard({
                                 </p>
                               </div>
                               <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
 
-                        {watchedValues.is_private && (
-                          <FormField
-                            control={form.control}
-                            name="access_code"
-                            render={({ field }) => (
-                              <FormItem>
+                        {watchedValues.is_private && <FormField control={form.control} name="access_code" render={({
+                      field
+                    }) => <FormItem>
                                 <FormLabel className="text-foreground">Access Code</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="BRAND2024"
-                                    className="bg-background border-border uppercase"
-                                    {...field}
-                                  />
+                                  <Input placeholder="BRAND2024" className="bg-background border-border uppercase" {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
+                              </FormItem>} />}
 
-                        <FormField
-                          control={form.control}
-                          name="requires_application"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between">
+                        <FormField control={form.control} name="requires_application" render={({
+                      field
+                    }) => <FormItem className="flex items-center justify-between">
                               <div>
                                 <FormLabel className="text-foreground">Require Application</FormLabel>
                                 <p className="text-xs text-muted-foreground">
@@ -579,21 +458,14 @@ export function CampaignCreationWizard({
                                 </p>
                               </div>
                               <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
                   {/* Step 3: Campaign Details */}
-                  {currentStep === 3 && (
-                    <div className="space-y-6">
+                  {currentStep === 3 && <div className="space-y-6">
                       <div className="mb-8">
                         <h1 className="text-xl font-semibold text-foreground tracking-[-0.5px]">
                           Campaign Details
@@ -604,144 +476,92 @@ export function CampaignCreationWizard({
                       </div>
 
                       <div className="space-y-5">
-                        <FormField
-                          control={form.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem className="space-y-2">
+                        <FormField control={form.control} name="title" render={({
+                      field
+                    }) => <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Campaign Name
                               </FormLabel>
                               <FormControl>
-                                <Input
-                                  placeholder="Enter campaign name"
-                                  className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0"
-                                  style={{ letterSpacing: '-0.3px' }}
-                                  {...field}
-                                />
+                                <Input placeholder="Enter campaign name" className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
+                          letterSpacing: '-0.3px'
+                        }} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
 
-                        <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem className="space-y-2">
+                        <FormField control={form.control} name="description" render={({
+                      field
+                    }) => <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Description
                               </FormLabel>
                               <FormControl>
-                                <Textarea
-                                  placeholder="Describe your campaign objectives and expectations..."
-                                  className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none"
-                                  style={{ letterSpacing: '-0.3px' }}
-                                  rows={4}
-                                  {...field}
-                                />
+                                <Textarea placeholder="Describe your campaign objectives and expectations..." className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none" style={{
+                          letterSpacing: '-0.3px'
+                        }} rows={4} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
 
                         {/* Banner Upload */}
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
                             Campaign Banner
                           </label>
-                          {bannerPreview ? (
-                            <div className="relative w-full h-36 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#1a1a1a]">
-                              <img
-                                src={bannerPreview}
-                                alt="Campaign banner"
-                                className="w-full h-full object-cover"
-                              />
-                              <Button
-                                type="button"
-                                size="icon"
-                                variant="ghost"
-                                className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-destructive/90 text-white"
-                                onClick={removeBanner}
-                              >
+                          {bannerPreview ? <div className="relative w-full h-36 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#1a1a1a]">
+                              <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
+                              <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-destructive/90 text-white" onClick={removeBanner}>
                                 <X className="h-4 w-4" />
                               </Button>
-                            </div>
-                          ) : (
-                            <div
-                              className="w-full h-36 rounded-lg flex items-center justify-center cursor-pointer transition-all bg-[#0a0a0a] border border-dashed border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#0f0f0f]"
-                              onClick={() => fileInputRef.current?.click()}
-                            >
+                            </div> : <div className="w-full h-36 rounded-lg flex items-center justify-center cursor-pointer transition-all bg-[#0a0a0a] border border-dashed border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#0f0f0f]" onClick={() => fileInputRef.current?.click()}>
                               <div className="text-center">
                                 <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
                                   <Upload className="h-4 w-4 text-muted-foreground" />
                                 </div>
-                                <p className="text-sm text-muted-foreground" style={{ letterSpacing: '-0.3px' }}>
+                                <p className="text-sm text-muted-foreground" style={{
+                            letterSpacing: '-0.3px'
+                          }}>
                                   Click to upload
                                 </p>
                                 <p className="text-xs text-muted-foreground/60 mt-1">
                                   PNG, JPG up to 10MB
                                 </p>
                               </div>
-                            </div>
-                          )}
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="hidden"
-                          />
+                            </div>}
+                          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                         </div>
 
-                        <FormField
-                          control={form.control}
-                          name="guidelines"
-                          render={({ field }) => (
-                            <FormItem className="space-y-2">
+                        <FormField control={form.control} name="guidelines" render={({
+                      field
+                    }) => <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Creator Guidelines
                               </FormLabel>
                               <FormControl>
-                                <Textarea
-                                  placeholder="Provide guidelines for creators..."
-                                  className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none"
-                                  style={{ letterSpacing: '-0.3px' }}
-                                  rows={4}
-                                  {...field}
-                                />
+                                <Textarea placeholder="Provide guidelines for creators..." className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none" style={{
+                          letterSpacing: '-0.3px'
+                        }} rows={4} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
 
-                        <FormField
-                          control={form.control}
-                          name="embed_url"
-                          render={({ field }) => (
-                            <FormItem className="space-y-2">
+                        <FormField control={form.control} name="embed_url" render={({
+                      field
+                    }) => <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Blueprint URL
                                 <span className="text-muted-foreground/50 ml-1 font-normal">(optional)</span>
                               </FormLabel>
                               <FormControl>
-                                <Input
-                                  placeholder="https://notion.so/..."
-                                  className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0"
-                                  style={{ letterSpacing: '-0.3px' }}
-                                  {...field}
-                                />
+                                <Input placeholder="https://notion.so/..." className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
+                          letterSpacing: '-0.3px'
+                        }} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </form>
               </Form>
             </div>
@@ -749,50 +569,23 @@ export function CampaignCreationWizard({
             {/* Bottom Action Bar */}
             <div className="border-t border-border px-8 lg:px-16 py-4 bg-background">
               <div className="max-w-2xl mx-auto flex items-center justify-between">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleSaveDraft}
-                  disabled={isSubmitting}
-                  className="gap-2"
-                >
+                <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2">
                   <Save className="h-4 w-4" />
                   Save as Draft
                 </Button>
 
                 <div className="flex items-center gap-3">
-                  {currentStep > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleBack}
-                      disabled={isSubmitting}
-                    >
+                  {currentStep > 1 && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting}>
                       Back
-                    </Button>
-                  )}
+                    </Button>}
                   
-                  {currentStep < 3 ? (
-                    <Button
-                      type="button"
-                      onClick={handleNext}
-                      disabled={isSubmitting}
-                      className="gap-2 min-w-[120px]"
-                    >
+                  {currentStep < 3 ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="gap-2 min-w-[120px]">
                       Continue
                       <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={form.handleSubmit(onSubmit)}
-                      disabled={isSubmitting}
-                      className="gap-2 min-w-[120px]"
-                    >
+                    </Button> : <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting} className="gap-2 min-w-[120px]">
                       {isSubmitting ? "Creating..." : "Finish"}
                       <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
               </div>
             </div>
@@ -812,19 +605,11 @@ export function CampaignCreationWizard({
               <div className="rounded-xl overflow-hidden bg-primary/80 dark:bg-primary/60">
                 {/* Banner Area */}
                 <div className="h-24 flex items-end p-4">
-                  {brandLogoUrl ? (
-                    <img
-                      src={brandLogoUrl}
-                      alt={brandName}
-                      className="w-12 h-12 rounded-lg object-cover bg-background"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center">
+                  {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-12 h-12 rounded-lg object-cover bg-background" /> : <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center">
                       <span className="text-lg font-bold text-foreground">
                         {brandName?.charAt(0) || "V"}
                       </span>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
 
@@ -852,37 +637,24 @@ export function CampaignCreationWizard({
                     <span className="text-muted-foreground">
                       Step {currentStep}: {STEPS[currentStep - 1]?.label}
                     </span>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="h-7 gap-1"
-                      onClick={() => currentStep < 3 ? handleNext() : form.handleSubmit(onSubmit)()}
-                    >
-                      {currentStep < 3 ? "Continue" : "Finish"}
-                      <ArrowRight className="h-3 w-3" />
-                    </Button>
+                    
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-300"
-                      style={{ width: `${getStepProgress()}%` }}
-                    />
+                    <div className="h-full bg-primary transition-all duration-300" style={{
+                    width: `${getStepProgress()}%`
+                  }} />
                   </div>
                 </div>
 
                 {/* Pricing Embed */}
                 <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
-                  <iframe
-                    src="https://joinvirality.com/pickplan-3"
-                    className="w-full border-0"
-                    style={{ height: '450px' }}
-                    title="Pricing Plans"
-                  />
+                  <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{
+                  height: '450px'
+                }} title="Pricing Plans" />
                 </div>
 
                 {/* Enterprise CTA */}
-                {watchedValues.goal === "conversions" && (
-                  <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
+                {watchedValues.goal === "conversions" && <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
                     <Badge variant="secondary" className="bg-primary/20 text-primary">
                       Enterprise
                     </Badge>
@@ -892,13 +664,11 @@ export function CampaignCreationWizard({
                     <p className="text-xs text-muted-foreground">
                       Complete this 2-minute form to see if you qualify. Based on your goals, we'll guide you towards the best solution.
                     </p>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
