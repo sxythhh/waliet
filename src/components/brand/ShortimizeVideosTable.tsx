@@ -288,7 +288,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
           <TableBody>
             {isLoading ? (
               Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i} className="border-b border-table-border dark:bg-[#141414] bg-muted/30">
+                <TableRow key={i} className="border-b border-table-border bg-transparent">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-16 w-9 rounded" />
@@ -314,7 +314,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
               videos.map((video) => {
                 const creatorInfo = getCreatorInfo(video);
                 return (
-                  <TableRow key={video.ad_id} className="border-b border-table-border dark:bg-[#141414] bg-muted/30 hover:bg-muted/50 dark:hover:bg-[#1a1a1a]">
+                  <TableRow key={video.ad_id} className="border-b border-table-border bg-transparent hover:bg-[#F4F4F4] dark:hover:bg-[#0a0a0a]">
                     <TableCell>
                       <a 
                         href={video.ad_link} 
@@ -422,32 +422,40 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
 
       {/* Creator Popup */}
       <Dialog open={!!selectedCreator} onOpenChange={(open) => !open && setSelectedCreator(null)}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="tracking-[-0.5px]">Creator Profile</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-[480px] bg-white dark:bg-[#0a0a0a] border-border">
           {selectedCreator && (
-            <div className="flex flex-col items-center gap-4 py-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={selectedCreator.avatar_url || ''} alt={selectedCreator.name} />
-                <AvatarFallback className="text-2xl">
-                  {selectedCreator.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-center">
-                <h3 className="text-lg font-medium tracking-[-0.5px]">{selectedCreator.name}</h3>
-                <p className="text-sm text-muted-foreground tracking-[-0.5px]">@{selectedCreator.username.toLowerCase()}</p>
+            <>
+              <DialogHeader>
+                <DialogTitle className="sr-only">Creator Details</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Profile Header */}
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16 ring-2 ring-background">
+                    <AvatarImage src={selectedCreator.avatar_url || ''} alt={selectedCreator.name} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                      {selectedCreator.name.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold tracking-[-0.5px]">{selectedCreator.name}</h3>
+                    <p className="text-sm text-muted-foreground tracking-[-0.5px]">@{selectedCreator.username.toLowerCase()}</p>
+                  </div>
+                </div>
+
+                {/* View Profile Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full tracking-[-0.5px]"
+                  onClick={() => window.open(`/u/${selectedCreator.username}`, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Full Profile
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="tracking-[-0.5px]"
-                onClick={() => window.open(`/u/${selectedCreator.username}`, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View Full Profile
-              </Button>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
