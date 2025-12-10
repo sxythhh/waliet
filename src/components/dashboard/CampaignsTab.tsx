@@ -650,7 +650,7 @@ export function CampaignsTab({
         letterSpacing: '-0.5px'
       }}>Recent Activity</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recentActivity.slice(0, 6).map(activity => <div key={activity.id} className="group p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200">
+            {recentActivity.slice(0, 6).map(activity => <div key={activity.id} className="group p-4 rounded-xl transition-all duration-200 bg-[#1f1f1f]/0">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wide">
                     {new Date(activity.timestamp).toLocaleDateString('en-US', {
@@ -663,15 +663,15 @@ export function CampaignsTab({
                       {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
                     </span>}
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="gap-3 flex items-center justify-center">
                   {activity.campaignLogo ? <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
                       <img src={activity.campaignLogo} alt={activity.campaignName || ''} className="w-full h-full object-cover" />
                     </div> : <div className="w-9 h-9 rounded-lg flex-shrink-0 ring-1 ring-border bg-muted flex items-center justify-center">
                       <Wallet className="w-4 h-4 text-muted-foreground" />
                     </div>}
                   <div className="flex-1 min-w-0">
-                    {activity.campaignName && <p className="text-sm font-medium text-foreground truncate mb-0.5">{activity.campaignName}</p>}
-                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{activity.description}</p>
+                    {activity.campaignName && <p className="text-sm text-foreground truncate mb-0.5 font-semibold">{activity.campaignName}</p>}
+                    
                   </div>
                 </div>
               </div>)}
