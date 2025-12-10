@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, TrendingDown, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -18,6 +18,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow, format } from "date-fns";
 import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
 import { ImportCampaignStatsDialog } from "./ImportCampaignStatsDialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
@@ -159,8 +162,8 @@ export function CampaignAnalyticsTable({
   const [selectedAccountForDemo, setSelectedAccountForDemo] = useState<AnalyticsData | null>(null);
   const [transactionsSortBy, setTransactionsSortBy] = useState<'date' | 'amount'>('date');
   const [transactionsSortDir, setTransactionsSortDir] = useState<'asc' | 'desc'>('desc');
-  const [transactionsStartDate, setTransactionsStartDate] = useState<string>('');
-  const [transactionsEndDate, setTransactionsEndDate] = useState<string>('');
+  const [transactionsStartDate, setTransactionsStartDate] = useState<Date | undefined>(undefined);
+  const [transactionsEndDate, setTransactionsEndDate] = useState<Date | undefined>(undefined);
   const [selectedTransactionUser, setSelectedTransactionUser] = useState<Transaction | null>(null);
   const itemsPerPage = 20;
   const transactionsPerPage = 20;
@@ -178,8 +181,8 @@ export function CampaignAnalyticsTable({
     setDateRanges([]);
     setTransactionsSortBy('date');
     setTransactionsSortDir('desc');
-    setTransactionsStartDate('');
-    setTransactionsEndDate('');
+    setTransactionsStartDate(undefined);
+    setTransactionsEndDate(undefined);
   }, [campaignId]);
 
   // Sync activeTab with view prop
@@ -1112,8 +1115,7 @@ export function CampaignAnalyticsTable({
     .filter(txn => {
       if (transactionsStartDate) {
         const txnDate = new Date(txn.created_at);
-        const startDate = new Date(transactionsStartDate);
-        if (txnDate < startDate) return false;
+        if (txnDate < transactionsStartDate) return false;
       }
       if (transactionsEndDate) {
         const txnDate = new Date(txn.created_at);
@@ -1560,49 +1562,64 @@ export function CampaignAnalyticsTable({
 
             {/* Header with Filters and Export Button */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-4 mb-3">
+              <p className="text-sm text-muted-foreground">
+                {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
+              </p>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm text-muted-foreground">
-                  {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
-                </p>
-                <Select value={transactionsSortBy} onValueChange={(v) => setTransactionsSortBy(v as 'date' | 'amount')}>
-                  <SelectTrigger className="w-[120px] h-8 bg-muted/50 border-0 text-xs">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-0">
-                    <SelectItem value="date">Date</SelectItem>
-                    <SelectItem value="amount">Amount</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTransactionsSortDir(prev => prev === 'desc' ? 'asc' : 'desc')}
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                >
-                  {transactionsSortDir === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
-                </Button>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Input
-                  type="date"
-                  value={transactionsStartDate}
-                  onChange={(e) => setTransactionsStartDate(e.target.value)}
-                  placeholder="Start"
-                  className="h-8 w-[130px] bg-muted/50 border-0 text-xs"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg",
+                        transactionsStartDate ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      {transactionsStartDate ? format(transactionsStartDate, "MMM d, yyyy") : "Start date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-popover border border-border shadow-lg z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={transactionsStartDate}
+                      onSelect={setTransactionsStartDate}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
                 <span className="text-muted-foreground text-xs">to</span>
-                <Input
-                  type="date"
-                  value={transactionsEndDate}
-                  onChange={(e) => setTransactionsEndDate(e.target.value)}
-                  placeholder="End"
-                  className="h-8 w-[130px] bg-muted/50 border-0 text-xs"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg",
+                        transactionsEndDate ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      {transactionsEndDate ? format(transactionsEndDate, "MMM d, yyyy") : "End date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-popover border border-border shadow-lg z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={transactionsEndDate}
+                      onSelect={setTransactionsEndDate}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
                 {(transactionsStartDate || transactionsEndDate) && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => { setTransactionsStartDate(''); setTransactionsEndDate(''); }}
+                    onClick={() => { setTransactionsStartDate(undefined); setTransactionsEndDate(undefined); }}
                     className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   >
                     <X className="h-4 w-4" />
@@ -1625,11 +1642,51 @@ export function CampaignAnalyticsTable({
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-[#141414] dark:border-[#141414] hover:bg-transparent">
-                    <TableHead className="text-foreground font-medium text-xs py-3 pl-4 tracking-[-0.5px]">Date</TableHead>
+                    <TableHead 
+                      className="text-foreground font-medium text-xs py-3 pl-4 tracking-[-0.5px] cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => {
+                        if (transactionsSortBy === 'date') {
+                          setTransactionsSortDir(prev => prev === 'desc' ? 'asc' : 'desc');
+                        } else {
+                          setTransactionsSortBy('date');
+                          setTransactionsSortDir('desc');
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        Date
+                        {transactionsSortBy === 'date' && (
+                          transactionsSortDir === 'desc' 
+                            ? <ArrowDown className="h-3 w-3 text-primary" /> 
+                            : <ArrowUp className="h-3 w-3 text-primary" />
+                        )}
+                        {transactionsSortBy !== 'date' && <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />}
+                      </div>
+                    </TableHead>
                     <TableHead className="text-foreground font-medium text-xs py-3 tracking-[-0.5px]">User</TableHead>
                     <TableHead className="text-foreground font-medium text-xs py-3 tracking-[-0.5px]">Account</TableHead>
                     <TableHead className="text-foreground font-medium text-xs py-3 text-right tracking-[-0.5px]">Views</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs py-3 text-right tracking-[-0.5px]">Amount</TableHead>
+                    <TableHead 
+                      className="text-foreground font-medium text-xs py-3 text-right tracking-[-0.5px] cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => {
+                        if (transactionsSortBy === 'amount') {
+                          setTransactionsSortDir(prev => prev === 'desc' ? 'asc' : 'desc');
+                        } else {
+                          setTransactionsSortBy('amount');
+                          setTransactionsSortDir('desc');
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-end gap-1.5">
+                        Amount
+                        {transactionsSortBy === 'amount' && (
+                          transactionsSortDir === 'desc' 
+                            ? <ArrowDown className="h-3 w-3 text-primary" /> 
+                            : <ArrowUp className="h-3 w-3 text-primary" />
+                        )}
+                        {transactionsSortBy !== 'amount' && <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />}
+                      </div>
+                    </TableHead>
                     <TableHead className="text-foreground font-medium text-xs py-3 text-right pr-4 tracking-[-0.5px]">Action</TableHead>
                   </TableRow>
                 </TableHeader>
