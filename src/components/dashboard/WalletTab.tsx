@@ -896,7 +896,7 @@ export function WalletTab() {
     '1Y': '1 Year',
     'TW': 'This Week'
   };
-  return <div className="space-y-6 max-w-6xl mx-auto">
+  return <div className="space-y-6 max-w-6xl mx-auto pt-6">
 
       {/* Payout Methods - First */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -939,81 +939,29 @@ export function WalletTab() {
                 return "N/A";
             }
           };
-          const getMethodIcon = () => {
-            switch (method.method) {
-              case "paypal":
-                return <div className="w-10 h-10 rounded-xl bg-[#0070ba]/10 flex items-center justify-center">
-                  <span className="text-lg font-bold text-[#0070ba]">P</span>
-                </div>;
-              case "crypto":
-                const network = method.details?.network?.toLowerCase();
-                const networkLogo = network === 'ethereum' ? ethereumLogo : network === 'optimism' ? optimismLogo : network === 'solana' ? solanaLogo : network === 'polygon' ? polygonLogo : null;
-                return <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center p-2">
-                  {networkLogo ? <img src={networkLogo} alt={network} className="w-full h-full object-contain" /> : <WalletIcon className="h-5 w-5 text-purple-500" />}
-                </div>;
-              case "bank":
-                return <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <CreditCard className="h-5 w-5 text-emerald-500" />
-                </div>;
-              case "wise":
-                return <div className="w-10 h-10 rounded-xl bg-[#9fe870]/10 flex items-center justify-center">
-                  <span className="text-lg font-bold text-[#9fe870]">W</span>
-                </div>;
-              case "revolut":
-                return <div className="w-10 h-10 rounded-xl bg-[#0075eb]/10 flex items-center justify-center">
-                  <span className="text-lg font-bold text-[#0075eb]">R</span>
-                </div>;
-              default:
-                return <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                  <WalletIcon className="h-5 w-5 text-muted-foreground" />
-                </div>;
-            }
-          };
-          const getGradientClass = () => {
-            switch (method.method) {
-              case "paypal":
-                return "from-[#0070ba]/5 via-transparent to-transparent";
-              case "crypto":
-                return "from-purple-500/5 via-transparent to-transparent";
-              case "bank":
-                return "from-emerald-500/5 via-transparent to-transparent";
-              case "wise":
-                return "from-[#9fe870]/5 via-transparent to-transparent";
-              case "revolut":
-                return "from-[#0075eb]/5 via-transparent to-transparent";
-              default:
-                return "from-muted/50 via-transparent to-transparent";
-            }
-          };
           return (
             <div
               key={method.id}
-              className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradientClass()} border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg`}
+              className="group relative rounded-xl bg-card p-4 hover:bg-muted/50 transition-colors"
             >
-              <div className="absolute inset-0 bg-card/80 backdrop-blur-sm" />
-              <div className="relative p-5">
-                <div className="flex items-start justify-between mb-4">
-                  {getMethodIcon()}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteMethod(method.id)}
-                    className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">{getMethodLabel()}</p>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">{getMethodDetails()}</p>
+                  {method.method === 'crypto' && method.details?.network && (
+                    <p className="text-[10px] text-muted-foreground/70 mt-1 uppercase tracking-wider">
+                      {method.details.network}
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground mb-1">{getMethodLabel()}</p>
-                  <p className="text-xs text-muted-foreground font-medium truncate">{getMethodDetails()}</p>
-                </div>
-                {method.method === 'crypto' && method.details?.network && (
-                  <div className="mt-3 pt-3 border-t border-border/50">
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {method.details.network} Network
-                    </span>
-                  </div>
-                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteMethod(method.id)}
+                  className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           );
@@ -1023,19 +971,13 @@ export function WalletTab() {
         <button
           onClick={() => setDialogOpen(true)}
           disabled={payoutMethods.length >= 3}
-          className="group relative overflow-hidden rounded-2xl border-2 border-dashed border-border/50 hover:border-primary/50 transition-all duration-300 min-h-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group rounded-xl border border-dashed border-border/50 hover:border-muted-foreground/30 transition-colors p-4 min-h-[80px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="relative h-full flex flex-col items-center justify-center p-5 gap-2">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Plus className="h-5 w-5 text-primary" />
-            </div>
-            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+          <div className="h-full flex items-center justify-center gap-2">
+            <Plus className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
               Add Method
             </span>
-            {payoutMethods.length >= 3 && (
-              <span className="text-[10px] text-muted-foreground">Max 3 methods</span>
-            )}
           </div>
         </button>
       </div>
