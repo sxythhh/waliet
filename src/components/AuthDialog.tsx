@@ -173,7 +173,7 @@ export default function AuthDialog({
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 py-0">
               {!showEmailForm ? <>
                   {/* Creator Sign In Section */}
                   <div className="space-y-4">
