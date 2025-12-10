@@ -141,11 +141,14 @@ export function AppSidebar() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-56 lg:w-64 h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414]">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 py-[10px]">
-          <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
-          <span className="font-geist font-bold tracking-tighter-custom text-lg text-white">
-            VIRALITY
-          </span>
+        <div className="flex items-center justify-between px-4 py-[10px]">
+          <div className="flex items-center gap-2.5">
+            <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
+            <span className="font-geist font-bold tracking-tighter-custom text-lg text-white">
+              VIRALITY
+            </span>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* Main Navigation */}
@@ -161,7 +164,7 @@ export function AppSidebar() {
           </div>
 
           {/* Secondary Links */}
-          <div className="mt-4 pt-4">
+          <div>
             <button onClick={() => navigate("/leaderboard")} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[#0e0e0e] transition-colors ${location.pathname === '/leaderboard' ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
               <Medal className={`h-5 w-5 ${location.pathname === '/leaderboard' ? 'text-[#2060df]' : ''}`} />
               <span className="tracking-[-0.5px]">Leaderboard</span>
@@ -182,43 +185,21 @@ export function AppSidebar() {
 
         {/* User Profile Section */}
         <div className="p-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="w-full flex items-center gap-3 p-2.5 hover:bg-white/5 transition-colors">
-                <Avatar className="w-9 h-9">
-                  <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                  <AvatarFallback className="bg-neutral-800 text-neutral-300 text-sm">
-                    {getInitial()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{displayName}</p>
-                  <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
-                </div>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-2 bg-[#141414] border-white/10" align="start" side="top">
-              <div className="space-y-1">
-                <button onClick={() => handleTabClick("profile")} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:bg-white/5 transition-colors">
-                  <Settings className="w-4 h-4" />
-                  <span>Settings</span>
-                </button>
-                <div className="flex items-center gap-3 px-3 py-2">
-                  <span className="text-sm text-neutral-300 flex-1">Theme</span>
-                  <ThemeToggle />
-                </div>
-                <button onClick={() => window.open("https://virality.cc/help", "_blank")} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:bg-white/5 transition-colors">
-                  <HelpCircle className="w-4 h-4" />
-                  <span>Support</span>
-                </button>
-                <div className="my-1 border-t border-white/10" />
-                <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
-                  <LogOut className="w-4 h-4" />
-                  <span>Log out</span>
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <div className="flex items-center gap-3 p-2.5">
+            <Avatar className="w-9 h-9">
+              <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+              <AvatarFallback className="bg-neutral-800 text-neutral-300 text-sm">
+                {getInitial()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-medium text-white truncate">{displayName}</p>
+              <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
+            </div>
+            <button onClick={handleSignOut} className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors" title="Log out">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </aside>
     </>;
