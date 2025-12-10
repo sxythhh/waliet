@@ -304,11 +304,13 @@ export default function Auth() {
                   </p>
                 </div>
                 
-                <Button variant="outline" className="w-full h-12 bg-muted/50 hover:bg-muted border-0 font-semibold font-geist" style={{
-              letterSpacing: '-0.5px'
-            }} onClick={() => navigate('/brand-auth')} disabled={loading}>
+                <a 
+                  href="https://virality.cc/auth" 
+                  className="flex items-center justify-center w-full h-12 bg-muted/50 hover:bg-muted rounded-md font-semibold font-geist text-sm transition-colors"
+                  style={{ letterSpacing: '-0.5px' }}
+                >
                   Continue to Client Portal
-                </Button>
+                </a>
               </div>
             </> : (/* Email Form */
         <div className="space-y-4">
