@@ -143,8 +143,8 @@ export function ImportCampaignStatsDialog({
         for (const line of batch) {
           const values = parseCSVLine(line);
           
-          if (values.length < 11) {
-            console.warn("Skipping invalid line (expected at least 11 columns, got " + values.length + "):", line);
+          if (values.length < 10) {
+            console.warn("Skipping invalid line (expected at least 10 columns, got " + values.length + "):", line);
             continue;
           }
 
@@ -159,22 +159,28 @@ export function ImportCampaignStatsDialog({
               }
             }
 
-            // CSV columns: account, account_link, platform, total_videos, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked, amount_of_videos_tracked
+            // CSV columns: account, account_link, platform, amount_of_videos_tracked, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked
+            const amountOfVideosTracked = values[3] || '0';
+            const totalViews = parseInt(values[4]) || 0;
+            const totalLikes = parseInt(values[5]) || 0;
+            const totalComments = parseInt(values[6]) || 0;
+            const totalVideos = parseInt(amountOfVideosTracked) || 0;
+            
             const record = {
               campaign_id: campaignId,
               account_username: values[0] || '',
               account_link: values[1] || null,
               platform: values[2] || 'unknown',
-              total_videos: parseInt(values[3]) || 0,
-              total_views: parseInt(values[4]) || 0,
-              total_likes: parseInt(values[5]) || 0,
-              total_comments: parseInt(values[6]) || 0,
+              total_videos: totalVideos,
+              total_views: totalViews,
+              total_likes: totalLikes,
+              total_comments: totalComments,
               average_engagement_rate: parseFloat(values[7]) || 0,
               outperforming_video_rate: 0,
-              average_video_views: parseInt(values[4]) / Math.max(parseInt(values[3]), 1) || 0,
+              average_video_views: totalVideos > 0 ? Math.round(totalViews / totalVideos) : 0,
               posts_last_7_days: postsLast7Days,
               last_tracked: parseDate(values[9]),
-              amount_of_videos_tracked: values[10] || null,
+              amount_of_videos_tracked: amountOfVideosTracked,
               start_date: format(startDate, 'yyyy-MM-dd'),
               end_date: format(endDate, 'yyyy-MM-dd')
             };
