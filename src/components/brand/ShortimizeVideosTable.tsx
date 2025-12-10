@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { RefreshCw, ExternalLink, Calendar as CalendarIcon, ChevronUp, ChevronDown, Eye, Heart, MessageSquare, Share2, Bookmark, Search } from "lucide-react";
+import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import tiktokLogo from "@/assets/tiktok-logo-black.png";
+import instagramLogo from "@/assets/instagram-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-new.png";
 
 interface ShortimizeVideo {
   ad_id: string;
@@ -34,18 +35,19 @@ interface ShortimizeVideosTableProps {
   collectionName?: string;
 }
 
-type SortField = 'uploaded_at' | 'latest_views' | 'latest_likes' | 'latest_comments';
+type SortField = 'uploaded_at' | 'latest_views' | 'latest_likes' | 'latest_comments' | 'latest_shares';
 type SortDirection = 'asc' | 'desc';
+
+const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
 
 export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVideosTableProps) {
   const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchUsername, setSearchUsername] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [sortField, setSortField] = useState<SortField>('uploaded_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 100, total_pages: 0 });
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 50, total_pages: 0 });
 
   const fetchVideos = async () => {
     setIsLoading(true);
@@ -55,10 +57,9 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
           brandId,
           collectionName,
           page: pagination.page,
-          limit: 100,
+          limit: 50,
           orderBy: sortField,
           orderDirection: sortDirection,
-          username: searchUsername || undefined,
           uploadedAtStart: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
           uploadedAtEnd: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
         },
@@ -84,16 +85,7 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
     if (brandId) {
       fetchVideos();
     }
-  }, [brandId, collectionName, sortField, sortDirection]);
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
+  }, [brandId, collectionName, sortField, sortDirection, pagination.page]);
 
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -104,227 +96,188 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
     if (num === null || num === undefined) return '-';
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
+    return num.toLocaleString();
   };
 
   const getPlatformIcon = (platform: string) => {
     switch (platform?.toLowerCase()) {
       case 'tiktok':
-        return '🎵';
+        return <img src={tiktokLogo} alt="TikTok" className="h-4 w-4" />;
       case 'instagram':
-        return '📸';
+        return <img src={instagramLogo} alt="Instagram" className="h-4 w-4" />;
       case 'youtube':
-        return '▶️';
+        return <img src={youtubeLogo} alt="YouTube" className="h-4 w-4" />;
       default:
-        return '🎬';
+        return <span className="h-4 w-4 flex items-center justify-center text-xs">🎬</span>;
     }
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ? 
-      <ChevronUp className="h-3 w-3 ml-1 inline" /> : 
-      <ChevronDown className="h-3 w-3 ml-1 inline" />;
+  const getThumbnailUrl = (video: ShortimizeVideo) => {
+    return `${THUMBNAIL_BASE_URL}/${video.username}/${video.ad_id}_${video.platform}.jpg`;
   };
+
+  const startIndex = (pagination.page - 1) * pagination.limit + 1;
+  const endIndex = Math.min(pagination.page * pagination.limit, pagination.total);
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-[300px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by username..."
-            value={searchUsername}
-            onChange={(e) => setSearchUsername(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="pl-9 tracking-[-0.5px]"
-          />
+      {/* Header with filters */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button onClick={fetchVideos} variant="ghost" size="icon" disabled={isLoading} className="h-8 w-8">
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-2 tracking-[-0.5px]">
-              <CalendarIcon className="h-4 w-4" />
-              {startDate ? format(startDate, 'MMM d, yyyy') : 'Start Date'}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={startDate}
-              onSelect={setStartDate}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 tracking-[-0.5px] h-8 text-xs">
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {startDate ? format(startDate, 'MMM d, yyyy') : 'Start Date'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={(date) => {
+                  setStartDate(date);
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-2 tracking-[-0.5px]">
-              <CalendarIcon className="h-4 w-4" />
-              {endDate ? format(endDate, 'MMM d, yyyy') : 'End Date'}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={endDate}
-              onSelect={setEndDate}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+          <span className="text-muted-foreground text-xs">to</span>
 
-        <Button onClick={handleSearch} variant="secondary" className="gap-2 tracking-[-0.5px]">
-          <Search className="h-4 w-4" />
-          Search
-        </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 tracking-[-0.5px] h-8 text-xs">
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {endDate ? format(endDate, 'MMM d, yyyy') : 'End Date'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={endDate}
+                onSelect={(date) => {
+                  setEndDate(date);
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
 
-        <Button onClick={fetchVideos} variant="ghost" size="icon" disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-        </Button>
-
-        {(startDate || endDate || searchUsername) && (
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => {
-              setStartDate(undefined);
-              setEndDate(undefined);
-              setSearchUsername("");
-              fetchVideos();
-            }}
-            className="text-muted-foreground tracking-[-0.5px]"
-          >
-            Clear filters
+          <Button onClick={handleSearch} variant="secondary" size="sm" className="tracking-[-0.5px] h-8 text-xs">
+            Apply
           </Button>
-        )}
+
+          {(startDate || endDate) && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                setStartDate(undefined);
+                setEndDate(undefined);
+                setPagination(prev => ({ ...prev, page: 1 }));
+                setTimeout(fetchVideos, 0);
+              }}
+              className="text-muted-foreground tracking-[-0.5px] h-8 text-xs"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Stats Summary */}
-      {videos.length > 0 && (
-        <div className="flex items-center gap-6 text-sm text-muted-foreground">
-          <span className="tracking-[-0.5px]">{pagination.total} videos</span>
-          <span className="flex items-center gap-1">
-            <Eye className="h-4 w-4" />
-            {formatNumber(videos.reduce((sum, v) => sum + (v.latest_views || 0), 0))} total views
-          </span>
-          <span className="flex items-center gap-1">
-            <Heart className="h-4 w-4" />
-            {formatNumber(videos.reduce((sum, v) => sum + (v.latest_likes || 0), 0))} total likes
-          </span>
-        </div>
-      )}
-
       {/* Table */}
-      <div className="rounded-lg border bg-card/50 overflow-hidden">
+      <div className="rounded-lg border border-border/50 bg-card/30 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="tracking-[-0.5px]">Video</TableHead>
-              <TableHead className="tracking-[-0.5px]">Username</TableHead>
-              <TableHead className="tracking-[-0.5px]">Platform</TableHead>
-              <TableHead 
-                className="cursor-pointer tracking-[-0.5px]" 
-                onClick={() => handleSort('uploaded_at')}
-              >
-                Uploaded <SortIcon field="uploaded_at" />
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer tracking-[-0.5px]" 
-                onClick={() => handleSort('latest_views')}
-              >
-                <Eye className="h-4 w-4 inline mr-1" />
-                Views <SortIcon field="latest_views" />
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer tracking-[-0.5px]" 
-                onClick={() => handleSort('latest_likes')}
-              >
-                <Heart className="h-4 w-4 inline mr-1" />
-                Likes <SortIcon field="latest_likes" />
-              </TableHead>
-              <TableHead className="tracking-[-0.5px]">
-                <MessageSquare className="h-4 w-4 inline mr-1" />
-                Comments
-              </TableHead>
-              <TableHead className="tracking-[-0.5px]">
-                <Share2 className="h-4 w-4 inline mr-1" />
-                Shares
-              </TableHead>
-              <TableHead className="tracking-[-0.5px]">Status</TableHead>
-              <TableHead className="tracking-[-0.5px]">Link</TableHead>
+            <TableRow className="hover:bg-transparent border-b border-border/50">
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground w-[300px]">Video</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Account</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground">Upload Date</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Views</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Likes</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Comments</TableHead>
+              <TableHead className="tracking-[-0.5px] text-xs font-medium text-muted-foreground text-right">Shares</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 10 }).map((_, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-4 w-full" />
-                    </TableCell>
-                  ))}
+              Array.from({ length: 10 }).map((_, i) => (
+                <TableRow key={i} className="border-b border-border/30">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-12 w-[68px] rounded" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                  </TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
                 </TableRow>
               ))
             ) : videos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-12 text-muted-foreground tracking-[-0.5px]">
+                <TableCell colSpan={7} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
                   No videos found. Make sure your brand has a Shortimize API key and collection configured.
                 </TableCell>
               </TableRow>
             ) : (
               videos.map((video) => (
-                <TableRow key={video.ad_id} className="hover:bg-muted/30">
-                  <TableCell className="max-w-[200px] truncate tracking-[-0.5px]" title={video.title || 'Untitled'}>
-                    {video.title || 'Untitled'}
-                  </TableCell>
-                  <TableCell className="tracking-[-0.5px]">
-                    <span className="font-medium">@{video.username}</span>
+                <TableRow key={video.ad_id} className="border-b border-border/30 hover:bg-muted/20">
+                  <TableCell>
+                    <a 
+                      href={video.ad_link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 group"
+                    >
+                      <div className="relative h-12 w-[68px] rounded overflow-hidden bg-muted/50 flex-shrink-0">
+                        <img 
+                          src={getThumbnailUrl(video)} 
+                          alt={video.title || 'Video thumbnail'}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play className="h-4 w-4 text-white fill-white" />
+                        </div>
+                      </div>
+                      <span className="text-sm tracking-[-0.5px] line-clamp-2 group-hover:text-primary transition-colors">
+                        {video.title || 'Untitled'}
+                      </span>
+                    </a>
                   </TableCell>
                   <TableCell>
-                    <span className="text-lg" title={video.platform}>
+                    <div className="flex items-center gap-2">
                       {getPlatformIcon(video.platform)}
-                    </span>
+                      <span className="text-sm tracking-[-0.5px]">@{video.username}</span>
+                    </div>
                   </TableCell>
-                  <TableCell className="tracking-[-0.5px]">
+                  <TableCell className="text-sm tracking-[-0.5px] text-muted-foreground">
                     {video.uploaded_at ? format(new Date(video.uploaded_at), 'MMM d, yyyy') : '-'}
                   </TableCell>
-                  <TableCell className="tracking-[-0.5px] font-medium">
+                  <TableCell className="text-sm tracking-[-0.5px] text-right font-medium">
                     {formatNumber(video.latest_views)}
                   </TableCell>
-                  <TableCell className="tracking-[-0.5px]">
+                  <TableCell className="text-sm tracking-[-0.5px] text-right">
                     {formatNumber(video.latest_likes)}
                   </TableCell>
-                  <TableCell className="tracking-[-0.5px]">
+                  <TableCell className="text-sm tracking-[-0.5px] text-right">
                     {formatNumber(video.latest_comments)}
                   </TableCell>
-                  <TableCell className="tracking-[-0.5px]">
+                  <TableCell className="text-sm tracking-[-0.5px] text-right">
                     {formatNumber(video.latest_shares)}
-                  </TableCell>
-                  <TableCell>
-                    {video.removed ? (
-                      <Badge variant="destructive" className="tracking-[-0.5px]">Removed</Badge>
-                    ) : video.private ? (
-                      <Badge variant="secondary" className="tracking-[-0.5px]">Private</Badge>
-                    ) : (
-                      <Badge variant="outline" className="tracking-[-0.5px] text-green-500 border-green-500/30">Live</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {video.ad_link && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        className="h-8 w-8"
-                      >
-                        <a href={video.ad_link} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -334,35 +287,29 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
       </div>
 
       {/* Pagination */}
-      {pagination.total_pages > 1 && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground tracking-[-0.5px]">
-            Page {pagination.page} of {pagination.total_pages}
+      {pagination.total > 0 && (
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground tracking-[-0.5px]">
+            {startIndex} - {endIndex} of {pagination.total.toLocaleString()}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
               disabled={pagination.page <= 1}
-              onClick={() => {
-                setPagination(prev => ({ ...prev, page: prev.page - 1 }));
-                fetchVideos();
-              }}
-              className="tracking-[-0.5px]"
+              onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
             >
-              Previous
+              <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
               disabled={pagination.page >= pagination.total_pages}
-              onClick={() => {
-                setPagination(prev => ({ ...prev, page: prev.page + 1 }));
-                fetchVideos();
-              }}
-              className="tracking-[-0.5px]"
+              onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
             >
-              Next
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
