@@ -25,6 +25,14 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+}
 interface BrandMembership {
   brand_id: string;
   role: string;
@@ -81,30 +89,48 @@ export function AppSidebar() {
   const {
     theme
   } = useTheme();
+  const { isAdmin } = useAdminCheck();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [accountType, setAccountType] = useState<string>("creator");
   const [brandMemberships, setBrandMemberships] = useState<BrandMembership[]>([]);
+  const [allBrands, setAllBrands] = useState<Brand[]>([]);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
+  
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchBrandMemberships();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchAllBrands();
+    }
+  }, [isAdmin]);
+
   useEffect(() => {
     // Update current brand info when workspace changes
     if (!isCreatorMode && workspace) {
+      // Check in allBrands first (for admins), then in brandMemberships
+      const brandFromAll = allBrands.find(b => b.slug === workspace);
+      if (brandFromAll) {
+        setCurrentBrandName(brandFromAll.name);
+        setCurrentBrandLogo(brandFromAll.logo_url);
+        return;
+      }
       const brand = brandMemberships.find(m => m.brands.slug === workspace);
       if (brand) {
         setCurrentBrandName(brand.brands.name);
         setCurrentBrandLogo(brand.brands.logo_url);
       }
     }
-  }, [workspace, brandMemberships, isCreatorMode]);
+  }, [workspace, brandMemberships, allBrands, isCreatorMode]);
+
   const fetchProfile = async () => {
     if (!user) return;
     const {
@@ -118,6 +144,7 @@ export function AppSidebar() {
       setDisplayName(user.email || "");
     }
   };
+
   const fetchBrandMemberships = async () => {
     if (!user) return;
     const {
@@ -125,6 +152,16 @@ export function AppSidebar() {
     } = await supabase.from("brand_members").select("brand_id, role, brands(name, slug, logo_url)").eq("user_id", user.id);
     if (data) {
       setBrandMemberships(data as unknown as BrandMembership[]);
+    }
+  };
+
+  const fetchAllBrands = async () => {
+    const { data } = await supabase
+      .from("brands")
+      .select("id, name, slug, logo_url")
+      .order("name");
+    if (data) {
+      setAllBrands(data);
     }
   };
   const getInitial = () => {
@@ -201,14 +238,18 @@ export function AppSidebar() {
                 </div>
                 
                 {/* Workspace switcher in mobile menu */}
-                {brandMemberships.length > 0 && <div className="border-t border-border pt-3">
+                {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="border-t border-border pt-3">
                     <p className="text-xs text-muted-foreground mb-2">Switch Workspace</p>
-                    <div className="space-y-1">
+                    <div className="space-y-1 max-h-[200px] overflow-y-auto">
                       <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${isCreatorMode ? 'bg-accent' : 'hover:bg-accent/50'}`}>
                         <User className="w-4 h-4" />
                         <span className="text-sm">Creator Dashboard</span>
                       </button>
-                      {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${workspace === membership.brands.slug ? 'bg-accent' : 'hover:bg-accent/50'}`}>
+                      {isAdmin && allBrands.map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${workspace === brand.slug ? 'bg-accent' : 'hover:bg-accent/50'}`}>
+                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
+                          <span className="text-sm truncate">{brand.name}</span>
+                        </button>)}
+                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${workspace === membership.brands.slug ? 'bg-accent' : 'hover:bg-accent/50'}`}>
                           {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
                           <span className="text-sm truncate">{membership.brands.name}</span>
                         </button>)}
@@ -300,14 +341,24 @@ export function AppSidebar() {
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-[calc(100%-24px)] p-1.5 bg-[#141414] border-[#242424]" align="start" sideOffset={4}>
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 max-h-[400px] overflow-y-auto">
                 <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
                   <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                     <User className="w-3 h-3 text-neutral-400" />
                   </div>
                   <span className="text-xs font-medium text-white">Creator Dashboard</span>
                 </button>
-                {brandMemberships.length > 0 && <>
+                {isAdmin && allBrands.length > 0 && <>
+                    <div className="h-px bg-[#242424] my-1" />
+                    <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">All Brands</p>
+                    {allBrands.map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
+                        {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                            <Building2 className="w-3 h-3 text-neutral-400" />
+                          </div>}
+                        <span className="text-xs font-medium text-white truncate">{brand.name}</span>
+                      </button>)}
+                  </>}
+                {!isAdmin && brandMemberships.length > 0 && <>
                     <div className="h-px bg-[#242424] my-1" />
                     <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
                     {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
