@@ -1127,9 +1127,10 @@ export function CampaignAnalyticsTable({
     })
     .sort((a, b) => {
       if (transactionsSortBy === 'amount') {
+        // Use actual values so negatives sort correctly
         return transactionsSortDir === 'desc' 
-          ? Math.abs(Number(b.amount)) - Math.abs(Number(a.amount))
-          : Math.abs(Number(a.amount)) - Math.abs(Number(b.amount));
+          ? Number(b.amount) - Number(a.amount)
+          : Number(a.amount) - Number(b.amount);
       }
       // Default: sort by date
       return transactionsSortDir === 'desc'
@@ -1643,7 +1644,7 @@ export function CampaignAnalyticsTable({
                 <TableHeader>
                   <TableRow className="border-b border-[#141414] dark:border-[#141414] hover:bg-transparent">
                     <TableHead 
-                      className="text-foreground font-medium text-xs py-3 pl-4 tracking-[-0.5px] cursor-pointer hover:text-primary transition-colors"
+                      className="text-foreground font-medium text-xs py-3 pl-4 tracking-[-0.5px] cursor-pointer"
                       onClick={() => {
                         if (transactionsSortBy === 'date') {
                           setTransactionsSortDir(prev => prev === 'desc' ? 'asc' : 'desc');
@@ -1667,7 +1668,7 @@ export function CampaignAnalyticsTable({
                     <TableHead className="text-foreground font-medium text-xs py-3 tracking-[-0.5px]">Account</TableHead>
                     <TableHead className="text-foreground font-medium text-xs py-3 text-right tracking-[-0.5px]">Views</TableHead>
                     <TableHead 
-                      className="text-foreground font-medium text-xs py-3 text-right tracking-[-0.5px] cursor-pointer hover:text-primary transition-colors"
+                      className="text-foreground font-medium text-xs py-3 text-right tracking-[-0.5px] cursor-pointer"
                       onClick={() => {
                         if (transactionsSortBy === 'amount') {
                           setTransactionsSortDir(prev => prev === 'desc' ? 'asc' : 'desc');
