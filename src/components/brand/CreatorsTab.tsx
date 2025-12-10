@@ -245,14 +245,14 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       ) : (
         <>
           {/* Desktop Table */}
-          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50 dark:border dark:border-[#111111]">
+          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50 dark:border dark:border-[#111111] max-h-[600px] overflow-y-auto">
             <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-white">Creator</th>
-                  <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-white">Accounts</th>
-                  <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-white">Views</th>
-                  <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-white">Earnings</th>
+              <thead className="sticky top-0 bg-card z-10">
+                <tr className="border-b border-[#111111]">
+                  <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Creator</th>
+                  <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Accounts</th>
+                  <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Views</th>
+                  <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Earnings</th>
                 </tr>
               </thead>
               <tbody>
