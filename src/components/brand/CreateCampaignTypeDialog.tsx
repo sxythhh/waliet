@@ -38,7 +38,7 @@ export function CreateCampaignTypeDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[520px] bg-[#0a0a0a] border-[#1a1a1a]">
+      <DialogContent className="sm:max-w-[520px] bg-[#0a0a0a] border-transparent">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Create New Campaign</DialogTitle>
         </DialogHeader>
@@ -46,10 +46,10 @@ export function CreateCampaignTypeDialog({
         <div className="space-y-6 pt-2">
           {/* Blueprint Select */}
           <Select value={selectedBlueprint} onValueChange={setSelectedBlueprint}>
-            <SelectTrigger className="w-full bg-[#141414] border-[#242424] h-12">
+            <SelectTrigger className="w-full bg-[#141414] border-transparent h-12">
               <SelectValue placeholder="Select a blueprint" />
             </SelectTrigger>
-            <SelectContent className="bg-[#141414] border-[#242424]">
+            <SelectContent className="bg-[#141414] border-transparent">
               <SelectItem value="new">New Blueprint</SelectItem>
             </SelectContent>
           </Select>
@@ -62,11 +62,14 @@ export function CreateCampaignTypeDialog({
               {/* Clipping Option */}
               <button
                 onClick={handleClippingClick}
-                className="flex flex-col items-start p-4 rounded-xl bg-[#141414] border border-[#242424] hover:border-[#3a3a3a] transition-all text-left group"
+                className="flex flex-col items-start p-4 rounded-xl bg-[#141414] border-transparent hover:bg-[#1a1a1a] transition-all text-left group"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                    <Sparkles className="h-5 w-5 text-amber-500" />
+                  <div 
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#a7751e', borderTop: '2px solid #dda038' }}
+                  >
+                    <Sparkles className="h-5 w-5 text-white" />
                   </div>
                   <span className="font-semibold">Clipping</span>
                 </div>
@@ -78,11 +81,14 @@ export function CreateCampaignTypeDialog({
               {/* Managed Option */}
               <button
                 onClick={handleManagedClick}
-                className="flex flex-col items-start p-4 rounded-xl bg-[#141414] border border-[#242424] hover:border-[#3a3a3a] transition-all text-left group"
+                className="flex flex-col items-start p-4 rounded-xl bg-[#141414] border-transparent hover:bg-[#1a1a1a] transition-all text-left group"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-primary" />
+                  <div 
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#1e5aa7', borderTop: '2px solid #3888dd' }}
+                  >
+                    <Crown className="h-5 w-5 text-white" />
                   </div>
                   <span className="font-semibold">Managed</span>
                 </div>
