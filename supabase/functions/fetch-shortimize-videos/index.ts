@@ -59,7 +59,11 @@ serve(async (req) => {
     params.append('order_direction', orderDirection);
     
     if (collection) {
+      // URL encode the collection name for filtering
       params.append('collections', encodeURIComponent(collection.trim()));
+      console.log('Filtering by collection:', collection.trim());
+    } else {
+      console.log('No collection specified - this may return all organization videos');
     }
     if (username) {
       params.append('username', username);

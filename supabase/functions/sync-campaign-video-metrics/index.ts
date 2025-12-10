@@ -65,7 +65,7 @@ serve(async (req) => {
           const url = new URL('https://api.shortimize.com/videos');
           url.searchParams.set('limit', '100');
           url.searchParams.set('page', page.toString());
-          url.searchParams.set('label_names', brand.collection_name);
+          url.searchParams.set('collections', encodeURIComponent(brand.collection_name));
 
           const response = await fetch(url.toString(), {
             method: 'GET',
