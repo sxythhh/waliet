@@ -18,6 +18,7 @@ import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
+import discordIcon from "@/assets/discord-icon-new.png";
 import { useNavigate } from "react-router-dom";
 
 interface OnboardingDialogProps {
@@ -42,8 +43,12 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Common
+  // Personal info
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [age, setAge] = useState("");
+  const [discordConnected, setDiscordConnected] = useState(false);
 
   // Creator fields
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("tiktok");
@@ -60,7 +65,49 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
   const [businessType, setBusinessType] = useState("");
   const [companyName, setCompanyName] = useState("");
 
+  // Check if Discord is already connected
+  useEffect(() => {
+    const checkDiscordConnection = async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("discord_id, full_name")
+        .eq("id", userId)
+        .single();
+      
+      if (profile) {
+        setDiscordConnected(!!profile.discord_id);
+        if (profile.full_name) {
+          const nameParts = profile.full_name.split(" ");
+          setFirstName(nameParts[0] || "");
+          setLastName(nameParts.slice(1).join(" ") || "");
+        }
+      }
+    };
+    
+    if (open && userId) {
+      checkDiscordConnection();
+    }
+  }, [open, userId]);
+
   const totalSteps = accountType === "creator" ? 5 : 3;
+
+  const handleDiscordConnect = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+        scopes: 'identify email'
+      }
+    });
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    }
+  };
 
   const handleNext = async () => {
     if (step === 1 && !accountType) {
@@ -72,22 +119,33 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
     }
 
     if (step === 2) {
-      if (!phoneNumber) {
+      if (!firstName || !lastName || !phoneNumber) {
         toast({
           variant: "destructive",
-          title: "Please enter your phone number"
+          title: "Please fill in all required fields"
+        });
+        return;
+      }
+
+      if (accountType === "creator" && !age) {
+        toast({
+          variant: "destructive",
+          title: "Please enter your age"
         });
         return;
       }
 
       setLoading(true);
       try {
+        const updateData: any = {
+          full_name: `${firstName} ${lastName}`,
+          phone_number: phoneNumber,
+          account_type: accountType
+        };
+
         const { error } = await supabase
           .from("profiles")
-          .update({ 
-            phone_number: phoneNumber,
-            account_type: accountType 
-          })
+          .update(updateData)
           .eq("id", userId);
 
         if (error) throw error;
@@ -205,7 +263,6 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
         setLoading(true);
         try {
-          // Create brand
           const slug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
           const { data: brand, error } = await supabase.from("brands").insert({
             name: companyName,
@@ -219,7 +276,6 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
           if (error) throw error;
 
-          // Add user as brand owner
           if (brand) {
             await supabase.from("brand_members").insert({
               brand_id: brand.id,
@@ -266,7 +322,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] border-0 bg-[#0a0a0a]/98 backdrop-blur-xl p-0">
+      <DialogContent className="sm:max-w-[600px] border-0 bg-[#0a0a0a] p-0">
         <div className="p-8 space-y-6">
           {/* Progress */}
           <div className="flex items-center gap-2">
@@ -330,22 +386,82 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
             </div>
           )}
 
-          {/* Step 2: Phone number */}
+          {/* Step 2: Personal Information */}
           {step === 2 && (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold">Add Your Phone Number</h2>
-                <p className="text-muted-foreground">We'll use this to keep you updated</p>
+                <h2 className="text-2xl font-bold">Personal Information</h2>
+                <p className="text-muted-foreground">Tell us a bit about yourself</p>
               </div>
 
-              <div className="space-y-3">
-                <Label>Phone Number</Label>
-                <PhoneInput value={phoneNumber} onChange={setPhoneNumber} />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>First Name</Label>
+                    <Input
+                      placeholder="John"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Last Name</Label>
+                    <Input
+                      placeholder="Doe"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Phone Number</Label>
+                  <PhoneInput value={phoneNumber} onChange={setPhoneNumber} />
+                </div>
+
+                {accountType === "creator" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Age</Label>
+                      <Input
+                        type="number"
+                        placeholder="18"
+                        min="13"
+                        max="120"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
+                      />
+                    </div>
+
+                    {!discordConnected && (
+                      <div className="space-y-2">
+                        <Label>Discord (Optional)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full h-12 bg-[#5865F2] hover:bg-[#4752C4] text-white border-0"
+                          onClick={handleDiscordConnect}
+                        >
+                          <img src={discordIcon} alt="Discord" className="h-5 w-5 mr-2" />
+                          Connect Discord
+                        </Button>
+                      </div>
+                    )}
+
+                    {discordConnected && (
+                      <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+                        <img src={discordIcon} alt="Discord" className="h-5 w-5" />
+                        <span className="text-sm text-muted-foreground">Discord connected</span>
+                        <Check className="h-4 w-4 text-green-500 ml-auto" />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="flex gap-3">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setStep(step - 1)}
                   className="flex-1"
                 >
@@ -353,7 +469,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                 </Button>
                 <Button
                   onClick={handleNext}
-                  disabled={loading || !phoneNumber}
+                  disabled={loading || !firstName || !lastName || !phoneNumber || (accountType === "creator" && !age)}
                   className="flex-1"
                 >
                   {loading ? "Saving..." : "Continue"}
@@ -413,7 +529,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
               <div className="flex gap-3">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setStep(step - 1)}
                   className="flex-1"
                 >
@@ -523,7 +639,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
               <div className="flex gap-3">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setStep(step - 1)}
                   className="flex-1"
                 >
@@ -662,7 +778,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
               <div className="flex gap-3">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setStep(step - 1)}
                   className="flex-1"
                 >
