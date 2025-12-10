@@ -12,20 +12,30 @@ serve(async (req) => {
   }
 
   try {
-    const { brandId, collectionName } = await req.json();
+    const { 
+      brandId, 
+      collectionName,
+      page = 1,
+      limit = 100,
+      orderBy = 'uploaded_at',
+      orderDirection = 'desc',
+      username,
+      uploadedAtStart,
+      uploadedAtEnd
+    } = await req.json();
 
-    if (!brandId || !collectionName) {
-      throw new Error('brandId and collectionName are required');
+    if (!brandId) {
+      throw new Error('brandId is required');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the brand's Shortimize API key
+    // Get the brand's Shortimize API key and collection name
     const { data: brand, error: brandError } = await supabase
       .from('brands')
-      .select('shortimize_api_key')
+      .select('shortimize_api_key, collection_name')
       .eq('id', brandId)
       .single();
 
@@ -38,10 +48,32 @@ serve(async (req) => {
       throw new Error('Shortimize API key not configured for this brand');
     }
 
+    // Use provided collection name or fall back to brand's collection
+    const collection = collectionName || brand.collection_name;
+
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    params.append('order_by', orderBy);
+    params.append('order_direction', orderDirection);
+    
+    if (collection) {
+      params.append('collections', encodeURIComponent(collection.trim()));
+    }
+    if (username) {
+      params.append('username', username);
+    }
+    if (uploadedAtStart) {
+      params.append('uploaded_at_start', uploadedAtStart);
+    }
+    if (uploadedAtEnd) {
+      params.append('uploaded_at_end', uploadedAtEnd);
+    }
+
     // Fetch videos from Shortimize API
-    const encodedCollection = encodeURIComponent(collectionName.trim());
     const response = await fetch(
-      `https://api.shortimize.com/videos?collections=${encodedCollection}&limit=100`,
+      `https://api.shortimize.com/videos?${params.toString()}`,
       {
         headers: {
           'Authorization': `Bearer ${brand.shortimize_api_key}`,
@@ -57,7 +89,10 @@ serve(async (req) => {
 
     const result = await response.json();
 
-    return new Response(JSON.stringify(result.data || []), {
+    return new Response(JSON.stringify({
+      videos: result.data || [],
+      pagination: result.pagination || { total: 0, page: 1, limit: 100, total_pages: 0 }
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
