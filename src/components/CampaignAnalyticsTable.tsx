@@ -1573,7 +1573,7 @@ export function CampaignAnalyticsTable({
                       variant="ghost"
                       size="sm"
                       className={cn(
-                        "h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg",
+                        "h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg tracking-[-0.5px]",
                         transactionsStartDate ? "text-foreground" : "text-muted-foreground"
                       )}
                     >
@@ -1598,7 +1598,7 @@ export function CampaignAnalyticsTable({
                       variant="ghost"
                       size="sm"
                       className={cn(
-                        "h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg",
+                        "h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg tracking-[-0.5px]",
                         transactionsEndDate ? "text-foreground" : "text-muted-foreground"
                       )}
                     >
