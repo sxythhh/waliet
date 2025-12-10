@@ -133,9 +133,12 @@ export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewP
         </nav>
       </div>
 
-      {/* Content Area - Uses the existing CampaignAnalyticsTable for all tabs */}
+      {/* Content Area */}
       <div className="flex-1 overflow-auto">
-        <CampaignAnalyticsTable campaignId={campaignId} />
+        <CampaignAnalyticsTable 
+          campaignId={campaignId} 
+          view={activeDetailTab === 'payouts' ? 'transactions' : 'analytics'}
+        />
       </div>
     </div>
   );

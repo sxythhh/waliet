@@ -98,12 +98,14 @@ interface Transaction {
 interface CampaignAnalyticsTableProps {
   campaignId: string;
   onPaymentComplete?: () => void;
+  view?: 'analytics' | 'transactions' | 'budget';
 }
 type SortField = 'total_views' | 'average_video_views' | 'average_engagement_rate' | 'outperforming_video_rate';
 type SortDirection = 'asc' | 'desc';
 export function CampaignAnalyticsTable({
   campaignId,
-  onPaymentComplete
+  onPaymentComplete,
+  view = 'analytics'
 }: CampaignAnalyticsTableProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -131,7 +133,7 @@ export function CampaignAnalyticsTable({
     platform: string;
     account_username: string;
   }>>([]);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'transactions' | 'budget'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'transactions' | 'budget'>(view);
   const [transactionFilter, setTransactionFilter] = useState<'all' | 'earning' | 'balance_correction'>('all');
   const [exportStartDate, setExportStartDate] = useState<string>('');
   const [exportEndDate, setExportEndDate] = useState<string>('');
@@ -168,6 +170,11 @@ export function CampaignAnalyticsTable({
     setSelectedDateRange("all");
     setDateRanges([]);
   }, [campaignId]);
+
+  // Sync activeTab with view prop
+  useEffect(() => {
+    setActiveTab(view);
+  }, [view]);
 
   useEffect(() => {
     if (!isPaused) {
@@ -1195,43 +1202,6 @@ export function CampaignAnalyticsTable({
         {/* Summary Cards */}
         
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg w-fit">
-          <button 
-            onClick={() => { setActiveTab('analytics'); setTransactionsCurrentPage(1); }} 
-            className={`px-4 py-2 text-sm font-medium transition-all rounded-md ${
-              activeTab === 'analytics'
-                ? "bg-background text-foreground shadow-sm" 
-                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-            }`}
-          >
-            Analytics
-          </button>
-          <button 
-            onClick={() => { setActiveTab('transactions'); setTransactionsCurrentPage(1); }} 
-            className={`px-4 py-2 text-sm font-medium transition-all rounded-md flex items-center gap-1.5 ${
-              activeTab === 'transactions'
-                ? "bg-background text-foreground shadow-sm" 
-                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-            }`}
-          >
-            <Receipt className="h-4 w-4" />
-            Transactions
-            <span className="text-xs opacity-60">({transactions.filter(t => t.type === 'earning').length})</span>
-          </button>
-          <button 
-            onClick={() => { setActiveTab('budget'); setTransactionsCurrentPage(1); }} 
-            className={`px-4 py-2 text-sm font-medium transition-all rounded-md flex items-center gap-1.5 ${
-              activeTab === 'budget'
-                ? "bg-background text-foreground shadow-sm" 
-                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-            }`}
-          >
-            <DollarSign className="h-4 w-4" />
-            Budget
-            <span className="text-xs opacity-60">({budgetTransactions.length})</span>
-          </button>
-        </div>
 
         {/* CSV Period Selector */}
         {activeTab === 'analytics' && dateRanges.length > 0 && <div className="flex items-center gap-3 mt-4">
