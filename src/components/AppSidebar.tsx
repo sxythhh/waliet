@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
-
 interface BrandMembership {
   brand_id: string;
   role: string;
@@ -31,21 +30,40 @@ interface BrandMembership {
     logo_url: string | null;
   };
 }
-
-const creatorMenuItems = [
-  { title: "Campaigns", tab: "campaigns", icon: null as any },
-  { title: "Wallet", tab: "wallet", icon: Dock },
-  { title: "Discover", tab: "discover", icon: Compass },
-  { title: "Profile", tab: "profile", icon: CircleUser },
-];
-
-const brandMenuItems = [
-  { title: "Campaigns", tab: "campaigns", icon: null as any },
-  { title: "Blueprints", tab: "blueprints", icon: Layers },
-  { title: "Creators", tab: "creators", icon: Users },
-  { title: "Profile", tab: "profile", icon: CircleUser },
-];
-
+const creatorMenuItems = [{
+  title: "Campaigns",
+  tab: "campaigns",
+  icon: null as any
+}, {
+  title: "Wallet",
+  tab: "wallet",
+  icon: Dock
+}, {
+  title: "Discover",
+  tab: "discover",
+  icon: Compass
+}, {
+  title: "Profile",
+  tab: "profile",
+  icon: CircleUser
+}];
+const brandMenuItems = [{
+  title: "Campaigns",
+  tab: "campaigns",
+  icon: null as any
+}, {
+  title: "Blueprints",
+  tab: "blueprints",
+  icon: Layers
+}, {
+  title: "Creators",
+  tab: "creators",
+  icon: Users
+}, {
+  title: "Profile",
+  tab: "profile",
+  icon: CircleUser
+}];
 export function AppSidebar() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -53,9 +71,12 @@ export function AppSidebar() {
   const currentTab = searchParams.get("tab") || "campaigns";
   const workspace = searchParams.get("workspace") || "creator";
   const isCreatorMode = workspace === "creator";
-  
-  const { user } = useAuth();
-  const { theme } = useTheme();
+  const {
+    user
+  } = useAuth();
+  const {
+    theme
+  } = useTheme();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [accountType, setAccountType] = useState<string>("creator");
@@ -63,16 +84,13 @@ export function AppSidebar() {
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
-
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
-
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchBrandMemberships();
     }
   }, [user]);
-
   useEffect(() => {
     // Update current brand info when workspace changes
     if (!isCreatorMode && workspace) {
@@ -83,14 +101,11 @@ export function AppSidebar() {
       }
     }
   }, [workspace, brandMemberships, isCreatorMode]);
-
   const fetchProfile = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("avatar_url, full_name, username, account_type")
-      .eq("id", user.id)
-      .single();
+    const {
+      data
+    } = await supabase.from("profiles").select("avatar_url, full_name, username, account_type").eq("id", user.id).single();
     if (data) {
       setAvatarUrl(data.avatar_url);
       setDisplayName(data.full_name || data.username || user.email || "");
@@ -99,28 +114,23 @@ export function AppSidebar() {
       setDisplayName(user.email || "");
     }
   };
-
   const fetchBrandMemberships = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("brand_members")
-      .select("brand_id, role, brands(name, slug, logo_url)")
-      .eq("user_id", user.id);
+    const {
+      data
+    } = await supabase.from("brand_members").select("brand_id, role, brands(name, slug, logo_url)").eq("user_id", user.id);
     if (data) {
       setBrandMemberships(data as unknown as BrandMembership[]);
     }
   };
-
   const getInitial = () => {
     return displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
   };
-
   const handleTabClick = (tab: string) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("tab", tab);
     setSearchParams(newParams);
   };
-
   const handleWorkspaceChange = (newWorkspace: string) => {
     const newParams = new URLSearchParams();
     if (newWorkspace === "creator") {
@@ -132,38 +142,29 @@ export function AppSidebar() {
     setSearchParams(newParams);
     setWorkspaceOpen(false);
   };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
     toast.success("Logged out successfully");
   };
-
   const getWorkspaceDisplayName = () => {
     if (isCreatorMode) return "Creator Dashboard";
     return currentBrandName || "Brand Dashboard";
   };
-
   const getWorkspaceIcon = () => {
     if (isCreatorMode) {
-      return (
-        <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
+      return <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
           <User className="w-3.5 h-3.5 text-neutral-400" />
-        </div>
-      );
+        </div>;
     }
     if (currentBrandLogo) {
       return <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" />;
     }
-    return (
-      <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
+    return <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
         <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-      </div>
-    );
+      </div>;
   };
-
-  return (
-    <>
+  return <>
       {/* Mobile Header - Top */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-[#0a0a0a] px-4">
         <div className="flex items-center gap-2">
@@ -196,34 +197,19 @@ export function AppSidebar() {
                 </div>
                 
                 {/* Workspace switcher in mobile menu */}
-                {brandMemberships.length > 0 && (
-                  <div className="border-t border-border pt-3">
+                {brandMemberships.length > 0 && <div className="border-t border-border pt-3">
                     <p className="text-xs text-muted-foreground mb-2">Switch Workspace</p>
                     <div className="space-y-1">
-                      <button 
-                        onClick={() => handleWorkspaceChange("creator")}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${isCreatorMode ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                      >
+                      <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${isCreatorMode ? 'bg-accent' : 'hover:bg-accent/50'}`}>
                         <User className="w-4 h-4" />
                         <span className="text-sm">Creator Dashboard</span>
                       </button>
-                      {brandMemberships.map(membership => (
-                        <button 
-                          key={membership.brand_id} 
-                          onClick={() => handleWorkspaceChange(membership.brands.slug)}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${workspace === membership.brands.slug ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                        >
-                          {membership.brands.logo_url ? (
-                            <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" />
-                          ) : (
-                            <Building2 className="w-4 h-4" />
-                          )}
+                      {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${workspace === membership.brands.slug ? 'bg-accent' : 'hover:bg-accent/50'}`}>
+                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
                           <span className="text-sm truncate">{membership.brands.name}</span>
-                        </button>
-                      ))}
+                        </button>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
                 
                 <div className="space-y-1">
                   <button className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity" onClick={() => navigate("/leaderboard")}>
@@ -255,42 +241,24 @@ export function AppSidebar() {
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-[#0a0a0a] px-2">
         {menuItems.map(item => {
-          const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-          return (
-            <button 
-              key={item.title} 
-              onClick={() => handleTabClick(item.tab)} 
-              className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
-            >
-              {item.tab === "campaigns" ? (
-                <div className="relative h-6 w-6">
+        const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
+        return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+              {item.tab === "campaigns" ? <div className="relative h-6 w-6">
                   <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={webStoriesActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div>
-              ) : item.tab === "wallet" ? (
-                <div className="relative h-6 w-6">
+                </div> : item.tab === "wallet" ? <div className="relative h-6 w-6">
                   <img src={walletInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={walletActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div>
-              ) : item.tab === "discover" ? (
-                <div className="relative h-6 w-6">
+                </div> : item.tab === "discover" ? <div className="relative h-6 w-6">
                   <img src={discoverInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={discoverActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div>
-              ) : item.tab === "profile" ? (
-                <div className="relative h-6 w-6">
+                </div> : item.tab === "profile" ? <div className="relative h-6 w-6">
                   <img src={profileInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={profileActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div>
-              ) : item.tab === "analytics" ? (
-                <BarChart3 className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />
-              ) : (
-                <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />
-              )}
+                </div> : item.tab === "analytics" ? <BarChart3 className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />}
               <span className="text-[10px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
-            </button>
-          );
-        })}
+            </button>;
+      })}
       </nav>
 
       {/* Desktop Sidebar */}
@@ -323,37 +291,22 @@ export function AppSidebar() {
             </PopoverTrigger>
             <PopoverContent className="w-[calc(100%-24px)] p-1.5 bg-[#141414] border-[#242424]" align="start" sideOffset={4}>
               <div className="space-y-0.5">
-                <button 
-                  onClick={() => handleWorkspaceChange("creator")} 
-                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}
-                >
+                <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
                   <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                     <User className="w-3 h-3 text-neutral-400" />
                   </div>
                   <span className="text-xs font-medium text-white">Creator Dashboard</span>
                 </button>
-                {brandMemberships.length > 0 && (
-                  <>
+                {brandMemberships.length > 0 && <>
                     <div className="h-px bg-[#242424] my-1" />
                     <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
-                    {brandMemberships.map(membership => (
-                      <button 
-                        key={membership.brand_id} 
-                        onClick={() => handleWorkspaceChange(membership.brands.slug)} 
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}
-                      >
-                        {membership.brands.logo_url ? (
-                          <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
-                        ) : (
-                          <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                    {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
+                        {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                             <Building2 className="w-3 h-3 text-neutral-400" />
-                          </div>
-                        )}
+                          </div>}
                         <span className="text-xs font-medium text-white truncate">{membership.brands.name}</span>
-                      </button>
-                    ))}
-                  </>
-                )}
+                      </button>)}
+                  </>}
               </div>
             </PopoverContent>
           </Popover>
@@ -363,56 +316,29 @@ export function AppSidebar() {
         <nav className="flex-1 py-0 px-0">
           <div>
             {menuItems.map(item => {
-              const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-              return (
-                <button 
-                  key={item.title} 
-                  onClick={() => handleTabClick(item.tab)} 
-                  className={`w-full flex items-center gap-2 px-3 py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`}
-                >
-                  {item.tab === "campaigns" ? (
-                    <div className="relative h-6 w-6">
+            const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
+            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-2 px-3 py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`}>
+                  {item.tab === "campaigns" ? <div className="relative h-6 w-6">
                       <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={webStoriesActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div>
-                  ) : item.tab === "wallet" ? (
-                    <div className="relative h-6 w-6">
+                    </div> : item.tab === "wallet" ? <div className="relative h-6 w-6">
                       <img src={walletInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={walletActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div>
-                  ) : item.tab === "discover" ? (
-                    <div className="relative h-6 w-6">
+                    </div> : item.tab === "discover" ? <div className="relative h-6 w-6">
                       <img src={discoverInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={discoverActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div>
-                  ) : item.tab === "profile" ? (
-                    <div className="relative h-6 w-6">
+                    </div> : item.tab === "profile" ? <div className="relative h-6 w-6">
                       <img src={profileInactive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={profileActive} alt="" className={`absolute inset-0 h-6 w-6 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div>
-                  ) : item.tab === "analytics" ? (
-                    <BarChart3 className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />
-                  ) : (
-                    <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />
-                  )}
+                    </div> : item.tab === "analytics" ? <BarChart3 className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />}
                   <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">{item.title}</span>
-                </button>
-              );
-            })}
+                </button>;
+          })}
           </div>
 
           {/* Secondary Links */}
           <div>
-            <button 
-              onClick={() => window.open("https://discord.gg/virality", "_blank")} 
-              className="w-full flex items-center justify-between px-3 py-2.5 text-[#6f6f6f] hover:text-white hover:bg-[#0e0e0e] transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <img src={discordIcon} alt="Discord" className="w-6 h-6 rounded" />
-                <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">Discord</span>
-              </div>
-              <ArrowUpRight className="w-4 h-4 opacity-50" />
-            </button>
+            
           </div>
         </nav>
 
@@ -429,16 +355,11 @@ export function AppSidebar() {
               <p className="text-sm font-medium text-white truncate">{displayName}</p>
               <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
             </div>
-            <button 
-              onClick={handleSignOut} 
-              className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors" 
-              title="Log out"
-            >
+            <button onClick={handleSignOut} className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors" title="Log out">
               <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
       </aside>
-    </>
-  );
+    </>;
 }
