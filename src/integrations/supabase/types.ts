@@ -18,11 +18,19 @@ export type Database = {
         Row: {
           assets: Json | null
           brand_id: string
+          brand_voice: string | null
+          call_to_action: string | null
           content: string | null
+          content_guidelines: string | null
           created_at: string
+          dos_and_donts: Json | null
+          example_videos: Json | null
+          hashtags: string[] | null
+          hooks: Json | null
           id: string
           platforms: string[] | null
           status: string
+          talking_points: Json | null
           target_personas: Json | null
           title: string
           updated_at: string
@@ -30,11 +38,19 @@ export type Database = {
         Insert: {
           assets?: Json | null
           brand_id: string
+          brand_voice?: string | null
+          call_to_action?: string | null
           content?: string | null
+          content_guidelines?: string | null
           created_at?: string
+          dos_and_donts?: Json | null
+          example_videos?: Json | null
+          hashtags?: string[] | null
+          hooks?: Json | null
           id?: string
           platforms?: string[] | null
           status?: string
+          talking_points?: Json | null
           target_personas?: Json | null
           title?: string
           updated_at?: string
@@ -42,11 +58,19 @@ export type Database = {
         Update: {
           assets?: Json | null
           brand_id?: string
+          brand_voice?: string | null
+          call_to_action?: string | null
           content?: string | null
+          content_guidelines?: string | null
           created_at?: string
+          dos_and_donts?: Json | null
+          example_videos?: Json | null
+          hashtags?: string[] | null
+          hooks?: Json | null
           id?: string
           platforms?: string[] | null
           status?: string
+          talking_points?: Json | null
           target_personas?: Json | null
           title?: string
           updated_at?: string
