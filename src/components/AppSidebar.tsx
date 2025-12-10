@@ -155,7 +155,7 @@ export function AppSidebar() {
                   <img src={profileInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={profileActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : <item.icon className={`h-6 w-6 ${isActive ? 'text-blue-500' : ''}`} />}
-              <span className="text-[10px] font-medium">{item.title}</span>
+              <span className="text-[10px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
             </button>;
       })}
       </nav>
