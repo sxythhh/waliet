@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
+
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
@@ -186,11 +186,20 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
         />
       </div>
 
+      {/* Embed Section */}
+      <div className="w-full h-[250px] rounded-xl overflow-hidden">
+        <iframe
+          src="https://joinvirality.com/pickplan-4"
+          className="w-full h-full border-0"
+          title="Pick Plan"
+        />
+      </div>
+
       {/* Campaigns Grid */}
       {campaigns.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Campaigns</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {campaigns.map(campaign => {
               const usedBudget = Number(campaign.budget_used || 0);
               const budgetPercentage = Number(campaign.budget) > 0 
@@ -200,7 +209,7 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
               return (
                 <Card 
                   key={campaign.id} 
-                  className="group bg-card border transition-all duration-300 flex flex-col overflow-hidden cursor-pointer hover:bg-accent/50"
+                  className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer"
                   onClick={() => handleCampaignClick(campaign)}
                 >
                   {campaign.banner_url && (
@@ -212,9 +221,9 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
                       />
                     </div>
                   )}
-                  <CardContent className="p-4 flex-1 flex flex-col gap-3">
+                  <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
                     <div className="flex items-start justify-between">
-                      <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1">
+                      <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1 group-hover:underline">
                         {campaign.title}
                       </h3>
                       <div className="flex gap-1" onClick={e => e.stopPropagation()}>
@@ -242,17 +251,22 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
                     </div>
 
                     {/* Budget Progress */}
-                    <div className="rounded-lg p-3 space-y-2 bg-muted/50">
+                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
                       <div className="flex items-baseline justify-between">
-                        <div className="flex items-baseline gap-1.5">
+                        <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
                           <span className="text-base font-bold tabular-nums">${usedBudget.toLocaleString()}</span>
-                          <span className="text-xs text-muted-foreground font-medium">/ ${Number(campaign.budget).toLocaleString()}</span>
+                          <span className="text-xs text-muted-foreground font-semibold">/ ${Number(campaign.budget).toLocaleString()}</span>
                         </div>
                       </div>
                       
-                      <Progress value={budgetPercentage} className="h-1.5" />
+                      <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
+                        <div 
+                          className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" 
+                          style={{ width: `${budgetPercentage}%` }} 
+                        />
+                      </div>
                       
-                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
                         <span>{budgetPercentage.toFixed(0)}% used</span>
                         <span>${Number(campaign.rpm_rate).toFixed(2)} RPM</span>
                       </div>
