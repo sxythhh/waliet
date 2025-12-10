@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.create-campaign-webhook]
 verify_jwt = false
+
+[functions.sync-campaign-video-metrics]
+verify_jwt = false
