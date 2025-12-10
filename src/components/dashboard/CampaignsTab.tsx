@@ -559,7 +559,7 @@ export function CampaignsTab({
                   e.stopPropagation();
                   setSelectedAccount(account);
                   setManageAccountDialogOpen(true);
-                }} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:brightness-95 transition-colors cursor-pointer border border-border">
+                }} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:brightness-95 transition-colors cursor-pointer border border-[#242424]/0">
                         <div className="w-4 h-4">
                           <img src={getPlatformIcon(account.platform) || ''} alt={account.platform} className="w-full h-full" />
                         </div>
@@ -604,7 +604,7 @@ export function CampaignsTab({
                   <Button variant="ghost" size="sm" onClick={e => {
                 e.stopPropagation();
                 setDialogOpen(true);
-              }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-md">
+              }} className="w-full h-8 text-[11px] font-instrument tracking-tight bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-md text-center border-0">
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Link Account
                   </Button>
