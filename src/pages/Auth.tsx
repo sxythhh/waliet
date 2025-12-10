@@ -11,11 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import viralityLogo from "@/assets/virality-logo.webp";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") === "signup" ? "signup" : "signin";
-  const { trackReferral } = useReferralTracking();
+  const {
+    trackReferral
+  } = useReferralTracking();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -109,7 +110,6 @@ export default function Auth() {
       });
     }
   };
-
   const handleDiscordSignIn = async () => {
     setLoading(true);
     const {
@@ -129,7 +129,6 @@ export default function Auth() {
       });
     }
   };
-
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const {
@@ -149,22 +148,20 @@ export default function Auth() {
       });
     }
   };
-
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setLoading(true);
-    
     try {
-      const { error } = await supabase.functions.invoke('send-password-reset', {
-        body: { 
+      const {
+        error
+      } = await supabase.functions.invoke('send-password-reset', {
+        body: {
           email: resetEmail,
           redirectTo: `${window.location.origin}/auth`
         }
       });
-
       setLoading(false);
-
       if (error) {
         toast({
           variant: "destructive",
@@ -188,11 +185,12 @@ export default function Auth() {
       });
     }
   };
-
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({
+    const {
+      error
+    } = await supabase.auth.updateUser({
       password: newPassword
     });
     setLoading(false);
@@ -227,22 +225,8 @@ export default function Auth() {
               <div className="space-y-2">
                 <Label htmlFor="new-password" className="text-sm font-medium">New Password</Label>
                 <div className="relative">
-                  <Input
-                    id="new-password"
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                    minLength={6}
-                    className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <Input id="new-password" type={showNewPassword ? "text" : "password"} placeholder="Enter new password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required disabled={loading} minLength={6} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
+                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
@@ -255,12 +239,11 @@ export default function Auth() {
         </Card>
       </div>;
   }
-
   return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md border bg-card">
         <CardHeader className="text-center space-y-1 pb-0 bg-card mt-2">
           <div className="flex justify-center">
-            <img src={viralityLogo} alt="Virality Logo" className="h-12 w-auto" />
+            <img alt="Virality Logo" className="h-12 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
           </div>
           <div className="space-y-2">
             <CardTitle className="text-2xl font-semibold tracking-tight">Welcome to Virality</CardTitle>
@@ -285,11 +268,7 @@ export default function Auth() {
                     <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
                     <div className="relative">
                       <Input id="signin-password" type={showSignInPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
-                      <button
-                        type="button"
-                        onClick={() => setShowSignInPassword(!showSignInPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      >
+                      <button type="button" onClick={() => setShowSignInPassword(!showSignInPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                         {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
@@ -306,26 +285,12 @@ export default function Auth() {
                             Enter your email address and we'll send you a link to reset your password.
                           </DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handlePasswordReset} className="space-y-4 mt-4" onClick={(e) => e.stopPropagation()}>
+                        <form onSubmit={handlePasswordReset} className="space-y-4 mt-4" onClick={e => e.stopPropagation()}>
                           <div className="space-y-2">
                             <Label htmlFor="reset-email">Email</Label>
-                            <Input
-                              id="reset-email"
-                              type="email"
-                              placeholder="you@example.com"
-                              value={resetEmail}
-                              onChange={(e) => setResetEmail(e.target.value)}
-                              required
-                              disabled={loading}
-                              className="h-11 bg-background border-2 border-transparent focus-visible:border-primary"
-                            />
+                            <Input id="reset-email" type="email" placeholder="you@example.com" value={resetEmail} onChange={e => setResetEmail(e.target.value)} required disabled={loading} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary" />
                           </div>
-                          <Button 
-                            type="submit" 
-                            className="w-full" 
-                            disabled={loading}
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <Button type="submit" className="w-full" disabled={loading} onClick={e => e.stopPropagation()}>
                             {loading ? "Sending..." : "Send Reset Link"}
                           </Button>
                         </form>
@@ -355,11 +320,7 @@ export default function Auth() {
                   <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
                   <div className="relative">
                     <Input id="signup-password" type={showSignUpPassword ? "text" : "password"} placeholder="Create secure password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-11 bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10" />
-                    <button
-                      type="button"
-                      onClick={() => setShowSignUpPassword(!showSignUpPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
+                    <button type="button" onClick={() => setShowSignUpPassword(!showSignUpPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                       {showSignUpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
