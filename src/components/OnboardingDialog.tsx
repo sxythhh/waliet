@@ -119,7 +119,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
     }
 
     if (step === 2) {
-      if (!firstName || !lastName || !phoneNumber) {
+      if (!firstName || !phoneNumber) {
         toast({
           variant: "destructive",
           title: "Please fill in all required fields"
@@ -137,8 +137,9 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
       setLoading(true);
       try {
+        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
         const updateData: any = {
-          full_name: `${firstName} ${lastName}`,
+          full_name: fullName,
           phone_number: phoneNumber,
           account_type: accountType
         };
@@ -321,8 +322,8 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] border-0 bg-[#0a0a0a] p-0">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-[600px] border-0 bg-[#0a0a0a] p-0 [&>button]:hidden" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <div className="p-8 space-y-6">
           {/* Progress */}
           <div className="flex items-center gap-2">
@@ -405,7 +406,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Last Name</Label>
+                    <Label>Last Name <span className="text-muted-foreground text-xs">(optional)</span></Label>
                     <Input
                       placeholder="Doe"
                       value={lastName}
@@ -463,14 +464,14 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                 <Button
                   variant="ghost"
                   onClick={() => setStep(step - 1)}
-                  className="flex-1"
+                  className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   Back
                 </Button>
                 <Button
                   onClick={handleNext}
-                  disabled={loading || !firstName || !lastName || !phoneNumber || (accountType === "creator" && !age)}
-                  className="flex-1"
+                  disabled={loading || !firstName || !phoneNumber || (accountType === "creator" && !age)}
+                  className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   {loading ? "Saving..." : "Continue"}
                 </Button>
@@ -531,14 +532,14 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                 <Button
                   variant="ghost"
                   onClick={() => setStep(step - 1)}
-                  className="flex-1"
+                  className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   Back
                 </Button>
                 <Button
                   onClick={handleNext}
                   disabled={loading || !username || !accountLink}
-                  className="flex-1"
+                  className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   {loading ? "Connecting..." : "Continue"}
                 </Button>
@@ -641,7 +642,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                 <Button
                   variant="ghost"
                   onClick={() => setStep(step - 1)}
-                  className="flex-1"
+                  className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   Back
                 </Button>
@@ -652,7 +653,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                     (payoutMethod === "paypal" && !paypalEmail) ||
                     (payoutMethod === "crypto" && !walletAddress)
                   }
-                  className="flex-1"
+                  className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   {loading ? "Saving..." : "Continue"}
                 </Button>
@@ -709,7 +710,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                 </div>
               </div>
 
-              <Button onClick={handleNext} className="w-full h-12">
+              <Button onClick={handleNext} className="w-full h-12 font-[Geist] tracking-[-0.5px]">
                 Go to Dashboard
               </Button>
             </div>
@@ -745,34 +746,56 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
                 <div className="space-y-3">
                   <Label>Monthly Recurring Revenue (MRR)</Label>
-                  <Select value={mrr} onValueChange={setMrr}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0-10k">$0 - $10k</SelectItem>
-                      <SelectItem value="10k-50k">$10k - $50k</SelectItem>
-                      <SelectItem value="50k-100k">$50k - $100k</SelectItem>
-                      <SelectItem value="100k-500k">$100k - $500k</SelectItem>
-                      <SelectItem value="500k+">$500k+</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { value: "0-10k", label: "$0-10k", emoji: "🌱" },
+                      { value: "10k-50k", label: "$10k-50k", emoji: "🚀" },
+                      { value: "50k-100k", label: "$50k-100k", emoji: "⚡" },
+                      { value: "100k-500k", label: "$100k-500k", emoji: "🔥" },
+                      { value: "500k+", label: "$500k+", emoji: "💎" }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setMrr(option.value)}
+                        className={`p-3 rounded-lg transition-all text-center ${
+                          mrr === option.value
+                            ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
+                            : "bg-muted/30 hover:bg-muted/50"
+                        }`}
+                      >
+                        <span className="text-xl mb-1 block">{option.emoji}</span>
+                        <span className="text-xs font-medium">{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
                   <Label>Business Type</Label>
-                  <Select value={businessType} onValueChange={setBusinessType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="saas">SaaS</SelectItem>
-                      <SelectItem value="ecommerce">E-commerce</SelectItem>
-                      <SelectItem value="agency">Agency</SelectItem>
-                      <SelectItem value="consumer">Consumer Brand</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { value: "saas", label: "SaaS", emoji: "💻" },
+                      { value: "ecommerce", label: "E-commerce", emoji: "🛒" },
+                      { value: "agency", label: "Agency", emoji: "🏢" },
+                      { value: "consumer", label: "Consumer", emoji: "🛍️" },
+                      { value: "other", label: "Other", emoji: "✨" }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setBusinessType(option.value)}
+                        className={`p-3 rounded-lg transition-all text-center ${
+                          businessType === option.value
+                            ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
+                            : "bg-muted/30 hover:bg-muted/50"
+                        }`}
+                      >
+                        <span className="text-xl mb-1 block">{option.emoji}</span>
+                        <span className="text-xs font-medium">{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -780,14 +803,14 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                 <Button
                   variant="ghost"
                   onClick={() => setStep(step - 1)}
-                  className="flex-1"
+                  className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   Back
                 </Button>
                 <Button
                   onClick={handleNext}
                   disabled={loading || !companyName || !website || !mrr || !businessType}
-                  className="flex-1"
+                  className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   {loading ? "Creating..." : "Complete Setup"}
                 </Button>
