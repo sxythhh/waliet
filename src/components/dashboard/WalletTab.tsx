@@ -1039,7 +1039,7 @@ export function WalletTab() {
             }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => <div key={transaction.id} onClick={() => {
               setSelectedTransaction(transaction);
               setTransactionSheetOpen(true);
-            }} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors">
+            }} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 dark:bg-[#0a0a0a] cursor-pointer hover:bg-muted/50 dark:hover:bg-[#0a0a0a]/80 transition-colors">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       {/* Icon */}
                       <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center overflow-hidden ${transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? '' : transaction.type === 'earning' ? 'bg-green-500/15' : transaction.type === 'balance_correction' ? 'bg-orange-500/15' : transaction.type === 'referral' ? 'bg-purple-500/15' : transaction.type === 'transfer_received' ? 'bg-blue-500/15' : transaction.type === 'transfer_sent' ? 'bg-red-500/15' : 'bg-red-500/15'}`}>
