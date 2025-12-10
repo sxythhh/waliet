@@ -5,15 +5,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Upload } from "lucide-react";
+import { LogOut, Upload, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { EditBrandDialog } from "@/components/EditBrandDialog";
+
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  description: string | null;
+  brand_type: string | null;
+  assets_url: string | null;
+  home_url: string | null;
+  account_url: string | null;
+  show_account_tab: boolean;
+}
+
 export function UserSettingsTab() {
   const navigate = useNavigate();
+  const { currentBrand, isBrandMode } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [brand, setBrand] = useState<Brand | null>(null);
   const [profile, setProfile] = useState({
     username: "",
     full_name: "",
@@ -23,9 +40,34 @@ export function UserSettingsTab() {
     phone_number: "",
     avatar_url: ""
   });
+
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (isBrandMode && currentBrand?.id) {
+      fetchBrand();
+    }
+  }, [isBrandMode, currentBrand?.id]);
+
+  const fetchBrand = async () => {
+    if (!currentBrand?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("brands")
+        .select("*")
+        .eq("id", currentBrand.id)
+        .single();
+      
+      if (error) throw error;
+      setBrand(data);
+    } catch (error) {
+      console.error("Error fetching brand:", error);
+    }
+  };
+
   const fetchProfile = async () => {
     try {
       setLoading(true);
@@ -171,7 +213,69 @@ export function UserSettingsTab() {
       </div>;
   }
   return <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">User Settings</h2>
+      <h2 className="text-2xl font-bold text-white">Settings</h2>
+
+      {isBrandMode && brand && (
+        <Card className="bg-[#121212] border-none shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-white">Brand Settings</CardTitle>
+            <EditBrandDialog 
+              brand={brand} 
+              onSuccess={fetchBrand}
+              trigger={
+                <Button variant="ghost" size="sm" className="text-white/60 hover:text-white hover:bg-white/10">
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Brand
+                </Button>
+              }
+            />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              {brand.logo_url ? (
+                <img src={brand.logo_url} alt={brand.name} className="w-16 h-16 rounded-lg object-cover" />
+              ) : (
+                <div className="w-16 h-16 rounded-lg bg-white/10 flex items-center justify-center text-white text-xl font-bold">
+                  {brand.name?.[0]?.toUpperCase() || "B"}
+                </div>
+              )}
+              <div>
+                <p className="text-white font-medium text-lg">{brand.name}</p>
+                <p className="text-sm text-white/60">@{brand.slug}</p>
+                {brand.brand_type && (
+                  <p className="text-xs text-white/40 mt-1 capitalize">{brand.brand_type}</p>
+                )}
+              </div>
+            </div>
+
+            {brand.description && (
+              <div className="space-y-1">
+                <Label className="text-white/60 text-xs">Description</Label>
+                <p className="text-sm text-white/80">{brand.description}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              {brand.home_url && (
+                <div className="space-y-1">
+                  <Label className="text-white/60 text-xs">Website</Label>
+                  <a href={brand.home_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline block truncate">
+                    {brand.home_url}
+                  </a>
+                </div>
+              )}
+              {brand.assets_url && (
+                <div className="space-y-1">
+                  <Label className="text-white/60 text-xs">Assets</Label>
+                  <a href={brand.assets_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline block truncate">
+                    {brand.assets_url}
+                  </a>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="bg-[#121212] border-none shadow-none">
         <CardHeader>
