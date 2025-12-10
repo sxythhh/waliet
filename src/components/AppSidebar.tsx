@@ -170,6 +170,9 @@ export function AppSidebar() {
   const handleTabClick = (tab: string) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("tab", tab);
+    // Clear blueprint and campaign params when switching tabs
+    newParams.delete("blueprint");
+    newParams.delete("campaign");
     setSearchParams(newParams);
   };
   const handleWorkspaceChange = (newWorkspace: string) => {
