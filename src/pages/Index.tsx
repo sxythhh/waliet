@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import brandLogo from "@/assets/brand-logo.avif";
 
 export default function Index() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,8 +25,9 @@ export default function Index() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <div className="flex items-center">
-              <span className="text-lg font-semibold text-foreground">Virality</span>
+            <div className="flex items-center gap-2">
+              <img src={brandLogo} alt="Virality" className="h-6 w-6" />
+              <span className="text-lg font-clash font-semibold text-foreground tracking-[-0.1em]">VIRALITY</span>
             </div>
             
             <div className="flex items-center gap-3">
