@@ -2,17 +2,17 @@ import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Pencil, Upload, X } from "lucide-react";
+import { Pencil, Upload, X, Globe, Link2, FolderOpen } from "lucide-react";
+
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   slug: z.string().trim().min(1, "Slug is required").max(100).regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
@@ -24,17 +24,10 @@ const brandSchema = z.object({
   account_url: z.string().url().optional().or(z.literal("")),
   assets_url: z.string().url().optional().or(z.literal("")),
   show_account_tab: z.boolean(),
-  // Sales deal fields
-  deal_value: z.string().optional(),
-  probability: z.string().optional(),
-  close_date: z.string().optional(),
-  next_payment_date: z.string().optional(),
-  payment_amount: z.string().optional(),
-  notes: z.string().optional(),
-  won_date: z.string().optional(),
-  lost_reason: z.string().optional(),
 });
+
 type BrandFormValues = z.infer<typeof brandSchema>;
+
 interface Brand {
   id: string;
   name: string;
@@ -47,6 +40,7 @@ interface Brand {
   assets_url: string | null;
   show_account_tab: boolean;
 }
+
 interface EditBrandDialogProps {
   brand: Brand;
   onSuccess?: () => void;
@@ -55,6 +49,7 @@ interface EditBrandDialogProps {
   onOpenChange?: (open: boolean) => void;
   reactivateButton?: React.ReactNode;
 }
+
 export function EditBrandDialog({
   brand,
   onSuccess,
@@ -69,7 +64,6 @@ export function EditBrandDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(brand.logo_url);
-  const [dealId, setDealId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<BrandFormValues>({
@@ -83,76 +77,29 @@ export function EditBrandDialog({
       account_url: brand.account_url || "",
       assets_url: brand.assets_url || "",
       show_account_tab: brand.show_account_tab ?? true,
-      deal_value: "",
-      probability: "",
-      close_date: "",
-      next_payment_date: "",
-      payment_amount: "",
-      notes: "",
-      won_date: "",
-      lost_reason: "",
     }
   });
+
   useEffect(() => {
     if (open) {
       const defaultAssetsUrl = brand.assets_url || 
         (brand.brand_type === "DWY" ? "https://partners.virality.cc/template/assets" : "");
       
-      // Fetch sales deal data
-      const fetchDealData = async () => {
-        const { data: dealData } = await supabase
-          .from('sales_deals')
-          .select('*')
-          .eq('brand_id', brand.id)
-          .maybeSingle();
-
-        if (dealData) {
-          setDealId(dealData.id);
-          form.reset({
-            name: brand.name,
-            slug: brand.slug,
-            description: brand.description || "",
-            brand_type: brand.brand_type as "Lead" | "DWY" | "Client" || "Client",
-            home_url: brand.home_url || "",
-            account_url: brand.account_url || "",
-            assets_url: defaultAssetsUrl,
-            show_account_tab: brand.show_account_tab ?? true,
-            deal_value: dealData.deal_value?.toString() || "",
-            probability: dealData.probability?.toString() || "",
-            close_date: dealData.close_date || "",
-            next_payment_date: dealData.next_payment_date || "",
-            payment_amount: dealData.payment_amount?.toString() || "",
-            notes: dealData.notes || "",
-            won_date: dealData.won_date || "",
-            lost_reason: dealData.lost_reason || "",
-          });
-        } else {
-          form.reset({
-            name: brand.name,
-            slug: brand.slug,
-            description: brand.description || "",
-            brand_type: brand.brand_type as "Lead" | "DWY" | "Client" || "Client",
-            home_url: brand.home_url || "",
-            account_url: brand.account_url || "",
-            assets_url: defaultAssetsUrl,
-            show_account_tab: brand.show_account_tab ?? true,
-            deal_value: "",
-            probability: "",
-            close_date: "",
-            next_payment_date: "",
-            payment_amount: "",
-            notes: "",
-            won_date: "",
-            lost_reason: "",
-          });
-        }
-      };
-
-      fetchDealData();
+      form.reset({
+        name: brand.name,
+        slug: brand.slug,
+        description: brand.description || "",
+        brand_type: brand.brand_type as "Lead" | "DWY" | "Client" || "Client",
+        home_url: brand.home_url || "",
+        account_url: brand.account_url || "",
+        assets_url: defaultAssetsUrl,
+        show_account_tab: brand.show_account_tab ?? true,
+      });
       setLogoPreview(brand.logo_url);
       setLogoFile(null);
     }
   }, [open, brand, form]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -164,6 +111,7 @@ export function EditBrandDialog({
       reader.readAsDataURL(file);
     }
   };
+
   const removeLogo = () => {
     setLogoFile(null);
     setLogoPreview(null);
@@ -171,28 +119,23 @@ export function EditBrandDialog({
       fileInputRef.current.value = "";
     }
   };
+
   const uploadLogo = async (): Promise<string | null> => {
     if (!logoFile) return brand.logo_url;
     const fileExt = logoFile.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
-    const {
-      error: uploadError
-    } = await supabase.storage.from("campaign-banners").upload(filePath, logoFile);
+    const { error: uploadError } = await supabase.storage.from("campaign-banners").upload(filePath, logoFile);
     if (uploadError) throw uploadError;
-    const {
-      data: {
-        publicUrl
-      }
-    } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
+    const { data: { publicUrl } } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
     return publicUrl;
   };
+
   const onSubmit = async (values: BrandFormValues) => {
     setIsSubmitting(true);
     try {
       const logoUrl = await uploadLogo();
       
-      // Update brand
       const { error: brandError } = await supabase
         .from("brands")
         .update({
@@ -210,25 +153,6 @@ export function EditBrandDialog({
       
       if (brandError) throw brandError;
 
-      // Update or create sales deal
-      if (dealId) {
-        const { error: dealError } = await supabase
-          .from('sales_deals')
-          .update({
-            deal_value: values.deal_value ? parseFloat(values.deal_value) : null,
-            probability: values.probability ? parseInt(values.probability) : null,
-            close_date: values.close_date || null,
-            next_payment_date: values.next_payment_date || null,
-            payment_amount: values.payment_amount ? parseFloat(values.payment_amount) : null,
-            notes: values.notes || null,
-            won_date: values.won_date || null,
-            lost_reason: values.lost_reason || null,
-          })
-          .eq('id', dealId);
-
-        if (dealError) throw dealError;
-      }
-
       toast.success("Brand updated successfully!");
       setOpen(false);
       onSuccess?.();
@@ -243,293 +167,211 @@ export function EditBrandDialog({
       setIsSubmitting(false);
     }
   };
-  return <Dialog open={open} onOpenChange={setOpen}>
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || <Button size="sm" variant="ghost" className="bg-[#1a1b1a]">
+        {trigger || (
+          <Button size="sm" variant="ghost" className="bg-[#1a1b1a]">
             <Pencil className="h-4 w-4" />
-          </Button>}
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Brand</DialogTitle>
-          <DialogDescription>
-            Update brand information and settings
-          </DialogDescription>
+      <DialogContent className="max-w-md bg-[#0c0c0c] border-[#1a1a1a]">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg font-medium text-white">Edit Brand</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {/* Logo Upload */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Brand Logo</label>
-              <div className="flex flex-col gap-3">
-                {logoPreview ? <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-muted">
-                    <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
-                    <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={removeLogo}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div> : <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => fileInputRef.current?.click()}>
-                    <div className="text-center">
-                      <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">Upload logo</p>
-                    </div>
-                  </div>}
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+            <div className="flex items-start gap-4">
+              {logoPreview ? (
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#1a1a1a] shrink-0">
+                  <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={removeLogo}
+                    className="absolute top-1 right-1 p-1 bg-black/60 rounded-full hover:bg-black/80 transition-colors"
+                  >
+                    <X className="h-3 w-3 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  className="w-20 h-20 border border-dashed border-[#2a2a2a] rounded-xl flex items-center justify-center cursor-pointer hover:border-[#3a3a3a] hover:bg-[#111] transition-all shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-5 w-5 text-[#666]" />
+                </div>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              
+              <div className="flex-1 space-y-3">
+                <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input 
+                        placeholder="Brand name" 
+                        className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="slug" render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="flex items-center">
+                        <span className="text-[#666] text-sm pr-1">@</span>
+                        <Input 
+                          placeholder="brand-slug" 
+                          className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm"
+                          {...field}
+                          onChange={e => {
+                            const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+                            field.onChange(slug);
+                          }}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
               </div>
             </div>
 
-            <FormField control={form.control} name="name" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Brand Name</FormLabel>
+            <FormField control={form.control} name="brand_type" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[#888] text-xs font-normal">Type</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <Input placeholder="Enter brand name" {...field} />
+                    <SelectTrigger className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>} />
+                  <SelectContent className="bg-[#111] border-[#1a1a1a]">
+                    <SelectItem value="Lead">Lead</SelectItem>
+                    <SelectItem value="DWY">DWY</SelectItem>
+                    <SelectItem value="Client">Client</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-            <FormField control={form.control} name="slug" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Slug</FormLabel>
-                  <FormControl>
-                    <Input placeholder="brand-slug" {...field} onChange={e => {
-                const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-                field.onChange(slug);
-              }} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>} />
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[#888] text-xs font-normal">Description</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Brief description..." 
+                    className="bg-[#111] border-[#1a1a1a] text-white text-sm resize-none min-h-[60px]"
+                    rows={2}
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-            <FormField control={form.control} name="brand_type" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Brand Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select brand type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Lead">Lead</SelectItem>
-                      <SelectItem value="DWY">DWY</SelectItem>
-                      <SelectItem value="Client">Client</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>} />
-
-            <FormField control={form.control} name="description" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Describe the brand" className="resize-none" rows={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>} />
-
-            <div className="space-y-4 pt-4 border-t">
-              <h4 className="text-sm font-medium">Brand Links</h4>
+            {/* Links Section */}
+            <div className="space-y-3 pt-2">
+              <p className="text-[#888] text-xs font-normal">Links</p>
               
-              <FormField control={form.control} name="home_url" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Home Embed HTML</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder='<iframe src="https://example.com" width="100%" height="100%" frameborder="0" allowfullscreen />' 
-                        className="resize-none font-mono text-xs"
-                        rows={4}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Paste the full iframe HTML code for the brand&apos;s home page embed
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>} />
-
-              <FormField control={form.control} name="account_url" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Account URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/account" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      URL for the brand's account page
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>} />
-
-              <FormField control={form.control} name="assets_url" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Assets URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/assets" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      URL for the brand's assets page
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>} />
-
-              <FormField control={form.control} name="show_account_tab" render={({
-              field
-            }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        Show Account Tab
-                      </FormLabel>
-                      <FormDescription>
-                        Display the account tab in the sidebar
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>} />
-            </div>
-
-            <Separator className="my-6" />
-
-            {/* Sales Deal Information */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Sales Deal Information</h4>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="deal_value" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Deal Value ($)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        placeholder="0.00" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="probability" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Probability (%)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0"
-                        max="100"
-                        placeholder="50" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="close_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expected Close Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="next_payment_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Next Payment Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-
-              <FormField control={form.control} name="payment_amount" render={({ field }) => (
+              <FormField control={form.control} name="home_url" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Payment Amount ($)</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      placeholder="0.00" 
-                      {...field} 
-                    />
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-[#666] shrink-0" />
+                      <Textarea 
+                        placeholder='Home embed HTML (iframe)' 
+                        className="bg-[#111] border-[#1a1a1a] text-white text-xs font-mono resize-none min-h-[36px]"
+                        rows={1}
+                        {...field} 
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
 
-              <FormField control={form.control} name="notes" render={({ field }) => (
+              <FormField control={form.control} name="account_url" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Add notes about this deal..." 
-                      className="resize-none"
-                      rows={4}
-                      {...field} 
-                    />
+                    <div className="flex items-center gap-2">
+                      <Link2 className="h-4 w-4 text-[#666] shrink-0" />
+                      <Input 
+                        placeholder="Account URL" 
+                        className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm"
+                        {...field} 
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="won_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Won Date (if applicable)</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="lost_reason" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lost Reason (if applicable)</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Why was this deal lost?" 
-                        className="resize-none"
-                        rows={2}
+              <FormField control={form.control} name="assets_url" render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4 text-[#666] shrink-0" />
+                      <Input 
+                        placeholder="Assets URL" 
+                        className="bg-[#111] border-[#1a1a1a] text-white h-9 text-sm"
                         {...field} 
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
 
-            <div className="flex justify-between gap-3 pt-4">
+            <FormField control={form.control} name="show_account_tab" render={({ field }) => (
+              <FormItem className="flex items-center justify-between py-2">
+                <FormLabel className="text-[#888] text-xs font-normal cursor-pointer">
+                  Show account tab in sidebar
+                </FormLabel>
+                <FormControl>
+                  <Switch 
+                    checked={field.value} 
+                    onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                </FormControl>
+              </FormItem>
+            )} />
+
+            <div className="flex items-center gap-2 pt-2">
               {reactivateButton && (
                 <div className="mr-auto">
                   {reactivateButton}
                 </div>
               )}
-              <div className="flex gap-3 ml-auto">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Updating..." : "Update Brand"}
-                </Button>
-              </div>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setOpen(false)} 
+                disabled={isSubmitting}
+                className="text-[#888] hover:text-white hover:bg-[#1a1a1a]"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-white text-black hover:bg-white/90"
+              >
+                {isSubmitting ? "Saving..." : "Save"}
+              </Button>
             </div>
           </form>
         </Form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
