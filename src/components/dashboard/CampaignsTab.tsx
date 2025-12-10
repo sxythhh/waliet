@@ -649,7 +649,11 @@ export function CampaignsTab({
             {recentActivity.slice(0, 6).map(activity => <div key={activity.id} className="group p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wide">
-                    {activity.title}
+                    {new Date(activity.timestamp).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
                   </span>
                   {activity.amount !== undefined && <span className={`text-sm font-semibold tabular-nums ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
                       {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
@@ -672,13 +676,6 @@ export function CampaignsTab({
                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{activity.description}</p>
                   </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground/60 mt-3">
-                  {new Date(activity.timestamp).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
-            })}
-                </p>
               </div>)}
           </div>
         </div>}
