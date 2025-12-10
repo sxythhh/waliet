@@ -9,6 +9,8 @@ import walletInactive from "@/assets/wallet-inactive.svg";
 import walletActive from "@/assets/wallet-active.svg";
 import discoverInactive from "@/assets/discover-inactive.svg";
 import discoverActive from "@/assets/discover-active.svg";
+import profileInactive from "@/assets/profile-inactive.svg";
+import profileActive from "@/assets/profile-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -155,6 +157,11 @@ export function AppSidebar() {
                   <img src={discoverInactive} alt="" className={`absolute inset-0 h-[30px] w-[30px] transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={discoverActive} alt="" className={`absolute inset-0 h-[30px] w-[30px] transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div>
+              ) : item.tab === "profile" ? (
+                <div className="relative h-[30px] w-[30px]">
+                  <img src={profileInactive} alt="" className={`absolute inset-0 h-[30px] w-[30px] transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={profileActive} alt="" className={`absolute inset-0 h-[30px] w-[30px] transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                </div>
               ) : <item.icon className={`h-[30px] w-[30px] ${isActive ? 'text-blue-500' : ''}`} />}
               <span className="text-[10px] font-medium">{item.title}</span>
             </button>;
@@ -194,6 +201,11 @@ export function AppSidebar() {
                     <div className="relative h-[30px] w-[30px]">
                       <img src={discoverInactive} alt="" className={`absolute inset-0 h-[30px] w-[30px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={discoverActive} alt="" className={`absolute inset-0 h-[30px] w-[30px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div>
+                  ) : item.tab === "profile" ? (
+                    <div className="relative h-[30px] w-[30px]">
+                      <img src={profileInactive} alt="" className={`absolute inset-0 h-[30px] w-[30px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={profileActive} alt="" className={`absolute inset-0 h-[30px] w-[30px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div>
                   ) : <item.icon className={`h-[30px] w-[30px] ${isActive ? 'text-[#2060df]' : ''}`} />}
                   <span className="font-['Inter'] text-[15px] font-semibold tracking-[-0.5px]">{item.title}</span>
