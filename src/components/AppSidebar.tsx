@@ -154,9 +154,9 @@ export function AppSidebar() {
               }`}
             >
               {item.tab === "campaigns" ? (
-                <WebStoriesIcon className="h-5 w-5" />
+                <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />
               ) : (
-                <item.icon className="h-5 w-5" />
+                <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />
               )}
               <span className="text-[10px] font-medium">{item.title}</span>
             </button>
@@ -185,14 +185,14 @@ export function AppSidebar() {
                   onClick={() => handleTabClick(item.tab)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors ${
                     isActive 
-                      ? 'bg-white/10 text-white' 
+                      ? 'text-white' 
                       : 'text-neutral-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   {item.tab === "campaigns" ? (
-                    <WebStoriesIcon className="h-5 w-5" />
+                    <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />
                   ) : (
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />
                   )}
                   <span>{item.title}</span>
                 </button>
