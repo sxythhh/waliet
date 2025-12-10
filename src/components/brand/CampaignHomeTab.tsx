@@ -176,19 +176,27 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
+      console.log('[CampaignHomeTab] Starting metrics refresh for campaign:', campaignId);
+      
       // Trigger the sync edge function for this specific campaign
-      const { error } = await supabase.functions.invoke('sync-campaign-video-metrics', {
+      const { data, error } = await supabase.functions.invoke('sync-campaign-video-metrics', {
         body: { campaignId }
       });
+      
+      console.log('[CampaignHomeTab] Sync response:', { data, error });
+      
       if (error) {
-        console.error('Error from sync function:', error);
+        console.error('[CampaignHomeTab] Error from sync function:', error);
       }
+      
       // Wait a moment then refetch
       await new Promise(resolve => setTimeout(resolve, 1000));
       await fetchMetrics();
       await fetchData();
+      
+      console.log('[CampaignHomeTab] Refresh complete');
     } catch (error) {
-      console.error('Error refreshing metrics:', error);
+      console.error('[CampaignHomeTab] Error refreshing metrics:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -429,6 +437,7 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
             <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm tracking-[-0.5px] gap-2">
               <p>No metrics data yet</p>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
