@@ -45,7 +45,7 @@ import Leaderboard from "./pages/Leaderboard";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBoost from "./pages/PublicBounty";
 import { AuthProvider } from "@/contexts/AuthContext";
-
+import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 const queryClient = new QueryClient();
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -118,7 +118,7 @@ const App = () => (
             <Route path="/boost/:id" element={<PublicBoost />} />
             <Route path="/join/:slug" element={<CampaignJoin />} />
             <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<WorkspaceProvider><Dashboard /></WorkspaceProvider>} />
             <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
             <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
             <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
