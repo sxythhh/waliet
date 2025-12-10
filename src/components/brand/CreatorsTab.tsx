@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Search, Users } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
@@ -42,6 +43,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
 
   useEffect(() => {
     fetchCreators();
@@ -253,11 +255,12 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                   <th className="text-right py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Earnings</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/30">
+              <tbody>
                 {filteredCreators.map((creator) => (
                   <tr
                     key={creator.id}
-                    className="hover:bg-[#0a0a0a] transition-colors"
+                    className="hover:bg-[#0a0a0a] transition-colors cursor-pointer"
+                    onClick={() => setSelectedCreator(creator)}
                   >
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
@@ -282,7 +285,8 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground rounded-full bg-muted/50 hover:bg-muted"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               if (account.account_link) {
                                 window.open(account.account_link, "_blank");
                               }
@@ -332,7 +336,8 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
             {filteredCreators.map((creator) => (
               <div
                 key={creator.id}
-                className="rounded-xl bg-card/50 p-4 space-y-4"
+                className="rounded-xl bg-card/50 p-4 space-y-4 cursor-pointer hover:bg-[#0a0a0a] transition-colors"
+                onClick={() => setSelectedCreator(creator)}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -362,7 +367,8 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                       variant="ghost"
                       size="sm"
                       className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground rounded-full bg-muted/50 hover:bg-muted"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (account.account_link) {
                           window.open(account.account_link, "_blank");
                         }
@@ -388,6 +394,103 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
           </div>
         </>
       )}
+
+      {/* Creator Detail Dialog */}
+      <Dialog open={!!selectedCreator} onOpenChange={(open) => !open && setSelectedCreator(null)}>
+        <DialogContent className="sm:max-w-[480px] bg-[#0a0a0a] border-transparent">
+          {selectedCreator && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="sr-only">Creator Details</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Profile Header */}
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16 ring-2 ring-background">
+                    <AvatarImage src={selectedCreator.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                      {selectedCreator.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold">{selectedCreator.full_name || selectedCreator.username}</h3>
+                    <p className="text-sm text-muted-foreground">@{selectedCreator.username}</p>
+                    {selectedCreator.email && (
+                      <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                        <Mail className="h-3 w-3" />
+                        <span>{selectedCreator.email}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-[#141414] p-4">
+                    <p className="text-xs text-muted-foreground mb-1">Total Views</p>
+                    <p className="text-xl font-bold tabular-nums">{formatNumber(selectedCreator.total_views)}</p>
+                  </div>
+                  <div className="rounded-xl bg-[#141414] p-4">
+                    <p className="text-xs text-muted-foreground mb-1">Total Earnings</p>
+                    <p className="text-xl font-bold tabular-nums text-green-500">${selectedCreator.total_earnings.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                {/* Social Accounts */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-muted-foreground">Connected Accounts</h4>
+                  <div className="space-y-2">
+                    {selectedCreator.social_accounts.map((account, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between rounded-xl bg-[#141414] p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={PLATFORM_LOGOS[account.platform.toLowerCase()]}
+                            alt={account.platform}
+                            className="h-5 w-5 object-contain"
+                          />
+                          <div>
+                            <p className="text-sm font-medium">@{account.username}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                          </div>
+                        </div>
+                        {account.account_link && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => window.open(account.account_link!, "_blank")}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Campaigns */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-muted-foreground">Joined Campaigns</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCreator.campaigns.map((campaign) => (
+                      <span
+                        key={campaign.id}
+                        className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium"
+                      >
+                        {campaign.title}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
