@@ -238,7 +238,7 @@ export default function Auth() {
   }
   return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       
-      <Card className="w-full max-w-md border-0 bg-card/50 backdrop-blur-sm shadow-xl relative z-10">
+      <Card className="w-full max-w-md border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
         <CardHeader className="text-center space-y-4 pb-2 pt-8">
           <div className="flex justify-center">
             <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
@@ -342,7 +342,7 @@ export default function Auth() {
                   </button>
                 </div>
                 
-                <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
+                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-xs font-sans">
                   {loading ? "Please wait..." : "Continue"}
                 </Button>
               </form>
