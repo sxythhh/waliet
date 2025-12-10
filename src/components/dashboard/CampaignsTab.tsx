@@ -647,32 +647,50 @@ export function CampaignsTab({
           <h3 className="text-lg font-semibold tracking-tight" style={{
         letterSpacing: '-0.5px'
       }}>Recent Activity</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recentActivity.slice(0, 6).map(activity => <div key={activity.id} className="group p-4 rounded-xl transition-all duration-200 bg-[#1f1f1f]/0">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wide">
-                    {new Date(activity.timestamp).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              })}
-                  </span>
-                  {activity.amount !== undefined && <span className={`text-sm font-semibold tabular-nums ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
-                      {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
-                    </span>}
-                </div>
-                <div className="gap-3 flex items-center justify-center">
-                  {activity.campaignLogo ? <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
-                      <img src={activity.campaignLogo} alt={activity.campaignName || ''} className="w-full h-full object-cover" />
-                    </div> : <div className="w-9 h-9 rounded-lg flex-shrink-0 ring-1 ring-border bg-muted flex items-center justify-center">
-                      <Wallet className="w-4 h-4 text-muted-foreground" />
-                    </div>}
-                  <div className="flex-1 min-w-0">
-                    {activity.campaignName && <p className="text-sm text-foreground truncate mb-0.5 font-semibold">{activity.campaignName}</p>}
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="absolute left-[18px] top-3 bottom-3 w-px bg-border" />
+            
+            <div className="space-y-0">
+              {recentActivity.slice(0, 6).map((activity, index) => (
+                <div key={activity.id} className="relative flex items-center gap-4 py-3 group">
+                  {/* Timeline dot */}
+                  <div className="relative z-10 flex-shrink-0">
+                    {activity.campaignLogo ? (
+                      <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-background bg-muted">
+                        <img src={activity.campaignLogo} alt={activity.campaignName || ''} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-9 h-9 rounded-full ring-2 ring-background bg-muted flex items-center justify-center">
+                        <Wallet className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      {activity.campaignName && (
+                        <p className="text-sm font-medium text-foreground truncate">{activity.campaignName}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(activity.timestamp).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
                     
+                    {activity.amount !== undefined && (
+                      <span className={`text-sm font-semibold tabular-nums flex-shrink-0 ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                        {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
+                      </span>
+                    )}
                   </div>
                 </div>
-              </div>)}
+              ))}
+            </div>
           </div>
         </div>}
 
