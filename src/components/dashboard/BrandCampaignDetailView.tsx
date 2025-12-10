@@ -8,6 +8,7 @@ import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { VideosTab } from "@/components/brand/VideosTab";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 interface Campaign {
   id: string;
@@ -49,6 +50,7 @@ export function BrandCampaignDetailView({
   const [loading, setLoading] = useState(true);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("home");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { isAdmin } = useAdminCheck();
 
   useEffect(() => {
     fetchCampaign();
@@ -79,7 +81,7 @@ export function BrandCampaignDetailView({
   const detailTabs = [
     { id: "home" as DetailTab, label: "Home", icon: Home },
     { id: "videos" as DetailTab, label: "Videos", icon: Video },
-    { id: "creators" as DetailTab, label: "Creators", icon: Users },
+    ...(isAdmin ? [{ id: "creators" as DetailTab, label: "Creators", icon: Users }] : []),
     { id: "payouts" as DetailTab, label: "Payouts", icon: DollarSign }
   ];
 
