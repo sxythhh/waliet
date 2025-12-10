@@ -245,14 +245,14 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       ) : (
         <>
           {/* Desktop Table */}
-          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50">
+          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50 dark:border dark:border-[#111111]">
             <table className="w-full">
               <thead>
-                <tr className="bg-muted/30">
-                  <th className="text-left py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Creator</th>
-                  <th className="text-left py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Accounts</th>
-                  <th className="text-right py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Views</th>
-                  <th className="text-right py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Earnings</th>
+                <tr>
+                  <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-white">Creator</th>
+                  <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-white">Accounts</th>
+                  <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-white">Views</th>
+                  <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-white">Earnings</th>
                 </tr>
               </thead>
               <tbody>
