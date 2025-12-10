@@ -271,7 +271,7 @@ export function OnboardingDialog({
     setStep(step + 1);
   };
   const getPlatformIcon = (platform: Platform) => {
-    const iconClass = "h-6 w-6";
+    const iconClass = "h-8 w-8";
     switch (platform) {
       case "tiktok":
         return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
