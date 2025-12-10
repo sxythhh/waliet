@@ -8,7 +8,7 @@ import { ReferralsTab } from "@/components/dashboard/ReferralsTab";
 import { WalletTab } from "@/components/dashboard/WalletTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
 import { BrandCampaignsTab } from "@/components/dashboard/BrandCampaignsTab";
-import { BrandAnalyticsTab } from "@/components/dashboard/BrandAnalyticsTab";
+import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { AppSidebar } from "@/components/AppSidebar";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
@@ -25,6 +25,7 @@ export default function Dashboard() {
   
   const currentTab = searchParams.get("tab") || "campaigns";
   const workspace = searchParams.get("workspace") || "creator";
+  const selectedCampaignId = searchParams.get("campaign");
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
 
@@ -86,13 +87,28 @@ export default function Dashboard() {
   };
 
   const renderContent = () => {
+    // Brand mode with selected campaign - show detail view
+    if (isBrandMode && currentBrand && selectedCampaignId) {
+      return <BrandCampaignDetailView campaignId={selectedCampaignId} />;
+    }
+
     // Brand mode tabs
     if (isBrandMode && currentBrand) {
       switch (currentTab) {
         case "campaigns":
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
-        case "analytics":
-          return <BrandAnalyticsTab brandId={currentBrand.id} />;
+        case "blueprints":
+          return (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-muted-foreground">Blueprints coming soon</p>
+            </div>
+          );
+        case "creators":
+          return (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-muted-foreground">Creators management coming soon</p>
+            </div>
+          );
         case "profile":
           return <ProfileTab />;
         default:

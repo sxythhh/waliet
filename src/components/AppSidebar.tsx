@@ -1,4 +1,4 @@
-import { Layers, Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, BarChart3 } from "lucide-react";
+import { Layers, Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, BarChart3, Users } from "lucide-react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import viralityIcon from "@/assets/virality-icon.png";
@@ -41,7 +41,8 @@ const creatorMenuItems = [
 
 const brandMenuItems = [
   { title: "Campaigns", tab: "campaigns", icon: null as any },
-  { title: "Analytics", tab: "analytics", icon: BarChart3 },
+  { title: "Blueprints", tab: "blueprints", icon: Layers },
+  { title: "Creators", tab: "creators", icon: Users },
   { title: "Profile", tab: "profile", icon: CircleUser },
 ];
 
