@@ -8,14 +8,17 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
 interface AuthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
-  const { trackReferral } = useReferralTracking();
+export default function AuthDialog({
+  open,
+  onOpenChange
+}: AuthDialogProps) {
+  const {
+    trackReferral
+  } = useReferralTracking();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,20 +27,25 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    const {
+      data: signInData,
+      error: signInError
+    } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-
     if (signInError) {
       if (signInError.message.includes("Invalid login credentials")) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const {
+          data: signUpData,
+          error: signUpError
+        } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -74,10 +82,11 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       navigate("/dashboard");
     }
   };
-
   const handleDiscordSignIn = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
+    const {
+      error
+    } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
         redirectTo: `${window.location.origin}/dashboard`
@@ -92,10 +101,11 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       });
     }
   };
-
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
+    const {
+      error
+    } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/dashboard`
@@ -110,13 +120,14 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       });
     }
   };
-
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('send-password-reset', {
+      const {
+        error
+      } = await supabase.functions.invoke('send-password-reset', {
         body: {
           email: resetEmail,
           redirectTo: `${window.location.origin}/auth`
@@ -146,19 +157,16 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       });
     }
   };
-
   const handleClose = () => {
     setShowEmailForm(false);
     setEmail("");
     setPassword("");
     onOpenChange(false);
   };
-
-  return (
-    <>
+  return <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md border-0 bg-[#0a0a0a]/98 backdrop-blur-xl shadow-2xl p-0">
-          <div className="p-6 pb-8">
+          <div className="p-6 pb-8 bg-black/[0.61]">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex justify-center">
                 <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
@@ -166,8 +174,7 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
             </div>
 
             <div className="pt-2">
-              {!showEmailForm ? (
-                <>
+              {!showEmailForm ? <>
                   {/* Creator Sign In Section */}
                   <div className="space-y-4">
                     <div className="text-center">
@@ -177,24 +184,16 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                     </div>
 
                     <div className="space-y-3">
-                      <Button
-                        variant="outline"
-                        className="w-full h-12 bg-[#5865F2] hover:bg-[#4752C4] text-white border-0 font-semibold font-geist gap-3"
-                        style={{ letterSpacing: '-0.5px' }}
-                        onClick={handleDiscordSignIn}
-                        disabled={loading}
-                      >
+                      <Button variant="outline" className="w-full h-12 bg-[#5865F2] hover:bg-[#4752C4] text-white border-0 font-semibold font-geist gap-3" style={{
+                    letterSpacing: '-0.5px'
+                  }} onClick={handleDiscordSignIn} disabled={loading}>
                         <img alt="Discord" className="h-5 w-5" src="/lovable-uploads/38b60a02-7cb6-4adb-b1b9-62f4de7373fd.webp" />
                         Continue with Discord
                       </Button>
 
-                      <Button
-                        variant="outline"
-                        className="w-full h-12 bg-white hover:bg-white/90 text-black hover:text-black border-0 font-semibold font-geist gap-3"
-                        style={{ letterSpacing: '-0.5px' }}
-                        onClick={handleGoogleSignIn}
-                        disabled={loading}
-                      >
+                      <Button variant="outline" className="w-full h-12 bg-white hover:bg-white/90 text-black hover:text-black border-0 font-semibold font-geist gap-3" style={{
+                    letterSpacing: '-0.5px'
+                  }} onClick={handleGoogleSignIn} disabled={loading}>
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
                           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -204,13 +203,9 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                         Continue with Google
                       </Button>
 
-                      <Button
-                        variant="outline"
-                        className="w-full h-12 bg-muted/50 hover:bg-muted border-0 font-semibold font-geist gap-3"
-                        style={{ letterSpacing: '-0.5px' }}
-                        onClick={() => setShowEmailForm(true)}
-                        disabled={loading}
-                      >
+                      <Button variant="outline" className="w-full h-12 bg-muted/50 hover:bg-muted border-0 font-semibold font-geist gap-3" style={{
+                    letterSpacing: '-0.5px'
+                  }} onClick={() => setShowEmailForm(true)} disabled={loading}>
                         <Mail className="h-5 w-5" />
                         Continue with Email
                       </Button>
@@ -223,7 +218,7 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                       <div className="w-full border-t border-muted-foreground/20" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="backdrop-blur-sm px-3 font-medium bg-[#0c0c0c] text-[#484444]">
+                      <span className="backdrop-blur-sm px-3 font-medium text-[#484444] bg-[#0d0d0d]">
                         OR
                       </span>
                     </div>
@@ -231,22 +226,15 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
 
                   {/* Client Sign In Section */}
                   <div className="space-y-4">
-                    <a
-                      href="https://virality.cc/auth"
-                      className="flex items-center justify-center w-full h-12 bg-muted/50 hover:bg-muted rounded-md font-semibold font-geist text-sm transition-colors"
-                      style={{ letterSpacing: '-0.5px' }}
-                    >
+                    <a href="https://virality.cc/auth" className="flex items-center justify-center w-full h-12 bg-muted/50 hover:bg-muted rounded-md font-semibold font-geist text-sm transition-colors" style={{
+                  letterSpacing: '-0.5px'
+                }}>
                       Continue to Client Portal
                     </a>
                   </div>
-                </>
-              ) : (
-                /* Email Form */
-                <div className="space-y-4">
-                  <button
-                    onClick={() => setShowEmailForm(false)}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                </> : (/* Email Form */
+            <div className="space-y-4">
+                  <button onClick={() => setShowEmailForm(false)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                     <ArrowLeft className="h-4 w-4" />
                     Back
                   </button>
@@ -254,63 +242,34 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                   <form onSubmit={handleEmailAuth} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                        disabled={loading}
-                        className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
-                      />
+                      <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                       <div className="relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Your password"
-                          value={password}
-                          onChange={e => setPassword(e.target.value)}
-                          required
-                          disabled={loading}
-                          minLength={6}
-                          className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
+                        <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pr-10" />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowResetDialog(true)}
-                        className="text-sm text-primary hover:underline"
-                      >
+                      <button type="button" onClick={() => setShowResetDialog(true)} className="text-sm text-primary hover:underline">
                         Forgot password?
                       </button>
                     </div>
 
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full h-12 font-semibold text-sm font-geist"
-                      style={{ letterSpacing: '-0.5px' }}
-                    >
+                    <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-geist" style={{
+                  letterSpacing: '-0.5px'
+                }}>
                       {loading ? "Please wait..." : "Continue"}
                     </Button>
                   </form>
-                </div>
-              )}
+                </div>)}
 
               {/* Terms and Conditions */}
-              <div className="mt-8 text-center" style={{ letterSpacing: '-0.3px' }}>
+              <div className="mt-8 text-center" style={{
+              letterSpacing: '-0.3px'
+            }}>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   By logging in, you agree to our{" "}
                   <a href="https://virality.gg/creator-terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
@@ -344,16 +303,7 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           <form onSubmit={handlePasswordReset} className="space-y-4 mt-4">
             <div className="space-y-2">
               <Label htmlFor="reset-email">Email</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                placeholder="you@example.com"
-                value={resetEmail}
-                onChange={e => setResetEmail(e.target.value)}
-                required
-                disabled={loading}
-                className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
-              />
+              <Input id="reset-email" type="email" placeholder="you@example.com" value={resetEmail} onChange={e => setResetEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
             </div>
             <Button type="submit" className="w-full h-12" disabled={loading}>
               {loading ? "Sending..." : "Send Reset Link"}
@@ -361,6 +311,5 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           </form>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 }
