@@ -286,13 +286,6 @@ export function OnboardingDialog({
   return <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-[420px] border-0 bg-[#0a0a0a] p-0 [&>button]:hidden" onInteractOutside={e => e.preventDefault()} onEscapeKeyDown={e => e.preventDefault()}>
         <div className="p-6 space-y-5">
-          {/* Progress */}
-          <div className="flex items-center gap-2">
-            {Array.from({
-            length: totalSteps
-          }).map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />)}
-          </div>
-
           {/* Step 1: Choose account type */}
           {step === 1 && <div className="space-y-6">
               <div className="text-center space-y-2">
@@ -333,6 +326,13 @@ export function OnboardingDialog({
               <Button onClick={handleNext} disabled={!accountType} className="w-full h-12 font-[Geist] tracking-[-0.5px]">
                 Continue
               </Button>
+
+              {/* Progress */}
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
+                ))}
+              </div>
             </div>}
 
           {/* Step 2: Personal Information */}
@@ -367,6 +367,13 @@ export function OnboardingDialog({
                 <Button onClick={handleNext} disabled={loading || !firstName || !phoneNumber} className="flex-1 font-[Geist] tracking-[-0.5px]">
                   {loading ? "Saving..." : "Continue"}
                 </Button>
+              </div>
+
+              {/* Progress */}
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
+                ))}
               </div>
             </div>}
 
@@ -406,6 +413,13 @@ export function OnboardingDialog({
                 <Button onClick={handleNext} disabled={loading || !username || !accountLink} className="flex-1 font-[Geist] tracking-[-0.5px]">
                   {loading ? "Connecting..." : "Continue"}
                 </Button>
+              </div>
+
+              {/* Progress */}
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
+                ))}
               </div>
             </div>}
 
@@ -474,6 +488,13 @@ export function OnboardingDialog({
                   {loading ? "Saving..." : "Continue"}
                 </Button>
               </div>
+
+              {/* Progress */}
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
+                ))}
+              </div>
             </div>}
 
           {/* Creator Step 5: Final instructions */}
@@ -527,6 +548,13 @@ export function OnboardingDialog({
               <Button onClick={handleNext} className="w-full h-12 font-[Geist] tracking-[-0.5px]">
                 Go to Dashboard
               </Button>
+
+              {/* Progress */}
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
+                ))}
+              </div>
             </div>}
 
           {/* Brand Step 3: Brand details */}
@@ -547,63 +575,55 @@ export function OnboardingDialog({
                   <Input type="url" placeholder="https://example.com" value={website} onChange={e => setWebsite(e.target.value)} />
                 </div>
 
-                <div className="space-y-3">
-                  <Label>Monthly Recurring Revenue (MRR)</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {[{
-                  value: "0-10k",
-                  label: "$0-10k",
-                  emoji: "🌱"
-                }, {
-                  value: "10k-50k",
-                  label: "$10k-50k",
-                  emoji: "🚀"
-                }, {
-                  value: "50k-100k",
-                  label: "$50k-100k",
-                  emoji: "⚡"
-                }, {
-                  value: "100k-500k",
-                  label: "$100k-500k",
-                  emoji: "🔥"
-                }, {
-                  value: "500k+",
-                  label: "$500k+",
-                  emoji: "💎"
-                }].map(option => <button key={option.value} type="button" onClick={() => setMrr(option.value)} className={`p-3 rounded-lg transition-all text-center ${mrr === option.value ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background" : "bg-muted/30 hover:bg-muted/50"}`}>
-                        <span className="text-xl mb-1 block">{option.emoji}</span>
-                        <span className="text-xs font-medium">{option.label}</span>
-                      </button>)}
+                <div className="space-y-2">
+                  <Label>Monthly Recurring Revenue</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: "0-10k", label: "$0-10k" },
+                      { value: "10k-50k", label: "$10k-50k" },
+                      { value: "50k-100k", label: "$50k-100k" },
+                      { value: "100k-500k", label: "$100k-500k" },
+                      { value: "500k+", label: "$500k+" }
+                    ].map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setMrr(option.value)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          mrr === option.value
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/40 hover:bg-muted/60 text-foreground"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <Label>Business Type</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {[{
-                  value: "saas",
-                  label: "SaaS",
-                  emoji: "💻"
-                }, {
-                  value: "ecommerce",
-                  label: "E-commerce",
-                  emoji: "🛒"
-                }, {
-                  value: "agency",
-                  label: "Agency",
-                  emoji: "🏢"
-                }, {
-                  value: "consumer",
-                  label: "Consumer",
-                  emoji: "🛍️"
-                }, {
-                  value: "other",
-                  label: "Other",
-                  emoji: "✨"
-                }].map(option => <button key={option.value} type="button" onClick={() => setBusinessType(option.value)} className={`p-3 rounded-lg transition-all text-center ${businessType === option.value ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background" : "bg-muted/30 hover:bg-muted/50"}`}>
-                        <span className="text-xl mb-1 block">{option.emoji}</span>
-                        <span className="text-xs font-medium">{option.label}</span>
-                      </button>)}
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: "saas", label: "SaaS" },
+                      { value: "ecommerce", label: "E-commerce" },
+                      { value: "agency", label: "Agency" },
+                      { value: "consumer", label: "Consumer" },
+                      { value: "other", label: "Other" }
+                    ].map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setBusinessType(option.value)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          businessType === option.value
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/40 hover:bg-muted/60 text-foreground"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -615,6 +635,13 @@ export function OnboardingDialog({
                 <Button onClick={handleNext} disabled={loading || !companyName || !website || !mrr || !businessType} className="flex-1 font-[Geist] tracking-[-0.5px]">
                   {loading ? "Creating..." : "Complete Setup"}
                 </Button>
+              </div>
+
+              {/* Progress */}
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
+                ))}
               </div>
             </div>}
         </div>
