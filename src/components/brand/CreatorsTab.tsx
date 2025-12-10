@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Search, ExternalLink, Users, TrendingUp } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
@@ -242,49 +241,48 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
           </p>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-xl overflow-hidden bg-card/50">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Creator</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Accounts</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Campaigns</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Views</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Earnings</th>
+                <tr className="bg-muted/30">
+                  <th className="text-left py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Creator</th>
+                  <th className="text-left py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Accounts</th>
+                  <th className="text-left py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaigns</th>
+                  <th className="text-right py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Views</th>
+                  <th className="text-right py-4 px-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Earnings</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border/30">
                 {filteredCreators.map((creator) => (
                   <tr
                     key={creator.id}
-                    className="border-b border-border/50 hover:bg-accent/30 transition-colors"
+                    className="hover:bg-accent/20 transition-colors"
                   >
-                    {/* Creator Info */}
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
+                        <Avatar className="h-10 w-10 ring-2 ring-background">
                           <AvatarImage src={creator.avatar_url || undefined} />
-                          <AvatarFallback className="bg-primary/10 text-primary">
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm">
                             {creator.username.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{creator.full_name || creator.username}</p>
-                          <p className="text-sm text-muted-foreground">@{creator.username}</p>
+                          <p className="font-medium text-sm">{creator.full_name || creator.username}</p>
+                          <p className="text-xs text-muted-foreground">@{creator.username}</p>
                         </div>
                       </div>
                     </td>
 
-                    {/* Social Accounts */}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {creator.social_accounts.slice(0, 3).map((account, idx) => (
                           <Button
                             key={idx}
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
+                            className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground rounded-full bg-muted/50 hover:bg-muted"
                             onClick={() => {
                               if (account.account_link) {
                                 window.open(account.account_link, "_blank");
@@ -294,33 +292,28 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                             <img
                               src={PLATFORM_LOGOS[account.platform.toLowerCase()]}
                               alt={account.platform}
-                              className="h-4 w-4 object-contain"
+                              className="h-3.5 w-3.5 object-contain"
                             />
-                            <span className="text-xs">@{account.username}</span>
-                            {account.account_link && (
-                              <ExternalLink className="h-3 w-3 opacity-50" />
-                            )}
+                            <span className="text-xs max-w-[80px] truncate">@{account.username}</span>
                           </Button>
                         ))}
                         {creator.social_accounts.length > 3 && (
-                          <span className="text-xs text-muted-foreground">
-                            +{creator.social_accounts.length - 3} more
+                          <span className="text-xs text-muted-foreground px-2">
+                            +{creator.social_accounts.length - 3}
                           </span>
                         )}
                       </div>
                     </td>
 
-                    {/* Campaigns */}
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-5">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {creator.campaigns.slice(0, 2).map((campaign) => (
-                          <Badge
+                          <span
                             key={campaign.id}
-                            variant="secondary"
-                            className="text-xs font-normal"
+                            className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium"
                           >
                             {campaign.title}
-                          </Badge>
+                          </span>
                         ))}
                         {creator.campaigns.length > 2 && (
                           <span className="text-xs text-muted-foreground">
@@ -330,19 +323,14 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                       </div>
                     </td>
 
-                    {/* Views */}
-                    <td className="py-4 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="font-medium tabular-nums">
-                          {formatNumber(creator.total_views)}
-                        </span>
-                      </div>
+                    <td className="py-4 px-5 text-right">
+                      <span className="font-semibold tabular-nums text-sm">
+                        {formatNumber(creator.total_views)}
+                      </span>
                     </td>
 
-                    {/* Earnings */}
-                    <td className="py-4 px-4 text-right">
-                      <span className="font-semibold tabular-nums text-green-500">
+                    <td className="py-4 px-5 text-right">
+                      <span className="font-semibold tabular-nums text-sm text-green-500">
                         ${creator.total_earnings.toFixed(2)}
                       </span>
                     </td>
@@ -350,14 +338,86 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                 ))}
               </tbody>
             </table>
+
+            {filteredCreators.length === 0 && searchQuery && (
+              <div className="p-8 text-center text-muted-foreground">
+                No creators found matching "{searchQuery}"
+              </div>
+            )}
           </div>
 
-          {filteredCreators.length === 0 && searchQuery && (
-            <div className="p-8 text-center text-muted-foreground">
-              No creators found matching "{searchQuery}"
-            </div>
-          )}
-        </Card>
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
+            {filteredCreators.map((creator) => (
+              <div
+                key={creator.id}
+                className="rounded-xl bg-card/50 p-4 space-y-4"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-11 w-11 ring-2 ring-background">
+                      <AvatarImage src={creator.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {creator.username.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{creator.full_name || creator.username}</p>
+                      <p className="text-sm text-muted-foreground">@{creator.username}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-green-500">${creator.total_earnings.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">{formatNumber(creator.total_views)} views</p>
+                  </div>
+                </div>
+
+                {/* Social Accounts */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {creator.social_accounts.slice(0, 4).map((account, idx) => (
+                    <Button
+                      key={idx}
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground rounded-full bg-muted/50 hover:bg-muted"
+                      onClick={() => {
+                        if (account.account_link) {
+                          window.open(account.account_link, "_blank");
+                        }
+                      }}
+                    >
+                      <img
+                        src={PLATFORM_LOGOS[account.platform.toLowerCase()]}
+                        alt={account.platform}
+                        className="h-3.5 w-3.5 object-contain"
+                      />
+                      <span className="text-xs">@{account.username}</span>
+                    </Button>
+                  ))}
+                </div>
+
+                {/* Campaigns */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {creator.campaigns.map((campaign) => (
+                    <span
+                      key={campaign.id}
+                      className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium"
+                    >
+                      {campaign.title}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {filteredCreators.length === 0 && searchQuery && (
+              <div className="p-8 text-center text-muted-foreground rounded-xl bg-card/50">
+                No creators found matching "{searchQuery}"
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
