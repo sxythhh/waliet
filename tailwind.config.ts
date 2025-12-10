@@ -24,6 +24,7 @@ export default {
       },
       colors: {
         border: "hsl(var(--border))",
+        "table-border": "hsl(var(--table-border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
