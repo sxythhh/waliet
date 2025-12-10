@@ -15,6 +15,7 @@ import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
+import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
@@ -111,7 +112,7 @@ export default function Dashboard() {
         case "creators":
           return <CreatorsTab brandId={currentBrand.id} />;
         case "profile":
-          return <ProfileTab />;
+          return <UserSettingsTab />;
         default:
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
       }
