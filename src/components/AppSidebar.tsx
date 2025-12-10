@@ -193,11 +193,11 @@ export function AppSidebar() {
               VIRALITY
             </span>
           </div>
-          <ThemeToggle />
+          <ThemeToggle className="rounded-none" />
         </div>
 
         {/* Workspace Toggle */}
-        <div className="px-0 py-0 rounded-none">
+        <div className="px-3 py-2">
           <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
             <PopoverTrigger asChild>
               <button className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] transition-colors">
