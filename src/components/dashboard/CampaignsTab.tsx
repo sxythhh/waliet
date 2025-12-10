@@ -86,6 +86,8 @@ interface RecentActivity {
   description: string;
   timestamp: string;
   amount?: number;
+  campaignLogo?: string | null;
+  campaignName?: string | null;
 }
 interface CampaignsTabProps {
   onOpenPrivateDialog: () => void;
@@ -195,17 +197,41 @@ export function CampaignsTab({
     // Fetch recent activity (recent transactions)
     const {
       data: recentTransactions
-    } = await supabase.from("wallet_transactions").select("id, type, amount, description, created_at").eq("user_id", user.id).order("created_at", {
+    } = await supabase.from("wallet_transactions").select("id, type, amount, description, created_at, metadata").eq("user_id", user.id).order("created_at", {
       ascending: false
     }).limit(5);
-    const activities: RecentActivity[] = (recentTransactions || []).map(tx => ({
-      id: tx.id,
-      type: 'earning' as const,
-      title: tx.type === 'earning' ? 'Payment Received' : tx.type === 'withdrawal' ? 'Withdrawal' : 'Transaction',
-      description: tx.description || 'Campaign payout',
-      timestamp: tx.created_at,
-      amount: tx.amount
-    }));
+
+    // Extract campaign IDs from metadata and fetch campaign info
+    const campaignIds = (recentTransactions || [])
+      .map(tx => (tx.metadata as any)?.campaign_id)
+      .filter(Boolean);
+    
+    let campaignMap: Record<string, { brand_logo_url: string | null; brand_name: string }> = {};
+    if (campaignIds.length > 0) {
+      const { data: campaignsData } = await supabase
+        .from("campaigns")
+        .select("id, brand_logo_url, brand_name")
+        .in("id", campaignIds);
+      campaignMap = (campaignsData || []).reduce((acc, c) => {
+        acc[c.id] = { brand_logo_url: c.brand_logo_url, brand_name: c.brand_name };
+        return acc;
+      }, {} as Record<string, { brand_logo_url: string | null; brand_name: string }>);
+    }
+
+    const activities: RecentActivity[] = (recentTransactions || []).map(tx => {
+      const campaignId = (tx.metadata as any)?.campaign_id;
+      const campaign = campaignId ? campaignMap[campaignId] : null;
+      return {
+        id: tx.id,
+        type: 'earning' as const,
+        title: tx.type === 'earning' ? 'Payment Received' : tx.type === 'withdrawal' ? 'Withdrawal' : 'Transaction',
+        description: tx.description || 'Campaign payout',
+        timestamp: tx.created_at,
+        amount: tx.amount,
+        campaignLogo: campaign?.brand_logo_url,
+        campaignName: campaign?.brand_name
+      };
+    });
     setRecentActivity(activities);
   };
   const fetchBoostApplications = async () => {
@@ -621,7 +647,7 @@ export function CampaignsTab({
       }}>Recent Activity</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {recentActivity.slice(0, 6).map(activity => <div key={activity.id} className="group p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wide">
                     {activity.title}
                   </span>
@@ -629,8 +655,24 @@ export function CampaignsTab({
                       {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
                     </span>}
                 </div>
-                <p className="text-sm text-foreground/80 line-clamp-2 leading-relaxed">{activity.description}</p>
-                <p className="text-[10px] text-muted-foreground/60 mt-2">
+                <div className="flex items-start gap-3">
+                  {activity.campaignLogo ? (
+                    <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
+                      <img src={activity.campaignLogo} alt={activity.campaignName || ''} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-lg flex-shrink-0 ring-1 ring-border bg-muted flex items-center justify-center">
+                      <Wallet className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    {activity.campaignName && (
+                      <p className="text-sm font-medium text-foreground truncate mb-0.5">{activity.campaignName}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{activity.description}</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground/60 mt-3">
                   {new Date(activity.timestamp).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
