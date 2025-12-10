@@ -176,8 +176,13 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Trigger the sync edge function
-      await supabase.functions.invoke('sync-campaign-video-metrics');
+      // Trigger the sync edge function for this specific campaign
+      const { error } = await supabase.functions.invoke('sync-campaign-video-metrics', {
+        body: { campaignId }
+      });
+      if (error) {
+        console.error('Error from sync function:', error);
+      }
       // Wait a moment then refetch
       await new Promise(resolve => setTimeout(resolve, 1000));
       await fetchMetrics();
