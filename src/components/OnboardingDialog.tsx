@@ -396,6 +396,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                       placeholder="John"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
+                      className="bg-background"
                     />
                   </div>
                   <div className="space-y-2">
@@ -404,6 +405,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                       placeholder="Doe"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
+                      className="bg-background"
                     />
                   </div>
                 </div>
