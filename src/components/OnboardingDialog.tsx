@@ -18,7 +18,7 @@ import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
-import discordIcon from "@/assets/discord-icon-new.png";
+
 import { useNavigate } from "react-router-dom";
 
 interface OnboardingDialogProps {
@@ -47,8 +47,6 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [age, setAge] = useState("");
-  const [discordConnected, setDiscordConnected] = useState(false);
 
   // Creator fields
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("tiktok");
@@ -65,49 +63,28 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
   const [businessType, setBusinessType] = useState("");
   const [companyName, setCompanyName] = useState("");
 
-  // Check if Discord is already connected
+  // Pre-populate name from profile
   useEffect(() => {
-    const checkDiscordConnection = async () => {
+    const loadProfileName = async () => {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("discord_id, full_name")
+        .select("full_name")
         .eq("id", userId)
         .single();
       
-      if (profile) {
-        setDiscordConnected(!!profile.discord_id);
-        if (profile.full_name) {
-          const nameParts = profile.full_name.split(" ");
-          setFirstName(nameParts[0] || "");
-          setLastName(nameParts.slice(1).join(" ") || "");
-        }
+      if (profile?.full_name) {
+        const nameParts = profile.full_name.split(" ");
+        setFirstName(nameParts[0] || "");
+        setLastName(nameParts.slice(1).join(" ") || "");
       }
     };
     
     if (open && userId) {
-      checkDiscordConnection();
+      loadProfileName();
     }
   }, [open, userId]);
 
   const totalSteps = accountType === "creator" ? 5 : 3;
-
-  const handleDiscordConnect = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-        scopes: 'identify email'
-      }
-    });
-    
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message
-      });
-    }
-  };
 
   const handleNext = async () => {
     if (step === 1 && !accountType) {
@@ -123,14 +100,6 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
         toast({
           variant: "destructive",
           title: "Please fill in all required fields"
-        });
-        return;
-      }
-
-      if (accountType === "creator" && !age) {
-        toast({
-          variant: "destructive",
-          title: "Please enter your age"
         });
         return;
       }
@@ -323,8 +292,8 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-[600px] border-0 bg-[#0a0a0a] p-0 [&>button]:hidden" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-        <div className="p-8 space-y-6">
+      <DialogContent className="sm:max-w-[420px] border-0 bg-[#0a0a0a] p-0 [&>button]:hidden" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+        <div className="p-6 space-y-5">
           {/* Progress */}
           <div className="flex items-center gap-2">
             {Array.from({ length: totalSteps }).map((_, i) => (
@@ -419,45 +388,6 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                   <Label>Phone Number</Label>
                   <PhoneInput value={phoneNumber} onChange={setPhoneNumber} />
                 </div>
-
-                {accountType === "creator" && (
-                  <>
-                    <div className="space-y-2">
-                      <Label>Age</Label>
-                      <Input
-                        type="number"
-                        placeholder="18"
-                        min="13"
-                        max="120"
-                        value={age}
-                        onChange={(e) => setAge(e.target.value)}
-                      />
-                    </div>
-
-                    {!discordConnected && (
-                      <div className="space-y-2">
-                        <Label>Discord (Optional)</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full h-12 bg-[#5865F2] hover:bg-[#4752C4] text-white border-0"
-                          onClick={handleDiscordConnect}
-                        >
-                          <img src={discordIcon} alt="Discord" className="h-5 w-5 mr-2" />
-                          Connect Discord
-                        </Button>
-                      </div>
-                    )}
-
-                    {discordConnected && (
-                      <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
-                        <img src={discordIcon} alt="Discord" className="h-5 w-5" />
-                        <span className="text-sm text-muted-foreground">Discord connected</span>
-                        <Check className="h-4 w-4 text-green-500 ml-auto" />
-                      </div>
-                    )}
-                  </>
-                )}
               </div>
 
               <div className="flex gap-3">
@@ -470,7 +400,7 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                 </Button>
                 <Button
                   onClick={handleNext}
-                  disabled={loading || !firstName || !phoneNumber || (accountType === "creator" && !age)}
+                  disabled={loading || !firstName || !phoneNumber}
                   className="flex-1 font-[Geist] tracking-[-0.5px]"
                 >
                   {loading ? "Saving..." : "Continue"}
@@ -488,21 +418,22 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
               </div>
 
               <div className="space-y-4">
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <Label>Platform</Label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="flex gap-2">
                     {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map((platform) => (
                       <button
                         key={platform}
                         type="button"
                         onClick={() => setSelectedPlatform(platform)}
-                        className={`p-3 rounded-lg transition-all ${
+                        className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-lg transition-all ${
                           selectedPlatform === platform
                             ? "bg-primary"
                             : "bg-muted/30 hover:bg-muted/50"
                         }`}
                       >
                         {getPlatformIcon(platform)}
+                        <span className="text-[10px] font-medium capitalize">{platform === "twitter" ? "X" : platform}</span>
                       </button>
                     ))}
                   </div>
