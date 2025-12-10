@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PhoneInput } from "@/components/PhoneInput";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Building2, ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
@@ -314,44 +314,68 @@ export function OnboardingDialog({ open, onOpenChange, userId }: OnboardingDialo
                 <p className="text-muted-foreground">Choose your account type to get started</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={() => setAccountType("creator")}
-                  className={`p-6 rounded-lg border-2 transition-all hover:scale-105 ${
+                  className={`group relative p-5 rounded-xl border transition-all text-left ${
                     accountType === "creator"
-                      ? "border-primary bg-primary/10"
-                      : "border-muted bg-muted/20"
+                      ? "border-primary bg-primary/5"
+                      : "border-muted/50 hover:border-muted"
                   }`}
                 >
-                  <User className="h-12 w-12 mx-auto mb-4 text-primary" />
-                  <h3 className="font-semibold text-lg mb-2">Creator</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Join campaigns and earn money
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-base mb-0.5">Creator</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Join campaigns and earn money
+                      </p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      accountType === "creator" 
+                        ? "border-primary bg-primary" 
+                        : "border-muted-foreground/30"
+                    }`}>
+                      {accountType === "creator" && (
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      )}
+                    </div>
+                  </div>
                 </button>
 
                 <button
                   onClick={() => setAccountType("brand")}
-                  className={`p-6 rounded-lg border-2 transition-all hover:scale-105 ${
+                  className={`group relative p-5 rounded-xl border transition-all text-left ${
                     accountType === "brand"
-                      ? "border-primary bg-primary/10"
-                      : "border-muted bg-muted/20"
+                      ? "border-primary bg-primary/5"
+                      : "border-muted/50 hover:border-muted"
                   }`}
                 >
-                  <Building2 className="h-12 w-12 mx-auto mb-4 text-primary" />
-                  <h3 className="font-semibold text-lg mb-2">Brand</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Create campaigns and find creators
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-base mb-0.5">Brand</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Create campaigns and find creators
+                      </p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      accountType === "brand" 
+                        ? "border-primary bg-primary" 
+                        : "border-muted-foreground/30"
+                    }`}>
+                      {accountType === "brand" && (
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      )}
+                    </div>
+                  </div>
                 </button>
               </div>
 
               <Button
                 onClick={handleNext}
                 disabled={!accountType}
-                className="w-full h-12"
+                className="w-full h-12 font-[Geist] tracking-[-0.5px]"
               >
-                Continue <ArrowRight className="ml-2 h-4 w-4" />
+                Continue
               </Button>
             </div>
           )}
