@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      blueprints: {
+        Row: {
+          assets: Json | null
+          brand_id: string
+          content: string | null
+          created_at: string
+          id: string
+          platforms: string[] | null
+          status: string
+          target_personas: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assets?: Json | null
+          brand_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          platforms?: string[] | null
+          status?: string
+          target_personas?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          assets?: Json | null
+          brand_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          platforms?: string[] | null
+          status?: string
+          target_personas?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blueprints_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bounty_applications: {
         Row: {
           application_text: string | null

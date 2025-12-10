@@ -12,6 +12,8 @@ import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDet
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { AppSidebar } from "@/components/AppSidebar";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
+import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
+import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
@@ -26,6 +28,7 @@ export default function Dashboard() {
   const currentTab = searchParams.get("tab") || "campaigns";
   const workspace = searchParams.get("workspace") || "creator";
   const selectedCampaignId = searchParams.get("campaign");
+  const selectedBlueprintId = searchParams.get("blueprint");
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
 
@@ -92,17 +95,18 @@ export default function Dashboard() {
       return <BrandCampaignDetailView campaignId={selectedCampaignId} />;
     }
 
+    // Brand mode with selected blueprint - show editor
+    if (isBrandMode && currentBrand && selectedBlueprintId) {
+      return <BlueprintEditor blueprintId={selectedBlueprintId} brandId={currentBrand.id} />;
+    }
+
     // Brand mode tabs
     if (isBrandMode && currentBrand) {
       switch (currentTab) {
         case "campaigns":
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
         case "blueprints":
-          return (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">Blueprints coming soon</p>
-            </div>
-          );
+          return <BlueprintsTab brandId={currentBrand.id} />;
         case "creators":
           return (
             <div className="flex items-center justify-center h-64">
