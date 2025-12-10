@@ -1,4 +1,4 @@
-import { Layers, Dock, Compass, User, ArrowUpRight, LogOut, Settings, Trophy, Gift, MessageSquare, HelpCircle } from "lucide-react";
+import { Layers, Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle } from "lucide-react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import viralityIcon from "@/assets/virality-icon.png";
@@ -29,7 +29,7 @@ const menuItems = [{
 }, {
   title: "Profile",
   tab: "profile",
-  icon: User
+  icon: CircleUser
 }];
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ export function AppSidebar() {
                 </div>
                 <div className="space-y-1">
                   <button className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity" onClick={() => navigate("/leaderboard")}>
-                    <Trophy className="w-4 h-4" />
+                    <Medal className="w-4 h-4" />
                     <span className="font-medium text-sm">Leaderboard</span>
                   </button>
                   <button className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity" onClick={() => navigate("/referrals")}>
@@ -154,7 +154,7 @@ export function AppSidebar() {
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
             return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
-                  {item.tab === "campaigns" ? <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} fill={isActive ? "currentColor" : "none"} />}
+                  {item.tab === "campaigns" ? <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} />}
                   <span className="tracking-[-0.5px]">{item.title}</span>
                 </button>;
           })}
@@ -162,12 +162,12 @@ export function AppSidebar() {
 
           {/* Secondary Links */}
           <div className="mt-4 pt-4">
-            <button onClick={() => navigate("/leaderboard")} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#0e0e0e] transition-colors">
-              <Trophy className="h-5 w-5" />
+            <button onClick={() => navigate("/leaderboard")} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[#0e0e0e] transition-colors ${location.pathname === '/leaderboard' ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
+              <Medal className={`h-5 w-5 ${location.pathname === '/leaderboard' ? 'text-[#2060df]' : ''}`} />
               <span className="tracking-[-0.5px]">Leaderboard</span>
             </button>
-            <button onClick={() => navigate("/referrals")} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#0e0e0e] transition-colors">
-              <Gift className="h-5 w-5" />
+            <button onClick={() => navigate("/referrals")} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[#0e0e0e] transition-colors ${location.pathname === '/referrals' ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
+              <Gift className={`h-5 w-5 ${location.pathname === '/referrals' ? 'text-[#2060df]' : ''}`} />
               <span className="tracking-[-0.5px]">Referrals</span>
             </button>
             <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#0e0e0e] transition-colors">
