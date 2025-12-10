@@ -317,11 +317,7 @@ export default function Auth() {
                 Back
               </button>
               
-              <div className="text-center pb-2">
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  Sign in as Creator
-                </p>
-              </div>
+              
               
               <form onSubmit={handleEmailAuth} className="space-y-4">
                 <div className="space-y-2">
