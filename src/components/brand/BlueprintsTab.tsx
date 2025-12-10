@@ -119,17 +119,13 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
       </div>
 
       {blueprints.length === 0 ? (
-        <Card className="p-12 flex flex-col items-center justify-center text-center">
-          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No blueprints yet</h3>
-          <p className="text-muted-foreground mb-4">
-            Create your first blueprint to get started with campaign briefs.
-          </p>
-          <Button onClick={createBlueprint} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Blueprint
-          </Button>
-        </Card>
+        <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
+          <iframe
+            src="https://joinvirality.com/blueprint-card"
+            className="w-full h-full border-0 rounded-lg"
+            title="Blueprint Introduction"
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {blueprints.map((blueprint) => (
