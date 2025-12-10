@@ -130,7 +130,7 @@ export function BrandCampaignDetailView({
 
       {/* Content Area */}
       <div className="flex-1 overflow-auto">
-        <CampaignAnalyticsTable campaignId={campaignId} view={activeDetailTab === 'payouts' ? 'transactions' : 'analytics'} />
+        <CampaignAnalyticsTable campaignId={campaignId} view={activeDetailTab === 'payouts' ? 'transactions' : 'analytics'} className="px-[10px] py-0" />
       </div>
       </div>
     </div>;
