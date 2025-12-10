@@ -526,9 +526,9 @@ export function CampaignsTab({
         </div>
         <div className="flex gap-2">
           
-          <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="gap-2">
+          <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="gap-2 border-black/0 font-medium text-sm">
             <Plus className="h-4 w-4" />
-            Join Private
+            Private Campaign 
           </Button>
         </div>
       </div>
@@ -616,7 +616,9 @@ export function CampaignsTab({
 
       {/* Recent Activity Section */}
       {recentActivity.length > 0 && <div className="space-y-4">
-          <h3 className="text-lg font-semibold tracking-tight" style={{ letterSpacing: '-0.5px' }}>Recent Activity</h3>
+          <h3 className="text-lg font-semibold tracking-tight" style={{
+        letterSpacing: '-0.5px'
+      }}>Recent Activity</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {recentActivity.slice(0, 6).map(activity => <div key={activity.id} className="group p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200">
                 <div className="flex items-center justify-between mb-2">
@@ -630,10 +632,10 @@ export function CampaignsTab({
                 <p className="text-sm text-foreground/80 line-clamp-2 leading-relaxed">{activity.description}</p>
                 <p className="text-[10px] text-muted-foreground/60 mt-2">
                   {new Date(activity.timestamp).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            })}
                 </p>
               </div>)}
           </div>
