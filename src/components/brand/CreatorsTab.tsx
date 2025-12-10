@@ -245,10 +245,10 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       ) : (
         <>
           {/* Desktop Table */}
-          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50 dark:border dark:border-[#111111] max-h-[600px] overflow-y-auto">
+          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50 border border-[#e0e0e0] dark:border-[#111111] max-h-[600px] overflow-y-auto">
             <table className="w-full">
               <thead className="sticky top-0 bg-card z-10">
-                <tr className="border-b border-[#111111]">
+                <tr className="border-b border-[#e0e0e0] dark:border-[#111111]">
                   <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Creator</th>
                   <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Accounts</th>
                   <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Views</th>
@@ -397,7 +397,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
 
       {/* Creator Detail Dialog */}
       <Dialog open={!!selectedCreator} onOpenChange={(open) => !open && setSelectedCreator(null)}>
-        <DialogContent className="sm:max-w-[480px] bg-[#0a0a0a] border-transparent">
+        <DialogContent className="sm:max-w-[480px] bg-white dark:bg-[#0a0a0a] border-border">
           {selectedCreator && (
             <>
               <DialogHeader>
@@ -427,11 +427,11 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-[#141414] p-4">
+                  <div className="rounded-xl bg-muted dark:bg-[#141414] p-4">
                     <p className="text-xs text-muted-foreground mb-1">Total Views</p>
                     <p className="text-xl font-bold tabular-nums">{formatNumber(selectedCreator.total_views)}</p>
                   </div>
-                  <div className="rounded-xl bg-[#141414] p-4">
+                  <div className="rounded-xl bg-muted dark:bg-[#141414] p-4">
                     <p className="text-xs text-muted-foreground mb-1">Total Earnings</p>
                     <p className="text-xl font-bold tabular-nums text-green-500">${selectedCreator.total_earnings.toFixed(2)}</p>
                   </div>
@@ -444,7 +444,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                     {selectedCreator.social_accounts.map((account, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between rounded-xl bg-[#141414] p-3"
+                        className="flex items-center justify-between rounded-xl bg-muted dark:bg-[#141414] p-3"
                       >
                         <div className="flex items-center gap-3">
                           <img

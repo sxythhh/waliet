@@ -33,15 +33,14 @@ export function CreateCampaignTypeDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button 
-            className="gap-2 font-geist tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)]"
-            style={{ borderTop: '1px solid #4b85f7' }}
+            className="gap-2 font-geist tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)] border-t border-[#d0d0d0] dark:border-[#4b85f7]"
           >
             <Plus className="h-4 w-4" />
             Create Campaign
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[520px] bg-[#0a0a0a] border-transparent">
+      <DialogContent className="sm:max-w-[520px] bg-white dark:bg-[#0a0a0a] border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Create New Campaign</DialogTitle>
         </DialogHeader>
@@ -49,10 +48,10 @@ export function CreateCampaignTypeDialog({
         <div className="space-y-6 pt-2">
           {/* Blueprint Select */}
           <Select value={selectedBlueprint} onValueChange={setSelectedBlueprint}>
-            <SelectTrigger className="w-full bg-[#141414] border-transparent h-12">
+            <SelectTrigger className="w-full bg-muted dark:bg-[#141414] border-transparent h-12">
               <SelectValue placeholder="Select a blueprint" />
             </SelectTrigger>
-            <SelectContent className="bg-[#141414] border-transparent">
+            <SelectContent className="bg-white dark:bg-[#141414] border-border">
               <SelectItem value="new">New Blueprint</SelectItem>
             </SelectContent>
           </Select>
@@ -65,7 +64,7 @@ export function CreateCampaignTypeDialog({
               {/* Clipping Option */}
               <button
                 onClick={handleClippingClick}
-                className="flex flex-col items-start p-4 rounded-xl bg-[#141414] border-transparent hover:bg-[#1a1a1a] transition-all text-left group"
+                className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div 
@@ -84,7 +83,7 @@ export function CreateCampaignTypeDialog({
               {/* Managed Option */}
               <button
                 onClick={handleManagedClick}
-                className="flex flex-col items-start p-4 rounded-xl bg-[#141414] border-transparent hover:bg-[#1a1a1a] transition-all text-left group"
+                className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div 
