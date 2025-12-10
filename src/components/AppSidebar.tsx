@@ -141,7 +141,7 @@ export function AppSidebar() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-56 lg:w-64 h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414]">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 py-5">
+        <div className="flex items-center gap-2.5 px-4 py-[10px]">
           <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
           <span className="font-geist font-bold tracking-tighter-custom text-lg text-white">
             VIRALITY
