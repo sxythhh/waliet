@@ -179,7 +179,9 @@ serve(async (req) => {
         const debugResult = await debugResponse.json();
         console.log('[fetch-shortimize-videos] Debug fetch (no collection filter):', {
           totalVideos: debugResult.pagination?.total || 0,
-          sampleCollections: debugResult.data?.slice(0, 3).map((v: any) => v.collection) || []
+          // Log the full structure of first video to see available fields
+          firstVideoFields: debugResult.data?.[0] ? Object.keys(debugResult.data[0]) : [],
+          firstVideoSample: debugResult.data?.[0] || null
         });
       }
     }
