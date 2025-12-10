@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
+import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 
 interface Campaign {
   id: string;
@@ -17,6 +18,19 @@ interface Campaign {
   banner_url: string | null;
   slug: string;
   brand_id: string | null;
+  guidelines: string | null;
+  allowed_platforms: string[];
+  application_questions: any;
+  embed_url?: string | null;
+  preview_url?: string | null;
+  analytics_url?: string | null;
+  is_private?: boolean;
+  access_code?: string | null;
+  requires_application?: boolean;
+  is_infinite_budget?: boolean;
+  is_featured?: boolean;
+  campaign_type?: string | null;
+  category?: string | null;
 }
 
 interface BrandCampaignDetailViewProps {
@@ -30,6 +44,7 @@ export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewP
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("home");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCampaign();
@@ -103,16 +118,35 @@ export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewP
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted"
+            onClick={() => setEditDialogOpen(true)}
+          >
             <Pencil className="h-3.5 w-3.5" />
             Edit Campaign
           </Button>
-          <Button size="sm" className="gap-2">
+          <Button size="sm" className="gap-2 font-sans tracking-[-0.5px]">
             <Plus className="h-3.5 w-3.5" />
             Top Up Budget
           </Button>
         </div>
       </div>
+
+      {campaign.brand_id && (
+        <CreateCampaignDialog
+          brandId={campaign.brand_id}
+          brandName=""
+          campaign={campaign}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={() => {
+            fetchCampaign();
+            setEditDialogOpen(false);
+          }}
+        />
+      )}
 
       {/* Tab Navigation - Horizontal bottom style */}
       <div className="border-b border-border">
