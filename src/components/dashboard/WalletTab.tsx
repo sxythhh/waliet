@@ -898,88 +898,107 @@ export function WalletTab() {
   };
   return <div className="space-y-6 max-w-6xl mx-auto pt-6">
 
-      {/* Payout Methods - First */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {payoutMethods.map(method => {
-          const getMethodLabel = () => {
-            switch (method.method) {
-              case "paypal":
-                return "PayPal";
-              case "crypto":
-                return "Crypto";
-              case "bank":
-                return "Bank";
-              case "wise":
-                return "Wise";
-              case "revolut":
-                return "Revolut";
-              case "tips":
-                return "TIPS";
-              default:
-                return method.method;
-            }
-          };
-          const getMethodDetails = () => {
-            switch (method.method) {
-              case "paypal":
-                return method.details.email;
-              case "crypto":
-                return `${method.details.address?.slice(0, 6)}...${method.details.address?.slice(-4)}`;
-              case "bank":
-                return `${method.details.bankName} - ****${method.details.accountNumber?.slice(-4)}`;
-              case "wise":
-                return method.details.email;
-              case "revolut":
-                return method.details.email;
-              case "upi":
-                return method.details.upi_id;
-              case "tips":
-                return method.details.username;
-              default:
-                return "N/A";
-            }
-          };
-          return (
-            <div
-              key={method.id}
-              className="group relative rounded-xl bg-card p-4 hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">{getMethodLabel()}</p>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">{getMethodDetails()}</p>
-                  {method.method === 'crypto' && method.details?.network && (
-                    <p className="text-[10px] text-muted-foreground/70 mt-1 uppercase tracking-wider">
-                      {method.details.network}
-                    </p>
-                  )}
+      {/* Page Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
+          <p className="text-sm text-muted-foreground mt-1">View your transactions and payment methods</p>
+        </div>
+        <Button onClick={() => setDialogOpen(true)} disabled={payoutMethods.length >= 3} size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Payment Method
+        </Button>
+      </div>
+
+      {/* Payment Methods Section */}
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Payment Methods</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Configured payment methods for receiving payouts</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {payoutMethods.map(method => {
+            const getMethodLabel = () => {
+              switch (method.method) {
+                case "paypal":
+                  return "PayPal";
+                case "crypto":
+                  return "Crypto";
+                case "bank":
+                  return "Bank";
+                case "wise":
+                  return "Wise";
+                case "revolut":
+                  return "Revolut";
+                case "tips":
+                  return "TIPS";
+                default:
+                  return method.method;
+              }
+            };
+            const getMethodDetails = () => {
+              switch (method.method) {
+                case "paypal":
+                  return method.details.email;
+                case "crypto":
+                  return `${method.details.address?.slice(0, 6)}...${method.details.address?.slice(-4)}`;
+                case "bank":
+                  return `${method.details.bankName} - ****${method.details.accountNumber?.slice(-4)}`;
+                case "wise":
+                  return method.details.email;
+                case "revolut":
+                  return method.details.email;
+                case "upi":
+                  return method.details.upi_id;
+                case "tips":
+                  return method.details.username;
+                default:
+                  return "N/A";
+              }
+            };
+            return (
+              <div
+                key={method.id}
+                className="group relative rounded-xl bg-card p-4 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">{getMethodLabel()}</p>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">{getMethodDetails()}</p>
+                    {method.method === 'crypto' && method.details?.network && (
+                      <p className="text-[10px] text-muted-foreground/70 mt-1 uppercase tracking-wider">
+                        {method.details.network}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteMethod(method.id)}
+                    className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteMethod(method.id)}
-                  className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
-            </div>
-          );
-        })}
-        
-        {/* Add Method Card */}
-        <button
-          onClick={() => setDialogOpen(true)}
-          disabled={payoutMethods.length >= 3}
-          className="group rounded-xl border border-dashed border-border/50 hover:border-muted-foreground/30 transition-colors p-4 min-h-[80px] disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <div className="h-full flex items-center justify-center gap-2">
-            <Plus className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-            <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-              Add Method
-            </span>
-          </div>
-        </button>
+            );
+          })}
+          
+          {/* Add Method Card */}
+          {payoutMethods.length < 3 && (
+            <button
+              onClick={() => setDialogOpen(true)}
+              className="group rounded-xl bg-card hover:bg-muted/50 transition-colors p-4 min-h-[80px]"
+            >
+              <div className="h-full flex items-center justify-center gap-2">
+                <Plus className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                  Add Method
+                </span>
+              </div>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Balance Cards - Side by Side */}
