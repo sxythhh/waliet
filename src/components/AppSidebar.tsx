@@ -153,27 +153,27 @@ export function AppSidebar() {
           <div>
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors ${isActive ? 'text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
-                  {item.tab === "campaigns" ? <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : ''}`} />}
-                  <span>{item.title}</span>
+            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-neutral-400 hover:text-white'}`}>
+                  {item.tab === "campaigns" ? <WebStoriesIcon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} /> : <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2060df]' : ''}`} fill={isActive ? "currentColor" : "none"} />}
+                  <span className="tracking-[-0.5px]">{item.title}</span>
                 </button>;
           })}
           </div>
 
           {/* Secondary Links */}
           <div className="mt-4 pt-4">
-            <button onClick={() => navigate("/leaderboard")} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">
+            <button onClick={() => navigate("/leaderboard")} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#0e0e0e] transition-colors">
               <Trophy className="h-5 w-5" />
-              <span>Leaderboard</span>
+              <span className="tracking-[-0.5px]">Leaderboard</span>
             </button>
-            <button onClick={() => navigate("/referrals")} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">
+            <button onClick={() => navigate("/referrals")} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#0e0e0e] transition-colors">
               <Gift className="h-5 w-5" />
-              <span>Referrals</span>
+              <span className="tracking-[-0.5px]">Referrals</span>
             </button>
-            <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">
+            <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#0e0e0e] transition-colors">
               <div className="flex items-center gap-3">
                 <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
-                <span>Discord</span>
+                <span className="tracking-[-0.5px]">Discord</span>
               </div>
               <ArrowUpRight className="w-4 h-4 opacity-50" />
             </button>
