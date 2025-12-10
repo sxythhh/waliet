@@ -1050,7 +1050,8 @@ export function WalletTab() {
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       {/* Icon */}
-                      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${
+                      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center overflow-hidden ${
+                        transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? '' :
                         transaction.type === 'earning' ? 'bg-green-500/15' :
                         transaction.type === 'balance_correction' ? 'bg-orange-500/15' :
                         transaction.type === 'referral' ? 'bg-purple-500/15' :
@@ -1058,7 +1059,13 @@ export function WalletTab() {
                         transaction.type === 'transfer_sent' ? 'bg-red-500/15' :
                         'bg-red-500/15'
                       }`}>
-                        {transaction.type === 'earning' ? (
+                        {transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? (
+                          <img 
+                            src={transaction.campaign.brand_logo_url} 
+                            alt={transaction.campaign.brand_name || 'Brand'} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : transaction.type === 'earning' ? (
                           <ArrowDownLeft className="h-4 w-4 text-green-500" />
                         ) : transaction.type === 'balance_correction' ? (
                           <RefreshCw className="h-4 w-4 text-orange-500" />
