@@ -17,10 +17,19 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Starting campaign video metrics sync...');
+    // Check if a specific campaignId was provided
+    let specificCampaignId: string | null = null;
+    try {
+      const body = await req.json();
+      specificCampaignId = body.campaignId || null;
+    } catch {
+      // No body or invalid JSON, sync all campaigns
+    }
 
-    // Get all campaigns that have Shortimize tracking configured via their brand
-    const { data: campaigns, error: campaignsError } = await supabaseClient
+    console.log('Starting campaign video metrics sync...', specificCampaignId ? `for campaign ${specificCampaignId}` : 'for all campaigns');
+
+    // Build query for campaigns
+    let query = supabaseClient
       .from('campaigns')
       .select(`
         id,
@@ -33,12 +42,19 @@ serve(async (req) => {
       `)
       .eq('status', 'active');
 
+    // Filter to specific campaign if provided
+    if (specificCampaignId) {
+      query = query.eq('id', specificCampaignId);
+    }
+
+    const { data: campaigns, error: campaignsError } = await query;
+
     if (campaignsError) {
       console.error('Error fetching campaigns:', campaignsError);
       throw campaignsError;
     }
 
-    console.log(`Found ${campaigns?.length || 0} active campaigns`);
+    console.log(`Found ${campaigns?.length || 0} campaigns to sync`);
 
     let syncedCount = 0;
     let errorCount = 0;
@@ -65,7 +81,8 @@ serve(async (req) => {
           const url = new URL('https://api.shortimize.com/videos');
           url.searchParams.set('limit', '100');
           url.searchParams.set('page', page.toString());
-          url.searchParams.set('collections', encodeURIComponent(brand.collection_name));
+          // URLSearchParams already handles encoding, don't double-encode
+          url.searchParams.set('collections', brand.collection_name);
 
           const response = await fetch(url.toString(), {
             method: 'GET',
