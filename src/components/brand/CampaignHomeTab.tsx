@@ -10,6 +10,7 @@ import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { toast } from "sonner";
 
 interface CampaignHomeTabProps {
   campaignId: string;
@@ -187,16 +188,32 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       
       if (error) {
         console.error('[CampaignHomeTab] Error from sync function:', error);
+        toast.error('Failed to sync metrics: ' + error.message);
+        return;
       }
       
-      // Wait a moment then refetch
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if the sync was successful
+      if (data && !data.success) {
+        const errorMsg = data.errorMessage || 'Unknown error during sync';
+        console.error('[CampaignHomeTab] Sync failed:', errorMsg);
+        toast.error('Sync failed: ' + errorMsg);
+        return;
+      }
+      
+      if (data?.synced > 0) {
+        toast.success(`Successfully synced metrics for ${data.synced} campaign(s)`);
+      } else if (data?.errors > 0) {
+        toast.warning('Sync completed with errors: ' + (data.errorMessage || 'Check logs for details'));
+      }
+      
+      // Refetch data
       await fetchMetrics();
       await fetchData();
       
       console.log('[CampaignHomeTab] Refresh complete');
     } catch (error) {
       console.error('[CampaignHomeTab] Error refreshing metrics:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to refresh metrics');
     } finally {
       setIsRefreshing(false);
     }

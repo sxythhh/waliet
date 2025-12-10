@@ -6,6 +6,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Fetch with retry logic for rate limiting
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch(url, options);
+    
+    if (response.status === 429) {
+      // Rate limited - wait and retry with exponential backoff
+      const waitTime = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
+      console.log(`Rate limited, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+      await delay(waitTime);
+      continue;
+    }
+    
+    return response;
+  }
+  
+  throw new Error('Max retries exceeded due to rate limiting');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -63,6 +87,7 @@ serve(async (req) => {
 
     let syncedCount = 0;
     let errorCount = 0;
+    let errorMessage = '';
 
     for (const campaign of campaigns || []) {
       // The brands relationship may return as array from Supabase, get first element
@@ -71,6 +96,8 @@ serve(async (req) => {
       
       if (!brand?.shortimize_api_key || !brand?.collection_name) {
         console.log(`Campaign ${campaign.id} - brand has no Shortimize config, skipping`);
+        errorMessage = 'Brand has no Shortimize API key or collection configured';
+        errorCount++;
         continue;
       }
 
@@ -86,10 +113,9 @@ serve(async (req) => {
           const url = new URL('https://api.shortimize.com/videos');
           url.searchParams.set('limit', '100');
           url.searchParams.set('page', page.toString());
-          // URLSearchParams already handles encoding, don't double-encode
           url.searchParams.set('collections', brand.collection_name);
 
-          const response = await fetch(url.toString(), {
+          const response = await fetchWithRetry(url.toString(), {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${brand.shortimize_api_key}`,
@@ -100,7 +126,8 @@ serve(async (req) => {
           if (!response.ok) {
             const errorText = await response.text();
             console.error(`Shortimize API error for campaign ${campaign.id}:`, errorText);
-            throw new Error(`Shortimize API error: ${response.status}`);
+            errorMessage = `Shortimize API error: ${response.status}`;
+            throw new Error(errorMessage);
           }
 
           const data = await response.json();
@@ -111,6 +138,8 @@ serve(async (req) => {
           const pagination = data.pagination;
           if (pagination && page < pagination.total_pages) {
             page++;
+            // Small delay between pages to avoid rate limiting
+            await delay(500);
           } else {
             hasMore = false;
           }
@@ -150,6 +179,7 @@ serve(async (req) => {
 
         if (insertError) {
           console.error(`Error inserting metrics for campaign ${campaign.id}:`, insertError);
+          errorMessage = insertError.message;
           errorCount++;
         } else {
           console.log(`Successfully recorded metrics for campaign ${campaign.id}: ${totalViews} views, ${totalLikes} likes, ${totalComments} comments, ${allVideos.length} videos`);
@@ -158,6 +188,7 @@ serve(async (req) => {
 
       } catch (error) {
         console.error(`Error processing campaign ${campaign.id}:`, error);
+        errorMessage = error instanceof Error ? error.message : 'Unknown error';
         errorCount++;
       }
     }
@@ -166,9 +197,10 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        success: true,
+        success: errorCount === 0,
         synced: syncedCount,
         errors: errorCount,
+        errorMessage: errorCount > 0 ? errorMessage : null,
         timestamp: new Date().toISOString(),
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -177,7 +209,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in sync-campaign-video-metrics:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ 
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
