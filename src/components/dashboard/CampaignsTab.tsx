@@ -652,44 +652,34 @@ export function CampaignsTab({
             <div className="absolute left-[18px] top-3 bottom-3 w-px bg-border" />
             
             <div className="space-y-0">
-              {recentActivity.slice(0, 6).map((activity, index) => (
-                <div key={activity.id} className="relative flex items-center gap-4 py-3 group">
+              {recentActivity.slice(0, 6).map((activity, index) => <div key={activity.id} className="relative flex items-center gap-4 py-3 group">
                   {/* Timeline dot */}
                   <div className="relative z-10 flex-shrink-0">
-                    {activity.campaignLogo ? (
-                      <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-background bg-muted">
+                    {activity.campaignLogo ? <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-background bg-muted">
                         <img src={activity.campaignLogo} alt={activity.campaignName || ''} className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-9 h-9 rounded-full ring-2 ring-background bg-muted flex items-center justify-center">
+                      </div> : <div className="w-9 h-9 rounded-full ring-2 ring-background bg-muted flex items-center justify-center">
                         <Wallet className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      {activity.campaignName && (
-                        <p className="text-sm font-medium text-foreground truncate">{activity.campaignName}</p>
-                      )}
+                      {activity.campaignName && <p className="text-sm text-foreground truncate font-semibold">{activity.campaignName}</p>}
                       <p className="text-xs text-muted-foreground">
                         {new Date(activity.timestamp).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
                       </p>
                     </div>
                     
-                    {activity.amount !== undefined && (
-                      <span className={`text-sm font-semibold tabular-nums flex-shrink-0 ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {activity.amount !== undefined && <span className={`text-sm font-semibold tabular-nums flex-shrink-0 ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
                         {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
-                      </span>
-                    )}
+                      </span>}
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </div>}
