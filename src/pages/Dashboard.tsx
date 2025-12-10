@@ -7,6 +7,8 @@ import { TrainingTab } from "@/components/dashboard/TrainingTab";
 import { ReferralsTab } from "@/components/dashboard/ReferralsTab";
 import { WalletTab } from "@/components/dashboard/WalletTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
+import { BrandCampaignsTab } from "@/components/dashboard/BrandCampaignsTab";
+import { BrandAnalyticsTab } from "@/components/dashboard/BrandAnalyticsTab";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { AppSidebar } from "@/components/AppSidebar";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
@@ -18,13 +20,39 @@ export default function Dashboard() {
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [currentBrand, setCurrentBrand] = useState<{ id: string; name: string; slug: string } | null>(null);
   const navigate = useNavigate();
+  
   const currentTab = searchParams.get("tab") || "campaigns";
+  const workspace = searchParams.get("workspace") || "creator";
+  const isCreatorMode = workspace === "creator";
+  const isBrandMode = !isCreatorMode;
 
   useEffect(() => {
     checkAuth();
     fetchCampaigns();
   }, []);
+
+  // Fetch brand data when workspace changes
+  useEffect(() => {
+    if (isBrandMode && workspace) {
+      fetchBrandBySlug(workspace);
+    } else {
+      setCurrentBrand(null);
+    }
+  }, [workspace, isBrandMode]);
+
+  const fetchBrandBySlug = async (slug: string) => {
+    const { data } = await supabase
+      .from("brands")
+      .select("id, name, slug")
+      .eq("slug", slug)
+      .single();
+    
+    if (data) {
+      setCurrentBrand(data);
+    }
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -58,6 +86,21 @@ export default function Dashboard() {
   };
 
   const renderContent = () => {
+    // Brand mode tabs
+    if (isBrandMode && currentBrand) {
+      switch (currentTab) {
+        case "campaigns":
+          return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
+        case "analytics":
+          return <BrandAnalyticsTab brandId={currentBrand.id} />;
+        case "profile":
+          return <ProfileTab />;
+        default:
+          return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
+      }
+    }
+
+    // Creator mode tabs
     switch (currentTab) {
       case "campaigns":
         return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
@@ -86,7 +129,7 @@ export default function Dashboard() {
           pt-14 pb-20 md:pt-0 md:pb-0
           ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" 
             ? "" 
-            : "px-4 sm:px-6 md:px-8 py-6 md:py-8"
+            : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"
           }
         `}>
           {renderContent()}
