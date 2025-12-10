@@ -75,7 +75,10 @@ export function AppSidebar() {
   return <>
       {/* Mobile Header - Top */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-[#0a0a0a] px-4">
-        <OptimizedImage src={newLogo} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
+        <div className="flex items-center gap-2">
+          <OptimizedImage src={viralityIcon} alt="Logo" className="h-7 w-7 rounded-lg object-cover" />
+          <span className="font-geist font-bold tracking-tighter-custom text-base text-white">VIRALITY</span>
+        </div>
         <div className="flex items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
