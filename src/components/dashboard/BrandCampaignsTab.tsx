@@ -226,32 +226,10 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
                       <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1 group-hover:underline">
                         {campaign.title}
                       </h3>
-                      <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                          onClick={() => handleCampaignClick(campaign)}
-                        >
-                          <BarChart3 className="h-3.5 w-3.5" />
-                        </Button>
-                        <CreateCampaignDialog 
-                          brandId={brandId} 
-                          brandName={brandName} 
-                          onSuccess={fetchBrandData} 
-                          campaign={campaign} 
-                          onDelete={() => handleDeleteClick(campaign)} 
-                          trigger={
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                          } 
-                        />
-                      </div>
                     </div>
 
                     {/* Budget Progress */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card border-t border-[#e0e0e0] dark:border-[#262626]">
+                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
                       <div className="flex items-baseline justify-between">
                         <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
                           <span className="text-base font-bold tabular-nums">${usedBudget.toLocaleString()}</span>
@@ -259,7 +237,7 @@ export function BrandCampaignsTab({ brandId, brandName }: BrandCampaignsTabProps
                         </div>
                       </div>
                       
-                      <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
+                      <div className="relative h-1.5 rounded-full overflow-hidden bg-muted border-t border-[#e0e0e0] dark:border-[#262626]">
                         <div 
                           className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" 
                           style={{ width: `${budgetPercentage}%` }} 
