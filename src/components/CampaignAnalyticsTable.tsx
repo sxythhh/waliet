@@ -157,6 +157,11 @@ export function CampaignAnalyticsTable({
   const [isPaused, setIsPaused] = useState(false);
   const [demographicDialogOpen, setDemographicDialogOpen] = useState(false);
   const [selectedAccountForDemo, setSelectedAccountForDemo] = useState<AnalyticsData | null>(null);
+  const [transactionsSortBy, setTransactionsSortBy] = useState<'date' | 'amount'>('date');
+  const [transactionsSortDir, setTransactionsSortDir] = useState<'asc' | 'desc'>('desc');
+  const [transactionsStartDate, setTransactionsStartDate] = useState<string>('');
+  const [transactionsEndDate, setTransactionsEndDate] = useState<string>('');
+  const [selectedTransactionUser, setSelectedTransactionUser] = useState<Transaction | null>(null);
   const itemsPerPage = 20;
   const transactionsPerPage = 20;
 
@@ -171,6 +176,10 @@ export function CampaignAnalyticsTable({
     setPlatformFilter("all");
     setSelectedDateRange("all");
     setDateRanges([]);
+    setTransactionsSortBy('date');
+    setTransactionsSortDir('desc');
+    setTransactionsStartDate('');
+    setTransactionsEndDate('');
   }, [campaignId]);
 
   // Sync activeTab with view prop
@@ -1098,8 +1107,33 @@ export function CampaignAnalyticsTable({
   const totalPages = Math.ceil(filteredAnalytics.length / itemsPerPage);
   const paginatedAnalytics = filteredAnalytics.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
-  // Transaction pagination with filter
-  const filteredTransactions = transactions;
+  // Transaction pagination with filter and sort
+  const filteredTransactions = transactions
+    .filter(txn => {
+      if (transactionsStartDate) {
+        const txnDate = new Date(txn.created_at);
+        const startDate = new Date(transactionsStartDate);
+        if (txnDate < startDate) return false;
+      }
+      if (transactionsEndDate) {
+        const txnDate = new Date(txn.created_at);
+        const endDate = new Date(transactionsEndDate);
+        endDate.setHours(23, 59, 59, 999);
+        if (txnDate > endDate) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (transactionsSortBy === 'amount') {
+        return transactionsSortDir === 'desc' 
+          ? Math.abs(Number(b.amount)) - Math.abs(Number(a.amount))
+          : Math.abs(Number(a.amount)) - Math.abs(Number(b.amount));
+      }
+      // Default: sort by date
+      return transactionsSortDir === 'desc'
+        ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        : new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
     
   const totalTransactionPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
   const paginatedTransactions = filteredTransactions.slice(
@@ -1524,20 +1558,66 @@ export function CampaignAnalyticsTable({
               </DialogContent>
             </Dialog>
 
-            {/* Header with Export Button */}
-            <div className="flex items-center justify-between mt-4 mb-3">
-              <p className="text-sm text-muted-foreground">
-                {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
-              </p>
-              <Button
-                onClick={() => setExportDialogOpen(true)}
-                size="sm"
-                variant="ghost"
-                className="h-8 gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              >
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
+            {/* Header with Filters and Export Button */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-4 mb-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm text-muted-foreground">
+                  {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
+                </p>
+                <Select value={transactionsSortBy} onValueChange={(v) => setTransactionsSortBy(v as 'date' | 'amount')}>
+                  <SelectTrigger className="w-[120px] h-8 bg-muted/50 border-0 text-xs">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-0">
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="amount">Amount</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTransactionsSortDir(prev => prev === 'desc' ? 'asc' : 'desc')}
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                >
+                  {transactionsSortDir === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
+                </Button>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  type="date"
+                  value={transactionsStartDate}
+                  onChange={(e) => setTransactionsStartDate(e.target.value)}
+                  placeholder="Start"
+                  className="h-8 w-[130px] bg-muted/50 border-0 text-xs"
+                />
+                <span className="text-muted-foreground text-xs">to</span>
+                <Input
+                  type="date"
+                  value={transactionsEndDate}
+                  onChange={(e) => setTransactionsEndDate(e.target.value)}
+                  placeholder="End"
+                  className="h-8 w-[130px] bg-muted/50 border-0 text-xs"
+                />
+                {(transactionsStartDate || transactionsEndDate) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setTransactionsStartDate(''); setTransactionsEndDate(''); }}
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setExportDialogOpen(true)}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                >
+                  <Download className="h-4 w-4" />
+                  Export
+                </Button>
+              </div>
             </div>
 
             {/* Desktop Table View */}
@@ -1564,12 +1644,8 @@ export function CampaignAnalyticsTable({
                         key={txn.id} 
                         className={`hover:bg-muted/20 transition-colors cursor-pointer ${!isLast ? 'border-b border-[#141414] dark:border-[#141414]' : 'border-0'}`}
                         onClick={() => {
-                          if (txn.user_id) {
-                            const analyticsItem = analytics.find(a => a.user_id === txn.user_id);
-                            if (analyticsItem) {
-                              setSelectedUserForDetails(analyticsItem);
-                              setUserDetailsDialogOpen(true);
-                            }
+                          if (txn.user_id && txn.profiles) {
+                            setSelectedTransactionUser(txn);
                           }
                         }}
                       >
@@ -2623,6 +2699,97 @@ export function CampaignAnalyticsTable({
               )}
             </div>
           </div>
+        )}
+      </DialogContent>
+    </Dialog>
+
+    {/* Transaction User Detail Dialog */}
+    <Dialog open={!!selectedTransactionUser} onOpenChange={(open) => !open && setSelectedTransactionUser(null)}>
+      <DialogContent className="sm:max-w-[480px] bg-white dark:bg-[#0a0a0a] border-border">
+        {selectedTransactionUser && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="sr-only">Creator Details</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Profile Header */}
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 ring-2 ring-background">
+                  <AvatarImage src={selectedTransactionUser.profiles?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                    {selectedTransactionUser.profiles?.username?.slice(0, 2).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold">{selectedTransactionUser.profiles?.username || 'Unknown'}</h3>
+                  <p className="text-sm text-muted-foreground">@{selectedTransactionUser.profiles?.username || 'unknown'}</p>
+                </div>
+              </div>
+
+              {/* Transaction Details */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-muted dark:bg-[#141414] p-4">
+                  <p className="text-xs text-muted-foreground mb-1">Transaction Amount</p>
+                  <p className={`text-xl font-bold tabular-nums ${Number(selectedTransactionUser.amount) >= 0 ? 'text-green-500' : 'text-red-400'}`}>
+                    {Number(selectedTransactionUser.amount) >= 0 ? '+' : ''}${Number(selectedTransactionUser.amount).toFixed(2)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-muted dark:bg-[#141414] p-4">
+                  <p className="text-xs text-muted-foreground mb-1">Views</p>
+                  <p className="text-xl font-bold tabular-nums">
+                    {selectedTransactionUser.metadata?.views?.toLocaleString() || '—'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Account Info */}
+              {selectedTransactionUser.metadata?.account_username && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-muted-foreground">Account</h4>
+                  <div className="flex items-center justify-between rounded-xl bg-muted dark:bg-[#141414] p-3">
+                    <div className="flex items-center gap-3">
+                      {getPlatformIcon(selectedTransactionUser.metadata?.platform || '') && (
+                        <img 
+                          src={getPlatformIcon(selectedTransactionUser.metadata?.platform || '') || ''} 
+                          alt={selectedTransactionUser.metadata?.platform} 
+                          className="h-5 w-5 object-contain" 
+                        />
+                      )}
+                      <span className="font-medium">@{selectedTransactionUser.metadata?.account_username}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Transaction Info */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-muted-foreground">Transaction Info</h4>
+                <div className="rounded-xl bg-muted dark:bg-[#141414] p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Date</span>
+                    <span className="text-sm font-medium">
+                      {new Date(selectedTransactionUser.created_at).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Type</span>
+                    <span className="text-sm font-medium capitalize">{selectedTransactionUser.type}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Status</span>
+                    <Badge variant={selectedTransactionUser.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                      {selectedTransactionUser.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </DialogContent>
     </Dialog>
