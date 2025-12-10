@@ -9,12 +9,15 @@ import { WalletTab } from "@/components/dashboard/WalletTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { AppSidebar } from "@/components/AppSidebar";
+import { OnboardingDialog } from "@/components/OnboardingDialog";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const currentTab = searchParams.get("tab") || "campaigns";
 
@@ -29,12 +32,20 @@ export default function Dashboard() {
       navigate("/auth");
       return;
     }
+    setUserId(session.user.id);
+    
     const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", session.user.id)
       .single();
+    
     setProfile(profileData);
+    
+    // Check if user needs onboarding (no phone number set)
+    if (profileData && !profileData.phone_number) {
+      setShowOnboarding(true);
+    }
   };
 
   const fetchCampaigns = async () => {
@@ -83,6 +94,14 @@ export default function Dashboard() {
       </main>
 
       <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
+      
+      {userId && (
+        <OnboardingDialog
+          open={showOnboarding}
+          onOpenChange={setShowOnboarding}
+          userId={userId}
+        />
+      )}
     </div>
   );
 }
