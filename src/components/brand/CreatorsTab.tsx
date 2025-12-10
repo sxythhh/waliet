@@ -259,7 +259,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                 {filteredCreators.map((creator) => (
                   <tr
                     key={creator.id}
-                    className="hover:bg-[#0a0a0a] transition-colors cursor-pointer"
+                    className="hover:bg-[#F4F4F4] dark:hover:bg-[#0a0a0a] transition-colors cursor-pointer"
                     onClick={() => setSelectedCreator(creator)}
                   >
                     <td className="py-4 px-5">
