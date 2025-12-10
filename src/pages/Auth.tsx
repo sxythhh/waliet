@@ -290,7 +290,7 @@ export default function Auth() {
                   <div className="w-full border-t border-muted-foreground/20" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card/50 backdrop-blur-sm px-3 text-muted-foreground font-medium">
+                  <span className="backdrop-blur-sm px-3 font-medium bg-[#0c0c0c] text-[#484444]">
                     OR
                   </span>
                 </div>
@@ -299,9 +299,7 @@ export default function Auth() {
               {/* Client Sign In Section */}
               <div className="space-y-4">
                 <div className="text-center">
-                  <p className="text-xs font-semibold font-geist uppercase text-primary-foreground">
-                    Sign in as Client
-                  </p>
+                  
                 </div>
                 
                 <a href="https://virality.cc/auth" className="flex items-center justify-center w-full h-12 bg-muted/50 hover:bg-muted rounded-md font-semibold font-geist text-sm transition-colors" style={{
