@@ -3,24 +3,26 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import viralityLogo from "@/assets/virality-logo-new.png";
-
 export default function Index() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       setIsAuthenticated(!!session);
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const {
+      data: {
+        subscription
+      }
+    } = supabase.auth.onAuthStateChange((_, session) => {
       setIsAuthenticated(!!session);
     });
-
     return () => subscription.unsubscribe();
   }, []);
-
-  return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
+  return <div className="h-screen w-screen flex flex-col overflow-hidden">
       {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,16 +33,13 @@ export default function Index() {
             </div>
             
             <div className="flex items-center gap-3">
-              {isAuthenticated ? (
-                <Link to="/dashboard">
+              {isAuthenticated ? <Link to="/dashboard">
                   <Button size="sm" className="font-medium">
                     Dashboard
                   </Button>
-                </Link>
-              ) : (
-                <>
+                </Link> : <>
                   <Link to="/auth">
-                    <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:bg-muted hover:text-foreground">
+                    <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:bg-muted hover:text-foreground rounded-2xl">
                       Sign In
                     </Button>
                   </Link>
@@ -49,8 +48,7 @@ export default function Index() {
                       Create Account
                     </Button>
                   </Link>
-                </>
-              )}
+                </>}
             </div>
           </div>
         </div>
@@ -58,13 +56,7 @@ export default function Index() {
 
       {/* Embedded Content */}
       <div className="flex-1 pt-14">
-        <iframe
-          src="https://virality.gg"
-          className="w-full h-full border-0"
-          title="Virality"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        />
+        <iframe src="https://virality.gg" className="w-full h-full border-0" title="Virality" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
       </div>
-    </div>
-  );
+    </div>;
 }
