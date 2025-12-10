@@ -26,6 +26,7 @@ interface Creator {
   }[];
   total_views: number;
   total_earnings: number;
+  date_joined: string | null;
 }
 
 interface CreatorsTabProps {
@@ -73,6 +74,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       .select(`
         campaign_id,
         user_id,
+        connected_at,
         social_accounts!inner (
           platform,
           username,
@@ -124,7 +126,14 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
           social_accounts: [],
           total_views: 0,
           total_earnings: 0,
+          date_joined: conn.connected_at,
         });
+      } else {
+        // Update date_joined to the earliest connection date
+        const creator = creatorMap.get(userId)!;
+        if (conn.connected_at && (!creator.date_joined || conn.connected_at < creator.date_joined)) {
+          creator.date_joined = conn.connected_at;
+        }
       }
 
       const creator = creatorMap.get(userId)!;
@@ -251,7 +260,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                 <tr className="border-b border-[#e0e0e0] dark:border-[#111111]">
                   <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Creator</th>
                   <th className="text-left py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Accounts</th>
-                  <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Views</th>
+                  <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Date Joined</th>
                   <th className="text-right py-4 px-5 text-xs font-geist tracking-[-0.5px] font-medium text-black dark:text-white">Earnings</th>
                 </tr>
               </thead>
@@ -309,8 +318,8 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                     </td>
 
                     <td className="py-4 px-5 text-right">
-                      <span className="font-semibold tabular-nums text-sm">
-                        {formatNumber(creator.total_views)}
+                      <span className="text-sm text-muted-foreground">
+                        {creator.date_joined ? new Date(creator.date_joined).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
                       </span>
                     </td>
 
