@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, TrendingUp, Users, Activity, Sparkles, ChevronRight, Clock, CheckCircle2, Bell } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
+
 interface Campaign {
   id: string;
   title: string;
@@ -65,6 +66,27 @@ interface BoostApplication {
     };
   };
 }
+
+interface RecommendedCampaign {
+  id: string;
+  title: string;
+  brand_name: string;
+  brand_logo_url: string | null;
+  rpm_rate: number;
+  slug: string;
+  banner_url: string | null;
+  allowed_platforms: string[] | null;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'earning' | 'account_connected' | 'campaign_joined';
+  title: string;
+  description: string;
+  timestamp: string;
+  amount?: number;
+}
+
 interface CampaignsTabProps {
   onOpenPrivateDialog: () => void;
 }
@@ -89,6 +111,14 @@ export function CampaignsTab({
     platform: string;
     username: string;
   } | null>(null);
+  
+  // New state for dashboard sections
+  const [profile, setProfile] = useState<{ full_name: string | null; username: string; total_earnings: number | null } | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [recommendedCampaigns, setRecommendedCampaigns] = useState<RecommendedCampaign[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [connectedAccountsCount, setConnectedAccountsCount] = useState(0);
+  
   const navigate = useNavigate();
   const {
     toast
@@ -114,7 +144,76 @@ export function CampaignsTab({
   useEffect(() => {
     fetchCampaigns();
     fetchBoostApplications();
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Fetch profile
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("full_name, username, total_earnings")
+      .eq("id", user.id)
+      .single();
+    if (profileData) setProfile(profileData);
+
+    // Fetch wallet balance
+    const { data: walletData } = await supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", user.id)
+      .single();
+    if (walletData) setWalletBalance(walletData.balance || 0);
+
+    // Fetch connected accounts count
+    const { count } = await supabase
+      .from("social_accounts")
+      .select("*", { count: 'exact', head: true })
+      .eq("user_id", user.id);
+    setConnectedAccountsCount(count || 0);
+
+    // Fetch recommended campaigns (public campaigns user hasn't joined)
+    const { data: userSubmissions } = await supabase
+      .from("campaign_submissions")
+      .select("campaign_id")
+      .eq("creator_id", user.id);
+    
+    const joinedCampaignIds = userSubmissions?.map(s => s.campaign_id) || [];
+    
+    let recommendedQuery = supabase
+      .from("campaigns")
+      .select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms")
+      .eq("status", "active")
+      .eq("is_private", false)
+      .limit(3);
+    
+    if (joinedCampaignIds.length > 0) {
+      recommendedQuery = recommendedQuery.not("id", "in", `(${joinedCampaignIds.join(",")})`);
+    }
+    
+    const { data: recommendedData } = await recommendedQuery;
+    setRecommendedCampaigns(recommendedData || []);
+
+    // Fetch recent activity (recent transactions)
+    const { data: recentTransactions } = await supabase
+      .from("wallet_transactions")
+      .select("id, type, amount, description, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const activities: RecentActivity[] = (recentTransactions || []).map(tx => ({
+      id: tx.id,
+      type: 'earning' as const,
+      title: tx.type === 'earning' ? 'Payment Received' : tx.type === 'withdrawal' ? 'Withdrawal' : 'Transaction',
+      description: tx.description || 'Campaign payout',
+      timestamp: tx.created_at,
+      amount: tx.amount
+    }));
+    setRecentActivity(activities);
+  };
   const fetchBoostApplications = async () => {
     try {
       const {
@@ -421,9 +520,171 @@ export function CampaignsTab({
       </div>;
   }
   return <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Here's what's happening with your campaigns
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate("/dashboard?tab=discover")} size="sm" className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            Discover
+          </Button>
+          <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Join Private
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Header */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="bg-card border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <DollarSign className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Earnings</p>
+                <p className="text-lg font-bold">${(profile?.total_earnings || 0).toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <Wallet className="h-4 w-4 text-green-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Balance</p>
+                <p className="text-lg font-bold">${walletBalance.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <TrendingUp className="h-4 w-4 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Active Campaigns</p>
+                <p className="text-lg font-bold">{campaigns.filter(c => c.status === 'active').length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-500/10">
+                <Users className="h-4 w-4 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Linked Accounts</p>
+                <p className="text-lg font-bold">{connectedAccountsCount}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recommended Campaigns Section */}
+      {recommendedCampaigns.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Recommended for You</h3>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard?tab=discover")} className="gap-1 text-muted-foreground hover:text-foreground">
+              View all <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {recommendedCampaigns.map(campaign => (
+              <Card 
+                key={campaign.id} 
+                className="group bg-card border cursor-pointer hover:border-primary/50 transition-all"
+                onClick={() => navigate(`/campaigns/${campaign.slug}/preview`)}
+              >
+                {campaign.banner_url && (
+                  <div className="h-24 overflow-hidden rounded-t-lg">
+                    <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  </div>
+                )}
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-2">
+                    {campaign.brand_logo_url && (
+                      <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-8 h-8 rounded-md object-cover ring-1 ring-border" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold line-clamp-1">{campaign.title}</h4>
+                      <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+                    <span className="text-xs text-muted-foreground">RPM Rate</span>
+                    <span className="text-sm font-semibold text-primary">${campaign.rpm_rate}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Activity Section */}
+      {recentActivity.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Recent Activity</h3>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard?tab=wallet")} className="gap-1 text-muted-foreground hover:text-foreground">
+              View all <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <Card className="bg-card border">
+            <CardContent className="p-0 divide-y divide-border/50">
+              {recentActivity.map(activity => (
+                <div key={activity.id} className="flex items-center gap-3 p-3">
+                  <div className={`p-2 rounded-lg ${activity.type === 'earning' && activity.amount && activity.amount > 0 ? 'bg-green-500/10' : 'bg-muted'}`}>
+                    {activity.type === 'earning' && activity.amount && activity.amount > 0 ? (
+                      <DollarSign className="h-4 w-4 text-green-500" />
+                    ) : activity.type === 'earning' ? (
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{activity.title}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{activity.description}</p>
+                  </div>
+                  <div className="text-right">
+                    {activity.amount !== undefined && (
+                      <p className={`text-sm font-semibold ${activity.amount > 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                        {activity.amount > 0 ? '+' : ''}${Math.abs(activity.amount).toLocaleString()}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(activity.timestamp).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Header with Actions */}
       
-
       {/* Boost Applications Section */}
       {boostApplications.length > 0 && <div className="space-y-3">
           <h3 className="text-lg font-semibold text-muted-foreground">Boost Applications</h3>
