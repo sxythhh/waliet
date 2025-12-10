@@ -1026,14 +1026,14 @@ export function WalletTab() {
                 </Select>}
             </div>}
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-4">
           {transactions.length === 0 ? (
-            <div className="text-center py-12 px-6">
+            <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div>
           ) : (
             <>
-              <div className="divide-y divide-border/50">
+              <div className="space-y-2">
                 {transactions.filter(transaction => {
                   if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
                   if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
@@ -1046,17 +1046,17 @@ export function WalletTab() {
                       setSelectedTransaction(transaction);
                       setTransactionSheetOpen(true);
                     }} 
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-xl bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       {/* Icon */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        transaction.type === 'earning' ? 'bg-green-500/10' :
-                        transaction.type === 'balance_correction' ? 'bg-orange-500/10' :
-                        transaction.type === 'referral' ? 'bg-purple-500/10' :
-                        transaction.type === 'transfer_received' ? 'bg-blue-500/10' :
-                        transaction.type === 'transfer_sent' ? 'bg-red-500/10' :
-                        'bg-red-500/10'
+                      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${
+                        transaction.type === 'earning' ? 'bg-green-500/15' :
+                        transaction.type === 'balance_correction' ? 'bg-orange-500/15' :
+                        transaction.type === 'referral' ? 'bg-purple-500/15' :
+                        transaction.type === 'transfer_received' ? 'bg-blue-500/15' :
+                        transaction.type === 'transfer_sent' ? 'bg-red-500/15' :
+                        'bg-red-500/15'
                       }`}>
                         {transaction.type === 'earning' ? (
                           <ArrowDownLeft className="h-4 w-4 text-green-500" />
@@ -1075,23 +1075,21 @@ export function WalletTab() {
                       
                       {/* Details */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-medium truncate">
-                            {transaction.type === 'earning' ? (
-                              <>
-                                Payment
-                                {transaction.campaign && (
-                                  <span className="text-muted-foreground font-normal"> · {transaction.campaign.title}</span>
-                                )}
-                              </>
-                            ) : transaction.type === 'balance_correction' ? 'Balance Correction' 
-                              : transaction.type === 'referral' ? 'Referral Bonus' 
-                              : transaction.type === 'transfer_sent' ? 'Transfer Sent' 
-                              : transaction.type === 'transfer_received' ? 'Transfer Received' 
-                              : 'Withdrawal'}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-sm font-medium truncate">
+                          {transaction.type === 'earning' ? (
+                            <>
+                              Payment
+                              {transaction.campaign && (
+                                <span className="text-muted-foreground font-normal"> · {transaction.campaign.title}</span>
+                              )}
+                            </>
+                          ) : transaction.type === 'balance_correction' ? 'Balance Correction' 
+                            : transaction.type === 'referral' ? 'Referral Bonus' 
+                            : transaction.type === 'transfer_sent' ? 'Transfer Sent' 
+                            : transaction.type === 'transfer_received' ? 'Transfer Received' 
+                            : 'Withdrawal'}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-xs text-muted-foreground">
                             {(() => {
                               const now = new Date();
@@ -1106,17 +1104,18 @@ export function WalletTab() {
                               return format(transaction.date, 'MMM dd, yyyy');
                             })()}
                           </span>
+                          <span className="text-muted-foreground/50">·</span>
                           {transaction.status && (
-                            <span className={`text-xs font-medium flex items-center gap-1 ${
+                            <span className={`text-xs flex items-center gap-1 ${
                               transaction.status === 'completed' ? 'text-green-500' : 
                               transaction.status === 'in_transit' ? 'text-blue-500' : 
                               transaction.status === 'rejected' ? 'text-red-500' : 
                               'text-yellow-500'
                             }`}>
-                              {transaction.status === 'in_transit' && <Hourglass className="h-3 w-3" />}
-                              {transaction.status === 'pending' && <Clock className="h-3 w-3" />}
-                              {transaction.status === 'completed' && <Check className="h-3 w-3" />}
-                              {transaction.status === 'rejected' && <X className="h-3 w-3" />}
+                              {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
+                              {transaction.status === 'pending' && <Clock className="h-2.5 w-2.5" />}
+                              {transaction.status === 'completed' && <Check className="h-2.5 w-2.5" />}
+                              {transaction.status === 'rejected' && <X className="h-2.5 w-2.5" />}
                               {transaction.status === 'in_transit' ? 'In Transit' : transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
                             </span>
                           )}
@@ -1124,9 +1123,9 @@ export function WalletTab() {
                       </div>
                     </div>
                     
-                    {/* Amount & Action */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`text-base font-semibold tabular-nums ${
+                    {/* Amount */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`text-sm font-semibold tabular-nums ${
                         transaction.status === 'rejected' ? 'text-red-500' : 
                         transaction.status === 'pending' ? 'text-yellow-500' : 
                         transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : 
@@ -1143,9 +1142,9 @@ export function WalletTab() {
                           e.stopPropagation();
                           generateTransactionImage(transaction);
                         }} 
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
                       >
-                        <Upload className="h-4 w-4" />
+                        <Upload className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -1153,7 +1152,7 @@ export function WalletTab() {
               </div>
               
               {/* Pagination Controls */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-t border-border/50 gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
                 <p className="text-xs text-muted-foreground">
                   Showing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
                     if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
