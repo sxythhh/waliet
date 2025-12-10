@@ -585,7 +585,7 @@ export function CampaignsTab({
                     </div>}
 
                   {/* Content Section */}
-                  <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
+                  <CardContent className="p-3 flex-1 flex flex-col font-instrument tracking-tight gap-0">
                     {/* Brand Logo + Title */}
                     <div className="flex items-start gap-2.5">
                       {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
