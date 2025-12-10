@@ -45,7 +45,7 @@ export default function Index() {
                     </Button>
                   </Link>
                   <Link to="/auth?tab=signup">
-                    <Button size="sm" className="font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md hover:shadow-lg transition-all duration-300">
+                    <Button size="sm" className="font-medium px-5 rounded-full bg-primary hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.5)] hover:scale-105 transition-all duration-300">
                       Create Account
                     </Button>
                   </Link>
