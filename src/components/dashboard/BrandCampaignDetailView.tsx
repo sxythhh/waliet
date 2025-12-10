@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Home, Video, Users, DollarSign } from "lucide-react";
+import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 
 interface Campaign {
@@ -23,7 +23,7 @@ interface BrandCampaignDetailViewProps {
   campaignId: string;
 }
 
-type DetailTab = "home" | "videos" | "creators" | "payouts";
+type DetailTab = "home" | "videos" | "payouts";
 
 export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewProps) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -60,7 +60,6 @@ export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewP
   const detailTabs = [
     { id: "home" as DetailTab, label: "Home", icon: Home },
     { id: "videos" as DetailTab, label: "Videos", icon: Video },
-    { id: "creators" as DetailTab, label: "Creators", icon: Users },
     { id: "payouts" as DetailTab, label: "Payouts", icon: DollarSign },
   ];
 
@@ -86,11 +85,33 @@ export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewP
   return (
     <div className="flex flex-col h-full">
       {/* Header with back button and campaign title */}
-      <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-border">
-        <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-lg font-semibold">{campaign.title}</h1>
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleBack} 
+            className="h-8 w-8 hover:bg-transparent"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <button 
+            onClick={handleBack}
+            className="text-lg font-semibold tracking-[-0.5px] hover:underline"
+          >
+            {campaign.title}
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2">
+            <Pencil className="h-3.5 w-3.5" />
+            Edit Campaign
+          </Button>
+          <Button size="sm" className="gap-2">
+            <Plus className="h-3.5 w-3.5" />
+            Top Up Budget
+          </Button>
+        </div>
       </div>
 
       {/* Tab Navigation - Horizontal bottom style */}
@@ -100,9 +121,9 @@ export function BrandCampaignDetailView({ campaignId }: BrandCampaignDetailViewP
             <button
               key={tab.id}
               onClick={() => setActiveDetailTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
+              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
                 activeDetailTab === tab.id
-                  ? "border-foreground text-foreground"
+                  ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
