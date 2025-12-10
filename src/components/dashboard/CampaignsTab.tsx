@@ -422,12 +422,7 @@ export function CampaignsTab({
   }
   return <div className="space-y-6">
       {/* Header with Actions */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">My Campaigns</h2>
-        <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="border-black/0">
-          Join Private Campaign
-        </Button>
-      </div>
+      
 
       {/* Boost Applications Section */}
       {boostApplications.length > 0 && <div className="space-y-3">
