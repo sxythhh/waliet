@@ -132,18 +132,36 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
         },
       });
 
-      console.log('[ShortimizeVideosTable] fetch response:', { error, hasData: !!data, videosCount: data?.videos?.length });
+      console.log('[ShortimizeVideosTable] fetch response:', { 
+        error, 
+        hasData: !!data, 
+        videosCount: data?.videos?.length,
+        pagination: data?.pagination,
+        debug: data?.debug
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[ShortimizeVideosTable] Supabase function error:', error);
+        throw error;
+      }
 
       if (data.error) {
+        console.error('[ShortimizeVideosTable] API error:', data.error, 'Debug:', data.debug);
         throw new Error(data.error);
       }
 
       const videosData = data.videos || [];
       setVideos(videosData);
       setPagination(prev => ({ ...prev, ...data.pagination }));
-      console.log('[ShortimizeVideosTable] videos set successfully, count:', videosData.length);
+      
+      if (videosData.length === 0) {
+        console.log('[ShortimizeVideosTable] No videos found. Debug info:', {
+          collectionUsed: data?.debug?.collectionUsed,
+          pagination: data?.pagination
+        });
+      } else {
+        console.log('[ShortimizeVideosTable] videos set successfully, count:', videosData.length);
+      }
       
       // Fetch creator matches for unique usernames
       const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
@@ -313,7 +331,10 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
             ) : videos.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
-                  No videos found. Make sure your brand has a Shortimize API key and collection configured.
+                  <div className="space-y-2">
+                    <p>No videos found for collection "{collectionName}"</p>
+                    <p className="text-xs">Check browser console (F12) for detailed debug logs from the Shortimize API.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (

@@ -49,6 +49,18 @@ serve(async (req) => {
       uploadedAtEnd
     } = await req.json();
 
+    console.log('[fetch-shortimize-videos] Request params:', { 
+      brandId, 
+      collectionName, 
+      page, 
+      limit, 
+      orderBy, 
+      orderDirection,
+      username,
+      uploadedAtStart,
+      uploadedAtEnd
+    });
+
     if (!brandId) {
       throw new Error('brandId is required');
     }
@@ -60,12 +72,20 @@ serve(async (req) => {
     // Get the brand's Shortimize API key and collection name
     const { data: brand, error: brandError } = await supabase
       .from('brands')
-      .select('shortimize_api_key, collection_name')
+      .select('shortimize_api_key, collection_name, name')
       .eq('id', brandId)
       .single();
 
+    console.log('[fetch-shortimize-videos] Brand data:', { 
+      brandName: brand?.name,
+      hasApiKey: !!brand?.shortimize_api_key,
+      apiKeyLength: brand?.shortimize_api_key?.length,
+      storedCollectionName: brand?.collection_name,
+      error: brandError
+    });
+
     if (brandError) {
-      console.error('Error fetching brand:', brandError);
+      console.error('[fetch-shortimize-videos] Error fetching brand:', brandError);
       throw new Error('Failed to fetch brand');
     }
 
@@ -75,6 +95,7 @@ serve(async (req) => {
 
     // Use provided collection name or fall back to brand's collection
     const collection = collectionName || brand.collection_name;
+    console.log('[fetch-shortimize-videos] Using collection:', collection);
 
     // Build query parameters
     const params = new URLSearchParams();
@@ -85,9 +106,6 @@ serve(async (req) => {
     
     if (collection) {
       params.append('collections', collection.trim());
-      console.log('Filtering by collection:', collection.trim());
-    } else {
-      console.log('No collection specified - this may return all organization videos');
     }
     if (username) {
       params.append('username', username);
@@ -99,9 +117,12 @@ serve(async (req) => {
       params.append('uploaded_at_end', uploadedAtEnd);
     }
 
+    const apiUrl = `https://api.shortimize.com/videos?${params.toString()}`;
+    console.log('[fetch-shortimize-videos] Calling Shortimize API:', apiUrl);
+
     // Fetch videos from Shortimize API with retry logic
     const response = await fetchWithRetry(
-      `https://api.shortimize.com/videos?${params.toString()}`,
+      apiUrl,
       {
         headers: {
           'Authorization': `Bearer ${brand.shortimize_api_key}`,
@@ -110,25 +131,79 @@ serve(async (req) => {
       3
     );
 
+    console.log('[fetch-shortimize-videos] API response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Shortimize API error:', errorText);
+      console.error('[fetch-shortimize-videos] Shortimize API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
       throw new Error(`Shortimize API returned ${response.status}: ${errorText}`);
     }
 
     const result = await response.json();
+    
+    console.log('[fetch-shortimize-videos] API response:', {
+      videosCount: result.data?.length || 0,
+      pagination: result.pagination,
+      hasData: !!result.data,
+      firstVideoSample: result.data?.[0] ? {
+        ad_id: result.data[0].ad_id,
+        username: result.data[0].username,
+        platform: result.data[0].platform
+      } : null
+    });
+
+    // If no videos found, try fetching without collection filter to debug
+    if ((!result.data || result.data.length === 0) && collection) {
+      console.log('[fetch-shortimize-videos] No videos found with collection filter. Checking available collections...');
+      
+      // Try fetching a sample without collection filter to see if API key works
+      const debugParams = new URLSearchParams();
+      debugParams.append('page', '1');
+      debugParams.append('limit', '5');
+      
+      const debugResponse = await fetchWithRetry(
+        `https://api.shortimize.com/videos?${debugParams.toString()}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${brand.shortimize_api_key}`,
+          },
+        },
+        3
+      );
+      
+      if (debugResponse.ok) {
+        const debugResult = await debugResponse.json();
+        console.log('[fetch-shortimize-videos] Debug fetch (no collection filter):', {
+          totalVideos: debugResult.pagination?.total || 0,
+          sampleCollections: debugResult.data?.slice(0, 3).map((v: any) => v.collection) || []
+        });
+      }
+    }
 
     return new Response(JSON.stringify({
       videos: result.data || [],
-      pagination: result.pagination || { total: 0, page: 1, limit: 100, total_pages: 0 }
+      pagination: result.pagination || { total: 0, page: 1, limit: 100, total_pages: 0 },
+      debug: {
+        collectionUsed: collection,
+        apiKeyConfigured: true
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in fetch-shortimize-videos:', error);
+    console.error('[fetch-shortimize-videos] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: errorMessage,
+        debug: {
+          timestamp: new Date().toISOString()
+        }
+      }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
