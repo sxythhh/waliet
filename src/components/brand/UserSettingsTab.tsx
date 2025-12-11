@@ -11,6 +11,8 @@ import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { TeamMembersTab } from "./TeamMembersTab";
+
 interface Brand {
   id: string;
   name: string;
@@ -184,6 +186,11 @@ export function UserSettingsTab() {
                     <ExternalLink className="h-3 w-3 text-muted-foreground/50 ml-auto" />
                   </a>}
               </div>}
+          </div>
+
+          {/* Team Members Section */}
+          <div className="pt-4 border-t border-border/50">
+            <TeamMembersTab brandId={brand.id} />
           </div>
         </div>}
 

@@ -173,55 +173,70 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Team Members</h2>
-          <p className="text-sm text-muted-foreground mt-1">Manage your team and pending invitations</p>
+          <h2 className="font-medium tracking-[-0.5px]">Team</h2>
+          <p className="text-xs text-muted-foreground tracking-[-0.5px]">
+            Invite and manage team members
+          </p>
         </div>
         {canManageTeam && (
           <Button
             onClick={() => setInviteDialogOpen(true)}
             size="sm"
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground"
           >
             <UserPlus className="mr-2 h-4 w-4" />
-            Invite Member
+            Invite
           </Button>
         )}
       </div>
 
       {/* Active Members */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-muted-foreground">
-          Active Members ({members.length})
-        </h3>
-        <div className="space-y-2">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground tracking-[-0.5px]">
+          Members ({members.length})
+        </p>
+        <div className="space-y-1">
           {members.map((member) => (
             <div
               key={member.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors"
+              className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                {getRoleIcon(member.role)}
+                {member.profiles.avatar_url ? (
+                  <img 
+                    src={member.profiles.avatar_url} 
+                    alt={member.profiles.full_name} 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
+                    {member.profiles.full_name?.[0]?.toUpperCase() || "?"}
+                  </div>
+                )}
                 <div>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-sm font-medium tracking-[-0.5px]">
                     {member.profiles.full_name || "Unknown"}
                   </p>
-                  <p className="text-xs text-muted-foreground">{member.profiles.email}</p>
+                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">{member.profiles.email}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-muted/50 rounded">
-                  {member.role}
-                </span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground px-2 py-1 bg-muted/50 rounded">
+                  {getRoleIcon(member.role)}
+                  <span className="capitalize">{member.role}</span>
+                </div>
                 {canManageTeam && member.role !== "owner" && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveMember(member.id)}
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>
@@ -231,26 +246,24 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
       </div>
 
       {/* Pending Invitations */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-muted-foreground">
-          Pending Invitations ({invitations.length})
-        </h3>
-        {invitations.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">No pending invitations</p>
-        ) : (
-          <div className="space-y-2">
+      {invitations.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground tracking-[-0.5px]">
+            Pending ({invitations.length})
+          </p>
+          <div className="space-y-1">
             {invitations.map((invitation) => (
               <div
                 key={invitation.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors"
+                className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
               >
                 <div>
-                  <p className="text-sm font-medium text-foreground">{invitation.email}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium tracking-[-0.5px]">{invitation.email}</p>
+                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">
                     Invited {new Date(invitation.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-muted/50 rounded">
                     {invitation.role}
                   </span>
@@ -259,7 +272,7 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCancelInvitation(invitation.id)}
-                      className="h-8 text-muted-foreground hover:text-foreground"
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
                     >
                       Cancel
                     </Button>
@@ -268,8 +281,8 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <InviteMemberDialog
         open={inviteDialogOpen}
