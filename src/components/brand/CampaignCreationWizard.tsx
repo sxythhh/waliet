@@ -528,17 +528,7 @@ export function CampaignCreationWizard({
 
                         <FormField control={form.control} name="description" render={({
                       field
-                    }) => <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Description
-                              </FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Describe your campaign objectives and expectations..." className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none" style={{
-                          letterSpacing: '-0.3px'
-                        }} rows={4} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>} />
+                    }) => {}} />
 
                         {/* Banner Upload */}
                         <div className="space-y-2">
@@ -570,17 +560,7 @@ export function CampaignCreationWizard({
 
                         <FormField control={form.control} name="guidelines" render={({
                       field
-                    }) => <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Creator Guidelines
-                              </FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Provide guidelines for creators..." className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none" style={{
-                          letterSpacing: '-0.3px'
-                        }} rows={4} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>} />
+                    }) => {}} />
 
                       </div>
                     </div>}
