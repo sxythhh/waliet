@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { LogOut, Camera, ExternalLink, Settings, User, Building2, MapPin, Phone, Mail, Globe, Folder } from "lucide-react";
+import { LogOut, Camera, ExternalLink, Settings, User, Building2, MapPin, Phone, Mail, Globe, Folder, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -39,7 +39,9 @@ export function UserSettingsTab() {
     country: "",
     city: "",
     phone_number: "",
-    avatar_url: ""
+    avatar_url: "",
+    billing_address: "",
+    legal_business_name: ""
   });
   useEffect(() => {
     fetchProfile();
@@ -88,7 +90,9 @@ export function UserSettingsTab() {
           country: profileData.country || "",
           city: profileData.city || "",
           phone_number: profileData.phone_number || "",
-          avatar_url: profileData.avatar_url || ""
+          avatar_url: profileData.avatar_url || "",
+          billing_address: (profileData as any).billing_address || "",
+          legal_business_name: (profileData as any).legal_business_name || ""
         });
       }
     } catch (error) {
@@ -115,8 +119,10 @@ export function UserSettingsTab() {
         bio: profile.bio,
         country: profile.country,
         city: profile.city,
-        phone_number: profile.phone_number
-      }).eq("id", user.id);
+        phone_number: profile.phone_number,
+        billing_address: profile.billing_address,
+        legal_business_name: profile.legal_business_name
+      } as any).eq("id", user.id);
       if (error) throw error;
       toast.success("Profile updated successfully");
     } catch (error) {
@@ -331,6 +337,30 @@ export function UserSettingsTab() {
               ...profile,
               phone_number: e.target.value
             })} className="bg-muted/30 border-0 h-11" placeholder="+1 (555) 000-0000" />
+            </div>
+
+            {/* Business Information */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground flex items-center gap-2 tracking-[-0.5px]">
+                <Building2 className="h-3.5 w-3.5" />
+                Legal Business Name
+              </Label>
+              <Input value={profile.legal_business_name} onChange={e => setProfile({
+              ...profile,
+              legal_business_name: e.target.value
+            })} className="bg-muted/30 border-0 h-11" placeholder="Company Name LLC" />
+            </div>
+
+            {/* Billing Address */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground flex items-center gap-2 tracking-[-0.5px]">
+                <FileText className="h-3.5 w-3.5" />
+                Billing Address
+              </Label>
+              <Input value={profile.billing_address} onChange={e => setProfile({
+              ...profile,
+              billing_address: e.target.value
+            })} className="bg-muted/30 border-0 h-11" placeholder="123 Main St, City, State, ZIP" />
             </div>
           </div>
 
