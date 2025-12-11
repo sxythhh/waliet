@@ -243,99 +243,104 @@ export function DiscoverTab() {
         
 
         {/* Filters */}
-        <div className="space-y-4">
-          {/* First Row: Search and Platform Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <div className="space-y-3 font-['Inter'] tracking-[-0.5px]">
+          {/* Search and Filters Row */}
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
             {/* Search Input */}
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-11 bg-card border-transparent" />
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+              <Input 
+                placeholder="Search campaigns..." 
+                value={searchQuery} 
+                onChange={e => setSearchQuery(e.target.value)} 
+                className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-muted-foreground/20" 
+              />
             </div>
 
-            {/* Filter and Bookmark Icons */}
-            <div className="flex gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setFiltersOpen(!filtersOpen)} className="h-11 w-11 bg-card hover:bg-card/80">
-                <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
-              </Button>
-              
+            {/* Platform Pills */}
+            <div className="flex items-center gap-1.5">
+              {[
+                { value: "all", label: "All" },
+                { value: "tiktok", label: "TikTok" },
+                { value: "instagram", label: "Instagram" },
+                { value: "youtube", label: "YouTube" }
+              ].map((platform) => (
+                <button
+                  key={platform.value}
+                  onClick={() => setSelectedPlatform(platform.value === "all" ? null : platform.value)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    (selectedPlatform === null && platform.value === "all") || selectedPlatform === platform.value
+                      ? "bg-foreground text-background"
+                      : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+                  }`}
+                >
+                  {platform.label}
+                </button>
+              ))}
             </div>
 
-            {/* Platform Pills - Desktop Divider */}
-            <div className="hidden sm:block h-6 w-px bg-border" />
+            {/* Filter Toggle */}
+            <button 
+              onClick={() => setFiltersOpen(!filtersOpen)} 
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                filtersOpen 
+                  ? "bg-foreground text-background" 
+                  : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+              }`}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filters
+            </button>
+          </div>
 
-            {/* Platform Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Platform:</span>
-              <Select value={selectedPlatform || "all"} onValueChange={value => setSelectedPlatform(value === "all" ? null : value)}>
-                <SelectTrigger className="w-[130px] h-11 border-transparent bg-card">
+          {/* Expanded Filters */}
+          {filtersOpen && (
+            <div className="flex flex-wrap gap-2 items-center pt-1">
+              {/* Sort By */}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-auto h-8 px-3 border-0 bg-muted/30 rounded-md text-xs gap-1.5 focus:ring-0">
+                  <span className="text-muted-foreground/70">Sort:</span>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Platforms</SelectItem>
-                  <SelectItem value="tiktok">TikTok</SelectItem>
-                  <SelectItem value="instagram">Instagram</SelectItem>
-                  <SelectItem value="youtube">YouTube</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="oldest">Oldest</SelectItem>
+                  <SelectItem value="popular">Most Popular</SelectItem>
+                  <SelectItem value="budget-high">Budget ↓</SelectItem>
+                  <SelectItem value="budget-low">Budget ↑</SelectItem>
+                  <SelectItem value="rpm-high">RPM ↓</SelectItem>
+                  <SelectItem value="rpm-low">RPM ↑</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Frequency */}
+              <Select value={frequency} onValueChange={setFrequency}>
+                <SelectTrigger className="w-auto h-8 px-3 border-0 bg-muted/30 rounded-md text-xs gap-1.5 focus:ring-0">
+                  <span className="text-muted-foreground/70">Frequency:</span>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Status */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-auto h-8 px-3 border-0 bg-muted/30 rounded-md text-xs gap-1.5 focus:ring-0">
+                  <span className="text-muted-foreground/70">Status:</span>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="ended">Ended</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            
-          </div>
-
-          {/* Second Row: Sort, Frequency, Status, and Hide Options */}
-          {filtersOpen && <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center flex-wrap">
-              {/* Sort By */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[140px] h-9 border-transparent bg-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="oldest">Oldest</SelectItem>
-                    <SelectItem value="popular">Most Popular</SelectItem>
-                    <SelectItem value="budget-high">Budget (High-Low)</SelectItem>
-                    <SelectItem value="budget-low">Budget (Low-High)</SelectItem>
-                    <SelectItem value="rpm-high">RPM (High-Low)</SelectItem>
-                    <SelectItem value="rpm-low">RPM (Low-High)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Frequency (placeholder for future feature) */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Frequency:</span>
-                <Select value={frequency} onValueChange={setFrequency}>
-                  <SelectTrigger className="w-[100px] h-9 border-transparent bg-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Status Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[110px] h-9 border-transparent bg-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="ended">Ended</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Hide Options */}
-              
-            </div>}
+          )}
         </div>
 
         {/* Campaigns and Bounties Grid */}
