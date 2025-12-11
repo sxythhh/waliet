@@ -564,89 +564,72 @@ export function ProfileTab() {
             const latestDemographicSubmission = demographicSubmissions[0];
             const demographicStatus = latestDemographicSubmission?.status;
 
-            return <div key={account.id} className="group relative p-5 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
-                    {/* Main Row */}
-                    <div className="flex flex-col lg:flex-row gap-4">
-                      {/* Left: Platform + Username + Campaigns */}
-                      <div className="flex-1 space-y-3">
-                        {/* Platform + Username */}
-                        <div 
-                          onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
-                          className="flex items-center gap-3 cursor-pointer group/link"
-                        >
-                          <div className="w-10 h-10 rounded-full bg-foreground/5 dark:bg-foreground/10 flex items-center justify-center">
-                            {getPlatformIcon(account.platform)}
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-foreground group-hover/link:underline tracking-tight">
+            return <div key={account.id} className="group relative p-4 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
+                    <div className="flex items-start gap-4">
+                      {/* Platform Icon */}
+                      <div 
+                        onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
+                        className="w-11 h-11 rounded-full bg-foreground/5 dark:bg-foreground/10 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
+                      >
+                        {getPlatformIcon(account.platform)}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Top Row: Username + Demographics */}
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div 
+                            onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
+                            className="cursor-pointer group/link"
+                          >
+                            <span className="font-semibold text-foreground group-hover/link:underline tracking-tight block">
                               {account.username}
                             </span>
                             <span className="text-xs text-muted-foreground capitalize">{account.platform}</span>
                           </div>
+                          
+                          {/* Demographics Mini Status */}
+                          <div className="flex-shrink-0 w-44">
+                            <DemographicStatusCard
+                              accountId={account.id}
+                              platform={account.platform}
+                              username={account.username}
+                              submissions={demographicSubmissions}
+                              onSubmitNew={() => {
+                                setSelectedAccountForDemographics({
+                                  id: account.id,
+                                  platform: account.platform,
+                                  username: account.username
+                                });
+                                setShowDemographicsDialog(true);
+                              }}
+                              onRefresh={fetchSocialAccounts}
+                            />
+                          </div>
                         </div>
                         
-                        {/* Connected Campaigns */}
+                        {/* Linked Campaigns */}
                         {connectedCampaigns.length > 0 && (
-                          <div className="flex items-center gap-2 pl-13">
-                            <span className="text-xs text-muted-foreground">Linked to</span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {connectedCampaigns.map(({ campaign }) => (
-                                <div 
-                                  key={campaign.id} 
-                                  className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-foreground/5 dark:bg-foreground/10 text-xs"
-                                >
-                                  {campaign.brand_logo_url && (
-                                    <img 
-                                      src={campaign.brand_logo_url} 
-                                      alt={campaign.brand_name} 
-                                      className="w-4 h-4 rounded-full object-cover" 
-                                    />
-                                  )}
-                                  <span className="font-medium tracking-tight">{campaign.title}</span>
-                                </div>
-                              ))}
-                            </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[11px] text-muted-foreground">Linked:</span>
+                            {connectedCampaigns.map(({ campaign }) => (
+                              <div 
+                                key={campaign.id} 
+                                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-foreground/5 dark:bg-foreground/10 text-[11px]"
+                              >
+                                {campaign.brand_logo_url && (
+                                  <img 
+                                    src={campaign.brand_logo_url} 
+                                    alt={campaign.brand_name} 
+                                    className="w-3.5 h-3.5 rounded-full object-cover" 
+                                  />
+                                )}
+                                <span className="font-medium tracking-tight">{campaign.title}</span>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
-
-                      {/* Right: Demographics Status Card */}
-                      <div className="w-full lg:w-64 p-4 rounded-lg bg-background/50 border border-border/50">
-                        <DemographicStatusCard
-                          accountId={account.id}
-                          platform={account.platform}
-                          username={account.username}
-                          submissions={demographicSubmissions}
-                          onSubmitNew={() => {
-                            setSelectedAccountForDemographics({
-                              id: account.id,
-                              platform: account.platform,
-                              username: account.username
-                            });
-                            setShowDemographicsDialog(true);
-                          }}
-                          onRefresh={fetchSocialAccounts}
-                        />
-                      </div>
-                      
-                      {/* Manage Button */}
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedAccountForManaging({
-                            id: account.id,
-                            username: account.username,
-                            platform: account.platform,
-                            account_link: account.account_link
-                          });
-                          setShowManageAccountDialog(true);
-                        }} 
-                        className="h-9 px-4 text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-foreground/10 w-full lg:w-auto self-start"
-                      >
-                        <Settings className="h-3.5 w-3.5 mr-1.5" />
-                        Manage
-                      </Button>
                     </div>
                   </div>;
           })}

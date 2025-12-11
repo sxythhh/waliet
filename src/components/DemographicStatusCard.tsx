@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Trash2, RefreshCw, ExternalLink, CheckCircle2, Clock, XCircle, AlertTriangle } from "lucide-react";
+import { Play, Trash2, ExternalLink, CheckCircle2, Clock, XCircle, AlertTriangle } from "lucide-react";
+import demographicsIcon from "@/assets/demographics-icon.svg";
 
 interface DemographicSubmission {
   id: string;
@@ -157,75 +158,40 @@ export function DemographicStatusCard({
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {/* Current Status */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor} animate-pulse`} />
-            <span className="text-xs font-medium text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-              Demographics
-            </span>
-          </div>
-          <Badge variant="outline" className={`text-[10px] font-medium ${statusConfig.color}`}>
-            <StatusIcon className="w-3 h-3 mr-1" />
+        <div className="flex items-center justify-between gap-2">
+          <Badge variant="outline" className={`text-[10px] font-medium px-1.5 py-0 ${statusConfig.color}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotColor} mr-1`} />
             {statusConfig.label}
           </Badge>
-        </div>
-
-        {/* Score Display (if approved) */}
-        {status === 'approved' && latestSubmission?.score && (
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Inter', letterSpacing: '-1px' }}>
+          {status === 'approved' && latestSubmission?.score && (
+            <span className="text-sm font-bold tracking-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
               {latestSubmission.score}%
             </span>
-            <span className="text-xs text-muted-foreground">Tier 1</span>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Submission History */}
-        {submissions.length > 0 && (
-          <div className="space-y-1.5">
-            {submissions.slice(0, 3).map((submission, index) => {
-              const config = getStatusConfig(submission.status);
-              return (
-                <div
-                  key={submission.id}
-                  className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${config.dotColor}`} />
-                    <span className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                      {format(new Date(submission.submitted_at), "MMM d, yyyy")}
-                    </span>
-                    {submission.score && (
-                      <span className="text-xs font-medium">{submission.score}%</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {submission.screenshot_url && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setViewingSubmission(submission)}
-                      >
-                        <Play className="h-3 w-3" />
-                      </Button>
-                    )}
-                    {submission.status !== 'approved' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-destructive hover:text-destructive"
-                        onClick={() => setDeletingSubmission(submission)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        {/* Latest Submission Info */}
+        {latestSubmission && (
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <span>{format(new Date(latestSubmission.submitted_at), "MMM d")}</span>
+            {latestSubmission.screenshot_url && (
+              <button 
+                onClick={() => setViewingSubmission(latestSubmission)}
+                className="text-primary hover:underline"
+              >
+                View
+              </button>
+            )}
+            {latestSubmission.status !== 'approved' && (
+              <button 
+                onClick={() => setDeletingSubmission(latestSubmission)}
+                className="text-destructive hover:underline"
+              >
+                Delete
+              </button>
+            )}
           </div>
         )}
 
@@ -233,27 +199,21 @@ export function DemographicStatusCard({
         <Button
           variant={availability.canSubmit ? "default" : "outline"}
           size="sm"
-          className="w-full h-9"
+          className="w-full h-8"
           style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
           disabled={!availability.canSubmit}
           onClick={onSubmitNew}
         >
           {availability.canSubmit ? (
             <>
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              {submissions.length > 0 ? 'Update Demographics' : 'Submit Demographics'}
+              <img src={demographicsIcon} alt="" className="h-4 w-4 mr-1.5" />
+              {submissions.length > 0 ? 'Update' : 'Submit'}
             </>
           ) : (
             <span className="text-muted-foreground">{availability.reason}</span>
           )}
         </Button>
 
-        {/* Next submission date hint */}
-        {availability.nextDate && !availability.canSubmit && (
-          <p className="text-[10px] text-center text-muted-foreground">
-            Available {format(availability.nextDate, "MMM d, yyyy")}
-          </p>
-        )}
       </div>
 
       {/* Video Preview Dialog */}
