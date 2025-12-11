@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 interface Brand {
   id: string;
@@ -27,6 +28,7 @@ interface Brand {
 export function UserSettingsTab() {
   const navigate = useNavigate();
   const { currentBrand, isBrandMode, refreshBrands } = useWorkspace();
+  const { isAdmin } = useAdminCheck();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [brand, setBrand] = useState<Brand | null>(null);
@@ -225,23 +227,25 @@ export function UserSettingsTab() {
         </div>
       )}
 
-      {/* Create New Brand */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="font-medium tracking-[-0.5px]">Workspaces</h2>
-          <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-            Create and manage brand workspaces
-          </p>
+      {/* Create New Brand - Admin Only */}
+      {isAdmin && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="font-medium tracking-[-0.5px]">Workspaces</h2>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">
+              Create and manage brand workspaces
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full h-11 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5"
+            onClick={() => setShowCreateBrandDialog(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create New Brand Workspace
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          className="w-full h-11 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5"
-          onClick={() => setShowCreateBrandDialog(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create New Brand Workspace
-        </Button>
-      </div>
+      )}
 
       {/* Billing Information */}
       <div className="space-y-4">

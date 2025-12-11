@@ -76,10 +76,10 @@ export default function Dashboard() {
     
     setProfile(profileData);
     
-    // Check if user needs onboarding (no phone number set)
-    if (profileData && !profileData.phone_number) {
-      setShowOnboarding(true);
-    }
+    // Onboarding disabled - keeping code for potential future use
+    // if (profileData && !profileData.phone_number) {
+    //   setShowOnboarding(true);
+    // }
   };
 
   const fetchCampaigns = async () => {
