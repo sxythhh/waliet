@@ -9,7 +9,6 @@ import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizar
 import { VideosTab } from "@/components/brand/VideosTab";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-
 interface Campaign {
   id: string;
   title: string;
@@ -36,13 +35,10 @@ interface Campaign {
   category?: string | null;
   hashtag?: string | null;
 }
-
 interface BrandCampaignDetailViewProps {
   campaignId: string;
 }
-
 type DetailTab = "home" | "videos" | "creators" | "payouts";
-
 export function BrandCampaignDetailView({
   campaignId
 }: BrandCampaignDetailViewProps) {
@@ -51,20 +47,18 @@ export function BrandCampaignDetailView({
   const [loading, setLoading] = useState(true);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("home");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const { isAdmin } = useAdminCheck();
-
+  const {
+    isAdmin
+  } = useAdminCheck();
   useEffect(() => {
     fetchCampaign();
   }, [campaignId]);
-
   const fetchCampaign = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("campaigns")
-      .select("*")
-      .eq("id", campaignId)
-      .single();
-    
+    const {
+      data,
+      error
+    } = await supabase.from("campaigns").select("*").eq("id", campaignId).single();
     if (error) {
       console.error("Error fetching campaign:", error);
     } else {
@@ -72,41 +66,42 @@ export function BrandCampaignDetailView({
     }
     setLoading(false);
   };
-
   const handleBack = () => {
     const newParams = new URLSearchParams(searchParams);
     newParams.delete("campaign");
     setSearchParams(newParams);
   };
-
-  const detailTabs = [
-    { id: "home" as DetailTab, label: "Home", icon: Home },
-    { id: "videos" as DetailTab, label: "Videos", icon: Video },
-    ...(isAdmin ? [{ id: "creators" as DetailTab, label: "Creators", icon: Users }] : []),
-    { id: "payouts" as DetailTab, label: "Payouts", icon: DollarSign }
-  ];
-
+  const detailTabs = [{
+    id: "home" as DetailTab,
+    label: "Home",
+    icon: Home
+  }, {
+    id: "videos" as DetailTab,
+    label: "Videos",
+    icon: Video
+  }, ...(isAdmin ? [{
+    id: "creators" as DetailTab,
+    label: "Creators",
+    icon: Users
+  }] : []), {
+    id: "payouts" as DetailTab,
+    label: "Payouts",
+    icon: DollarSign
+  }];
   if (loading) {
-    return (
-      <div className="flex flex-col h-full">
+    return <div className="flex flex-col h-full">
         <div className="flex-1 p-6">
           <Skeleton className="h-8 w-48 mb-4" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!campaign) {
-    return (
-      <div className="flex items-center justify-center h-full">
+    return <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground">Campaign not found</p>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="p-[10px] h-full">
+  return <div className="p-[10px] h-full">
       <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
         {/* Header with back button and campaign title */}
         <div className="flex items-center justify-between px-4 border-b border-border sm:px-[8px] py-[5px]">
@@ -119,12 +114,7 @@ export function BrandCampaignDetailView({
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted"
-              onClick={() => setEditDialogOpen(true)}
-            >
+            <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted" onClick={() => setEditDialogOpen(true)}>
               <Pencil className="h-3.5 w-3.5" />
               Edit Campaign
             </Button>
@@ -135,67 +125,26 @@ export function BrandCampaignDetailView({
           </div>
         </div>
 
-        {campaign.brand_id && (
-          <CampaignCreationWizard
-            brandId={campaign.brand_id}
-            brandName=""
-            campaign={campaign}
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
-            onSuccess={() => {
-              fetchCampaign();
-              setEditDialogOpen(false);
-            }}
-          />
-        )}
+        {campaign.brand_id && <CampaignCreationWizard brandId={campaign.brand_id} brandName="" campaign={campaign} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={() => {
+        fetchCampaign();
+        setEditDialogOpen(false);
+      }} />}
 
         {/* Tab Navigation - Horizontal bottom style */}
         <div className="border-b border-border">
           <nav className="flex gap-0">
-            {detailTabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveDetailTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
-                  activeDetailTab === tab.id
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
+            {detailTabs.map(tab => <button key={tab.id} onClick={() => setActiveDetailTab(tab.id)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
-              </button>
-            ))}
+              </button>)}
           </nav>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" && campaign.brand_id ? (
-            <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} />
-          ) : activeDetailTab === "videos" && campaign.brand_id ? (
-            <div className="p-4">
-              <VideosTab
-                campaignId={campaignId}
-                brandId={campaign.brand_id}
-                isAdmin={true}
-                approvedCreators={[]}
-              />
-            </div>
-          ) : activeDetailTab === "creators" ? (
-            <CampaignAnalyticsTable
-              campaignId={campaignId}
-              view="analytics"
-              className="px-[10px] py-0"
-            />
-          ) : (
-            <CampaignAnalyticsTable
-              campaignId={campaignId}
-              view="transactions"
-              className="px-[10px] py-0"
-            />
-          )}
+          {activeDetailTab === "home" && campaign.brand_id ? <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} /> : activeDetailTab === "videos" && campaign.brand_id ? <div className="p-4 py-0">
+              <VideosTab campaignId={campaignId} brandId={campaign.brand_id} isAdmin={true} approvedCreators={[]} />
+            </div> : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0" /> : <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
