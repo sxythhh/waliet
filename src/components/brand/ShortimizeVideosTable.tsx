@@ -293,28 +293,28 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-4" align="end">
+            <PopoverContent className="w-auto p-4 bg-background/80 dark:bg-black/70 backdrop-blur-xl border-border/50" align="end">
               <div className="space-y-4">
                 <div className="flex gap-4">
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px]">Start Date</p>
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px] text-center">Start Date</p>
                     <Calendar
                       mode="single"
                       selected={startDate}
                       onSelect={setStartDate}
                       disabled={(date) => endDate ? date > endDate : false}
                       initialFocus
-                      className="rounded-md border"
+                      className="rounded-md border border-border/50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px]">End Date</p>
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px] text-center">End Date</p>
                     <Calendar
                       mode="single"
                       selected={endDate}
                       onSelect={setEndDate}
                       disabled={(date) => startDate ? date < startDate : false}
-                      className="rounded-md border"
+                      className="rounded-md border border-border/50"
                     />
                   </div>
                 </div>
