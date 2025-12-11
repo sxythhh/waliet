@@ -195,7 +195,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
             >
               {/* Content Preview Area */}
               <div 
-                className="mx-[10px] mt-[10px] p-4 rounded-t-md min-h-[100px] bg-[#e8e8e8] dark:bg-[#181717] border-t border-x border-[#d0d0d0] dark:border-[#312f2f]"
+                className="mx-[10px] mt-[10px] p-4 rounded-t-md min-h-[100px] bg-[#e8e8e8] dark:bg-[#181717] border-t border-[#d0d0d0] dark:border-[#312f2f]"
               >
                 <p className="text-sm text-muted-foreground line-clamp-4">
                   {blueprint.content ? blueprint.content.replace(/<[^>]*>/g, '').slice(0, 250) + '...' : 'No content yet...'}
@@ -211,7 +211,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 shrink-0"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 shrink-0 hover:bg-muted"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
