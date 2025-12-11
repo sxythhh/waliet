@@ -98,12 +98,7 @@ export function JoinPrivateCampaignDialog({
             </p>
           </div>
           <div className="flex gap-2 justify-end">
-            <Button type="button" variant="outline" onClick={() => {
-            onOpenChange(false);
-            setAccessCode("");
-          }}>
-              Cancel
-            </Button>
+            
             <Button type="submit" disabled={loading}>
               {loading ? "Validating..." : "Join Campaign"}
             </Button>
