@@ -97,7 +97,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
   }
   
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex h-screen w-full overflow-hidden">
       <AdminSidebar />
       <main className="flex-1 overflow-auto">{children}</main>
     </div>
