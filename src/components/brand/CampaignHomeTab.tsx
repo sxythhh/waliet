@@ -235,6 +235,8 @@ export function CampaignHomeTab({ campaignId, brandId, timeframe = "this_month" 
             limit: 3,
             orderBy: 'latest_views',
             orderDirection: 'desc',
+            uploadedAtStart: rangeStart.toISOString(),
+            uploadedAtEnd: rangeEnd.toISOString(),
           },
         });
 
