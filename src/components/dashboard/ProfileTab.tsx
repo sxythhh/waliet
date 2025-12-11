@@ -578,36 +578,36 @@ export function ProfileTab() {
                         </div>
                         
                         {/* Linked Campaigns Row */}
-                        <div className="flex items-center gap-2 mt-3 flex-wrap">
+                        <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
                           {connectedCampaigns.length > 0 ? (
                             <>
                               {connectedCampaigns.slice(0, 3).map(({ campaign }) => (
                                 <div 
                                   key={campaign.id} 
-                                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-[11px]"
+                                  className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/60 dark:bg-muted/30 text-[11px]"
                                   style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                                 >
                                   {campaign.brand_logo_url && (
                                     <img 
                                       src={campaign.brand_logo_url} 
                                       alt={campaign.brand_name} 
-                                      className="w-4 h-4 rounded-full object-cover" 
+                                      className="w-3.5 h-3.5 rounded object-cover" 
                                     />
                                   )}
-                                  <span className="font-medium text-foreground">{campaign.title}</span>
+                                  <span className="font-medium text-muted-foreground">{campaign.title}</span>
                                 </div>
                               ))}
                               {connectedCampaigns.length > 3 && (
-                                <span className="text-[11px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>+{connectedCampaigns.length - 3} more</span>
+                                <span className="text-[10px] text-muted-foreground/70" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>+{connectedCampaigns.length - 3}</span>
                               )}
                             </>
                           ) : (
-                            <span className="text-[11px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                            <span className="text-[11px] text-muted-foreground/60" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                               No campaigns linked
                             </span>
                           )}
                           <button
-                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 text-[11px] text-muted-foreground hover:text-primary transition-all"
+                            className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40 hover:bg-muted/70 dark:bg-muted/20 dark:hover:bg-muted/40 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                             style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                             onClick={(e) => {
                               e.stopPropagation();
