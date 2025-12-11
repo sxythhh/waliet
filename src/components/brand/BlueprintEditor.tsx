@@ -355,7 +355,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           
           {/* Main Content - Rich Text Editor */}
           <section className="space-y-2">
-            <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Brief Content</label>
+            <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Brief Content</label>
             <div className="rounded-md bg-muted/20 overflow-hidden">
               <RichTextEditor
                 content={blueprint.content || ""}
@@ -367,7 +367,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
 
           {/* Platforms */}
           <section className="space-y-2">
-            <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Platforms</label>
+            <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Platforms</label>
             <div className="flex flex-wrap gap-2">
               {PLATFORMS.map((platform) => {
                 const isSelected = blueprint.platforms.includes(platform.id);
@@ -393,7 +393,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
 
           {/* Brand Voice */}
           <section className="space-y-2">
-            <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Brand Voice</label>
+            <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Brand Voice</label>
             <Textarea
               value={blueprint.brand_voice || ""}
               onChange={(e) => updateBlueprint({ brand_voice: e.target.value })}
@@ -405,7 +405,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           {/* Hooks */}
           <section className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Hooks</label>
+              <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Hooks</label>
               <Button variant="ghost" size="sm" onClick={addHook} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
                 <Plus className="h-3 w-3 mr-1" />
                 Add
@@ -442,7 +442,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           {/* Talking Points */}
           <section className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Talking Points</label>
+              <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Talking Points</label>
               <Button variant="ghost" size="sm" onClick={addTalkingPoint} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
                 <Plus className="h-3 w-3 mr-1" />
                 Add
@@ -478,7 +478,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
 
           {/* Do's and Don'ts */}
           <section className="space-y-2">
-            <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Do's and Don'ts</label>
+            <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Do's and Don'ts</label>
             <div className="grid md:grid-cols-2 gap-3">
               {/* Do's */}
               <div className="rounded-md bg-muted/20 p-3 space-y-2">
@@ -544,7 +544,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
 
           {/* Call to Action */}
           <section className="space-y-2">
-            <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Call to Action</label>
+            <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Call to Action</label>
             <Input
               value={blueprint.call_to_action || ""}
               onChange={(e) => updateBlueprint({ call_to_action: e.target.value })}
@@ -555,7 +555,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
 
           {/* Hashtags */}
           <section className="space-y-2">
-            <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Hashtags</label>
+            <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Hashtags</label>
             <div className="space-y-2">
               <div className="flex gap-1.5">
                 <Input
@@ -593,7 +593,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           {/* Assets */}
           <section className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Assets</label>
+              <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Assets</label>
               <Button variant="ghost" size="sm" onClick={addAsset} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
                 <Plus className="h-3 w-3 mr-1" />
                 Add
@@ -641,7 +641,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           {/* Example Videos */}
           <section className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Example Videos</label>
+              <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Example Videos</label>
               <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
                 <Plus className="h-3 w-3 mr-1" />
                 Add
@@ -690,7 +690,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           {/* Target Personas */}
           <section className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium tracking-[-0.3px] text-muted-foreground uppercase">Target Personas</label>
+              <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Target Personas</label>
               <Button variant="ghost" size="sm" onClick={addPersona} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
                 <Plus className="h-3 w-3 mr-1" />
                 Add
