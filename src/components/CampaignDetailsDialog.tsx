@@ -6,7 +6,6 @@ import tiktokIcon from "@/assets/tiktok-logo-black.png";
 import instagramIcon from "@/assets/instagram-logo-new.png";
 import youtubeIcon from "@/assets/youtube-logo-new.png";
 import xIcon from "@/assets/x-logo.png";
-
 interface Campaign {
   id: string;
   title: string;
@@ -23,32 +22,27 @@ interface Campaign {
   guidelines?: string | null;
   embed_url?: string | null;
 }
-
 interface CampaignDetailsDialogProps {
   campaign: Campaign | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onJoin?: () => void;
 }
-
 const platformIcons: Record<string, string> = {
   tiktok: tiktokIcon,
   instagram: instagramIcon,
   youtube: youtubeIcon,
-  x: xIcon,
+  x: xIcon
 };
-
 const calculateTimeAgo = (createdAt: string) => {
   const now = new Date();
   const created = new Date(createdAt);
   const diffMs = now.getTime() - created.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHours / 24);
-
   if (diffDays > 0) return `${diffDays}d ago`;
   return `${diffHours}h ago`;
 };
-
 const calculateDaysUntilEnd = (endDate: string | null) => {
   if (!endDate) return null;
   const now = new Date();
@@ -57,44 +51,33 @@ const calculateDaysUntilEnd = (endDate: string | null) => {
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   return diffDays > 0 ? diffDays : 0;
 };
-
 export function CampaignDetailsDialog({
   campaign,
   open,
   onOpenChange,
-  onJoin,
+  onJoin
 }: CampaignDetailsDialogProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
-
   if (!campaign) return null;
-
   const daysUntilEnd = calculateDaysUntilEnd(campaign.end_date);
   const timeAgo = calculateTimeAgo(campaign.created_at);
   const description = campaign.description || "";
   const isLongDescription = description.length > 300;
   const displayDescription = showFullDescription ? description : description.slice(0, 300);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8">
         {/* Header */}
         <div className="flex items-start gap-4 mb-6">
-          {campaign.brand_logo_url && (
-            <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
-              <img
-                src={campaign.brand_logo_url}
-                alt={campaign.brand_name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
+          {campaign.brand_logo_url && <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
+              <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+            </div>}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
               <Check className="w-4 h-4 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground mb-2">{timeAgo}</p>
-            <h3 className="text-base font-semibold">{campaign.title}</h3>
+            
           </div>
         </div>
 
@@ -103,11 +86,9 @@ export function CampaignDetailsDialog({
           <div className="text-center">
             <p className="text-xs text-muted-foreground mb-1">Ends</p>
             <p className="font-bold text-base">{daysUntilEnd !== null ? `${daysUntilEnd}m` : "—"}</p>
-            {daysUntilEnd !== null && (
-              <p className="text-[10px] text-muted-foreground mt-0.5">
+            {daysUntilEnd !== null && <p className="text-[10px] text-muted-foreground mt-0.5">
                 {daysUntilEnd === 0 ? "100.00" : ((1 - daysUntilEnd / 365) * 100).toFixed(2)}% PAID OUT
-              </p>
-            )}
+              </p>}
           </div>
 
           <div className="text-center border-l border-border">
@@ -118,14 +99,7 @@ export function CampaignDetailsDialog({
           <div className="text-center border-l border-border">
             <p className="text-xs text-muted-foreground mb-1">Platforms</p>
             <div className="flex justify-center gap-1.5 mt-1">
-              {campaign.allowed_platforms?.map((platform) => (
-                <img
-                  key={platform}
-                  src={platformIcons[platform.toLowerCase()]}
-                  alt={platform}
-                  className="w-5 h-5"
-                />
-              ))}
+              {campaign.allowed_platforms?.map(platform => <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-5 h-5" />)}
             </div>
           </div>
 
@@ -147,23 +121,13 @@ export function CampaignDetailsDialog({
             {displayDescription || "No description available."}
             {isLongDescription && !showFullDescription && "..."}
           </div>
-          {isLongDescription && (
-            <button
-              onClick={() => setShowFullDescription(!showFullDescription)}
-              className="text-sm font-medium text-foreground mt-2 flex items-center gap-1 hover:underline"
-            >
-              {showFullDescription ? (
-                <>Show less <ChevronUp className="w-4 h-4" /></>
-              ) : (
-                <>Show more <ChevronDown className="w-4 h-4" /></>
-              )}
-            </button>
-          )}
+          {isLongDescription && <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-sm font-medium text-foreground mt-2 flex items-center gap-1 hover:underline">
+              {showFullDescription ? <>Show less <ChevronUp className="w-4 h-4" /></> : <>Show more <ChevronDown className="w-4 h-4" /></>}
+            </button>}
         </div>
 
         {/* What to include Section */}
-        {campaign.hashtags && campaign.hashtags.length > 0 && (
-          <div className="mb-6 pt-6 border-t border-border">
+        {campaign.hashtags && campaign.hashtags.length > 0 && <div className="mb-6 pt-6 border-t border-border">
             <h4 className="text-xl font-bold mb-4">What to include</h4>
             <div className="flex items-start gap-3">
               <MessageSquare className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -175,12 +139,10 @@ export function CampaignDetailsDialog({
                 </p>
               </div>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Campaign Link Card */}
-        {campaign.embed_url && (
-          <div className="mb-6 p-4 rounded-xl border border-border">
+        {campaign.embed_url && <div className="mb-6 p-4 rounded-xl border border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -195,8 +157,7 @@ export function CampaignDetailsDialog({
                 <ExternalLink className="w-5 h-5 text-muted-foreground hover:text-foreground" />
               </a>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Campaigns on Vyro Section */}
         <div className="mb-6 pt-6 border-t border-border">
@@ -245,16 +206,9 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Join Button */}
-        {onJoin && (
-          <Button
-            onClick={onJoin}
-            className="w-full h-14 text-lg font-semibold rounded-full"
-            size="lg"
-          >
+        {onJoin && <Button onClick={onJoin} className="w-full h-14 text-lg font-semibold rounded-full" size="lg">
             Join campaign
-          </Button>
-        )}
+          </Button>}
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
