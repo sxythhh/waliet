@@ -6,7 +6,6 @@ import { Users, Copy, Check, Gift, Pencil, CheckCircle2, Circle } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-
 interface Milestone {
   id: string;
   milestone_type: string;
@@ -14,13 +13,11 @@ interface Milestone {
   reward_amount: number;
   display_name: string;
 }
-
 interface MilestoneReward {
   milestone_id: string;
   reward_amount: number;
   awarded_at: string;
 }
-
 interface ReferralWithMilestones {
   id: string;
   referrer_id: string;
@@ -36,7 +33,6 @@ interface ReferralWithMilestones {
   } | null;
   milestone_rewards?: MilestoneReward[];
 }
-
 export function ReferralsTab() {
   const [profile, setProfile] = useState<any>(null);
   const [referrals, setReferrals] = useState<ReferralWithMilestones[]>([]);
@@ -45,73 +41,72 @@ export function ReferralsTab() {
   const [isEditing, setIsEditing] = useState(false);
   const [newReferralCode, setNewReferralCode] = useState("");
   const [saving, setSaving] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchProfile();
     fetchReferrals();
     fetchMilestones();
   }, []);
-
   const fetchProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    const {
+      data
+    } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
     setProfile(data);
     if (data?.referral_code) {
       setNewReferralCode(data.referral_code);
     }
   };
-
   const fetchMilestones = async () => {
-    const { data } = await supabase
-      .from("referral_milestones")
-      .select("*")
-      .order("threshold", { ascending: true });
+    const {
+      data
+    } = await supabase.from("referral_milestones").select("*").order("threshold", {
+      ascending: true
+    });
     setMilestones(data || []);
   };
-
   const fetchReferrals = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) return;
-    
-    const { data: referralsData } = await supabase
-      .from("referrals")
-      .select("*")
-      .eq("referrer_id", user.id)
-      .order("created_at", { ascending: false });
-
+    const {
+      data: referralsData
+    } = await supabase.from("referrals").select("*").eq("referrer_id", user.id).order("created_at", {
+      ascending: false
+    });
     if (referralsData && referralsData.length > 0) {
       // Fetch profiles for referred users
       const referredIds = referralsData.map(r => r.referred_id);
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url, full_name, total_earnings")
-        .in("id", referredIds);
+      const {
+        data: profilesData
+      } = await supabase.from("profiles").select("id, username, avatar_url, full_name, total_earnings").in("id", referredIds);
 
       // Fetch milestone rewards for each referral
       const referralIds = referralsData.map(r => r.id);
-      const { data: rewards } = await supabase
-        .from("referral_milestone_rewards")
-        .select("*")
-        .in("referral_id", referralIds);
-
+      const {
+        data: rewards
+      } = await supabase.from("referral_milestone_rewards").select("*").in("referral_id", referralIds);
       const referralsWithMilestones: ReferralWithMilestones[] = referralsData.map(referral => ({
         ...referral,
         profiles: profilesData?.find(p => p.id === referral.referred_id) || null,
         milestone_rewards: rewards?.filter(r => r.referral_id === referral.id) || []
       }));
-
       setReferrals(referralsWithMilestones);
     } else {
       setReferrals([]);
     }
   };
-
-  const referralLink = profile?.referral_code 
-    ? `${window.location.origin}/?ref=${profile.referral_code}` 
-    : "";
-
+  const referralLink = profile?.referral_code ? `${window.location.origin}/?ref=${profile.referral_code}` : "";
   const copyReferralLink = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
@@ -121,7 +116,6 @@ export function ReferralsTab() {
     });
     setTimeout(() => setCopied(false), 2000);
   };
-
   const handleSaveReferralCode = async () => {
     if (!newReferralCode.trim()) {
       toast({
@@ -131,9 +125,7 @@ export function ReferralsTab() {
       });
       return;
     }
-
     const sanitizedCode = newReferralCode.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
-    
     if (sanitizedCode.length < 3) {
       toast({
         title: "Code too short",
@@ -142,18 +134,16 @@ export function ReferralsTab() {
       });
       return;
     }
-
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) return;
-
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("referral_code", sanitizedCode)
-      .neq("id", user.id)
-      .maybeSingle();
-
+    const {
+      data: existing
+    } = await supabase.from("profiles").select("id").eq("referral_code", sanitizedCode).neq("id", user.id).maybeSingle();
     if (existing) {
       toast({
         title: "Code taken",
@@ -163,12 +153,11 @@ export function ReferralsTab() {
       setSaving(false);
       return;
     }
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ referral_code: sanitizedCode })
-      .eq("id", user.id);
-
+    const {
+      error
+    } = await supabase.from("profiles").update({
+      referral_code: sanitizedCode
+    }).eq("id", user.id);
     if (error) {
       toast({
         title: "Error",
@@ -180,7 +169,10 @@ export function ReferralsTab() {
         title: "Updated!",
         description: "Your referral code has been updated."
       });
-      setProfile({ ...profile, referral_code: sanitizedCode });
+      setProfile({
+        ...profile,
+        referral_code: sanitizedCode
+      });
       setIsEditing(false);
     }
     setSaving(false);
@@ -193,9 +185,7 @@ export function ReferralsTab() {
   const getMilestoneStatus = (referral: ReferralWithMilestones, milestone: Milestone) => {
     return referral.milestone_rewards?.some(r => r.milestone_id === milestone.id) || false;
   };
-
-  return (
-    <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-8 max-w-4xl">
+  return <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-8 max-w-4xl">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
@@ -234,91 +224,39 @@ export function ReferralsTab() {
               <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
             </div>
           </div>
-          {!isEditing && (
-            <Button 
-              onClick={() => setIsEditing(true)} 
-              variant="ghost" 
-              size="sm"
-              className="gap-2 text-muted-foreground hover:text-foreground"
-            >
+          {!isEditing && <Button onClick={() => setIsEditing(true)} variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
               <Pencil className="w-3.5 h-3.5" />
               Edit Tag
-            </Button>
-          )}
+            </Button>}
         </div>
 
-        {isEditing ? (
-          <div className="space-y-3">
+        {isEditing ? <div className="space-y-3">
             <div className="flex gap-2 items-center">
               <span className="text-sm text-muted-foreground shrink-0">{window.location.origin}/?ref=</span>
-              <Input 
-                value={newReferralCode} 
-                onChange={(e) => setNewReferralCode(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
-                placeholder="your-code"
-                className="font-mono text-sm bg-background/50 border-0" 
-              />
+              <Input value={newReferralCode} onChange={e => setNewReferralCode(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))} placeholder="your-code" className="font-mono text-sm bg-background/50 border-0" />
             </div>
             <div className="flex gap-2">
-              <Button 
-                onClick={handleSaveReferralCode} 
-                size="sm"
-                disabled={saving}
-              >
+              <Button onClick={handleSaveReferralCode} size="sm" disabled={saving}>
                 {saving ? "Saving..." : "Save"}
               </Button>
-              <Button 
-                onClick={() => {
-                  setIsEditing(false);
-                  setNewReferralCode(profile?.referral_code || "");
-                }} 
-                variant="ghost" 
-                size="sm"
-              >
+              <Button onClick={() => {
+            setIsEditing(false);
+            setNewReferralCode(profile?.referral_code || "");
+          }} variant="ghost" size="sm">
                 Cancel
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <Input 
-              value={referralLink} 
-              readOnly 
-              className="font-mono text-sm bg-background/50 border-0" 
-            />
-            <Button 
-              onClick={copyReferralLink} 
-              variant="outline" 
-              className="gap-2 shrink-0"
-            >
+          </div> : <div className="flex gap-2">
+            <Input value={referralLink} readOnly className="font-mono text-sm bg-background/50 border-0" />
+            <Button onClick={copyReferralLink} variant="outline" className="gap-2 shrink-0">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied" : "Copy"}
             </Button>
-          </div>
-        )}
+          </div>}
       </div>
 
       {/* Milestone Rewards */}
-      <div className="space-y-4">
-        <h3 className="font-semibold text-sm">Milestone Rewards</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {milestones.map((milestone, index) => (
-            <div 
-              key={milestone.id}
-              className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground font-medium">
-                  {milestone.milestone_type === 'signup' ? 'On Signup' : `$${milestone.threshold} Earned`}
-                </span>
-                <span className="text-sm font-semibold text-[#2060df]">
-                  +${milestone.reward_amount.toFixed(2)}
-                </span>
-              </div>
-              <p className="text-sm font-medium">{milestone.display_name}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      
 
       {/* Referrals List */}
       <div className="space-y-4">
@@ -327,8 +265,7 @@ export function ReferralsTab() {
           <span className="text-xs text-muted-foreground">{referrals.length} total</span>
         </div>
 
-        {referrals.length === 0 ? (
-          <div className="text-center py-12 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+        {referrals.length === 0 ? <div className="text-center py-12 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
             <div className="w-12 h-12 rounded-full bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center mx-auto mb-4">
               <Users className="w-6 h-6 text-muted-foreground" />
             </div>
@@ -336,19 +273,12 @@ export function ReferralsTab() {
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               Start sharing your referral link to invite creators and earn rewards
             </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
+          </div> : <div className="space-y-3">
             {referrals.map(referral => {
-              const achievedMilestones = referral.milestone_rewards?.length || 0;
-              const totalMilestones = milestones.length;
-              const totalEarned = referral.reward_earned || 0;
-              
-              return (
-                <div 
-                  key={referral.id} 
-                  className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-3"
-                >
+          const achievedMilestones = referral.milestone_rewards?.length || 0;
+          const totalMilestones = milestones.length;
+          const totalEarned = referral.reward_earned || 0;
+          return <div key={referral.id} className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-3">
                   {/* User Info Row */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -380,37 +310,18 @@ export function ReferralsTab() {
                   {/* Milestone Progress */}
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {milestones.map(milestone => {
-                      const achieved = getMilestoneStatus(referral, milestone);
-                      return (
-                        <div
-                          key={milestone.id}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${
-                            achieved 
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
-                              : 'bg-muted/50 text-muted-foreground'
-                          }`}
-                        >
-                          {achieved ? (
-                            <CheckCircle2 className="w-3 h-3" />
-                          ) : (
-                            <Circle className="w-3 h-3" />
-                          )}
+                const achieved = getMilestoneStatus(referral, milestone);
+                return <div key={milestone.id} className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${achieved ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted/50 text-muted-foreground'}`}>
+                          {achieved ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
                           <span>
-                            {milestone.milestone_type === 'signup' 
-                              ? 'Signup' 
-                              : `$${milestone.threshold}`
-                            }
+                            {milestone.milestone_type === 'signup' ? 'Signup' : `$${milestone.threshold}`}
                           </span>
-                        </div>
-                      );
-                    })}
+                        </div>;
+              })}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                </div>;
+        })}
+          </div>}
       </div>
-    </div>
-  );
+    </div>;
 }
