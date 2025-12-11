@@ -17,6 +17,9 @@ import youtubeLogoBlack from "@/assets/youtube-logo-new.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import discordIconNew from "@/assets/discord-icon-new.png";
 import privateCampaignIcon from "@/assets/private-campaign-icon.svg";
+import discordWhiteIcon from "@/assets/discord-white-icon.webp";
+import settingsCinematicIcon from "@/assets/settings-cinematic-icon.svg";
+import creditCardIcon from "@/assets/credit-card-icon.svg";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -567,36 +570,36 @@ export function CampaignsTab({
 
       {/* Actions Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left">
-          <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
-            <GraduationCap className="w-5 h-5 text-white" />
+        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
+          <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
+            <img src={discordWhiteIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Start Learning</h3>
+            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Start Learning</h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
               Everything you need to master organic marketing for your business.
             </p>
           </div>
         </button>
         
-        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left">
-          <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
-            <Play className="w-5 h-5 text-white" />
+        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
+          <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
+            <img src={settingsCinematicIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Launch Campaign</h3>
+            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Launch Campaign</h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
               Connect with Virality's vetted network of video editors, clippers, and themepages
             </p>
           </div>
         </button>
         
-        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left">
-          <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
-            <Search className="w-5 h-5 text-white" />
+        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
+          <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
+            <img src={creditCardIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Discover Winning Content</h3>
+            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Discover Winning Content</h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
               Spy on your competitor's Viral videos through our curated content library
             </p>
