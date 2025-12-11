@@ -67,7 +67,7 @@ export function DiscoverTab() {
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [frequency, setFrequency] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("active");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [hideInfiniteBudget, setHideInfiniteBudget] = useState(false);
   const [hideLowBudget, setHideLowBudget] = useState(false);
@@ -374,14 +374,17 @@ export function DiscoverTab() {
                   {/* Banner Image */}
                   {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                       <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                      {isEnded && <div className="absolute top-2 right-2 z-20">
-                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-red-500/10 rounded">
+                      <div className="absolute top-2 right-2 z-20">
+                        {isEnded ? (
+                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-red-500/10 backdrop-blur-sm rounded">
                             Ended
                           </span>
-                        </div>}
-                      {!isEnded && campaign.is_featured && <div className="absolute top-2 right-2 z-20">
-                          
-                        </div>}
+                        ) : (
+                          <span className="text-emerald-500 text-xs font-medium px-2 py-1 bg-emerald-500/10 backdrop-blur-sm rounded">
+                            Active
+                          </span>
+                        )}
+                      </div>
                     </div>}
 
                   {/* Content Section */}
