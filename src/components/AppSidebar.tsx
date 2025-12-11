@@ -27,7 +27,6 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-
 interface Brand {
   id: string;
   name: string;
@@ -90,7 +89,9 @@ export function AppSidebar() {
   const {
     theme
   } = useTheme();
-  const { isAdmin } = useAdminCheck();
+  const {
+    isAdmin
+  } = useAdminCheck();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [accountType, setAccountType] = useState<string>("creator");
@@ -101,20 +102,17 @@ export function AppSidebar() {
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
-  
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchBrandMemberships();
     }
   }, [user]);
-
   useEffect(() => {
     if (isAdmin) {
       fetchAllBrands();
     }
   }, [isAdmin]);
-
   useEffect(() => {
     // Update current brand info when workspace changes
     if (!isCreatorMode && workspace) {
@@ -132,7 +130,6 @@ export function AppSidebar() {
       }
     }
   }, [workspace, brandMemberships, allBrands, isCreatorMode]);
-
   const fetchProfile = async () => {
     if (!user) return;
     const {
@@ -146,7 +143,6 @@ export function AppSidebar() {
       setDisplayName(user.email || "");
     }
   };
-
   const fetchBrandMemberships = async () => {
     if (!user) return;
     const {
@@ -156,12 +152,10 @@ export function AppSidebar() {
       setBrandMemberships(data as unknown as BrandMembership[]);
     }
   };
-
   const fetchAllBrands = async () => {
-    const { data } = await supabase
-      .from("brands")
-      .select("id, name, slug, logo_url")
-      .order("name");
+    const {
+      data
+    } = await supabase.from("brands").select("id, name, slug, logo_url").order("name");
     if (data) {
       setAllBrands(data);
     }
@@ -336,22 +330,14 @@ export function AppSidebar() {
             <PopoverTrigger asChild>
               <button className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] transition-colors">
                 <div className="flex items-center gap-2">
-                  {isCreatorMode ? (
-                    <Avatar className="w-6 h-6">
+                  {isCreatorMode ? <Avatar className="w-6 h-6">
                       <AvatarImage src={avatarUrl || undefined} />
                       <AvatarFallback className="bg-[#1f1f1f] text-[10px] text-neutral-400">
                         {displayName?.charAt(0)?.toUpperCase() || 'U'}
                       </AvatarFallback>
-                    </Avatar>
-                  ) : (
-                    currentBrandLogo ? (
-                      <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" />
-                    ) : (
-                      <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
+                    </Avatar> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
                         <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-                      </div>
-                    )
-                  )}
+                      </div>}
                   <p className="text-xs font-medium text-white truncate max-w-[120px] tracking-[-0.5px]">{getWorkspaceDisplayName()}</p>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
@@ -386,23 +372,18 @@ export function AppSidebar() {
                         <span className="text-sm font-medium text-white truncate">{membership.brands.name}</span>
                       </button>)}
                   </>}
-                {!isAdmin && (
-                  <>
-                    <div className="border-t border-[#1f1f1f] my-1.5" />
-                    <button
-                      onClick={() => {
-                        setWorkspaceOpen(false);
-                        setShowCreateBrandDialog(true);
-                      }}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white"
-                    >
+                {!isAdmin && <>
+                    
+                    <button onClick={() => {
+                  setWorkspaceOpen(false);
+                  setShowCreateBrandDialog(true);
+                }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
                       <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                         <Plus className="w-3 h-3" />
                       </div>
                       <span className="text-sm font-medium">Create Brand</span>
                     </button>
-                  </>
-                )}
+                  </>}
               </div>
             </PopoverContent>
           </Popover>
@@ -463,13 +444,8 @@ export function AppSidebar() {
           </div>
         </div>
       </aside>
-      <CreateBrandDialog 
-        open={showCreateBrandDialog} 
-        onOpenChange={setShowCreateBrandDialog}
-        hideTrigger
-        onSuccess={() => {
-          fetchBrandMemberships();
-        }}
-      />
+      <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger onSuccess={() => {
+      fetchBrandMemberships();
+    }} />
     </>;
 }
