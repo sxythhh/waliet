@@ -178,11 +178,11 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
   };
 
   useEffect(() => {
-    // Only fetch when we have both brandId and collectionName to avoid double-fetching
-    if (brandId && collectionName) {
+    // Fetch when we have brandId and either collectionName or campaignId (for hashtag filtering)
+    if (brandId && (collectionName || campaignId)) {
       fetchVideos();
     }
-  }, [brandId, collectionName, sortField, sortDirection, pagination.page]);
+  }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page]);
 
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -228,7 +228,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
       {/* Header with filters */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button type="button" onClick={fetchVideos} variant="ghost" size="icon" disabled={isLoading || !collectionName} className="h-8 w-8">
+          <Button type="button" onClick={fetchVideos} variant="ghost" size="icon" disabled={isLoading || (!collectionName && !campaignId)} className="h-8 w-8">
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
@@ -334,8 +334,8 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
                   <div className="space-y-2">
-                    <p>No videos found for collection "{collectionName}"</p>
-                    <p className="text-xs">Check browser console (F12) for detailed debug logs from the Shortimize API.</p>
+                    <p>No videos found{collectionName ? ` for collection "${collectionName}"` : ''}</p>
+                    <p className="text-xs">Videos are filtered by campaign hashtags. Check that your videos have the correct hashtags.</p>
                   </div>
                 </TableCell>
               </TableRow>
