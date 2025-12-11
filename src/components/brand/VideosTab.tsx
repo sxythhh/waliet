@@ -10,6 +10,7 @@ import { ShortimizeVideosTable } from "./ShortimizeVideosTable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
 
 interface VideosTabProps {
   campaignId: string;
@@ -23,6 +24,7 @@ interface VideosTabProps {
       avatar_url: string | null;
     };
   }>;
+  timeframe?: TimeframeOption;
 }
 
 interface CampaignVideo {
@@ -48,7 +50,7 @@ interface CampaignVideo {
   };
 }
 
-export function VideosTab({ campaignId, brandId, isAdmin, approvedCreators }: VideosTabProps) {
+export function VideosTab({ campaignId, brandId, isAdmin, approvedCreators, timeframe }: VideosTabProps) {
   const [videos, setVideos] = useState<CampaignVideo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -122,7 +124,7 @@ export function VideosTab({ campaignId, brandId, isAdmin, approvedCreators }: Vi
         </TabsList>
 
         <TabsContent value="shortimize" className="mt-4">
-          <ShortimizeVideosTable brandId={brandId} collectionName={collectionName} campaignId={campaignId} />
+          <ShortimizeVideosTable brandId={brandId} collectionName={collectionName} campaignId={campaignId} timeframe={timeframe} />
         </TabsContent>
 
         <TabsContent value="uploaded" className="mt-4">
