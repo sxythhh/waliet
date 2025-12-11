@@ -39,6 +39,11 @@ const campaignSchema = z.object({
   access_code: z.string().trim().optional(),
   requires_application: z.boolean().default(true),
   hashtags: z.array(z.string()).default([]),
+  asset_links: z.array(z.object({
+    label: z.string(),
+    url: z.string()
+  })).default([]),
+  requirements: z.array(z.string()).default([]),
 }).refine(data => {
   if (data.is_private) {
     return data.access_code && data.access_code.length >= 6;
@@ -80,6 +85,8 @@ interface Campaign {
   status?: string;
   is_infinite_budget?: boolean;
   hashtags?: string[] | null;
+  asset_links?: { label: string; url: string }[] | null;
+  requirements?: string[] | null;
 }
 
 interface CampaignCreationWizardProps {
@@ -160,9 +167,41 @@ export function CampaignCreationWizard({
       access_code: campaign?.access_code || "",
       requires_application: campaign?.requires_application !== false,
       hashtags: campaign?.hashtags || [],
+      asset_links: campaign?.asset_links || [],
+      requirements: campaign?.requirements || [],
     }
   });
 
+  const [newAssetLabel, setNewAssetLabel] = useState("");
+  const [newAssetUrl, setNewAssetUrl] = useState("");
+  const [newRequirement, setNewRequirement] = useState("");
+
+  const addAssetLink = () => {
+    if (newAssetLabel.trim() && newAssetUrl.trim()) {
+      const currentLinks = form.getValues("asset_links") || [];
+      form.setValue("asset_links", [...currentLinks, { label: newAssetLabel.trim(), url: newAssetUrl.trim() }]);
+      setNewAssetLabel("");
+      setNewAssetUrl("");
+    }
+  };
+
+  const removeAssetLink = (index: number) => {
+    const currentLinks = form.getValues("asset_links") || [];
+    form.setValue("asset_links", currentLinks.filter((_, i) => i !== index));
+  };
+
+  const addRequirement = () => {
+    if (newRequirement.trim()) {
+      const currentReqs = form.getValues("requirements") || [];
+      form.setValue("requirements", [...currentReqs, newRequirement.trim()]);
+      setNewRequirement("");
+    }
+  };
+
+  const removeRequirement = (index: number) => {
+    const currentReqs = form.getValues("requirements") || [];
+    form.setValue("requirements", currentReqs.filter((_, i) => i !== index));
+  };
   // Reset form when campaign changes
   useEffect(() => {
     if (open) {
@@ -182,9 +221,14 @@ export function CampaignCreationWizard({
         access_code: campaign?.access_code || "",
         requires_application: campaign?.requires_application !== false,
         hashtags: campaign?.hashtags || [],
+        asset_links: campaign?.asset_links || [],
+        requirements: campaign?.requirements || [],
       });
       setBannerPreview(campaign?.banner_url || null);
       setCurrentStep(isEditMode ? 3 : 1);
+      setNewAssetLabel("");
+      setNewAssetUrl("");
+      setNewRequirement("");
     }
   }, [open, campaign]);
 
@@ -338,6 +382,8 @@ export function CampaignCreationWizard({
           access_code: values.is_private ? values.access_code?.toUpperCase() : null,
           requires_application: values.requires_application,
           hashtags: values.hashtags || [],
+          asset_links: values.asset_links || [],
+          requirements: values.requirements || [],
           ...(bannerFile ? { banner_url: bannerUrl } : {}),
         };
         
@@ -373,6 +419,8 @@ export function CampaignCreationWizard({
           access_code: values.is_private ? values.access_code?.toUpperCase() : null,
           requires_application: values.requires_application,
           hashtags: values.hashtags || [],
+          asset_links: values.asset_links || [],
+          requirements: values.requirements || [],
           banner_url: bannerUrl,
           brand_id: brandId,
           brand_name: brandName,
@@ -723,6 +771,81 @@ export function CampaignCreationWizard({
                               </p>
                             </div>
                           )}
+
+                          {/* Asset Links */}
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
+                              Asset Links
+                            </label>
+                            <p className="text-xs text-muted-foreground">Add links to Google Drive, Dropbox, or other resources</p>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Label (e.g. Google Drive)"
+                                value={newAssetLabel}
+                                onChange={(e) => setNewAssetLabel(e.target.value)}
+                                className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50"
+                              />
+                              <Input
+                                placeholder="URL"
+                                value={newAssetUrl}
+                                onChange={(e) => setNewAssetUrl(e.target.value)}
+                                className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50"
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addAssetLink())}
+                              />
+                              <Button type="button" variant="outline" size="icon" onClick={addAssetLink} className="shrink-0">
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {form.watch("asset_links")?.length > 0 && (
+                              <div className="space-y-2">
+                                {form.watch("asset_links")?.map((link, index) => (
+                                  <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
+                                    <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <span className="font-medium text-sm">{link.label}</span>
+                                    <span className="text-xs text-muted-foreground truncate flex-1">{link.url}</span>
+                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeAssetLink(index)}>
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Requirements */}
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
+                              Campaign Requirements
+                            </label>
+                            <p className="text-xs text-muted-foreground">List the requirements creators must follow</p>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Add a requirement"
+                                value={newRequirement}
+                                onChange={(e) => setNewRequirement(e.target.value)}
+                                className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50"
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
+                              />
+                              <Button type="button" variant="outline" size="icon" onClick={addRequirement} className="shrink-0">
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {form.watch("requirements")?.length > 0 && (
+                              <div className="space-y-2">
+                                {form.watch("requirements")?.map((req, index) => (
+                                  <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
+                                    <div className="w-5 h-5 rounded-full bg-[#2060df]/10 flex items-center justify-center shrink-0">
+                                      <span className="text-xs text-[#2060df] font-semibold">{index + 1}</span>
+                                    </div>
+                                    <span className="text-sm flex-1">{req}</span>
+                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeRequirement(index)}>
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
 
                           {/* Banner Upload */}
                           <div className="space-y-2">
