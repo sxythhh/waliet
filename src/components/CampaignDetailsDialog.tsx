@@ -207,7 +207,7 @@ export function CampaignDetailsDialog({
           </div>}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl mb-4 bg-[#1f1f1f]/0">
+        <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl mb-4 bg-sidebar">
           <div className="text-center">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
