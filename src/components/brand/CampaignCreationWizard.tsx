@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
@@ -136,7 +137,9 @@ export function CampaignCreationWizard({
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(campaign?.banner_url || null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [shortimizeApiKey, setShortimizeApiKey] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isAdmin } = useAdminCheck();
 
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
@@ -183,6 +186,21 @@ export function CampaignCreationWizard({
       setCurrentStep(isEditMode ? 3 : 1);
     }
   }, [open, campaign]);
+
+  // Load brand's shortimize API key
+  useEffect(() => {
+    const loadShortimizeApiKey = async () => {
+      if (open && brandId && isAdmin) {
+        const { data } = await supabase
+          .from('brands')
+          .select('shortimize_api_key')
+          .eq('id', brandId)
+          .single();
+        setShortimizeApiKey(data?.shortimize_api_key || "");
+      }
+    };
+    loadShortimizeApiKey();
+  }, [open, brandId, isAdmin]);
 
   const watchedValues = form.watch();
   const selectedGoal = GOALS.find(g => g.id === watchedValues.goal);
@@ -273,6 +291,12 @@ export function CampaignCreationWizard({
 
       const { error } = await supabase.from("campaigns").insert(campaignData);
       if (error) throw error;
+      
+      // Save shortimize API key to brand if admin
+      if (isAdmin && shortimizeApiKey) {
+        await supabase.from("brands").update({ shortimize_api_key: shortimizeApiKey }).eq("id", brandId);
+      }
+      
       toast.success("Campaign saved as draft!");
       onOpenChange(false);
       form.reset();
@@ -341,6 +365,11 @@ export function CampaignCreationWizard({
         const { error } = await supabase.from("campaigns").insert(campaignData);
         if (error) throw error;
         toast.success("Campaign created successfully!");
+      }
+
+      // Save shortimize API key to brand if admin
+      if (isAdmin && shortimizeApiKey) {
+        await supabase.from("brands").update({ shortimize_api_key: shortimizeApiKey }).eq("id", brandId);
       }
       
       onOpenChange(false);
@@ -655,17 +684,24 @@ export function CampaignCreationWizard({
                             </FormItem>
                           )} />
 
-                          <FormField control={form.control} name="description" render={({ field }) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Description
-                              </FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Brief description of the campaign" className="min-h-[80px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{ letterSpacing: '-0.3px' }} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
+                          {isAdmin && (
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
+                                Shortimize API Key
+                              </label>
+                              <Input
+                                type="password"
+                                placeholder="Enter Shortimize API key"
+                                value={shortimizeApiKey}
+                                onChange={(e) => setShortimizeApiKey(e.target.value)}
+                                className="bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0"
+                                style={{ letterSpacing: '-0.3px' }}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Used for video tracking and analytics
+                              </p>
+                            </div>
+                          )}
 
                           {/* Banner Upload */}
                           <div className="space-y-2">
