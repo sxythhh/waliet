@@ -174,11 +174,11 @@ export function DemographicStatusCard({
 
         {/* Latest Submission Info */}
         {latestSubmission && (
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground" style={{ letterSpacing: '-0.5px' }}>
             <span>{format(new Date(latestSubmission.submitted_at), "MMM d")}</span>
             {latestSubmission.screenshot_url && (
               <button 
-                onClick={() => setViewingSubmission(latestSubmission)}
+                onClick={() => window.open(latestSubmission.screenshot_url!, '_blank')}
                 className="text-primary hover:underline"
               >
                 View
