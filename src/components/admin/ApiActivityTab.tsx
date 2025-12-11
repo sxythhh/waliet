@@ -3,8 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownLeft, Link2, Users, DollarSign, PieChart } from "lucide-react";
 import { format } from "date-fns";
+import tiktokLogo from "@/assets/tiktok-logo-black.png";
+import instagramLogo from "@/assets/instagram-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-new.png";
+import xLogo from "@/assets/x-logo.png";
 
 interface ApiLog {
   timestamp: number;
@@ -14,7 +18,30 @@ interface ApiLog {
   status?: string;
   amount?: number;
   user?: string;
+  platform?: string;
 }
+
+const getPlatformIcon = (platform?: string) => {
+  if (!platform) return null;
+  const p = platform.toLowerCase();
+  if (p === 'tiktok') return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4 rounded" />;
+  if (p === 'instagram') return <img src={instagramLogo} alt="Instagram" className="w-4 h-4 rounded" />;
+  if (p === 'youtube') return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4 rounded" />;
+  if (p === 'x' || p === 'twitter') return <img src={xLogo} alt="X" className="w-4 h-4 rounded" />;
+  return null;
+};
+
+const getTypeIcon = (type: string) => {
+  switch (type) {
+    case 'Transaction': return <DollarSign className="w-4 h-4 text-emerald-500" />;
+    case 'Submission': return <ArrowUpRight className="w-4 h-4 text-blue-500" />;
+    case 'Bounty App': return <Users className="w-4 h-4 text-purple-500" />;
+    case 'Payout': return <ArrowDownLeft className="w-4 h-4 text-amber-500" />;
+    case 'Account Link': return <Link2 className="w-4 h-4 text-cyan-500" />;
+    case 'Demographics': return <PieChart className="w-4 h-4 text-pink-500" />;
+    default: return null;
+  }
+};
 
 export function ApiActivityTab() {
   const [logs, setLogs] = useState<ApiLog[]>([]);
@@ -94,6 +121,7 @@ export function ApiActivityTab() {
             details: s.content_url ? `URL: ${s.content_url.substring(0, 50)}...` : undefined,
             status: s.status || "pending",
             user: profile?.username,
+            platform: s.platform,
           };
         }));
       }
@@ -139,6 +167,7 @@ export function ApiActivityTab() {
             description: `${isDisconnect ? 'Disconnected' : 'Connected'} ${account?.platform || 'account'} @${account?.username || 'unknown'}`,
             details: campaign?.title ? `Campaign: ${campaign.title}` : undefined,
             status: s.status,
+            platform: account?.platform,
           };
         }));
       }
@@ -153,6 +182,7 @@ export function ApiActivityTab() {
             description: `Demographics submission for ${account?.platform || 'account'} @${account?.username || 'unknown'}`,
             details: `Tier 1: ${d.tier1_percentage}%`,
             status: d.status,
+            platform: account?.platform,
           };
         }));
       }
@@ -220,50 +250,70 @@ export function ApiActivityTab() {
       </div>
 
       {/* Activity table - scrollable on mobile */}
-      <Card>
+      <Card className="border-[#141414]">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Recent Activity</CardTitle>
-          <CardDescription className="text-xs">Latest platform events</CardDescription>
+          <CardTitle className="text-base font-inter tracking-[-0.5px]">Recent Activity</CardTitle>
+          <CardDescription className="text-xs font-inter tracking-[-0.5px]">Latest platform events</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="border-[#141414]">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs whitespace-nowrap">Time</TableHead>
-                  <TableHead className="text-xs">Type</TableHead>
-                  <TableHead className="text-xs hidden sm:table-cell">Description</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs hidden md:table-cell">Amount</TableHead>
+                <TableRow className="border-[#141414] hover:bg-transparent">
+                  <TableHead className="text-xs whitespace-nowrap font-inter tracking-[-0.5px] text-white font-medium">Time</TableHead>
+                  <TableHead className="text-xs font-inter tracking-[-0.5px] text-white font-medium">Type</TableHead>
+                  <TableHead className="text-xs hidden sm:table-cell font-inter tracking-[-0.5px] text-white font-medium">Description</TableHead>
+                  <TableHead className="text-xs font-inter tracking-[-0.5px] text-white font-medium">Status</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell font-inter tracking-[-0.5px] text-white font-medium">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {logs.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableRow className="border-[#141414]">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8 font-inter tracking-[-0.5px]">
                       No recent activity
                     </TableCell>
                   </TableRow>
                 ) : (
                   logs.slice(0, 50).map((log, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-mono text-xs whitespace-nowrap py-2">
+                    <TableRow key={index} className="border-[#141414]">
+                      <TableCell className="font-inter tracking-[-0.5px] text-xs whitespace-nowrap py-3 text-muted-foreground">
                         {format(new Date(log.timestamp), "MMM d, HH:mm")}
                       </TableCell>
-                      <TableCell className="py-2">
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">{log.type}</Badge>
+                      <TableCell className="py-3">
+                        <div className="flex items-center gap-2">
+                          {getTypeIcon(log.type)}
+                          <span className="font-inter tracking-[-0.5px] text-xs">{log.type}</span>
+                        </div>
                       </TableCell>
-                      <TableCell className="text-xs py-2 hidden sm:table-cell">
-                        {log.description}
-                        {log.user && <span className="text-muted-foreground ml-1">@{log.user}</span>}
+                      <TableCell className="py-3 hidden sm:table-cell">
+                        <div className="flex items-center gap-2">
+                          {getPlatformIcon(log.platform)}
+                          <div className="flex flex-col">
+                            <span className="font-inter tracking-[-0.5px] text-xs">{log.description}</span>
+                            {log.user && (
+                              <span className="text-muted-foreground font-inter tracking-[-0.5px] text-[10px]">by @{log.user}</span>
+                            )}
+                            {log.details && (
+                              <span className="text-muted-foreground font-inter tracking-[-0.5px] text-[10px]">{log.details}</span>
+                            )}
+                          </div>
+                        </div>
                       </TableCell>
-                      <TableCell className="py-2">
-                        <Badge variant={getStatusColor(log.status)} className="text-[10px] px-1.5 py-0">
+                      <TableCell className="py-3">
+                        <Badge 
+                          variant={getStatusColor(log.status)} 
+                          className="text-[10px] px-2 py-0.5 font-inter tracking-[-0.5px] uppercase"
+                        >
                           {log.status || 'N/A'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-xs py-2 hidden md:table-cell">
-                        {log.amount ? `$${log.amount.toFixed(2)}` : '-'}
+                      <TableCell className="font-inter tracking-[-0.5px] text-xs py-3 hidden md:table-cell">
+                        {log.amount ? (
+                          <span className="text-emerald-500 font-medium">${log.amount.toFixed(2)}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
