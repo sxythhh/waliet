@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, Check } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, Check, Pencil, MapPin, Languages, Mail, RefreshCw, AtSign } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,7 @@ interface Profile {
   full_name: string | null;
   bio: string | null;
   avatar_url: string | null;
+  email: string | null;
   total_earnings: number;
   trust_score: number;
   demographics_score: number;
@@ -774,188 +775,155 @@ export function ProfileTab() {
         
       </Collapsible>
 
-      {/* Edit Profile */}
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle className="text-lg">Edit Profile</CardTitle>
-          <CardDescription>Update your public profile information</CardDescription>
+      {/* Personal Info */}
+      <Card className="bg-card border-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Personal info</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSaveProfile} className="space-y-6">
-            {/* Discord Integration */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm font-medium">Discord Account</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Connect your Discord account to access community features
-                  </p>
-                </div>
-                <DiscordLinkDialog userId={profile.id} discordUsername={profile.discord_username || undefined} discordAvatar={profile.discord_avatar || undefined} onSuccess={fetchProfile} />
-              </div>
-              {profile.discord_username && <div className="p-3 rounded-lg bg-muted/20 border border-border flex items-center gap-3">
-                  {profile.discord_avatar && <Avatar className="h-10 w-10">
-                      <AvatarImage src={profile.discord_avatar} />
-                      <AvatarFallback>
-                        {profile.discord_username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>}
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{profile.discord_username}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Connected {profile.discord_connected_at && formatDistanceToNow(new Date(profile.discord_connected_at), {
-                    addSuffix: true
-                  })}
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={async () => {
-                try {
-                  const {
-                    error
-                  } = await supabase.functions.invoke('discord-oauth', {
-                    body: {
-                      action: 'disconnect',
-                      userId: profile.id
-                    }
-                  });
-                  if (error) throw error;
-                  toast({
-                    title: "Success!",
-                    description: "Discord account unlinked successfully."
-                  });
-                  fetchProfile();
-                } catch (error: any) {
-                  toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: error.message || "Failed to unlink Discord account."
-                  });
-                }
-              }} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
-                    <Unlink className="h-4 w-4" />
-                  </Button>
-                </div>}
+          <form onSubmit={handleSaveProfile} className="space-y-0">
+            {/* Profile Picture */}
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Profile picture</p>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={uploading} 
+                className="gap-2 bg-muted/40 hover:bg-muted/60 rounded-full px-4"
+                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+              >
+                <RefreshCw className="h-4 w-4" />
+                {uploading ? "Uploading..." : "Replace picture"}
+              </Button>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
             </div>
+            <div className="border-t border-border/50" />
 
-            {/* Privacy Settings */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="hide-leaderboard" className="text-sm font-medium">Hide from Leaderboard</Label>
-                  <p className="text-xs text-muted-foreground">
-                    When enabled, your name will not appear on the public leaderboard
-                  </p>
+            {/* First name / Last name */}
+            <div className="py-4 flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex gap-8 mb-1">
+                  <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>First name</p>
+                  <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Last name</p>
                 </div>
-                <Switch id="hide-leaderboard" checked={profile.hide_from_leaderboard} onCheckedChange={checked => setProfile({
-                ...profile,
-                hide_from_leaderboard: checked
-              })} />
+                <Input 
+                  value={profile.full_name || ""} 
+                  onChange={e => setProfile({ ...profile, full_name: e.target.value })} 
+                  placeholder="Your name" 
+                  className="border-0 p-0 h-auto text-base font-medium bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                />
               </div>
+              <Pencil className="h-4 w-4 text-muted-foreground/50" />
             </div>
+            <div className="border-t border-border/50" />
 
-            {/* Avatar Upload Section */}
-            <div className="space-y-3">
-              <div className="flex items-start gap-6">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={profile.avatar_url || ""} />
-                  <AvatarFallback className="text-2xl bg-muted font-semibold">
-                    {profile.full_name?.[0] || profile.username[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <Label className="text-sm font-semibold">Profile Picture</Label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Upload a professional photo. JPG, PNG or GIF. Max 5MB.
-                    </p>
-                  </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 bg-muted/50 hover:bg-muted/70 hover:text-foreground border-0">
-                    <Upload className="h-4 w-4" />
-                    {uploading ? "Uploading..." : "Change Photo"}
-                  </Button>
-                </div>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-              </div>
-            </div>
-
-            {/* Basic Information */}
-            <div className="space-y-3">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium">Username</Label>
-                  <Input id="username" value={profile.username} onChange={e => setProfile({
-                  ...profile,
-                  username: e.target.value
-                })} placeholder="username" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-sm font-medium">Display Name</Label>
-                  <Input id="fullName" value={profile.full_name || ""} onChange={e => setProfile({
-                  ...profile,
-                  full_name: e.target.value
-                })} placeholder="John Doe" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
+            {/* Username */}
+            <div className="py-4 flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Username</p>
+                <div className="flex items-center gap-1">
+                  <AtSign className="h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    value={profile.username} 
+                    onChange={e => setProfile({ ...profile, username: e.target.value })} 
+                    placeholder="username" 
+                    className="border-0 p-0 h-auto text-base font-medium bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                  />
                 </div>
               </div>
+              <Pencil className="h-4 w-4 text-muted-foreground/50" />
             </div>
+            <div className="border-t border-border/50" />
 
-            {/* Contact Information */}
-            <div className="space-y-3">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-                  <PhoneInput value={profile.phone_number || ""} onChange={value => setProfile({
-                  ...profile,
-                  phone_number: value
-                })} placeholder="Enter phone number" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="country" className="text-sm font-medium">Country</Label>
-                  <Input id="country" value={profile.country || ""} onChange={e => setProfile({
-                  ...profile,
-                  country: e.target.value
-                })} placeholder="United States" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="city" className="text-sm font-medium">City</Label>
-                  <Input id="city" value={profile.city || ""} onChange={e => setProfile({
-                  ...profile,
-                  city: e.target.value
-                })} placeholder="New York" className="bg-background focus-visible:ring-0 focus-visible:ring-offset-0 text-sm" />
+            {/* Location */}
+            <div className="py-4 flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Location</p>
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    value={profile.country || ""} 
+                    onChange={e => setProfile({ ...profile, country: e.target.value })} 
+                    placeholder="Your country" 
+                    className="border-0 p-0 h-auto text-base font-medium bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                  />
                 </div>
               </div>
+              <Pencil className="h-4 w-4 text-muted-foreground/50" />
             </div>
+            <div className="border-t border-border/50" />
+
+            {/* Languages */}
+            <div className="py-4 flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Languages you post in</p>
+                <div className="flex items-center gap-1">
+                  <Languages className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-base font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                    {profile.content_languages?.length ? profile.content_languages.join(', ') : 'Not set'}
+                  </span>
+                </div>
+              </div>
+              <Pencil className="h-4 w-4 text-muted-foreground/50" />
+            </div>
+            <div className="border-t border-border/50" />
+
+            {/* Email (read-only) */}
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Email</p>
+              <div className="flex items-center gap-1">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="text-base font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                  {profile.email || 'Not set'}
+                </span>
+              </div>
+            </div>
+            <div className="border-t border-border/50" />
+
+            {/* Phone */}
+            <div className="py-4 flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Phone number</p>
+                <PhoneInput 
+                  value={profile.phone_number || ""} 
+                  onChange={value => setProfile({ ...profile, phone_number: value })} 
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <Pencil className="h-4 w-4 text-muted-foreground/50" />
+            </div>
+            <div className="border-t border-border/50" />
 
             {/* Bio */}
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
-                <Textarea id="bio" value={profile.bio || ""} onChange={e => setProfile({
-                ...profile,
-                bio: e.target.value
-              })} placeholder="Tell us about yourself..." className="bg-background focus-visible:bg-background border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none text-sm min-h-[100px] resize-none" maxLength={500} />
-                <p className="text-xs text-muted-foreground">
-                  {profile.bio?.length || 0}/500 characters
-                </p>
-              </div>
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Bio</p>
+              <Textarea 
+                value={profile.bio || ""} 
+                onChange={e => setProfile({ ...profile, bio: e.target.value })} 
+                placeholder="Tell us about yourself..." 
+                className="border-0 p-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base resize-none min-h-[60px]"
+                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground mt-1">{profile.bio?.length || 0}/500 characters</p>
             </div>
 
-
             {/* Save Button */}
-            <div className="flex items-center justify-between pt-4">
-
-              
-              <Button type="submit" disabled={saving} size="lg" className="gap-2 min-w-[140px]">
-                {saving ? <>
+            <div className="pt-4">
+              <Button type="submit" disabled={saving} className="gap-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                {saving ? (
+                  <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     Saving...
-                  </> : <>
-                    Save Changes
-                  </>}
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
               </Button>
             </div>
           </form>
