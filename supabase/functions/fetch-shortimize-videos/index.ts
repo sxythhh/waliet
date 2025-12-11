@@ -167,56 +167,65 @@ serve(async (req) => {
     const apiUrl = `https://api.shortimize.com/videos?${params.toString()}`;
     console.log('[fetch-shortimize-videos] Calling Shortimize API:', apiUrl);
 
-    // If filtering by hashtags without collection, we need to fetch ALL matching videos first
-    // then sort by the requested field (since API ordering won't work with hashtag filter)
+    // If filtering by hashtags without collection, fetch in parallel batches for speed
     if (campaignHashtags.length > 0 && !collection) {
       const allMatchingVideos: any[] = [];
-      let currentPage = 1;
-      const maxPages = 50; // Increase to scan more videos
-      let hasMorePages = true;
+      const maxPages = 20; // Limit pages to scan
+      const batchSize = 5; // Fetch 5 pages in parallel
+      let totalPagesAvailable = maxPages;
+      let consecutiveEmptyBatches = 0;
       
-      // Always fetch by uploaded_at to get campaign-relevant videos, then sort afterwards
-      while (hasMorePages && currentPage <= maxPages) {
-        const pageParams = new URLSearchParams();
-        pageParams.append('page', currentPage.toString());
-        pageParams.append('limit', '100');
-        pageParams.append('order_by', 'uploaded_at'); // Always use uploaded_at for scanning
-        pageParams.append('order_direction', 'desc');
+      // Fetch pages in parallel batches
+      for (let batchStart = 1; batchStart <= maxPages && consecutiveEmptyBatches < 2; batchStart += batchSize) {
+        const batchEnd = Math.min(batchStart + batchSize - 1, totalPagesAvailable);
+        const pagePromises: Promise<{ page: number; videos: any[]; totalPages: number }>[] = [];
         
-        if (username) pageParams.append('username', username);
-        if (uploadedAtStart) pageParams.append('uploaded_at_start', uploadedAtStart);
-        if (uploadedAtEnd) pageParams.append('uploaded_at_end', uploadedAtEnd);
+        for (let p = batchStart; p <= batchEnd; p++) {
+          const pageParams = new URLSearchParams();
+          pageParams.append('page', p.toString());
+          pageParams.append('limit', '100');
+          pageParams.append('order_by', 'uploaded_at');
+          pageParams.append('order_direction', 'desc');
+          
+          if (username) pageParams.append('username', username);
+          if (uploadedAtStart) pageParams.append('uploaded_at_start', uploadedAtStart);
+          if (uploadedAtEnd) pageParams.append('uploaded_at_end', uploadedAtEnd);
 
-        const pageUrl = `https://api.shortimize.com/videos?${pageParams.toString()}`;
-        
-        const response = await fetchWithRetry(pageUrl, {
-          headers: { 'Authorization': `Bearer ${brand.shortimize_api_key}` },
-        }, 5);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[fetch-shortimize-videos] Shortimize API error:', errorText);
-          throw new Error(`Shortimize API returned ${response.status}: ${errorText}`);
-        }
-
-        const result = await response.json();
-        const videos = result.data || [];
-        
-        // Filter by hashtag - log first video for debugging
-        const matchingVideos = videos.filter((v: any, idx: number) => 
-          videoMatchesHashtags(v, campaignHashtags, currentPage === 1 && idx === 0)
-        );
-        allMatchingVideos.push(...matchingVideos);
-        
-        console.log(`[fetch-shortimize-videos] Page ${currentPage}: ${videos.length} videos, ${matchingVideos.length} matching, total: ${allMatchingVideos.length}`);
-
-        // Check if there are more pages
-        if (!result.pagination || currentPage >= result.pagination.total_pages || videos.length === 0) {
-          hasMorePages = false;
+          const pageUrl = `https://api.shortimize.com/videos?${pageParams.toString()}`;
+          
+          pagePromises.push(
+            fetchWithRetry(pageUrl, {
+              headers: { 'Authorization': `Bearer ${brand.shortimize_api_key}` },
+            }, 3).then(async (response) => {
+              if (!response.ok) return { page: p, videos: [], totalPages: 0 };
+              const result = await response.json();
+              return { 
+                page: p, 
+                videos: result.data || [], 
+                totalPages: result.pagination?.total_pages || 0 
+              };
+            }).catch(() => ({ page: p, videos: [], totalPages: 0 }))
+          );
         }
         
-        currentPage++;
-        await delay(300); // Small delay between pages
+        const batchResults = await Promise.all(pagePromises);
+        let batchMatchCount = 0;
+        
+        for (const result of batchResults) {
+          if (result.totalPages > 0) totalPagesAvailable = Math.min(result.totalPages, maxPages);
+          const matchingVideos = result.videos.filter((v: any) => videoMatchesHashtags(v, campaignHashtags, false));
+          batchMatchCount += matchingVideos.length;
+          allMatchingVideos.push(...matchingVideos);
+        }
+        
+        console.log(`[fetch-shortimize-videos] Batch ${Math.ceil(batchStart/batchSize)}: pages ${batchStart}-${batchEnd}, found ${batchMatchCount} matching, total: ${allMatchingVideos.length}`);
+        
+        // Early termination if no matches in batch
+        if (batchMatchCount === 0) {
+          consecutiveEmptyBatches++;
+        } else {
+          consecutiveEmptyBatches = 0;
+        }
       }
 
       // Sort by the requested field
@@ -245,7 +254,6 @@ serve(async (req) => {
           collectionUsed: null,
           hashtagFilter: campaignHashtags,
           apiKeyConfigured: true,
-          pagesScanned: currentPage - 1,
           totalMatching: allMatchingVideos.length
         }
       }), {
