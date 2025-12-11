@@ -385,7 +385,7 @@ export function AppSidebar() {
                           <span className="text-sm font-medium text-white truncate">{membership.brands.name}</span>
                         </button>)}
                     </>}
-                  <button onClick={() => {
+                  {isAdmin && <button onClick={() => {
                 setWorkspaceOpen(false);
                 setShowCreateBrandDialog(true);
               }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
@@ -393,7 +393,7 @@ export function AppSidebar() {
                       <Plus className="w-3 h-3" />
                     </div>
                     <span className="text-sm font-medium">Create Brand</span>
-                  </button>
+                  </button>}
                 </div>
               </PopoverContent>
             </Popover>

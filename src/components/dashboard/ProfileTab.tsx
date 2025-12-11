@@ -757,7 +757,7 @@ export function ProfileTab() {
             const demographicSubmissions = account.demographic_submissions || [];
             const latestDemographicSubmission = demographicSubmissions[0];
             const demographicStatus = latestDemographicSubmission?.status;
-            return <div key={account.id} className="group relative p-4 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
+            return <div key={account.id} className="group relative p-4 rounded-xl bg-neutral-100 dark:bg-muted/10 hover:bg-neutral-200 dark:hover:bg-muted/20 transition-all duration-300">
                     {/* Main Layout */}
                     <div className="flex items-start gap-4">
                       {/* Content - Clickable to open popover */}
