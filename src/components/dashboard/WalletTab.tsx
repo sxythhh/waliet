@@ -553,11 +553,10 @@ export function WalletTab() {
     if (!wallet) return;
     const methodIndex = payoutMethods.findIndex(m => m.id === methodId);
     if (methodIndex === -1 || methodIndex === 0) return; // Already default or not found
-    
+
     const updatedMethods = [...payoutMethods];
     const [selectedMethod] = updatedMethods.splice(methodIndex, 1);
     updatedMethods.unshift(selectedMethod);
-    
     const {
       error
     } = await supabase.from("wallets").update({
@@ -999,19 +998,15 @@ export function WalletTab() {
           };
           const methodIcon = getMethodIcon();
           return <div key={method.id} className="group relative rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors p-4 border border-border dark:border-transparent">
-                {isDefault && (
-                  <div className="absolute top-2 right-2">
+                {isDefault && <div className="absolute top-2 right-2">
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0 font-inter tracking-[-0.4px]">
                       Default
                     </Badge>
-                  </div>
-                )}
+                  </div>}
                 <div className="flex items-center gap-3">
-                  {methodIcon && (
-                    <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
+                  {methodIcon && <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
                       <img src={methodIcon} alt={getMethodLabel()} className="w-5 h-5" />
-                    </div>
-                  )}
+                    </div>}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">{getMethodLabel()}</p>
                     <p className="text-xs text-neutral-500 mt-0.5 truncate font-inter tracking-[-0.4px]">{getMethodDetails()}</p>
@@ -1020,11 +1015,9 @@ export function WalletTab() {
                       </p>}
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {!isDefault && (
-                      <Button variant="ghost" size="icon" onClick={() => handleSetDefaultMethod(method.id)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary flex-shrink-0">
+                    {!isDefault && <Button variant="ghost" size="icon" onClick={() => handleSetDefaultMethod(method.id)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary flex-shrink-0">
                         <Star className="h-4 w-4" />
-                      </Button>
-                    )}
+                      </Button>}
                     <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive flex-shrink-0">
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -1108,7 +1101,7 @@ export function WalletTab() {
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3 mb-2">
               
-              <p className="text-sm font-semibold text-foreground">💵 Current Balance</p>
+              <p className="text-sm font-semibold text-foreground">Current Balance</p>
             </div>
             <p className="text-3xl font-bold font-geist mb-4" style={{
             letterSpacing: '-0.3px'
