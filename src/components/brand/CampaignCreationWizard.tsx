@@ -36,7 +36,7 @@ const campaignSchema = z.object({
   is_private: z.boolean().default(false),
   access_code: z.string().trim().optional(),
   requires_application: z.boolean().default(true),
-  hashtag: z.string().trim().optional(),
+  hashtags: z.array(z.string()).default([]),
 }).refine(data => {
   if (data.is_private) {
     return data.access_code && data.access_code.length >= 6;
@@ -77,7 +77,7 @@ interface Campaign {
   requires_application?: boolean;
   status?: string;
   is_infinite_budget?: boolean;
-  hashtag?: string | null;
+  hashtags?: string[] | null;
 }
 
 interface CampaignCreationWizardProps {
@@ -155,7 +155,7 @@ export function CampaignCreationWizard({
       is_private: campaign?.is_private || false,
       access_code: campaign?.access_code || "",
       requires_application: campaign?.requires_application !== false,
-      hashtag: campaign?.hashtag || "",
+      hashtags: campaign?.hashtags || [],
     }
   });
 
@@ -177,7 +177,7 @@ export function CampaignCreationWizard({
         is_private: campaign?.is_private || false,
         access_code: campaign?.access_code || "",
         requires_application: campaign?.requires_application !== false,
-        hashtag: campaign?.hashtag || "",
+        hashtags: campaign?.hashtags || [],
       });
       setBannerPreview(campaign?.banner_url || null);
       setCurrentStep(isEditMode ? 3 : 1);
@@ -268,7 +268,7 @@ export function CampaignCreationWizard({
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
         is_featured: false,
-        hashtag: values.hashtag || null,
+        hashtags: values.hashtags || [],
       };
 
       const { error } = await supabase.from("campaigns").insert(campaignData);
@@ -330,7 +330,7 @@ export function CampaignCreationWizard({
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
         is_featured: false,
-        hashtag: values.hashtag || null,
+        hashtags: values.hashtags || [],
       };
 
       if (isEditMode && campaign) {
@@ -600,18 +600,55 @@ export function CampaignCreationWizard({
                             </FormItem>
                           )} />
 
-                          <FormField control={form.control} name="hashtag" render={({ field }) => (
+                          <FormField control={form.control} name="hashtags" render={({ field }) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Campaign Hashtag
+                                Campaign Hashtags
                               </FormLabel>
                               <p className="text-xs text-muted-foreground">
-                                Videos with this hashtag will be tracked (without #)
+                                Videos with these hashtags in their caption will be tracked (without #)
                               </p>
                               <FormControl>
-                                <div className="relative">
-                                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                  <Input placeholder="brandname" className="h-11 pl-9 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{ letterSpacing: '-0.3px' }} {...field} />
+                                <div className="space-y-2">
+                                  <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                      <Input 
+                                        placeholder="Add hashtag and press Enter" 
+                                        className="h-11 pl-9 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" 
+                                        style={{ letterSpacing: '-0.3px' }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const input = e.currentTarget;
+                                            const value = input.value.trim().replace(/^#/, '');
+                                            if (value && !field.value?.includes(value)) {
+                                              field.onChange([...(field.value || []), value]);
+                                              input.value = '';
+                                            }
+                                          }
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  {field.value && field.value.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {field.value.map((tag: string, index: number) => (
+                                        <Badge key={index} variant="secondary" className="gap-1 px-2 py-1">
+                                          #{tag}
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              field.onChange(field.value.filter((_: string, i: number) => i !== index));
+                                            }}
+                                            className="ml-1 hover:text-destructive"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               </FormControl>
                               <FormMessage />
@@ -764,10 +801,12 @@ export function CampaignCreationWizard({
                     </div>
                   </div>
 
-                  {watchedValues.hashtag && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {watchedValues.hashtags && watchedValues.hashtags.length > 0 && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                       <Hash className="h-4 w-4" />
-                      <span>#{watchedValues.hashtag}</span>
+                      {watchedValues.hashtags.map((tag: string, i: number) => (
+                        <span key={i}>#{tag}{i < watchedValues.hashtags!.length - 1 ? ',' : ''}</span>
+                      ))}
                     </div>
                   )}
 

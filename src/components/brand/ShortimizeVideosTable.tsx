@@ -55,9 +55,9 @@ const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/
 const extractPlatformId = (adLink: string, platform: string): string | null => {
   try {
     if (platform?.toLowerCase() === 'tiktok') {
-      // TikTok: https://www.tiktok.com/@username/video/VIDEO_ID
-      const match = adLink.match(/\/video\/(\d+)/);
-      return match ? match[1] : null;
+      // TikTok: https://www.tiktok.com/@username/video/VIDEO_ID or /photo/VIDEO_ID (slideshows)
+      const match = adLink.match(/\/(video|photo)\/(\d+)/);
+      return match ? match[2] : null;
     } else if (platform?.toLowerCase() === 'instagram') {
       // Instagram: https://www.instagram.com/reel/SHORTCODE/ or /p/SHORTCODE/
       const match = adLink.match(/\/(reel|p)\/([A-Za-z0-9_-]+)/);
