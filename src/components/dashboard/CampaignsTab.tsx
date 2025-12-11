@@ -536,18 +536,7 @@ export function CampaignsTab({
         <Skeleton className="h-[350px] rounded-lg" />
       </div>;
   }
-  if (campaigns.length === 0) {
-    return <div className="text-center py-12 flex flex-col items-center gap-4">
-        <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
-        <p className="text-foreground font-medium">You haven't joined any campaigns yet</p>
-        <div className="flex gap-2 mt-2">
-          <Button onClick={() => navigate("/dashboard?tab=discover")} className="bg-primary hover:bg-primary/90">
-            Discover Campaigns
-          </Button>
-          
-        </div>
-      </div>;
-  }
+  const hasNoCampaigns = campaigns.length === 0;
   return <div className="space-y-6 pt-6">
       {/* Welcome Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -798,7 +787,7 @@ export function CampaignsTab({
         </div>}
 
       {/* Your Campaigns */}
-      <div className="space-y-3">
+      {!hasNoCampaigns && <div className="space-y-3">
         <h3 className="text-lg font-semibold">Your Campaigns</h3>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
       {campaigns.map(campaign => {
@@ -933,7 +922,7 @@ export function CampaignsTab({
           </Card>;
         })}
         </div>
-      </div>
+      </div>}
     
     {/* Link Account Options Dialog */}
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
