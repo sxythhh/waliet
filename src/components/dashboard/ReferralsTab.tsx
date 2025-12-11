@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, DollarSign, TrendingUp, Copy, Check, Gift, Share2, Twitter, MessageCircle } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Copy, Check, Gift, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,9 @@ export function ReferralsTab() {
   const [profile, setProfile] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newReferralCode, setNewReferralCode] = useState("");
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -21,8 +24,11 @@ export function ReferralsTab() {
   const fetchProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
     setProfile(data);
+    if (data?.referral_code) {
+      setNewReferralCode(data.referral_code);
+    }
   };
 
   const fetchReferrals = async () => {
@@ -58,18 +64,69 @@ export function ReferralsTab() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const shareToTwitter = () => {
-    const text = encodeURIComponent("Join me on Virality and start earning from your content! 🚀");
-    const url = encodeURIComponent(referralLink);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-  };
+  const handleSaveReferralCode = async () => {
+    if (!newReferralCode.trim()) {
+      toast({
+        title: "Invalid code",
+        description: "Please enter a valid referral code.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const shareToDiscord = () => {
-    navigator.clipboard.writeText(`Join me on Virality and start earning from your content! 🚀\n${referralLink}`);
-    toast({
-      title: "Ready to share!",
-      description: "Message copied. Paste it in Discord!"
-    });
+    const sanitizedCode = newReferralCode.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+    
+    if (sanitizedCode.length < 3) {
+      toast({
+        title: "Code too short",
+        description: "Referral code must be at least 3 characters.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Check if code is already taken
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("referral_code", sanitizedCode)
+      .neq("id", user.id)
+      .maybeSingle();
+
+    if (existing) {
+      toast({
+        title: "Code taken",
+        description: "This referral code is already in use. Please choose another.",
+        variant: "destructive"
+      });
+      setSaving(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ referral_code: sanitizedCode })
+      .eq("id", user.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update referral code.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Updated!",
+        description: "Your referral code has been updated."
+      });
+      setProfile({ ...profile, referral_code: sanitizedCode });
+      setIsEditing(false);
+    }
+    setSaving(false);
   };
 
   const pendingReferrals = referrals.filter(r => r.status === 'pending').length;
@@ -88,31 +145,16 @@ export function ReferralsTab() {
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3">
         <div className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center">
-              <Users className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </div>
           <p className="text-2xl font-semibold tracking-tight">{profile?.total_referrals || 0}</p>
           <p className="text-xs text-muted-foreground mt-1">Total Referrals</p>
         </div>
 
         <div className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </div>
           <p className="text-2xl font-semibold tracking-tight">{profile?.successful_referrals || 0}</p>
           <p className="text-xs text-muted-foreground mt-1">Successful</p>
         </div>
 
         <div className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </div>
           <p className="text-2xl font-semibold tracking-tight">${profile?.referral_earnings?.toFixed(2) || "0.00"}</p>
           <p className="text-xs text-muted-foreground mt-1">Earnings</p>
         </div>
@@ -120,52 +162,77 @@ export function ReferralsTab() {
 
       {/* Referral Link Section */}
       <div className="p-5 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center">
-            <Gift className="w-5 h-5 text-[#2060df]" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center">
+              <Gift className="w-5 h-5 text-[#2060df]" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm">Your Referral Link</h3>
+              <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-sm">Your Referral Link</h3>
-            <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
-          </div>
+          {!isEditing && (
+            <Button 
+              onClick={() => setIsEditing(true)} 
+              variant="ghost" 
+              size="sm"
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit Tag
+            </Button>
+          )}
         </div>
 
-        <div className="flex gap-2">
-          <Input 
-            value={referralLink} 
-            readOnly 
-            className="font-mono text-sm bg-background/50 border-border/50" 
-          />
-          <Button 
-            onClick={copyReferralLink} 
-            variant="outline" 
-            className="gap-2 shrink-0"
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
-        </div>
-
-        <div className="flex gap-2 pt-2">
-          <Button 
-            onClick={shareToTwitter} 
-            variant="ghost" 
-            size="sm"
-            className="gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <Twitter className="w-4 h-4" />
-            Share on X
-          </Button>
-          <Button 
-            onClick={shareToDiscord} 
-            variant="ghost" 
-            size="sm"
-            className="gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <MessageCircle className="w-4 h-4" />
-            Share on Discord
-          </Button>
-        </div>
+        {isEditing ? (
+          <div className="space-y-3">
+            <div className="flex gap-2 items-center">
+              <span className="text-sm text-muted-foreground shrink-0">{window.location.origin}/?ref=</span>
+              <Input 
+                value={newReferralCode} 
+                onChange={(e) => setNewReferralCode(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
+                placeholder="your-code"
+                className="font-mono text-sm bg-background/50 border-0" 
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSaveReferralCode} 
+                size="sm"
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save"}
+              </Button>
+              <Button 
+                onClick={() => {
+                  setIsEditing(false);
+                  setNewReferralCode(profile?.referral_code || "");
+                }} 
+                variant="ghost" 
+                size="sm"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Input 
+              value={referralLink} 
+              readOnly 
+              className="font-mono text-sm bg-background/50 border-0" 
+            />
+            <Button 
+              onClick={copyReferralLink} 
+              variant="outline" 
+              className="gap-2 shrink-0"
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? "Copied" : "Copy"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* How it Works */}
