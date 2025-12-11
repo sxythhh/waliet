@@ -167,64 +167,59 @@ serve(async (req) => {
     const apiUrl = `https://api.shortimize.com/videos?${params.toString()}`;
     console.log('[fetch-shortimize-videos] Calling Shortimize API:', apiUrl);
 
-    // If filtering by hashtags without collection, fetch in parallel batches for speed
+    // If filtering by hashtags without collection, fetch sequentially to avoid rate limits
     if (campaignHashtags.length > 0 && !collection) {
       const allMatchingVideos: any[] = [];
-      const maxPages = 20; // Limit pages to scan
-      const batchSize = 5; // Fetch 5 pages in parallel
-      let totalPagesAvailable = maxPages;
-      let consecutiveEmptyBatches = 0;
+      const maxPages = 15; // Limit pages to scan
+      let currentPage = 1;
+      let consecutiveEmptyPages = 0;
       
-      // Fetch pages in parallel batches
-      for (let batchStart = 1; batchStart <= maxPages && consecutiveEmptyBatches < 2; batchStart += batchSize) {
-        const batchEnd = Math.min(batchStart + batchSize - 1, totalPagesAvailable);
-        const pagePromises: Promise<{ page: number; videos: any[]; totalPages: number }>[] = [];
+      while (currentPage <= maxPages && consecutiveEmptyPages < 3) {
+        const pageParams = new URLSearchParams();
+        pageParams.append('page', currentPage.toString());
+        pageParams.append('limit', '100');
+        pageParams.append('order_by', 'uploaded_at');
+        pageParams.append('order_direction', 'desc');
         
-        for (let p = batchStart; p <= batchEnd; p++) {
-          const pageParams = new URLSearchParams();
-          pageParams.append('page', p.toString());
-          pageParams.append('limit', '100');
-          pageParams.append('order_by', 'uploaded_at');
-          pageParams.append('order_direction', 'desc');
-          
-          if (username) pageParams.append('username', username);
-          if (uploadedAtStart) pageParams.append('uploaded_at_start', uploadedAtStart);
-          if (uploadedAtEnd) pageParams.append('uploaded_at_end', uploadedAtEnd);
+        if (username) pageParams.append('username', username);
+        if (uploadedAtStart) pageParams.append('uploaded_at_start', uploadedAtStart);
+        if (uploadedAtEnd) pageParams.append('uploaded_at_end', uploadedAtEnd);
 
-          const pageUrl = `https://api.shortimize.com/videos?${pageParams.toString()}`;
+        const pageUrl = `https://api.shortimize.com/videos?${pageParams.toString()}`;
+        
+        try {
+          const response = await fetchWithRetry(pageUrl, {
+            headers: { 'Authorization': `Bearer ${brand.shortimize_api_key}` },
+          }, 3);
           
-          pagePromises.push(
-            fetchWithRetry(pageUrl, {
-              headers: { 'Authorization': `Bearer ${brand.shortimize_api_key}` },
-            }, 3).then(async (response) => {
-              if (!response.ok) return { page: p, videos: [], totalPages: 0 };
-              const result = await response.json();
-              return { 
-                page: p, 
-                videos: result.data || [], 
-                totalPages: result.pagination?.total_pages || 0 
-              };
-            }).catch(() => ({ page: p, videos: [], totalPages: 0 }))
-          );
-        }
-        
-        const batchResults = await Promise.all(pagePromises);
-        let batchMatchCount = 0;
-        
-        for (const result of batchResults) {
-          if (result.totalPages > 0) totalPagesAvailable = Math.min(result.totalPages, maxPages);
-          const matchingVideos = result.videos.filter((v: any) => videoMatchesHashtags(v, campaignHashtags, false));
-          batchMatchCount += matchingVideos.length;
+          if (!response.ok) {
+            console.error(`[fetch-shortimize-videos] Page ${currentPage} failed: ${response.status}`);
+            break;
+          }
+          
+          const result = await response.json();
+          const videos = result.data || [];
+          const matchingVideos = videos.filter((v: any) => videoMatchesHashtags(v, campaignHashtags, currentPage === 1));
           allMatchingVideos.push(...matchingVideos);
-        }
-        
-        console.log(`[fetch-shortimize-videos] Batch ${Math.ceil(batchStart/batchSize)}: pages ${batchStart}-${batchEnd}, found ${batchMatchCount} matching, total: ${allMatchingVideos.length}`);
-        
-        // Early termination if no matches in batch
-        if (batchMatchCount === 0) {
-          consecutiveEmptyBatches++;
-        } else {
-          consecutiveEmptyBatches = 0;
+          
+          console.log(`[fetch-shortimize-videos] Page ${currentPage}: ${videos.length} videos, ${matchingVideos.length} matching, total: ${allMatchingVideos.length}`);
+          
+          if (matchingVideos.length === 0) {
+            consecutiveEmptyPages++;
+          } else {
+            consecutiveEmptyPages = 0;
+          }
+          
+          // Check if we've reached the end
+          if (!result.pagination || currentPage >= result.pagination.total_pages || videos.length === 0) {
+            break;
+          }
+          
+          currentPage++;
+          await delay(200); // Small delay between requests
+        } catch (err) {
+          console.error(`[fetch-shortimize-videos] Page ${currentPage} error:`, err);
+          break;
         }
       }
 
