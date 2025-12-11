@@ -247,11 +247,11 @@ export function AddSocialAccountDialog({
                 <Label className="text-sm font-medium font-inter tracking-[-0.5px]">Select Platform</Label>
                 <div className="flex gap-2">
                   {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`
-                        relative flex items-center justify-center p-3 rounded-lg
+                        relative flex items-center justify-center p-2 rounded-lg
                         transition-all duration-300 hover:scale-105
                         ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
                       `}>
-                      <div className={`p-1 rounded-lg ${selectedPlatform === platform ? '' : 'bg-background/50'}`}>
+                      <div className={`rounded-lg ${selectedPlatform === platform ? '' : 'bg-background/50'}`}>
                         {getPlatformIcon(platform)}
                       </div>
                     </button>)}
