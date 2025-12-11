@@ -781,7 +781,8 @@ export function CampaignsTab({
           const isEnded = campaign.status === 'ended';
           return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
             if (!isPending) {
-              navigate(`/c/${campaign.slug}`);
+              setSelectedCampaignForDetails(campaign);
+              setCampaignDetailsDialogOpen(true);
             }
           }}>
             {/* Banner Image - Top Section */}
