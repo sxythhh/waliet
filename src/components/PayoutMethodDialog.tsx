@@ -1,206 +1,242 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Wallet, Landmark, CreditCard } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import paypalLogo from "@/assets/paypal-logo-grey.svg";
-import paypalLogoBlue from "@/assets/paypal-logo.svg";
+import { Wallet, Check } from "lucide-react";
+import paypalLogo from "@/assets/paypal-logo.svg";
 import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
+
 interface PayoutMethodDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (method: string, details: any) => void;
   currentMethodCount: number;
 }
-const cryptoCurrencies = [{
-  id: "usdc",
-  name: "USDC",
-  logo: usdcLogo
-}];
-const cryptoNetworks = [{
-  id: "ethereum",
-  name: "Ethereum",
-  logo: ethereumLogo
-}, {
-  id: "optimism",
-  name: "Optimism",
-  logo: optimismLogo
-}, {
-  id: "solana",
-  name: "Solana",
-  logo: solanaLogo
-}, {
-  id: "polygon",
-  name: "Polygon",
-  logo: polygonLogo
-}];
+
+const cryptoNetworks = [
+  { id: "ethereum", name: "Ethereum", logo: ethereumLogo },
+  { id: "optimism", name: "Optimism", logo: optimismLogo },
+  { id: "solana", name: "Solana", logo: solanaLogo },
+  { id: "polygon", name: "Polygon", logo: polygonLogo },
+];
+
 export default function PayoutMethodDialog({
   open,
   onOpenChange,
   onSave,
   currentMethodCount
 }: PayoutMethodDialogProps) {
-  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "wise">("crypto");
-  const [selectedCurrency, setSelectedCurrency] = useState(cryptoCurrencies[0].id);
+  const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal">("crypto");
   const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("");
 
-  // Bank transfer fields
-  const [bankName, setBankName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [routingNumber, setRoutingNumber] = useState("");
-  const [accountHolderName, setAccountHolderName] = useState("");
   const handleSave = () => {
     if (selectedMethod === "crypto") {
       if (!walletAddress) return;
       onSave("crypto", {
-        currency: selectedCurrency,
+        currency: "usdc",
         network: selectedNetwork,
         address: walletAddress
       });
     } else if (selectedMethod === "paypal") {
       if (!paypalEmail) return;
-      onSave("paypal", {
-        email: paypalEmail
-      });
+      onSave("paypal", { email: paypalEmail });
     }
 
-    // Reset all fields
     setWalletAddress("");
     setPaypalEmail("");
     onOpenChange(false);
   };
-  const isMaxMethodsReached = currentMethodCount >= 3;
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] bg-card border-border max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            {isMaxMethodsReached ? "Maximum Methods Reached" : "Add Payout Method"}
-          </DialogTitle>
-        </DialogHeader>
 
-        {!isMaxMethodsReached && <div className="flex flex-col sm:flex-row gap-6 pt-6 py-[19px]">
-            {/* Payment Method Sidebar */}
-            <div className="w-full sm:w-48 flex-shrink-0 space-y-2">
-              <p className="font-medium text-muted-foreground mb-4 px-3" style={{
-            fontSize: '11px',
-            letterSpacing: '-0.5px'
-          }}>
-                SELECT METHOD
-              </p>
-              {[{
-            id: "crypto",
-            icon: Wallet,
-            label: "Crypto Wallet",
-            isLogo: false
-          }, {
-            id: "paypal",
-            icon: paypalLogo,
-            iconActive: paypalLogoBlue,
-            label: "PayPal",
-            isLogo: true
-          }].map(method => {
-            const Icon = method.icon;
-            const isActive = selectedMethod === method.id;
-            return <button key={method.id} onClick={() => setSelectedMethod(method.id as any)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? "bg-muted" : "bg-background hover:bg-muted/50"}`}>
-                    {method.isLogo ? <img src={(isActive && method.iconActive ? method.iconActive : Icon) as string} alt={method.label} className="h-4 w-4" /> : <Icon className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />}
-                    <span className={`text-sm font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                      {method.label}
-                    </span>
-                  </button>;
-          })}
+  const isMaxMethodsReached = currentMethodCount >= 3;
+  const isDisabled = (selectedMethod === "crypto" && !walletAddress) || 
+                     (selectedMethod === "paypal" && !paypalEmail);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[480px] p-0 gap-0 bg-background border-border overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4">
+          <h2 className="text-lg font-semibold tracking-tight">
+            {isMaxMethodsReached ? "Maximum Methods Reached" : "Add Payout Method"}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isMaxMethodsReached 
+              ? "You've reached the maximum of 3 payout methods." 
+              : "Choose how you'd like to receive your earnings."}
+          </p>
+        </div>
+
+        {!isMaxMethodsReached && (
+          <>
+            {/* Method Selection */}
+            <div className="px-6 pb-5">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setSelectedMethod("crypto")}
+                  className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all duration-200 ${
+                    selectedMethod === "crypto"
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50"
+                  }`}
+                >
+                  {selectedMethod === "crypto" && (
+                    <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    </div>
+                  )}
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    selectedMethod === "crypto" ? "bg-primary/10" : "bg-muted"
+                  }`}>
+                    <Wallet className={`w-5 h-5 ${selectedMethod === "crypto" ? "text-primary" : "text-muted-foreground"}`} />
+                  </div>
+                  <span className={`text-sm font-medium ${selectedMethod === "crypto" ? "text-foreground" : "text-muted-foreground"}`}>
+                    Crypto Wallet
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedMethod("paypal")}
+                  className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all duration-200 ${
+                    selectedMethod === "paypal"
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50"
+                  }`}
+                >
+                  {selectedMethod === "paypal" && (
+                    <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    </div>
+                  )}
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    selectedMethod === "paypal" ? "bg-primary/10" : "bg-muted"
+                  }`}>
+                    <img src={paypalLogo} alt="PayPal" className="w-5 h-5" />
+                  </div>
+                  <span className={`text-sm font-medium ${selectedMethod === "paypal" ? "text-foreground" : "text-muted-foreground"}`}>
+                    PayPal
+                  </span>
+                </button>
+              </div>
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 bg-background rounded-xl p-6">
-              {selectedMethod === "crypto" && <div className="space-y-6">
-                  <div>
-                    <Label className="font-medium text-muted-foreground mb-4 block" style={{
-                fontSize: '11px',
-                letterSpacing: '-0.5px'
-              }}>
-                      SELECT CURRENCY
-                    </Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {cryptoCurrencies.map(currency => <button key={currency.id} type="button" onClick={() => setSelectedCurrency(currency.id)} className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 justify-center ${selectedCurrency === currency.id ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-transparent hover:border-transparent"}`}>
-                          <img src={currency.logo} alt={currency.name} className="h-5 w-5" />
-                          {currency.name}
-                        </button>)}
+            {/* Divider */}
+            <div className="h-px bg-border" />
+
+            {/* Form Content */}
+            <div className="px-6 py-5 space-y-5">
+              {selectedMethod === "crypto" && (
+                <>
+                  {/* Currency Display */}
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <img src={usdcLogo} alt="USDC" className="w-8 h-8" />
+                    <div>
+                      <p className="text-sm font-medium">USDC</p>
+                      <p className="text-xs text-muted-foreground">USD Coin</p>
                     </div>
                   </div>
 
-                  <div>
-                    <Label className="font-medium text-muted-foreground mb-3 block" style={{
-                fontSize: '11px',
-                letterSpacing: '-0.5px'
-              }}>
-                      SELECT NETWORK
-                    </Label>
-                    <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
-                      <SelectTrigger className="h-12 bg-muted border-transparent">
-                        <SelectValue>
-                          {selectedNetwork && <div className="flex items-center gap-3">
-                              <img src={cryptoNetworks.find(n => n.id === selectedNetwork)?.logo} alt={cryptoNetworks.find(n => n.id === selectedNetwork)?.name} className="h-5 w-5" />
-                              <span>{cryptoNetworks.find(n => n.id === selectedNetwork)?.name}</span>
-                            </div>}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="bg-muted border-transparent">
-                        {cryptoNetworks.map(network => <SelectItem key={network.id} value={network.id} className="focus:bg-accent">
-                            <div className="flex items-center gap-3">
-                              <img src={network.logo} alt={network.name} className="h-5 w-5" />
-                              <span>{network.name}</span>
-                            </div>
-                          </SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                  {/* Network Selection */}
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Network
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {cryptoNetworks.map((network) => (
+                        <button
+                          key={network.id}
+                          type="button"
+                          onClick={() => setSelectedNetwork(network.id)}
+                          className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all duration-200 ${
+                            selectedNetwork === network.id
+                              ? "bg-primary/10 ring-1 ring-primary"
+                              : "bg-muted/50 hover:bg-muted"
+                          }`}
+                        >
+                          <img src={network.logo} alt={network.name} className="w-6 h-6" />
+                          <span className={`text-xs font-medium ${
+                            selectedNetwork === network.id ? "text-primary" : "text-muted-foreground"
+                          }`}>
+                            {network.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <Label htmlFor="wallet-address" className="font-medium text-muted-foreground" style={{
-                fontSize: '11px',
-                letterSpacing: '-0.5px'
-              }}>
-                      WALLET ADDRESS
-                    </Label>
-                    <Input id="wallet-address" placeholder="Enter your wallet address" value={walletAddress} onChange={e => setWalletAddress(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
+                  {/* Wallet Address */}
+                  <div className="space-y-2.5">
+                    <label htmlFor="wallet-address" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Wallet Address
+                    </label>
+                    <Input
+                      id="wallet-address"
+                      placeholder="0x..."
+                      value={walletAddress}
+                      onChange={(e) => setWalletAddress(e.target.value)}
+                      className="h-11 bg-muted/50 border-transparent focus:border-primary focus:bg-background placeholder:text-muted-foreground/50"
+                    />
                   </div>
-                </div>}
+                </>
+              )}
 
-              {selectedMethod === "paypal" && <div className="space-y-3">
-                  <Label htmlFor="paypal-email" className="font-medium text-muted-foreground" style={{
-              fontSize: '11px',
-              letterSpacing: '-0.5px'
-            }}>
-                    PAYPAL EMAIL
-                  </Label>
-                  <Input id="paypal-email" type="email" placeholder="your.email@example.com" value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} className="h-12 bg-muted border-transparent focus:bg-background focus:border-transparent" />
-                </div>}
-
+              {selectedMethod === "paypal" && (
+                <div className="space-y-2.5">
+                  <label htmlFor="paypal-email" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    PayPal Email
+                  </label>
+                  <Input
+                    id="paypal-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={paypalEmail}
+                    onChange={(e) => setPaypalEmail(e.target.value)}
+                    className="h-11 bg-muted/50 border-transparent focus:border-primary focus:bg-background placeholder:text-muted-foreground/50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Make sure this matches your PayPal account email.
+                  </p>
+                </div>
+              )}
             </div>
-          </div>}
 
-        {!isMaxMethodsReached && <div className="flex gap-3 pt-6 border-t border-border">
-            <Button variant="outline" className="flex-1 h-12 bg-background border-border hover:bg-muted" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button className="flex-1 h-12 bg-primary hover:bg-primary/90" onClick={handleSave} disabled={selectedMethod === "crypto" && !walletAddress || selectedMethod === "paypal" && !paypalEmail}>
-              Add Method
-            </Button>
-          </div>}
+            {/* Footer */}
+            <div className="px-6 py-4 bg-muted/30 border-t border-border flex gap-3">
+              <Button
+                variant="ghost"
+                className="flex-1 h-10"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 h-10"
+                onClick={handleSave}
+                disabled={isDisabled}
+              >
+                Add Method
+              </Button>
+            </div>
+          </>
+        )}
 
-        {isMaxMethodsReached && <div className="flex justify-end pt-4 border-t border-border">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="bg-background border-border hover:bg-muted">
+        {isMaxMethodsReached && (
+          <div className="px-6 py-4 bg-muted/30 border-t border-border">
+            <Button
+              variant="outline"
+              className="w-full h-10"
+              onClick={() => onOpenChange(false)}
+            >
               Close
             </Button>
-          </div>}
+          </div>
+        )}
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
