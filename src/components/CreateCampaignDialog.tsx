@@ -20,6 +20,7 @@ import youtubeLogo from "@/assets/youtube-logo-new.png";
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   description: z.string().trim().max(500).optional(),
+  slug: z.string().trim().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens").optional(),
   campaign_type: z.string().optional(),
   category: z.string().optional(),
   is_infinite_budget: z.boolean().default(false),
@@ -136,6 +137,7 @@ export function CreateCampaignDialog({
     defaultValues: {
       title: campaign?.title || "",
       description: campaign?.description || "",
+      slug: campaign?.slug || "",
       campaign_type: campaign?.campaign_type || "",
       category: campaign?.category || "",
       is_infinite_budget: campaign?.is_infinite_budget || false,
@@ -199,22 +201,15 @@ export function CreateCampaignDialog({
         .eq('id', brandId)
         .single();
 
-      // Generate slug from title
-      const generateSlug = (title: string, id?: string) => {
+      // Generate slug from title (only for new campaigns)
+      const generateSlug = (title: string) => {
         const baseSlug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
-
-        // For updates, keep existing slug if title hasn't changed meaningfully
-        if (campaign && campaign.slug) {
-          const existingBase = campaign.slug.substring(0, campaign.slug.lastIndexOf('-'));
-          if (existingBase === baseSlug) {
-            return campaign.slug;
-          }
-        }
-
-        // For new campaigns or if title changed, add random suffix
         const randomSuffix = Math.random().toString(36).substring(2, 10);
         return `${baseSlug}-${randomSuffix}`;
       };
+
+      // For updates, use form value; for new campaigns, generate from title
+      const slug = campaign ? values.slug : generateSlug(values.title);
       const campaignData = {
         title: values.title,
         description: values.description || null,
@@ -234,7 +229,7 @@ export function CreateCampaignDialog({
         status: isCampaignEnded ? "ended" : "active",
         allowed_platforms: values.allowed_platforms,
         application_questions: values.application_questions,
-        slug: generateSlug(values.title, campaign?.id),
+        slug: slug,
         is_private: values.is_private,
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
@@ -353,18 +348,24 @@ export function CreateCampaignDialog({
                 </FormItem>} />
 
 
-            {campaign?.slug && <div className="p-3 rounded-lg bg-[#191919]">
-                <p className="text-xs text-white/40 mb-1">Campaign Slug</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-white/80 font-mono flex-1">{campaign.slug}</p>
-                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10" onClick={() => {
-                    navigator.clipboard.writeText(campaign.slug!);
-                    toast.success("Slug copied to clipboard!");
-                  }}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>}
+            {campaign && <FormField control={form.control} name="slug" render={({
+                field
+              }) => <FormItem>
+                  <FormLabel className="text-white">Campaign Slug (Join URL)</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <FormControl>
+                      <Input placeholder="campaign-slug" className="bg-[#191919] text-white placeholder:text-white/40 font-mono" {...field} />
+                    </FormControl>
+                    <Button type="button" size="icon" variant="ghost" className="h-10 w-10 text-white/60 hover:text-white hover:bg-white/10 shrink-0" onClick={() => {
+                      navigator.clipboard.writeText(field.value || "");
+                      toast.success("Slug copied to clipboard!");
+                    }}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-white/40">Join URL: virality.gg/c/{field.value}</p>
+                  <FormMessage className="text-destructive/80" />
+                </FormItem>} />}
 
             <FormField control={form.control} name="description" render={({
                 field
