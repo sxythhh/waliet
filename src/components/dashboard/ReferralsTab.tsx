@@ -224,10 +224,7 @@ export function ReferralsTab() {
               <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
             </div>
           </div>
-          {!isEditing && <Button onClick={() => setIsEditing(true)} variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
-              <Pencil className="w-3.5 h-3.5" />
-              Edit Tag
-            </Button>}
+          {!isEditing}
         </div>
 
         {isEditing ? <div className="space-y-3">
@@ -247,7 +244,9 @@ export function ReferralsTab() {
               </Button>
             </div>
           </div> : <div className="flex gap-2 items-stretch">
-            <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{ letterSpacing: '-0.5px' }} />
+            <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
+          letterSpacing: '-0.5px'
+        }} />
             <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-muted hover:bg-muted/80 text-muted-foreground">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied" : "Copy"}
@@ -265,7 +264,7 @@ export function ReferralsTab() {
           <span className="text-xs text-muted-foreground">{referrals.length} total</span>
         </div>
 
-        {referrals.length === 0 ? <div className="text-center py-12 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+        {referrals.length === 0 ? <div className="text-center py-12 rounded-xl bg-neutral-100/0">
             
             <h3 className="font-semibold mb-1">No referrals yet</h3>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
