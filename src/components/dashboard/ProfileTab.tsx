@@ -788,47 +788,50 @@ export function ProfileTab() {
                             </div>
                           </div>
                         </PopoverTrigger>
-                        <PopoverContent className="w-72 p-3 bg-[#0a0a0a] border-0" align="start" side="bottom" sideOffset={8}>
-                          <div className="space-y-3">
+                        <PopoverContent className="w-72 p-4 bg-[#0a0a0a] border-0 rounded-xl" align="start" side="bottom" sideOffset={8}>
+                          <div className="space-y-4">
                             {/* Account Link */}
-                            {account.account_link && <button onClick={() => window.open(account.account_link, '_blank')} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors" style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.3px'
+                            {account.account_link && <button onClick={() => window.open(account.account_link, '_blank')} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors" style={{
+                        fontFamily: 'Geist',
+                        letterSpacing: '-0.5px'
                       }}>
                                 <ArrowUpRight className="w-4 h-4 text-white" />
                                 <span>Open profile</span>
                               </button>}
                             
                             {/* Linked Campaigns */}
-                            <div className="space-y-1.5">
-                              <span className="text-[11px] text-white/50 uppercase tracking-wider" style={{
-                          fontFamily: 'Inter'
+                            <div className="space-y-2">
+                              <span className="text-[11px] text-white/50 tracking-wide" style={{
+                          fontFamily: 'Geist',
+                          letterSpacing: '-0.5px'
                         }}>
                                 Linked Campaigns
                               </span>
-                              {connectedCampaigns.length > 0 ? <div className="space-y-1.5">
+                              {connectedCampaigns.length > 0 ? <div className="space-y-2">
                                   {connectedCampaigns.map(({
                             campaign
-                          }) => <div key={campaign.id} className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5" style={{
-                            fontFamily: 'Inter',
-                            letterSpacing: '-0.3px'
+                          }) => <div key={campaign.id} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5" style={{
+                            fontFamily: 'Geist',
+                            letterSpacing: '-0.5px'
                           }}>
-                                      {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-5 h-5 rounded object-cover" />}
+                                      {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-6 h-6 rounded-md object-cover" />}
                                       <span className="text-sm text-white">{campaign.title}</span>
                                     </div>)}
-                                </div> : <p className="text-sm text-white/40" style={{
-                          fontFamily: 'Inter',
-                          letterSpacing: '-0.3px'
+                                </div> : <p className="text-sm text-white/40 px-1" style={{
+                          fontFamily: 'Geist',
+                          letterSpacing: '-0.5px'
                         }}>
                                   No campaigns linked
                                 </p>}
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-2 pt-2">
-                              <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-sm text-white transition-colors" style={{
-                          fontFamily: 'Inter',
-                          letterSpacing: '-0.3px'
+                            <div className="flex gap-2 pt-1">
+                              <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm text-white transition-colors hover:brightness-110" style={{
+                          fontFamily: 'Geist',
+                          letterSpacing: '-0.5px',
+                          backgroundColor: '#2360de',
+                          borderTop: '1px solid #4b85f7'
                         }} onClick={e => {
                           e.stopPropagation();
                           setSelectedAccountForLinking(account);
@@ -837,14 +840,14 @@ export function ProfileTab() {
                                 <Link2 className="w-4 h-4 text-white" />
                                 <span>Link</span>
                               </button>
-                              <button className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-sm text-white transition-colors" style={{
-                          fontFamily: 'Inter',
-                          letterSpacing: '-0.3px'
+                              <button className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors" style={{
+                          fontFamily: 'Geist',
+                          letterSpacing: '-0.5px'
                         }} onClick={e => {
                           e.stopPropagation();
                           handleDeleteAccount(account.id);
                         }}>
-                                <Trash2 className="w-4 h-4 text-white" />
+                                <Trash2 className="w-4 h-4 text-red-500" />
                               </button>
                             </div>
                           </div>
