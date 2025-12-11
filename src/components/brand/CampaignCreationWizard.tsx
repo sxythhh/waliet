@@ -313,6 +313,7 @@ export function CampaignCreationWizard({
   };
 
   const onSubmit = async (values: CampaignFormValues) => {
+    console.log('Form submitted with values:', values);
     setIsSubmitting(true);
     try {
       const bannerUrl = await uploadBanner();
@@ -773,7 +774,23 @@ export function CampaignCreationWizard({
                         Continue
                       </Button>
                     ) : (
-                      <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      <Button 
+                        type="button" 
+                        onClick={async () => {
+                          const isValid = await form.trigger();
+                          if (!isValid) {
+                            const errors = form.formState.errors;
+                            const errorMessages = Object.entries(errors).map(([key, error]) => `${key}: ${error?.message}`).join(', ');
+                            toast.error(`Please fix form errors: ${errorMessages}`);
+                            console.log('Form errors:', errors);
+                            return;
+                          }
+                          form.handleSubmit(onSubmit)();
+                        }} 
+                        disabled={isSubmitting} 
+                        className="min-w-[120px] tracking-[-0.5px]" 
+                        style={{ fontFamily: 'Inter, sans-serif' }}
+                      >
                         {isSubmitting ? (isEditMode ? "Saving..." : "Creating...") : (isEditMode ? "Save Changes" : "Finish")}
                       </Button>
                     )}
