@@ -1397,9 +1397,9 @@ export function CampaignAnalyticsTable({
           </CardHeader>
           <CardContent className="p-0">
           <div className="overflow-x-auto">
-              <Table className="dark:border dark:border-[#141414]">
+              <Table className="dark:border dark:border-[#141414] rounded-lg overflow-hidden">
                 <TableHeader>
-                  <TableRow className="border-0 hover:bg-transparent">
+                  <TableRow className="border-0 hover:bg-transparent dark:border-b dark:border-[#141414]">
                     <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] sticky left-0 bg-card/50 z-10 py-3" style={{ fontFamily: 'Inter, sans-serif' }}>Account</TableHead>
                     <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{ fontFamily: 'Inter, sans-serif' }}>User</TableHead>
                     <TableHead className="text-foreground font-medium text-right cursor-pointer hover:text-muted-foreground transition-colors text-xs tracking-[-0.5px] whitespace-nowrap py-3 bg-card/50" style={{ fontFamily: 'Inter, sans-serif' }} onClick={() => handleSort('total_views')}>
@@ -1449,7 +1449,7 @@ export function CampaignAnalyticsTable({
                         </div>
                       </TableCell>
                       <TableCell className="py-3.5 bg-card/50">
-                        {item.user_id && item.profiles ? (
+                        {item.profiles ? (
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => openUserDetailsDialog(item)}>
                               <Avatar className="h-6 w-6">
