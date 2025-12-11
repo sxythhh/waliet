@@ -105,25 +105,6 @@ export default function Auth() {
       setLoading(false);
     }
   };
-  const handleDiscordSignIn = async () => {
-    setLoading(true);
-    const {
-      error
-    } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`
-      }
-    });
-    if (error) {
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message
-      });
-    }
-  };
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const {
@@ -255,13 +236,6 @@ export default function Auth() {
                 </div>
                 
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full h-12 bg-[#5865F2] hover:bg-[#4752C4] text-white border-0 font-semibold font-geist gap-3" style={{
-                letterSpacing: '-0.5px'
-              }} onClick={handleDiscordSignIn} disabled={loading}>
-                    <img alt="Discord" className="h-5 w-5" src="/lovable-uploads/38b60a02-7cb6-4adb-b1b9-62f4de7373fd.webp" />
-                    Continue with Discord
-                  </Button>
-                  
                   <Button variant="outline" className="w-full h-12 bg-white hover:bg-white/90 text-black hover:text-black border-0 font-semibold font-geist gap-3" style={{
                 letterSpacing: '-0.5px'
               }} onClick={handleGoogleSignIn} disabled={loading}>
