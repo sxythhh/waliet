@@ -319,51 +319,70 @@ export function CampaignCreationWizard({
       const bannerUrl = await uploadBanner();
       const { data: brandData } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
       
-      const generateSlug = (title: string) => {
-        if (campaign?.slug) {
-          const existingBase = campaign.slug.substring(0, campaign.slug.lastIndexOf('-'));
-          const newBase = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
-          if (existingBase === newBase) {
-            return campaign.slug;
-          }
-        }
-        const baseSlug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
-        const randomSuffix = Math.random().toString(36).substring(2, 10);
-        return `${baseSlug}-${randomSuffix}`;
-      };
-
-      const campaignData = {
-        title: values.title,
-        description: values.description || null,
-        campaign_type: values.campaign_type || "clipping",
-        category: values.goal,
-        is_infinite_budget: values.is_infinite_budget,
-        budget: values.is_infinite_budget ? 0 : Number(values.budget),
-        rpm_rate: Number(values.rpm_rate),
-        guidelines: values.guidelines || null,
-        embed_url: values.embed_url || null,
-        preview_url: values.preview_url || null,
-        brand_id: brandId,
-        brand_name: brandName,
-        brand_logo_url: brandData?.logo_url || null,
-        banner_url: bannerUrl,
-        status: "active",
-        allowed_platforms: values.allowed_platforms,
-        application_questions: [],
-        slug: generateSlug(values.title),
-        is_private: values.is_private,
-        access_code: values.is_private ? values.access_code?.toUpperCase() : null,
-        requires_application: values.requires_application,
-        is_featured: false,
-        hashtags: values.hashtags || [],
-      };
-
       if (isEditMode && campaign) {
-        const { error } = await supabase.from("campaigns").update(campaignData).eq("id", campaign.id);
-        if (error) throw error;
+        // Update existing campaign - only include editable fields
+        const updateData = {
+          title: values.title,
+          description: values.description || null,
+          campaign_type: values.campaign_type || "clipping",
+          category: values.goal || null,
+          is_infinite_budget: values.is_infinite_budget,
+          budget: values.is_infinite_budget ? 0 : (Number(values.budget) || 0),
+          rpm_rate: Number(values.rpm_rate) || 5,
+          guidelines: values.guidelines || null,
+          embed_url: values.embed_url || null,
+          preview_url: values.preview_url || null,
+          allowed_platforms: values.allowed_platforms,
+          is_private: values.is_private,
+          access_code: values.is_private ? values.access_code?.toUpperCase() : null,
+          requires_application: values.requires_application,
+          hashtags: values.hashtags || [],
+          ...(bannerFile ? { banner_url: bannerUrl } : {}),
+        };
+        
+        console.log('Updating campaign with data:', updateData);
+        const { data, error } = await supabase.from("campaigns").update(updateData).eq("id", campaign.id).select();
+        if (error) {
+          console.error('Supabase update error:', error);
+          throw error;
+        }
+        console.log('Campaign updated successfully:', data);
         toast.success("Campaign updated successfully!");
       } else {
-        const { error } = await supabase.from("campaigns").insert(campaignData);
+        // Create new campaign
+        const slug = (() => {
+          const baseSlug = values.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+          const randomSuffix = Math.random().toString(36).substring(2, 10);
+          return `${baseSlug}-${randomSuffix}`;
+        })();
+
+        const insertData = {
+          title: values.title,
+          description: values.description || null,
+          campaign_type: values.campaign_type || "clipping",
+          category: values.goal || null,
+          is_infinite_budget: values.is_infinite_budget,
+          budget: values.is_infinite_budget ? 0 : (Number(values.budget) || 0),
+          rpm_rate: Number(values.rpm_rate) || 5,
+          guidelines: values.guidelines || null,
+          embed_url: values.embed_url || null,
+          preview_url: values.preview_url || null,
+          allowed_platforms: values.allowed_platforms,
+          is_private: values.is_private,
+          access_code: values.is_private ? values.access_code?.toUpperCase() : null,
+          requires_application: values.requires_application,
+          hashtags: values.hashtags || [],
+          banner_url: bannerUrl,
+          brand_id: brandId,
+          brand_name: brandName,
+          brand_logo_url: brandData?.logo_url || null,
+          status: "active",
+          application_questions: [],
+          slug: slug,
+          is_featured: false,
+        };
+
+        const { error } = await supabase.from("campaigns").insert(insertData);
         if (error) throw error;
         toast.success("Campaign created successfully!");
       }
@@ -821,44 +840,37 @@ export function CampaignCreationWizard({
                 <div className="rounded-xl overflow-hidden">
                   {/* Banner Area */}
                   {bannerPreview ? (
-                    <div className="h-28 relative">
+                    <div className="h-28">
                       <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
-                      <div className="absolute bottom-3 left-3">
-                        {brandLogoUrl ? (
-                          <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
-                            <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   ) : (
-                    <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d] flex items-end p-3">
-                      {brandLogoUrl ? (
-                        <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
-                          <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
-                        </div>
-                      )}
-                    </div>
+                    <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d]" />
                   )}
                 </div>
 
                 {/* Campaign Info */}
                 <div className="mt-4 space-y-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      {watchedValues.title || "Untitled"}
-                    </h3>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        {isEditMode ? (campaign?.status || "Active") : "Draft"}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        Clipping
-                      </Badge>
+                  <div className="flex items-start gap-3">
+                    {/* Brand Logo */}
+                    {brandLogoUrl ? (
+                      <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          {watchedValues.title || "Untitled"}
+                        </h3>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            {isEditMode ? (campaign?.status || "Active") : "Draft"}
+                          </Badge>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground tracking-[-0.3px]">{brandName}</p>
                     </div>
                   </div>
 
