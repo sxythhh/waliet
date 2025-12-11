@@ -355,7 +355,7 @@ export function AppSidebar() {
                   <span className="text-sm font-medium text-white">Creator Dashboard</span>
                 </button>
                 {isAdmin && allBrands.length > 0 && <>
-                    <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">All Brands</p>
+                    
                     {allBrands.map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
                         {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                             <Building2 className="w-3 h-3 text-neutral-400" />
