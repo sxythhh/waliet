@@ -211,7 +211,7 @@ export function ReferralsTab() {
       </div>
 
       {/* Referral Link Section */}
-      <div className="p-5 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-4">
+      <div className="p-5 rounded-xl space-y-4 bg-neutral-100/0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center">
