@@ -586,45 +586,74 @@ export function ProfileTab() {
               return format(submittedDate, "MMM d, yyyy 'at' h:mm a");
             };
             const submissionTimestamp = getSubmissionTimestamp();
-            return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-muted dark:bg-background">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
-                      <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-card hover:brightness-95 transition-colors cursor-pointer border border-border w-fit">
-                        {getPlatformIcon(account.platform)}
-                        <span className="font-medium">{account.username}</span>
-                        {demographicStatus === 'approved' && <BadgeCheck className="h-3.5 w-3.5 text-success" />}
-                        {demographicStatus === 'pending' && <Clock className="h-3.5 w-3.5 text-warning" />}
-                        {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-destructive" />}
-                        {!demographicStatus && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
+            return <div key={account.id} className="group relative p-5 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
+                    {/* Main Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      {/* Platform + Username */}
+                      <div 
+                        onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
+                        className="flex items-center gap-3 cursor-pointer group/link"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-foreground/5 dark:bg-foreground/10 flex items-center justify-center">
+                          {getPlatformIcon(account.platform)}
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-foreground group-hover/link:underline tracking-tight">
+                              {account.username}
+                            </span>
+                            {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-emerald-500" />}
+                            {demographicStatus === 'pending' && <Clock className="h-4 w-4 text-amber-500" />}
+                            {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-red-500" />}
+                            {!demographicStatus && <AlertCircle className="h-4 w-4 text-red-500" />}
+                          </div>
+                          <span className="text-xs text-muted-foreground capitalize">{account.platform}</span>
+                        </div>
                       </div>
                       
-                      {/* Link icon separator - hidden on mobile */}
-                      {connectedCampaigns.length > 0 && <Link2 className="hidden sm:block h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />}
+                      {/* Connected Campaigns */}
+                      {connectedCampaigns.length > 0 && (
+                        <div className="flex-1 flex items-center gap-2 sm:justify-center">
+                          <span className="text-xs text-muted-foreground hidden sm:inline">linked to</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {connectedCampaigns.map(({ campaign }) => (
+                              <div 
+                                key={campaign.id} 
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-foreground/5 dark:bg-foreground/10 text-xs"
+                              >
+                                {campaign.brand_logo_url && (
+                                  <img 
+                                    src={campaign.brand_logo_url} 
+                                    alt={campaign.brand_name} 
+                                    className="w-4 h-4 rounded-full object-cover" 
+                                  />
+                                )}
+                                <span className="font-medium tracking-tight">{campaign.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       
-                      {/* Display connected campaigns */}
-                      {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-2">
-                          {connectedCampaigns.map(({
-                    campaign
-                  }) => <div key={campaign.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border bg-card/50 text-xs">
-                              {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-3.5 h-3.5 rounded object-cover" />}
-                              <span style={{
-                      letterSpacing: '-0.3px'
-                    }} className="font-medium text-foreground">{campaign.title}</span>
-                            </div>)}
-                        </div>}
+                      {/* Manage Button */}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedAccountForManaging({
+                            id: account.id,
+                            username: account.username,
+                            platform: account.platform,
+                            account_link: account.account_link
+                          });
+                          setShowManageAccountDialog(true);
+                        }} 
+                        className="h-9 px-4 text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-foreground/10 w-full sm:w-auto sm:ml-auto"
+                      >
+                        <Settings className="h-3.5 w-3.5 mr-1.5" />
+                        Manage
+                      </Button>
                     </div>
-                    
-                    <Button variant="secondary" size="sm" onClick={() => {
-                setSelectedAccountForManaging({
-                  id: account.id,
-                  username: account.username,
-                  platform: account.platform,
-                  account_link: account.account_link
-                });
-                setShowManageAccountDialog(true);
-              }} className="h-8 gap-1 w-full sm:w-auto whitespace-nowrap bg-muted border-0">
-                      <Settings className="h-3 w-3" />
-                      Manage Account
-                    </Button>
                   </div>;
           })}
             </div>}
