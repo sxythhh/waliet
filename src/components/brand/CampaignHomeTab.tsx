@@ -51,8 +51,9 @@ const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/
 const extractPlatformId = (adLink: string, platform: string): string | null => {
   try {
     if (platform?.toLowerCase() === 'tiktok') {
-      const match = adLink.match(/\/video\/(\d+)/);
-      return match ? match[1] : null;
+      // TikTok: /video/ or /photo/ (slideshows)
+      const match = adLink.match(/\/(video|photo)\/(\d+)/);
+      return match ? match[2] : null;
     } else if (platform?.toLowerCase() === 'instagram') {
       const match = adLink.match(/\/(reel|p)\/([A-Za-z0-9_-]+)/);
       return match ? match[2] : null;
@@ -126,12 +127,12 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       const chartPoints = generateChartData(transactionsData || []);
       setChartData(chartPoints);
 
-      // Fetch top videos from Shortimize if collection name exists
+      // Fetch top videos from Shortimize - pass campaignId for hashtag filtering
       if (brandData?.collection_name) {
         const { data: videosData, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
           body: {
             brandId,
-            collectionName: brandData.collection_name,
+            campaignId, // Pass campaignId to enable hashtag filtering
             page: 1,
             limit: 3,
             orderBy: 'latest_views',
