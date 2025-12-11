@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, TrendingDown, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Eye, Heart, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -1208,7 +1208,7 @@ export function CampaignAnalyticsTable({
     return <Card className="bg-card border">
         <CardContent className="p-6">
           <div className="text-center py-8">
-            <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            
             <h3 className="text-lg font-semibold mb-2">No Analytics Data</h3>
             <p className="text-muted-foreground text-sm max-w-md mx-auto mb-4">
               No account analytics have been imported for this campaign yet. Import stats from a CSV file or connect accounts via Shortimize to start tracking analytics.
