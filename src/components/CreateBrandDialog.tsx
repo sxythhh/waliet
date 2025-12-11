@@ -144,7 +144,7 @@ export function CreateBrandDialog({
         <div className="relative px-6 pt-8 pb-6">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
           <DialogHeader className="relative">
-            <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white mb-2">
+            <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white mb-1">
               Create Brand
             </DialogTitle>
             <p className="text-sm text-neutral-500" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
@@ -155,8 +155,8 @@ export function CreateBrandDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 pb-6 space-y-5">
-            {/* Logo Upload - Centered */}
-            <div className="flex flex-col items-center">
+            {/* Logo Upload - Left aligned */}
+            <div className="flex flex-col items-start">
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               {logoPreview ? (
                 <div className="relative group">
@@ -175,7 +175,7 @@ export function CreateBrandDialog({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-20 h-20 rounded-2xl border-2 border-dashed border-neutral-700 hover:border-primary/50 flex items-center justify-center transition-all hover:bg-primary/5 group"
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center transition-all hover:bg-primary/5 group bg-[#141414]"
                 >
                   <Upload className="h-5 w-5 text-neutral-500 group-hover:text-primary transition-colors" />
                 </button>
@@ -216,8 +216,8 @@ export function CreateBrandDialog({
             <Button 
               type="submit" 
               disabled={isSubmitting} 
-              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition-all"
-              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+              className="w-full h-11 text-white font-medium rounded-xl transition-all border-t border-t-[#4b85f7]"
+              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px', backgroundColor: '#2061de' }}
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
