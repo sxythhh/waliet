@@ -303,7 +303,7 @@ export default function Auth() {
               
               
               
-              <form onSubmit={handleEmailAuth} className="space-y-4">
+              <form onSubmit={handleEmailAuth} className="space-y-4 font-inter tracking-[-0.5px]">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                   <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
@@ -322,9 +322,7 @@ export default function Auth() {
                   </button>
                 </div>
                 
-                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-geist" style={{
-              letterSpacing: '-0.5px'
-            }}>
+                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-inter tracking-[-0.5px]">
                   {loading ? "Please wait..." : "Continue"}
                 </Button>
               </form>
