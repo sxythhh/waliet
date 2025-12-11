@@ -785,16 +785,10 @@ export function ProfileTab() {
                               <span className="font-semibold text-base text-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                                 {account.username}
                               </span>
-                              {connectedCampaigns.length > 0 && (
-                                <span className="text-[11px] text-muted-foreground/70 ml-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                                  · {connectedCampaigns.length} campaign{connectedCampaigns.length !== 1 ? 's' : ''}
-                                </span>
-                              )}
-                              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                             </div>
                           </div>
                         </PopoverTrigger>
-                        <PopoverContent className="w-72 p-3 bg-[#1a1a1a] border-0" align="start" side="bottom" sideOffset={8}>
+                        <PopoverContent className="w-72 p-3 bg-[#0a0a0a] border-0" align="start" side="bottom" sideOffset={8}>
                           <div className="space-y-3">
                             {/* Account Link */}
                             {account.account_link && (
@@ -840,7 +834,7 @@ export function ProfileTab() {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-2 pt-2 border-t border-white/10">
+                            <div className="flex gap-2 pt-2">
                               <button
                                 className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-sm text-white transition-colors"
                                 style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
