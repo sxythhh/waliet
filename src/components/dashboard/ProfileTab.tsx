@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, AlertCircle, BadgeCheck, Clock, XCircle, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
+import { DemographicStatusCard } from "@/components/DemographicStatusCard";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -83,6 +84,8 @@ interface SocialAccount {
     status: string;
     score: number | null;
     submitted_at: string;
+    reviewed_at: string | null;
+    screenshot_url: string | null;
   }>;
 }
 interface Campaign {
@@ -164,7 +167,9 @@ export function ProfileTab() {
           tier1_percentage,
           status,
           score,
-          submitted_at
+          submitted_at,
+          reviewed_at,
+          screenshot_url
         )
       `).eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
       ascending: false
@@ -555,85 +560,74 @@ export function ProfileTab() {
             </div> : <div className="space-y-3">
               {socialAccounts.map(account => {
             const connectedCampaigns = account.connected_campaigns || [];
-            const latestDemographicSubmission = account.demographic_submissions?.[0];
+            const demographicSubmissions = account.demographic_submissions || [];
+            const latestDemographicSubmission = demographicSubmissions[0];
             const demographicStatus = latestDemographicSubmission?.status;
 
-            // Calculate next submission date (7 days from last submission)
-            const getNextSubmissionDate = () => {
-              if (!latestDemographicSubmission?.submitted_at) return null;
-              const submittedDate = new Date(latestDemographicSubmission.submitted_at);
-              const nextDate = new Date(submittedDate);
-              nextDate.setDate(nextDate.getDate() + 7);
-              return nextDate;
-            };
-            const nextSubmissionDate = getNextSubmissionDate();
-            const daysUntilNext = nextSubmissionDate ? Math.ceil((nextSubmissionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
-
-            // Format the submission timestamp
-            const getSubmissionTimestamp = () => {
-              if (!latestDemographicSubmission?.submitted_at) return null;
-              const submittedDate = new Date(latestDemographicSubmission.submitted_at);
-              const now = new Date();
-              const hoursDiff = (now.getTime() - submittedDate.getTime()) / (1000 * 60 * 60);
-
-              // If less than 24 hours, show relative time
-              if (hoursDiff < 24) {
-                return formatDistanceToNow(submittedDate, {
-                  addSuffix: true
-                });
-              }
-              // Otherwise show full date and time
-              return format(submittedDate, "MMM d, yyyy 'at' h:mm a");
-            };
-            const submissionTimestamp = getSubmissionTimestamp();
             return <div key={account.id} className="group relative p-5 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
                     {/* Main Row */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                      {/* Platform + Username */}
-                      <div 
-                        onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
-                        className="flex items-center gap-3 cursor-pointer group/link"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-foreground/5 dark:bg-foreground/10 flex items-center justify-center">
-                          {getPlatformIcon(account.platform)}
-                        </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                      {/* Left: Platform + Username + Campaigns */}
+                      <div className="flex-1 space-y-3">
+                        {/* Platform + Username */}
+                        <div 
+                          onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
+                          className="flex items-center gap-3 cursor-pointer group/link"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-foreground/5 dark:bg-foreground/10 flex items-center justify-center">
+                            {getPlatformIcon(account.platform)}
+                          </div>
+                          <div className="flex flex-col">
                             <span className="font-semibold text-foreground group-hover/link:underline tracking-tight">
                               {account.username}
                             </span>
-                            {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-emerald-500" />}
-                            {demographicStatus === 'pending' && <Clock className="h-4 w-4 text-amber-500" />}
-                            {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-red-500" />}
-                            {!demographicStatus && <AlertCircle className="h-4 w-4 text-red-500" />}
+                            <span className="text-xs text-muted-foreground capitalize">{account.platform}</span>
                           </div>
-                          <span className="text-xs text-muted-foreground capitalize">{account.platform}</span>
                         </div>
+                        
+                        {/* Connected Campaigns */}
+                        {connectedCampaigns.length > 0 && (
+                          <div className="flex items-center gap-2 pl-13">
+                            <span className="text-xs text-muted-foreground">Linked to</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {connectedCampaigns.map(({ campaign }) => (
+                                <div 
+                                  key={campaign.id} 
+                                  className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-foreground/5 dark:bg-foreground/10 text-xs"
+                                >
+                                  {campaign.brand_logo_url && (
+                                    <img 
+                                      src={campaign.brand_logo_url} 
+                                      alt={campaign.brand_name} 
+                                      className="w-4 h-4 rounded-full object-cover" 
+                                    />
+                                  )}
+                                  <span className="font-medium tracking-tight">{campaign.title}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      
-                      {/* Connected Campaigns */}
-                      {connectedCampaigns.length > 0 && (
-                        <div className="flex-1 flex items-center gap-2 sm:justify-center">
-                          <span className="text-xs text-muted-foreground hidden sm:inline">linked to</span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {connectedCampaigns.map(({ campaign }) => (
-                              <div 
-                                key={campaign.id} 
-                                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-foreground/5 dark:bg-foreground/10 text-xs"
-                              >
-                                {campaign.brand_logo_url && (
-                                  <img 
-                                    src={campaign.brand_logo_url} 
-                                    alt={campaign.brand_name} 
-                                    className="w-4 h-4 rounded-full object-cover" 
-                                  />
-                                )}
-                                <span className="font-medium tracking-tight">{campaign.title}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+
+                      {/* Right: Demographics Status Card */}
+                      <div className="w-full lg:w-64 p-4 rounded-lg bg-background/50 border border-border/50">
+                        <DemographicStatusCard
+                          accountId={account.id}
+                          platform={account.platform}
+                          username={account.username}
+                          submissions={demographicSubmissions}
+                          onSubmitNew={() => {
+                            setSelectedAccountForDemographics({
+                              id: account.id,
+                              platform: account.platform,
+                              username: account.username
+                            });
+                            setShowDemographicsDialog(true);
+                          }}
+                          onRefresh={fetchSocialAccounts}
+                        />
+                      </div>
                       
                       {/* Manage Button */}
                       <Button 
@@ -648,7 +642,7 @@ export function ProfileTab() {
                           });
                           setShowManageAccountDialog(true);
                         }} 
-                        className="h-9 px-4 text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-foreground/10 w-full sm:w-auto sm:ml-auto"
+                        className="h-9 px-4 text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-foreground/10 w-full lg:w-auto self-start"
                       >
                         <Settings className="h-3.5 w-3.5 mr-1.5" />
                         Manage
