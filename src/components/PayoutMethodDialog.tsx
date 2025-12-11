@@ -80,51 +80,47 @@ export default function PayoutMethodDialog({
           <>
             {/* Method Selection */}
             <div className="px-6 pb-5">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setSelectedMethod("crypto")}
-                  className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 ${
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all duration-200 ${
                     selectedMethod === "crypto"
                       ? "border-foreground/20 bg-muted"
                       : "border-transparent bg-muted/30 hover:bg-muted/50"
                   }`}
                 >
-                  {selectedMethod === "crypto" && (
-                    <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
-                      <Check className="w-3 h-3 text-background" />
-                    </div>
-                  )}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     selectedMethod === "crypto" ? "bg-foreground/10" : "bg-muted"
                   }`}>
-                    <img src={walletIcon} alt="Wallet" className="w-5 h-5" />
+                    <img src={walletIcon} alt="Wallet" className="w-4 h-4" />
                   </div>
                   <span className={`text-sm font-medium ${selectedMethod === "crypto" ? "text-foreground" : "text-muted-foreground"}`}>
-                    Crypto Wallet
+                    Crypto
                   </span>
+                  {selectedMethod === "crypto" && (
+                    <Check className="w-4 h-4 text-foreground ml-auto" />
+                  )}
                 </button>
 
                 <button
                   onClick={() => setSelectedMethod("paypal")}
-                  className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 ${
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all duration-200 ${
                     selectedMethod === "paypal"
                       ? "border-foreground/20 bg-muted"
                       : "border-transparent bg-muted/30 hover:bg-muted/50"
                   }`}
                 >
-                  {selectedMethod === "paypal" && (
-                    <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
-                      <Check className="w-3 h-3 text-background" />
-                    </div>
-                  )}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     selectedMethod === "paypal" ? "bg-foreground/10" : "bg-muted"
                   }`}>
-                    <img src={paypalLogo} alt="PayPal" className="w-5 h-5" />
+                    <img src={paypalLogo} alt="PayPal" className="w-4 h-4" />
                   </div>
                   <span className={`text-sm font-medium ${selectedMethod === "paypal" ? "text-foreground" : "text-muted-foreground"}`}>
                     PayPal
                   </span>
+                  {selectedMethod === "paypal" && (
+                    <Check className="w-4 h-4 text-foreground ml-auto" />
+                  )}
                 </button>
               </div>
             </div>
@@ -147,7 +143,7 @@ export default function PayoutMethodDialog({
 
                   {/* Network Selection */}
                   <div className="space-y-2.5">
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide font-inter">
+                    <label className="text-xs font-medium text-muted-foreground uppercase font-inter tracking-[-0.5px]">
                       Network
                     </label>
                     <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
@@ -176,7 +172,7 @@ export default function PayoutMethodDialog({
 
                   {/* Wallet Address */}
                   <div className="space-y-2.5">
-                    <label htmlFor="wallet-address" className="text-xs font-medium text-muted-foreground uppercase tracking-wide font-inter">
+                    <label htmlFor="wallet-address" className="text-xs font-medium text-muted-foreground uppercase font-inter tracking-[-0.5px]">
                       Wallet Address
                     </label>
                     <Input
@@ -202,7 +198,7 @@ export default function PayoutMethodDialog({
               {selectedMethod === "paypal" && (
                 <>
                   <div className="space-y-2.5">
-                    <label htmlFor="paypal-email" className="text-xs font-medium text-muted-foreground uppercase tracking-wide font-inter">
+                    <label htmlFor="paypal-email" className="text-xs font-medium text-muted-foreground uppercase font-inter tracking-[-0.5px]">
                       PayPal Email
                     </label>
                     <Input
