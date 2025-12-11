@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, X, Mail, ExternalLink } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -195,6 +195,60 @@ export function CreatorsTab({
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
+
+  const exportToCSV = () => {
+    const rows: string[][] = [];
+    
+    // Header
+    rows.push(["Creator Name", "Username", "Email", "Platform", "Account Username", "Account URL", "Date Joined", "Total Earnings"]);
+    
+    // Data rows - one row per social account
+    for (const creator of creators) {
+      if (creator.social_accounts.length === 0) {
+        // Creator with no accounts
+        rows.push([
+          creator.full_name || "",
+          creator.username,
+          creator.email || "",
+          "",
+          "",
+          "",
+          creator.date_joined ? new Date(creator.date_joined).toLocaleDateString() : "",
+          creator.total_earnings.toFixed(2)
+        ]);
+      } else {
+        // One row per social account
+        for (const account of creator.social_accounts) {
+          rows.push([
+            creator.full_name || "",
+            creator.username,
+            creator.email || "",
+            account.platform,
+            account.username,
+            account.account_link || "",
+            creator.date_joined ? new Date(creator.date_joined).toLocaleDateString() : "",
+            creator.total_earnings.toFixed(2)
+          ]);
+        }
+      }
+    }
+    
+    // Convert to CSV string
+    const csvContent = rows.map(row => 
+      row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    ).join("\n");
+    
+    // Download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `creators-export-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
   if (loading) {
     return (
       <div className="p-6 space-y-6">
@@ -234,6 +288,17 @@ export function CreatorsTab({
           </p>
         </div>
         
+        {creators.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-3 gap-2 text-xs font-inter tracking-[-0.5px]"
+            onClick={exportToCSV}
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </Button>
+        )}
       </div>
 
       {creators.length === 0 ? <Card className="p-12 flex flex-col items-center justify-center text-center flex-1 border-0 bg-transparent shadow-none">
