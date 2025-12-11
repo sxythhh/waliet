@@ -546,9 +546,6 @@ export function CampaignCreationWizard({
                               <FormMessage />
                             </FormItem>} />
 
-                        <FormField control={form.control} name="embed_url" render={({
-                      field
-                    }) => {}} />
                       </div>
                     </div>}
                 </form>
@@ -585,37 +582,56 @@ export function CampaignCreationWizard({
             {/* Preview Header */}
             <div className="px-6 py-4 border-b border-border flex items-center justify-center gap-2 text-muted-foreground">
               <Eye className="h-4 w-4" />
-              <span className="text-sm font-medium">Preview</span>
+              <span className="text-sm font-medium tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Preview</span>
             </div>
 
             {/* Preview Content */}
-            <div className="flex-1 p-6 overflow-y-auto">
+            <div className="flex-1 p-6">
               {/* Campaign Preview Card */}
-              <div className="rounded-xl overflow-hidden bg-primary/80 dark:bg-primary/60">
+              <div className="rounded-xl overflow-hidden">
                 {/* Banner Area */}
-                <div className="h-24 flex items-end p-4">
-                  {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-12 h-12 rounded-lg object-cover bg-background" /> : <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center">
-                      <span className="text-lg font-bold text-foreground">
-                        {brandName?.charAt(0) || "V"}
-                      </span>
-                    </div>}
-                </div>
+                {bannerPreview ? (
+                  <div className="h-28 relative">
+                    <img 
+                      src={bannerPreview} 
+                      alt="Campaign banner" 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-3 left-3">
+                      {brandLogoUrl ? (
+                        <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
+                          <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d] flex items-end p-3">
+                    {brandLogoUrl ? (
+                      <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
+                        <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Campaign Info */}
               <div className="mt-4 space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-semibold text-foreground">
-                      {watchedValues.title || "Untitled"}
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    {watchedValues.title || "Untitled"}
+                  </h3>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Draft
                     </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      ✂ Clipping
+                    <Badge variant="outline" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      Clipping
                     </Badge>
                   </div>
                 </div>
@@ -623,37 +639,42 @@ export function CampaignCreationWizard({
                 {/* Progress Indicator */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Step {currentStep}: {STEPS[currentStep - 1]?.label}
                     </span>
-                    
                   </div>
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className="h-1 bg-muted rounded-full overflow-hidden">
                     <div className="h-full bg-primary transition-all duration-300" style={{
-                    width: `${getStepProgress()}%`
-                  }} />
+                      width: `${getStepProgress()}%`
+                    }} />
                   </div>
                 </div>
 
                 {/* Pricing Embed */}
                 <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
-                  <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{
-                  height: '200px'
-                }} title="Pricing Plans" />
+                  <iframe 
+                    src="https://joinvirality.com/pickplan-3" 
+                    className="w-full border-0" 
+                    style={{ height: '350px' }}
+                    scrolling="no"
+                    title="Pricing Plans" 
+                  />
                 </div>
 
                 {/* Enterprise CTA */}
-                {watchedValues.goal === "conversions" && <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
-                    <Badge variant="secondary" className="bg-primary/20 text-primary">
+                {watchedValues.goal === "conversions" && (
+                  <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
+                    <Badge variant="secondary" className="bg-primary/20 text-primary tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Enterprise
                     </Badge>
-                    <h4 className="font-semibold text-foreground">
+                    <h4 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Looking for Done-for-you Management?
                     </h4>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Complete this 2-minute form to see if you qualify. Based on your goals, we'll guide you towards the best solution.
                     </p>
-                  </div>}
+                  </div>
+                )}
               </div>
             </div>
           </div>
