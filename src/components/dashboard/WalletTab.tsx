@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
 import viralityLogo from "@/assets/virality-logo.webp";
 import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -28,6 +28,8 @@ import usdcLogo from "@/assets/usdc-logo.png";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
+import paypalLogo from "@/assets/paypal-logo.svg";
+import walletActiveIcon from "@/assets/wallet-active.svg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { P2PTransferDialog } from "@/components/P2PTransferDialog";
 interface WalletData {
@@ -547,6 +549,38 @@ export function WalletTab() {
       fetchWallet();
     }
   };
+  const handleSetDefaultMethod = async (methodId: string) => {
+    if (!wallet) return;
+    const methodIndex = payoutMethods.findIndex(m => m.id === methodId);
+    if (methodIndex === -1 || methodIndex === 0) return; // Already default or not found
+    
+    const updatedMethods = [...payoutMethods];
+    const [selectedMethod] = updatedMethods.splice(methodIndex, 1);
+    updatedMethods.unshift(selectedMethod);
+    
+    const {
+      error
+    } = await supabase.from("wallets").update({
+      payout_method: selectedMethod.method,
+      payout_details: updatedMethods.map(m => ({
+        method: m.method,
+        details: m.details
+      }))
+    }).eq("id", wallet.id);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to set default method"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Default payment method updated"
+      });
+      fetchWallet();
+    }
+  };
   const handleRequestPayout = async () => {
     if (!wallet?.balance || wallet.balance < 20) {
       toast({
@@ -917,7 +951,8 @@ export function WalletTab() {
           
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {payoutMethods.map(method => {
+          {payoutMethods.map((method, index) => {
+          const isDefault = index === 0;
           const getMethodLabel = () => {
             switch (method.method) {
               case "paypal":
@@ -934,6 +969,16 @@ export function WalletTab() {
                 return "TIPS";
               default:
                 return method.method;
+            }
+          };
+          const getMethodIcon = () => {
+            switch (method.method) {
+              case "paypal":
+                return paypalLogo;
+              case "crypto":
+                return walletActiveIcon;
+              default:
+                return null;
             }
           };
           const getMethodDetails = () => {
@@ -956,18 +1001,38 @@ export function WalletTab() {
                 return "N/A";
             }
           };
+          const methodIcon = getMethodIcon();
           return <div key={method.id} className="group relative rounded-xl bg-card p-4 hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
+                {isDefault && (
+                  <div className="absolute top-2 right-2">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0">
+                      Default
+                    </Badge>
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  {methodIcon && (
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <img src={methodIcon} alt={getMethodLabel()} className="w-5 h-5" />
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-foreground">{getMethodLabel()}</p>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">{getMethodDetails()}</p>
-                    {method.method === 'crypto' && method.details?.network && <p className="text-[10px] text-muted-foreground/70 mt-1 uppercase tracking-wider">
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{getMethodDetails()}</p>
+                    {method.method === 'crypto' && method.details?.network && <p className="text-[10px] text-muted-foreground/70 mt-0.5 uppercase tracking-wider">
                         {method.details.network}
                       </p>}
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive flex-shrink-0">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!isDefault && (
+                      <Button variant="ghost" size="icon" onClick={() => handleSetDefaultMethod(method.id)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary flex-shrink-0">
+                        <Star className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive flex-shrink-0">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>;
         })}
