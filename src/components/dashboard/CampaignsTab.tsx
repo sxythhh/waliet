@@ -555,7 +555,7 @@ export function CampaignsTab({
         </div>
         <div className="flex gap-2">
           
-          <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="gap-2 border-t-2 border-t-[#4b85f7] border-x-0 border-b-0 font-geist font-medium text-sm tracking-[-0.5px] rounded-t-none">
+          <Button onClick={onOpenPrivateDialog} size="sm" className="gap-2 bg-[#4b85f7] hover:bg-[#3a74e6] text-white border border-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px]">
             <img src={privateCampaignIcon} alt="" className="h-4 w-4" />
             Private Campaign 
           </Button>
