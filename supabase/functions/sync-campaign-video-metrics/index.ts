@@ -30,6 +30,19 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3)
   throw new Error('Max retries exceeded due to rate limiting');
 }
 
+// Check if video caption contains any of the hashtags
+function videoMatchesHashtags(video: any, hashtags: string[]): boolean {
+  if (!hashtags || hashtags.length === 0) return true;
+  
+  const caption = (video.title || video.caption || '').toLowerCase();
+  
+  return hashtags.some(hashtag => {
+    const hashtagLower = hashtag.toLowerCase().replace(/^#/, '');
+    // Check if caption contains the hashtag (with or without #)
+    return caption.includes(`#${hashtagLower}`) || caption.includes(hashtagLower);
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -57,13 +70,13 @@ serve(async (req) => {
 
     console.log('Starting campaign video metrics sync...', specificCampaignId ? `for campaign ${specificCampaignId}` : 'for all campaigns');
 
-    // Build query for campaigns - include hashtag field
+    // Build query for campaigns - include hashtags field
     let query = supabaseClient
       .from('campaigns')
       .select(`
         id,
         brand_id,
-        hashtag,
+        hashtags,
         brands!campaigns_brand_id_fkey (
           id,
           shortimize_api_key,
@@ -102,8 +115,10 @@ serve(async (req) => {
         continue;
       }
 
+      const campaignHashtags = campaign.hashtags || [];
+
       try {
-        console.log(`Syncing metrics for campaign ${campaign.id} with collection ${brand.collection_name}, hashtag: ${campaign.hashtag || 'none'}`);
+        console.log(`Syncing metrics for campaign ${campaign.id} with collection ${brand.collection_name}, hashtags: ${campaignHashtags.length > 0 ? campaignHashtags.join(', ') : 'none'}`);
 
         // Fetch all videos from Shortimize for this collection
         const allVideos: any[] = [];
@@ -134,24 +149,16 @@ serve(async (req) => {
           const data = await response.json();
           let videos = data.data || [];
           
-          // Filter by campaign hashtag if provided
-          if (campaign.hashtag) {
-            const hashtagLower = campaign.hashtag.toLowerCase();
-            videos = videos.filter((video: any) => {
-              const videoHashtags = video.hashtags || video.label_names || [];
-              return videoHashtags.some((tag: string) => 
-                tag.toLowerCase() === hashtagLower || 
-                tag.toLowerCase() === `#${hashtagLower}` ||
-                tag.toLowerCase().replace('#', '') === hashtagLower
-              );
-            });
+          // Filter by campaign hashtags if provided (check caption content)
+          if (campaignHashtags.length > 0) {
+            videos = videos.filter((video: any) => videoMatchesHashtags(video, campaignHashtags));
           }
           
           allVideos.push(...videos);
 
           // Check if there are more pages
           const pagination = data.pagination;
-          if (pagination && page < pagination.total_pages && !campaign.hashtag) {
+          if (pagination && page < pagination.total_pages && campaignHashtags.length === 0) {
             // Only paginate if not filtering by hashtag (hashtag filtering is done client-side)
             page++;
             // Small delay between pages to avoid rate limiting
@@ -161,7 +168,7 @@ serve(async (req) => {
           }
         }
 
-        console.log(`Fetched ${allVideos.length} videos for campaign ${campaign.id}${campaign.hashtag ? ` (filtered by #${campaign.hashtag})` : ''}`);
+        console.log(`Fetched ${allVideos.length} videos for campaign ${campaign.id}${campaignHashtags.length > 0 ? ` (filtered by hashtags: ${campaignHashtags.join(', ')})` : ''}`);
 
         // Calculate totals
         let totalViews = 0;

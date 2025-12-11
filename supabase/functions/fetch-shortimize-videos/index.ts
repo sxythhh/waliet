@@ -31,6 +31,19 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3)
   throw lastError || new Error('Max retries exceeded');
 }
 
+// Check if video caption contains any of the hashtags
+function videoMatchesHashtags(video: any, hashtags: string[]): boolean {
+  if (!hashtags || hashtags.length === 0) return true;
+  
+  const caption = (video.title || video.caption || '').toLowerCase();
+  
+  return hashtags.some(hashtag => {
+    const hashtagLower = hashtag.toLowerCase().replace(/^#/, '');
+    // Check if caption contains the hashtag (with or without #)
+    return caption.includes(`#${hashtagLower}`) || caption.includes(hashtagLower);
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -95,18 +108,18 @@ serve(async (req) => {
       throw new Error('Shortimize API key not configured for this brand');
     }
 
-    // Get campaign hashtag if campaignId is provided
-    let campaignHashtag: string | null = null;
+    // Get campaign hashtags if campaignId is provided
+    let campaignHashtags: string[] = [];
     if (campaignId) {
       const { data: campaign, error: campaignError } = await supabase
         .from('campaigns')
-        .select('hashtag')
+        .select('hashtags')
         .eq('id', campaignId)
         .single();
       
-      if (!campaignError && campaign?.hashtag) {
-        campaignHashtag = campaign.hashtag;
-        console.log('[fetch-shortimize-videos] Campaign hashtag:', campaignHashtag);
+      if (!campaignError && campaign?.hashtags && campaign.hashtags.length > 0) {
+        campaignHashtags = campaign.hashtags;
+        console.log('[fetch-shortimize-videos] Campaign hashtags:', campaignHashtags);
       }
     }
 
@@ -165,21 +178,13 @@ serve(async (req) => {
     
     let videos = result.data || [];
     
-    // Filter by campaign hashtag if provided
-    if (campaignHashtag) {
-      const hashtagLower = campaignHashtag.toLowerCase();
-      videos = videos.filter((video: any) => {
-        // Check if the video's hashtags/labels contain the campaign hashtag
-        const videoHashtags = video.hashtags || video.label_names || [];
-        return videoHashtags.some((tag: string) => 
-          tag.toLowerCase() === hashtagLower || 
-          tag.toLowerCase() === `#${hashtagLower}` ||
-          tag.toLowerCase().replace('#', '') === hashtagLower
-        );
-      });
-      console.log('[fetch-shortimize-videos] Filtered by hashtag:', {
-        hashtag: campaignHashtag,
-        originalCount: result.data?.length || 0,
+    // Filter by campaign hashtags if provided (check caption content)
+    if (campaignHashtags.length > 0) {
+      const originalCount = videos.length;
+      videos = videos.filter((video: any) => videoMatchesHashtags(video, campaignHashtags));
+      console.log('[fetch-shortimize-videos] Filtered by hashtags:', {
+        hashtags: campaignHashtags,
+        originalCount,
         filteredCount: videos.length
       });
     }
@@ -188,17 +193,17 @@ serve(async (req) => {
       videosCount: videos.length,
       pagination: result.pagination,
       hasData: !!result.data,
-      hashtagFilter: campaignHashtag,
+      hashtagFilter: campaignHashtags.length > 0 ? campaignHashtags : null,
       firstVideoSample: videos[0] ? {
         ad_id: videos[0].ad_id,
         username: videos[0].username,
         platform: videos[0].platform,
-        hashtags: videos[0].hashtags || videos[0].label_names
+        title: videos[0].title?.substring(0, 100)
       } : null
     });
 
     // If no videos found, try fetching without collection filter to debug
-    if (videos.length === 0 && collection && !campaignHashtag) {
+    if (videos.length === 0 && collection && campaignHashtags.length === 0) {
       console.log('[fetch-shortimize-videos] No videos found with collection filter. Checking available collections...');
       
       // Try fetching a sample without collection filter to see if API key works
@@ -235,12 +240,12 @@ serve(async (req) => {
       pagination: {
         ...result.pagination,
         // Adjust total if we filtered by hashtag
-        total: campaignHashtag ? videos.length : (result.pagination?.total || 0),
-        total_pages: campaignHashtag ? 1 : (result.pagination?.total_pages || 0)
+        total: campaignHashtags.length > 0 ? videos.length : (result.pagination?.total || 0),
+        total_pages: campaignHashtags.length > 0 ? 1 : (result.pagination?.total_pages || 0)
       },
       debug: {
         collectionUsed: collection,
-        hashtagFilter: campaignHashtag,
+        hashtagFilter: campaignHashtags.length > 0 ? campaignHashtags : null,
         apiKeyConfigured: true
       }
     }), {
