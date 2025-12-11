@@ -397,148 +397,147 @@ export function JoinCampaignSheet({
   const budgetRemaining = campaign.budget - (campaign.budget_used || 0);
   const budgetPercentage = campaign.budget > 0 ? (campaign.budget_used || 0) / campaign.budget * 100 : 0;
   return <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        
-
-        <div className="mt-6 space-y-6">
-          {/* Campaign Banner */}
-          {campaign.banner_url && <div className="relative w-full h-40 rounded-lg overflow-hidden">
-              <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
-            </div>}
-
-          {/* Brand Info */}
-          <div className="flex items-start gap-3">
-            {campaign.brand_logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border">
-                <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+      <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">
+        <div className="flex-1 overflow-y-auto px-6 pb-24">
+          <div className="mt-6 space-y-6">
+            {/* Campaign Banner */}
+            {campaign.banner_url && <div className="relative w-full h-40 rounded-lg overflow-hidden">
+                <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
               </div>}
-            <div className="flex-1">
-              <h3 className="font-semibold text-2xl">{campaign.title}</h3>
-              <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
-              {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                  {campaign.campaign_type && <span className="px-3 py-1.5 text-[11px] font-medium bg-[#2060df]/15 text-[#4f89ff] rounded-full" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.5px'
-              }}>
-                      {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
-                    </span>}
-                  {campaign.category && <span className="px-3 py-1.5 text-[11px] font-medium bg-muted/50 text-muted-foreground rounded-full" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.5px'
-              }}>
-                      {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </span>}
-                  {campaign.platforms.length > 0}
+
+            {/* Brand Info */}
+            <div className="flex items-start gap-3">
+              {campaign.brand_logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border">
+                  <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                 </div>}
+              <div className="flex-1">
+                <h3 className="font-semibold text-2xl">{campaign.title}</h3>
+                <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
+                {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    {campaign.campaign_type && <span className="px-3 py-1.5 text-[11px] font-medium bg-[#2060df]/15 text-[#4f89ff] rounded-full" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
+                        {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
+                      </span>}
+                    {campaign.category && <span className="px-3 py-1.5 text-[11px] font-medium bg-muted/50 text-muted-foreground rounded-full" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
+                        {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      </span>}
+                    {campaign.platforms.length > 0}
+                  </div>}
+              </div>
             </div>
-          </div>
 
-          {/* Description with expandable "Show more" */}
-          {campaign.description && <div className="space-y-2">
-              <div className="relative">
-                <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${descriptionExpanded ? '' : 'max-h-[100px]'}`} style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>
-                  {parseTextWithLinks(campaign.description)}
+            {/* Description with expandable "Show more" */}
+            {campaign.description && <div className="space-y-2">
+                <div className="relative">
+                  <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${descriptionExpanded ? '' : 'max-h-[100px]'}`} style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
+                    {parseTextWithLinks(campaign.description)}
+                  </div>
+                  {!descriptionExpanded && campaign.description.length > 200 && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
                 </div>
-                {!descriptionExpanded && campaign.description.length > 200 && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
-              </div>
-              {campaign.description.length > 200 && <div className="flex justify-center">
-                  <button onClick={() => setDescriptionExpanded(!descriptionExpanded)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>
-                    {descriptionExpanded ? 'Show less' : 'Show more'}
-                  </button>
-                </div>}
-            </div>}
+                {campaign.description.length > 200 && <div className="flex justify-center">
+                    <button onClick={() => setDescriptionExpanded(!descriptionExpanded)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
+                      {descriptionExpanded ? 'Show less' : 'Show more'}
+                    </button>
+                  </div>}
+              </div>}
 
-          {/* Budget & RPM */}
-          {!campaign.is_infinite_budget}
+            {/* Budget & RPM */}
+            {!campaign.is_infinite_budget}
 
-          {/* Campaign Preview Button - only show if preview_url exists */}
-          {campaign.preview_url && <Button variant="outline" className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors" onClick={() => window.open(campaign.preview_url!, '_blank')}>
-              <ArrowUp className="w-4 h-4 mr-2" />
-              <span className="font-medium">View Campaign Details</span>
-            </Button>}
+            {/* Campaign Preview Button - only show if preview_url exists */}
+            {campaign.preview_url && <Button variant="outline" className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors" onClick={() => window.open(campaign.preview_url!, '_blank')}>
+                <ArrowUp className="w-4 h-4 mr-2" />
+                <span className="font-medium">View Campaign Details</span>
+              </Button>}
 
-          {/* Account Selection or Create Account - only show for campaigns requiring application */}
-          {!isLoggedIn ? <div className="space-y-3">
-              <div className="p-6 rounded-lg bg-muted/50 text-center space-y-4">
-                <p className="text-sm font-medium text-foreground">Join this campaign</p>
-                <p className="text-xs text-muted-foreground">Create an account to start earning from your content</p>
-                <Button onClick={() => {
-              onOpenChange(false);
-              navigate('/auth');
-            }} className="w-full">
-                  Create Account
-                </Button>
-              </div>
-            </div> : <div className="space-y-2">
-              <Label style={{
-            fontFamily: 'Inter',
-            letterSpacing: '-0.5px'
-          }}>Select Social Accounts *</Label>
-              {socialAccounts.length === 0 ? <div className="py-8 text-center space-y-3">
-                  <p className="text-sm text-muted-foreground" style={{
+            {/* Account Selection or Create Account - only show for campaigns requiring application */}
+            {!isLoggedIn ? <div className="space-y-3">
+                <div className="p-6 rounded-lg bg-muted/50 text-center space-y-4">
+                  <p className="text-sm font-medium text-foreground">Join this campaign</p>
+                  <p className="text-xs text-muted-foreground">Create an account to start earning from your content</p>
+                  <Button onClick={() => {
+                onOpenChange(false);
+                navigate('/auth');
+              }} className="w-full">
+                    Create Account
+                  </Button>
+                </div>
+              </div> : <div className="space-y-2">
+                <Label style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
-            }}>
-                    No accounts connected yet
-                  </p>
-                  <button onClick={() => setShowAddAccountDialog(true)} className="text-sm font-medium text-primary hover:text-primary/80 transition-colors" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.5px'
-            }}>
-                    + Add Account
-                  </button>
-                </div> : <div className="space-y-1.5">
-                  {socialAccounts.map(account => {
-              const platformIcon = getPlatformIcon(account.platform);
-              const isSelected = selectedAccounts.includes(account.id);
-              return <button key={account.id} type="button" onClick={() => toggleAccountSelection(account.id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all ${isSelected ? "bg-primary/10" : "hover:bg-muted/50"}`} style={{
+            }}>Select Social Accounts *</Label>
+                {socialAccounts.length === 0 ? <div className="py-8 text-center space-y-3">
+                    <p className="text-sm text-muted-foreground" style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.5px'
               }}>
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
-                          {isSelected && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 flex-shrink-0" />}
-                        <span className="text-sm font-medium text-foreground">{account.username}</span>
-                      </button>;
-            })}
-                  <button onClick={() => setShowAddAccountDialog(true)} className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.5px'
-            }}>
-                    + Add another account
-                  </button>
-                </div>}
-            </div>}
+                      No accounts connected yet
+                    </p>
+                    <button onClick={() => setShowAddAccountDialog(true)} className="text-sm font-medium text-primary hover:text-primary/80 transition-colors" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
+                      + Add Account
+                    </button>
+                  </div> : <div className="space-y-1.5">
+                    {socialAccounts.map(account => {
+                const platformIcon = getPlatformIcon(account.platform);
+                const isSelected = selectedAccounts.includes(account.id);
+                return <button key={account.id} type="button" onClick={() => toggleAccountSelection(account.id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all ${isSelected ? "bg-primary/10" : "hover:bg-muted/50"}`} style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 flex-shrink-0" />}
+                          <span className="text-sm font-medium text-foreground">{account.username}</span>
+                        </button>;
+              })}
+                    <button onClick={() => setShowAddAccountDialog(true)} className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
+                      + Add another account
+                    </button>
+                  </div>}
+              </div>}
 
-          {/* Application Questions - only show if logged in and campaign requires application */}
-          {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
-              <Label htmlFor={`question-${index}`}>
-                {question} *
-              </Label>
-              <Textarea id={`question-${index}`} value={answers[index] || ""} onChange={e => setAnswers({
-            ...answers,
-            [index]: e.target.value
-          })} placeholder="Your answer..." rows={3} className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none" />
-            </div>)}
-
-          {/* Submit Button - only show if logged in */}
-          {isLoggedIn && <div className="pt-4">
-              <Button className="w-full text-white border-t" style={{
-            fontFamily: 'Geist',
-            letterSpacing: '-0.5px',
-            backgroundColor: '#2060df',
-            borderTopColor: '#4f89ff'
-          }} onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
-                {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
-              </Button>
-            </div>}
+            {/* Application Questions - only show if logged in and campaign requires application */}
+            {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
+                <Label htmlFor={`question-${index}`}>
+                  {question} *
+                </Label>
+                <Textarea id={`question-${index}`} value={answers[index] || ""} onChange={e => setAnswers({
+              ...answers,
+              [index]: e.target.value
+            })} placeholder="Your answer..." rows={3} className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none" />
+              </div>)}
+          </div>
         </div>
+
+        {/* Sticky Submit Button at bottom */}
+        {isLoggedIn && <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-border">
+            <Button className="w-full text-white" style={{
+          fontFamily: 'Geist',
+          letterSpacing: '-0.5px',
+          backgroundColor: '#2060df'
+        }} onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
+              {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
+            </Button>
+          </div>}
       </SheetContent>
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={loadSocialAccounts} />
