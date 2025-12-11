@@ -497,21 +497,23 @@ export function JoinCampaignSheet({
               </div>
             </div>
           ) : campaign.requires_application !== false ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Select Social Accounts *</Label>
-              </div>
+            <div className="space-y-2">
+              <Label style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Select Social Accounts *</Label>
               {socialAccounts.length === 0 ? (
-                <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
-                  <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
-                  <p className="text-sm font-medium text-foreground">No available accounts</p>
-                  <Button onClick={() => setShowAddAccountDialog(true)} size="sm" className="border-0" style={{ backgroundColor: '#1F1F1F' }}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Account
-                  </Button>
+                <div className="py-8 text-center space-y-3">
+                  <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                    No accounts connected yet
+                  </p>
+                  <button 
+                    onClick={() => setShowAddAccountDialog(true)} 
+                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+                  >
+                    + Add Account
+                  </button>
                 </div>
               ) : (
-                <div className="grid gap-2">
+                <div className="space-y-1.5">
                   {socialAccounts.map(account => {
                     const platformIcon = getPlatformIcon(account.platform);
                     const isSelected = selectedAccounts.includes(account.id);
@@ -520,25 +522,34 @@ export function JoinCampaignSheet({
                         key={account.id} 
                         type="button" 
                         onClick={() => toggleAccountSelection(account.id)} 
-                        className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? "border-blue-500 bg-blue-500/10" : "border-border hover:border-muted-foreground/50 bg-card"}`}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all ${
+                          isSelected 
+                            ? "bg-primary/10" 
+                            : "hover:bg-muted/50"
+                        }`}
+                        style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                       >
-                        {platformIcon && (
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-blue-500" : "bg-muted"}`}>
-                            <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
-                          </div>
-                        )}
-                        <div className="flex-1 text-left">
-                          <p className="font-medium text-sm">{account.username}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                          isSelected 
+                            ? "border-primary bg-primary" 
+                            : "border-muted-foreground/30"
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
                         </div>
-                        {isSelected && (
-                          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
+                        {platformIcon && (
+                          <img src={platformIcon} alt={account.platform} className="w-5 h-5 flex-shrink-0" />
                         )}
+                        <span className="text-sm font-medium text-foreground">{account.username}</span>
                       </button>
                     );
                   })}
+                  <button 
+                    onClick={() => setShowAddAccountDialog(true)} 
+                    className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+                  >
+                    + Add another account
+                  </button>
                 </div>
               )}
             </div>
