@@ -32,26 +32,29 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5)
 function videoMatchesHashtags(video: any, hashtags: string[], logFirst = false): boolean {
   if (!hashtags || hashtags.length === 0) return true;
   
-  // Check multiple possible caption fields
-  const caption = (video.title || video.caption || video.description || video.text || '').toLowerCase();
-  
   if (logFirst) {
-    console.log('[fetch-shortimize-videos] Sample video caption fields:', {
-      title: video.title?.substring(0, 100),
-      caption: video.caption?.substring(0, 100),
-      description: video.description?.substring(0, 100),
-      text: video.text?.substring(0, 100),
-      combinedCaption: caption.substring(0, 100)
-    });
+    // Log all available fields on the video object
+    console.log('[fetch-shortimize-videos] Sample video object keys:', Object.keys(video));
+    console.log('[fetch-shortimize-videos] Sample video data:', JSON.stringify(video, null, 2).substring(0, 2000));
   }
+  
+  // Check multiple possible caption fields from Shortimize API
+  const caption = (
+    video.title || 
+    video.caption || 
+    video.description || 
+    video.text || 
+    video.content ||
+    video.video_title ||
+    video.ad_title ||
+    ''
+  ).toLowerCase();
   
   return hashtags.some(hashtag => {
     const hashtagLower = hashtag.toLowerCase().replace(/^#/, '');
-    // Check for hashtag with # prefix, without prefix, or as part of words
-    const hasMatch = caption.includes(`#${hashtagLower}`) || 
-                     caption.includes(hashtagLower) ||
-                     caption.includes(hashtagLower.replace(/\s+/g, ''));
-    return hasMatch;
+    return caption.includes(`#${hashtagLower}`) || 
+           caption.includes(hashtagLower) ||
+           caption.includes(hashtagLower.replace(/\s+/g, ''));
   });
 }
 
