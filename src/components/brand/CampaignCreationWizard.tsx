@@ -781,7 +781,7 @@ export function CampaignCreationWizard({
                                 Describe your campaign, requirements, and what creators should know
                               </p>
                               <FormControl>
-                                <Textarea placeholder="Enter campaign description..." className="min-h-[120px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-[#1a1a1a] focus:ring-0 focus:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none focus-visible:bg-[#0a0a0a] resize-none" style={{
+                                <Textarea placeholder="Enter campaign description..." className="min-h-[120px] bg-[#0a0a0a] border-0 text-foreground placeholder:text-muted-foreground/50 focus:ring-0 focus:shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none focus-visible:bg-[#0a0a0a] transition-none resize-none" style={{
                             letterSpacing: '-0.3px'
                           }} {...field} />
                               </FormControl>
