@@ -212,7 +212,7 @@ export function BrandCampaignsTab({
                     {/* Budget Progress */}
                     <div className="rounded-lg p-2.5 space-y-1.5 px-0 py-0 bg-[#080808]/0">
                       <div className="flex items-baseline justify-between">
-                        <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                        <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
                           <span className="text-base font-bold tabular-nums">${usedBudget.toLocaleString()}</span>
                           <span className="text-xs text-muted-foreground font-semibold">/ ${Number(campaign.budget).toLocaleString()}</span>
                         </div>
