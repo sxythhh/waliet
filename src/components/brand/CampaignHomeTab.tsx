@@ -212,16 +212,14 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       if (rawMetrics && rawMetrics.length > 0) {
         let cumViews = 0, cumLikes = 0, cumShares = 0, cumBookmarks = 0;
         
-        const formattedMetrics = rawMetrics.map((m, index) => {
-          const prev = index > 0 ? rawMetrics[index - 1] : null;
+        const formattedMetrics = rawMetrics.map((m) => {
+          // Raw daily values from database
+          const dailyViews = m.total_views || 0;
+          const dailyLikes = m.total_likes || 0;
+          const dailyShares = m.total_shares || 0;
+          const dailyBookmarks = m.total_bookmarks || 0;
           
-          // Daily values (difference from previous)
-          const dailyViews = prev ? Math.max(0, m.total_views - prev.total_views) : m.total_views;
-          const dailyLikes = prev ? Math.max(0, m.total_likes - prev.total_likes) : m.total_likes;
-          const dailyShares = prev ? Math.max(0, m.total_shares - prev.total_shares) : m.total_shares;
-          const dailyBookmarks = prev ? Math.max(0, m.total_bookmarks - prev.total_bookmarks) : m.total_bookmarks;
-          
-          // Cumulative values (running sum of daily)
+          // Cumulative = running sum of all daily values
           cumViews += dailyViews;
           cumLikes += dailyLikes;
           cumShares += dailyShares;
@@ -229,10 +227,12 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
           
           return {
             date: format(new Date(m.recorded_at), 'MMM d'),
+            // Cumulative values (running sum)
             views: cumViews,
             likes: cumLikes,
             shares: cumShares,
             bookmarks: cumBookmarks,
+            // Daily values (raw from DB)
             dailyViews,
             dailyLikes,
             dailyShares,
