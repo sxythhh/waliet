@@ -777,7 +777,7 @@ export function ProfileTab() {
                               </span>
                             </div>
                             {/* Campaign count below username */}
-                            <div className="flex items-center gap-1.5 mt-1.5 ml-7">
+                            <div className="flex items-center gap-1.5 mt-1.5 ml-7 w-fit px-2 py-1 rounded-md bg-muted/50">
                               <span className="text-[11px] text-foreground" style={{
                           fontFamily: 'Inter',
                           letterSpacing: '-0.3px'
