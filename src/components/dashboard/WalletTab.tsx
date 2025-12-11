@@ -1433,90 +1433,60 @@ export function WalletTab() {
         <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0">
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Hero Header with Amount */}
-              <div className="px-6 pt-8 pb-6 text-center border-b border-border/50">
-                <div className={`text-4xl font-bold tracking-tight mb-2 ${
-                  selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral'
-                    ? 'text-green-500' 
-                    : selectedTransaction.type === 'balance_correction' 
-                    ? 'text-orange-500' 
-                    : 'text-red-500'
-                }`}>
+              <div className="px-6 pt-8 pb-6 text-center border-b border-[#242424]/0">
+                <div className={`text-4xl font-bold tracking-tight mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
                   {selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? '+' : selectedTransaction.amount < 0 ? '-' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
                 </div>
                 <div className="text-sm text-muted-foreground mb-3">
                   {format(selectedTransaction.date, 'MMM dd, yyyy • h:mm a')}
                 </div>
-                {selectedTransaction.status && (
-                  selectedTransaction.status === 'completed' ? (
-                    <Badge 
-                      className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white"
-                    >
+                {selectedTransaction.status && (selectedTransaction.status === 'completed' ? <Badge className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white">
                       <img src={checkCircleFilledIcon} alt="" className="h-3 w-3 mr-1" />
                       {selectedTransaction.status}
-                    </Badge>
-                  ) : (
-                    <Badge 
-                      variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} 
-                      className="capitalize"
-                    >
+                    </Badge> : <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
                       {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
                       {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
                       {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
-                    </Badge>
-                  )
-                )}
+                    </Badge>)}
               </div>
 
               {/* Content */}
-              <div className="flex-1 p-6 space-y-5">
+              <div className="flex-1 p-6 space-y-5 border-black/0">
                 {/* Campaign/Source Card for earnings */}
-                {selectedTransaction.type === 'earning' && selectedTransaction.campaign && (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+                {selectedTransaction.type === 'earning' && selectedTransaction.campaign && <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
                     <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background flex items-center justify-center overflow-hidden">
-                      {selectedTransaction.campaign.brand_logo_url ? (
-                        <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-cover" />
-                      ) : (
-                        <DollarSign className="h-5 w-5 text-muted-foreground" />
-                      )}
+                      {selectedTransaction.campaign.brand_logo_url ? <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-cover" /> : <DollarSign className="h-5 w-5 text-muted-foreground" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{selectedTransaction.campaign.title}</div>
                       <div className="text-xs text-muted-foreground truncate">{selectedTransaction.campaign.brand_name}</div>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Platform & Views Row for earnings */}
-                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined) && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {selectedTransaction.metadata.account_username && (
-                      <div className="p-3 rounded-xl bg-muted/30">
+                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined) && <div className="grid grid-cols-2 gap-3">
+                    {selectedTransaction.metadata.account_username && <div className="p-3 rounded-xl bg-muted/30">
                         <div className="flex items-center gap-2 mb-1">
                           {(() => {
-                            const platform = selectedTransaction.metadata.platform?.toLowerCase();
-                            const platformIcon = platform === 'tiktok' ? tiktokLogo : platform === 'instagram' ? instagramLogo : platform === 'youtube' ? youtubeLogo : null;
-                            return platformIcon ? <img src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
-                          })()}
+                    const platform = selectedTransaction.metadata.platform?.toLowerCase();
+                    const platformIcon = platform === 'tiktok' ? tiktokLogo : platform === 'instagram' ? instagramLogo : platform === 'youtube' ? youtubeLogo : null;
+                    return platformIcon ? <img src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
+                  })()}
                           <span className="text-xs text-muted-foreground">Account</span>
                         </div>
                         <div className="text-sm font-medium truncate">@{selectedTransaction.metadata.account_username}</div>
-                      </div>
-                    )}
-                    {selectedTransaction.metadata.views !== undefined && (
-                      <div className="p-3 rounded-xl bg-muted/30">
+                      </div>}
+                    {selectedTransaction.metadata.views !== undefined && <div className="p-3 rounded-xl bg-muted/30">
                         <div className="flex items-center gap-2 mb-1">
                           <Eye className="w-4 h-4 text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">Views</span>
                         </div>
                         <div className="text-sm font-medium">{selectedTransaction.metadata.views.toLocaleString()}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </div>}
+                  </div>}
 
                 {/* Rejection Reason */}
-                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && (
-                  <div className="p-3 bg-destructive/10 rounded-xl">
+                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && <div className="p-3 bg-destructive/10 rounded-xl">
                     <div className="flex items-start gap-2">
                       <X className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
                       <div>
@@ -1524,32 +1494,23 @@ export function WalletTab() {
                         <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Transfer Details - P2P */}
-                {(selectedTransaction.type === 'transfer_sent' || selectedTransaction.type === 'transfer_received') && selectedTransaction.metadata && (
-                  <div className="p-3 rounded-xl bg-muted/30 space-y-2">
-                    {selectedTransaction.type === 'transfer_sent' && selectedTransaction.metadata.recipient_username && (
-                      <div className="flex items-center justify-between">
+                {(selectedTransaction.type === 'transfer_sent' || selectedTransaction.type === 'transfer_received') && selectedTransaction.metadata && <div className="p-3 rounded-xl bg-muted/30 space-y-2">
+                    {selectedTransaction.type === 'transfer_sent' && selectedTransaction.metadata.recipient_username && <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">Sent To</span>
                         <span className="text-sm font-medium">@{selectedTransaction.metadata.recipient_username}</span>
-                      </div>
-                    )}
-                    {selectedTransaction.type === 'transfer_received' && selectedTransaction.metadata.sender_username && (
-                      <div className="flex items-center justify-between">
+                      </div>}
+                    {selectedTransaction.type === 'transfer_received' && selectedTransaction.metadata.sender_username && <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">From</span>
                         <span className="text-sm font-medium">@{selectedTransaction.metadata.sender_username}</span>
-                      </div>
-                    )}
-                    {selectedTransaction.metadata.note && (
-                      <div className="pt-2 border-t border-border/50">
+                      </div>}
+                    {selectedTransaction.metadata.note && <div className="pt-2 border-t border-border/50">
                         <div className="text-xs text-muted-foreground mb-1">Note</div>
                         <div className="text-sm">{selectedTransaction.metadata.note}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </div>}
+                  </div>}
 
                 {/* Details List */}
                 <div className="space-y-1">
@@ -1567,104 +1528,92 @@ export function WalletTab() {
                         {selectedTransaction.id.slice(0, 6)}...{selectedTransaction.id.slice(-4)}
                       </span>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                        navigator.clipboard.writeText(selectedTransaction.id);
-                        setCopiedId(true);
-                        setTimeout(() => setCopiedId(false), 2000);
-                        toast({ description: "Transaction ID copied" });
-                      }}>
+                    navigator.clipboard.writeText(selectedTransaction.id);
+                    setCopiedId(true);
+                    setTimeout(() => setCopiedId(false), 2000);
+                    toast({
+                      description: "Transaction ID copied"
+                    });
+                  }}>
                         {copiedId ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                       </Button>
                     </div>
                   </div>
 
-                  {selectedTransaction.source && (
-                    <div className="flex items-center justify-between py-2.5">
+                  {selectedTransaction.source && <div className="flex items-center justify-between py-2.5">
                       <span className="text-sm text-muted-foreground">From</span>
                       <span className="text-sm font-medium text-right max-w-[180px] truncate">{selectedTransaction.source}</span>
-                    </div>
-                  )}
+                    </div>}
 
-                  {selectedTransaction.destination && (
-                    <div className="flex items-center justify-between py-2.5">
+                  {selectedTransaction.destination && <div className="flex items-center justify-between py-2.5">
                       <span className="text-sm text-muted-foreground">To</span>
                       <span className="text-sm font-medium text-right max-w-[180px] truncate">
                         {(() => {
-                          const details = selectedTransaction.metadata?.payoutDetails;
-                          if (details?.address) return `${details.address.slice(0, 6)}...${details.address.slice(-4)}`;
-                          if (details?.email) return details.email;
-                          if (details?.account_number) return `•••• ${details.account_number.slice(-4)}`;
-                          return selectedTransaction.destination;
-                        })()}
+                    const details = selectedTransaction.metadata?.payoutDetails;
+                    if (details?.address) return `${details.address.slice(0, 6)}...${details.address.slice(-4)}`;
+                    if (details?.email) return details.email;
+                    if (details?.account_number) return `•••• ${details.account_number.slice(-4)}`;
+                    return selectedTransaction.destination;
+                  })()}
                       </span>
-                    </div>
-                  )}
+                    </div>}
                 </div>
 
                 {/* Payout Method Details */}
                 {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (() => {
-                  return (
-                    <div className="space-y-1 pt-4">
+              return <div className="space-y-1 pt-4">
                       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Payout Details</div>
                       
-                      {selectedTransaction.metadata.payout_method && (
-                        <div className="flex items-center justify-between py-2.5">
+                      {selectedTransaction.metadata.payout_method && <div className="flex items-center justify-between py-2.5">
                           <span className="text-sm text-muted-foreground">Method</span>
                           <span className="text-sm font-medium capitalize">{selectedTransaction.metadata.payout_method}</span>
-                        </div>
-                      )}
+                        </div>}
                       
                       {selectedTransaction.metadata.network && (() => {
-                        const network = selectedTransaction.metadata.network.toLowerCase();
-                        const getNetworkLogo = () => {
-                          if (network === 'ethereum') return ethereumLogo;
-                          if (network === 'optimism') return optimismLogo;
-                          if (network === 'solana') return solanaLogo;
-                          if (network === 'polygon') return polygonLogo;
-                          return null;
-                        };
-                        const networkLogo = getNetworkLogo();
-                        return (
-                          <div className="flex items-center justify-between py-2.5">
+                  const network = selectedTransaction.metadata.network.toLowerCase();
+                  const getNetworkLogo = () => {
+                    if (network === 'ethereum') return ethereumLogo;
+                    if (network === 'optimism') return optimismLogo;
+                    if (network === 'solana') return solanaLogo;
+                    if (network === 'polygon') return polygonLogo;
+                    return null;
+                  };
+                  const networkLogo = getNetworkLogo();
+                  return <div className="flex items-center justify-between py-2.5">
                             <span className="text-sm text-muted-foreground">Network</span>
                             <div className="flex items-center gap-1.5">
                               {networkLogo && <img src={networkLogo} alt="Network" className="h-4 w-4" />}
                               <span className="text-sm font-medium capitalize">{selectedTransaction.metadata.network}</span>
                             </div>
-                          </div>
-                        );
-                      })()}
+                          </div>;
+                })()}
                       
-                      {selectedTransaction.metadata.payoutDetails?.address && (
-                        <div className="flex items-center justify-between py-2.5">
+                      {selectedTransaction.metadata.payoutDetails?.address && <div className="flex items-center justify-between py-2.5">
                           <span className="text-sm text-muted-foreground">Address</span>
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-mono">{selectedTransaction.metadata.payoutDetails.address.slice(0, 6)}...{selectedTransaction.metadata.payoutDetails.address.slice(-4)}</span>
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                              navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
-                              toast({ description: "Address copied" });
-                            }}>
+                      navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
+                      toast({
+                        description: "Address copied"
+                      });
+                    }}>
                               <Copy className="h-3 w-3" />
                             </Button>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       
-                      {selectedTransaction.metadata.payoutDetails?.currency && (
-                        <div className="flex items-center justify-between py-2.5">
+                      {selectedTransaction.metadata.payoutDetails?.currency && <div className="flex items-center justify-between py-2.5">
                           <span className="text-sm text-muted-foreground">Currency</span>
                           <span className="text-sm font-medium uppercase">{selectedTransaction.metadata.payoutDetails.currency}</span>
-                        </div>
-                      )}
+                        </div>}
                       
-                      {selectedTransaction.metadata.payoutDetails?.email && (
-                        <div className="flex items-center justify-between py-2.5">
+                      {selectedTransaction.metadata.payoutDetails?.email && <div className="flex items-center justify-between py-2.5">
                           <span className="text-sm text-muted-foreground">PayPal</span>
                           <span className="text-sm font-medium">{selectedTransaction.metadata.payoutDetails.email}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                        </div>}
+                    </div>;
+            })()}
               </div>
             </div>}
         </SheetContent>
