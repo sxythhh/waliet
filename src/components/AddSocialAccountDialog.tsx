@@ -18,7 +18,7 @@ const extractUsernameFromUrl = (url: string, platform: Platform): string | null 
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
-    
+
     // Validate domain matches platform
     if (platform === "tiktok" && !hostname.includes("tiktok.com")) {
       return null;
@@ -32,7 +32,7 @@ const extractUsernameFromUrl = (url: string, platform: Platform): string | null 
     if (platform === "twitter" && !(hostname.includes("twitter.com") || hostname.includes("x.com"))) {
       return null;
     }
-    
+
     // Extract username based on platform
     if (platform === "tiktok" || platform === "youtube") {
       // Format: https://www.tiktok.com/@username or https://www.youtube.com/@username
@@ -40,35 +40,25 @@ const extractUsernameFromUrl = (url: string, platform: Platform): string | null 
       const match = urlObj.pathname.match(/@([^/?#]+)/);
       return match ? match[1].toLowerCase() : null;
     }
-    
     if (platform === "instagram" || platform === "twitter") {
       // Format: https://www.instagram.com/username/ or https://twitter.com/username
       const pathParts = urlObj.pathname.split('/').filter(p => p);
       return pathParts.length > 0 ? pathParts[0].toLowerCase() : null;
     }
-    
     return null;
   } catch {
     return null;
   }
 };
-
 const socialAccountSchema = z.object({
   platform: z.enum(["tiktok", "instagram", "youtube", "twitter"], {
     required_error: "Please select a platform"
   }),
-  username: z.string()
-    .trim()
-    .min(1, "Username is required")
-    .max(100, "Username must be less than 100 characters")
-    .refine((val) => !val.includes("@"), {
-      message: "Username should not include @ symbol"
-    }),
-  accountLink: z.string()
-    .trim()
-    .url("Please enter a valid URL")
-    .max(500, "URL must be less than 500 characters")
-}).refine((data) => {
+  username: z.string().trim().min(1, "Username is required").max(100, "Username must be less than 100 characters").refine(val => !val.includes("@"), {
+    message: "Username should not include @ symbol"
+  }),
+  accountLink: z.string().trim().url("Please enter a valid URL").max(500, "URL must be less than 500 characters")
+}).refine(data => {
   const extractedUsername = extractUsernameFromUrl(data.accountLink, data.platform);
   if (!extractedUsername) {
     return false;
@@ -93,13 +83,19 @@ export function AddSocialAccountDialog({
   const [username, setUsername] = useState("");
   const [accountLink, setAccountLink] = useState("");
   const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
-  const { theme } = useTheme();
-
+  const {
+    toast
+  } = useToast();
+  const {
+    theme
+  } = useTheme();
   const handleXOAuth = async () => {
     const REDIRECT_URI = `${window.location.origin}/x/callback`;
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session?.user) {
       toast({
         variant: "destructive",
@@ -108,24 +104,15 @@ export function AddSocialAccountDialog({
       });
       return;
     }
-
-    const STATE = btoa(JSON.stringify({ userId: session.user.id, returnTo: 'social_accounts' }));
+    const STATE = btoa(JSON.stringify({
+      userId: session.user.id,
+      returnTo: 'social_accounts'
+    }));
     const codeChallenge = 'challenge';
-    
-    const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?` +
-      `client_id=YXNfUndDN1BXZFZCOVhJMjFQaWQ6MTpjaQ&` +
-      `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
-      `response_type=code&` +
-      `scope=tweet.read%20users.read&` +
-      `state=${STATE}&` +
-      `code_challenge=${codeChallenge}&` +
-      `code_challenge_method=plain`;
-
+    const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?` + `client_id=YXNfUndDN1BXZFZCOVhJMjFQaWQ6MTpjaQ&` + `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` + `response_type=code&` + `scope=tweet.read%20users.read&` + `state=${STATE}&` + `code_challenge=${codeChallenge}&` + `code_challenge_method=plain`;
     const popup = window.open(twitterAuthUrl, 'X OAuth', 'width=500,height=700');
-
     const handleMessage = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      
       if (event.data.type === 'x-oauth-success') {
         popup?.close();
         toast({
@@ -148,7 +135,6 @@ export function AddSocialAccountDialog({
         window.removeEventListener('message', handleMessage);
       }
     };
-
     window.addEventListener('message', handleMessage);
   };
   const handleSubmit = async (e: React.FormEvent) => {
@@ -248,14 +234,10 @@ export function AddSocialAccountDialog({
         <div className="flex flex-col">
           {/* Embed Section */}
           <div className="w-full h-[250px] border-b border-border">
-            <iframe 
-              src="https://joinvirality.com/accounts" 
-              className="w-full h-full"
-              title="Connect Accounts"
-            />
+            <iframe src="https://joinvirality.com/accounts" className="w-full h-full" title="Connect Accounts" />
           </div>
           
-          <div className="p-6">
+          <div className="p-6 pt-0">
             <DialogHeader className="space-y-3">
               <DialogTitle className="text-2xl font-bold font-inter tracking-[-0.5px]">
                 Connect Your Account
@@ -267,71 +249,45 @@ export function AddSocialAccountDialog({
               <div className="space-y-3">
                 <Label className="text-sm font-medium font-inter tracking-[-0.5px]">Select Platform</Label>
                 <div className="flex gap-2">
-                  {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
-                    <button 
-                      key={platform} 
-                      type="button" 
-                      onClick={() => setSelectedPlatform(platform)} 
-                      className={`
+                  {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`
                         relative flex items-center justify-center p-3 rounded-lg
                         transition-all duration-300 hover:scale-105
                         ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
-                      `}
-                    >
+                      `}>
                       <div className={`p-1 rounded-lg ${selectedPlatform === platform ? '' : 'bg-background/50'}`}>
                         {getPlatformIcon(platform)}
                       </div>
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
               </div>
 
               {/* Show OAuth button for Twitter, manual input for others */}
-              {selectedPlatform === "twitter" ? (
-                <div className="space-y-4">
+              {selectedPlatform === "twitter" ? <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-muted/20 border">
                     <p className="text-sm text-muted-foreground mb-4 font-inter tracking-[-0.5px]">
                       Connect your X account to automatically link your profile
                     </p>
-                    <Button 
-                      type="button"
-                      onClick={handleXOAuth}
-                      className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px]"
-                      disabled={uploading}
-                    >
-                      {uploading ? (
-                        <span className="flex items-center gap-2">
+                    <Button type="button" onClick={handleXOAuth} className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px]" disabled={uploading}>
+                      {uploading ? <span className="flex items-center gap-2">
                           <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           Connecting...
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-2">
+                        </span> : <span className="flex items-center gap-2">
                           {getPlatformIcon("twitter")}
                           Connect with X
-                        </span>
-                      )}
+                        </span>}
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <>
+                </div> : <>
                   {/* Username Input */}
                   <div className="space-y-2">
                     <Label htmlFor="username" className="text-sm font-medium font-inter tracking-[-0.5px] flex items-center gap-2">
                       Username
                     </Label>
                     <div className="relative">
-                      <Input 
-                        id="username" 
-                        placeholder="mrbeast" 
-                        value={username} 
-                        onChange={e => {
-                          const cleanedValue = e.target.value.replace(/@/g, "");
-                          setUsername(cleanedValue);
-                        }} 
-                        required 
-                        className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4 font-inter tracking-[-0.5px]" 
-                      />
+                      <Input id="username" placeholder="mrbeast" value={username} onChange={e => {
+                    const cleanedValue = e.target.value.replace(/@/g, "");
+                    setUsername(cleanedValue);
+                  }} required className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4 font-inter tracking-[-0.5px]" />
                     </div>
                     <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Don't include the @ symbol</p>
                   </div>
@@ -342,31 +298,18 @@ export function AddSocialAccountDialog({
                       Profile Link
                     </Label>
                     <div className="relative">
-                      <Input 
-                        id="accountLink" 
-                        type="url" 
-                        placeholder={`https://${selectedPlatform}.com/@${username || "username"}`} 
-                        value={accountLink} 
-                        onChange={e => setAccountLink(e.target.value)} 
-                        required 
-                        className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary font-inter tracking-[-0.5px]" 
-                      />
+                      <Input id="accountLink" type="url" placeholder={`https://${selectedPlatform}.com/@${username || "username"}`} value={accountLink} onChange={e => setAccountLink(e.target.value)} required className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary font-inter tracking-[-0.5px]" />
                     </div>
                   </div>
 
                   {/* Submit Button */}
                   <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px]" disabled={uploading}>
-                    {uploading ? (
-                      <span className="flex items-center gap-2">
+                    {uploading ? <span className="flex items-center gap-2">
                         <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         Connecting...
-                      </span>
-                    ) : (
-                      "Connect Account"
-                    )}
+                      </span> : "Connect Account"}
                   </Button>
-                </>
-              )}
+                </>}
             </form>
           </div>
         </div>
