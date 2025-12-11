@@ -657,7 +657,11 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
             </div>
             <div className="rounded-lg bg-muted/30 p-4">
               {blueprint.example_videos.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-2">Add reference videos for creators</p>
+                <iframe 
+                  src="https://joinvirality.com/pricing-2" 
+                  className="w-full h-[300px] border-0 rounded-lg" 
+                  title="Pricing"
+                />
               ) : (
                 <div className="space-y-3">
                   {blueprint.example_videos.map((video, index) => (
