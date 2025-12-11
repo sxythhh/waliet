@@ -334,12 +334,49 @@ export function DiscoverTab() {
         <div className="flex-1 overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
         {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
-            <Skeleton className="h-[350px] rounded-lg" />
-            <Skeleton className="h-[350px] rounded-lg" />
-            <Skeleton className="h-[350px] rounded-lg" />
-            <Skeleton className="h-[350px] rounded-lg" />
-            <Skeleton className="h-[350px] rounded-lg" />
-            <Skeleton className="h-[350px] rounded-lg" />
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-card rounded-lg border overflow-hidden">
+                {/* Banner skeleton */}
+                <Skeleton className="h-32 w-full rounded-none" />
+                {/* Content */}
+                <div className="p-3 space-y-3">
+                  {/* Brand logo + title */}
+                  <div className="flex items-center gap-2.5">
+                    <Skeleton className="w-8 h-8 rounded-md" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                  {/* Platform badges */}
+                  <div className="flex gap-1.5">
+                    <Skeleton className="h-5 w-14 rounded-full" />
+                    <Skeleton className="h-5 w-14 rounded-full" />
+                    <Skeleton className="h-5 w-12 rounded-full" />
+                  </div>
+                  {/* Description lines */}
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-5/6" />
+                  </div>
+                  {/* Budget bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-12" />
+                    </div>
+                    <div className="h-1.5 w-full bg-muted/40 rounded-full overflow-hidden">
+                      <Skeleton className="h-full w-1/3 rounded-full" />
+                    </div>
+                  </div>
+                  {/* Bottom row */}
+                  <div className="flex items-center justify-between pt-1">
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-8 w-16 rounded-md" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
