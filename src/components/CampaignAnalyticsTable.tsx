@@ -389,27 +389,32 @@ export function CampaignAnalyticsTable({
         console.log('Profiles fetched total:', profilesMap.size);
       }
 
-      // Fetch ALL demographic submissions for all matched social accounts
-      const {
-        data: allSubmissions
-      } = allSocialAccountIds.length > 0 ? await supabase.from("demographic_submissions").select("id, social_account_id, status, submitted_at, reviewed_at, tier1_percentage, score").in("social_account_id", allSocialAccountIds).order("submitted_at", {
-        ascending: false
-      }) : {
-        data: []
-      };
-
-      // Group submissions by social_account_id and get most recent
+      // Fetch ALL demographic submissions for all matched social accounts (batched to avoid limits)
       const submissionsMap = new Map();
-      (allSubmissions || []).forEach(sub => {
-        if (!submissionsMap.has(sub.social_account_id)) {
-          submissionsMap.set(sub.social_account_id, sub);
+      if (allSocialAccountIds.length > 0) {
+        const batchSize = 50;
+        for (let i = 0; i < allSocialAccountIds.length; i += batchSize) {
+          const batch = allSocialAccountIds.slice(i, i + batchSize);
+          const { data: batchSubmissions } = await supabase
+            .from("demographic_submissions")
+            .select("id, social_account_id, status, submitted_at, reviewed_at, tier1_percentage, score")
+            .in("social_account_id", batch)
+            .order("submitted_at", { ascending: false });
+          
+          (batchSubmissions || []).forEach(sub => {
+            if (!submissionsMap.has(sub.social_account_id)) {
+              submissionsMap.set(sub.social_account_id, sub);
+            }
+          });
         }
-      });
+      }
 
       // Debug: log what we found
       console.log('Campaign accounts found:', allCampaignAccounts?.length || 0);
       console.log('Social accounts map size:', socialAccountsByUsernameMap.size);
       console.log('Profiles map size:', profilesMap.size);
+      console.log('Demographic submissions map size:', submissionsMap.size);
+      console.log('All social account IDs count:', allSocialAccountIds.length);
 
       // Map everything together efficiently and collect records that need user_id updates
       const recordsToUpdate: {
@@ -1453,7 +1458,7 @@ export function CampaignAnalyticsTable({
                           // Check if this specific analytics record has been paid
                           const isPaidForThisPeriod = transactions.some(txn => txn.metadata?.analytics_id === item.id);
                           if (isPaidForThisPeriod) {
-                            return <Badge className="bg-green-500/10 text-green-500 border-0 px-2 py-0.5 text-xs font-medium">
+                            return <Badge className="bg-green-500/10 text-green-500 border-t border-green-400/30 border-x-0 border-b-0 px-2 py-0.5 text-xs font-medium rounded-sm hover:bg-green-500/10 hover:text-green-500">
                                     <Check className="h-3 w-3 mr-1" />
                                     Paid
                                   </Badge>;
