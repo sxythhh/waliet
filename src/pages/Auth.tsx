@@ -250,9 +250,7 @@ export default function Auth() {
               {/* Creator Sign In Section */}
               <div className="space-y-4">
                 <div className="text-center">
-                  <p className="text-xs font-semibold font-geist text-muted-foreground uppercase">
-                    Sign in as Creator
-                  </p>
+                  
                 </div>
                 
                 <div className="space-y-3">
@@ -302,11 +300,7 @@ export default function Auth() {
                   
                 </div>
                 
-                <a href="https://virality.cc/auth" className="flex items-center justify-center w-full h-12 bg-muted/50 hover:bg-muted rounded-md font-semibold font-geist text-sm transition-colors" style={{
-              letterSpacing: '-0.5px'
-            }}>
-                  Continue to Client Portal
-                </a>
+                
               </div>
             </> : (/* Email Form */
         <div className="space-y-4">
