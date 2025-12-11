@@ -210,21 +210,38 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         .order('recorded_at', { ascending: true });
 
       if (rawMetrics && rawMetrics.length > 0) {
+        let cumViews = 0, cumLikes = 0, cumShares = 0, cumBookmarks = 0;
+        
         const formattedMetrics = rawMetrics.map((m, index) => {
           const prev = index > 0 ? rawMetrics[index - 1] : null;
+          
+          // Daily values (difference from previous)
+          const dailyViews = prev ? Math.max(0, m.total_views - prev.total_views) : m.total_views;
+          const dailyLikes = prev ? Math.max(0, m.total_likes - prev.total_likes) : m.total_likes;
+          const dailyShares = prev ? Math.max(0, m.total_shares - prev.total_shares) : m.total_shares;
+          const dailyBookmarks = prev ? Math.max(0, m.total_bookmarks - prev.total_bookmarks) : m.total_bookmarks;
+          
+          // Cumulative values (running sum of daily)
+          cumViews += dailyViews;
+          cumLikes += dailyLikes;
+          cumShares += dailyShares;
+          cumBookmarks += dailyBookmarks;
+          
           return {
             date: format(new Date(m.recorded_at), 'MMM d'),
-            views: m.total_views,
-            likes: m.total_likes,
-            shares: m.total_shares,
-            bookmarks: m.total_bookmarks,
-            dailyViews: prev ? Math.max(0, m.total_views - prev.total_views) : m.total_views,
-            dailyLikes: prev ? Math.max(0, m.total_likes - prev.total_likes) : m.total_likes,
-            dailyShares: prev ? Math.max(0, m.total_shares - prev.total_shares) : m.total_shares,
-            dailyBookmarks: prev ? Math.max(0, m.total_bookmarks - prev.total_bookmarks) : m.total_bookmarks,
+            views: cumViews,
+            likes: cumLikes,
+            shares: cumShares,
+            bookmarks: cumBookmarks,
+            dailyViews,
+            dailyLikes,
+            dailyShares,
+            dailyBookmarks,
           };
         });
         setMetricsData(formattedMetrics);
+      } else {
+        setMetricsData([]);
       }
     } catch (error) {
       console.error('Error fetching metrics:', error);
@@ -467,21 +484,35 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
                   width={50}
                 />
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--popover))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    return (
+                      <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-lg">
+                        <p className="text-sm font-medium text-foreground tracking-[-0.5px] mb-1.5">{label}</p>
+                        <div className="space-y-1">
+                          {payload.map((entry: any) => (
+                            <div key={entry.name} className="flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                                <span className="text-xs text-foreground tracking-[-0.5px] capitalize">
+                                  {entry.name.replace('daily', '')}
+                                </span>
+                              </div>
+                              <span className="text-xs font-medium text-foreground tracking-[-0.5px]">
+                                {formatNumber(entry.value)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
                   }}
-                  labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 500, marginBottom: 4 }}
-                  itemStyle={{ color: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                  formatter={(value: number, name: string) => [formatNumber(value), name.replace('daily', '').toLowerCase()]}
                   cursor={{ stroke: 'white', strokeWidth: 1, strokeOpacity: 0.5 }}
                 />
                 {activeMetrics.map((metric) => (
                   <Area
                     key={metric}
-                    type="monotone"
+                    type="linear"
                     dataKey={getChartDataKey(metric)}
                     name={metric}
                     stroke={METRIC_COLORS[metric]}
