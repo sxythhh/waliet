@@ -329,25 +329,17 @@ export function AppSidebar() {
         <div className="flex items-center justify-between py-[10px] px-[10px]">
           <div className={`flex items-center gap-2.5 ${isCollapsed ? 'justify-center w-full' : ''}`}>
             <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
-            {!isCollapsed && (
-              <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
+            {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
                 VIRALITY
-              </span>
-            )}
+              </span>}
           </div>
-          {!isCollapsed && (
-            <button 
-              onClick={() => setIsCollapsed(true)}
-              className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-[#1f1f1f] text-neutral-400 hover:text-white transition-colors"
-            >
+          {!isCollapsed && <button onClick={() => setIsCollapsed(true)} className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-[#1f1f1f] text-neutral-400 hover:text-white transition-colors">
               <PanelLeftClose className="h-4 w-4" />
-            </button>
-          )}
+            </button>}
         </div>
 
         {/* Workspace Toggle */}
-        {!isCollapsed ? (
-          <div className="px-[5px] py-[5px]">
+        {!isCollapsed ? <div className="px-[5px] py-[5px]">
             <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
               <PopoverTrigger asChild>
                 <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors hover:bg-[#0e0e0e] rounded-md">
@@ -397,9 +389,9 @@ export function AppSidebar() {
                   {!isAdmin && <>
                       
                       <button onClick={() => {
-                    setWorkspaceOpen(false);
-                    setShowCreateBrandDialog(true);
-                  }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
+                  setWorkspaceOpen(false);
+                  setShowCreateBrandDialog(true);
+                }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
                         <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                           <Plus className="w-3 h-3" />
                         </div>
@@ -409,17 +401,11 @@ export function AppSidebar() {
                 </div>
               </PopoverContent>
             </Popover>
-          </div>
-        ) : (
-          <div className="px-2 py-2 flex justify-center">
-            <button 
-              onClick={() => setIsCollapsed(false)}
-              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#1f1f1f] text-neutral-400 hover:text-white transition-colors"
-            >
+          </div> : <div className="px-2 py-2 flex justify-center">
+            <button onClick={() => setIsCollapsed(false)} className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#1f1f1f] text-neutral-400 hover:text-white transition-colors">
               <PanelLeft className="h-4 w-4" />
             </button>
-          </div>
-        )}
+          </div>}
 
         {/* Main Navigation */}
         <nav className="flex-1 py-0 px-0">
@@ -471,23 +457,16 @@ export function AppSidebar() {
                     {getInitial()}
                   </AvatarFallback>
                 </Avatar>
-                {!isCollapsed && (
-                  <>
+                {!isCollapsed && <>
                     <div className="flex-1 text-left min-w-0">
                       <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">{displayName}</p>
                       <p className="text-xs text-neutral-500 truncate font-inter tracking-[-0.5px]">{user?.email}</p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-neutral-500" />
-                  </>
-                )}
+                  </>}
               </button>
             </PopoverTrigger>
-            <PopoverContent 
-              className="w-64 p-3 bg-[#111111] border-0 rounded-xl" 
-              side="top" 
-              align="start" 
-              sideOffset={8}
-            >
+            <PopoverContent className="w-64 p-3 bg-[#111111] border-0 rounded-xl" side="top" align="start" sideOffset={8}>
               {/* User Info + Theme Toggle */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
@@ -502,17 +481,11 @@ export function AppSidebar() {
                     <p className="text-xs text-neutral-500 truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-0.5 bg-[#1f1f1f] rounded-lg p-1">
-                  <button 
-                    onClick={() => setTheme('light')} 
-                    className={`p-1.5 rounded transition-colors ${theme === 'light' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}
-                  >
+                <div className="flex items-center gap-0.5 bg-[#1f1f1f] p-1 rounded">
+                  <button onClick={() => setTheme('light')} className={`p-1.5 rounded transition-colors ${theme === 'light' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
                     <Sun className="w-4 h-4" />
                   </button>
-                  <button 
-                    onClick={() => setTheme('dark')} 
-                    className={`p-1.5 rounded transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}
-                  >
+                  <button onClick={() => setTheme('dark')} className={`p-1.5 rounded transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
                     <Moon className="w-4 h-4" />
                   </button>
                 </div>
@@ -520,27 +493,18 @@ export function AppSidebar() {
 
               {/* Menu Items */}
               <div className="space-y-0.5 mb-3">
-                <button 
-                  onClick={() => window.open("https://discord.gg/virality", "_blank")}
-                  className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#1f1f1f] transition-colors"
-                >
+                <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#1f1f1f] transition-colors">
                   <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord</span>
                 </button>
-                <button 
-                  onClick={() => window.open("mailto:support@virality.gg", "_blank")}
-                  className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#1f1f1f] transition-colors"
-                >
+                <button onClick={() => window.open("mailto:support@virality.gg", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#1f1f1f] transition-colors">
                   <img src={supportIcon} alt="Support" className="w-5 h-5" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Support</span>
                 </button>
               </div>
 
               {/* Sign Out Button */}
-              <button 
-                onClick={handleSignOut}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#6b2a2a] hover:bg-[#7a3333] text-white rounded-lg transition-colors"
-              >
+              <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#6b2a2a] hover:bg-[#7a3333] text-white rounded-lg transition-colors">
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium font-inter tracking-[-0.5px]">Sign Out</span>
               </button>
