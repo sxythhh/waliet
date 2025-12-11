@@ -40,22 +40,25 @@ const handler = async (req: Request): Promise<Response> => {
         to: [email],
         subject: `You've been invited to join ${brandName} on Virality`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333;">Brand Team Invitation</h1>
-            <p>Hi there,</p>
-            <p><strong>${inviterName}</strong> has invited you to join <strong>${brandName}</strong> as a <strong>${role}</strong>.</p>
-            <p>Click the button below to view the brand and accept your invitation:</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <img src="https://app.virality.gg/lovable-uploads/38b60a02-7cb6-4adb-b1b9-62f4de7373fd.webp" alt="Virality" style="height: 32px; margin-bottom: 20px;" />
+            </div>
+            <h1 style="color: #333; text-align: center; font-size: 24px; margin-bottom: 24px;">Brand Team Invitation</h1>
+            <p style="color: #333; font-size: 16px; line-height: 1.6;">Hi there,</p>
+            <p style="color: #333; font-size: 16px; line-height: 1.6;"><strong>${inviterName}</strong> has invited you to join <strong>${brandName}</strong> as a <strong>${role}</strong>.</p>
+            <p style="color: #333; font-size: 16px; line-height: 1.6;">Click the button below to view the brand and accept your invitation:</p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${inviteUrl}" 
-                 style="background-color: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                 style="background-color: #2061e0; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500; font-size: 16px;">
                 View Brand
               </a>
             </div>
-            <p style="color: #666; font-size: 14px;">
+            <p style="color: #666; font-size: 14px; text-align: center;">
               If you didn't expect this invitation, you can safely ignore this email.
             </p>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="color: #999; font-size: 12px;">Virality - Creator Marketing Platform</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0 20px 0;">
+            <p style="color: #999; font-size: 12px; text-align: center;">Virality - Creator Marketing Platform</p>
           </div>
         `,
       }),
