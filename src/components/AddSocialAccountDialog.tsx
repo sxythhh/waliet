@@ -244,116 +244,132 @@ export function AddSocialAccountDialog({
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader className="space-y-3">
-          <DialogTitle className="text-2xl font-bold">
-            Connect Your Account
-          </DialogTitle>
-          
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-          {/* Platform Selection - Card Style */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Select Platform</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`
-                    relative flex flex-col items-center gap-2 p-3 rounded-lg
-                    transition-all duration-300 hover:scale-105
-                    ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
-                  `}>
-                  <div className="p-1.5 rounded-lg bg-background/50">
-                    {getPlatformIcon(platform)}
-                  </div>
-                  <span className={`text-xs font-medium ${selectedPlatform === platform ? 'text-white' : 'text-foreground/70'}`}>
-                    {getPlatformLabel(platform)}
-                  </span>
-                </button>)}
-            </div>
+      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+        <div className="flex flex-col">
+          {/* Embed Section */}
+          <div className="w-full h-[200px] border-b border-border">
+            <iframe 
+              src="https://joinvirality.com/accounts" 
+              className="w-full h-full"
+              title="Connect Accounts"
+            />
           </div>
+          
+          <div className="p-6">
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="text-2xl font-bold font-inter tracking-[-0.5px]">
+                Connect Your Account
+              </DialogTitle>
+            </DialogHeader>
 
-          {/* Show OAuth button for Twitter, manual input for others */}
-          {selectedPlatform === "twitter" ? (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-muted/20 border">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Connect your X account to automatically link your profile
-                </p>
-                <Button 
-                  type="button"
-                  onClick={handleXOAuth}
-                  className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors"
-                  disabled={uploading}
-                >
-                  {uploading ? (
-                    <span className="flex items-center gap-2">
-                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Connecting...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      {getPlatformIcon("twitter")}
-                      Connect with X
-                    </span>
-                  )}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Username Input */}
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium flex items-center gap-2">
-                  Username
-                </Label>
-                <div className="relative">
-                  <Input 
-                    id="username" 
-                    placeholder="mrbeast" 
-                    value={username} 
-                    onChange={e => {
-                      const cleanedValue = e.target.value.replace(/@/g, "");
-                      setUsername(cleanedValue);
-                    }} 
-                    required 
-                    className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4" 
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">Don't include the @ symbol</p>
-              </div>
-
-              {/* Account Link Input */}
-              <div className="space-y-2">
-                <Label htmlFor="accountLink" className="text-sm font-medium">
-                  Profile Link
-                </Label>
-                <div className="relative">
-                  <Input 
-                    id="accountLink" 
-                    type="url" 
-                    placeholder={`https://${selectedPlatform}.com/@${username || "username"}`} 
-                    value={accountLink} 
-                    onChange={e => setAccountLink(e.target.value)} 
-                    required 
-                    className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" 
-                  />
+            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+              {/* Platform Selection - Icon Only */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium font-inter tracking-[-0.5px]">Select Platform</Label>
+                <div className="flex gap-2">
+                  {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
+                    <button 
+                      key={platform} 
+                      type="button" 
+                      onClick={() => setSelectedPlatform(platform)} 
+                      className={`
+                        relative flex items-center justify-center p-3 rounded-lg
+                        transition-all duration-300 hover:scale-105
+                        ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
+                      `}
+                    >
+                      <div className={`p-1 rounded-lg ${selectedPlatform === platform ? '' : 'bg-background/50'}`}>
+                        {getPlatformIcon(platform)}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors" disabled={uploading}>
-                {uploading ? (
-                  <span className="flex items-center gap-2">
-                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Connecting...
-                  </span>
-                ) : (
-                  "Connect Account"
-                )}
-              </Button>
-            </>
-          )}
-        </form>
+              {/* Show OAuth button for Twitter, manual input for others */}
+              {selectedPlatform === "twitter" ? (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg bg-muted/20 border">
+                    <p className="text-sm text-muted-foreground mb-4 font-inter tracking-[-0.5px]">
+                      Connect your X account to automatically link your profile
+                    </p>
+                    <Button 
+                      type="button"
+                      onClick={handleXOAuth}
+                      className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px]"
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <span className="flex items-center gap-2">
+                          <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Connecting...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          {getPlatformIcon("twitter")}
+                          Connect with X
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Username Input */}
+                  <div className="space-y-2">
+                    <Label htmlFor="username" className="text-sm font-medium font-inter tracking-[-0.5px] flex items-center gap-2">
+                      Username
+                    </Label>
+                    <div className="relative">
+                      <Input 
+                        id="username" 
+                        placeholder="mrbeast" 
+                        value={username} 
+                        onChange={e => {
+                          const cleanedValue = e.target.value.replace(/@/g, "");
+                          setUsername(cleanedValue);
+                        }} 
+                        required 
+                        className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4 font-inter tracking-[-0.5px]" 
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Don't include the @ symbol</p>
+                  </div>
+
+                  {/* Account Link Input */}
+                  <div className="space-y-2">
+                    <Label htmlFor="accountLink" className="text-sm font-medium font-inter tracking-[-0.5px]">
+                      Profile Link
+                    </Label>
+                    <div className="relative">
+                      <Input 
+                        id="accountLink" 
+                        type="url" 
+                        placeholder={`https://${selectedPlatform}.com/@${username || "username"}`} 
+                        value={accountLink} 
+                        onChange={e => setAccountLink(e.target.value)} 
+                        required 
+                        className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary font-inter tracking-[-0.5px]" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px]" disabled={uploading}>
+                    {uploading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Connecting...
+                      </span>
+                    ) : (
+                      "Connect Account"
+                    )}
+                  </Button>
+                </>
+              )}
+            </form>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>;
 }
