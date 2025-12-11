@@ -567,17 +567,21 @@ export function ProfileTab() {
 
             return <div key={account.id} className="group relative p-4 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
                     {/* Main Layout */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-start gap-4">
+                      {/* Platform Icon - Large & Centered */}
+                      <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-muted/50 dark:bg-muted/30 flex-shrink-0">
+                        <div className="w-8 h-8">
+                          {getPlatformIcon(account.platform)}
+                        </div>
+                      </div>
+                      
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        {/* Username Row with Platform Icon */}
+                        {/* Username Row */}
                         <div 
                           onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
-                          className="cursor-pointer group/link inline-flex items-center gap-2.5"
+                          className="cursor-pointer group/link inline-flex items-center gap-2"
                         >
-                          <div className="w-6 h-6 flex-shrink-0">
-                            {getPlatformIcon(account.platform)}
-                          </div>
                           <span className="font-semibold text-base text-foreground group-hover/link:underline" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                             {account.username}
                           </span>
