@@ -10,15 +10,13 @@ const corsHeaders = {
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Fetch with retry logic for rate limiting
-async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3): Promise<Response> {
-  let lastError: Error | null = null;
-  
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5): Promise<Response> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     const response = await fetch(url, options);
     
     if (response.status === 429) {
       // Rate limited - wait and retry with exponential backoff
-      const waitTime = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
+      const waitTime = Math.pow(2, attempt) * 3000; // 3s, 6s, 12s, 24s, 48s
       console.log(`Rate limited, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
       await delay(waitTime);
       continue;
@@ -38,7 +36,6 @@ function videoMatchesHashtags(video: any, hashtags: string[]): boolean {
   
   return hashtags.some(hashtag => {
     const hashtagLower = hashtag.toLowerCase().replace(/^#/, '');
-    // Check if caption contains the hashtag (with or without #)
     return caption.includes(`#${hashtagLower}`) || caption.includes(hashtagLower);
   });
 }
@@ -57,7 +54,6 @@ serve(async (req) => {
     // Check if a specific campaignId was provided
     let specificCampaignId: string | null = null;
     
-    // Clone the request to read body safely
     const clonedReq = req.clone();
     try {
       const body = await clonedReq.json();
@@ -79,8 +75,7 @@ serve(async (req) => {
         hashtags,
         brands!campaigns_brand_id_fkey (
           id,
-          shortimize_api_key,
-          collection_name
+          shortimize_api_key
         )
       `)
       .eq('status', 'active');
@@ -104,32 +99,42 @@ serve(async (req) => {
     let errorMessage = '';
 
     for (const campaign of campaigns || []) {
-      // The brands relationship may return as array from Supabase, get first element
       const brandsData = campaign.brands as unknown;
-      const brand = Array.isArray(brandsData) ? brandsData[0] : brandsData as { id: string; shortimize_api_key: string | null; collection_name: string | null } | null;
+      const brand = Array.isArray(brandsData) ? brandsData[0] : brandsData as { id: string; shortimize_api_key: string | null } | null;
       
-      if (!brand?.shortimize_api_key || !brand?.collection_name) {
-        console.log(`Campaign ${campaign.id} - brand has no Shortimize config, skipping`);
-        errorMessage = 'Brand has no Shortimize API key or collection configured';
+      if (!brand?.shortimize_api_key) {
+        console.log(`Campaign ${campaign.id} - brand has no Shortimize API key, skipping`);
+        errorMessage = 'Brand has no Shortimize API key configured';
         errorCount++;
         continue;
       }
 
       const campaignHashtags = campaign.hashtags || [];
+      
+      // Skip if no hashtags configured - need hashtags to filter
+      if (campaignHashtags.length === 0) {
+        console.log(`Campaign ${campaign.id} - no hashtags configured, skipping metrics sync`);
+        errorMessage = 'No hashtags configured for campaign';
+        errorCount++;
+        continue;
+      }
 
       try {
-        console.log(`Syncing metrics for campaign ${campaign.id} with collection ${brand.collection_name}, hashtags: ${campaignHashtags.length > 0 ? campaignHashtags.join(', ') : 'none'}`);
+        console.log(`Syncing metrics for campaign ${campaign.id}, hashtags: ${campaignHashtags.join(', ')}`);
 
-        // Fetch all videos from Shortimize for this collection
-        const allVideos: any[] = [];
+        // Fetch ALL videos from Shortimize (no collection filter) and filter by hashtag
+        const allMatchingVideos: any[] = [];
         let page = 1;
         let hasMore = true;
+        const maxPages = 20; // Safety limit to prevent infinite loops
 
-        while (hasMore) {
+        while (hasMore && page <= maxPages) {
           const url = new URL('https://api.shortimize.com/videos');
           url.searchParams.set('limit', '100');
           url.searchParams.set('page', page.toString());
-          url.searchParams.set('collections', brand.collection_name);
+          // NO collection filter - fetch all videos
+
+          console.log(`[sync-campaign-video-metrics] Fetching page ${page}...`);
 
           const response = await fetchWithRetry(url.toString(), {
             method: 'GET',
@@ -147,37 +152,35 @@ serve(async (req) => {
           }
 
           const data = await response.json();
-          let videos = data.data || [];
+          const videos = data.data || [];
           
-          // Filter by campaign hashtags if provided (check caption content)
-          if (campaignHashtags.length > 0) {
-            videos = videos.filter((video: any) => videoMatchesHashtags(video, campaignHashtags));
-          }
+          // Filter videos by hashtag in caption
+          const matchingVideos = videos.filter((video: any) => videoMatchesHashtags(video, campaignHashtags));
+          allMatchingVideos.push(...matchingVideos);
           
-          allVideos.push(...videos);
+          console.log(`[sync-campaign-video-metrics] Page ${page}: ${videos.length} videos, ${matchingVideos.length} matching hashtags`);
 
           // Check if there are more pages
           const pagination = data.pagination;
-          if (pagination && page < pagination.total_pages && campaignHashtags.length === 0) {
-            // Only paginate if not filtering by hashtag (hashtag filtering is done client-side)
+          if (pagination && page < pagination.total_pages) {
             page++;
-            // Small delay between pages to avoid rate limiting
-            await delay(500);
+            // Longer delay between pages to avoid rate limiting
+            await delay(1000);
           } else {
             hasMore = false;
           }
         }
 
-        console.log(`Fetched ${allVideos.length} videos for campaign ${campaign.id}${campaignHashtags.length > 0 ? ` (filtered by hashtags: ${campaignHashtags.join(', ')})` : ''}`);
+        console.log(`[sync-campaign-video-metrics] Total matching videos for campaign ${campaign.id}: ${allMatchingVideos.length}`);
 
-        // Calculate totals
+        // Calculate totals from matching videos
         let totalViews = 0;
         let totalLikes = 0;
         let totalComments = 0;
         let totalShares = 0;
         let totalBookmarks = 0;
 
-        for (const video of allVideos) {
+        for (const video of allMatchingVideos) {
           totalViews += video.latest_views || 0;
           totalLikes += video.latest_likes || 0;
           totalComments += video.latest_comments || 0;
@@ -196,7 +199,7 @@ serve(async (req) => {
             total_comments: totalComments,
             total_shares: totalShares,
             total_bookmarks: totalBookmarks,
-            total_videos: allVideos.length,
+            total_videos: allMatchingVideos.length,
             recorded_at: new Date().toISOString(),
           });
 
@@ -205,7 +208,7 @@ serve(async (req) => {
           errorMessage = insertError.message;
           errorCount++;
         } else {
-          console.log(`Successfully recorded metrics for campaign ${campaign.id}: ${totalViews} views, ${totalLikes} likes, ${totalComments} comments, ${allVideos.length} videos`);
+          console.log(`Successfully recorded metrics for campaign ${campaign.id}: ${totalViews} views, ${totalLikes} likes, ${totalComments} comments, ${allMatchingVideos.length} videos`);
           syncedCount++;
         }
 
