@@ -638,11 +638,11 @@ export function ProfileTab() {
                             <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center flex-shrink-0">
                               <img src={demographicsIcon} alt="" className="w-4 h-4 opacity-80" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(2615%) hue-rotate(344deg) brightness(87%) contrast(93%)' }} />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-[11px] font-medium text-destructive block truncate" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                            <div className="flex-1 min-w-0 space-y-0">
+                              <span className="text-[11px] font-medium text-destructive block truncate leading-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                                 {demographicStatus === 'rejected' ? 'Resubmit' : 'Required'}
                               </span>
-                              <span className="text-[10px] text-destructive/70">Tap to submit</span>
+                              <span className="text-[10px] text-destructive/70 leading-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Tap to submit</span>
                             </div>
                           </div>
                         ) : (
