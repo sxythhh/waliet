@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Play, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, subWeeks, subMonths } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
@@ -14,10 +14,35 @@ import { toast } from "sonner";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManualMetricsDialog } from "./ManualMetricsDialog";
 
+export type TimeframeOption = "today" | "this_week" | "last_week" | "this_month" | "last_month";
+
 interface CampaignHomeTabProps {
   campaignId: string;
   brandId: string;
+  timeframe?: TimeframeOption;
 }
+
+const getDateRange = (timeframe: TimeframeOption): { start: Date; end: Date } => {
+  const now = new Date();
+  switch (timeframe) {
+    case "today":
+      return { start: startOfDay(now), end: endOfDay(now) };
+    case "this_week":
+      return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
+    case "last_week": {
+      const lastWeek = subWeeks(now, 1);
+      return { start: startOfWeek(lastWeek, { weekStartsOn: 1 }), end: endOfWeek(lastWeek, { weekStartsOn: 1 }) };
+    }
+    case "this_month":
+      return { start: startOfMonth(now), end: endOfMonth(now) };
+    case "last_month": {
+      const lastMonth = subMonths(now, 1);
+      return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
+    }
+    default:
+      return { start: startOfMonth(now), end: endOfMonth(now) };
+  }
+};
 
 interface VideoData {
   ad_id: string;
@@ -85,7 +110,7 @@ const METRIC_COLORS: Record<MetricType, string> = {
   bookmarks: '#f59e0b',
 };
 
-export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
+export function CampaignHomeTab({ campaignId, brandId, timeframe = "this_month" }: CampaignHomeTabProps) {
   const { isAdmin } = useAdminCheck();
   const [stats, setStats] = useState<StatsData>({ totalViews: 0, totalPayouts: 0, effectiveCPM: 0, viewsLastWeek: 0, payoutsLastWeek: 0, viewsChangePercent: 0, payoutsChangePercent: 0 });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
@@ -100,7 +125,7 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
   useEffect(() => {
     fetchData();
     fetchMetrics();
-  }, [campaignId, brandId]);
+  }, [campaignId, brandId, timeframe]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -113,12 +138,25 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       
       setBrand(brandData);
 
+      // Get date range based on timeframe
+      const { start: rangeStart, end: rangeEnd } = getDateRange(timeframe);
+
       const { data: analyticsData } = await supabase
         .from('campaign_account_analytics')
         .select('total_views, paid_views')
         .eq('campaign_id', campaignId);
 
+      // Fetch transactions filtered by timeframe
       const { data: transactionsData } = await supabase
+        .from('wallet_transactions')
+        .select('amount, created_at')
+        .eq('metadata->>campaign_id', campaignId)
+        .eq('type', 'earning')
+        .gte('created_at', rangeStart.toISOString())
+        .lte('created_at', rangeEnd.toISOString());
+
+      // Fetch all transactions for total calculation
+      const { data: allTransactionsData } = await supabase
         .from('wallet_transactions')
         .select('amount, created_at')
         .eq('metadata->>campaign_id', campaignId)
@@ -128,12 +166,22 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-      const payoutsThisWeek = transactionsData?.filter(t => new Date(t.created_at) >= oneWeekAgo)
+      const payoutsThisWeek = allTransactionsData?.filter(t => new Date(t.created_at) >= oneWeekAgo)
         .reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-      const payoutsLastWeek = transactionsData?.filter(t => {
+      const payoutsLastWeek = allTransactionsData?.filter(t => {
         const date = new Date(t.created_at);
         return date >= twoWeeksAgo && date < oneWeekAgo;
       }).reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+
+      // Get metrics for the selected timeframe
+      const { data: metricsInRange } = await supabase
+        .from('campaign_video_metrics')
+        .select('total_views')
+        .eq('campaign_id', campaignId)
+        .gte('recorded_at', rangeStart.toISOString())
+        .lte('recorded_at', rangeEnd.toISOString())
+        .order('recorded_at', { ascending: false })
+        .limit(1);
 
       const { data: metricsThisWeek } = await supabase
         .from('campaign_video_metrics')
@@ -162,7 +210,8 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         ? ((payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek) * 100 
         : 0;
 
-      const totalViews = analyticsData?.reduce((sum, a) => sum + (a.total_views || 0), 0) || 0;
+      // Use filtered data for display based on timeframe
+      const totalViews = metricsInRange?.[0]?.total_views || analyticsData?.reduce((sum, a) => sum + (a.total_views || 0), 0) || 0;
       const totalPayouts = transactionsData?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
       // Calculate effective CPM based on total views and total payouts
       const effectiveCPM = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
@@ -203,10 +252,14 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
 
   const fetchMetrics = async () => {
     try {
+      const { start: rangeStart, end: rangeEnd } = getDateRange(timeframe);
+      
       const { data: rawMetrics } = await supabase
         .from('campaign_video_metrics')
         .select('*')
         .eq('campaign_id', campaignId)
+        .gte('recorded_at', rangeStart.toISOString())
+        .lte('recorded_at', rangeEnd.toISOString())
         .order('recorded_at', { ascending: true });
 
       if (rawMetrics && rawMetrics.length > 0) {
