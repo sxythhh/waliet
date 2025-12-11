@@ -280,23 +280,46 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Connected Accounts Section */}
-        {(onConnectAccount || onManageAccount) && <div className="mb-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+        {(onConnectAccount || onManageAccount) && <div className="mb-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-sm">Your Connected Accounts</h4>
-              {onConnectAccount && <Button variant="ghost" size="sm" onClick={onConnectAccount} className="gap-1.5 h-8 text-xs">
-                  <Plus className="w-3.5 h-3.5" />
-                  Connect Account
-                </Button>}
+              <h4 className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Your Connected Accounts</h4>
+              {onConnectAccount && <button 
+                onClick={onConnectAccount} 
+                className="flex items-center gap-1.5 text-xs font-medium text-[#2060df] hover:text-[#1a4db8] transition-colors"
+                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add
+              </button>}
             </div>
             
-            {hasConnectedAccounts ? <div className="flex flex-wrap gap-2">
-                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-background hover:bg-muted transition-colors cursor-pointer">
-                    <img src={platformIcons[account.platform.toLowerCase()]} alt={account.platform} className="w-4 h-4" />
-                    <span className="font-medium">{account.username}</span>
-                  </button>)}
-              </div> : <p className="text-sm text-muted-foreground">
-                No accounts connected. Connect an account to start earning.
-              </p>}
+            {hasConnectedAccounts ? (
+              <div className="flex flex-wrap gap-2">
+                {campaign.connected_accounts!.map(account => (
+                  <button 
+                    key={account.id} 
+                    onClick={() => onManageAccount?.(account)} 
+                    className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full bg-gradient-to-r from-muted/80 to-muted/40 hover:from-muted hover:to-muted/60 transition-all duration-200 cursor-pointer border border-border/50 hover:border-border"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-background flex items-center justify-center shadow-sm">
+                      <img src={platformIcons[account.platform.toLowerCase()]} alt={account.platform} className="w-4 h-4" />
+                    </div>
+                    <span className="font-medium text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{account.username}</span>
+                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-dashed border-border/60 bg-muted/20">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <Plus className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>No accounts connected</p>
+                  <p className="text-xs text-muted-foreground">Connect an account to start earning</p>
+                </div>
+              </div>
+            )}
           </div>}
 
         {/* Asset Links Section */}
