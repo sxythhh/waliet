@@ -328,7 +328,7 @@ export function AppSidebar() {
         <div className="py-[3px] px-[8px]">
           <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
             <PopoverTrigger asChild>
-              <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors rounded bg-[#131313]">
+              <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors rounded bg-[#121212]/0">
                 <div className="flex items-center gap-2">
                   {isCreatorMode ? <Avatar className="w-6 h-6">
                       <AvatarImage src={avatarUrl || undefined} />
