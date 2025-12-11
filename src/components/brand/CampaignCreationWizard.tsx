@@ -777,9 +777,11 @@ export function CampaignCreationWizard({
                       <Button 
                         type="button" 
                         onClick={async () => {
-                          // Skip validation for edit mode (existing campaigns may not have all new fields)
+                          // Skip validation for edit mode - call onSubmit directly
                           if (isEditMode) {
-                            form.handleSubmit(onSubmit)();
+                            const values = form.getValues();
+                            console.log('Edit mode - submitting with values:', values);
+                            await onSubmit(values as CampaignFormValues);
                             return;
                           }
                           // Validate for new campaigns
