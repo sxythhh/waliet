@@ -10,32 +10,29 @@ interface PayoutsPanelProps {
 export function PayoutsPanel({ transactions, loading }: PayoutsPanelProps) {
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="p-4 space-y-4">
         {/* Header Skeleton */}
-        <div className="flex items-center gap-3">
-          <Skeleton className="w-9 h-9 rounded-lg bg-muted/40 dark:bg-muted-foreground/10" />
-          <div className="space-y-1.5">
-            <Skeleton className="h-4 w-32 bg-muted/40 dark:bg-muted-foreground/10" />
-            <Skeleton className="h-3 w-20 bg-muted/40 dark:bg-muted-foreground/10" />
-          </div>
+        <div className="p-4 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-3">
+          <Skeleton className="h-5 w-32 dark:bg-muted-foreground/20" />
+          <Skeleton className="h-4 w-20 dark:bg-muted-foreground/20" />
         </div>
         {/* Transaction Row Skeletons */}
-        <div className="space-y-2">
+        <div className="p-5 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-4">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/20 dark:bg-muted/30">
+            <div key={i} className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3 flex-1">
-                <Skeleton className="w-9 h-9 rounded-full bg-muted/40 dark:bg-muted-foreground/10" />
-                <div className="space-y-1.5">
-                  <Skeleton className="h-4 w-28 bg-muted/40 dark:bg-muted-foreground/10" />
-                  <Skeleton className="h-3 w-36 bg-muted/40 dark:bg-muted-foreground/10" />
+                <Skeleton className="w-10 h-10 rounded-full dark:bg-muted-foreground/20" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-28 dark:bg-muted-foreground/20" />
+                  <Skeleton className="h-3 w-36 dark:bg-muted-foreground/20" />
                 </div>
               </div>
               <div className="flex items-center gap-6">
-                <div className="space-y-1 text-right">
-                  <Skeleton className="h-4 w-16 bg-muted/40 dark:bg-muted-foreground/10" />
-                  <Skeleton className="h-3 w-12 bg-muted/40 dark:bg-muted-foreground/10" />
+                <div className="space-y-2 text-right">
+                  <Skeleton className="h-4 w-16 dark:bg-muted-foreground/20" />
+                  <Skeleton className="h-3 w-12 dark:bg-muted-foreground/20" />
                 </div>
-                <Skeleton className="h-3 w-14 bg-muted/40 dark:bg-muted-foreground/10" />
+                <Skeleton className="h-3 w-14 dark:bg-muted-foreground/20" />
               </div>
             </div>
           ))}
