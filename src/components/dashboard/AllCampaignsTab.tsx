@@ -329,9 +329,9 @@ export function AllCampaignsTab() {
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">
                           Budget
                         </span>
-                        <div className="text-xs">
-                          <span className="font-bold">${budgetUsed.toLocaleString()}</span>
-                          <span className="text-muted-foreground"> / ${campaign.budget.toLocaleString()}</span>
+                        <div className="text-xs font-['Inter'] tracking-[-0.5px]">
+                          <span className="font-bold">${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                          <span className="text-muted-foreground"> / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                         </div>
                         <div className="relative h-1.5 bg-muted rounded-full overflow-hidden mt-1">
                           <div

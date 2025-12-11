@@ -692,10 +692,10 @@ export function CampaignsTab({
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
                               <span className="text-base font-bold tabular-nums">
-                                ${budgetUsed.toLocaleString()}
+                                ${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                               <span className="text-xs text-muted-foreground font-semibold">
-                                / ${campaign.budget.toLocaleString()}
+                                / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                             </div>
                           </div>
@@ -861,8 +861,8 @@ export function CampaignsTab({
                         
                         <span className="text-xs text-muted-foreground font-medium">Infinite Budget</span>
                       </> : <>
-                        <span className="text-base font-bold tabular-nums">${budgetUsed.toLocaleString()}</span>
-                        <span className="text-xs text-muted-foreground font-bold">/ ${campaign.budget.toLocaleString()}</span>
+                        <span className="text-base font-bold tabular-nums">${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                        <span className="text-xs text-muted-foreground font-bold">/ ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                       </>}
                   </div>
                 </div>

@@ -360,12 +360,12 @@ export default function AdminCampaigns() {
                   {/* Budget Section */}
                   <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
                     <div className="flex items-baseline justify-between">
-                      <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                      <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
                         <span className="text-base font-bold tabular-nums">
-                          ${(campaign.budget_used || 0).toLocaleString()}
+                          ${Math.ceil(campaign.budget_used || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                         <span className="text-xs text-muted-foreground font-medium">
-                          / ${campaign.budget.toLocaleString()}
+                          / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                       </div>
                     </div>
