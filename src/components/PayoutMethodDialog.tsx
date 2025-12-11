@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import paypalLogo from "@/assets/paypal-logo.svg";
 import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
@@ -58,6 +59,8 @@ export default function PayoutMethodDialog({
   const isDisabled = (selectedMethod === "crypto" && !walletAddress) || 
                      (selectedMethod === "paypal" && !paypalEmail);
 
+  const selectedNetworkData = cryptoNetworks.find(n => n.id === selectedNetwork);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] p-0 gap-0 bg-background border-border overflow-hidden font-inter tracking-[-0.5px]">
@@ -83,7 +86,7 @@ export default function PayoutMethodDialog({
                   className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 ${
                     selectedMethod === "crypto"
                       ? "border-foreground/20 bg-muted"
-                      : "border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50"
+                      : "border-transparent bg-muted/30 hover:bg-muted/50"
                   }`}
                 >
                   {selectedMethod === "crypto" && (
@@ -106,7 +109,7 @@ export default function PayoutMethodDialog({
                   className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 ${
                     selectedMethod === "paypal"
                       ? "border-foreground/20 bg-muted"
-                      : "border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50"
+                      : "border-transparent bg-muted/30 hover:bg-muted/50"
                   }`}
                 >
                   {selectedMethod === "paypal" && (
@@ -144,35 +147,36 @@ export default function PayoutMethodDialog({
 
                   {/* Network Selection */}
                   <div className="space-y-2.5">
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide font-inter">
                       Network
                     </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {cryptoNetworks.map((network) => (
-                        <button
-                          key={network.id}
-                          type="button"
-                          onClick={() => setSelectedNetwork(network.id)}
-                          className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all duration-200 ${
-                            selectedNetwork === network.id
-                              ? "bg-muted ring-1 ring-foreground/20"
-                              : "bg-muted/50 hover:bg-muted"
-                          }`}
-                        >
-                          <img src={network.logo} alt={network.name} className="w-6 h-6" />
-                          <span className={`text-xs font-medium ${
-                            selectedNetwork === network.id ? "text-foreground" : "text-muted-foreground"
-                          }`}>
-                            {network.name}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
+                      <SelectTrigger className="h-11 bg-muted/50 border-transparent focus:ring-0 font-inter tracking-[-0.5px]">
+                        <SelectValue>
+                          {selectedNetworkData && (
+                            <div className="flex items-center gap-2">
+                              <img src={selectedNetworkData.logo} alt={selectedNetworkData.name} className="w-5 h-5" />
+                              <span>{selectedNetworkData.name}</span>
+                            </div>
+                          )}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border">
+                        {cryptoNetworks.map((network) => (
+                          <SelectItem key={network.id} value={network.id} className="font-inter tracking-[-0.5px]">
+                            <div className="flex items-center gap-2">
+                              <img src={network.logo} alt={network.name} className="w-5 h-5" />
+                              <span>{network.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Wallet Address */}
                   <div className="space-y-2.5">
-                    <label htmlFor="wallet-address" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <label htmlFor="wallet-address" className="text-xs font-medium text-muted-foreground uppercase tracking-wide font-inter">
                       Wallet Address
                     </label>
                     <Input
@@ -180,48 +184,50 @@ export default function PayoutMethodDialog({
                       placeholder="0x..."
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
-                      className="h-11 bg-muted/50 border-transparent focus:border-foreground/20 focus:bg-background placeholder:text-muted-foreground/50 font-inter tracking-[-0.5px]"
+                      className="h-11 bg-muted/50 border-transparent focus:border-transparent focus:bg-background placeholder:text-muted-foreground/50 font-inter tracking-[-0.5px]"
                     />
                   </div>
+
+                  {/* Add Method Button */}
+                  <Button
+                    className="w-full h-10 font-inter tracking-[-0.5px] mt-2"
+                    onClick={handleSave}
+                    disabled={!walletAddress}
+                  >
+                    Add Method
+                  </Button>
                 </>
               )}
 
               {selectedMethod === "paypal" && (
-                <div className="space-y-2.5">
-                  <label htmlFor="paypal-email" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    PayPal Email
-                  </label>
-                  <Input
-                    id="paypal-email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={paypalEmail}
-                    onChange={(e) => setPaypalEmail(e.target.value)}
-                    className="h-11 bg-muted/50 border-transparent focus:border-foreground/20 focus:bg-background placeholder:text-muted-foreground/50 font-inter tracking-[-0.5px]"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Make sure this matches your PayPal account email.
-                  </p>
-                </div>
-              )}
-            </div>
+                <>
+                  <div className="space-y-2.5">
+                    <label htmlFor="paypal-email" className="text-xs font-medium text-muted-foreground uppercase tracking-wide font-inter">
+                      PayPal Email
+                    </label>
+                    <Input
+                      id="paypal-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={paypalEmail}
+                      onChange={(e) => setPaypalEmail(e.target.value)}
+                      className="h-11 bg-muted/50 border-transparent focus:border-transparent focus:bg-background placeholder:text-muted-foreground/50 font-inter tracking-[-0.5px]"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Make sure this matches your PayPal account email.
+                    </p>
+                  </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 bg-muted/30 border-t border-border flex gap-3">
-              <Button
-                variant="ghost"
-                className="flex-1 h-10 font-inter tracking-[-0.5px]"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 h-10 font-inter tracking-[-0.5px]"
-                onClick={handleSave}
-                disabled={isDisabled}
-              >
-                Add Method
-              </Button>
+                  {/* Add Method Button */}
+                  <Button
+                    className="w-full h-10 font-inter tracking-[-0.5px] mt-2"
+                    onClick={handleSave}
+                    disabled={!paypalEmail}
+                  >
+                    Add Method
+                  </Button>
+                </>
+              )}
             </div>
           </>
         )}
