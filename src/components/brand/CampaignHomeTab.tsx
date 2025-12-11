@@ -175,21 +175,23 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       const chartPoints = generateChartData(transactionsData || []);
       setChartData(chartPoints);
 
-      // Fetch top videos from Shortimize - pass campaignId for hashtag filtering
-      const { data: videosData, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
-        body: {
-          brandId,
-          campaignId, // Pass campaignId to enable hashtag filtering
-          page: 1,
-          limit: 3,
-          orderBy: 'latest_views',
-          orderDirection: 'desc',
-        },
-      });
+      // Fetch top videos from Shortimize - only if brand has API key configured
+      if (brandData?.collection_name) {
+        const { data: videosData, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
+          body: {
+            brandId,
+            campaignId,
+            page: 1,
+            limit: 3,
+            orderBy: 'latest_views',
+            orderDirection: 'desc',
+          },
+        });
 
-      if (!error && videosData?.videos) {
-        setTopVideos(videosData.videos);
-        setTotalVideos(videosData.pagination?.total || 0);
+        if (!error && videosData?.videos) {
+          setTopVideos(videosData.videos);
+          setTotalVideos(videosData.pagination?.total || 0);
+        }
       }
     } catch (error) {
       console.error('Error fetching home data:', error);
