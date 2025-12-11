@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2 } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, Check } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +118,9 @@ export function ProfileTab() {
   } | null>(null);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [savingPreferences, setSavingPreferences] = useState(false);
+  const [showLinkCampaignDialog, setShowLinkCampaignDialog] = useState(false);
+  const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<SocialAccount | null>(null);
+  const [linkingCampaign, setLinkingCampaign] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     toast
@@ -246,6 +249,62 @@ export function ProfileTab() {
       });
       fetchSocialAccounts();
     }
+  };
+
+  const handleLinkCampaign = async (campaignId: string) => {
+    if (!selectedAccountForLinking) return;
+    
+    setLinkingCampaign(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setLinkingCampaign(false);
+      return;
+    }
+
+    // Check if already linked
+    const { data: existing } = await supabase
+      .from("social_account_campaigns")
+      .select("id")
+      .eq("social_account_id", selectedAccountForLinking.id)
+      .eq("campaign_id", campaignId)
+      .eq("status", "active")
+      .single();
+
+    if (existing) {
+      toast({
+        variant: "destructive",
+        title: "Already linked",
+        description: "This account is already linked to this campaign"
+      });
+      setLinkingCampaign(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("social_account_campaigns")
+      .insert({
+        social_account_id: selectedAccountForLinking.id,
+        campaign_id: campaignId,
+        user_id: session.user.id,
+        status: "active"
+      });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to link account to campaign"
+      });
+    } else {
+      toast({
+        title: "Account linked",
+        description: "Successfully linked to campaign"
+      });
+      fetchSocialAccounts();
+      setShowLinkCampaignDialog(false);
+      setSelectedAccountForLinking(null);
+    }
+    setLinkingCampaign(false);
   };
   
   // Remove the old delete and link/unlink functions - now handled by ManageAccountDialog
@@ -629,14 +688,15 @@ export function ProfileTab() {
                             </span>
                           )}
                           <button
-                            className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary text-[11px] text-primary-foreground hover:bg-primary/90 transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 hover:bg-muted text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                             style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate('/dashboard?tab=campaigns');
+                              setSelectedAccountForLinking(account);
+                              setShowLinkCampaignDialog(true);
                             }}
                           >
-                            <Link2 className="w-3 h-3 text-primary-foreground" />
+                            <Link2 className="w-3 h-3" />
                             <span>Link</span>
                           </button>
                           <button
@@ -906,6 +966,84 @@ export function ProfileTab() {
 
       {/* Demographics Dialog */}
       {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
+
+      {/* Link Campaign Dialog */}
+      <Dialog open={showLinkCampaignDialog} onOpenChange={(open) => {
+        setShowLinkCampaignDialog(open);
+        if (!open) setSelectedAccountForLinking(null);
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Link to Campaign</DialogTitle>
+            <DialogDescription style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              Select a campaign to link {selectedAccountForLinking?.username} to
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {joinedCampaigns.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                  No campaigns available to link
+                </p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={() => {
+                    setShowLinkCampaignDialog(false);
+                    navigate('/dashboard?tab=discover');
+                  }}
+                >
+                  Browse Campaigns
+                </Button>
+              </div>
+            ) : (
+              joinedCampaigns.map((campaign) => {
+                const isLinked = selectedAccountForLinking?.connected_campaigns?.some(
+                  c => c.campaign.id === campaign.id
+                );
+                return (
+                  <button
+                    key={campaign.id}
+                    disabled={isLinked || linkingCampaign}
+                    onClick={() => handleLinkCampaign(campaign.id)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+                      isLinked 
+                        ? 'bg-primary/10 cursor-not-allowed' 
+                        : 'bg-muted/30 hover:bg-muted/60 cursor-pointer'
+                    }`}
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                  >
+                    {campaign.brand_logo_url || campaign.brands?.logo_url ? (
+                      <img 
+                        src={campaign.brand_logo_url || campaign.brands?.logo_url} 
+                        alt={campaign.brand_name}
+                        className="w-10 h-10 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {campaign.brand_name?.[0]?.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1 text-left">
+                      <p className="font-medium text-sm">{campaign.title}</p>
+                      <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                    </div>
+                    {isLinked && (
+                      <div className="flex items-center gap-1.5 text-xs text-primary">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Linked</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>;
 }
