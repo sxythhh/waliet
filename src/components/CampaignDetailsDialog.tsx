@@ -285,7 +285,7 @@ export function CampaignDetailsDialog({
               <h4 className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Your Connected Accounts</h4>
               {onConnectAccount && <button 
                 onClick={onConnectAccount} 
-                className="flex items-center gap-1.5 text-xs font-medium text-[#2060df] hover:text-[#1a4db8] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#2061de] hover:bg-[#1a4db8] transition-colors border-t border-[#4b85f7]"
                 style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -299,13 +299,12 @@ export function CampaignDetailsDialog({
                   <button 
                     key={account.id} 
                     onClick={() => onManageAccount?.(account)} 
-                    className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full bg-gradient-to-r from-muted/80 to-muted/40 hover:from-muted hover:to-muted/60 transition-all duration-200 cursor-pointer border border-border/50 hover:border-border"
+                    className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full bg-muted hover:bg-muted/80 transition-all duration-200 cursor-pointer"
                   >
                     <div className="w-7 h-7 rounded-full bg-background flex items-center justify-center shadow-sm">
                       <img src={platformIcons[account.platform.toLowerCase()]} alt={account.platform} className="w-4 h-4" />
                     </div>
                     <span className="font-medium text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{account.username}</span>
-                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
               </div>
