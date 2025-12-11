@@ -448,7 +448,7 @@ export function JoinCampaignSheet({
             <div className="space-y-2">
               <div className="relative">
                 <div 
-                  className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all ${
+                  className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${
                     descriptionExpanded ? '' : 'max-h-[100px]'
                   }`}
                   style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
@@ -460,13 +460,15 @@ export function JoinCampaignSheet({
                 )}
               </div>
               {campaign.description.length > 200 && (
-                <button
-                  onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                >
-                  {descriptionExpanded ? 'Show less' : 'Show more'}
-                </button>
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                  >
+                    {descriptionExpanded ? 'Show less' : 'Show more'}
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -564,17 +566,15 @@ export function JoinCampaignSheet({
 
           {/* Submit Button - only show if logged in */}
           {isLoggedIn && (
-            <div className="flex gap-2 pt-4">
+            <div className="pt-4">
               <Button 
-                variant="outline" 
-                className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors" 
-                onClick={() => onOpenChange(false)} 
-                disabled={submitting}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="flex-1" 
+                className="w-full text-white border-t"
+                style={{ 
+                  fontFamily: 'Geist', 
+                  letterSpacing: '-0.5px',
+                  backgroundColor: '#2060df',
+                  borderTopColor: '#4f89ff'
+                }}
                 onClick={handleSubmit} 
                 disabled={submitting || (campaign.requires_application !== false && selectedAccounts.length === 0)}
               >
