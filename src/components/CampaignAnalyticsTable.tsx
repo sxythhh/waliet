@@ -399,7 +399,9 @@ export function CampaignAnalyticsTable({
         }
       });
 
-      // Map everything together efficiently
+      // Map everything together efficiently and collect records that need user_id updates
+      const recordsToUpdate: { id: string; user_id: string }[] = [];
+      
       const analyticsWithProfiles = (data || []).map(item => {
         let profile = null;
         let account = null;
@@ -423,6 +425,11 @@ export function CampaignAnalyticsTable({
           // Also get the profile for this matched account if it has a user_id
           if (account && account.user_id && !profile) {
             profile = profilesMap.get(account.user_id);
+            
+            // If we found a match and the analytics record doesn't have user_id, queue it for update
+            if (!item.user_id && account.user_id) {
+              recordsToUpdate.push({ id: item.id, user_id: account.user_id });
+            }
           }
         }
 
@@ -433,11 +440,23 @@ export function CampaignAnalyticsTable({
 
         return {
           ...item,
+          user_id: item.user_id || (account?.user_id) || null, // Use matched user_id for display
           profiles: profile || null,
           social_account: account || null,
           demographic_submission: submission || null
         };
       });
+
+      // Batch update analytics records that were matched by username but didn't have user_id
+      if (recordsToUpdate.length > 0) {
+        console.log(`Auto-linking ${recordsToUpdate.length} analytics records...`);
+        for (const record of recordsToUpdate) {
+          await supabase
+            .from("campaign_account_analytics")
+            .update({ user_id: record.user_id })
+            .eq("id", record.id);
+        }
+      }
 
       setAnalytics(analyticsWithProfiles);
     } catch (error) {
