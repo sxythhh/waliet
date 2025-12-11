@@ -136,8 +136,14 @@ export default function BrandInvite() {
         .maybeSingle();
 
       if (existingMember) {
+        // Update invitation status to accepted
+        await supabase
+          .from("brand_invitations")
+          .update({ status: "accepted" })
+          .eq("id", invitation.id);
+        
         toast.success("You are already a member of this brand!");
-        navigate(`/brand/${brandSlug}/account`);
+        navigate(`/dashboard?workspace=${brandSlug}`);
         return;
       }
 
@@ -155,8 +161,18 @@ export default function BrandInvite() {
         throw memberError;
       }
 
+      // Update invitation status to accepted
+      const { error: updateError } = await supabase
+        .from("brand_invitations")
+        .update({ status: "accepted" })
+        .eq("id", invitation.id);
+
+      if (updateError) {
+        console.error("Error updating invitation status:", updateError);
+      }
+
       toast.success(`Welcome to ${brand?.name}!`);
-      navigate(`/brand/${brandSlug}/account`);
+      navigate(`/dashboard?workspace=${brandSlug}`);
     } catch (error: any) {
       console.error("Error accepting invitation:", error);
       toast.error(error.message || "Failed to accept invitation");

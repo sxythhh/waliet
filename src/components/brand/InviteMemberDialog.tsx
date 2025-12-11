@@ -118,17 +118,17 @@ export function InviteMemberDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#202020] border-white/10">
+      <DialogContent className="bg-background border-border sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle className="text-white">Invite Team Member</DialogTitle>
-          <DialogDescription className="text-white/60">
-            Send an invitation to join this brand workspace
+          <DialogTitle className="tracking-[-0.5px]">Invite Team Member</DialogTitle>
+          <DialogDescription className="text-muted-foreground tracking-[-0.5px]">
+            Send an email invitation to join this workspace
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">
+        <div className="space-y-4 pt-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-xs text-muted-foreground tracking-[-0.5px]">
               Email Address
             </Label>
             <Input
@@ -137,32 +137,34 @@ export function InviteMemberDialog({
               placeholder="colleague@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-[#191919] border-white/10 text-white"
+              className="bg-muted/30 border-0 h-10"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="role" className="text-white">
+          <div className="space-y-1.5">
+            <Label htmlFor="role" className="text-xs text-muted-foreground tracking-[-0.5px]">
               Role
             </Label>
             <Select value={role} onValueChange={(value: "admin" | "member") => setRole(value)}>
-              <SelectTrigger className="bg-[#191919] border-white/10 text-white">
+              <SelectTrigger className="bg-muted/30 border-0 h-10">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#202020] border-white/10">
-                <SelectItem value="member" className="text-white">
-                  Member - Can view and contribute
+              <SelectContent>
+                <SelectItem value="member">
+                  <span className="font-medium">Member</span>
+                  <span className="text-muted-foreground ml-1">- Can view and contribute</span>
                 </SelectItem>
-                <SelectItem value="admin" className="text-white">
-                  Admin - Can manage team and settings
+                <SelectItem value="admin">
+                  <span className="font-medium">Admin</span>
+                  <span className="text-muted-foreground ml-1">- Can manage team and settings</span>
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-2 pt-2">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => onOpenChange(false)}
               className="flex-1"
             >
@@ -171,9 +173,9 @@ export function InviteMemberDialog({
             <Button
               onClick={handleInvite}
               disabled={sending}
-              className="flex-1 bg-primary hover:bg-primary/90"
+              className="flex-1"
             >
-              {sending ? "Sending..." : "Send Invitation"}
+              {sending ? "Sending..." : "Send Invite"}
             </Button>
           </div>
         </div>
