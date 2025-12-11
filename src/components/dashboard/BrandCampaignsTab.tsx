@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
@@ -70,12 +69,9 @@ export function BrandCampaignsTab({
     setLoading(true);
     try {
       // Fetch brand info for logo
-      const { data: brandData } = await supabase
-        .from("brands")
-        .select("logo_url")
-        .eq("id", brandId)
-        .single();
-      
+      const {
+        data: brandData
+      } = await supabase.from("brands").select("logo_url").eq("id", brandId).single();
       if (brandData?.logo_url) {
         setBrandLogoUrl(brandData.logo_url);
       }
@@ -179,9 +175,7 @@ export function BrandCampaignsTab({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {activeCampaigns} active campaign{activeCampaigns !== 1 ? 's' : ''} · ${totalUsed.toLocaleString()} / ${totalBudget.toLocaleString()} budget used
-          </p>
+          
         </div>
         <CreateCampaignTypeDialog onSelectClipping={() => setCreateCampaignOpen(true)} onSelectManaged={() => setCreateBountyOpen(true)} />
       </div>
@@ -242,20 +236,10 @@ export function BrandCampaignsTab({
         </div>}
 
       {/* Empty State */}
-      {campaigns.length === 0 && bounties.length === 0 && <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-muted-foreground mb-4">No campaigns or bounties yet</p>
-          <CreateCampaignTypeDialog onSelectClipping={() => setCreateCampaignOpen(true)} onSelectManaged={() => setCreateBountyOpen(true)} />
-        </div>}
+      {campaigns.length === 0 && bounties.length === 0}
 
       {/* Create Campaign Wizard (Clipping) */}
-      <CampaignCreationWizard 
-        brandId={brandId} 
-        brandName={brandName} 
-        brandLogoUrl={brandLogoUrl}
-        onSuccess={fetchBrandData} 
-        open={createCampaignOpen} 
-        onOpenChange={setCreateCampaignOpen} 
-      />
+      <CampaignCreationWizard brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />
 
       {/* Create Bounty Dialog (Managed) */}
       <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} onSuccess={fetchBrandData} />
