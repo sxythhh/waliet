@@ -606,7 +606,7 @@ export function CampaignsTab({
             {recommendedCampaigns.map(campaign => {
           const budgetUsed = campaign.budget_used || 0;
           const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-          return <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer" onClick={() => {
+          return <Card key={campaign.id} className="group bg-card dark:hover:bg-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer" onClick={() => {
             setSelectedCampaignForJoin({
               id: campaign.id,
               title: campaign.title,
@@ -795,7 +795,7 @@ export function CampaignsTab({
           const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
           const isPending = campaign.submission_status === 'pending';
           const isEnded = campaign.status === 'ended';
-          return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
+          return <Card key={campaign.id} className={`group bg-card dark:hover:bg-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
             if (!isPending) {
               setSelectedCampaignForDetails(campaign);
               setCampaignDetailsDialogOpen(true);
