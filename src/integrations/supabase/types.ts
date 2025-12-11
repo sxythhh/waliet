@@ -1166,6 +1166,7 @@ export type Database = {
         Row: {
           account_type: string
           avatar_url: string | null
+          billing_address: string | null
           bio: string | null
           city: string | null
           content_languages: string[] | null
@@ -1187,6 +1188,7 @@ export type Database = {
           full_name: string | null
           hide_from_leaderboard: boolean
           id: string
+          legal_business_name: string | null
           phone_number: string | null
           referral_code: string | null
           referral_earnings: number | null
@@ -1207,6 +1209,7 @@ export type Database = {
         Insert: {
           account_type?: string
           avatar_url?: string | null
+          billing_address?: string | null
           bio?: string | null
           city?: string | null
           content_languages?: string[] | null
@@ -1228,6 +1231,7 @@ export type Database = {
           full_name?: string | null
           hide_from_leaderboard?: boolean
           id: string
+          legal_business_name?: string | null
           phone_number?: string | null
           referral_code?: string | null
           referral_earnings?: number | null
@@ -1248,6 +1252,7 @@ export type Database = {
         Update: {
           account_type?: string
           avatar_url?: string | null
+          billing_address?: string | null
           bio?: string | null
           city?: string | null
           content_languages?: string[] | null
@@ -1269,6 +1274,7 @@ export type Database = {
           full_name?: string | null
           hide_from_leaderboard?: boolean
           id?: string
+          legal_business_name?: string | null
           phone_number?: string | null
           referral_code?: string | null
           referral_earnings?: number | null
