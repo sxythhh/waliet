@@ -581,21 +581,19 @@ export function CampaignsTab({
 
       {/* Actions Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
+        <button onClick={() => window.open('https://discord.gg/virality', '_blank')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
           <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <img src={discordWhiteIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Join Discord </h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-              
-Connect with our community and be the first to
-know about new campaigns.   
+              Connect with our community and be the first to know about new campaigns.   
             </p>
           </div>
         </button>
         
-        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
+        <button onClick={() => setAddAccountDialogOpen(true)} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
           <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <img src={settingsCinematicIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
@@ -607,16 +605,14 @@ know about new campaigns.
           </div>
         </button>
         
-        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
+        <button onClick={() => navigate('/dashboard?tab=wallet')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
           <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <img src={creditCardIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Manage Payouts </h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-              Set up your wallet
-and cash out your earnings
-
+              Set up your wallet and cash out your earnings
             </p>
           </div>
         </button>
