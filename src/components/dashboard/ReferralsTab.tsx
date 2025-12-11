@@ -185,7 +185,7 @@ export function ReferralsTab() {
   const getMilestoneStatus = (referral: ReferralWithMilestones, milestone: Milestone) => {
     return referral.milestone_rewards?.some(r => r.milestone_id === milestone.id) || false;
   };
-  return <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-8 max-w-4xl">
+  return <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-8 w-full">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
@@ -246,9 +246,9 @@ export function ReferralsTab() {
                 Cancel
               </Button>
             </div>
-          </div> : <div className="flex gap-2">
-            <Input value={referralLink} readOnly className="font-mono text-sm bg-background/50 border-0" />
-            <Button onClick={copyReferralLink} variant="outline" className="gap-2 shrink-0">
+          </div> : <div className="flex gap-2 items-stretch">
+            <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{ letterSpacing: '-0.5px' }} />
+            <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-muted hover:bg-muted/80 text-muted-foreground">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied" : "Copy"}
             </Button>
