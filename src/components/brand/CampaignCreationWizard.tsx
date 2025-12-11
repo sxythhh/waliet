@@ -649,7 +649,7 @@ export function CampaignCreationWizard({
                 {/* Pricing Embed */}
                 <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
                   <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{
-                  height: '450px'
+                  height: '200px'
                 }} title="Pricing Plans" />
                 </div>
 
