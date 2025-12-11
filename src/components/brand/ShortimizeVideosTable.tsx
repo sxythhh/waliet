@@ -43,6 +43,7 @@ interface CreatorInfo {
 interface ShortimizeVideosTableProps {
   brandId: string;
   collectionName?: string;
+  campaignId?: string;
 }
 
 type SortField = 'uploaded_at' | 'latest_views' | 'latest_likes' | 'latest_comments' | 'latest_shares';
@@ -74,7 +75,7 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
   }
 };
 
-export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVideosTableProps) {
+export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: ShortimizeVideosTableProps) {
   const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
   const [creatorMatches, setCreatorMatches] = useState<Map<string, CreatorInfo>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
@@ -116,13 +117,14 @@ export function ShortimizeVideosTable({ brandId, collectionName }: ShortimizeVid
   };
 
   const fetchVideos = async () => {
-    console.log('[ShortimizeVideosTable] fetchVideos called, brandId:', brandId, 'collectionName:', collectionName);
+    console.log('[ShortimizeVideosTable] fetchVideos called, brandId:', brandId, 'collectionName:', collectionName, 'campaignId:', campaignId);
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
         body: {
           brandId,
           collectionName,
+          campaignId,
           page: pagination.page,
           limit: 50,
           orderBy: sortField,

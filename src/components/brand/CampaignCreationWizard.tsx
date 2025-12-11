@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,11 +12,13 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink } from "lucide-react";
+import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
+
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   goal: z.enum(["attention", "leads", "conversions"]),
@@ -33,7 +35,8 @@ const campaignSchema = z.object({
   allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
   is_private: z.boolean().default(false),
   access_code: z.string().trim().optional(),
-  requires_application: z.boolean().default(true)
+  requires_application: z.boolean().default(true),
+  hashtag: z.string().trim().optional(),
 }).refine(data => {
   if (data.is_private) {
     return data.access_code && data.access_code.length >= 6;
@@ -51,7 +54,32 @@ const campaignSchema = z.object({
   message: "Budget must be a positive number",
   path: ["budget"]
 });
+
 type CampaignFormValues = z.infer<typeof campaignSchema>;
+
+interface Campaign {
+  id: string;
+  title: string;
+  description: string | null;
+  campaign_type?: string | null;
+  category?: string | null;
+  budget: number;
+  budget_used?: number;
+  rpm_rate: number;
+  guidelines: string | null;
+  banner_url: string | null;
+  allowed_platforms: string[];
+  slug?: string;
+  embed_url?: string | null;
+  preview_url?: string | null;
+  is_private?: boolean;
+  access_code?: string | null;
+  requires_application?: boolean;
+  status?: string;
+  is_infinite_budget?: boolean;
+  hashtag?: string | null;
+}
+
 interface CampaignCreationWizardProps {
   brandId: string;
   brandName: string;
@@ -59,7 +87,10 @@ interface CampaignCreationWizardProps {
   onSuccess?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  campaign?: Campaign;
+  onDelete?: () => void;
 }
+
 const STEPS = [{
   id: 1,
   label: "Your Goal"
@@ -70,6 +101,7 @@ const STEPS = [{
   id: 3,
   label: "Campaign Details"
 }];
+
 const GOALS = [{
   id: "attention",
   title: "Attention",
@@ -87,40 +119,74 @@ const GOALS = [{
   icon: TrendingUp,
   enterprise: true
 }];
+
 export function CampaignCreationWizard({
   brandId,
   brandName,
   brandLogoUrl,
   onSuccess,
   open,
-  onOpenChange
+  onOpenChange,
+  campaign,
+  onDelete
 }: CampaignCreationWizardProps) {
-  const [currentStep, setCurrentStep] = useState(1);
+  const isEditMode = !!campaign;
+  const [currentStep, setCurrentStep] = useState(isEditMode ? 3 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(campaign?.banner_url || null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
-      title: "",
-      goal: "attention",
-      description: "",
-      campaign_type: "clipping",
-      is_infinite_budget: false,
-      budget: "",
-      rpm_rate: "5",
-      guidelines: "",
-      embed_url: "",
-      preview_url: "",
-      allowed_platforms: ["tiktok", "instagram"],
-      is_private: false,
-      access_code: "",
-      requires_application: true
+      title: campaign?.title || "",
+      goal: (campaign?.category as "attention" | "leads" | "conversions") || "attention",
+      description: campaign?.description || "",
+      campaign_type: campaign?.campaign_type || "clipping",
+      is_infinite_budget: campaign?.is_infinite_budget || false,
+      budget: campaign?.budget?.toString() || "",
+      rpm_rate: campaign?.rpm_rate?.toString() || "5",
+      guidelines: campaign?.guidelines || "",
+      embed_url: campaign?.embed_url || "",
+      preview_url: campaign?.preview_url || "",
+      allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
+      is_private: campaign?.is_private || false,
+      access_code: campaign?.access_code || "",
+      requires_application: campaign?.requires_application !== false,
+      hashtag: campaign?.hashtag || "",
     }
   });
+
+  // Reset form when campaign changes
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        title: campaign?.title || "",
+        goal: (campaign?.category as "attention" | "leads" | "conversions") || "attention",
+        description: campaign?.description || "",
+        campaign_type: campaign?.campaign_type || "clipping",
+        is_infinite_budget: campaign?.is_infinite_budget || false,
+        budget: campaign?.budget?.toString() || "",
+        rpm_rate: campaign?.rpm_rate?.toString() || "5",
+        guidelines: campaign?.guidelines || "",
+        embed_url: campaign?.embed_url || "",
+        preview_url: campaign?.preview_url || "",
+        allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
+        is_private: campaign?.is_private || false,
+        access_code: campaign?.access_code || "",
+        requires_application: campaign?.requires_application !== false,
+        hashtag: campaign?.hashtag || "",
+      });
+      setBannerPreview(campaign?.banner_url || null);
+      setCurrentStep(isEditMode ? 3 : 1);
+    }
+  }, [open, campaign]);
+
   const watchedValues = form.watch();
   const selectedGoal = GOALS.find(g => g.id === watchedValues.goal);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -132,6 +198,7 @@ export function CampaignCreationWizard({
       reader.readAsDataURL(file);
     }
   };
+
   const removeBanner = () => {
     setBannerFile(null);
     setBannerPreview(null);
@@ -139,22 +206,18 @@ export function CampaignCreationWizard({
       fileInputRef.current.value = "";
     }
   };
+
   const uploadBanner = async (): Promise<string | null> => {
-    if (!bannerFile) return null;
+    if (!bannerFile) return campaign?.banner_url || null;
     const fileExt = bannerFile.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
-    const {
-      error: uploadError
-    } = await supabase.storage.from("campaign-banners").upload(filePath, bannerFile);
+    const { error: uploadError } = await supabase.storage.from("campaign-banners").upload(filePath, bannerFile);
     if (uploadError) throw uploadError;
-    const {
-      data: {
-        publicUrl
-      }
-    } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
+    const { data: { publicUrl } } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
     return publicUrl;
   };
+
   const handleNext = async () => {
     if (currentStep === 1) {
       const isValid = await form.trigger("goal");
@@ -164,22 +227,24 @@ export function CampaignCreationWizard({
       if (isValid) setCurrentStep(3);
     }
   };
+
   const handleBack = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
+
   const handleSaveDraft = async () => {
     setIsSubmitting(true);
     try {
       const values = form.getValues();
       const bannerUrl = await uploadBanner();
-      const {
-        data: brandData
-      } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
+      const { data: brandData } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
+      
       const generateSlug = (title: string) => {
         const baseSlug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim() || 'untitled';
         const randomSuffix = Math.random().toString(36).substring(2, 10);
         return `${baseSlug}-${randomSuffix}`;
       };
+
       const campaignData = {
         title: values.title || "Untitled Campaign",
         description: values.description || null,
@@ -202,11 +267,11 @@ export function CampaignCreationWizard({
         is_private: values.is_private,
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
-        is_featured: false
+        is_featured: false,
+        hashtag: values.hashtag || null,
       };
-      const {
-        error
-      } = await supabase.from("campaigns").insert(campaignData);
+
+      const { error } = await supabase.from("campaigns").insert(campaignData);
       if (error) throw error;
       toast.success("Campaign saved as draft!");
       onOpenChange(false);
@@ -222,18 +287,26 @@ export function CampaignCreationWizard({
       setIsSubmitting(false);
     }
   };
+
   const onSubmit = async (values: CampaignFormValues) => {
     setIsSubmitting(true);
     try {
       const bannerUrl = await uploadBanner();
-      const {
-        data: brandData
-      } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
+      const { data: brandData } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
+      
       const generateSlug = (title: string) => {
+        if (campaign?.slug) {
+          const existingBase = campaign.slug.substring(0, campaign.slug.lastIndexOf('-'));
+          const newBase = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+          if (existingBase === newBase) {
+            return campaign.slug;
+          }
+        }
         const baseSlug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
         const randomSuffix = Math.random().toString(36).substring(2, 10);
         return `${baseSlug}-${randomSuffix}`;
       };
+
       const campaignData = {
         title: values.title,
         description: values.description || null,
@@ -256,13 +329,20 @@ export function CampaignCreationWizard({
         is_private: values.is_private,
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
-        is_featured: false
+        is_featured: false,
+        hashtag: values.hashtag || null,
       };
-      const {
-        error
-      } = await supabase.from("campaigns").insert(campaignData);
-      if (error) throw error;
-      toast.success("Campaign created successfully!");
+
+      if (isEditMode && campaign) {
+        const { error } = await supabase.from("campaigns").update(campaignData).eq("id", campaign.id);
+        if (error) throw error;
+        toast.success("Campaign updated successfully!");
+      } else {
+        const { error } = await supabase.from("campaigns").insert(campaignData);
+        if (error) throw error;
+        toast.success("Campaign created successfully!");
+      }
+      
       onOpenChange(false);
       form.reset();
       setCurrentStep(1);
@@ -270,407 +350,469 @@ export function CampaignCreationWizard({
       setBannerPreview(null);
       onSuccess?.();
     } catch (error) {
-      console.error("Error creating campaign:", error);
-      toast.error("Failed to create campaign. Please try again.");
+      console.error("Error saving campaign:", error);
+      toast.error(`Failed to ${isEditMode ? "update" : "create"} campaign. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!campaign) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from("campaigns").delete().eq("id", campaign.id);
+      if (error) throw error;
+      toast.success("Campaign deleted successfully!");
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+      onDelete?.();
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      toast.error("Failed to delete campaign. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const getStepProgress = () => {
     return currentStep / STEPS.length * 100;
   };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1400px] w-[95vw] max-h-[90vh] bg-white dark:bg-[#0a0a0a] border-border p-0 overflow-hidden flex flex-col">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] flex-1 min-h-0 overflow-hidden">
-          {/* Left Column - Main Content */}
-          <div className="flex flex-col min-h-0 overflow-hidden">
-            {/* Main Form Area */}
-            <div className="flex-1 overflow-y-auto px-8 py-[20px] lg:px-[30px]">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl mx-auto">
-                  {/* Step 1: Goal Selection */}
-                  {currentStep === 1 && <div className="space-y-8">
-                      <div className="text-center mb-10">
-                        <h1 className="text-2xl font-bold text-foreground mb-2">
-                          Select Your Campaign Goal
-                        </h1>
-                        <p className="text-muted-foreground text-sm">
-                          Select the marketing objective that best fits your business goals.
-                        </p>
-                      </div>
 
-                      <FormField control={form.control} name="goal" render={({
-                    field
-                  }) => <FormItem>
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-[1400px] w-[95vw] max-h-[90vh] bg-white dark:bg-[#0a0a0a] border-border p-0 overflow-hidden flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] flex-1 min-h-0 overflow-hidden">
+            {/* Left Column - Main Content */}
+            <div className="flex flex-col min-h-0 overflow-hidden">
+              {/* Main Form Area */}
+              <div className="flex-1 overflow-y-auto px-8 py-[20px] lg:px-[30px]">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl mx-auto">
+                    {/* Step 1: Goal Selection */}
+                    {currentStep === 1 && (
+                      <div className="space-y-8">
+                        <div className="text-center mb-10">
+                          <h1 className="text-2xl font-bold text-foreground mb-2">
+                            Select Your Campaign Goal
+                          </h1>
+                          <p className="text-muted-foreground text-sm">
+                            Select the marketing objective that best fits your business goals.
+                          </p>
+                        </div>
+
+                        <FormField control={form.control} name="goal" render={({ field }) => (
+                          <FormItem>
                             <FormControl>
                               <div className="space-y-3">
-                                {GOALS.map(goal => <button key={goal.id} type="button" onClick={() => field.onChange(goal.id)} className={`w-full flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${field.value === goal.id ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
+                                {GOALS.map(goal => (
+                                  <button key={goal.id} type="button" onClick={() => field.onChange(goal.id)} className={`w-full flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${field.value === goal.id ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
                                     <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${field.value === goal.id ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
                                       {field.value === goal.id && <Check className="w-3 h-3 text-white" />}
                                     </div>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-semibold text-base text-foreground tracking-[-0.5px]" style={{
-                                fontFamily: 'Inter, sans-serif'
-                              }}>
+                                        <h3 className="font-semibold text-base text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                           {goal.title}
                                         </h3>
-                                        {goal.enterprise && <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs tracking-[-0.5px]" style={{
-                                fontFamily: 'Inter, sans-serif'
-                              }}>
+                                        {goal.enterprise && (
+                                          <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                             Enterprise
-                                          </Badge>}
+                                          </Badge>
+                                        )}
                                       </div>
-                                      <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]" style={{
-                              fontFamily: 'Inter, sans-serif'
-                            }}>
+                                      <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                         {goal.description}
                                       </p>
                                     </div>
-                                  </button>)}
+                                  </button>
+                                ))}
                               </div>
                             </FormControl>
                             <FormMessage />
-                          </FormItem>} />
-                    </div>}
+                          </FormItem>
+                        )} />
+                      </div>
+                    )}
 
-                  {/* Step 2: Budget & Targeting */}
-                  {currentStep === 2 && <div className="space-y-6">
-                      
-
-                      {/* Budget Section */}
-                      <div className="space-y-4">
-                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Budget Settings</h3>
-                        
-                        <FormField control={form.control} name="is_infinite_budget" render={({
-                      field
-                    }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                    {/* Step 2: Budget & Targeting */}
+                    {currentStep === 2 && (
+                      <div className="space-y-6">
+                        {/* Budget Section */}
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Budget Settings</h3>
+                          
+                          <FormField control={form.control} name="is_infinite_budget" render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>Unlimited Budget</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Unlimited Budget</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                   No cap on campaign spending
                                 </p>
                               </div>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>} />
+                            </FormItem>
+                          )} />
 
-                        {!watchedValues.is_infinite_budget && <FormField control={form.control} name="budget" render={({
-                      field
-                    }) => <FormItem>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>Total Budget ($)</FormLabel>
+                          {!watchedValues.is_infinite_budget && (
+                            <FormField control={form.control} name="budget" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Total Budget ($)</FormLabel>
                                 <FormControl>
-                                  <Input type="number" placeholder="10000" className="bg-background border-border tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }} {...field} />
+                                  <Input type="number" placeholder="10000" className="bg-background border-border tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>} />}
+                              </FormItem>
+                            )} />
+                          )}
 
-                        <FormField control={form.control} name="rpm_rate" render={({
-                      field
-                    }) => <FormItem>
-                              <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>CPM Rate ($)</FormLabel>
-                              <p className="text-xs text-muted-foreground mb-2 tracking-[-0.3px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>
+                          <FormField control={form.control} name="rpm_rate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>CPM Rate ($)</FormLabel>
+                              <p className="text-xs text-muted-foreground mb-2 tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                 Cost per 1,000 views paid to creators
                               </p>
                               <FormControl>
-                                <Input type="number" placeholder="5" className="bg-background border-border tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }} {...field} />
+                                <Input type="number" placeholder="5" className="bg-background border-border tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
-                      </div>
+                            </FormItem>
+                          )} />
+                        </div>
 
-                      {/* Platform Targeting */}
-                      <div className="space-y-4">
-                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Platform Targeting</h3>
-                        
-                        <FormField control={form.control} name="allowed_platforms" render={({
-                      field
-                    }) => <FormItem>
+                        {/* Platform Targeting */}
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Platform Targeting</h3>
+                          
+                          <FormField control={form.control} name="allowed_platforms" render={({ field }) => (
+                            <FormItem>
                               <FormControl>
                                 <div className="space-y-2">
                                   {[{
-                            id: "tiktok",
-                            label: "TikTok",
-                            logo: tiktokLogo
-                          }, {
-                            id: "instagram",
-                            label: "Instagram",
-                            logo: instagramLogo
-                          }, {
-                            id: "youtube",
-                            label: "YouTube",
-                            logo: youtubeLogo
-                          }].map(platform => {
-                            const isSelected = field.value.includes(platform.id);
-                            return <button key={platform.id} type="button" onClick={() => {
-                              const newValue = isSelected ? field.value.filter(p => p !== platform.id) : [...field.value, platform.id];
-                              field.onChange(newValue);
-                            }} className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${isSelected ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
+                                    id: "tiktok",
+                                    label: "TikTok",
+                                    logo: tiktokLogo
+                                  }, {
+                                    id: "instagram",
+                                    label: "Instagram",
+                                    logo: instagramLogo
+                                  }, {
+                                    id: "youtube",
+                                    label: "YouTube",
+                                    logo: youtubeLogo
+                                  }].map(platform => {
+                                    const isSelected = field.value.includes(platform.id);
+                                    return (
+                                      <button key={platform.id} type="button" onClick={() => {
+                                        const newValue = isSelected ? field.value.filter(p => p !== platform.id) : [...field.value, platform.id];
+                                        field.onChange(newValue);
+                                      }} className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${isSelected ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
                                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
                                           {isSelected && <Check className="w-3 h-3 text-white" />}
                                         </div>
                                         <img src={platform.logo} alt={platform.label} className="w-6 h-6 object-contain" />
-                                        <span className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{
-                                fontFamily: 'Inter, sans-serif'
-                              }}>
+                                        <span className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                           {platform.label}
                                         </span>
-                                      </button>;
-                          })}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
-                      </div>
+                            </FormItem>
+                          )} />
+                        </div>
 
-                      {/* Privacy Settings */}
-                      <div className="space-y-4">
-                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Access Settings</h3>
-                        
-                        <FormField control={form.control} name="is_private" render={({
-                      field
-                    }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                        {/* Privacy Settings */}
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Access Settings</h3>
+                          
+                          <FormField control={form.control} name="is_private" render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>Private Campaign</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Private Campaign</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                   Only accessible via invite code
                                 </p>
                               </div>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>} />
+                            </FormItem>
+                          )} />
 
-                        {watchedValues.is_private && <FormField control={form.control} name="access_code" render={({
-                      field
-                    }) => <FormItem>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>Access Code</FormLabel>
+                          {watchedValues.is_private && (
+                            <FormField control={form.control} name="access_code" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Access Code</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="BRAND2024" className="bg-background border-border uppercase tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }} {...field} />
+                                  <Input placeholder="BRAND2024" className="bg-background border-border uppercase tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>} />}
+                              </FormItem>
+                            )} />
+                          )}
 
-                        <FormField control={form.control} name="requires_application" render={({
-                      field
-                    }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                          <FormField control={form.control} name="requires_application" render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>Require Application</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Require Application</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                   Creators must apply to join
                                 </p>
                               </div>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>} />
+                            </FormItem>
+                          )} />
+                        </div>
                       </div>
-                    </div>}
+                    )}
 
-                  {/* Step 3: Campaign Details */}
-                  {currentStep === 3 && <div className="space-y-6">
-                      <div className="mb-8">
-                        <h1 className="text-xl font-semibold text-foreground tracking-[-0.5px]">
-                          Campaign Details
-                        </h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Add the final details for your campaign.
-                        </p>
-                      </div>
+                    {/* Step 3: Campaign Details */}
+                    {currentStep === 3 && (
+                      <div className="space-y-6">
+                        <div className="mb-8">
+                          <h1 className="text-xl font-semibold text-foreground tracking-[-0.5px]">
+                            {isEditMode ? "Edit Campaign" : "Campaign Details"}
+                          </h1>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {isEditMode ? "Update your campaign settings." : "Add the final details for your campaign."}
+                          </p>
+                        </div>
 
-                      <div className="space-y-5">
-                        <FormField control={form.control} name="title" render={({
-                      field
-                    }) => <FormItem className="space-y-2">
+                        <div className="space-y-5">
+                          <FormField control={form.control} name="title" render={({ field }) => (
+                            <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Campaign Name
                               </FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter campaign name" className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
-                          letterSpacing: '-0.3px'
-                        }} {...field} />
+                                <Input placeholder="Enter campaign name" className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{ letterSpacing: '-0.3px' }} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
+                            </FormItem>
+                          )} />
 
-
-                        {/* Banner Upload */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                            Campaign Banner
-                          </label>
-                          {bannerPreview ? <div className="relative w-full h-36 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#1a1a1a]">
-                              <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
-                              <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-destructive/90 text-white" onClick={removeBanner}>
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div> : <div className="w-full h-36 rounded-lg flex items-center justify-center cursor-pointer transition-all bg-[#0a0a0a] border border-dashed border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#0f0f0f]" onClick={() => fileInputRef.current?.click()}>
-                              <div className="text-center">
-                                <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
-                                  <Upload className="h-4 w-4 text-muted-foreground" />
+                          <FormField control={form.control} name="hashtag" render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
+                                Campaign Hashtag
+                              </FormLabel>
+                              <p className="text-xs text-muted-foreground">
+                                Videos with this hashtag will be tracked (without #)
+                              </p>
+                              <FormControl>
+                                <div className="relative">
+                                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                  <Input placeholder="brandname" className="h-11 pl-9 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{ letterSpacing: '-0.3px' }} {...field} />
                                 </div>
-                                <p className="text-sm text-muted-foreground" style={{
-                            letterSpacing: '-0.3px'
-                          }}>
-                                  Click to upload
-                                </p>
-                                <p className="text-xs text-muted-foreground/60 mt-1">
-                                  PNG, JPG up to 10MB
-                                </p>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+
+                          <FormField control={form.control} name="description" render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
+                                Description
+                              </FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Brief description of the campaign" className="min-h-[80px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{ letterSpacing: '-0.3px' }} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+
+                          {/* Banner Upload */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
+                              Campaign Banner
+                            </label>
+                            {bannerPreview ? (
+                              <div className="relative w-full h-36 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#1a1a1a]">
+                                <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
+                                <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-destructive/90 text-white" onClick={removeBanner}>
+                                  <X className="h-4 w-4" />
+                                </Button>
                               </div>
-                            </div>}
-                          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                            ) : (
+                              <div className="w-full h-36 rounded-lg flex items-center justify-center cursor-pointer transition-all bg-[#0a0a0a] border border-dashed border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#0f0f0f]" onClick={() => fileInputRef.current?.click()}>
+                                <div className="text-center">
+                                  <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
+                                    <Upload className="h-4 w-4 text-muted-foreground" />
+                                  </div>
+                                  <p className="text-sm text-muted-foreground" style={{ letterSpacing: '-0.3px' }}>
+                                    Click to upload
+                                  </p>
+                                  <p className="text-xs text-muted-foreground/60 mt-1">
+                                    PNG, JPG up to 10MB
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                          </div>
+
+                          {/* Delete button for edit mode */}
+                          {isEditMode && (
+                            <div className="pt-4 border-t border-border">
+                              <Button type="button" variant="destructive" onClick={() => setDeleteDialogOpen(true)} className="gap-2">
+                                <Trash2 className="h-4 w-4" />
+                                Delete Campaign
+                              </Button>
+                            </div>
+                          )}
                         </div>
-
-
                       </div>
-                    </div>}
-                </form>
-              </Form>
-            </div>
+                    )}
+                  </form>
+                </Form>
+              </div>
 
-            {/* Bottom Action Bar */}
-            <div className="border-t border-border lg:px-16 py-4 bg-neutral-950/0 px-[12px]">
-              <div className="max-w-2xl mx-auto flex items-center justify-between">
-                <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                  <Bookmark className="h-4 w-4" />
-                  Save as Draft
-                </Button>
+              {/* Bottom Action Bar */}
+              <div className="border-t border-border lg:px-16 py-4 bg-neutral-950/0 px-[12px]">
+                <div className="max-w-2xl mx-auto flex items-center justify-between">
+                  {!isEditMode ? (
+                    <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      <Bookmark className="h-4 w-4" />
+                      Save as Draft
+                    </Button>
+                  ) : (
+                    <div />
+                  )}
 
-                <div className="flex items-center gap-3">
-                  {currentStep > 1 && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} style={{
-                  fontFamily: 'Inter, sans-serif'
-                }} className="tracking-[-0.5px] border-black/0">
-                      Back
-                    </Button>}
-                  
-                  {currentStep < 3 ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                      Continue
-                    </Button> : <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                      {isSubmitting ? "Creating..." : "Finish"}
-                    </Button>}
+                  <div className="flex items-center gap-3">
+                    {currentStep > 1 && !isEditMode && (
+                      <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} style={{ fontFamily: 'Inter, sans-serif' }} className="tracking-[-0.5px] border-black/0">
+                        Back
+                      </Button>
+                    )}
+                    
+                    {currentStep < 3 && !isEditMode ? (
+                      <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        Continue
+                      </Button>
+                    ) : (
+                      <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        {isSubmitting ? (isEditMode ? "Saving..." : "Creating...") : (isEditMode ? "Save Changes" : "Finish")}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column - Preview Sidebar */}
-          <div className="hidden lg:flex flex-col bg-muted/30 dark:bg-[#0f0f0f] border-l border-border">
-            {/* Preview Header */}
-            <div className="px-6 py-4 border-b border-border flex items-center justify-center gap-2 text-primary-foreground">
-              <Eye className="h-4 w-4" />
-              <span className="text-sm font-medium tracking-[-0.5px]" style={{
-              fontFamily: 'Inter, sans-serif'
-            }}>Preview</span>
-            </div>
+            {/* Right Column - Preview Sidebar */}
+            <div className="hidden lg:flex flex-col bg-muted/30 dark:bg-[#0f0f0f] border-l border-border">
+              {/* Preview Header */}
+              <div className="px-6 py-4 border-b border-border flex items-center justify-center gap-2 text-primary-foreground">
+                <Eye className="h-4 w-4" />
+                <span className="text-sm font-medium tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Preview</span>
+              </div>
 
-            {/* Preview Content */}
-            <div className="flex-1 p-6">
-              {/* Campaign Preview Card */}
-              <div className="rounded-xl overflow-hidden">
-                {/* Banner Area */}
-                {bannerPreview ? <div className="h-28 relative">
-                    <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
-                    <div className="absolute bottom-3 left-3">
-                      {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" /> : <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
-                          <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
-                        </div>}
+              {/* Preview Content */}
+              <div className="flex-1 p-6">
+                {/* Campaign Preview Card */}
+                <div className="rounded-xl overflow-hidden">
+                  {/* Banner Area */}
+                  {bannerPreview ? (
+                    <div className="h-28 relative">
+                      <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
+                      <div className="absolute bottom-3 left-3">
+                        {brandLogoUrl ? (
+                          <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
+                            <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div> : <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d] flex items-end p-3">
-                    {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" /> : <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
-                        <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
-                      </div>}
-                  </div>}
-              </div>
-
-              {/* Campaign Info */}
-              <div className="mt-4 space-y-4">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                    {watchedValues.title || "Untitled"}
-                  </h3>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
-                      Draft
-                    </Badge>
-                    <Badge variant="outline" className="text-xs tracking-[-0.5px]" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
-                      Clipping
-                    </Badge>
-                  </div>
+                  ) : (
+                    <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d] flex items-end p-3">
+                      {brandLogoUrl ? (
+                        <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
+                          <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Progress Indicator */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground tracking-[-0.5px]" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
-                      Step {currentStep}: {STEPS[currentStep - 1]?.label}
-                    </span>
+                {/* Campaign Info */}
+                <div className="mt-4 space-y-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      {watchedValues.title || "Untitled"}
+                    </h3>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        {isEditMode ? (campaign?.status || "Active") : "Draft"}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        Clipping
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="h-1 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary transition-all duration-300" style={{
-                    width: `${getStepProgress()}%`
-                  }} />
+
+                  {watchedValues.hashtag && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Hash className="h-4 w-4" />
+                      <span>#{watchedValues.hashtag}</span>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  {!isEditMode && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Step {currentStep}: {STEPS[currentStep - 1]?.label}
+                        </span>
+                      </div>
+                      <div className="h-1 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary transition-all duration-300" style={{ width: `${getStepProgress()}%` }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pricing Embed */}
+                  <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
+                    <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{ height: '350px' }} scrolling="no" title="Pricing Plans" />
                   </div>
                 </div>
-
-                {/* Pricing Embed */}
-                <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
-                  <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{
-                  height: '350px'
-                }} scrolling="no" title="Pricing Plans" />
-                </div>
-
               </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>;
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this campaign? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }

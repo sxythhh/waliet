@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus, Users } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
-import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
+import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { VideosTab } from "@/components/brand/VideosTab";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -34,6 +34,7 @@ interface Campaign {
   is_featured?: boolean;
   campaign_type?: string | null;
   category?: string | null;
+  hashtag?: string | null;
 }
 
 interface BrandCampaignDetailViewProps {
@@ -135,7 +136,7 @@ export function BrandCampaignDetailView({
         </div>
 
         {campaign.brand_id && (
-          <CreateCampaignDialog
+          <CampaignCreationWizard
             brandId={campaign.brand_id}
             brandName=""
             campaign={campaign}

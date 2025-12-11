@@ -773,6 +773,7 @@ export type Database = {
           embed_url: string | null
           end_date: string | null
           guidelines: string | null
+          hashtag: string | null
           id: string
           is_featured: boolean
           is_infinite_budget: boolean | null
@@ -805,6 +806,7 @@ export type Database = {
           embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
+          hashtag?: string | null
           id?: string
           is_featured?: boolean
           is_infinite_budget?: boolean | null
@@ -837,6 +839,7 @@ export type Database = {
           embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
+          hashtag?: string | null
           id?: string
           is_featured?: boolean
           is_infinite_budget?: boolean | null
