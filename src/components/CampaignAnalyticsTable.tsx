@@ -1451,8 +1451,8 @@ export function CampaignAnalyticsTable({
                           // Check if this specific analytics record has been paid
                           const isPaidForThisPeriod = transactions.some(txn => txn.metadata?.analytics_id === item.id);
                           if (isPaidForThisPeriod) {
-                            return <Badge className="text-green-500 border-t border-green-400/30 border-x-0 border-b-0 px-2 py-0.5 text-xs font-medium rounded-sm hover:text-green-500 bg-[#21693c]/[0.56]">
-                                    <Check className="h-3 w-3 mr-1" />
+                            return <Badge className="text-green-500 px-1.5 py-0 text-[10px] font-inter tracking-[-0.5px] font-medium rounded-sm bg-[#21693c]/[0.56] hover:bg-[#21693c]/[0.56]">
+                                    <Check className="h-2.5 w-2.5 mr-0.5" />
                                     Paid
                                   </Badge>;
                           }
