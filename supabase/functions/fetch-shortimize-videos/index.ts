@@ -167,19 +167,21 @@ serve(async (req) => {
     const apiUrl = `https://api.shortimize.com/videos?${params.toString()}`;
     console.log('[fetch-shortimize-videos] Calling Shortimize API:', apiUrl);
 
-    // If filtering by hashtags without collection, we need to fetch multiple pages
+    // If filtering by hashtags without collection, we need to fetch ALL matching videos first
+    // then sort by the requested field (since API ordering won't work with hashtag filter)
     if (campaignHashtags.length > 0 && !collection) {
       const allMatchingVideos: any[] = [];
       let currentPage = 1;
-      const maxPages = 10; // Limit to prevent too many requests
-      const targetLimit = limit;
+      const maxPages = 50; // Increase to scan more videos
+      let hasMorePages = true;
       
-      while (allMatchingVideos.length < targetLimit && currentPage <= maxPages) {
+      // Always fetch by uploaded_at to get campaign-relevant videos, then sort afterwards
+      while (hasMorePages && currentPage <= maxPages) {
         const pageParams = new URLSearchParams();
         pageParams.append('page', currentPage.toString());
-        pageParams.append('limit', '100'); // Fetch 100 at a time
-        pageParams.append('order_by', orderBy);
-        pageParams.append('order_direction', orderDirection);
+        pageParams.append('limit', '100');
+        pageParams.append('order_by', 'uploaded_at'); // Always use uploaded_at for scanning
+        pageParams.append('order_direction', 'desc');
         
         if (username) pageParams.append('username', username);
         if (uploadedAtStart) pageParams.append('uploaded_at_start', uploadedAtStart);
@@ -201,42 +203,50 @@ serve(async (req) => {
         const videos = result.data || [];
         
         // Filter by hashtag - log first video for debugging
-        const matchingVideos = videos.filter((v: any, idx: number) => videoMatchesHashtags(v, campaignHashtags, idx === 0));
+        const matchingVideos = videos.filter((v: any, idx: number) => 
+          videoMatchesHashtags(v, campaignHashtags, currentPage === 1 && idx === 0)
+        );
         allMatchingVideos.push(...matchingVideos);
         
         console.log(`[fetch-shortimize-videos] Page ${currentPage}: ${videos.length} videos, ${matchingVideos.length} matching, total: ${allMatchingVideos.length}`);
 
         // Check if there are more pages
         if (!result.pagination || currentPage >= result.pagination.total_pages || videos.length === 0) {
-          break;
+          hasMorePages = false;
         }
         
         currentPage++;
-        await delay(500); // Small delay between pages
+        await delay(300); // Small delay between pages
       }
 
-      // Sort and limit results
-      const sortedVideos = allMatchingVideos
-        .sort((a, b) => {
-          const aVal = a[orderBy] || 0;
-          const bVal = b[orderBy] || 0;
-          return orderDirection === 'desc' ? bVal - aVal : aVal - bVal;
-        })
-        .slice(0, targetLimit);
+      // Sort by the requested field
+      const sortedVideos = allMatchingVideos.sort((a, b) => {
+        const aVal = a[orderBy] ?? 0;
+        const bVal = b[orderBy] ?? 0;
+        if (orderDirection === 'desc') {
+          return (bVal > aVal ? 1 : bVal < aVal ? -1 : 0);
+        }
+        return (aVal > bVal ? 1 : aVal < bVal ? -1 : 0);
+      });
+
+      // Paginate results
+      const startIdx = (page - 1) * limit;
+      const paginatedVideos = sortedVideos.slice(startIdx, startIdx + limit);
 
       return new Response(JSON.stringify({
-        videos: sortedVideos,
+        videos: paginatedVideos,
         pagination: {
           total: allMatchingVideos.length,
-          page: 1,
-          limit: targetLimit,
-          total_pages: 1
+          page: page,
+          limit: limit,
+          total_pages: Math.ceil(allMatchingVideos.length / limit)
         },
         debug: {
           collectionUsed: null,
           hashtagFilter: campaignHashtags,
           apiKeyConfigured: true,
-          pagesScanned: currentPage
+          pagesScanned: currentPage - 1,
+          totalMatching: allMatchingVideos.length
         }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
