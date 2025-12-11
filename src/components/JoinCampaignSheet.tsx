@@ -397,17 +397,23 @@ export function JoinCampaignSheet({
               <h3 className="font-semibold text-2xl">{campaign.title}</h3>
               <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
               {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                  {campaign.campaign_type && <span className="px-3 py-1.5 text-[11px] font-medium bg-[#2060df]/15 text-[#4f89ff] rounded-full" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                  {campaign.campaign_type && <span className="px-3 py-1.5 text-[11px] font-medium bg-[#2060df]/15 text-[#4f89ff] rounded-full" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
                       {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
                     </span>}
-                  {campaign.category && <span className="px-3 py-1.5 text-[11px] font-medium bg-muted/50 text-muted-foreground rounded-full" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                  {campaign.category && <span className="px-3 py-1.5 text-[11px] font-medium bg-muted/50 text-muted-foreground rounded-full" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
                       {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </span>}
                   {campaign.platforms.length > 0 && <span className="px-2.5 py-1.5 flex items-center gap-1 bg-muted/30 rounded-full">
                     {campaign.platforms.map(platform => {
-                      const platformIcon = getPlatformIcon(platform);
-                      return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4 opacity-70" /> : null;
-                    })}
+                  const platformIcon = getPlatformIcon(platform);
+                  return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4 opacity-70" /> : null;
+                })}
                   </span>}
                 </div>}
             </div>
@@ -420,20 +426,7 @@ export function JoinCampaignSheet({
 
 
           {/* Budget & RPM */}
-          {!campaign.is_infinite_budget && <div className="rounded-lg p-4 space-y-3 py-0 bg-[#1f1f1f]/0">
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm font-medium">Budget Progress</span>
-                <span className="text-xs text-slate-50 font-medium">
-                  ${(campaign.budget_used || 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
-                </span>
-              </div>
-              <div className="h-2 rounded-full overflow-hidden bg-background">
-                <div className="h-full bg-primary transition-all duration-700" style={{
-              width: `${budgetPercentage}%`
-            }} />
-              </div>
-              
-            </div>}
+          {!campaign.is_infinite_budget}
 
           {/* Campaign Preview Button - only show if preview_url exists */}
           {campaign.preview_url && <Button variant="outline" className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors" onClick={() => window.open(campaign.preview_url!, '_blank')}>
