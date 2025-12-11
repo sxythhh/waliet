@@ -61,7 +61,9 @@ export function JoinCampaignSheet({
   const [submitting, setSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const {
+    theme
+  } = useTheme();
 
   // Check authentication when sheet opens
   useEffect(() => {
@@ -70,21 +72,22 @@ export function JoinCampaignSheet({
       loadSocialAccounts();
     }
   }, [open]);
-
   const checkAuthentication = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
     } catch (error) {
       console.error("Error checking authentication:", error);
       setIsLoggedIn(false);
     }
   };
-  
   const getPlatformIcon = (platform: string) => {
     const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const isLightMode = theme === "light" || (theme === "system" && systemIsLight);
-    
+    const isLightMode = theme === "light" || theme === "system" && systemIsLight;
     switch (platform.toLowerCase()) {
       case "tiktok":
         return isLightMode ? tiktokLogoBlack : tiktokLogo;
@@ -230,7 +233,6 @@ export function JoinCampaignSheet({
         const {
           data: existingLink
         } = await supabase.from("social_account_campaigns").select("id, status").eq("social_account_id", accountId).eq("campaign_id", campaign.id).maybeSingle();
-        
         if (!existingLink) {
           // Create new link
           const linkData = {
@@ -251,7 +253,10 @@ export function JoinCampaignSheet({
           // Reactivate disconnected link
           const {
             error: updateError
-          } = await supabase.from("social_account_campaigns").update({ status: 'active', disconnected_at: null }).eq("id", existingLink.id);
+          } = await supabase.from("social_account_campaigns").update({
+            status: 'active',
+            disconnected_at: null
+          }).eq("id", existingLink.id);
           if (updateError) {
             console.error('Update error:', updateError);
             throw updateError;
@@ -269,13 +274,14 @@ export function JoinCampaignSheet({
       if (!campaign.requires_application && submissionsCreated > 0) {
         try {
           console.log('Tracking accounts in Shortimize...');
-          const { error: trackError } = await supabase.functions.invoke('track-campaign-user', {
+          const {
+            error: trackError
+          } = await supabase.functions.invoke('track-campaign-user', {
             body: {
               campaignId: campaign.id,
               userId: user.id
             }
           });
-          
           if (trackError) {
             console.error('Error tracking accounts:', trackError);
           } else {
@@ -388,7 +394,7 @@ export function JoinCampaignSheet({
                 <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
               </div>}
             <div className="flex-1">
-              <h3 className="text-lg font-semibold">{campaign.title}</h3>
+              <h3 className="font-semibold text-2xl">{campaign.title}</h3>
               <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
               {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-2 mt-2">
                   {campaign.campaign_type && <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-primary/20" style={{
@@ -420,7 +426,7 @@ export function JoinCampaignSheet({
 
 
           {/* Budget & RPM */}
-          {!campaign.is_infinite_budget && <div className="rounded-lg p-4 space-y-3 bg-muted/50">
+          {!campaign.is_infinite_budget && <div className="rounded-lg p-4 space-y-3 py-0 bg-[#1f1f1f]/0">
               <div className="flex justify-between items-baseline">
                 <span className="text-sm font-medium">Budget Progress</span>
                 <span className="text-xs text-slate-50 font-medium">
@@ -457,10 +463,7 @@ export function JoinCampaignSheet({
             </div> : <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label>Select Social Accounts *</Label>
-                {socialAccounts.length > 0 && <p className="text-xs text-muted-foreground">
-                    {selectedAccounts.length > 0 && `${selectedAccounts.length} selected • `}
-                    Can select multiple
-                  </p>}
+                {socialAccounts.length > 0}
               </div>
             {socialAccounts.length === 0 ? <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
                 <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
