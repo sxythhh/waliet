@@ -692,10 +692,14 @@ export function CampaignsTab({
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
                               <span className="text-base font-bold tabular-nums">
-                                ${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                ${Math.ceil(budgetUsed).toLocaleString(undefined, {
+                          maximumFractionDigits: 0
+                        })}
                               </span>
                               <span className="text-xs text-muted-foreground font-semibold">
-                                / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                / ${Math.ceil(campaign.budget).toLocaleString(undefined, {
+                          maximumFractionDigits: 0
+                        })}
                               </span>
                             </div>
                           </div>
@@ -854,15 +858,19 @@ export function CampaignsTab({
               </div>
 
               {/* Budget Section - Redesigned */}
-              <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
+              <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
                 <div className="flex items-baseline justify-between">
                   <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
                     {campaign.is_infinite_budget ? <>
                         
                         <span className="text-xs text-muted-foreground font-medium">Infinite Budget</span>
                       </> : <>
-                        <span className="text-base font-bold tabular-nums">${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                        <span className="text-xs text-muted-foreground font-bold">/ ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                        <span className="text-base font-bold tabular-nums">${Math.ceil(budgetUsed).toLocaleString(undefined, {
+                          maximumFractionDigits: 0
+                        })}</span>
+                        <span className="text-xs text-muted-foreground font-bold">/ ${Math.ceil(campaign.budget).toLocaleString(undefined, {
+                          maximumFractionDigits: 0
+                        })}</span>
                       </>}
                   </div>
                 </div>
@@ -921,42 +929,52 @@ export function CampaignsTab({
       <DialogContent className="sm:max-w-sm border-0 p-0 overflow-hidden bg-background">
         <div className="p-6 pb-4">
           <DialogHeader className="space-y-1.5">
-            <DialogTitle className="text-base font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+            <DialogTitle className="text-base font-semibold" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.5px'
+            }}>
               Link Your Account
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+            <DialogDescription className="text-xs text-muted-foreground" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
               Connect a social account to this campaign
             </DialogDescription>
           </DialogHeader>
         </div>
         
         <div className="px-6 pb-6 space-y-2">
-          <button 
-            onClick={() => {
-              setDialogOpen(false);
-              navigate("/dashboard?tab=profile");
-            }} 
-            className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left"
-          >
+          <button onClick={() => {
+            setDialogOpen(false);
+            navigate("/dashboard?tab=profile");
+          }} className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left">
             <div>
-              <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Link Existing</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5" style={{ fontFamily: 'Inter' }}>From connected accounts</p>
+              <p className="text-sm font-medium" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>Link Existing</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5" style={{
+                fontFamily: 'Inter'
+              }}>From connected accounts</p>
             </div>
             <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
             </div>
           </button>
           
-          <button 
-            onClick={() => {
-              setDialogOpen(false);
-              setAddAccountDialogOpen(true);
-            }} 
-            className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left"
-          >
+          <button onClick={() => {
+            setDialogOpen(false);
+            setAddAccountDialogOpen(true);
+          }} className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left">
             <div>
-              <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Add New Account</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5" style={{ fontFamily: 'Inter' }}>Connect & verify new account</p>
+              <p className="text-sm font-medium" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>Add New Account</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5" style={{
+                fontFamily: 'Inter'
+              }}>Connect & verify new account</p>
             </div>
             <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1026,45 +1044,34 @@ export function CampaignsTab({
       }} />
       </>}
     
-      <CampaignDetailsDialog 
-        campaign={selectedCampaignForDetails} 
-        open={campaignDetailsDialogOpen} 
-        onOpenChange={setCampaignDetailsDialogOpen}
-        onConnectAccount={() => {
-          setCampaignDetailsDialogOpen(false);
-          setDialogOpen(true);
-        }}
-        onManageAccount={(account) => {
-          setCampaignDetailsDialogOpen(false);
-          setSelectedAccount(account);
-          setManageAccountDialogOpen(true);
-        }}
-      />
+      <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} onConnectAccount={() => {
+      setCampaignDetailsDialogOpen(false);
+      setDialogOpen(true);
+    }} onManageAccount={account => {
+      setCampaignDetailsDialogOpen(false);
+      setSelectedAccount(account);
+      setManageAccountDialogOpen(true);
+    }} />
       
-      <JoinCampaignSheet 
-        campaign={selectedCampaignForJoin} 
-        open={joinCampaignSheetOpen} 
-        onOpenChange={setJoinCampaignSheetOpen}
-        onSuccess={() => {
-          // After successful join, open the campaign details dialog
-          if (selectedCampaignForJoin) {
-            // Find the full campaign data from campaigns to get connected accounts
-            const fullCampaign = campaigns.find(c => c.id === selectedCampaignForJoin.id);
-            if (fullCampaign) {
-              setSelectedCampaignForDetails(fullCampaign);
-            } else {
-              // If not found in campaigns yet, use the join data
-              setSelectedCampaignForDetails({
-                ...selectedCampaignForJoin,
-                connected_accounts: []
-              });
-            }
-            // Small delay to let the sheet close animation complete
-            setTimeout(() => {
-              setCampaignDetailsDialogOpen(true);
-            }, 300);
-          }
-        }}
-      />
+      <JoinCampaignSheet campaign={selectedCampaignForJoin} open={joinCampaignSheetOpen} onOpenChange={setJoinCampaignSheetOpen} onSuccess={() => {
+      // After successful join, open the campaign details dialog
+      if (selectedCampaignForJoin) {
+        // Find the full campaign data from campaigns to get connected accounts
+        const fullCampaign = campaigns.find(c => c.id === selectedCampaignForJoin.id);
+        if (fullCampaign) {
+          setSelectedCampaignForDetails(fullCampaign);
+        } else {
+          // If not found in campaigns yet, use the join data
+          setSelectedCampaignForDetails({
+            ...selectedCampaignForJoin,
+            connected_accounts: []
+          });
+        }
+        // Small delay to let the sheet close animation complete
+        setTimeout(() => {
+          setCampaignDetailsDialogOpen(true);
+        }, 300);
+      }
+    }} />
     </div>;
 }
