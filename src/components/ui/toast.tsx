@@ -95,7 +95,7 @@ const ToastDescription = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Description>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitives.Description ref={ref} className={cn("text-sm text-muted-foreground leading-snug", className)} style={{ fontFamily: 'Inter', letterSpacing: '-0.2px' }} {...props} />
+  <ToastPrimitives.Description ref={ref} className={cn("text-sm text-foreground/80 leading-snug", className)} style={{ fontFamily: 'Inter', letterSpacing: '-0.2px' }} {...props} />
 ));
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
