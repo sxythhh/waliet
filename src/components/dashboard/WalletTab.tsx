@@ -997,18 +997,18 @@ export function WalletTab() {
             }
           };
           const methodIcon = getMethodIcon();
-          return <div key={method.id} className="group relative rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors p-4 border border-border dark:border-transparent">
-                {isDefault && <div className="absolute top-2 right-2">
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0 font-inter tracking-[-0.4px]">
-                      Default
-                    </Badge>
-                  </div>}
+          return <div key={method.id} className="group relative rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] p-4 border border-border dark:border-transparent">
                 <div className="flex items-center gap-3">
                   {methodIcon && <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
                       <img src={methodIcon} alt={getMethodLabel()} className="w-5 h-5" />
                     </div>}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">{getMethodLabel()}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">{getMethodLabel()}</p>
+                      {isDefault && <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0 font-inter tracking-[-0.4px]">
+                        Default
+                      </Badge>}
+                    </div>
                     <p className="text-xs text-neutral-500 mt-0.5 truncate font-inter tracking-[-0.4px]">{getMethodDetails()}</p>
                     {method.method === 'crypto' && method.details?.network && <p className="text-[10px] text-neutral-500/70 mt-0.5 uppercase font-inter tracking-[-0.4px]">
                         {method.details.network}
