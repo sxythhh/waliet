@@ -50,12 +50,22 @@ export function CreatorsTab({
     fetchCreators();
   }, [brandId]);
   const fetchCreators = async () => {
+    if (!brandId) {
+      setCreators([]);
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
 
     // Get all campaigns for this brand
     const {
-      data: campaigns
+      data: campaigns,
+      error: campaignsError
     } = await supabase.from("campaigns").select("id, title").eq("brand_id", brandId);
+    
+    console.log("CreatorsTab - brandId:", brandId, "campaigns:", campaigns, "error:", campaignsError);
+    
     if (!campaigns || campaigns.length === 0) {
       setCreators([]);
       setLoading(false);
@@ -66,7 +76,8 @@ export function CreatorsTab({
 
     // Get all social account campaign connections
     const {
-      data: connections
+      data: connections,
+      error: connectionsError
     } = await supabase.from("social_account_campaigns").select(`
         campaign_id,
         user_id,
@@ -77,6 +88,9 @@ export function CreatorsTab({
           account_link
         )
       `).in("campaign_id", campaignIds).eq("status", "active");
+    
+    console.log("CreatorsTab - campaignIds:", campaignIds, "connections:", connections?.length, "error:", connectionsError);
+    
     if (!connections || connections.length === 0) {
       setCreators([]);
       setLoading(false);
