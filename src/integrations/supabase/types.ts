@@ -2077,6 +2077,7 @@ export type Database = {
       }
     }
     Functions: {
+      brand_has_no_members: { Args: { _brand_id: string }; Returns: boolean }
       can_view_profile: {
         Args: { _profile_id: string; _viewer_id: string }
         Returns: boolean
