@@ -1397,20 +1397,20 @@ export function CampaignAnalyticsTable({
           </CardHeader>
           <CardContent className="p-0">
           <div className="overflow-x-auto">
-              <Table>
+              <Table className="dark:border dark:border-[#141414]">
                 <TableHeader>
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider sticky left-0 bg-card/50 z-10 py-3">Account</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">User</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-right cursor-pointer hover:text-foreground transition-colors text-xs uppercase tracking-wider whitespace-nowrap py-3 bg-card/50" onClick={() => handleSort('total_views')}>
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] sticky left-0 bg-card/50 z-10 py-3" style={{ fontFamily: 'Inter, sans-serif' }}>Account</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{ fontFamily: 'Inter, sans-serif' }}>User</TableHead>
+                    <TableHead className="text-foreground font-medium text-right cursor-pointer hover:text-muted-foreground transition-colors text-xs tracking-[-0.5px] whitespace-nowrap py-3 bg-card/50" style={{ fontFamily: 'Inter, sans-serif' }} onClick={() => handleSort('total_views')}>
                       <div className="flex items-center justify-end gap-1">
                         Views
                         {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Period</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-xs uppercase tracking-wider py-3 bg-card/50">Last Paid</TableHead>
-                    <TableHead className="text-muted-foreground font-medium text-xs w-8 py-3 bg-card/50"></TableHead>
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{ fontFamily: 'Inter, sans-serif' }}>Period</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{ fontFamily: 'Inter, sans-serif' }}>Last Paid</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{ fontFamily: 'Inter, sans-serif' }}>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
