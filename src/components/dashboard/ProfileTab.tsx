@@ -786,6 +786,13 @@ export function ProfileTab() {
                                 {account.username}
                               </span>
                             </div>
+                            {/* Campaign count below username */}
+                            <div className="flex items-center gap-1.5 mt-1.5 ml-7">
+                              <span className="text-[11px] text-muted-foreground/70" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                                {connectedCampaigns.length} campaign{connectedCampaigns.length !== 1 ? 's' : ''} linked
+                              </span>
+                              <ChevronDown className="w-3 h-3 text-muted-foreground/70" />
+                            </div>
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-72 p-3 bg-[#0a0a0a] border-0" align="start" side="bottom" sideOffset={8}>
