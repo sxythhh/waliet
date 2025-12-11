@@ -94,11 +94,13 @@ interface RecentActivity {
   campaignLogo?: string | null;
   campaignName?: string | null;
 }
-interface CampaignsTabProps {
+export interface CampaignsTabProps {
   onOpenPrivateDialog: () => void;
+  className?: string;
 }
 export function CampaignsTab({
-  onOpenPrivateDialog
+  onOpenPrivateDialog,
+  className
 }: CampaignsTabProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [boostApplications, setBoostApplications] = useState<BoostApplication[]>([]);
@@ -601,7 +603,7 @@ export function CampaignsTab({
     </div>;
   }
   const hasNoCampaigns = campaigns.length === 0;
-  return <div className="space-y-6 pt-6">
+  return <div className={`space-y-6 pt-6 ${className || ''}`}>
       {/* Welcome Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

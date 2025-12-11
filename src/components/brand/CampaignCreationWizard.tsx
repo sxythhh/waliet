@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2 } from "lucide-react";
+import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -992,10 +992,25 @@ export function CampaignCreationWizard({
                                   }}
                                 />
                               </div>
-                              <Button type="button" variant="destructive" onClick={() => setDeleteDialogOpen(true)} className="gap-2">
-                                <Trash2 className="h-4 w-4" />
-                                Delete Campaign
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={() => {
+                                    const link = `${window.location.origin}/join/${campaign?.slug}`;
+                                    navigator.clipboard.writeText(link);
+                                    toast.success('Invite link copied to clipboard');
+                                  }} 
+                                  className="gap-2"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                  Copy Invite Link
+                                </Button>
+                                <Button type="button" variant="destructive" onClick={() => setDeleteDialogOpen(true)} className="gap-2">
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete Campaign
+                                </Button>
+                              </div>
                             </div>
                           )}
                         </div>
