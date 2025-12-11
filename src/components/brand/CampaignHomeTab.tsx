@@ -487,27 +487,30 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     return (
-                      <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-lg">
-                        <p className="text-sm font-medium text-foreground tracking-[-0.5px] mb-1.5">{label}</p>
-                        <div className="space-y-1">
-                          {payload.map((entry: any) => (
-                            <div key={entry.name} className="flex items-center justify-between gap-4">
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                                <span className="text-xs text-foreground tracking-[-0.5px] capitalize">
-                                  {entry.name.replace('daily', '')}
+                      <div className="bg-popover border border-border rounded-lg px-3 py-2.5 shadow-lg min-w-[140px]">
+                        <p className="text-sm font-medium text-foreground tracking-[-0.5px] mb-2">{label}</p>
+                        <div className="space-y-1.5">
+                          {payload.map((entry: any) => {
+                            const metricName = String(entry.dataKey).replace('daily', '').replace(/([A-Z])/g, ' $1').trim();
+                            return (
+                              <div key={entry.dataKey} className="flex items-center justify-between gap-6">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                                  <span className="text-xs text-foreground tracking-[-0.5px] capitalize">
+                                    {metricName}
+                                  </span>
+                                </div>
+                                <span className="text-xs font-medium text-foreground tracking-[-0.5px]">
+                                  {formatNumber(entry.value)}
                                 </span>
                               </div>
-                              <span className="text-xs font-medium text-foreground tracking-[-0.5px]">
-                                {formatNumber(entry.value)}
-                              </span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     );
                   }}
-                  cursor={{ stroke: 'white', strokeWidth: 1, strokeOpacity: 0.5 }}
+                  cursor={{ stroke: '#666666', strokeWidth: 1 }}
                 />
                 {activeMetrics.map((metric) => (
                   <Area
@@ -522,7 +525,7 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
                     activeDot={{ 
                       r: 5, 
                       fill: METRIC_COLORS[metric],
-                      stroke: 'white',
+                      stroke: '#1a1a1a',
                       strokeWidth: 2
                     }}
                   />
