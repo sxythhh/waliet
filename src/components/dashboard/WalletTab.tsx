@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
 import viralityLogo from "@/assets/virality-logo.webp";
 import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift, Star } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift, Star, Building2, Smartphone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -555,13 +555,25 @@ export function WalletTab() {
     const methodIndex = payoutMethods.findIndex(m => m.id === methodId);
     if (methodIndex === -1 || methodIndex === 0) return; // Already default or not found
 
+    const selectedMethod = payoutMethods[methodIndex];
+    
+    // Block UPI from being set as default
+    if (selectedMethod.method === 'upi') {
+      toast({
+        variant: "destructive",
+        title: "Temporarily Disabled",
+        description: "UPI payouts are temporarily disabled. Please use another payment method."
+      });
+      return;
+    }
+
     const updatedMethods = [...payoutMethods];
-    const [selectedMethod] = updatedMethods.splice(methodIndex, 1);
-    updatedMethods.unshift(selectedMethod);
+    const [method] = updatedMethods.splice(methodIndex, 1);
+    updatedMethods.unshift(method);
     const {
       error
     } = await supabase.from("wallets").update({
-      payout_method: selectedMethod.method,
+      payout_method: method.method,
       payout_details: updatedMethods.map(m => ({
         method: m.method,
         details: m.details
@@ -764,11 +776,28 @@ export function WalletTab() {
       return;
     }
     const amount = Number(payoutAmount);
-    if (amount < 20) {
+    
+    const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+    if (!selectedMethod) return;
+
+    // Block UPI withdrawals
+    if (selectedMethod.method === 'upi') {
+      toast({
+        variant: "destructive",
+        title: "Temporarily Disabled",
+        description: "UPI payouts are temporarily disabled. Please use another payment method."
+      });
+      return;
+    }
+
+    // Bank minimum is $250
+    const minimumAmount = selectedMethod.method === 'bank' ? 250 : 20;
+    
+    if (amount < minimumAmount) {
       toast({
         variant: "destructive",
         title: "Minimum Amount",
-        description: "Minimum payout amount is $20"
+        description: `Minimum payout amount is $${minimumAmount}${selectedMethod.method === 'bank' ? ' for bank transfers' : ''}`
       });
       return;
     }
@@ -786,7 +815,6 @@ export function WalletTab() {
       }
     } = await supabase.auth.getSession();
     if (!session) return;
-    const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
     if (!selectedMethod) return;
 
     // Set submitting state BEFORE any async operations to prevent race conditions
@@ -957,6 +985,8 @@ export function WalletTab() {
                 return "Crypto";
               case "bank":
                 return "Bank";
+              case "upi":
+                return "UPI";
               case "wise":
                 return "Wise";
               case "revolut":
@@ -973,6 +1003,10 @@ export function WalletTab() {
                 return paypalLogo;
               case "crypto":
                 return walletActiveIcon;
+              case "bank":
+                return null; // Will use Building2 icon
+              case "upi":
+                return null; // Will use Smartphone icon
               default:
                 return null;
             }
@@ -1000,9 +1034,17 @@ export function WalletTab() {
           const methodIcon = getMethodIcon();
           return <div key={method.id} className="group relative rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] p-4 border border-border dark:border-transparent">
                 <div className="flex items-center gap-3">
-                  {methodIcon && <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
+                    {methodIcon ? (
                       <img src={methodIcon} alt={getMethodLabel()} className="w-5 h-5" />
-                    </div>}
+                    ) : method.method === 'bank' ? (
+                      <Building2 className="w-5 h-5 text-muted-foreground" />
+                    ) : method.method === 'upi' ? (
+                      <Smartphone className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <CreditCard className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">{getMethodLabel()}</p>
@@ -1294,14 +1336,28 @@ export function WalletTab() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="payout-amount">Amount ($)</Label>
-              <Input id="payout-amount" type="number" min="20" step="0.01" max={wallet?.balance || 0} placeholder="20.00" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} className="bg-muted border-transparent placeholder:text-muted-foreground h-14 text-lg font-medium focus-visible:ring-primary/50" />
+              <Input id="payout-amount" type="number" min={(() => {
+                const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                return method?.method === 'bank' ? 250 : 20;
+              })()} step="0.01" max={wallet?.balance || 0} placeholder={(() => {
+                const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                return method?.method === 'bank' ? '250.00' : '20.00';
+              })()} value={payoutAmount} onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} className="bg-muted border-transparent placeholder:text-muted-foreground h-14 text-lg font-medium focus-visible:ring-primary/50" />
               <div className="flex gap-2 flex-wrap">
-                {[20, 50, 100, 500].map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-muted hover:bg-accent">
-                    ${amount}
-                  </Button>)}
+                {(() => {
+                  const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                  const amounts = method?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500];
+                  return amounts.map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-muted hover:bg-accent">
+                      ${amount}
+                    </Button>);
+                })()}
               </div>
               <p className="text-xs text-muted-foreground">
-                Minimum: $20.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
+                {(() => {
+                  const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                  const minimum = method?.method === 'bank' ? '$250.00' : '$20.00';
+                  return `Minimum: ${minimum} • Available: $${wallet?.balance?.toFixed(2) || "0.00"}`;
+                })()}
               </p>
             </div>
 
@@ -1321,6 +1377,8 @@ export function WalletTab() {
                         return "Crypto";
                       case "bank":
                         return "Bank";
+                      case "upi":
+                        return "UPI (Disabled)";
                       case "wise":
                         return "Wise";
                       case "revolut":
@@ -1339,6 +1397,8 @@ export function WalletTab() {
                         return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
                       case "bank":
                         return `${method.details.bankName}`;
+                      case "upi":
+                        return method.details.upi_id;
                       case "wise":
                         return method.details.email;
                       case "revolut":
@@ -1374,6 +1434,22 @@ export function WalletTab() {
               {(() => {
               const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
               const isPayPal = selectedMethod?.method === 'paypal';
+              const isUpi = selectedMethod?.method === 'upi';
+              const isBank = selectedMethod?.method === 'bank';
+              
+              if (isUpi) {
+                return <>
+                  <p className="text-destructive font-medium">UPI payouts are temporarily disabled</p>
+                  <p className="text-xs text-muted-foreground">Please select another payment method</p>
+                </>;
+              }
+              if (isBank) {
+                return <>
+                  <p className="text-muted-foreground">3-5 business day wait time</p>
+                  <p className="text-xs text-muted-foreground mb-2">Minimum withdrawal: $250</p>
+                  <p className="font-medium">$1 + 0.75% fee</p>
+                </>;
+              }
               if (isPayPal) {
                 return <>
                   <p className="text-muted-foreground">24h wait time</p>
@@ -1388,17 +1464,20 @@ export function WalletTab() {
             </div>
 
             {/* Fee Breakdown and Net Amount */}
-            {payoutAmount && parseFloat(payoutAmount) >= 20 && (() => {
+            {payoutAmount && (() => {
             const amount = parseFloat(payoutAmount);
             const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
             const isPayPal = selectedMethod?.method === 'paypal';
+            const isUpi = selectedMethod?.method === 'upi';
+            const isBank = selectedMethod?.method === 'bank';
+            const minimumAmount = isBank ? 250 : 20;
 
-            // Don't show fee breakdown for PayPal
-            if (isPayPal) {
+            // Don't show fee breakdown for PayPal or UPI
+            if (isPayPal || isUpi || amount < minimumAmount) {
               return null;
             }
 
-            // For crypto, show fee breakdown
+            // For crypto/bank, show fee breakdown
             const percentageFee = amount * 0.0075;
             const afterPercentage = amount - percentageFee;
             const netAmount = afterPercentage - 1;
