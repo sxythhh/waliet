@@ -177,7 +177,7 @@ export function BrandCampaignsTab({
           <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
           
         </div>
-        <CreateCampaignTypeDialog onSelectClipping={() => setCreateCampaignOpen(true)} onSelectManaged={() => setCreateBountyOpen(true)} />
+        <CreateCampaignTypeDialog brandId={brandId} onSelectClipping={() => setCreateCampaignOpen(true)} onSelectManaged={() => setCreateBountyOpen(true)} />
       </div>
 
       {/* Embed Section */}
