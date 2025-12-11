@@ -94,6 +94,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 50, total_pages: 0 });
   const [selectedCreator, setSelectedCreator] = useState<CreatorInfo | null>(null);
+  const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
   const fetchCreatorMatches = async (usernames: string[]) => {
     if (usernames.length === 0) return;
@@ -157,10 +158,18 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
       }
 
       if (data.error) {
+        // Handle "API key not configured" gracefully - not an error, just no integration
+        if (data.error.includes('API key not configured')) {
+          console.log('[ShortimizeVideosTable] Shortimize not configured for this brand');
+          setHasApiKey(false);
+          setVideos([]);
+          return;
+        }
         console.error('[ShortimizeVideosTable] API error:', data.error, 'Debug:', data.debug);
         throw new Error(data.error);
       }
 
+      setHasApiKey(true);
       const videosData = data.videos || [];
       setVideos(videosData);
       setPagination(prev => ({ ...prev, ...data.pagination }));
@@ -177,9 +186,15 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
       // Fetch creator matches for unique usernames
       const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
       await fetchCreatorMatches(uniqueUsernames);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[ShortimizeVideosTable] Error fetching videos:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to fetch videos');
+      // Don't show toast for "API key not configured" error
+      const errorMsg = error?.message || '';
+      if (!errorMsg.includes('API key not configured')) {
+        toast.error(errorMsg || 'Failed to fetch videos');
+      } else {
+        setHasApiKey(false);
+      }
     } finally {
       console.log('[ShortimizeVideosTable] setting isLoading to false');
       setIsLoading(false);
@@ -382,6 +397,15 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
                   <TableCell><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
                 </TableRow>
               ))
+            ) : hasApiKey === false ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
+                  <div className="space-y-2">
+                    <p>Video tracking not configured</p>
+                    <p className="text-xs">Connect a Shortimize API key in brand settings to enable video analytics.</p>
+                  </div>
+                </TableCell>
+              </TableRow>
             ) : videos.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
