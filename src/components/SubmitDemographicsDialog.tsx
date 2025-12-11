@@ -247,16 +247,7 @@ export function SubmitDemographicsDialog({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Account Display */}
-          <div className="flex items-center gap-3 p-4 rounded-lg border bg-[#070707]/50">
-            {getPlatformIcon(platform)}
-            <div className="flex flex-col">
-              <span className="font-semibold text-sm" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.5px'
-            }}>@{username}</span>
-              <span className="text-xs text-muted-foreground capitalize">{platform}</span>
-            </div>
-          </div>
+          
 
           {/* Video Upload */}
           <div className="space-y-2">
