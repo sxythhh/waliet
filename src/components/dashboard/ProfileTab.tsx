@@ -31,6 +31,7 @@ import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoBlack from "@/assets/instagram-logo-new.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
+import demographicsIcon from "@/assets/demographics-icon.svg";
 interface Profile {
   id: string;
   username: string;
@@ -565,69 +566,119 @@ export function ProfileTab() {
             const demographicStatus = latestDemographicSubmission?.status;
 
             return <div key={account.id} className="group relative p-4 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
-                    <div className="flex items-start gap-4">
-                      {/* Platform Icon */}
+                    {/* Main Layout */}
+                    <div className="flex items-center gap-4">
+                      {/* Platform Icon - Larger */}
                       <div 
                         onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
-                        className="w-11 h-11 rounded-full bg-foreground/5 dark:bg-foreground/10 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
+                        className="w-14 h-14 rounded-2xl bg-foreground/5 dark:bg-foreground/10 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
                       >
-                        {getPlatformIcon(account.platform)}
+                        <div className="w-8 h-8">
+                          {getPlatformIcon(account.platform)}
+                        </div>
                       </div>
                       
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        {/* Top Row: Username + Demographics */}
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div 
-                            onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
-                            className="cursor-pointer group/link"
-                          >
-                            <span className="font-semibold text-foreground group-hover/link:underline tracking-tight block">
-                              {account.username}
-                            </span>
-                            <span className="text-xs text-muted-foreground capitalize">{account.platform}</span>
-                          </div>
-                          
-                          {/* Demographics Mini Status */}
-                          <div className="flex-shrink-0 w-44">
-                            <DemographicStatusCard
-                              accountId={account.id}
-                              platform={account.platform}
-                              username={account.username}
-                              submissions={demographicSubmissions}
-                              onSubmitNew={() => {
-                                setSelectedAccountForDemographics({
-                                  id: account.id,
-                                  platform: account.platform,
-                                  username: account.username
-                                });
-                                setShowDemographicsDialog(true);
-                              }}
-                              onRefresh={fetchSocialAccounts}
-                            />
-                          </div>
+                        {/* Username Row */}
+                        <div 
+                          onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
+                          className="cursor-pointer group/link inline-flex items-center gap-2"
+                        >
+                          <span className="font-semibold text-base text-foreground group-hover/link:underline tracking-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                            {account.username}
+                          </span>
+                          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-opacity" />
                         </div>
                         
-                        {/* Linked Campaigns */}
-                        {connectedCampaigns.length > 0 && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[11px] text-muted-foreground">Linked:</span>
-                            {connectedCampaigns.map(({ campaign }) => (
-                              <div 
-                                key={campaign.id} 
-                                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-foreground/5 dark:bg-foreground/10 text-[11px]"
-                              >
-                                {campaign.brand_logo_url && (
-                                  <img 
-                                    src={campaign.brand_logo_url} 
-                                    alt={campaign.brand_name} 
-                                    className="w-3.5 h-3.5 rounded-full object-cover" 
-                                  />
-                                )}
-                                <span className="font-medium tracking-tight">{campaign.title}</span>
-                              </div>
-                            ))}
+                        {/* Linked Campaigns Row */}
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          {connectedCampaigns.length > 0 ? (
+                            <>
+                              {connectedCampaigns.slice(0, 3).map(({ campaign }) => (
+                                <div 
+                                  key={campaign.id} 
+                                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-[11px]"
+                                >
+                                  {campaign.brand_logo_url && (
+                                    <img 
+                                      src={campaign.brand_logo_url} 
+                                      alt={campaign.brand_name} 
+                                      className="w-4 h-4 rounded-full object-cover" 
+                                    />
+                                  )}
+                                  <span className="font-medium tracking-tight text-foreground">{campaign.title}</span>
+                                </div>
+                              ))}
+                              {connectedCampaigns.length > 3 && (
+                                <span className="text-[11px] text-muted-foreground">+{connectedCampaigns.length - 3} more</span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-[11px] text-muted-foreground">No campaigns linked</span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              setSelectedAccountForManaging({
+                                id: account.id,
+                                username: account.username,
+                                platform: account.platform,
+                                account_link: account.account_link
+                              });
+                              setShowManageAccountDialog(true);
+                            }}
+                          >
+                            <Link2 className="w-3 h-3 mr-1" />
+                            {connectedCampaigns.length > 0 ? 'Manage' : 'Link'}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Demographics Section - Right Side */}
+                      <div className="flex-shrink-0 w-40">
+                        {!demographicStatus || demographicStatus === 'rejected' ? (
+                          // Required/Rejected State - Compact Alert
+                          <div 
+                            className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 cursor-pointer hover:bg-destructive/15 transition-colors"
+                            onClick={() => {
+                              setSelectedAccountForDemographics({
+                                id: account.id,
+                                platform: account.platform,
+                                username: account.username
+                              });
+                              setShowDemographicsDialog(true);
+                            }}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center flex-shrink-0">
+                              <img src={demographicsIcon} alt="" className="w-4 h-4 opacity-80" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(2615%) hue-rotate(344deg) brightness(87%) contrast(93%)' }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[11px] font-medium text-destructive block truncate">
+                                {demographicStatus === 'rejected' ? 'Resubmit' : 'Required'}
+                              </span>
+                              <span className="text-[10px] text-destructive/70">Tap to submit</span>
+                            </div>
                           </div>
+                        ) : (
+                          // Has Submission - Show Status Card
+                          <DemographicStatusCard
+                            accountId={account.id}
+                            platform={account.platform}
+                            username={account.username}
+                            submissions={demographicSubmissions}
+                            onSubmitNew={() => {
+                              setSelectedAccountForDemographics({
+                                id: account.id,
+                                platform: account.platform,
+                                username: account.username
+                              });
+                              setShowDemographicsDialog(true);
+                            }}
+                            onRefresh={fetchSocialAccounts}
+                          />
                         )}
                       </div>
                     </div>
