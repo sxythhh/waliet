@@ -2,12 +2,14 @@ import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload } from "lucide-react";
+import { Upload, CheckCircle2 } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
+
 interface SubmitDemographicsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -16,6 +18,7 @@ interface SubmitDemographicsDialogProps {
   platform: string;
   username: string;
 }
+
 export function SubmitDemographicsDialog({
   open,
   onOpenChange,
@@ -26,10 +29,9 @@ export function SubmitDemographicsDialog({
 }: SubmitDemographicsDialogProps) {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
     switch (platform.toLowerCase()) {
@@ -112,15 +114,31 @@ export function SubmitDemographicsDialog({
         // If rejected, can resubmit immediately - no check needed
       }
 
-      // Upload video
+      // Upload video with progress simulation
       const fileExt = videoFile.name.split('.').pop();
       const fileName = `${session.user.id}/demographics_${socialAccountId}_${Date.now()}.${fileExt}`;
-      const {
-        error: uploadError
-      } = await supabase.storage.from('verification-screenshots').upload(fileName, videoFile);
+      
+      // Simulate progress during upload
+      setUploadProgress(0);
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 15;
+        });
+      }, 300);
+
+      const { error: uploadError } = await supabase.storage
+        .from('verification-screenshots')
+        .upload(fileName, videoFile);
+      
+      clearInterval(progressInterval);
+      
       if (uploadError) {
+        setUploadProgress(0);
         throw uploadError;
       }
+      
+      setUploadProgress(100);
 
       // Get public URL
       const {
@@ -197,6 +215,7 @@ export function SubmitDemographicsDialog({
       });
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -225,10 +244,10 @@ export function SubmitDemographicsDialog({
     setVideoFile(file);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-neutral-950">
+      <DialogContent className="sm:max-w-[600px] bg-neutral-950" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
         <DialogHeader>
-          <DialogTitle>Submit Account Demographics</DialogTitle>
-          <DialogDescription>
+          <DialogTitle style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Submit Account Demographics</DialogTitle>
+          <DialogDescription style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
             Upload a video showing your audience demographics
           </DialogDescription>
         </DialogHeader>
@@ -238,34 +257,57 @@ export function SubmitDemographicsDialog({
           <div className="flex items-center gap-3 p-4 rounded-lg border bg-[#070707]/50">
             {getPlatformIcon(platform)}
             <div className="flex flex-col">
-              <span className="font-semibold text-sm">@{username}</span>
+              <span className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>@{username}</span>
               <span className="text-xs text-muted-foreground capitalize">{platform}</span>
             </div>
           </div>
 
           {/* Video Upload */}
           <div className="space-y-2">
-            <Label>Demographics Video</Label>
+            <Label style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Demographics Video</Label>
             <p className="text-xs text-muted-foreground mb-2">
               Record a video showing your audience demographics from your platform's analytics
             </p>
-            <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors" onClick={() => fileInputRef.current?.click()}>
-              {videoFile ? <div className="space-y-2">
-                  <Upload className="h-8 w-8 mx-auto text-primary" />
-                  <p className="text-sm font-medium">{videoFile.name}</p>
-                  <p className="text-xs text-muted-foreground">Click to change</p>
-                </div> : <div className="space-y-2">
+            <div 
+              className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors" 
+              onClick={() => !uploading && fileInputRef.current?.click()}
+            >
+              {videoFile ? (
+                <div className="space-y-2">
+                  <CheckCircle2 className="h-8 w-8 mx-auto text-primary" />
+                  <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{videoFile.name}</p>
+                  <p className="text-xs text-muted-foreground">{!uploading && 'Click to change'}</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Upload Video (Max 50MB)</p>
+                  <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Upload Video (Max 50MB)</p>
                   <p className="text-xs text-muted-foreground">MP4, MOV, or other video formats</p>
-                </div>}
+                </div>
+              )}
             </div>
             <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileChange} className="hidden" required />
           </div>
 
+          {/* Upload Progress */}
+          {uploading && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Uploading...</span>
+                <span>{Math.round(uploadProgress)}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+            </div>
+          )}
+
           {/* Submit Button */}
-          <Button type="submit" className="w-full" disabled={uploading}>
-            {uploading ? "Submitting..." : "Submit Demographics"}
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={uploading}
+            style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+          >
+            {uploading ? "Uploading..." : "Submit Demographics"}
           </Button>
         </form>
       </DialogContent>
