@@ -810,10 +810,10 @@ export function ProfileTab() {
                               {connectedCampaigns.length > 0 ? <div className="space-y-2">
                                   {connectedCampaigns.map(({
                             campaign
-                          }) => <div key={campaign.id} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5" style={{
+                          }) => <div key={campaign.id} style={{
                             fontFamily: 'Geist',
                             letterSpacing: '-0.5px'
-                          }}>
+                          }} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/0">
                                       {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-6 h-6 rounded-md object-cover" />}
                                       <span className="text-sm text-white">{campaign.title}</span>
                                     </div>)}
@@ -1258,12 +1258,21 @@ export function ProfileTab() {
                         </span>
                       </div>}
                     <div className="flex-1 flex items-center">
-                      <p className="font-medium text-sm" style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}>{campaign.title}</p>
+                      <p className="font-medium text-sm" style={{
+                  fontFamily: 'Geist',
+                  letterSpacing: '-0.5px'
+                }}>{campaign.title}</p>
                     </div>
-                    {isLinked ? <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }} onClick={() => handleUnlinkCampaign(linkedConnection.connection_id, campaign.title)}>
+                    {isLinked ? <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" style={{
+                fontFamily: 'Geist',
+                letterSpacing: '-0.5px'
+              }} onClick={() => handleUnlinkCampaign(linkedConnection.connection_id, campaign.title)}>
                         <Unlink className="w-3.5 h-3.5 mr-1" />
                         Unlink
-                      </Button> : <Button variant="ghost" size="sm" disabled={linkingCampaign} onClick={() => handleLinkCampaign(campaign.id)} className="text-primary hover:text-primary hover:bg-primary/10" style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}>
+                      </Button> : <Button variant="ghost" size="sm" disabled={linkingCampaign} onClick={() => handleLinkCampaign(campaign.id)} className="text-primary hover:text-primary hover:bg-primary/10" style={{
+                fontFamily: 'Geist',
+                letterSpacing: '-0.5px'
+              }}>
                         <Link2 className="w-3.5 h-3.5 mr-1" />
                         Link
                       </Button>}
