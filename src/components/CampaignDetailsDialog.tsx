@@ -197,7 +197,7 @@ export function CampaignDetailsDialog({
               {!showFullDescription && campaign.description.length > 200 && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
             </div>
             {campaign.description.length > 200 && <div className="flex justify-center mt-2">
-                <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" style={{
+                <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px'
           }}>
