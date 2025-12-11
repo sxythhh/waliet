@@ -526,9 +526,6 @@ export function CampaignCreationWizard({
                               <FormMessage />
                             </FormItem>} />
 
-                        <FormField control={form.control} name="description" render={({
-                      field
-                    }) => {}} />
 
                         {/* Banner Upload */}
                         <div className="space-y-2">
@@ -558,9 +555,6 @@ export function CampaignCreationWizard({
                           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                         </div>
 
-                        <FormField control={form.control} name="guidelines" render={({
-                      field
-                    }) => {}} />
 
                       </div>
                     </div>}

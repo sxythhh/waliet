@@ -193,9 +193,15 @@ export function BrandCampaignsTab({
           const usedBudget = Number(campaign.budget_used || 0);
           const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
           return <Card key={campaign.id} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => handleCampaignClick(campaign)}>
-                  {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                  <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                    {campaign.banner_url ? (
                       <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                    </div>}
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
+                        <span className="text-muted-foreground/50 text-xs font-medium tracking-[-0.5px]">No Banner</span>
+                      </div>
+                    )}
+                  </div>
                   <CardContent className="p-3 flex-1 flex flex-col font-instrument tracking-tight bg-[#f8f8f8] dark:bg-[#0e0e0e] group-hover:bg-[#f0f0f0] dark:group-hover:bg-[#141414] transition-colors gap-0 px-[10px]">
                     <div className="flex items-start justify-between">
                       <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1 group-hover:underline">
