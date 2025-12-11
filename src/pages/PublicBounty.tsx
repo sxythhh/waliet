@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { X } from "lucide-react";
 
 interface BountyCampaign {
   id: string;
@@ -37,6 +38,7 @@ const PublicBounty = () => {
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [showApplySheet, setShowApplySheet] = useState(false);
+  const [showFloatingMenu, setShowFloatingMenu] = useState(true);
 
   useEffect(() => {
     fetchBountyData();
@@ -130,7 +132,7 @@ const PublicBounty = () => {
       />
 
       {/* Floating Brand Card */}
-      {!isFull && (
+      {!isFull && showFloatingMenu && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
           <div className="bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-6 max-w-md w-[90vw] sm:w-full">
             {/* Brand Info */}
@@ -150,16 +152,39 @@ const PublicBounty = () => {
               </div>
             </div>
 
-            {/* Apply Button */}
-            <Button
-              size="lg"
-              className="w-full shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
-              onClick={handleApplyClick}
-            >
-              {user ? "Apply Now" : "Sign In to Apply"}
-            </Button>
+            {/* Buttons */}
+            <div className="flex gap-2">
+              {/* Cancel button - mobile only */}
+              <Button
+                size="lg"
+                variant="outline"
+                className="sm:hidden"
+                onClick={() => setShowFloatingMenu(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              
+              {/* Apply Button */}
+              <Button
+                size="lg"
+                className="flex-1 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+                onClick={handleApplyClick}
+              >
+                {user ? "Apply Now" : "Sign In to Apply"}
+              </Button>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Show menu button - mobile only, when menu is hidden */}
+      {!isFull && !showFloatingMenu && (
+        <button
+          onClick={() => setShowFloatingMenu(true)}
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 sm:hidden bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg font-inter tracking-[-0.5px] font-medium"
+        >
+          Apply Now
+        </button>
       )}
 
       {/* Apply Sheet */}
