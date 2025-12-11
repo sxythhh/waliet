@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending brand invitation email to:", email);
 
-    const inviteUrl = `https://app.virality.gg/brand/${brandSlug}/invite/${invitationId}`;
+    const inviteUrl = `https://virality.gg/brand/${brandSlug}/invite/${invitationId}`;
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
