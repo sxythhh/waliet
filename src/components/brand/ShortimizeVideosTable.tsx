@@ -6,9 +6,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, User } from "lucide-react";
+import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, ArrowUpDown, X } from "lucide-react";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
@@ -48,6 +49,14 @@ interface ShortimizeVideosTableProps {
 
 type SortField = 'uploaded_at' | 'latest_views' | 'latest_likes' | 'latest_comments' | 'latest_shares';
 type SortDirection = 'asc' | 'desc';
+
+const SORT_OPTIONS = [
+  { value: 'uploaded_at', label: 'Most Recent' },
+  { value: 'latest_views', label: 'Most Viewed' },
+  { value: 'latest_likes', label: 'Most Liked' },
+  { value: 'latest_comments', label: 'Most Comments' },
+  { value: 'latest_shares', label: 'Most Shares' },
+] as const;
 
 const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
 
@@ -226,71 +235,114 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
   return (
     <div className="space-y-4">
       {/* Header with filters */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <Button type="button" onClick={fetchVideos} variant="ghost" size="icon" disabled={isLoading || (!collectionName && !campaignId)} className="h-8 w-8">
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
+          
+          {/* Sort Selector */}
+          <Select 
+            value={sortField} 
+            onValueChange={(value) => {
+              setSortField(value as SortField);
+              setPagination(prev => ({ ...prev, page: 1 }));
+            }}
+          >
+            <SelectTrigger className="h-8 w-[140px] text-xs tracking-[-0.5px]">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map(option => (
+                <SelectItem key={option.value} value={option.value} className="text-xs tracking-[-0.5px]">
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
+        {/* Date Range Filter */}
         <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 tracking-[-0.5px] h-8 text-xs">
-                <CalendarIcon className="h-3.5 w-3.5" />
-                {startDate ? format(startDate, 'MMM d, yyyy') : 'Start Date'}
+              <Button variant="outline" size="sm" className="gap-2 tracking-[-0.5px] h-8 text-xs min-w-[200px] justify-start">
+                <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                {startDate && endDate ? (
+                  <span>{format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}</span>
+                ) : startDate ? (
+                  <span>{format(startDate, 'MMM d, yyyy')} - ...</span>
+                ) : (
+                  <span className="text-muted-foreground">Filter by upload date</span>
+                )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={(date) => {
-                  setStartDate(date);
-                }}
-                initialFocus
-              />
+            <PopoverContent className="w-auto p-4" align="end">
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px]">Start Date</p>
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      disabled={(date) => endDate ? date > endDate : false}
+                      initialFocus
+                      className="rounded-md border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px]">End Date</p>
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      disabled={(date) => startDate ? date < startDate : false}
+                      className="rounded-md border"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs tracking-[-0.5px]"
+                    onClick={() => {
+                      setStartDate(undefined);
+                      setEndDate(undefined);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="text-xs tracking-[-0.5px]"
+                    onClick={() => {
+                      setPagination(prev => ({ ...prev, page: 1 }));
+                      fetchVideos();
+                    }}
+                  >
+                    Apply Filter
+                  </Button>
+                </div>
+              </div>
             </PopoverContent>
           </Popover>
-
-          <span className="text-muted-foreground text-xs">to</span>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 tracking-[-0.5px] h-8 text-xs">
-                <CalendarIcon className="h-3.5 w-3.5" />
-                {endDate ? format(endDate, 'MMM d, yyyy') : 'End Date'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={(date) => {
-                  setEndDate(date);
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Button onClick={handleSearch} variant="secondary" size="sm" className="tracking-[-0.5px] h-8 text-xs">
-            Apply
-          </Button>
 
           {(startDate || endDate) && (
             <Button 
               variant="ghost" 
-              size="sm"
+              size="icon"
+              className="h-8 w-8"
               onClick={() => {
                 setStartDate(undefined);
                 setEndDate(undefined);
                 setPagination(prev => ({ ...prev, page: 1 }));
                 setTimeout(fetchVideos, 0);
               }}
-              className="text-muted-foreground tracking-[-0.5px] h-8 text-xs"
             >
-              Clear
+              <X className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
