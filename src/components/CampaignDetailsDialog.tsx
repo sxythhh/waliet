@@ -151,7 +151,7 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Next Payout Card */}
-        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-br from-[#2060df]/10 via-[#4f89ff]/5 to-transparent">
+        <div className="mb-4 p-4 rounded-2xl ">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground mb-0.5" style={{
