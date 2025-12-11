@@ -9,21 +9,14 @@ import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizar
 import { VideosTab } from "@/components/brand/VideosTab";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 export type TimeframeOption = "today" | "this_week" | "last_week" | "this_month" | "last_month";
-
 const TIMEFRAME_LABELS: Record<TimeframeOption, string> = {
   today: "Today",
   this_week: "This week",
   last_week: "Last week",
   this_month: "This month",
-  last_month: "Last month",
+  last_month: "Last month"
 };
 interface Campaign {
   id: string;
@@ -141,15 +134,9 @@ export function BrandCampaignDetailView({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-popover">
-                {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map((option) => (
-                  <DropdownMenuItem
-                    key={option}
-                    className="focus:bg-muted focus:text-foreground"
-                    onClick={() => setTimeframe(option)}
-                  >
+                {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => <DropdownMenuItem key={option} className="focus:bg-muted focus:text-foreground" onClick={() => setTimeframe(option)}>
                     {TIMEFRAME_LABELS[option]}
-                  </DropdownMenuItem>
-                ))}
+                  </DropdownMenuItem>)}
               </DropdownMenuContent>
             </DropdownMenu>
             <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted" onClick={() => setEditDialogOpen(true)}>
@@ -181,7 +168,7 @@ export function BrandCampaignDetailView({
         <div className="flex-1 overflow-auto">
           {activeDetailTab === "home" && campaign.brand_id ? <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} /> : activeDetailTab === "videos" && campaign.brand_id ? <div className="p-4 py-0">
               <VideosTab campaignId={campaignId} brandId={campaign.brand_id} isAdmin={true} approvedCreators={[]} />
-            </div> : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0" /> : <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />}
+            </div> : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />}
         </div>
       </div>
     </div>;

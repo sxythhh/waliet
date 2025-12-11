@@ -395,12 +395,11 @@ export function CampaignAnalyticsTable({
         const batchSize = 50;
         for (let i = 0; i < allSocialAccountIds.length; i += batchSize) {
           const batch = allSocialAccountIds.slice(i, i + batchSize);
-          const { data: batchSubmissions } = await supabase
-            .from("demographic_submissions")
-            .select("id, social_account_id, status, submitted_at, reviewed_at, tier1_percentage, score")
-            .in("social_account_id", batch)
-            .order("submitted_at", { ascending: false });
-          
+          const {
+            data: batchSubmissions
+          } = await supabase.from("demographic_submissions").select("id, social_account_id, status, submitted_at, reviewed_at, tier1_percentage, score").in("social_account_id", batch).order("submitted_at", {
+            ascending: false
+          });
           (batchSubmissions || []).forEach(sub => {
             if (!submissionsMap.has(sub.social_account_id)) {
               submissionsMap.set(sub.social_account_id, sub);
@@ -1241,7 +1240,7 @@ export function CampaignAnalyticsTable({
 
         {/* Filters and Table */}
         {activeTab === 'analytics' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
-          <CardHeader className="px-4 py-3">
+          <CardHeader className="px-4 py-0 pt-0 pl-[4px] pr-[4px] pb-[7px]">
             <div className="flex flex-col sm:flex-row gap-3 items-start justify-between sm:flex sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 {dateRanges.length > 0 && <>
@@ -1257,18 +1256,20 @@ export function CampaignAnalyticsTable({
                     </SelectContent>
                   </Select>
                   {selectedDateRange !== "all" && <Button variant="ghost" size="sm" onClick={async () => {
-                    const [start, end] = selectedDateRange.split('|');
-                    try {
-                      const { error } = await supabase.from('campaign_account_analytics').delete().eq('campaign_id', campaignId).eq('start_date', start).eq('end_date', end);
-                      if (error) throw error;
-                      toast.success("CSV period deleted successfully");
-                      setSelectedDateRange("all");
-                      fetchAnalytics();
-                    } catch (error) {
-                      console.error("Error deleting CSV period:", error);
-                      toast.error("Failed to delete CSV period");
-                    }
-                  }} className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                  const [start, end] = selectedDateRange.split('|');
+                  try {
+                    const {
+                      error
+                    } = await supabase.from('campaign_account_analytics').delete().eq('campaign_id', campaignId).eq('start_date', start).eq('end_date', end);
+                    if (error) throw error;
+                    toast.success("CSV period deleted successfully");
+                    setSelectedDateRange("all");
+                    fetchAnalytics();
+                  } catch (error) {
+                    console.error("Error deleting CSV period:", error);
+                    toast.error("Failed to delete CSV period");
+                  }
+                }} className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>}
                 </>}
@@ -1902,40 +1903,24 @@ export function CampaignAnalyticsTable({
       {/* Pagination */}
       {activeTab === 'analytics' && totalPages > 1 && <div className="flex justify-center mt-3">
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none"
-            >
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none">
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
             
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-              if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-7 min-w-[28px] px-2 text-xs rounded transition-colors ${
-                      currentPage === page 
-                        ? 'bg-muted/70 text-foreground font-medium' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                    }`}
-                  >
+            {Array.from({
+            length: totalPages
+          }, (_, i) => i + 1).map(page => {
+            if (page === 1 || page === totalPages || page >= currentPage - 1 && page <= currentPage + 1) {
+              return <button key={page} onClick={() => setCurrentPage(page)} className={`h-7 min-w-[28px] px-2 text-xs rounded transition-colors ${currentPage === page ? 'bg-muted/70 text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}>
                     {page}
-                  </button>
-                );
-              } else if (page === currentPage - 2 || page === currentPage + 2) {
-                return <span key={page} className="px-1 text-muted-foreground/50 text-xs">...</span>;
-              }
-              return null;
-            })}
+                  </button>;
+            } else if (page === currentPage - 2 || page === currentPage + 2) {
+              return <span key={page} className="px-1 text-muted-foreground/50 text-xs">...</span>;
+            }
+            return null;
+          })}
 
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none"
-            >
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none">
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
