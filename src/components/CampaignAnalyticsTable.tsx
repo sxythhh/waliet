@@ -20,6 +20,7 @@ import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
 import { ImportCampaignStatsDialog } from "./ImportCampaignStatsDialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
@@ -1293,60 +1294,99 @@ export function CampaignAnalyticsTable({
         {activeTab === 'analytics' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
           <CardHeader className="px-4 py-3">
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-              <CardTitle className="text-sm font-medium text-foreground">Account Analytics</CardTitle>
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                
+              <h3 className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Account Analytics</h3>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <div className="relative flex-1 sm:w-44">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search accounts..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-9 bg-muted/50 border-0 text-sm" />
+                  <Input 
+                    placeholder="Search accounts..." 
+                    value={searchTerm} 
+                    onChange={e => setSearchTerm(e.target.value)} 
+                    className="pl-9 h-8 bg-muted/50 border-0 text-sm tracking-[-0.5px]" 
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  />
                 </div>
-                <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                  <SelectTrigger className="w-full sm:w-32 h-9 bg-muted/50 border-0 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-0 shadow-lg">
-                    <SelectItem value="all" className="text-sm">All Platforms</SelectItem>
-                    {platforms.map(platform => <SelectItem key={platform} value={platform} className="capitalize text-sm">
-                        {platform}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setShowLinkedOnly(!showLinkedOnly)} 
-                  size="sm" 
-                  className={`h-9 text-sm ${showLinkedOnly ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <Filter className="h-4 w-4 mr-1.5" />
-                  Linked
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setShowPaidOnly(!showPaidOnly)} 
-                  size="sm" 
-                  className={`h-9 text-sm ${showPaidOnly ? "bg-green-500/10 text-green-500" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <DollarSign className="h-4 w-4 mr-1.5" />
-                  Paid
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setIsPaused(!isPaused)} 
-                  size="sm" 
-                  className={`h-9 text-sm ${isPaused ? "bg-amber-500/10 text-amber-500" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  {isPaused ? (
-                    <>
-                      <Play className="h-4 w-4 mr-1.5" />
-                      Resume
-                    </>
-                  ) : (
-                    <>
-                      <Pause className="h-4 w-4 mr-1.5" />
-                      Pause
-                    </>
-                  )}
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`h-8 text-sm tracking-[-0.5px] gap-1.5 ${
+                        platformFilter !== 'all' || showLinkedOnly || showPaidOnly 
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      style={{ fontFamily: 'Inter, sans-serif' }}
+                    >
+                      <Filter className="h-3.5 w-3.5" />
+                      Filters
+                      {(platformFilter !== 'all' || showLinkedOnly || showPaidOnly) && (
+                        <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-primary/20 rounded-full">
+                          {[platformFilter !== 'all', showLinkedOnly, showPaidOnly].filter(Boolean).length}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-popover border border-border shadow-lg">
+                    <div className="px-2 py-1.5">
+                      <p className="text-xs text-muted-foreground mb-2 tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Platform</p>
+                      <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                        <SelectTrigger className="w-full h-8 bg-muted/50 border-0 text-sm tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border border-border shadow-lg">
+                          <SelectItem value="all" className="text-sm tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>All Platforms</SelectItem>
+                          {platforms.map(platform => (
+                            <SelectItem key={platform} value={platform} className="capitalize text-sm tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              {platform}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="border-t border-border my-1" />
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowLinkedOnly(!showLinkedOnly);
+                      }}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="text-sm tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Linked only</span>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${showLinkedOnly ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                        {showLinkedOnly && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowPaidOnly(!showPaidOnly);
+                      }}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="text-sm tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Paid only</span>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${showPaidOnly ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                        {showPaidOnly && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                    </DropdownMenuItem>
+                    {(platformFilter !== 'all' || showLinkedOnly || showPaidOnly) && (
+                      <>
+                        <div className="border-t border-border my-1" />
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setPlatformFilter('all');
+                            setShowLinkedOnly(false);
+                            setShowPaidOnly(false);
+                          }}
+                          className="text-sm text-muted-foreground tracking-[-0.5px]"
+                          style={{ fontFamily: 'Inter, sans-serif' }}
+                        >
+                          Clear all filters
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <ImportCampaignStatsDialog
                   campaignId={campaignId}
                   onImportComplete={fetchAnalytics}
