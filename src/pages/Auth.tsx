@@ -284,14 +284,8 @@ export default function Auth() {
               
               {/* Divider */}
               <div className="relative my-8">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-muted-foreground/20" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="backdrop-blur-sm px-3 font-medium bg-[#0c0c0c] text-[#484444]">
-                    OR
-                  </span>
-                </div>
+                
+                
               </div>
               
               {/* Client Sign In Section */}
