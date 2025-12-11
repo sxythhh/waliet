@@ -25,11 +25,20 @@ const brandSchema = z.object({
 type BrandFormValues = z.infer<typeof brandSchema>;
 interface CreateBrandDialogProps {
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 export function CreateBrandDialog({
-  onSuccess
+  onSuccess,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  hideTrigger = false
 }: CreateBrandDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (controlledOnOpenChange || (() => {})) : setInternalOpen;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -200,12 +209,14 @@ export function CreateBrandDialog({
     }
   };
   return <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-primary hover:bg-primary/90 text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Brand
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button className="bg-primary hover:bg-primary/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Brand
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl border-0 bg-neutral-950">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-lg">Create New Brand</DialogTitle>

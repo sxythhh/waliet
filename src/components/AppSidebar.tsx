@@ -1,4 +1,5 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus } from "lucide-react";
+import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import viralityIcon from "@/assets/virality-icon.png";
@@ -98,6 +99,7 @@ export function AppSidebar() {
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
+  const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
   
   useEffect(() => {
@@ -375,7 +377,7 @@ export function AppSidebar() {
                         <span className="text-sm font-medium text-white truncate">{brand.name}</span>
                       </button>)}
                   </>}
-                {!isAdmin && brandMemberships.length > 0 && <>
+              {!isAdmin && brandMemberships.length > 0 && <>
                     <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
                     {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
                         {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
@@ -384,6 +386,23 @@ export function AppSidebar() {
                         <span className="text-sm font-medium text-white truncate">{membership.brands.name}</span>
                       </button>)}
                   </>}
+                {!isAdmin && (
+                  <>
+                    <div className="border-t border-[#1f1f1f] my-1.5" />
+                    <button
+                      onClick={() => {
+                        setWorkspaceOpen(false);
+                        setShowCreateBrandDialog(true);
+                      }}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white"
+                    >
+                      <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                        <Plus className="w-3 h-3" />
+                      </div>
+                      <span className="text-sm font-medium">Create Brand</span>
+                    </button>
+                  </>
+                )}
               </div>
             </PopoverContent>
           </Popover>
@@ -444,5 +463,13 @@ export function AppSidebar() {
           </div>
         </div>
       </aside>
+      <CreateBrandDialog 
+        open={showCreateBrandDialog} 
+        onOpenChange={setShowCreateBrandDialog}
+        hideTrigger
+        onSuccess={() => {
+          fetchBrandMemberships();
+        }}
+      />
     </>;
 }
