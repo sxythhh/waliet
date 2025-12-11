@@ -3,16 +3,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Upload, X } from "lucide-react";
+import { Plus, Upload, X, Building2 } from "lucide-react";
 
 const brandSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  slug: z.string().trim().min(1, "Slug is required").max(100).regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  name: z.string().trim().min(1, "Brand name is required").max(100),
   description: z.string().trim().max(500).optional(),
 });
 
@@ -44,7 +43,6 @@ export function CreateBrandDialog({
     resolver: zodResolver(brandSchema),
     defaultValues: {
       name: "",
-      slug: "",
       description: "",
     }
   });
@@ -80,6 +78,10 @@ export function CreateBrandDialog({
     return publicUrl;
   };
 
+  const generateSlug = (name: string): string => {
+    return name.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  };
+
   const onSubmit = async (values: BrandFormValues) => {
     setIsSubmitting(true);
     try {
@@ -87,9 +89,11 @@ export function CreateBrandDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      const slug = generateSlug(values.name);
+
       const { data: brandData, error: brandError } = await supabase.from("brands").insert({
         name: values.name,
-        slug: values.slug,
+        slug: slug,
         description: values.description || null,
         logo_url: logoUrl,
       }).select().single();
@@ -116,7 +120,7 @@ export function CreateBrandDialog({
     } catch (error: any) {
       console.error("Error creating brand:", error);
       if (error.code === "23505") {
-        toast.error("A brand with this slug already exists");
+        toast.error("A brand with this name already exists");
       } else {
         toast.error("Failed to create brand. Please try again.");
       }
@@ -135,103 +139,104 @@ export function CreateBrandDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-md bg-background border-0">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="text-lg font-medium">Create Brand</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-sm bg-[#0a0a0a] border-[#1a1a1a] p-0 overflow-hidden">
+        {/* Header with gradient accent */}
+        <div className="relative px-6 pt-8 pb-6">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+          <DialogHeader className="relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-primary" />
+              </div>
+              <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white">
+                Create Brand
+              </DialogTitle>
+            </div>
+            <p className="text-sm text-neutral-500" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              Set up your brand workspace to manage campaigns
+            </p>
+          </DialogHeader>
+        </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            {/* Logo Upload */}
-            <div className="flex items-start gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 pb-6 space-y-5">
+            {/* Logo Upload - Centered */}
+            <div className="flex flex-col items-center">
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               {logoPreview ? (
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0">
-                  <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
-                  <button type="button" onClick={removeLogo} className="absolute top-1 right-1 p-1 bg-black/60 rounded-full hover:bg-black/80 transition-colors">
+                <div className="relative group">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden ring-2 ring-primary/20">
+                    <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={removeLogo} 
+                    className="absolute -top-2 -right-2 p-1.5 bg-red-500/90 rounded-full hover:bg-red-500 transition-colors shadow-lg"
+                  >
                     <X className="h-3 w-3 text-white" />
                   </button>
                 </div>
               ) : (
-                <div className="w-20 h-20 border border-dashed border-muted-foreground/30 rounded-xl flex items-center justify-center cursor-pointer hover:border-muted-foreground/50 hover:bg-muted/50 transition-all shrink-0" onClick={() => fileInputRef.current?.click()}>
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-20 h-20 rounded-2xl border-2 border-dashed border-neutral-700 hover:border-primary/50 flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-primary/5 group"
+                >
+                  <Upload className="h-5 w-5 text-neutral-500 group-hover:text-primary transition-colors" />
+                  <span className="text-[10px] text-neutral-500 group-hover:text-primary transition-colors" style={{ fontFamily: 'Inter' }}>
+                    Upload logo
+                  </span>
+                </button>
               )}
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-              
-              <div className="flex-1 space-y-3">
-                <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input 
-                        placeholder="Brand name" 
-                        className="bg-muted/50 border-0 h-9 text-sm focus-visible:ring-0 focus-visible:ring-offset-0" 
-                        {...field} 
-                        onChange={e => {
-                          field.onChange(e);
-                          const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-                          form.setValue("slug", slug);
-                        }} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="slug" render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="flex items-center">
-                        <span className="text-muted-foreground text-sm pr-1">@</span>
-                        <Input 
-                          placeholder="brand-slug" 
-                          className="bg-muted/50 border-0 h-9 text-sm focus-visible:ring-0 focus-visible:ring-offset-0" 
-                          {...field} 
-                          onChange={e => {
-                            const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-                            field.onChange(slug);
-                          }} 
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
             </div>
 
-            <FormField control={form.control} name="description" render={({ field }) => (
+            {/* Brand Name Input */}
+            <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground text-xs font-normal">Description</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="Brief description..." 
-                    className="bg-muted/50 border-0 h-9 text-sm focus-visible:ring-0 focus-visible:ring-offset-0" 
+                    placeholder="Brand name" 
+                    className="bg-[#141414] border-0 h-11 text-sm text-white placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 rounded-xl" 
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                     {...field} 
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs" />
               </FormItem>
             )} />
 
-            <div className="flex items-center gap-2 pt-2">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={() => {
-                  setOpen(false);
-                  form.reset();
-                  setLogoFile(null);
-                  setLogoPreview(null);
-                }} 
-                disabled={isSubmitting} 
-                className="text-muted-foreground hover:text-foreground hover:bg-muted ml-auto"
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90 tracking-[-0.5px]">
-                {isSubmitting ? "Creating..." : "Create"}
-              </Button>
-            </div>
+            {/* Description Input */}
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input 
+                    placeholder="Brief description (optional)" 
+                    className="bg-[#141414] border-0 h-11 text-sm text-white placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 rounded-xl" 
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )} />
+
+            {/* Submit Button */}
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition-all"
+              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+            >
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Creating...
+                </span>
+              ) : "Create Brand"}
+            </Button>
           </form>
         </Form>
       </DialogContent>
