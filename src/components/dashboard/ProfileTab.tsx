@@ -561,20 +561,16 @@ export function ProfileTab() {
             return <div key={account.id} className="group relative p-4 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
                     {/* Main Layout */}
                     <div className="flex items-start gap-4">
-                      {/* Platform Icon - Large & Centered */}
-                      <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-muted/50 dark:bg-muted/30 flex-shrink-0">
-                        <div className="w-8 h-8">
-                          {getPlatformIcon(account.platform)}
-                        </div>
-                      </div>
-                      
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        {/* Username Row */}
+                        {/* Username Row with Platform Icon */}
                         <div 
                           onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
                           className="cursor-pointer group/link inline-flex items-center gap-2"
                         >
+                          <div className="w-5 h-5 flex-shrink-0">
+                            {getPlatformIcon(account.platform)}
+                          </div>
                           <span className="font-semibold text-base text-foreground group-hover/link:underline" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                             {account.username}
                           </span>
@@ -610,6 +606,17 @@ export function ProfileTab() {
                               No campaigns linked
                             </span>
                           )}
+                          <button
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 text-[11px] text-muted-foreground hover:text-primary transition-all"
+                            style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate('/dashboard?tab=campaigns');
+                            }}
+                          >
+                            <Link2 className="w-3 h-3" />
+                            <span>Link</span>
+                          </button>
                         </div>
                       </div>
                       
