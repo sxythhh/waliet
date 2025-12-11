@@ -485,11 +485,12 @@ export function ProfileTab() {
         return;
       }
 
-      // Check for duplicate username if username changed
+      // Check for duplicate username if username changed (case-insensitive)
       if (profile.username) {
+        const normalizedUsername = profile.username.toLowerCase().trim();
         const {
           data: existingProfile
-        } = await supabase.from("profiles").select("id").eq("username", profile.username).neq("id", session.user.id).maybeSingle();
+        } = await supabase.from("profiles").select("id").ilike("username", normalizedUsername).neq("id", session.user.id).maybeSingle();
         if (existingProfile) {
           setSaving(false);
           toast({
@@ -506,7 +507,7 @@ export function ProfileTab() {
       const {
         error
       } = await supabase.from("profiles").update({
-        username: profile.username,
+        username: profile.username?.toLowerCase().trim(),
         full_name: profile.full_name,
         bio: profile.bio,
         country: profile.country,
