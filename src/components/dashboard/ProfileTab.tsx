@@ -239,7 +239,7 @@ export function ProfileTab() {
     return joinedCampaigns.find(c => c.id === campaignId);
   };
   const getPlatformIcon = (platform: string) => {
-    const iconClass = "h-4 w-4";
+    const iconClass = "w-full h-full object-contain";
     const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
     const isLightMode = theme === "light" || theme === "system" && systemIsLight;
     switch (platform.toLowerCase()) {
