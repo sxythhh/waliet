@@ -31,7 +31,15 @@ export default function BrandInvite() {
   };
 
   const loadInvitation = async () => {
+    if (!invitationId) {
+      console.error("No invitation ID provided");
+      setLoading(false);
+      return;
+    }
+    
     try {
+      console.log("Loading invitation:", invitationId);
+      
       // Fetch invitation
       const { data: inviteData, error: inviteError } = await supabase
         .from("brand_invitations")
@@ -39,20 +47,34 @@ export default function BrandInvite() {
         .eq("id", invitationId)
         .maybeSingle();
 
-      if (inviteError) throw inviteError;
+      console.log("Invitation response:", { inviteData, inviteError });
+
+      if (inviteError) {
+        console.error("Invitation fetch error:", inviteError);
+        toast.error("Failed to load invitation");
+        setLoading(false);
+        return;
+      }
+      
       if (!inviteData) {
+        console.log("Invitation not found");
         toast.error("Invitation not found");
+        setLoading(false);
         return;
       }
 
       // Check if invitation has expired
       if (inviteData.expires_at && new Date(inviteData.expires_at) < new Date()) {
+        console.log("Invitation expired");
         toast.error("This invitation has expired");
+        setLoading(false);
         return;
       }
 
       if (inviteData.status !== "pending") {
+        console.log("Invitation already used:", inviteData.status);
         toast.error("This invitation has already been used");
+        setLoading(false);
         return;
       }
 
@@ -66,7 +88,13 @@ export default function BrandInvite() {
         .eq("id", inviteData.brand_id)
         .maybeSingle();
 
-      if (brandError) throw brandError;
+      console.log("Brand response:", { brandData, brandError });
+
+      if (brandError) {
+        console.error("Brand fetch error:", brandError);
+        toast.error("Failed to load brand details");
+      }
+      
       setBrand(brandData);
     } catch (error: any) {
       console.error("Error loading invitation:", error);
