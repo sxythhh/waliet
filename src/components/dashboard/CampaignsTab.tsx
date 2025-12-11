@@ -555,7 +555,7 @@ export function CampaignsTab({
         </div>
         <div className="flex gap-2">
           
-          <Button onClick={onOpenPrivateDialog} size="sm" className="gap-2 bg-[#4b85f7] hover:bg-[#3a74e6] text-white border border-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px]">
+          <Button onClick={onOpenPrivateDialog} size="sm" className="gap-2 text-white border border-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df]">
             <img src={privateCampaignIcon} alt="" className="h-4 w-4" />
             Private Campaign 
           </Button>
@@ -564,10 +564,7 @@ export function CampaignsTab({
 
       {/* Actions Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <button 
-          onClick={() => navigate('/dashboard?tab=discover')}
-          className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left"
-        >
+        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left">
           <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
@@ -579,10 +576,7 @@ export function CampaignsTab({
           </div>
         </button>
         
-        <button 
-          onClick={() => navigate('/dashboard?tab=discover')}
-          className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left"
-        >
+        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left">
           <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <Play className="w-5 h-5 text-white" />
           </div>
@@ -594,10 +588,7 @@ export function CampaignsTab({
           </div>
         </button>
         
-        <button 
-          onClick={() => navigate('/dashboard?tab=discover')}
-          className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left"
-        >
+        <button onClick={() => navigate('/dashboard?tab=discover')} className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left">
           <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <Search className="w-5 h-5 text-white" />
           </div>
