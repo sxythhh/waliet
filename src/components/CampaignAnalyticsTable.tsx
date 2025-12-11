@@ -385,16 +385,23 @@ export function CampaignAnalyticsTable({
       
       console.log('All user IDs to fetch profiles for:', allUserIds.length, allUserIds.slice(0, 5));
 
-      // Fetch profiles for all linked accounts
+      // Fetch profiles for all linked accounts (batch to avoid query limits)
       const profilesMap = new Map();
       if (allUserIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("id, username, avatar_url, trust_score")
-          .in("id", allUserIds);
-        
-        console.log('Profiles fetch result:', profiles?.length || 0, 'error:', profilesError);
-        (profiles || []).forEach(p => profilesMap.set(p.id, p));
+        const batchSize = 50;
+        for (let i = 0; i < allUserIds.length; i += batchSize) {
+          const batch = allUserIds.slice(i, i + batchSize);
+          const { data: profiles, error: profilesError } = await supabase
+            .from("profiles")
+            .select("id, username, avatar_url, trust_score")
+            .in("id", batch);
+          
+          if (profilesError) {
+            console.error('Profiles fetch error:', profilesError);
+          }
+          (profiles || []).forEach(p => profilesMap.set(p.id, p));
+        }
+        console.log('Profiles fetched total:', profilesMap.size);
       }
 
       // Fetch ALL demographic submissions for all matched social accounts
