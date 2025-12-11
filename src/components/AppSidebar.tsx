@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import viralityIcon from "@/assets/virality-icon.png";
 import discordIcon from "@/assets/discord-icon.png";
+import supportIcon from "@/assets/support-icon.svg";
 import webStoriesInactive from "@/assets/web-stories-inactive.svg";
 import webStoriesActive from "@/assets/web-stories-active.svg";
 import walletInactive from "@/assets/wallet-inactive.svg";
@@ -482,7 +483,7 @@ export function AppSidebar() {
               </button>
             </PopoverTrigger>
             <PopoverContent 
-              className="w-64 p-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl" 
+              className="w-64 p-3 bg-[#111111] border-0 rounded-xl" 
               side="top" 
               align="start" 
               sideOffset={8}
@@ -501,22 +502,16 @@ export function AppSidebar() {
                     <p className="text-xs text-neutral-500 truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-0.5 bg-[#2a2a2a] rounded-lg p-1">
-                  <button 
-                    onClick={() => setTheme('system')} 
-                    className={`p-1.5 rounded transition-colors ${theme === 'system' ? 'bg-[#3a3a3a] text-white' : 'text-neutral-500 hover:text-white'}`}
-                  >
-                    <Monitor className="w-4 h-4" />
-                  </button>
+                <div className="flex items-center gap-0.5 bg-[#1f1f1f] rounded-lg p-1">
                   <button 
                     onClick={() => setTheme('light')} 
-                    className={`p-1.5 rounded transition-colors ${theme === 'light' ? 'bg-[#3a3a3a] text-white' : 'text-neutral-500 hover:text-white'}`}
+                    className={`p-1.5 rounded transition-colors ${theme === 'light' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}
                   >
                     <Sun className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => setTheme('dark')} 
-                    className={`p-1.5 rounded transition-colors ${theme === 'dark' ? 'bg-[#3a3a3a] text-white' : 'text-neutral-500 hover:text-white'}`}
+                    className={`p-1.5 rounded transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}
                   >
                     <Moon className="w-4 h-4" />
                   </button>
@@ -527,16 +522,16 @@ export function AppSidebar() {
               <div className="space-y-0.5 mb-3">
                 <button 
                   onClick={() => window.open("https://discord.gg/virality", "_blank")}
-                  className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#2a2a2a] transition-colors"
+                  className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#1f1f1f] transition-colors"
                 >
                   <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord</span>
                 </button>
                 <button 
                   onClick={() => window.open("mailto:support@virality.gg", "_blank")}
-                  className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#2a2a2a] transition-colors"
+                  className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#1f1f1f] transition-colors"
                 >
-                  <BookOpen className="w-5 h-5" />
+                  <img src={supportIcon} alt="Support" className="w-5 h-5" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Support</span>
                 </button>
               </div>
