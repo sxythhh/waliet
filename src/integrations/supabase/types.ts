@@ -759,6 +759,7 @@ export type Database = {
           allowed_platforms: string[] | null
           analytics_url: string | null
           application_questions: Json | null
+          asset_links: Json | null
           banner_url: string | null
           brand_id: string | null
           brand_logo_url: string | null
@@ -779,6 +780,7 @@ export type Database = {
           is_infinite_budget: boolean | null
           is_private: boolean | null
           preview_url: string | null
+          requirements: string[] | null
           requires_application: boolean
           rpm_rate: number
           slug: string
@@ -792,6 +794,7 @@ export type Database = {
           allowed_platforms?: string[] | null
           analytics_url?: string | null
           application_questions?: Json | null
+          asset_links?: Json | null
           banner_url?: string | null
           brand_id?: string | null
           brand_logo_url?: string | null
@@ -812,6 +815,7 @@ export type Database = {
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
           preview_url?: string | null
+          requirements?: string[] | null
           requires_application?: boolean
           rpm_rate: number
           slug: string
@@ -825,6 +829,7 @@ export type Database = {
           allowed_platforms?: string[] | null
           analytics_url?: string | null
           application_questions?: Json | null
+          asset_links?: Json | null
           banner_url?: string | null
           brand_id?: string | null
           brand_logo_url?: string | null
@@ -845,6 +850,7 @@ export type Database = {
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
           preview_url?: string | null
+          requirements?: string[] | null
           requires_application?: boolean
           rpm_rate?: number
           slug?: string

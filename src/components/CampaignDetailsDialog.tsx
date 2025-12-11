@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2 } from "lucide-react";
 import { useState } from "react";
 import tiktokIcon from "@/assets/tiktok-logo-black.png";
 import instagramIcon from "@/assets/instagram-logo-new.png";
@@ -11,6 +11,11 @@ interface ConnectedAccount {
   id: string;
   platform: string;
   username: string;
+}
+
+interface AssetLink {
+  label: string;
+  url: string;
 }
 
 interface Campaign {
@@ -29,6 +34,8 @@ interface Campaign {
   guidelines?: string | null;
   embed_url?: string | null;
   connected_accounts?: ConnectedAccount[];
+  asset_links?: AssetLink[] | null;
+  requirements?: string[] | null;
 }
 
 interface CampaignDetailsDialogProps {
@@ -79,10 +86,9 @@ export function CampaignDetailsDialog({
   
   const daysUntilEnd = calculateDaysUntilEnd(campaign.end_date);
   const timeAgo = calculateTimeAgo(campaign.created_at);
-  const description = campaign.description || "";
-  const isLongDescription = description.length > 300;
-  const displayDescription = showFullDescription ? description : description.slice(0, 300);
   const hasConnectedAccounts = campaign.connected_accounts && campaign.connected_accounts.length > 0;
+  const hasAssetLinks = campaign.asset_links && campaign.asset_links.length > 0;
+  const hasRequirements = campaign.requirements && campaign.requirements.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -183,26 +189,52 @@ export function CampaignDetailsDialog({
           </div>
         )}
 
-        {/* Details Section */}
-        <div className="mb-6">
-          <h4 className="text-xl font-bold mb-3">Details</h4>
-          <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-            {displayDescription || "No description available."}
-            {isLongDescription && !showFullDescription && "..."}
+        {/* Asset Links Section */}
+        {hasAssetLinks && (
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold mb-3">Campaign Assets</h4>
+            <div className="grid grid-cols-2 gap-2">
+              {campaign.asset_links!.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center shrink-0">
+                    <Link2 className="w-5 h-5 text-[#2060df]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{link.label}</p>
+                    <p className="text-xs text-muted-foreground truncate">{link.url}</p>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                </a>
+              ))}
+            </div>
           </div>
-          {isLongDescription && (
-            <button 
-              onClick={() => setShowFullDescription(!showFullDescription)} 
-              className="text-sm font-medium text-foreground mt-2 flex items-center gap-1 hover:underline"
-            >
-              {showFullDescription ? (
-                <>Show less <ChevronUp className="w-4 h-4" /></>
-              ) : (
-                <>Show more <ChevronDown className="w-4 h-4" /></>
-              )}
-            </button>
-          )}
-        </div>
+        )}
+
+        {/* Requirements Section */}
+        {hasRequirements && (
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold mb-3">Campaign Requirements</h4>
+            <div className="space-y-2">
+              {campaign.requirements!.map((req, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-start gap-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-xs font-semibold shrink-0 mt-0.5">
+                    {index + 1}
+                  </div>
+                  <p className="text-sm leading-relaxed">{req}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* What to include Section */}
         {campaign.hashtags && campaign.hashtags.length > 0 && (
