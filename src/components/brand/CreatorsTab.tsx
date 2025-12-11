@@ -192,7 +192,7 @@ export function CreatorsTab({
         </div>
       </div>;
   }
-  return <div className="p-6 space-y-6">
+  return <div className="p-6 space-y-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
@@ -204,7 +204,7 @@ export function CreatorsTab({
         
       </div>
 
-      {creators.length === 0 ? <Card className="p-12 flex flex-col items-center justify-center text-center">
+      {creators.length === 0 ? <Card className="p-12 flex flex-col items-center justify-center text-center flex-1">
           <Users className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">No creators yet</h3>
           <p className="text-muted-foreground">
@@ -212,7 +212,7 @@ export function CreatorsTab({
           </p>
         </Card> : <>
           {/* Desktop Table */}
-          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50 border border-[#e0e0e0] dark:border-[#111111] max-h-[600px] overflow-y-auto">
+          <div className="hidden lg:block rounded-xl overflow-hidden bg-card/50 border border-[#e0e0e0] dark:border-[#111111] flex-1 overflow-y-auto">
             <table className="w-full">
               <thead className="sticky top-0 bg-card z-10">
                 <tr className="border-b border-[#e0e0e0] dark:border-[#111111]">
@@ -241,23 +241,23 @@ export function CreatorsTab({
 
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {creator.social_accounts.slice(0, 3).map((account, idx) => <Button key={idx} variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground rounded-full bg-muted/50 hover:bg-muted" onClick={e => {
+                        {creator.social_accounts.slice(0, 3).map((account, idx) => <Button key={idx} variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-foreground rounded-full bg-muted/50 hover:bg-muted" onClick={e => {
                     e.stopPropagation();
                     if (account.account_link) {
                       window.open(account.account_link, "_blank");
                     }
                   }}>
                             <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3.5 w-3.5 object-contain" />
-                            <span className="text-xs max-w-[80px] truncate">@{account.username}</span>
+                            <span className="text-xs font-medium tracking-[-0.5px] max-w-[80px] truncate">@{account.username}</span>
                           </Button>)}
-                        {creator.social_accounts.length > 3 && <span className="text-xs text-muted-foreground px-2">
+                        {creator.social_accounts.length > 3 && <span className="text-xs text-muted-foreground px-2 tracking-[-0.5px]">
                             +{creator.social_accounts.length - 3}
                           </span>}
                       </div>
                     </td>
 
                     <td className="py-4 px-5 text-right">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground tracking-[-0.5px]">
                         {creator.date_joined ? new Date(creator.date_joined).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
@@ -267,7 +267,7 @@ export function CreatorsTab({
                     </td>
 
                     <td className="py-4 px-5 text-right">
-                      <span className="font-semibold tabular-nums text-sm text-green-500">
+                      <span className="font-semibold tabular-nums text-sm text-green-500 tracking-[-0.5px]">
                         ${creator.total_earnings.toFixed(2)}
                       </span>
                     </td>
@@ -305,14 +305,14 @@ export function CreatorsTab({
 
                 {/* Social Accounts */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {creator.social_accounts.slice(0, 4).map((account, idx) => <Button key={idx} variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground rounded-full bg-muted/50 hover:bg-muted" onClick={e => {
+                  {creator.social_accounts.slice(0, 4).map((account, idx) => <Button key={idx} variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-foreground rounded-full bg-muted/50 hover:bg-muted" onClick={e => {
               e.stopPropagation();
               if (account.account_link) {
                 window.open(account.account_link, "_blank");
               }
             }}>
                       <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3.5 w-3.5 object-contain" />
-                      <span className="text-xs">@{account.username}</span>
+                      <span className="text-xs font-medium tracking-[-0.5px]">@{account.username}</span>
                     </Button>)}
                 </div>
               </div>)}
