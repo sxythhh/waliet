@@ -545,7 +545,29 @@ export function CampaignsTab({
             Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Here's what's happening with your campaigns
+            Select a campaign to see details and start earning
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+ 
           </p>
         </div>
         <div className="flex gap-2">
