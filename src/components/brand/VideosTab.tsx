@@ -122,7 +122,7 @@ export function VideosTab({ campaignId, brandId, isAdmin, approvedCreators }: Vi
         </TabsList>
 
         <TabsContent value="shortimize" className="mt-4">
-          <ShortimizeVideosTable brandId={brandId} collectionName={collectionName} />
+          <ShortimizeVideosTable brandId={brandId} collectionName={collectionName} campaignId={campaignId} />
         </TabsContent>
 
         <TabsContent value="uploaded" className="mt-4">

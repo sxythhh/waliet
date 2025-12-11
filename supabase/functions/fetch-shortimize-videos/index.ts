@@ -29,14 +29,29 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5)
 }
 
 // Check if video caption contains any of the hashtags
-function videoMatchesHashtags(video: any, hashtags: string[]): boolean {
+function videoMatchesHashtags(video: any, hashtags: string[], logFirst = false): boolean {
   if (!hashtags || hashtags.length === 0) return true;
   
-  const caption = (video.title || video.caption || '').toLowerCase();
+  // Check multiple possible caption fields
+  const caption = (video.title || video.caption || video.description || video.text || '').toLowerCase();
+  
+  if (logFirst) {
+    console.log('[fetch-shortimize-videos] Sample video caption fields:', {
+      title: video.title?.substring(0, 100),
+      caption: video.caption?.substring(0, 100),
+      description: video.description?.substring(0, 100),
+      text: video.text?.substring(0, 100),
+      combinedCaption: caption.substring(0, 100)
+    });
+  }
   
   return hashtags.some(hashtag => {
     const hashtagLower = hashtag.toLowerCase().replace(/^#/, '');
-    return caption.includes(`#${hashtagLower}`) || caption.includes(hashtagLower);
+    // Check for hashtag with # prefix, without prefix, or as part of words
+    const hasMatch = caption.includes(`#${hashtagLower}`) || 
+                     caption.includes(hashtagLower) ||
+                     caption.includes(hashtagLower.replace(/\s+/g, ''));
+    return hasMatch;
   });
 }
 
@@ -182,8 +197,8 @@ serve(async (req) => {
         const result = await response.json();
         const videos = result.data || [];
         
-        // Filter by hashtag
-        const matchingVideos = videos.filter((v: any) => videoMatchesHashtags(v, campaignHashtags));
+        // Filter by hashtag - log first video for debugging
+        const matchingVideos = videos.filter((v: any, idx: number) => videoMatchesHashtags(v, campaignHashtags, idx === 0));
         allMatchingVideos.push(...matchingVideos);
         
         console.log(`[fetch-shortimize-videos] Page ${currentPage}: ${videos.length} videos, ${matchingVideos.length} matching, total: ${allMatchingVideos.length}`);
