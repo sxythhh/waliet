@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Trash2, Shield, User, Crown } from "lucide-react";
+import { Trash2, Shield, User, Crown } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -186,9 +186,8 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
             onClick={() => setInviteDialogOpen(true)}
             size="sm"
             variant="ghost"
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground tracking-[-0.5px]"
           >
-            <UserPlus className="mr-2 h-4 w-4" />
             Invite
           </Button>
         )}
