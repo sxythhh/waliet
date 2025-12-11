@@ -189,7 +189,7 @@ export function UserSettingsTab() {
           </div>
 
           {/* Team Members Section */}
-          <div className="pt-4 border-t border-border/50">
+          <div className="pt-4">
             <TeamMembersTab brandId={brand.id} />
           </div>
         </div>}
