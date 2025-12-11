@@ -1277,7 +1277,7 @@ export function CampaignAnalyticsTable({
               <h3 className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{
               fontFamily: 'Inter, sans-serif'
             }}>Account Analytics</h3>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex items-center gap-2 w-full sm:w-auto py-[1px]">
                 <div className="relative flex-1 sm:w-44">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input placeholder="Search accounts..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-8 bg-muted/50 border-0 text-sm tracking-[-0.5px]" style={{
@@ -1286,7 +1286,7 @@ export function CampaignAnalyticsTable({
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className={`h-8 text-sm tracking-[-0.5px] gap-1.5 ${platformFilter !== 'all' || showLinkedOnly || showPaidOnly ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} style={{
+                    <Button variant="ghost" size="sm" className={`h-8 text-sm tracking-[-0.5px] gap-1.5 bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground ${platformFilter !== 'all' || showLinkedOnly || showPaidOnly ? "text-foreground" : ""}`} style={{
                     fontFamily: 'Inter, sans-serif'
                   }}>
                       <Filter className="h-3.5 w-3.5" />
