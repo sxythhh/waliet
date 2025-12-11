@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon } from "lucide-react";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
@@ -93,7 +93,8 @@ export function AppSidebar() {
     user
   } = useAuth();
   const {
-    theme
+    theme,
+    setTheme
   } = useTheme();
   const {
     isAdmin
@@ -439,21 +440,92 @@ export function AppSidebar() {
 
         {/* User Profile Section */}
         <div className="p-2">
-          <div className="flex items-center gap-3 p-2.5">
-            <Avatar className="w-9 h-9">
-              <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-              <AvatarFallback className="bg-neutral-800 text-neutral-300 text-sm">
-                {getInitial()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-sm font-medium text-white truncate">{displayName}</p>
-              <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
-            </div>
-            <button onClick={handleSignOut} className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors" title="Log out">
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-[#141414] transition-colors">
+                <Avatar className="w-9 h-9">
+                  <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                  <AvatarFallback className="bg-neutral-800 text-neutral-300 text-sm">
+                    {getInitial()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">{displayName}</p>
+                  <p className="text-xs text-neutral-500 truncate font-inter tracking-[-0.5px]">{user?.email}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-neutral-500" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="w-64 p-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl" 
+              side="top" 
+              align="start" 
+              sideOffset={8}
+            >
+              {/* User Info + Theme Toggle */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                    <AvatarFallback className="bg-neutral-800 text-neutral-300 text-sm">
+                      {getInitial()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">{displayName}</p>
+                    <p className="text-xs text-neutral-500 truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.5 bg-[#2a2a2a] rounded-lg p-1">
+                  <button 
+                    onClick={() => setTheme('system')} 
+                    className={`p-1.5 rounded transition-colors ${theme === 'system' ? 'bg-[#3a3a3a] text-white' : 'text-neutral-500 hover:text-white'}`}
+                  >
+                    <Monitor className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => setTheme('light')} 
+                    className={`p-1.5 rounded transition-colors ${theme === 'light' ? 'bg-[#3a3a3a] text-white' : 'text-neutral-500 hover:text-white'}`}
+                  >
+                    <Sun className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => setTheme('dark')} 
+                    className={`p-1.5 rounded transition-colors ${theme === 'dark' ? 'bg-[#3a3a3a] text-white' : 'text-neutral-500 hover:text-white'}`}
+                  >
+                    <Moon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Menu Items */}
+              <div className="space-y-0.5 mb-3">
+                <button 
+                  onClick={() => window.open("https://discord.gg/virality", "_blank")}
+                  className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#2a2a2a] transition-colors"
+                >
+                  <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
+                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord</span>
+                </button>
+                <button 
+                  onClick={() => window.open("mailto:support@virality.gg", "_blank")}
+                  className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#2a2a2a] transition-colors"
+                >
+                  <BookOpen className="w-5 h-5" />
+                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Support</span>
+                </button>
+              </div>
+
+              {/* Sign Out Button */}
+              <button 
+                onClick={handleSignOut}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#6b2a2a] hover:bg-[#7a3333] text-white rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-medium font-inter tracking-[-0.5px]">Sign Out</span>
+              </button>
+            </PopoverContent>
+          </Popover>
         </div>
       </aside>
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger onSuccess={() => {
