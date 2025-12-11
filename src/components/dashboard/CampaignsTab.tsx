@@ -918,45 +918,48 @@ export function CampaignsTab({
     
     {/* Link Account Options Dialog */}
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="sm:max-w-lg border-0 bg-gradient-to-b from-background to-muted/20">
-        <DialogHeader className="space-y-3 pb-2">
-          <DialogTitle className="text-2xl font-bold tracking-tight">Link Your Account</DialogTitle>
-          <DialogDescription className="text-base">
-            Choose how you'd like to connect your social media account
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-6">
-          <button onClick={() => {
-            setDialogOpen(false);
-            navigate("/dashboard?tab=profile");
-          }} className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1">
-            <div className="relative flex items-start gap-4">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
-                <Link2 className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
-              </div>
-              <div className="flex-1 space-y-1">
-                <h3 className="text-lg font-semibold tracking-tight">Link Existing Account</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Choose from your already connected social media accounts
-                </p>
-              </div>
+      <DialogContent className="sm:max-w-sm border-0 p-0 overflow-hidden bg-background">
+        <div className="p-6 pb-4">
+          <DialogHeader className="space-y-1.5">
+            <DialogTitle className="text-base font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+              Link Your Account
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              Connect a social account to this campaign
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        
+        <div className="px-6 pb-6 space-y-2">
+          <button 
+            onClick={() => {
+              setDialogOpen(false);
+              navigate("/dashboard?tab=profile");
+            }} 
+            className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left"
+          >
+            <div>
+              <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Link Existing</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5" style={{ fontFamily: 'Inter' }}>From connected accounts</p>
+            </div>
+            <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
             </div>
           </button>
           
-          <button onClick={() => {
-            setDialogOpen(false);
-            setAddAccountDialogOpen(true);
-          }} className="group relative overflow-hidden rounded-2xl bg-card p-6 text-left transition-all hover:-translate-y-1">
-            <div className="relative flex items-start gap-4">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
-                <UserPlus className="h-7 w-7 text-primary transition-transform group-hover:scale-110" />
-              </div>
-              <div className="flex-1 space-y-1">
-                <h3 className="text-lg font-semibold tracking-tight">Add New Account</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Connect and verify a new social media account
-                </p>
-              </div>
+          <button 
+            onClick={() => {
+              setDialogOpen(false);
+              setAddAccountDialogOpen(true);
+            }} 
+            className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left"
+          >
+            <div>
+              <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Add New Account</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5" style={{ fontFamily: 'Inter' }}>Connect & verify new account</p>
+            </div>
+            <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
             </div>
           </button>
         </div>
