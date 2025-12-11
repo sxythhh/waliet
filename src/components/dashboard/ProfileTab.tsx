@@ -310,6 +310,61 @@ export function ProfileTab() {
     }
     setLinkingCampaign(false);
   };
+
+  const handleUnlinkCampaign = async (connectionId: string, campaignTitle: string) => {
+    const { error } = await supabase
+      .from("social_account_campaigns")
+      .update({ status: "disconnected", disconnected_at: new Date().toISOString() })
+      .eq("id", connectionId);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to unlink account from campaign"
+      });
+    } else {
+      toast({
+        title: "Account unlinked",
+        description: `Successfully unlinked from ${campaignTitle}`
+      });
+      fetchSocialAccounts();
+    }
+  };
+
+  const handleLeaveCampaign = async (campaignId: string, campaignTitle: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Update campaign submission status to withdrawn
+    const { error: submissionError } = await supabase
+      .from("campaign_submissions")
+      .update({ status: "withdrawn" })
+      .eq("campaign_id", campaignId)
+      .eq("creator_id", session.user.id);
+
+    // Also disconnect all social accounts from this campaign
+    const { error: disconnectError } = await supabase
+      .from("social_account_campaigns")
+      .update({ status: "disconnected", disconnected_at: new Date().toISOString() })
+      .eq("campaign_id", campaignId)
+      .eq("user_id", session.user.id);
+
+    if (submissionError || disconnectError) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to leave campaign"
+      });
+    } else {
+      toast({
+        title: "Left campaign",
+        description: `You have left ${campaignTitle}`
+      });
+      fetchJoinedCampaigns();
+      fetchSocialAccounts();
+    }
+  };
   
   // Remove the old delete and link/unlink functions - now handled by ManageAccountDialog
   const getLinkedCampaign = (campaignId: string | null) => {
@@ -871,16 +926,17 @@ export function ProfileTab() {
               <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Languages you post in</p>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40">
+                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                     <div className="flex flex-wrap gap-1.5 py-1">
                       {profile.content_languages?.length ? (
                         profile.content_languages.map(lang => (
-                          <Badge key={lang} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                          <Badge key={lang} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                             {lang}
                             <X 
                               className="ml-1 h-3 w-3 cursor-pointer" 
                               onClick={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
                                 setProfile({ 
                                   ...profile, 
                                   content_languages: profile.content_languages?.filter(l => l !== lang) || [] 
@@ -890,7 +946,7 @@ export function ProfileTab() {
                           </Badge>
                         ))
                       ) : (
-                        <span className="text-muted-foreground text-sm">Select languages</span>
+                        <span className="text-muted-foreground text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Select languages</span>
                       )}
                     </div>
                     <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -898,9 +954,9 @@ export function ProfileTab() {
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0 bg-popover" align="start">
                   <Command>
-                    <CommandInput placeholder="Search languages..." />
+                    <CommandInput placeholder="Search languages..." style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }} />
                     <CommandList>
-                      <CommandEmpty>No language found.</CommandEmpty>
+                      <CommandEmpty style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>No language found.</CommandEmpty>
                       <CommandGroup>
                         {["English", "Spanish", "Portuguese", "French", "German", "Italian", "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Hindi", "Arabic", "Turkish", "Polish", "Vietnamese", "Thai", "Indonesian", "Tagalog", "Swedish", "Norwegian", "Danish", "Finnish", "Greek", "Hebrew", "Czech", "Romanian", "Hungarian", "Ukrainian"].map(lang => (
                           <CommandItem 
@@ -913,6 +969,7 @@ export function ProfileTab() {
                                 setProfile({ ...profile, content_languages: [...current, lang] });
                               }
                             }}
+                            style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                           >
                             <Check className={`mr-2 h-4 w-4 ${profile.content_languages?.includes(lang) ? "opacity-100" : "opacity-0"}`} />
                             {lang}
@@ -930,16 +987,17 @@ export function ProfileTab() {
               <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Preferred content style</p>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40">
+                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                     <div className="flex flex-wrap gap-1.5 py-1">
                       {profile.content_styles?.length ? (
                         profile.content_styles.map(style => (
-                          <Badge key={style} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                          <Badge key={style} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                             {style}
                             <X 
                               className="ml-1 h-3 w-3 cursor-pointer" 
                               onClick={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
                                 setProfile({ 
                                   ...profile, 
                                   content_styles: profile.content_styles?.filter(s => s !== style) || [] 
@@ -949,7 +1007,7 @@ export function ProfileTab() {
                           </Badge>
                         ))
                       ) : (
-                        <span className="text-muted-foreground text-sm">Select content styles</span>
+                        <span className="text-muted-foreground text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Select content styles</span>
                       )}
                     </div>
                     <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -957,11 +1015,11 @@ export function ProfileTab() {
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0 bg-popover" align="start">
                   <Command>
-                    <CommandInput placeholder="Search styles..." />
+                    <CommandInput placeholder="Search styles..." style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }} />
                     <CommandList>
-                      <CommandEmpty>No style found.</CommandEmpty>
+                      <CommandEmpty style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>No style found.</CommandEmpty>
                       <CommandGroup>
-                        {["Comedy/Entertainment", "Educational", "Lifestyle", "Gaming", "Beauty/Fashion", "Fitness/Health", "Food/Cooking", "Travel", "Tech/Reviews", "Music", "Dance", "Vlogs", "ASMR", "Reactions", "Storytelling", "Tutorials", "News/Commentary", "Motivation", "Art/Creative", "DIY/Crafts"].map(style => (
+                        {["UGC", "Faceless UGC", "Clipping", "Edits", "Music", "Memes", "Slideshows", "AI", "POV"].map(style => (
                           <CommandItem 
                             key={style} 
                             onSelect={() => {
@@ -972,6 +1030,7 @@ export function ProfileTab() {
                                 setProfile({ ...profile, content_styles: [...current, style] });
                               }
                             }}
+                            style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                           >
                             <Check className={`mr-2 h-4 w-4 ${profile.content_styles?.includes(style) ? "opacity-100" : "opacity-0"}`} />
                             {style}
@@ -1034,9 +1093,9 @@ export function ProfileTab() {
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Link to Campaign</DialogTitle>
+            <DialogTitle style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Manage Campaign Links</DialogTitle>
             <DialogDescription style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-              Select a campaign to link {selectedAccountForLinking?.username} to
+              Link or unlink {selectedAccountForLinking?.username} from campaigns
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -1059,18 +1118,15 @@ export function ProfileTab() {
               </div>
             ) : (
               joinedCampaigns.map((campaign) => {
-                const isLinked = selectedAccountForLinking?.connected_campaigns?.some(
+                const linkedConnection = selectedAccountForLinking?.connected_campaigns?.find(
                   c => c.campaign.id === campaign.id
                 );
+                const isLinked = !!linkedConnection;
                 return (
-                  <button
+                  <div
                     key={campaign.id}
-                    disabled={isLinked || linkingCampaign}
-                    onClick={() => handleLinkCampaign(campaign.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                      isLinked 
-                        ? 'bg-primary/10 cursor-not-allowed' 
-                        : 'bg-muted/30 hover:bg-muted/60 cursor-pointer'
+                      isLinked ? 'bg-primary/10' : 'bg-muted/30'
                     }`}
                     style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                   >
@@ -1091,17 +1147,61 @@ export function ProfileTab() {
                       <p className="font-medium text-sm">{campaign.title}</p>
                       <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
                     </div>
-                    {isLinked && (
-                      <div className="flex items-center gap-1.5 text-xs text-primary">
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Linked</span>
-                      </div>
+                    {isLinked ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleUnlinkCampaign(linkedConnection.connection_id, campaign.title)}
+                      >
+                        <Unlink className="w-3.5 h-3.5 mr-1" />
+                        Unlink
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={linkingCampaign}
+                        onClick={() => handleLinkCampaign(campaign.id)}
+                        className="text-primary hover:text-primary hover:bg-primary/10"
+                      >
+                        <Link2 className="w-3.5 h-3.5 mr-1" />
+                        Link
+                      </Button>
                     )}
-                  </button>
+                  </div>
                 );
               })
             )}
           </div>
+          
+          {/* Leave Campaign Section */}
+          {joinedCampaigns.length > 0 && (
+            <div className="border-t border-border/50 pt-4 mt-4">
+              <p className="text-sm text-muted-foreground mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                Leave a campaign
+              </p>
+              <div className="space-y-2">
+                {joinedCampaigns.map((campaign) => (
+                  <div
+                    key={`leave-${campaign.id}`}
+                    className="flex items-center justify-between p-2 rounded-lg bg-muted/20"
+                  >
+                    <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{campaign.title}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs"
+                      onClick={() => handleLeaveCampaign(campaign.id, campaign.title)}
+                    >
+                      <LogOut className="w-3 h-3 mr-1" />
+                      Leave
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
