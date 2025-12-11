@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, TrendingDown, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Eye, Heart, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -1375,17 +1375,17 @@ export function CampaignAnalyticsTable({
             </div>
           </CardHeader>
           <CardContent className="p-0">
-          <div className="overflow-x-auto rounded-lg dark:border dark:border-[#141414]">
+          <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-lg dark:border dark:border-[#141414]">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 z-20 bg-card">
                   <TableRow className="border-0 hover:bg-transparent dark:border-b dark:border-[#141414]">
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] sticky left-0 bg-card/50 z-10 py-3" style={{
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] sticky left-0 bg-card z-30 py-3" style={{
                     fontFamily: 'Inter, sans-serif'
                   }}>Account</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card" style={{
                     fontFamily: 'Inter, sans-serif'
                   }}>User</TableHead>
-                    <TableHead className="text-foreground font-medium text-right cursor-pointer hover:text-muted-foreground transition-colors text-xs tracking-[-0.5px] whitespace-nowrap py-3 bg-card/50" style={{
+                    <TableHead className="text-foreground font-medium text-right cursor-pointer hover:text-muted-foreground transition-colors text-xs tracking-[-0.5px] whitespace-nowrap py-3 bg-card" style={{
                     fontFamily: 'Inter, sans-serif'
                   }} onClick={() => handleSort('total_views')}>
                       <div className="flex items-center justify-end gap-1">
@@ -1393,13 +1393,13 @@ export function CampaignAnalyticsTable({
                         {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-30" />}
                       </div>
                     </TableHead>
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card" style={{
                     fontFamily: 'Inter, sans-serif'
                   }}>Period</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card" style={{
                     fontFamily: 'Inter, sans-serif'
                   }}>Last Paid</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card/50" style={{
+                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card" style={{
                     fontFamily: 'Inter, sans-serif'
                   }}>Actions</TableHead>
                   </TableRow>
@@ -1903,44 +1903,45 @@ export function CampaignAnalyticsTable({
          </div>}
 
       {/* Pagination */}
-      {activeTab === 'analytics' && totalPages > 1 && <div className="flex justify-center mt-4">
-          <Pagination>
-            <PaginationContent className="gap-1">
-              <PaginationItem>
-                <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className={currentPage === 1 ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} style={{
-                backgroundColor: 'transparent'
-              }} />
-              </PaginationItem>
-              
-              {Array.from({
-              length: totalPages
-            }, (_, i) => i + 1).map(page => {
-              // Show first page, last page, current page, and pages around current
-              if (page === 1 || page === totalPages || page >= currentPage - 1 && page <= currentPage + 1) {
-                return <PaginationItem key={page}>
-                      <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer transition-colors min-w-[36px] h-[36px] rounded-md border border-transparent" style={{
-                    backgroundColor: currentPage === page ? '#202020' : 'transparent'
-                  }}>
-                        <span className={currentPage === page ? "text-white font-medium" : "text-white/50"}>
-                          {page}
-                        </span>
-                      </PaginationLink>
-                    </PaginationItem>;
+      {activeTab === 'analytics' && totalPages > 1 && <div className="flex justify-center mt-3">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+              if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`h-7 min-w-[28px] px-2 text-xs rounded transition-colors ${
+                      currentPage === page 
+                        ? 'bg-muted/70 text-foreground font-medium' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
               } else if (page === currentPage - 2 || page === currentPage + 2) {
-                return <PaginationItem key={page}>
-                      <span className="px-2 text-white/20 text-sm">...</span>
-                    </PaginationItem>;
+                return <span key={page} className="px-1 text-muted-foreground/50 text-xs">...</span>;
               }
               return null;
             })}
 
-              <PaginationItem>
-                <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-30" : "cursor-pointer hover:bg-[#202020] transition-colors"} style={{
-                backgroundColor: 'transparent'
-              }} />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>}
     </div>
 
