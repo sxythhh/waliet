@@ -264,7 +264,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
               setPagination(prev => ({ ...prev, page: 1 }));
             }}
           >
-            <SelectTrigger className="h-8 w-[140px] text-xs tracking-[-0.5px]">
+            <SelectTrigger className="h-8 w-[140px] text-xs tracking-[-0.5px] border-0 bg-muted/50 hover:bg-muted">
               <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
@@ -282,7 +282,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
         <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 tracking-[-0.5px] h-8 text-xs min-w-[200px] justify-start">
+              <Button variant="ghost" size="sm" className="gap-2 tracking-[-0.5px] h-8 text-xs min-w-[200px] justify-start bg-muted/50 hover:bg-muted">
                 <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
                 {startDate && endDate ? (
                   <span>{format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}</span>
