@@ -340,7 +340,7 @@ export function CampaignCreationWizard({
                       </div>
 
                       {/* Budget Section */}
-                      <div className="space-y-6 p-6 rounded-xl bg-muted/50 dark:bg-[#141414]">
+                      <div className="space-y-6 p-6 rounded-xl bg-[#1f1f1f]/0">
                         <h3 className="font-semibold text-foreground">Budget Settings</h3>
                         
                         <FormField control={form.control} name="is_infinite_budget" render={({
@@ -382,7 +382,7 @@ export function CampaignCreationWizard({
                       </div>
 
                       {/* Platform Targeting */}
-                      <div className="space-y-6 p-6 rounded-xl bg-muted/50 dark:bg-[#141414]">
+                      <div className="space-y-6 p-6 rounded-xl bg-[#1f1f1f]/0">
                         <h3 className="font-semibold text-foreground">Platform Targeting</h3>
                         
                         <FormField control={form.control} name="allowed_platforms" render={({
