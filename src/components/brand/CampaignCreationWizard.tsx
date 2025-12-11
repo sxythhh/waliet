@@ -610,9 +610,9 @@ export function CampaignCreationWizard({
                 </Button>
 
                 <div className="flex items-center gap-3">
-                  {currentStep > 1 && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} className="tracking-[-0.5px]" style={{
+                  {currentStep > 1 && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} style={{
                   fontFamily: 'Inter, sans-serif'
-                }}>
+                }} className="tracking-[-0.5px] border-black/0">
                       Back
                     </Button>}
                   
