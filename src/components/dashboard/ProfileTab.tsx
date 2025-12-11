@@ -794,23 +794,23 @@ export function ProfileTab() {
                             </div>
                           </div>
                         </PopoverTrigger>
-                        <PopoverContent className="w-72 p-3 bg-[#0a0a0a] border-0" align="start">
+                        <PopoverContent className="w-72 p-3 bg-[#1a1a1a] border-0" align="start" side="bottom" sideOffset={8}>
                           <div className="space-y-3">
                             {/* Account Link */}
                             {account.account_link && (
                               <button
                                 onClick={() => window.open(account.account_link, '_blank')}
-                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 hover:bg-muted/50 text-sm text-foreground transition-colors"
+                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors"
                                 style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                               >
-                                <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+                                <ArrowUpRight className="w-4 h-4 text-white" />
                                 <span>Open profile</span>
                               </button>
                             )}
                             
                             {/* Linked Campaigns */}
                             <div className="space-y-1.5">
-                              <span className="text-[11px] text-muted-foreground/70 uppercase tracking-wider" style={{ fontFamily: 'Inter' }}>
+                              <span className="text-[11px] text-white/50 uppercase tracking-wider" style={{ fontFamily: 'Inter' }}>
                                 Linked Campaigns
                               </span>
                               {connectedCampaigns.length > 0 ? (
@@ -818,7 +818,7 @@ export function ProfileTab() {
                                   {connectedCampaigns.map(({ campaign }) => (
                                     <div 
                                       key={campaign.id} 
-                                      className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-muted/40"
+                                      className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5"
                                       style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                                     >
                                       {campaign.brand_logo_url && (
@@ -828,21 +828,21 @@ export function ProfileTab() {
                                           className="w-5 h-5 rounded object-cover" 
                                         />
                                       )}
-                                      <span className="text-sm text-foreground">{campaign.title}</span>
+                                      <span className="text-sm text-white">{campaign.title}</span>
                                     </div>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-sm text-muted-foreground/60" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                                <p className="text-sm text-white/40" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                                   No campaigns linked
                                 </p>
                               )}
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-2 pt-2 border-t border-muted/30">
+                            <div className="flex gap-2 pt-2 border-t border-white/10">
                               <button
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-sm text-primary transition-colors"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-sm text-white transition-colors"
                                 style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -850,18 +850,18 @@ export function ProfileTab() {
                                   setShowLinkCampaignDialog(true);
                                 }}
                               >
-                                <Link2 className="w-4 h-4" />
+                                <Link2 className="w-4 h-4 text-white" />
                                 <span>Link</span>
                               </button>
                               <button
-                                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-sm text-destructive transition-colors"
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-sm text-white transition-colors"
                                 style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteAccount(account.id);
                                 }}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4 text-white" />
                               </button>
                             </div>
                           </div>
