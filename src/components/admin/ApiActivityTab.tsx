@@ -19,6 +19,7 @@ interface ApiLog {
   amount?: number;
   user?: string;
   platform?: string;
+  accountLink?: string;
 }
 
 const getPlatformIcon = (platform?: string) => {
@@ -41,6 +42,17 @@ const getTypeIcon = (type: string) => {
     case 'Demographics': return <PieChart className="w-4 h-4 text-pink-500" />;
     default: return null;
   }
+};
+
+const generateAccountLink = (platform?: string, username?: string) => {
+  if (!platform || !username) return null;
+  const p = platform.toLowerCase();
+  const cleanUsername = username.replace('@', '');
+  if (p === 'tiktok') return `https://tiktok.com/@${cleanUsername}`;
+  if (p === 'instagram') return `https://instagram.com/${cleanUsername}`;
+  if (p === 'youtube') return `https://youtube.com/@${cleanUsername}`;
+  if (p === 'x' || p === 'twitter') return `https://x.com/${cleanUsername}`;
+  return null;
 };
 
 export function ApiActivityTab() {
@@ -69,7 +81,7 @@ export function ApiActivityTab() {
           .limit(25),
         supabase
           .from("bounty_applications")
-          .select("applied_at, status, video_url, bounty_campaigns(title)")
+          .select("applied_at, status, video_url, user_id, bounty_campaigns(title)")
           .order("applied_at", { ascending: false })
           .limit(25),
         supabase
@@ -79,12 +91,12 @@ export function ApiActivityTab() {
           .limit(25),
         supabase
           .from("social_account_campaigns")
-          .select("connected_at, disconnected_at, status, social_accounts(username, platform), campaigns(title)")
+          .select("connected_at, disconnected_at, status, user_id, social_accounts(username, platform, user_id), campaigns(title)")
           .order("created_at", { ascending: false })
           .limit(25),
         supabase
           .from("demographic_submissions")
-          .select("submitted_at, status, tier1_percentage, social_accounts(username, platform)")
+          .select("submitted_at, status, tier1_percentage, social_accounts(username, platform, user_id)")
           .order("submitted_at", { ascending: false })
           .limit(25)
       ]);
@@ -158,7 +170,7 @@ export function ApiActivityTab() {
       // Process social account connections
       if (socialAccountsResult.data) {
         allLogs.push(...socialAccountsResult.data.map(s => {
-          const account = s.social_accounts as { username: string; platform: string } | null;
+          const account = s.social_accounts as { username: string; platform: string; user_id: string } | null;
           const campaign = s.campaigns as { title: string } | null;
           const isDisconnect = s.status === 'disconnected';
           return {
@@ -168,6 +180,7 @@ export function ApiActivityTab() {
             details: campaign?.title ? `Campaign: ${campaign.title}` : undefined,
             status: s.status,
             platform: account?.platform,
+            accountLink: generateAccountLink(account?.platform, account?.username),
           };
         }));
       }
@@ -175,7 +188,7 @@ export function ApiActivityTab() {
       // Process demographic submissions
       if (demographicsResult.data) {
         allLogs.push(...demographicsResult.data.map(d => {
-          const account = d.social_accounts as { username: string; platform: string } | null;
+          const account = d.social_accounts as { username: string; platform: string; user_id: string } | null;
           return {
             timestamp: new Date(d.submitted_at).getTime(),
             type: "Demographics",
@@ -252,63 +265,79 @@ export function ApiActivityTab() {
       {/* Activity table - scrollable on mobile */}
       <Card className="border-[#141414]">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-inter tracking-[-0.5px]">Recent Activity</CardTitle>
-          <CardDescription className="text-xs font-inter tracking-[-0.5px]">Latest platform events</CardDescription>
+          <CardTitle className="text-base font-inter tracking-[-0.3px]">Recent Activity</CardTitle>
+          <CardDescription className="text-xs font-inter tracking-[-0.3px]">Latest platform events</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table className="border-[#141414]">
+          <div className="overflow-x-auto border border-[#141414] rounded-md mx-4 mb-4">
+            <Table>
               <TableHeader>
                 <TableRow className="border-[#141414] hover:bg-transparent">
-                  <TableHead className="text-xs whitespace-nowrap font-inter tracking-[-0.5px] text-white font-medium">Time</TableHead>
-                  <TableHead className="text-xs font-inter tracking-[-0.5px] text-white font-medium">Type</TableHead>
-                  <TableHead className="text-xs hidden sm:table-cell font-inter tracking-[-0.5px] text-white font-medium">Description</TableHead>
-                  <TableHead className="text-xs font-inter tracking-[-0.5px] text-white font-medium">Status</TableHead>
-                  <TableHead className="text-xs hidden md:table-cell font-inter tracking-[-0.5px] text-white font-medium">Amount</TableHead>
+                  <TableHead className="text-xs whitespace-nowrap font-inter tracking-[-0.3px] text-white font-medium">Time</TableHead>
+                  <TableHead className="text-xs font-inter tracking-[-0.3px] text-white font-medium">Type</TableHead>
+                  <TableHead className="text-xs hidden sm:table-cell font-inter tracking-[-0.3px] text-white font-medium">Description</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell font-inter tracking-[-0.3px] text-white font-medium">User</TableHead>
+                  <TableHead className="text-xs font-inter tracking-[-0.3px] text-white font-medium">Status</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell font-inter tracking-[-0.3px] text-white font-medium">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {logs.length === 0 ? (
                   <TableRow className="border-[#141414]">
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8 font-inter tracking-[-0.5px]">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8 font-inter tracking-[-0.3px]">
                       No recent activity
                     </TableCell>
                   </TableRow>
                 ) : (
                   logs.slice(0, 50).map((log, index) => (
                     <TableRow key={index} className="border-[#141414]">
-                      <TableCell className="font-inter tracking-[-0.5px] text-xs whitespace-nowrap py-3 text-muted-foreground">
+                      <TableCell className="font-inter tracking-[-0.3px] text-xs whitespace-nowrap py-3 text-muted-foreground">
                         {format(new Date(log.timestamp), "MMM d, HH:mm")}
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="flex items-center gap-2">
                           {getTypeIcon(log.type)}
-                          <span className="font-inter tracking-[-0.5px] text-xs">{log.type}</span>
+                          <span className="font-inter tracking-[-0.3px] text-xs">{log.type}</span>
                         </div>
                       </TableCell>
                       <TableCell className="py-3 hidden sm:table-cell">
                         <div className="flex items-center gap-2">
                           {getPlatformIcon(log.platform)}
                           <div className="flex flex-col">
-                            <span className="font-inter tracking-[-0.5px] text-xs">{log.description}</span>
-                            {log.user && (
-                              <span className="text-muted-foreground font-inter tracking-[-0.5px] text-[10px]">by @{log.user}</span>
+                            {log.type === 'Account Link' && log.accountLink ? (
+                              <a 
+                                href={log.accountLink} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="font-inter tracking-[-0.3px] text-xs hover:underline cursor-pointer"
+                              >
+                                {log.description}
+                              </a>
+                            ) : (
+                              <span className="font-inter tracking-[-0.3px] text-xs">{log.description}</span>
                             )}
                             {log.details && (
-                              <span className="text-muted-foreground font-inter tracking-[-0.5px] text-[10px]">{log.details}</span>
+                              <span className="text-muted-foreground font-inter tracking-[-0.3px] text-[10px]">{log.details}</span>
                             )}
                           </div>
                         </div>
                       </TableCell>
+                      <TableCell className="py-3 hidden md:table-cell">
+                        {log.user ? (
+                          <span className="font-inter tracking-[-0.3px] text-xs text-muted-foreground">@{log.user}</span>
+                        ) : (
+                          <span className="font-inter tracking-[-0.3px] text-xs text-muted-foreground/50">-</span>
+                        )}
+                      </TableCell>
                       <TableCell className="py-3">
                         <Badge 
                           variant={getStatusColor(log.status)} 
-                          className="text-[10px] px-2 py-0.5 font-inter tracking-[-0.5px] uppercase"
+                          className="text-[10px] px-2 py-0.5 font-inter tracking-[-0.3px] uppercase"
                         >
                           {log.status || 'N/A'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-inter tracking-[-0.5px] text-xs py-3 hidden md:table-cell">
+                      <TableCell className="font-inter tracking-[-0.3px] text-xs py-3 hidden md:table-cell">
                         {log.amount ? (
                           <span className="text-emerald-500 font-medium">${log.amount.toFixed(2)}</span>
                         ) : (
