@@ -1560,7 +1560,7 @@ export function WalletTab() {
                     </span>
                   </div>
                   
-                  <div className="flex items-center justify-between py-2.5 border-t border-border/30">
+                  <div className="flex items-center justify-between py-2.5">
                     <span className="text-sm text-muted-foreground">Transaction ID</span>
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-mono text-muted-foreground">
@@ -1578,14 +1578,14 @@ export function WalletTab() {
                   </div>
 
                   {selectedTransaction.source && (
-                    <div className="flex items-center justify-between py-2.5 border-t border-border/30">
+                    <div className="flex items-center justify-between py-2.5">
                       <span className="text-sm text-muted-foreground">From</span>
                       <span className="text-sm font-medium text-right max-w-[180px] truncate">{selectedTransaction.source}</span>
                     </div>
                   )}
 
                   {selectedTransaction.destination && (
-                    <div className="flex items-center justify-between py-2.5 border-t border-border/30">
+                    <div className="flex items-center justify-between py-2.5">
                       <span className="text-sm text-muted-foreground">To</span>
                       <span className="text-sm font-medium text-right max-w-[180px] truncate">
                         {(() => {
@@ -1603,7 +1603,7 @@ export function WalletTab() {
                 {/* Payout Method Details */}
                 {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (() => {
                   return (
-                    <div className="space-y-1 pt-4 border-t border-border/50">
+                    <div className="space-y-1 pt-4">
                       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Payout Details</div>
                       
                       {selectedTransaction.metadata.payout_method && (
@@ -1624,7 +1624,7 @@ export function WalletTab() {
                         };
                         const networkLogo = getNetworkLogo();
                         return (
-                          <div className="flex items-center justify-between py-2.5 border-t border-border/30">
+                          <div className="flex items-center justify-between py-2.5">
                             <span className="text-sm text-muted-foreground">Network</span>
                             <div className="flex items-center gap-1.5">
                               {networkLogo && <img src={networkLogo} alt="Network" className="h-4 w-4" />}
@@ -1635,7 +1635,7 @@ export function WalletTab() {
                       })()}
                       
                       {selectedTransaction.metadata.payoutDetails?.address && (
-                        <div className="flex items-center justify-between py-2.5 border-t border-border/30">
+                        <div className="flex items-center justify-between py-2.5">
                           <span className="text-sm text-muted-foreground">Address</span>
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-mono">{selectedTransaction.metadata.payoutDetails.address.slice(0, 6)}...{selectedTransaction.metadata.payoutDetails.address.slice(-4)}</span>
@@ -1650,14 +1650,14 @@ export function WalletTab() {
                       )}
                       
                       {selectedTransaction.metadata.payoutDetails?.currency && (
-                        <div className="flex items-center justify-between py-2.5 border-t border-border/30">
+                        <div className="flex items-center justify-between py-2.5">
                           <span className="text-sm text-muted-foreground">Currency</span>
                           <span className="text-sm font-medium uppercase">{selectedTransaction.metadata.payoutDetails.currency}</span>
                         </div>
                       )}
                       
                       {selectedTransaction.metadata.payoutDetails?.email && (
-                        <div className="flex items-center justify-between py-2.5 border-t border-border/30">
+                        <div className="flex items-center justify-between py-2.5">
                           <span className="text-sm text-muted-foreground">PayPal</span>
                           <span className="text-sm font-medium">{selectedTransaction.metadata.payoutDetails.email}</span>
                         </div>
