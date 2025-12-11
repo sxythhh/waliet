@@ -827,7 +827,7 @@ export function ProfileTab() {
 
                             {/* Actions */}
                             <div className="flex gap-2 pt-1">
-                              <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm text-white transition-colors hover:brightness-110" style={{
+                              <button className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-white transition-colors hover:brightness-110" style={{
                           fontFamily: 'Geist',
                           letterSpacing: '-0.5px',
                           backgroundColor: '#2360de',
@@ -837,17 +837,17 @@ export function ProfileTab() {
                           setSelectedAccountForLinking(account);
                           setShowLinkCampaignDialog(true);
                         }}>
-                                <Link2 className="w-4 h-4 text-white" />
+                                <Link2 className="w-3.5 h-3.5 text-white" />
                                 <span>Link</span>
                               </button>
-                              <button className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors" style={{
+                              <button className="flex items-center justify-center px-2 py-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors" style={{
                           fontFamily: 'Geist',
                           letterSpacing: '-0.5px'
                         }} onClick={e => {
                           e.stopPropagation();
                           handleDeleteAccount(account.id);
                         }}>
-                                <Trash2 className="w-4 h-4 text-red-500" />
+                                <Trash2 className="w-3.5 h-3.5 text-red-500" />
                               </button>
                             </div>
                           </div>
