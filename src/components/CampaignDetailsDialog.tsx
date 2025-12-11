@@ -88,6 +88,39 @@ const formatDate = (dateString: string) => {
     year: 'numeric'
   });
 };
+
+const getFaviconUrl = (url: string) => {
+  try {
+    const urlObj = new URL(url);
+    return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
+  } catch {
+    return null;
+  }
+};
+
+const renderDescriptionWithLinks = (text: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      urlRegex.lastIndex = 0; // Reset regex
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#2060df] hover:underline"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 export function CampaignDetailsDialog({
   campaign,
   open,
@@ -108,7 +141,7 @@ export function CampaignDetailsDialog({
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8">
         {/* Header */}
-        <div className="flex items-start gap-4 mb-6">
+        <div className="flex items-start gap-4 mb-4">
           {campaign.brand_logo_url && <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border/50 bg-muted">
               <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
             </div>}
@@ -129,7 +162,7 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Next Payout Card */}
-        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#2060df]/10 via-[#4f89ff]/5 to-transparent">
+        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-br from-[#2060df]/10 via-[#4f89ff]/5 to-transparent">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground mb-0.5" style={{
@@ -165,7 +198,7 @@ export function CampaignDetailsDialog({
 
         {/* Description with gradient + read more */}
         {campaign.description && (
-          <div className="mb-6">
+          <div className="mb-4">
             <div className="relative">
               <div 
                 className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${
@@ -173,7 +206,7 @@ export function CampaignDetailsDialog({
                 }`}
                 style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
               >
-                {campaign.description}
+                {renderDescriptionWithLinks(campaign.description)}
               </div>
               {!showFullDescription && campaign.description.length > 200 && (
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
@@ -194,7 +227,7 @@ export function CampaignDetailsDialog({
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl bg-muted/30 mb-6">
+        <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl bg-muted/30 mb-4">
           <div className="text-center">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
@@ -246,7 +279,7 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Connected Accounts Section */}
-        {(onConnectAccount || onManageAccount) && <div className="mb-6 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+        {(onConnectAccount || onManageAccount) && <div className="mb-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold text-sm">Your Connected Accounts</h4>
               {onConnectAccount && <Button variant="ghost" size="sm" onClick={onConnectAccount} className="gap-1.5 h-8 text-xs">
@@ -266,25 +299,36 @@ export function CampaignDetailsDialog({
           </div>}
 
         {/* Asset Links Section */}
-        {hasAssetLinks && <div className="mb-6">
-            <h4 className="text-sm font-semibold mb-3">Campaign Assets</h4>
+        {hasAssetLinks && <div className="mb-4">
+            <h4 className="text-sm font-semibold mb-3" style={{ letterSpacing: '-0.5px' }}>Campaign Assets</h4>
             <div className="grid grid-cols-2 gap-2">
-              {campaign.asset_links!.map((link, index) => <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
-                  <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center shrink-0">
-                    <Link2 className="w-5 h-5 text-[#2060df]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{link.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">{link.url}</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
-                </a>)}
+              {campaign.asset_links!.map((link, index) => {
+                const faviconUrl = getFaviconUrl(link.url);
+                return (
+                  <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
+                    <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center shrink-0 overflow-hidden">
+                      {faviconUrl ? (
+                        <img src={faviconUrl} alt="" className="w-6 h-6" onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }} />
+                      ) : null}
+                      <Link2 className={`w-5 h-5 text-[#2060df] ${faviconUrl ? 'hidden' : ''}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{link.label}</p>
+                      <p className="text-xs text-muted-foreground truncate">{link.url}</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                  </a>
+                );
+              })}
             </div>
           </div>}
 
         {/* Requirements Section */}
-        {hasRequirements && <div className="mb-6">
-            <h4 className="text-sm font-semibold mb-3">Campaign Requirements</h4>
+        {hasRequirements && <div className="mb-4">
+            <h4 className="text-sm font-semibold mb-3" style={{ letterSpacing: '-0.5px' }}>Campaign Requirements</h4>
             <div className="space-y-2">
               {campaign.requirements!.map((req, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
                   <div className="w-6 h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-xs font-semibold shrink-0 mt-0.5">
@@ -295,23 +339,8 @@ export function CampaignDetailsDialog({
             </div>
           </div>}
 
-        {/* What to include Section */}
-        {campaign.hashtags && campaign.hashtags.length > 0 && <div className="mb-6 pt-6 border-t border-border">
-            <h4 className="text-xl font-bold mb-4">What to include</h4>
-            <div className="flex items-start gap-3">
-              <MessageSquare className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">Caption, tags, text</p>
-                <p className="text-xs text-primary font-medium mt-1">REQUIRED HASHTAGS</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {campaign.hashtags.map(h => h.startsWith('#') ? h : `#${h}`).join(' ')}
-                </p>
-              </div>
-            </div>
-          </div>}
-
         {/* Campaign Link Card */}
-        {campaign.embed_url && <div className="mb-6 p-4 rounded-xl border border-border">
+        {campaign.embed_url && <div className="mb-4 p-4 rounded-xl border border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -327,9 +356,6 @@ export function CampaignDetailsDialog({
               </a>
             </div>
           </div>}
-
-        {/* Campaigns on Vyro Section */}
-        
 
         {/* Join Button */}
         {onJoin && <Button onClick={onJoin} className="w-full h-14 text-lg font-semibold rounded-full" size="lg">
