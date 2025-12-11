@@ -24,7 +24,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   goal: z.enum(["attention", "leads", "conversions"]).optional(),
-  description: z.string().trim().max(500).optional(),
+  description: z.string().trim().max(2000).optional(),
   campaign_type: z.string().optional(),
   is_infinite_budget: z.boolean().default(false),
   budget: z.string().optional(),
@@ -44,6 +44,7 @@ const campaignSchema = z.object({
     url: z.string()
   })).default([]),
   requirements: z.array(z.string()).default([]),
+  application_questions: z.array(z.string().trim().min(1)).max(5, "Maximum 5 questions allowed").default([]),
 }).refine(data => {
   if (data.is_private) {
     return data.access_code && data.access_code.length >= 6;
@@ -87,6 +88,7 @@ interface Campaign {
   hashtags?: string[] | null;
   asset_links?: { label: string; url: string }[] | null;
   requirements?: string[] | null;
+  application_questions?: string[] | null;
 }
 
 interface CampaignCreationWizardProps {
@@ -169,12 +171,14 @@ export function CampaignCreationWizard({
       hashtags: campaign?.hashtags || [],
       asset_links: campaign?.asset_links || [],
       requirements: campaign?.requirements || [],
+      application_questions: campaign?.application_questions || [],
     }
   });
 
   const [newAssetLabel, setNewAssetLabel] = useState("");
   const [newAssetUrl, setNewAssetUrl] = useState("");
   const [newRequirement, setNewRequirement] = useState("");
+  const [newQuestion, setNewQuestion] = useState("");
 
   const addAssetLink = () => {
     if (newAssetLabel.trim() && newAssetUrl.trim()) {
@@ -202,6 +206,21 @@ export function CampaignCreationWizard({
     const currentReqs = form.getValues("requirements") || [];
     form.setValue("requirements", currentReqs.filter((_, i) => i !== index));
   };
+
+  const addQuestion = () => {
+    if (newQuestion.trim()) {
+      const currentQuestions = form.getValues("application_questions") || [];
+      if (currentQuestions.length < 5) {
+        form.setValue("application_questions", [...currentQuestions, newQuestion.trim()]);
+        setNewQuestion("");
+      }
+    }
+  };
+
+  const removeQuestion = (index: number) => {
+    const currentQuestions = form.getValues("application_questions") || [];
+    form.setValue("application_questions", currentQuestions.filter((_, i) => i !== index));
+  };
   // Reset form when campaign changes
   useEffect(() => {
     if (open) {
@@ -223,12 +242,14 @@ export function CampaignCreationWizard({
         hashtags: campaign?.hashtags || [],
         asset_links: campaign?.asset_links || [],
         requirements: campaign?.requirements || [],
+        application_questions: campaign?.application_questions || [],
       });
       setBannerPreview(campaign?.banner_url || null);
       setCurrentStep(isEditMode ? 3 : 1);
       setNewAssetLabel("");
       setNewAssetUrl("");
       setNewRequirement("");
+      setNewQuestion("");
     }
   }, [open, campaign]);
 
@@ -384,6 +405,7 @@ export function CampaignCreationWizard({
           hashtags: values.hashtags || [],
           asset_links: values.asset_links || [],
           requirements: values.requirements || [],
+          application_questions: values.application_questions || [],
           ...(bannerFile ? { banner_url: bannerUrl } : {}),
         };
         
@@ -421,12 +443,12 @@ export function CampaignCreationWizard({
           hashtags: values.hashtags || [],
           asset_links: values.asset_links || [],
           requirements: values.requirements || [],
+          application_questions: values.application_questions || [],
           banner_url: bannerUrl,
           brand_id: brandId,
           brand_name: brandName,
           brand_logo_url: brandData?.logo_url || null,
           status: "active",
-          application_questions: [],
           slug: slug,
           is_featured: false,
         };
@@ -669,6 +691,52 @@ export function CampaignCreationWizard({
                               </FormControl>
                             </FormItem>
                           )} />
+
+                          {/* Application Questions - only shown when requires_application is true */}
+                          {watchedValues.requires_application && (
+                            <div className="space-y-3">
+                              <label className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                Application Questions
+                              </label>
+                              <p className="text-xs text-muted-foreground">
+                                Add up to 5 questions creators must answer when applying
+                              </p>
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="Add a question..."
+                                  value={newQuestion}
+                                  onChange={(e) => setNewQuestion(e.target.value)}
+                                  className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground/50"
+                                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addQuestion())}
+                                />
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="icon" 
+                                  onClick={addQuestion} 
+                                  className="shrink-0"
+                                  disabled={(form.watch("application_questions")?.length || 0) >= 5}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              {form.watch("application_questions")?.length > 0 && (
+                                <div className="space-y-2">
+                                  {form.watch("application_questions")?.map((question, index) => (
+                                    <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border">
+                                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                        <span className="text-xs text-primary font-semibold">{index + 1}</span>
+                                      </div>
+                                      <span className="text-sm flex-1">{question}</span>
+                                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeQuestion(index)}>
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -693,6 +761,26 @@ export function CampaignCreationWizard({
                               </FormLabel>
                               <FormControl>
                                 <Input placeholder="Enter campaign name" className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{ letterSpacing: '-0.3px' }} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+
+                          <FormField control={form.control} name="description" render={({ field }) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
+                                Campaign Description
+                              </FormLabel>
+                              <p className="text-xs text-muted-foreground">
+                                Describe your campaign, requirements, and what creators should know
+                              </p>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Enter campaign description..." 
+                                  className="min-h-[120px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none" 
+                                  style={{ letterSpacing: '-0.3px' }} 
+                                  {...field} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
