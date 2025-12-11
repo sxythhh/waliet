@@ -675,7 +675,7 @@ and cash out your earnings
                     </div>
 
                     {/* Budget Section */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
+                    <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
                       {campaign.is_infinite_budget ? <>
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
