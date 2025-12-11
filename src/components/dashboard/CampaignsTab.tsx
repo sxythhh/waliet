@@ -537,9 +537,7 @@ export function CampaignsTab({
           <Button onClick={() => navigate("/dashboard?tab=discover")} className="bg-primary hover:bg-primary/90">
             Discover Campaigns
           </Button>
-          <Button onClick={onOpenPrivateDialog} variant="outline">
-            Join Private Campaign
-          </Button>
+          
         </div>
       </div>;
   }
