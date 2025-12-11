@@ -105,8 +105,8 @@ serve(async (req) => {
     params.append('order_direction', orderDirection);
     
     if (collection) {
-      // URL encode the collection name as per Shortimize docs
-      params.append('collections', encodeURIComponent(collection.trim()));
+      // URLSearchParams handles encoding automatically - don't double encode
+      params.append('collections', collection.trim());
     }
     if (username) {
       params.append('username', username);
