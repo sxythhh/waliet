@@ -816,13 +816,7 @@ export function ProfileTab() {
             {/* Save Button */}
             <div className="flex items-center justify-between pt-4">
 
-              <Button type="button" variant="outline" onClick={async () => {
-              await supabase.auth.signOut();
-              navigate('/auth');
-            }} className="gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-500 border-transparent">
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
+              
               <Button type="submit" disabled={saving} size="lg" className="gap-2 min-w-[140px]">
                 {saving ? <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
