@@ -548,18 +548,7 @@ export function CampaignCreationWizard({
 
                         <FormField control={form.control} name="embed_url" render={({
                       field
-                    }) => <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Blueprint URL
-                                <span className="text-muted-foreground/50 ml-1 font-normal">(optional)</span>
-                              </FormLabel>
-                              <FormControl>
-                                <Input placeholder="https://notion.so/..." className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
-                          letterSpacing: '-0.3px'
-                        }} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>} />
+                    }) => {}} />
                       </div>
                     </div>}
                 </form>
