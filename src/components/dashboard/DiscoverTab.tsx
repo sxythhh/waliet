@@ -398,7 +398,7 @@ export function DiscoverTab() {
                     <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
                       {campaign.is_infinite_budget ? <>
                           <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                            <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
                               <span className="text-base font-bold">
                                 ∞ Unlimited Budget
                               </span>
@@ -417,7 +417,7 @@ export function DiscoverTab() {
                           </div>
                         </> : <>
                           <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-chakra tracking-tight">
+                            <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
                               <span className="text-base font-bold tabular-nums">
                                 ${budgetUsed.toLocaleString()}
                               </span>
