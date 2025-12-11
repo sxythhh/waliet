@@ -171,7 +171,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Blueprints</h2>
-        <Button onClick={createBlueprint} className="gap-2">
+        <Button onClick={createBlueprint} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5">
           <Plus className="h-4 w-4" />
           New Blueprint
         </Button>
