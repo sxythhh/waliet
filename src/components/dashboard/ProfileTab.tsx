@@ -20,7 +20,6 @@ import { Switch } from "@/components/ui/switch";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { DemographicStatusCard } from "@/components/DemographicStatusCard";
-
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -233,13 +232,10 @@ export function ProfileTab() {
       setJoinedCampaigns(Array.from(uniqueCampaignsMap.values()));
     }
   };
-  
   const handleDeleteAccount = async (accountId: string) => {
-    const { error } = await supabase
-      .from("social_accounts")
-      .delete()
-      .eq("id", accountId);
-    
+    const {
+      error
+    } = await supabase.from("social_accounts").delete().eq("id", accountId);
     if (error) {
       toast({
         variant: "destructive",
@@ -254,26 +250,23 @@ export function ProfileTab() {
       fetchSocialAccounts();
     }
   };
-
   const handleLinkCampaign = async (campaignId: string) => {
     if (!selectedAccountForLinking) return;
-    
     setLinkingCampaign(true);
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) {
       setLinkingCampaign(false);
       return;
     }
 
     // Check if already linked
-    const { data: existing } = await supabase
-      .from("social_account_campaigns")
-      .select("id")
-      .eq("social_account_id", selectedAccountForLinking.id)
-      .eq("campaign_id", campaignId)
-      .eq("status", "active")
-      .single();
-
+    const {
+      data: existing
+    } = await supabase.from("social_account_campaigns").select("id").eq("social_account_id", selectedAccountForLinking.id).eq("campaign_id", campaignId).eq("status", "active").single();
     if (existing) {
       toast({
         variant: "destructive",
@@ -283,16 +276,14 @@ export function ProfileTab() {
       setLinkingCampaign(false);
       return;
     }
-
-    const { error } = await supabase
-      .from("social_account_campaigns")
-      .insert({
-        social_account_id: selectedAccountForLinking.id,
-        campaign_id: campaignId,
-        user_id: session.user.id,
-        status: "active"
-      });
-
+    const {
+      error
+    } = await supabase.from("social_account_campaigns").insert({
+      social_account_id: selectedAccountForLinking.id,
+      campaign_id: campaignId,
+      user_id: session.user.id,
+      status: "active"
+    });
     if (error) {
       toast({
         variant: "destructive",
@@ -310,13 +301,13 @@ export function ProfileTab() {
     }
     setLinkingCampaign(false);
   };
-
   const handleUnlinkCampaign = async (connectionId: string, campaignTitle: string) => {
-    const { error } = await supabase
-      .from("social_account_campaigns")
-      .update({ status: "disconnected", disconnected_at: new Date().toISOString() })
-      .eq("id", connectionId);
-
+    const {
+      error
+    } = await supabase.from("social_account_campaigns").update({
+      status: "disconnected",
+      disconnected_at: new Date().toISOString()
+    }).eq("id", connectionId);
     if (error) {
       toast({
         variant: "destructive",
@@ -331,25 +322,28 @@ export function ProfileTab() {
       fetchSocialAccounts();
     }
   };
-
   const handleLeaveCampaign = async (campaignId: string, campaignTitle: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     // Update campaign submission status to withdrawn
-    const { error: submissionError } = await supabase
-      .from("campaign_submissions")
-      .update({ status: "withdrawn" })
-      .eq("campaign_id", campaignId)
-      .eq("creator_id", session.user.id);
+    const {
+      error: submissionError
+    } = await supabase.from("campaign_submissions").update({
+      status: "withdrawn"
+    }).eq("campaign_id", campaignId).eq("creator_id", session.user.id);
 
     // Also disconnect all social accounts from this campaign
-    const { error: disconnectError } = await supabase
-      .from("social_account_campaigns")
-      .update({ status: "disconnected", disconnected_at: new Date().toISOString() })
-      .eq("campaign_id", campaignId)
-      .eq("user_id", session.user.id);
-
+    const {
+      error: disconnectError
+    } = await supabase.from("social_account_campaigns").update({
+      status: "disconnected",
+      disconnected_at: new Date().toISOString()
+    }).eq("campaign_id", campaignId).eq("user_id", session.user.id);
     if (submissionError || disconnectError) {
       toast({
         variant: "destructive",
@@ -365,7 +359,7 @@ export function ProfileTab() {
       fetchSocialAccounts();
     }
   };
-  
+
   // Remove the old delete and link/unlink functions - now handled by ManageAccountDialog
   const getLinkedCampaign = (campaignId: string | null) => {
     if (!campaignId) return null;
@@ -679,8 +673,7 @@ export function ProfileTab() {
               <Skeleton className="h-9 w-32 rounded-md" />
             </div>
             <div className="grid gap-3">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border">
+              {[...Array(2)].map((_, i) => <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border">
                   <Skeleton className="w-12 h-12 rounded-lg" />
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
@@ -693,16 +686,14 @@ export function ProfileTab() {
                     <Skeleton className="h-8 w-8 rounded-md" />
                     <Skeleton className="h-8 w-8 rounded-md" />
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
         </Card>
 
         {/* Stats Cards Skeleton */}
         <div className="grid gap-4 md:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="bg-card border overflow-hidden">
+          {[...Array(3)].map((_, i) => <Card key={i} className="bg-card border overflow-hidden">
               <CardContent className="p-5 space-y-3">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-10 h-10 rounded-lg" />
@@ -711,8 +702,7 @@ export function ProfileTab() {
                 <Skeleton className="h-8 w-20" />
                 <Skeleton className="h-3 w-32" />
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
 
         {/* Connected Integrations Skeleton */}
@@ -723,16 +713,14 @@ export function ProfileTab() {
               <Skeleton className="h-4 w-64" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border">
+              {[...Array(2)].map((_, i) => <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border">
                   <Skeleton className="w-10 h-10 rounded-lg" />
                   <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-5 w-20" />
                     <Skeleton className="h-4 w-32" />
                   </div>
                   <Skeleton className="h-8 w-20 rounded-md" />
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
         </Card>
@@ -769,7 +757,6 @@ export function ProfileTab() {
             const demographicSubmissions = account.demographic_submissions || [];
             const latestDemographicSubmission = demographicSubmissions[0];
             const demographicStatus = latestDemographicSubmission?.status;
-
             return <div key={account.id} className="group relative p-4 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
                     {/* Main Layout */}
                     <div className="flex items-start gap-4">
@@ -782,13 +769,19 @@ export function ProfileTab() {
                               <div className="w-5 h-5 flex-shrink-0">
                                 {getPlatformIcon(account.platform)}
                               </div>
-                              <span className="font-semibold text-base text-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                              <span className="font-semibold text-base text-foreground" style={{
+                          fontFamily: 'Inter',
+                          letterSpacing: '-0.5px'
+                        }}>
                                 {account.username}
                               </span>
                             </div>
                             {/* Campaign count below username */}
                             <div className="flex items-center gap-1.5 mt-1.5 ml-7">
-                              <span className="text-[11px] text-muted-foreground/70" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                              <span className="text-[11px] text-muted-foreground/70" style={{
+                          fontFamily: 'Inter',
+                          letterSpacing: '-0.3px'
+                        }}>
                                 {connectedCampaigns.length} campaign{connectedCampaigns.length !== 1 ? 's' : ''} linked
                               </span>
                               <ChevronDown className="w-3 h-3 text-muted-foreground/70" />
@@ -798,70 +791,59 @@ export function ProfileTab() {
                         <PopoverContent className="w-72 p-3 bg-[#0a0a0a] border-0" align="start" side="bottom" sideOffset={8}>
                           <div className="space-y-3">
                             {/* Account Link */}
-                            {account.account_link && (
-                              <button
-                                onClick={() => window.open(account.account_link, '_blank')}
-                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors"
-                                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                              >
+                            {account.account_link && <button onClick={() => window.open(account.account_link, '_blank')} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors" style={{
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.3px'
+                      }}>
                                 <ArrowUpRight className="w-4 h-4 text-white" />
                                 <span>Open profile</span>
-                              </button>
-                            )}
+                              </button>}
                             
                             {/* Linked Campaigns */}
                             <div className="space-y-1.5">
-                              <span className="text-[11px] text-white/50 uppercase tracking-wider" style={{ fontFamily: 'Inter' }}>
+                              <span className="text-[11px] text-white/50 uppercase tracking-wider" style={{
+                          fontFamily: 'Inter'
+                        }}>
                                 Linked Campaigns
                               </span>
-                              {connectedCampaigns.length > 0 ? (
-                                <div className="space-y-1.5">
-                                  {connectedCampaigns.map(({ campaign }) => (
-                                    <div 
-                                      key={campaign.id} 
-                                      className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5"
-                                      style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                                    >
-                                      {campaign.brand_logo_url && (
-                                        <img 
-                                          src={campaign.brand_logo_url} 
-                                          alt={campaign.brand_name} 
-                                          className="w-5 h-5 rounded object-cover" 
-                                        />
-                                      )}
+                              {connectedCampaigns.length > 0 ? <div className="space-y-1.5">
+                                  {connectedCampaigns.map(({
+                            campaign
+                          }) => <div key={campaign.id} className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5" style={{
+                            fontFamily: 'Inter',
+                            letterSpacing: '-0.3px'
+                          }}>
+                                      {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-5 h-5 rounded object-cover" />}
                                       <span className="text-sm text-white">{campaign.title}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-sm text-white/40" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                                    </div>)}
+                                </div> : <p className="text-sm text-white/40" style={{
+                          fontFamily: 'Inter',
+                          letterSpacing: '-0.3px'
+                        }}>
                                   No campaigns linked
-                                </p>
-                              )}
+                                </p>}
                             </div>
 
                             {/* Actions */}
                             <div className="flex gap-2 pt-2">
-                              <button
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-sm text-white transition-colors"
-                                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedAccountForLinking(account);
-                                  setShowLinkCampaignDialog(true);
-                                }}
-                              >
+                              <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-sm text-white transition-colors" style={{
+                          fontFamily: 'Inter',
+                          letterSpacing: '-0.3px'
+                        }} onClick={e => {
+                          e.stopPropagation();
+                          setSelectedAccountForLinking(account);
+                          setShowLinkCampaignDialog(true);
+                        }}>
                                 <Link2 className="w-4 h-4 text-white" />
                                 <span>Link</span>
                               </button>
-                              <button
-                                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-sm text-white transition-colors"
-                                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteAccount(account.id);
-                                }}
-                              >
+                              <button className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-sm text-white transition-colors" style={{
+                          fontFamily: 'Inter',
+                          letterSpacing: '-0.3px'
+                        }} onClick={e => {
+                          e.stopPropagation();
+                          handleDeleteAccount(account.id);
+                        }}>
                                 <Trash2 className="w-4 h-4 text-white" />
                               </button>
                             </div>
@@ -871,47 +853,43 @@ export function ProfileTab() {
                       
                       {/* Demographics Section - Right Side */}
                       <div className="flex-shrink-0 w-40">
-                        {!demographicStatus || demographicStatus === 'rejected' ? (
-                          // Required/Rejected State - Compact Alert
-                          <div 
-                            className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 cursor-pointer hover:bg-destructive/15 transition-colors"
-                            onClick={() => {
-                              setSelectedAccountForDemographics({
-                                id: account.id,
-                                platform: account.platform,
-                                username: account.username
-                              });
-                              setShowDemographicsDialog(true);
-                            }}
-                          >
+                        {!demographicStatus || demographicStatus === 'rejected' ?
+                  // Required/Rejected State - Compact Alert
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 cursor-pointer hover:bg-destructive/15 transition-colors" onClick={() => {
+                    setSelectedAccountForDemographics({
+                      id: account.id,
+                      platform: account.platform,
+                      username: account.username
+                    });
+                    setShowDemographicsDialog(true);
+                  }}>
                             <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center flex-shrink-0">
-                              <img src={demographicsIcon} alt="" className="w-4 h-4 opacity-80" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(2615%) hue-rotate(344deg) brightness(87%) contrast(93%)' }} />
+                              <img src={demographicsIcon} alt="" className="w-4 h-4 opacity-80" style={{
+                        filter: 'brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(2615%) hue-rotate(344deg) brightness(87%) contrast(93%)'
+                      }} />
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col">
-                              <span className="text-[11px] font-medium text-destructive truncate leading-none" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                              <span className="text-[11px] font-medium text-destructive truncate leading-none" style={{
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.3px'
+                      }}>
                                 {demographicStatus === 'rejected' ? 'Resubmit' : 'Required'}
                               </span>
-                              <span className="text-[10px] text-destructive/70 leading-none mt-0.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Tap to submit</span>
+                              <span className="text-[10px] text-destructive/70 leading-none mt-0.5" style={{
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.5px'
+                      }}>Tap to submit</span>
                             </div>
-                          </div>
-                        ) : (
-                          // Has Submission - Show Status Card
-                          <DemographicStatusCard
-                            accountId={account.id}
-                            platform={account.platform}
-                            username={account.username}
-                            submissions={demographicSubmissions}
-                            onSubmitNew={() => {
-                              setSelectedAccountForDemographics({
-                                id: account.id,
-                                platform: account.platform,
-                                username: account.username
-                              });
-                              setShowDemographicsDialog(true);
-                            }}
-                            onRefresh={fetchSocialAccounts}
-                          />
-                        )}
+                          </div> :
+                  // Has Submission - Show Status Card
+                  <DemographicStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} onSubmitNew={() => {
+                    setSelectedAccountForDemographics({
+                      id: account.id,
+                      platform: account.platform,
+                      username: account.username
+                    });
+                    setShowDemographicsDialog(true);
+                  }} onRefresh={fetchSocialAccounts} />}
                       </div>
                     </div>
                   </div>;
@@ -934,22 +912,23 @@ export function ProfileTab() {
       {/* Personal Info */}
       <Card className="bg-card border-0">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Personal info</CardTitle>
+          <CardTitle className="text-xl font-semibold" style={{
+          fontFamily: 'Inter',
+          letterSpacing: '-0.5px'
+        }}>Personal info</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSaveProfile} className="space-y-6">
             {/* Profile Picture */}
             <div>
-              <p className="text-sm text-muted-foreground mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Profile picture</p>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => fileInputRef.current?.click()} 
-                disabled={uploading} 
-                className="gap-2 bg-muted/40 hover:bg-muted/60 rounded-full px-4"
-                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-              >
+              <p className="text-sm text-muted-foreground mb-3" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Profile picture</p>
+              <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 bg-muted/40 hover:bg-muted/60 rounded-full px-4" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
                 <RefreshCw className="h-4 w-4" />
                 {uploading ? "Uploading..." : "Replace picture"}
               </Button>
@@ -959,52 +938,70 @@ export function ProfileTab() {
             {/* First name / Last name */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>First name</p>
-                <Input 
-                  value={profile.full_name?.split(' ')[0] || ""} 
-                  onChange={e => {
-                    const lastName = profile.full_name?.split(' ').slice(1).join(' ') || '';
-                    setProfile({ ...profile, full_name: `${e.target.value}${lastName ? ' ' + lastName : ''}` });
-                  }} 
-                  placeholder="First name" 
-                  className="h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                />
+                <p className="text-sm text-muted-foreground mb-2" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>First name</p>
+                <Input value={profile.full_name?.split(' ')[0] || ""} onChange={e => {
+                const lastName = profile.full_name?.split(' ').slice(1).join(' ') || '';
+                setProfile({
+                  ...profile,
+                  full_name: `${e.target.value}${lastName ? ' ' + lastName : ''}`
+                });
+              }} placeholder="First name" className="h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Last name</p>
-                <Input 
-                  value={profile.full_name?.split(' ').slice(1).join(' ') || ""} 
-                  onChange={e => {
-                    const firstName = profile.full_name?.split(' ')[0] || '';
-                    setProfile({ ...profile, full_name: `${firstName}${e.target.value ? ' ' + e.target.value : ''}` });
-                  }} 
-                  placeholder="Last name" 
-                  className="h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                />
+                <p className="text-sm text-muted-foreground mb-2" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>Last name</p>
+                <Input value={profile.full_name?.split(' ').slice(1).join(' ') || ""} onChange={e => {
+                const firstName = profile.full_name?.split(' ')[0] || '';
+                setProfile({
+                  ...profile,
+                  full_name: `${firstName}${e.target.value ? ' ' + e.target.value : ''}`
+                });
+              }} placeholder="Last name" className="h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }} />
               </div>
             </div>
 
             {/* Username */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Username</p>
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Username</p>
               <div className="relative flex items-center">
-                <span className="absolute left-3 text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>virality.gg/</span>
-                <Input 
-                  value={profile.username} 
-                  onChange={e => setProfile({ ...profile, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })} 
-                  placeholder="username" 
-                  className="h-10 pl-[85px] bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                />
+                <span className="absolute left-3 text-sm text-muted-foreground" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>virality.gg/</span>
+                <Input value={profile.username} onChange={e => setProfile({
+                ...profile,
+                username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')
+              })} placeholder="username" className="h-10 pl-[85px] bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }} />
               </div>
             </div>
 
             {/* Location */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Location</p>
-              <Select value={profile.country || ""} onValueChange={value => setProfile({ ...profile, country: value })}>
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Location</p>
+              <Select value={profile.country || ""} onValueChange={value => setProfile({
+              ...profile,
+              country: value
+            })}>
                 <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-0 focus:ring-offset-0">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -1012,67 +1009,77 @@ export function ProfileTab() {
                   </div>
                 </SelectTrigger>
                 <SelectContent className="bg-popover max-h-[300px]">
-                  {["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Spain", "Italy", "Netherlands", "Brazil", "Mexico", "Argentina", "India", "Japan", "South Korea", "China", "Singapore", "Indonesia", "Philippines", "Thailand", "Vietnam", "Malaysia", "Nigeria", "South Africa", "Kenya", "Egypt", "UAE", "Saudi Arabia", "Turkey", "Poland", "Sweden", "Norway", "Denmark", "Finland", "Ireland", "Portugal", "Belgium", "Austria", "Switzerland", "New Zealand", "Russia", "Ukraine", "Czech Republic", "Romania", "Hungary", "Greece", "Israel", "Pakistan", "Bangladesh", "Colombia", "Chile", "Peru", "Venezuela"].map(country => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
-                  ))}
+                  {["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Spain", "Italy", "Netherlands", "Brazil", "Mexico", "Argentina", "India", "Japan", "South Korea", "China", "Singapore", "Indonesia", "Philippines", "Thailand", "Vietnam", "Malaysia", "Nigeria", "South Africa", "Kenya", "Egypt", "UAE", "Saudi Arabia", "Turkey", "Poland", "Sweden", "Norway", "Denmark", "Finland", "Ireland", "Portugal", "Belgium", "Austria", "Switzerland", "New Zealand", "Russia", "Ukraine", "Czech Republic", "Romania", "Hungary", "Greece", "Israel", "Pakistan", "Bangladesh", "Colombia", "Chile", "Peru", "Venezuela"].map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Languages */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Languages you post in</p>
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Languages you post in</p>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
                     <div className="flex flex-wrap gap-1.5 py-1">
-                      {profile.content_languages?.length ? (
-                        profile.content_languages.map(lang => (
-                          <Badge key={lang} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                      {profile.content_languages?.length ? profile.content_languages.map(lang => <Badge key={lang} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>
                             {lang}
-                            <X 
-                              className="ml-1 h-3 w-3 cursor-pointer" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                setProfile({ 
-                                  ...profile, 
-                                  content_languages: profile.content_languages?.filter(l => l !== lang) || [] 
-                                });
-                              }} 
-                            />
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Select languages</span>
-                      )}
+                            <X className="ml-1 h-3 w-3 cursor-pointer" onClick={e => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setProfile({
+                          ...profile,
+                          content_languages: profile.content_languages?.filter(l => l !== lang) || []
+                        });
+                      }} />
+                          </Badge>) : <span className="text-muted-foreground text-sm" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>Select languages</span>}
                     </div>
                     <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0 bg-popover" align="start">
                   <Command>
-                    <CommandInput placeholder="Search languages..." style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }} />
+                    <CommandInput placeholder="Search languages..." style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.5px'
+                  }} />
                     <CommandList>
-                      <CommandEmpty style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>No language found.</CommandEmpty>
+                      <CommandEmpty style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>No language found.</CommandEmpty>
                       <CommandGroup>
-                        {["English", "Spanish", "Portuguese", "French", "German", "Italian", "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Hindi", "Arabic", "Turkish", "Polish", "Vietnamese", "Thai", "Indonesian", "Tagalog", "Swedish", "Norwegian", "Danish", "Finnish", "Greek", "Hebrew", "Czech", "Romanian", "Hungarian", "Ukrainian"].map(lang => (
-                          <CommandItem 
-                            key={lang} 
-                            onSelect={() => {
-                              const current = profile.content_languages || [];
-                              if (current.includes(lang)) {
-                                setProfile({ ...profile, content_languages: current.filter(l => l !== lang) });
-                              } else {
-                                setProfile({ ...profile, content_languages: [...current, lang] });
-                              }
-                            }}
-                            style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-                          >
+                        {["English", "Spanish", "Portuguese", "French", "German", "Italian", "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Hindi", "Arabic", "Turkish", "Polish", "Vietnamese", "Thai", "Indonesian", "Tagalog", "Swedish", "Norwegian", "Danish", "Finnish", "Greek", "Hebrew", "Czech", "Romanian", "Hungarian", "Ukrainian"].map(lang => <CommandItem key={lang} onSelect={() => {
+                        const current = profile.content_languages || [];
+                        if (current.includes(lang)) {
+                          setProfile({
+                            ...profile,
+                            content_languages: current.filter(l => l !== lang)
+                          });
+                        } else {
+                          setProfile({
+                            ...profile,
+                            content_languages: [...current, lang]
+                          });
+                        }
+                      }} style={{
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.5px'
+                      }}>
                             <Check className={`mr-2 h-4 w-4 ${profile.content_languages?.includes(lang) ? "opacity-100" : "opacity-0"}`} />
                             {lang}
-                          </CommandItem>
-                        ))}
+                          </CommandItem>)}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -1082,58 +1089,70 @@ export function ProfileTab() {
 
             {/* Content Style */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Preferred content style</p>
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Preferred content style</p>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
                     <div className="flex flex-wrap gap-1.5 py-1">
-                      {profile.content_styles?.length ? (
-                        profile.content_styles.map(style => (
-                          <Badge key={style} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                      {profile.content_styles?.length ? profile.content_styles.map(style => <Badge key={style} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>
                             {style}
-                            <X 
-                              className="ml-1 h-3 w-3 cursor-pointer" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                setProfile({ 
-                                  ...profile, 
-                                  content_styles: profile.content_styles?.filter(s => s !== style) || [] 
-                                });
-                              }} 
-                            />
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Select content styles</span>
-                      )}
+                            <X className="ml-1 h-3 w-3 cursor-pointer" onClick={e => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setProfile({
+                          ...profile,
+                          content_styles: profile.content_styles?.filter(s => s !== style) || []
+                        });
+                      }} />
+                          </Badge>) : <span className="text-muted-foreground text-sm" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>Select content styles</span>}
                     </div>
                     <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0 bg-popover" align="start">
                   <Command>
-                    <CommandInput placeholder="Search styles..." style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }} />
+                    <CommandInput placeholder="Search styles..." style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.5px'
+                  }} />
                     <CommandList>
-                      <CommandEmpty style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>No style found.</CommandEmpty>
+                      <CommandEmpty style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>No style found.</CommandEmpty>
                       <CommandGroup>
-                        {["UGC", "Faceless UGC", "Clipping", "Edits", "Music", "Memes", "Slideshows", "AI", "POV"].map(style => (
-                          <CommandItem 
-                            key={style} 
-                            onSelect={() => {
-                              const current = profile.content_styles || [];
-                              if (current.includes(style)) {
-                                setProfile({ ...profile, content_styles: current.filter(s => s !== style) });
-                              } else {
-                                setProfile({ ...profile, content_styles: [...current, style] });
-                              }
-                            }}
-                            style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-                          >
+                        {["UGC", "Faceless UGC", "Clipping", "Edits", "Music", "Memes", "Slideshows", "AI", "POV"].map(style => <CommandItem key={style} onSelect={() => {
+                        const current = profile.content_styles || [];
+                        if (current.includes(style)) {
+                          setProfile({
+                            ...profile,
+                            content_styles: current.filter(s => s !== style)
+                          });
+                        } else {
+                          setProfile({
+                            ...profile,
+                            content_styles: [...current, style]
+                          });
+                        }
+                      }} style={{
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.5px'
+                      }}>
                             <Check className={`mr-2 h-4 w-4 ${profile.content_styles?.includes(style) ? "opacity-100" : "opacity-0"}`} />
                             {style}
-                          </CommandItem>
-                        ))}
+                          </CommandItem>)}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -1143,10 +1162,16 @@ export function ProfileTab() {
 
             {/* Email (read-only) */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Email</p>
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Email</p>
               <div className="flex items-center gap-2 h-10 px-3 bg-muted/30 rounded-md">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                <span className="text-sm" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
                   {profile.email || 'Not set'}
                 </span>
               </div>
@@ -1154,25 +1179,26 @@ export function ProfileTab() {
 
             {/* Phone */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Phone number</p>
-              <PhoneInput 
-                value={profile.phone_number || ""} 
-                onChange={value => setProfile({ ...profile, phone_number: value })} 
-                placeholder="Enter phone number"
-              />
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Phone number</p>
+              <PhoneInput value={profile.phone_number || ""} onChange={value => setProfile({
+              ...profile,
+              phone_number: value
+            })} placeholder="Enter phone number" />
             </div>
 
             {/* Save Button */}
             <div className="pt-2 flex justify-end">
-              <Button type="submit" disabled={saving} className="gap-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                {saving ? (
-                  <>
+              <Button type="submit" disabled={saving} className="gap-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
+                {saving ? <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
+                  </> : 'Save Changes'}
               </Button>
             </div>
           </form>
@@ -1185,121 +1211,66 @@ export function ProfileTab() {
       {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
 
       {/* Link Campaign Dialog */}
-      <Dialog open={showLinkCampaignDialog} onOpenChange={(open) => {
-        setShowLinkCampaignDialog(open);
-        if (!open) setSelectedAccountForLinking(null);
-      }}>
+      <Dialog open={showLinkCampaignDialog} onOpenChange={open => {
+      setShowLinkCampaignDialog(open);
+      if (!open) setSelectedAccountForLinking(null);
+    }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Manage Campaign Links</DialogTitle>
-            <DialogDescription style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+            <DialogTitle style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>Manage Campaign Links</DialogTitle>
+            <DialogDescription style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
               Link or unlink {selectedAccountForLinking?.username} from campaigns
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {joinedCampaigns.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+            {joinedCampaigns.length === 0 ? <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
                   No campaigns available to link
                 </p>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="mt-2"
-                  onClick={() => {
-                    setShowLinkCampaignDialog(false);
-                    navigate('/dashboard?tab=discover');
-                  }}
-                >
+                <Button variant="ghost" size="sm" className="mt-2" onClick={() => {
+              setShowLinkCampaignDialog(false);
+              navigate('/dashboard?tab=discover');
+            }}>
                   Browse Campaigns
                 </Button>
-              </div>
-            ) : (
-              joinedCampaigns.map((campaign) => {
-                const linkedConnection = selectedAccountForLinking?.connected_campaigns?.find(
-                  c => c.campaign.id === campaign.id
-                );
-                const isLinked = !!linkedConnection;
-                return (
-                  <div
-                    key={campaign.id}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                      isLinked ? 'bg-primary/10' : 'bg-muted/30'
-                    }`}
-                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                  >
-                    {campaign.brand_logo_url || campaign.brands?.logo_url ? (
-                      <img 
-                        src={campaign.brand_logo_url || campaign.brands?.logo_url} 
-                        alt={campaign.brand_name}
-                        className="w-10 h-10 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              </div> : joinedCampaigns.map(campaign => {
+            const linkedConnection = selectedAccountForLinking?.connected_campaigns?.find(c => c.campaign.id === campaign.id);
+            const isLinked = !!linkedConnection;
+            return <div key={campaign.id} className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${isLinked ? 'bg-primary/10' : 'bg-muted/30'}`} style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
+                    {campaign.brand_logo_url || campaign.brands?.logo_url ? <img src={campaign.brand_logo_url || campaign.brands?.logo_url} alt={campaign.brand_name} className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                         <span className="text-xs font-medium text-muted-foreground">
                           {campaign.brand_name?.[0]?.toUpperCase()}
                         </span>
-                      </div>
-                    )}
+                      </div>}
                     <div className="flex-1 text-left">
                       <p className="font-medium text-sm">{campaign.title}</p>
                       <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
                     </div>
-                    {isLinked ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleUnlinkCampaign(linkedConnection.connection_id, campaign.title)}
-                      >
+                    {isLinked ? <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleUnlinkCampaign(linkedConnection.connection_id, campaign.title)}>
                         <Unlink className="w-3.5 h-3.5 mr-1" />
                         Unlink
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={linkingCampaign}
-                        onClick={() => handleLinkCampaign(campaign.id)}
-                        className="text-primary hover:text-primary hover:bg-primary/10"
-                      >
+                      </Button> : <Button variant="ghost" size="sm" disabled={linkingCampaign} onClick={() => handleLinkCampaign(campaign.id)} className="text-primary hover:text-primary hover:bg-primary/10">
                         <Link2 className="w-3.5 h-3.5 mr-1" />
                         Link
-                      </Button>
-                    )}
-                  </div>
-                );
-              })
-            )}
+                      </Button>}
+                  </div>;
+          })}
           </div>
           
           {/* Leave Campaign Section */}
-          {joinedCampaigns.length > 0 && (
-            <div className="border-t border-border/50 pt-4 mt-4">
-              <p className="text-sm text-muted-foreground mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                Leave a campaign
-              </p>
-              <div className="space-y-2">
-                {joinedCampaigns.map((campaign) => (
-                  <div
-                    key={`leave-${campaign.id}`}
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/20"
-                  >
-                    <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{campaign.title}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs"
-                      onClick={() => handleLeaveCampaign(campaign.id, campaign.title)}
-                    >
-                      <LogOut className="w-3 h-3 mr-1" />
-                      Leave
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {joinedCampaigns.length > 0}
         </DialogContent>
       </Dialog>
 
