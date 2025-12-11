@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -226,6 +226,28 @@ export function ProfileTab() {
       setJoinedCampaigns(Array.from(uniqueCampaignsMap.values()));
     }
   };
+  
+  const handleDeleteAccount = async (accountId: string) => {
+    const { error } = await supabase
+      .from("social_accounts")
+      .delete()
+      .eq("id", accountId);
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete account"
+      });
+    } else {
+      toast({
+        title: "Account deleted",
+        description: "Social account has been removed"
+      });
+      fetchSocialAccounts();
+    }
+  };
+  
   // Remove the old delete and link/unlink functions - now handled by ManageAccountDialog
   const getLinkedCampaign = (campaignId: string | null) => {
     if (!campaignId) return null;
@@ -607,15 +629,25 @@ export function ProfileTab() {
                             </span>
                           )}
                           <button
-                            className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40 hover:bg-muted/70 dark:bg-muted/20 dark:hover:bg-muted/40 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary text-[11px] text-primary-foreground hover:bg-primary/90 transition-colors"
                             style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate('/dashboard?tab=campaigns');
                             }}
                           >
-                            <Link2 className="w-3 h-3" />
+                            <Link2 className="w-3 h-3 text-primary-foreground" />
                             <span>Link</span>
+                          </button>
+                          <button
+                            className="flex items-center gap-1 px-2 py-1 rounded-md bg-destructive/10 hover:bg-destructive/20 text-[11px] text-destructive transition-colors"
+                            style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAccount(account.id);
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
@@ -638,11 +670,11 @@ export function ProfileTab() {
                             <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center flex-shrink-0">
                               <img src={demographicsIcon} alt="" className="w-4 h-4 opacity-80" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(2615%) hue-rotate(344deg) brightness(87%) contrast(93%)' }} />
                             </div>
-                            <div className="flex-1 min-w-0 space-y-0">
-                              <span className="text-[11px] font-medium text-destructive block truncate leading-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                            <div className="flex-1 min-w-0 flex flex-col">
+                              <span className="text-[11px] font-medium text-destructive truncate leading-none" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                                 {demographicStatus === 'rejected' ? 'Resubmit' : 'Required'}
                               </span>
-                              <span className="text-[10px] text-destructive/70 leading-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Tap to submit</span>
+                              <span className="text-[10px] text-destructive/70 leading-none mt-0.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Tap to submit</span>
                             </div>
                           </div>
                         ) : (
