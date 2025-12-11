@@ -352,7 +352,7 @@ export function AppSidebar() {
                       </Avatar> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
                           <Building2 className="w-3.5 h-3.5 text-neutral-400" />
                         </div>}
-                    <p className="text-xs font-medium text-white truncate max-w-[120px] tracking-[-0.5px]">{getWorkspaceDisplayName()}</p>
+                    <p className="font-medium text-white truncate max-w-[120px] tracking-[-0.5px] text-sm">{getWorkspaceDisplayName()}</p>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -386,9 +386,9 @@ export function AppSidebar() {
                         </button>)}
                     </>}
                   <button onClick={() => {
-                    setWorkspaceOpen(false);
-                    setShowCreateBrandDialog(true);
-                  }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
+                setWorkspaceOpen(false);
+                setShowCreateBrandDialog(true);
+              }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
                     <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
                       <Plus className="w-3 h-3" />
                     </div>
