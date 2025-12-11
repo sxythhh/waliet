@@ -496,7 +496,7 @@ export function JoinCampaignSheet({
                 </Button>
               </div>
             </div>
-          ) : campaign.requires_application !== false ? (
+          ) : (
             <div className="space-y-2">
               <Label style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Select Social Accounts *</Label>
               {socialAccounts.length === 0 ? (
@@ -553,7 +553,7 @@ export function JoinCampaignSheet({
                 </div>
               )}
             </div>
-          ) : null}
+          )}
 
           {/* Application Questions - only show if logged in and campaign requires application */}
           {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => (
@@ -587,7 +587,7 @@ export function JoinCampaignSheet({
                   borderTopColor: '#4f89ff'
                 }}
                 onClick={handleSubmit} 
-                disabled={submitting || (campaign.requires_application !== false && selectedAccounts.length === 0)}
+                disabled={submitting || selectedAccounts.length === 0}
               >
                 {submitting 
                   ? campaign.requires_application === false ? "Joining..." : "Submitting..." 
