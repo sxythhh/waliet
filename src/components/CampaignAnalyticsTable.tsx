@@ -276,6 +276,7 @@ export function CampaignAnalyticsTable({
 
       // Batch fetch all data at once for better performance
       const userIds = [...new Set((data || []).filter(item => item.user_id).map(item => item.user_id))];
+      console.log('User IDs from analytics:', userIds.length, userIds.slice(0, 5));
 
       // Get all unique username+platform combinations from analytics for global lookup
       const analyticsUsernamePlatforms = (data || []).map(item => ({
@@ -381,14 +382,18 @@ export function CampaignAnalyticsTable({
         ...(allCampaignAccounts || []).filter((item: any) => item.social_accounts?.user_id).map((item: any) => item.social_accounts.user_id),
         ...Array.from(socialAccountsByUsernameMap.values()).filter((acc: any) => acc.user_id).map((acc: any) => acc.user_id)
       ])];
+      
+      console.log('All user IDs to fetch profiles for:', allUserIds.length, allUserIds.slice(0, 5));
 
       // Fetch profiles for all linked accounts
       const profilesMap = new Map();
       if (allUserIds.length > 0) {
-        const { data: profiles } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("id, username, avatar_url, trust_score")
           .in("id", allUserIds);
+        
+        console.log('Profiles fetch result:', profiles?.length || 0, 'error:', profilesError);
         (profiles || []).forEach(p => profilesMap.set(p.id, p));
       }
 
