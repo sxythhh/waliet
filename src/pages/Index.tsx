@@ -30,18 +30,18 @@ export default function Index() {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">
               <img src={viralityLogo} alt="Virality" className="h-6 w-6" />
-              <span className="text-lg font-clash font-semibold text-foreground">VIRALITY</span>
+              <span className="text-lg font-clash font-semibold text-white">VIRALITY</span>
             </div>
 
             <div className="flex items-center gap-3">
               {isAuthenticated ? (
                 <Link to="/dashboard">
-                  <Button size="sm" className="font-medium">
+                  <Button size="sm" className="font-medium bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4f89ff] text-white">
                     Dashboard
                   </Button>
                 </Link>
