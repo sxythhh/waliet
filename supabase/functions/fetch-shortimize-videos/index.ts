@@ -40,6 +40,7 @@ serve(async (req) => {
     const { 
       brandId, 
       collectionName,
+      campaignId,
       page = 1,
       limit = 100,
       orderBy = 'uploaded_at',
@@ -52,6 +53,7 @@ serve(async (req) => {
     console.log('[fetch-shortimize-videos] Request params:', { 
       brandId, 
       collectionName, 
+      campaignId,
       page, 
       limit, 
       orderBy, 
@@ -91,6 +93,21 @@ serve(async (req) => {
 
     if (!brand?.shortimize_api_key) {
       throw new Error('Shortimize API key not configured for this brand');
+    }
+
+    // Get campaign hashtag if campaignId is provided
+    let campaignHashtag: string | null = null;
+    if (campaignId) {
+      const { data: campaign, error: campaignError } = await supabase
+        .from('campaigns')
+        .select('hashtag')
+        .eq('id', campaignId)
+        .single();
+      
+      if (!campaignError && campaign?.hashtag) {
+        campaignHashtag = campaign.hashtag;
+        console.log('[fetch-shortimize-videos] Campaign hashtag:', campaignHashtag);
+      }
     }
 
     // Use provided collection name or fall back to brand's collection
@@ -146,19 +163,42 @@ serve(async (req) => {
 
     const result = await response.json();
     
+    let videos = result.data || [];
+    
+    // Filter by campaign hashtag if provided
+    if (campaignHashtag) {
+      const hashtagLower = campaignHashtag.toLowerCase();
+      videos = videos.filter((video: any) => {
+        // Check if the video's hashtags/labels contain the campaign hashtag
+        const videoHashtags = video.hashtags || video.label_names || [];
+        return videoHashtags.some((tag: string) => 
+          tag.toLowerCase() === hashtagLower || 
+          tag.toLowerCase() === `#${hashtagLower}` ||
+          tag.toLowerCase().replace('#', '') === hashtagLower
+        );
+      });
+      console.log('[fetch-shortimize-videos] Filtered by hashtag:', {
+        hashtag: campaignHashtag,
+        originalCount: result.data?.length || 0,
+        filteredCount: videos.length
+      });
+    }
+    
     console.log('[fetch-shortimize-videos] API response:', {
-      videosCount: result.data?.length || 0,
+      videosCount: videos.length,
       pagination: result.pagination,
       hasData: !!result.data,
-      firstVideoSample: result.data?.[0] ? {
-        ad_id: result.data[0].ad_id,
-        username: result.data[0].username,
-        platform: result.data[0].platform
+      hashtagFilter: campaignHashtag,
+      firstVideoSample: videos[0] ? {
+        ad_id: videos[0].ad_id,
+        username: videos[0].username,
+        platform: videos[0].platform,
+        hashtags: videos[0].hashtags || videos[0].label_names
       } : null
     });
 
     // If no videos found, try fetching without collection filter to debug
-    if ((!result.data || result.data.length === 0) && collection) {
+    if (videos.length === 0 && collection && !campaignHashtag) {
       console.log('[fetch-shortimize-videos] No videos found with collection filter. Checking available collections...');
       
       // Try fetching a sample without collection filter to see if API key works
@@ -191,10 +231,16 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      videos: result.data || [],
-      pagination: result.pagination || { total: 0, page: 1, limit: 100, total_pages: 0 },
+      videos: videos,
+      pagination: {
+        ...result.pagination,
+        // Adjust total if we filtered by hashtag
+        total: campaignHashtag ? videos.length : (result.pagination?.total || 0),
+        total_pages: campaignHashtag ? 1 : (result.pagination?.total_pages || 0)
+      },
       debug: {
         collectionUsed: collection,
+        hashtagFilter: campaignHashtag,
         apiKeyConfigured: true
       }
     }), {

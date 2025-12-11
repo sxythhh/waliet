@@ -57,12 +57,13 @@ serve(async (req) => {
 
     console.log('Starting campaign video metrics sync...', specificCampaignId ? `for campaign ${specificCampaignId}` : 'for all campaigns');
 
-    // Build query for campaigns
+    // Build query for campaigns - include hashtag field
     let query = supabaseClient
       .from('campaigns')
       .select(`
         id,
         brand_id,
+        hashtag,
         brands!campaigns_brand_id_fkey (
           id,
           shortimize_api_key,
@@ -102,7 +103,7 @@ serve(async (req) => {
       }
 
       try {
-        console.log(`Syncing metrics for campaign ${campaign.id} with collection ${brand.collection_name}`);
+        console.log(`Syncing metrics for campaign ${campaign.id} with collection ${brand.collection_name}, hashtag: ${campaign.hashtag || 'none'}`);
 
         // Fetch all videos from Shortimize for this collection
         const allVideos: any[] = [];
@@ -131,12 +132,27 @@ serve(async (req) => {
           }
 
           const data = await response.json();
-          const videos = data.videos || [];
+          let videos = data.data || [];
+          
+          // Filter by campaign hashtag if provided
+          if (campaign.hashtag) {
+            const hashtagLower = campaign.hashtag.toLowerCase();
+            videos = videos.filter((video: any) => {
+              const videoHashtags = video.hashtags || video.label_names || [];
+              return videoHashtags.some((tag: string) => 
+                tag.toLowerCase() === hashtagLower || 
+                tag.toLowerCase() === `#${hashtagLower}` ||
+                tag.toLowerCase().replace('#', '') === hashtagLower
+              );
+            });
+          }
+          
           allVideos.push(...videos);
 
           // Check if there are more pages
           const pagination = data.pagination;
-          if (pagination && page < pagination.total_pages) {
+          if (pagination && page < pagination.total_pages && !campaign.hashtag) {
+            // Only paginate if not filtering by hashtag (hashtag filtering is done client-side)
             page++;
             // Small delay between pages to avoid rate limiting
             await delay(500);
@@ -145,7 +161,7 @@ serve(async (req) => {
           }
         }
 
-        console.log(`Fetched ${allVideos.length} videos for campaign ${campaign.id}`);
+        console.log(`Fetched ${allVideos.length} videos for campaign ${campaign.id}${campaign.hashtag ? ` (filtered by #${campaign.hashtag})` : ''}`);
 
         // Calculate totals
         let totalViews = 0;
