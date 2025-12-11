@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 
@@ -48,6 +48,12 @@ import PublicBoost from "./pages/PublicBounty";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 const queryClient = new QueryClient();
+
+// Redirect /join/:slug to discover page with campaign slug param
+function JoinRedirect() {
+  const { slug } = useParams();
+  return <Navigate to={`/dashboard?tab=discover&campaignSlug=${slug}`} replace />;
+}
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -118,7 +124,7 @@ const App = () => (
             <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
             <Route path="/boost/:id" element={<PublicBoost />} />
             <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
-            <Route path="/join/:slug" element={<CampaignJoin />} />
+            <Route path="/join/:slug" element={<JoinRedirect />} />
             <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
             <Route path="/dashboard" element={<WorkspaceProvider><Dashboard /></WorkspaceProvider>} />
             <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />

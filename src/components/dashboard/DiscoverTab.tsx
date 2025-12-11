@@ -93,10 +93,54 @@ export function DiscoverTab() {
       setSearchParams(newParams, { replace: true });
     }
   }, [searchParams, setSearchParams]);
-  
+
+  // Auto-open join sheet if campaignSlug param is present
+  useEffect(() => {
+    const campaignSlug = searchParams.get("campaignSlug");
+    if (campaignSlug && !loading) {
+      const campaign = campaigns.find(c => c.slug === campaignSlug);
+      if (campaign) {
+        setSelectedCampaign(campaign);
+        setSheetOpen(true);
+        // Remove the param from URL
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("campaignSlug");
+        setSearchParams(newParams, { replace: true });
+      } else {
+        // Campaign not found in public campaigns (might be private), fetch it directly
+        fetchCampaignBySlug(campaignSlug);
+      }
+    }
+  }, [searchParams, campaigns, loading]);
+
+  const fetchCampaignBySlug = async (slug: string) => {
+    const { data, error } = await supabase
+      .from("campaigns")
+      .select(`*, brands (logo_url)`)
+      .eq("slug", slug)
+      .in("status", ["active", "ended"])
+      .maybeSingle();
+    
+    if (!error && data) {
+      const campaignData: Campaign = {
+        ...data,
+        brand_logo_url: data.brand_logo_url || (data.brands as any)?.logo_url,
+        platforms: data.allowed_platforms || [],
+        application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : []
+      };
+      setSelectedCampaign(campaignData);
+      setSheetOpen(true);
+      // Remove the param from URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("campaignSlug");
+      setSearchParams(newParams, { replace: true });
+    }
+  };
+
   useEffect(() => {
     fetchCampaigns();
   }, []);
+
   const fetchCampaigns = async () => {
     setLoading(true);
 
