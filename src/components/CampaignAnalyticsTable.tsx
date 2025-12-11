@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, TrendingDown, Eye, Heart, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Eye, Heart, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -65,6 +65,7 @@ interface DemographicSubmission {
   reviewed_at: string | null;
   tier1_percentage: number;
   score: number | null;
+  screenshot_url: string | null;
 }
 interface SocialAccount {
   id: string;
@@ -397,7 +398,7 @@ export function CampaignAnalyticsTable({
           const batch = allSocialAccountIds.slice(i, i + batchSize);
           const {
             data: batchSubmissions
-          } = await supabase.from("demographic_submissions").select("id, social_account_id, status, submitted_at, reviewed_at, tier1_percentage, score").in("social_account_id", batch).order("submitted_at", {
+          } = await supabase.from("demographic_submissions").select("id, social_account_id, status, submitted_at, reviewed_at, tier1_percentage, score, screenshot_url").in("social_account_id", batch).order("submitted_at", {
             ascending: false
           });
           (batchSubmissions || []).forEach(sub => {
@@ -2490,6 +2491,18 @@ export function CampaignAnalyticsTable({
                       {format(new Date(selectedAccountForDemo.demographic_submission.submitted_at), 'MMM d, yyyy')}
                     </span>
                   </div>
+
+                  {getDemographicStatus(selectedAccountForDemo) === 'pending' && selectedAccountForDemo.demographic_submission.screenshot_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2 font-inter tracking-[-0.5px]"
+                      onClick={() => window.open(selectedAccountForDemo.demographic_submission!.screenshot_url!, '_blank')}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                      View Submission
+                    </Button>
+                  )}
 
                   {selectedAccountForDemo.demographic_submission.reviewed_at && <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Reviewed</span>
