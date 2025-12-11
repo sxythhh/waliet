@@ -13,12 +13,16 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CampaignCreationWizard } from "./CampaignCreationWizard";
+import tiktokLogo from "@/assets/tiktok-logo-black.png";
+import instagramLogo from "@/assets/instagram-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-new.png";
 
 interface Blueprint {
   id: string;
   title: string;
   status: string;
   content: string | null;
+  platforms: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -76,7 +80,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     setLoading(true);
     const { data, error } = await supabase
       .from("blueprints")
-      .select("id, title, status, content, created_at, updated_at")
+      .select("id, title, status, content, platforms, created_at, updated_at")
       .eq("brand_id", brandId)
       .order("updated_at", { ascending: false });
 
@@ -134,6 +138,19 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     setCreateCampaignOpen(true);
   };
 
+  const getPlatformIcon = (platform: string) => {
+    switch (platform?.toLowerCase()) {
+      case 'tiktok':
+        return <img src={tiktokLogo} alt="TikTok" className="h-4 w-4 dark:invert" />;
+      case 'instagram':
+        return <img src={instagramLogo} alt="Instagram" className="h-4 w-4" />;
+      case 'youtube':
+        return <img src={youtubeLogo} alt="YouTube" className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 space-y-4">
@@ -178,7 +195,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
             >
               {/* Content Preview Area */}
               <div 
-                className="mx-[10px] mt-[10px] p-4 rounded-md min-h-[100px] bg-[#e8e8e8] dark:bg-[#181717] border-t border-[#d0d0d0] dark:border-[#312f2f]"
+                className="mx-[10px] mt-[10px] p-4 rounded-t-md min-h-[100px] bg-[#e8e8e8] dark:bg-[#181717] border-t border-x border-[#d0d0d0] dark:border-[#312f2f]"
               >
                 <p className="text-sm text-muted-foreground line-clamp-4">
                   {blueprint.content ? blueprint.content.replace(/<[^>]*>/g, '').slice(0, 250) + '...' : 'No content yet...'}
@@ -186,7 +203,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
               </div>
 
               {/* Title, User Info, and Actions */}
-              <div className="p-4 space-y-2">
+              <div className="p-4 space-y-3">
                 <div className="flex items-start justify-between">
                   <h3 className="font-medium text-base truncate flex-1 mr-2">{blueprint.title}</h3>
                   <DropdownMenu>
@@ -199,8 +216,9 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="bg-popover">
                       <DropdownMenuItem
+                        className="focus:bg-muted focus:text-foreground"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleActivateBlueprint(blueprint.id);
@@ -210,7 +228,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                         Create Campaign
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-destructive"
+                        className="text-destructive focus:bg-muted focus:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteBlueprint(blueprint.id);
@@ -222,6 +240,18 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
+                
+                {/* Platform Icons */}
+                {blueprint.platforms && blueprint.platforms.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    {blueprint.platforms.map((platform) => (
+                      <div key={platform} className="flex items-center">
+                        {getPlatformIcon(platform)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 <div className="flex items-center gap-2">
                   {userInfo?.avatarUrl ? (
                     <img 
