@@ -2492,17 +2492,10 @@ export function CampaignAnalyticsTable({
                     </span>
                   </div>
 
-                  {getDemographicStatus(selectedAccountForDemo) === 'pending' && selectedAccountForDemo.demographic_submission.screenshot_url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2 font-inter tracking-[-0.5px]"
-                      onClick={() => window.open(selectedAccountForDemo.demographic_submission!.screenshot_url!, '_blank')}
-                    >
+                  {getDemographicStatus(selectedAccountForDemo) === 'pending' && selectedAccountForDemo.demographic_submission.screenshot_url && <Button variant="outline" size="sm" onClick={() => window.open(selectedAccountForDemo.demographic_submission!.screenshot_url!, '_blank')} className="w-full mt-2 font-inter tracking-[-0.5px] bg-[#191818]">
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                       View Submission
-                    </Button>
-                  )}
+                    </Button>}
 
                   {selectedAccountForDemo.demographic_submission.reviewed_at && <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Reviewed</span>
