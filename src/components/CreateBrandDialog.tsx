@@ -142,7 +142,6 @@ export function CreateBrandDialog({
       <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
         {/* Header with gradient accent */}
         <div className="relative px-6 pt-8 pb-6">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
           <DialogHeader className="relative">
             <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white mb-1">
               Create Brand
