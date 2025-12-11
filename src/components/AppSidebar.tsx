@@ -462,7 +462,7 @@ export function AppSidebar() {
                   </>}
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3 bg-[#111111] border-0 rounded-xl" side="top" align="start" sideOffset={8}>
+            <PopoverContent className="w-64 p-3 bg-[#0a0a0a] border-0 rounded-xl" side="top" align="start" sideOffset={8}>
               {/* User Info + Theme Toggle */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
@@ -500,7 +500,7 @@ export function AppSidebar() {
               </div>
 
               {/* Sign Out Button */}
-              <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#6b2a2a] hover:bg-[#7a3333] text-white rounded-lg transition-colors">
+              <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors">
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium font-inter tracking-[-0.5px]">Sign Out</span>
               </button>
