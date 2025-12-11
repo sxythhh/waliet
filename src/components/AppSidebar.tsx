@@ -325,10 +325,10 @@ export function AppSidebar() {
         </div>
 
         {/* Workspace Toggle */}
-        <div className="py-0 px-0">
+        <div className="px-3 py-2">
           <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
             <PopoverTrigger asChild>
-              <button className="w-full flex items-center justify-between px-2.5 py-2 bg-[#141414] hover:bg-[#1a1a1a] transition-colors rounded-none">
+              <button className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] transition-colors">
                 <div className="flex items-center gap-2">
                   {isCreatorMode ? <Avatar className="w-6 h-6">
                       <AvatarImage src={avatarUrl || undefined} />
