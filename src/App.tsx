@@ -20,6 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import CampaignDetail from "./pages/CampaignDetail";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import CampaignJoin from "./pages/CampaignJoin";
+import { Navigate } from "react-router-dom";
 import CampaignPreview from "./pages/CampaignPreview";
 import BrandManagement from "./pages/BrandManagement";
 import BrandAssets from "./pages/BrandAssets";
@@ -116,6 +117,7 @@ const App = () => (
             <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
             <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
             <Route path="/boost/:id" element={<PublicBoost />} />
+            <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
             <Route path="/join/:slug" element={<CampaignJoin />} />
             <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
             <Route path="/dashboard" element={<WorkspaceProvider><Dashboard /></WorkspaceProvider>} />
