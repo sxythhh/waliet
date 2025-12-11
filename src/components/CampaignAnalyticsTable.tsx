@@ -1238,51 +1238,43 @@ export function CampaignAnalyticsTable({
         
 
 
-        {/* CSV Period Selector */}
-        {activeTab === 'analytics' && dateRanges.length > 0 && <div className="flex items-center gap-3 mt-4">
-              <Label className="text-foreground text-sm tracking-[-0.5px]" style={{
-          fontFamily: 'Inter, sans-serif'
-        }}>Period:</Label>
-              <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
-                <SelectTrigger className="w-[200px] bg-muted/50 border-0 h-9">
-                  <SelectValue placeholder="All periods" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-0 shadow-lg">
-                  <SelectItem value="all">All Periods</SelectItem>
-                  {dateRanges.map((range, idx) => <SelectItem key={idx} value={`${range.start}|${range.end}`}>
-                      {new Date(range.start).toLocaleDateString()} - {new Date(range.end).toLocaleDateString()}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
-              {selectedDateRange !== "all" && <Button variant="ghost" size="sm" onClick={async () => {
-          const [start, end] = selectedDateRange.split('|');
-          try {
-            const {
-              error
-            } = await supabase.from('campaign_account_analytics').delete().eq('campaign_id', campaignId).eq('start_date', start).eq('end_date', end);
-            if (error) throw error;
-            toast.success("CSV period deleted successfully");
-            setSelectedDateRange("all");
-            fetchAnalytics();
-          } catch (error) {
-            console.error("Error deleting CSV period:", error);
-            toast.error("Failed to delete CSV period");
-          }
-        }} className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                  <Trash2 className="h-4 w-4 mr-1.5" />
-                  Delete Period
-                </Button>}
-              <ImportCampaignStatsDialog campaignId={campaignId} onImportComplete={fetchAnalytics} onMatchingRequired={() => {}} />
-            </div>}
 
         {/* Filters and Table */}
         {activeTab === 'analytics' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
           <CardHeader className="px-4 py-3">
-            <div className="flex flex-col sm:flex-row gap-3 items-start justify-between sm:flex sm:items-end sm:justify-between">
-              <h3 className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{
-              fontFamily: 'Inter, sans-serif'
-            }}>Account Analytics</h3>
-              <div className="flex items-center gap-2 w-full sm:w-auto py-[1px]">
+            <div className="flex flex-col sm:flex-row gap-3 items-start justify-between sm:flex sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                {dateRanges.length > 0 && <>
+                  <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
+                    <SelectTrigger className="w-[180px] bg-muted/50 border-0 h-8 text-sm">
+                      <SelectValue placeholder="All periods" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-0 shadow-lg">
+                      <SelectItem value="all">All Periods</SelectItem>
+                      {dateRanges.map((range, idx) => <SelectItem key={idx} value={`${range.start}|${range.end}`}>
+                          {new Date(range.start).toLocaleDateString()} - {new Date(range.end).toLocaleDateString()}
+                        </SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {selectedDateRange !== "all" && <Button variant="ghost" size="sm" onClick={async () => {
+                    const [start, end] = selectedDateRange.split('|');
+                    try {
+                      const { error } = await supabase.from('campaign_account_analytics').delete().eq('campaign_id', campaignId).eq('start_date', start).eq('end_date', end);
+                      if (error) throw error;
+                      toast.success("CSV period deleted successfully");
+                      setSelectedDateRange("all");
+                      fetchAnalytics();
+                    } catch (error) {
+                      console.error("Error deleting CSV period:", error);
+                      toast.error("Failed to delete CSV period");
+                    }
+                  }} className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>}
+                </>}
+                <ImportCampaignStatsDialog campaignId={campaignId} onImportComplete={fetchAnalytics} onMatchingRequired={() => {}} />
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <div className="relative flex-1 sm:w-44">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-8 bg-muted/50 border-0 text-sm tracking-[-0.5px]" style={{
