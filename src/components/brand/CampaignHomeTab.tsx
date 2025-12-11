@@ -34,8 +34,10 @@ interface StatsData {
   totalViews: number;
   totalPayouts: number;
   effectiveCPM: number;
-  viewsChange: number;
-  payoutsChange: number;
+  viewsLastWeek: number;
+  payoutsLastWeek: number;
+  viewsChangePercent: number;
+  payoutsChangePercent: number;
 }
 
 interface MetricsData {
@@ -70,7 +72,7 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
 };
 
 export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
-  const [stats, setStats] = useState<StatsData>({ totalViews: 0, totalPayouts: 0, effectiveCPM: 0, viewsChange: 0, payoutsChange: 0 });
+  const [stats, setStats] = useState<StatsData>({ totalViews: 0, totalPayouts: 0, effectiveCPM: 0, viewsLastWeek: 0, payoutsLastWeek: 0, viewsChangePercent: 0, payoutsChangePercent: 0 });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -110,6 +112,48 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         .eq('metadata->>campaign_id', campaignId)
         .eq('type', 'earning');
 
+      // Calculate week boundaries
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+      // Calculate payouts for current week vs last week
+      const payoutsThisWeek = transactionsData?.filter(t => new Date(t.created_at) >= oneWeekAgo)
+        .reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+      const payoutsLastWeek = transactionsData?.filter(t => {
+        const date = new Date(t.created_at);
+        return date >= twoWeeksAgo && date < oneWeekAgo;
+      }).reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+
+      // Fetch metrics for views comparison (last week vs week before)
+      const { data: metricsThisWeek } = await supabase
+        .from('campaign_video_metrics')
+        .select('total_views')
+        .eq('campaign_id', campaignId)
+        .gte('recorded_at', oneWeekAgo.toISOString())
+        .order('recorded_at', { ascending: false })
+        .limit(1);
+
+      const { data: metricsLastWeek } = await supabase
+        .from('campaign_video_metrics')
+        .select('total_views')
+        .eq('campaign_id', campaignId)
+        .gte('recorded_at', twoWeeksAgo.toISOString())
+        .lt('recorded_at', oneWeekAgo.toISOString())
+        .order('recorded_at', { ascending: false })
+        .limit(1);
+
+      const viewsThisWeekValue = metricsThisWeek?.[0]?.total_views || 0;
+      const viewsLastWeekValue = metricsLastWeek?.[0]?.total_views || 0;
+
+      // Calculate percentage changes
+      const viewsChangePercent = viewsLastWeekValue > 0 
+        ? ((viewsThisWeekValue - viewsLastWeekValue) / viewsLastWeekValue) * 100 
+        : 0;
+      const payoutsChangePercent = payoutsLastWeek > 0 
+        ? ((payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek) * 100 
+        : 0;
+
       const totalViews = analyticsData?.reduce((sum, a) => sum + (a.total_views || 0), 0) || 0;
       const paidViews = analyticsData?.reduce((sum, a) => sum + (a.paid_views || 0), 0) || 0;
       const totalPayouts = transactionsData?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
@@ -119,8 +163,10 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         totalViews,
         totalPayouts,
         effectiveCPM,
-        viewsChange: 0,
-        payoutsChange: 0
+        viewsLastWeek: viewsLastWeekValue,
+        payoutsLastWeek,
+        viewsChangePercent,
+        payoutsChangePercent
       });
 
       // Generate mock chart data based on transactions
@@ -284,21 +330,21 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
     <div className="p-4 space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 bg-card/30 border-table-border">
+        <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(stats.totalViews)}</p>
-              <Badge variant="secondary" className="bg-primary/20 text-primary text-xs">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                Live
+              <Badge variant="secondary" className={`text-xs ${stats.viewsChangePercent >= 0 ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}`}>
+                {stats.viewsChangePercent >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                {stats.viewsChangePercent >= 0 ? '+' : ''}{stats.viewsChangePercent.toFixed(1)}%
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">From {formatNumber(stats.viewsChange)} (last 4 weeks)</p>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatNumber(stats.viewsLastWeek)} last week</p>
           </div>
         </Card>
 
-        <Card className="p-4 bg-card/30 border-table-border">
+        <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Effective CPM</p>
             <div className="flex items-center justify-between">
@@ -308,21 +354,21 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
                 Live
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">Running Efficiently</p>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">Cost per 1K views</p>
           </div>
         </Card>
 
-        <Card className="p-4 bg-card/30 border-table-border">
+        <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Payouts</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
-              <Badge variant="secondary" className="bg-primary/20 text-primary text-xs">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                Live
+              <Badge variant="secondary" className={`text-xs ${stats.payoutsChangePercent >= 0 ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}`}>
+                {stats.payoutsChangePercent >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                {stats.payoutsChangePercent >= 0 ? '+' : ''}{stats.payoutsChangePercent.toFixed(1)}%
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">From {formatCurrency(stats.payoutsChange)} (last 4 weeks)</p>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatCurrency(stats.payoutsLastWeek)} last week</p>
           </div>
         </Card>
       </div>
