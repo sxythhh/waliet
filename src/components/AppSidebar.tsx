@@ -314,7 +314,7 @@ export function AppSidebar() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-56 lg:w-64 h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414]">
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-[10px]">
+        <div className="flex items-center justify-between py-[10px] px-[10px]">
           <div className="flex items-center gap-2.5">
             <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
             <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
@@ -325,10 +325,10 @@ export function AppSidebar() {
         </div>
 
         {/* Workspace Toggle */}
-        <div className="px-[5px] py-0">
+        <div className="py-[3px] px-[8px]">
           <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
             <PopoverTrigger asChild>
-              <button className="w-full flex items-center justify-between px-2.5 py-2 bg-[#141414] hover:bg-[#1a1a1a] transition-colors rounded">
+              <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors rounded bg-[#131313]">
                 <div className="flex items-center gap-2">
                   {isCreatorMode ? <Avatar className="w-6 h-6">
                       <AvatarImage src={avatarUrl || undefined} />
