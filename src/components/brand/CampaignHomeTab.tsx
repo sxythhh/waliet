@@ -11,7 +11,8 @@ import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { toast } from "sonner";
-
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { ManualMetricsDialog } from "./ManualMetricsDialog";
 interface CampaignHomeTabProps {
   campaignId: string;
   brandId: string;
@@ -72,6 +73,7 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
 };
 
 export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
+  const { isAdmin } = useAdminCheck();
   const [stats, setStats] = useState<StatsData>({ totalViews: 0, totalPayouts: 0, effectiveCPM: 0, viewsLastWeek: 0, payoutsLastWeek: 0, viewsChangePercent: 0, payoutsChangePercent: 0 });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
@@ -378,6 +380,13 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <ManualMetricsDialog 
+                campaignId={campaignId} 
+                brandId={brandId} 
+                onSuccess={fetchMetrics}
+              />
+            )}
             <Button
               variant="ghost"
               size="sm"
