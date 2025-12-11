@@ -339,10 +339,9 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(stats.totalViews)}</p>
-              <Badge variant="secondary" className={`text-xs ${stats.viewsChangePercent >= 0 ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}`}>
-                {stats.viewsChangePercent >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+              <div className={`text-xs px-2 py-1 rounded ${stats.viewsChangePercent >= 0 ? 'bg-[#173e23] text-[#4ade80] border-t border-[#35663b]' : 'bg-[#3e1717] text-[#f87171] border-t border-[#663535]'}`}>
                 {stats.viewsChangePercent >= 0 ? '+' : ''}{stats.viewsChangePercent.toFixed(1)}%
-              </Badge>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatNumber(stats.viewsLastWeek)} last week</p>
           </div>
@@ -367,10 +366,9 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Payouts</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
-              <Badge variant="secondary" className={`text-xs ${stats.payoutsChangePercent >= 0 ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}`}>
-                {stats.payoutsChangePercent >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+              <div className={`text-xs px-2 py-1 rounded ${stats.payoutsChangePercent >= 0 ? 'bg-[#173e23] text-[#4ade80] border-t border-[#35663b]' : 'bg-[#3e1717] text-[#f87171] border-t border-[#663535]'}`}>
                 {stats.payoutsChangePercent >= 0 ? '+' : ''}{stats.payoutsChangePercent.toFixed(1)}%
-              </Badge>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatCurrency(stats.payoutsLastWeek)} last week</p>
           </div>
