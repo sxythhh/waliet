@@ -280,10 +280,10 @@ export function CampaignCreationWizard({
     return currentStep / STEPS.length * 100;
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1400px] w-[95vw] max-h-[95vh] bg-white dark:bg-[#0a0a0a] border-border p-0 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] h-[85vh]">
+      <DialogContent className="max-w-[1400px] w-[95vw] max-h-[90vh] bg-white dark:bg-[#0a0a0a] border-border p-0 overflow-hidden flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] flex-1 min-h-0 overflow-hidden">
           {/* Left Column - Main Content */}
-          <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex flex-col min-h-0 overflow-hidden">
             {/* Main Form Area */}
             <div className="flex-1 overflow-y-auto px-8 lg:px-16 py-10">
               <Form {...form}>
