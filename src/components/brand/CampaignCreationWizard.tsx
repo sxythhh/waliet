@@ -294,7 +294,7 @@ export function CampaignCreationWizard({
                         <h1 className="text-2xl font-bold text-foreground mb-2">
                           Select Your Campaign Goal
                         </h1>
-                        <p className="text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           Select the marketing objective that best fits your business goals.
                         </p>
                       </div>
