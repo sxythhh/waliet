@@ -213,8 +213,8 @@ export function BrandCampaignsTab({
                     <div className="rounded-lg p-2.5 space-y-1.5 px-0 py-0 bg-[#080808]/0">
                       <div className="flex items-baseline justify-between">
                         <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                          <span className="text-base font-bold tabular-nums">${usedBudget.toLocaleString()}</span>
-                          <span className="text-xs text-muted-foreground font-semibold">/ ${Number(campaign.budget).toLocaleString()}</span>
+                          <span className="text-base font-bold tabular-nums">${Math.ceil(usedBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                          <span className="text-xs text-muted-foreground font-semibold">/ ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                         </div>
                       </div>
                       

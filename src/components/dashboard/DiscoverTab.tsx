@@ -419,10 +419,10 @@ export function DiscoverTab() {
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5">
                               <span className="text-base font-bold tabular-nums" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-                                ${budgetUsed.toLocaleString()}
+                                ${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                               <span className="text-xs text-muted-foreground font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-                                / ${campaign.budget.toLocaleString()}
+                                / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                             </div>
                           </div>
