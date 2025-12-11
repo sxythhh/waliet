@@ -556,7 +556,7 @@ export function WalletTab() {
     if (methodIndex === -1 || methodIndex === 0) return; // Already default or not found
 
     const selectedMethod = payoutMethods[methodIndex];
-    
+
     // Block UPI from being set as default
     if (selectedMethod.method === 'upi') {
       toast({
@@ -566,7 +566,6 @@ export function WalletTab() {
       });
       return;
     }
-
     const updatedMethods = [...payoutMethods];
     const [method] = updatedMethods.splice(methodIndex, 1);
     updatedMethods.unshift(method);
@@ -776,7 +775,6 @@ export function WalletTab() {
       return;
     }
     const amount = Number(payoutAmount);
-    
     const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
     if (!selectedMethod) return;
 
@@ -792,7 +790,6 @@ export function WalletTab() {
 
     // Bank minimum is $250
     const minimumAmount = selectedMethod.method === 'bank' ? 250 : 20;
-    
     if (amount < minimumAmount) {
       toast({
         variant: "destructive",
@@ -1004,9 +1001,11 @@ export function WalletTab() {
               case "crypto":
                 return walletActiveIcon;
               case "bank":
-                return null; // Will use Building2 icon
+                return null;
+              // Will use Building2 icon
               case "upi":
-                return null; // Will use Smartphone icon
+                return null;
+              // Will use Smartphone icon
               default:
                 return null;
             }
@@ -1035,15 +1034,7 @@ export function WalletTab() {
           return <div key={method.id} className="group relative rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] p-4 border border-border dark:border-transparent">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
-                    {methodIcon ? (
-                      <img src={methodIcon} alt={getMethodLabel()} className="w-5 h-5" />
-                    ) : method.method === 'bank' ? (
-                      <Building2 className="w-5 h-5 text-muted-foreground" />
-                    ) : method.method === 'upi' ? (
-                      <Smartphone className="w-5 h-5 text-muted-foreground" />
-                    ) : (
-                      <CreditCard className="w-5 h-5 text-muted-foreground" />
-                    )}
+                    {methodIcon ? <img src={methodIcon} alt={getMethodLabel()} className="w-5 h-5" /> : method.method === 'bank' ? <Building2 className="w-5 h-5 text-muted-foreground" /> : method.method === 'upi' ? <Smartphone className="w-5 h-5 text-muted-foreground" /> : <CreditCard className="w-5 h-5 text-muted-foreground" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -1337,27 +1328,27 @@ export function WalletTab() {
             <div className="space-y-2">
               <Label htmlFor="payout-amount">Amount ($)</Label>
               <Input id="payout-amount" type="number" min={(() => {
-                const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
-                return method?.method === 'bank' ? 250 : 20;
-              })()} step="0.01" max={wallet?.balance || 0} placeholder={(() => {
-                const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
-                return method?.method === 'bank' ? '250.00' : '20.00';
-              })()} value={payoutAmount} onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} className="bg-muted border-transparent placeholder:text-muted-foreground h-14 text-lg font-medium focus-visible:ring-primary/50" />
+              const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+              return method?.method === 'bank' ? 250 : 20;
+            })()} step="0.01" max={wallet?.balance || 0} placeholder={(() => {
+              const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+              return method?.method === 'bank' ? '250.00' : '20.00';
+            })()} value={payoutAmount} onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} className="bg-muted border-transparent placeholder:text-muted-foreground h-14 text-lg font-medium focus-visible:ring-primary/50" />
               <div className="flex gap-2 flex-wrap">
                 {(() => {
-                  const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
-                  const amounts = method?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500];
-                  return amounts.map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-muted hover:bg-accent">
+                const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                const amounts = method?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500];
+                return amounts.map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-muted hover:bg-accent">
                       ${amount}
                     </Button>);
-                })()}
+              })()}
               </div>
               <p className="text-xs text-muted-foreground">
                 {(() => {
-                  const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
-                  const minimum = method?.method === 'bank' ? '$250.00' : '$20.00';
-                  return `Minimum: ${minimum} • Available: $${wallet?.balance?.toFixed(2) || "0.00"}`;
-                })()}
+                const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                const minimum = method?.method === 'bank' ? '$250.00' : '$20.00';
+                return `Minimum: ${minimum} • Available: $${wallet?.balance?.toFixed(2) || "0.00"}`;
+              })()}
               </p>
             </div>
 
@@ -1436,7 +1427,6 @@ export function WalletTab() {
               const isPayPal = selectedMethod?.method === 'paypal';
               const isUpi = selectedMethod?.method === 'upi';
               const isBank = selectedMethod?.method === 'bank';
-              
               if (isUpi) {
                 return <>
                   <p className="text-destructive font-medium">UPI payouts are temporarily disabled</p>
@@ -1523,7 +1513,7 @@ export function WalletTab() {
                 <div className="text-sm text-muted-foreground mb-3">
                   {format(selectedTransaction.date, 'MMM dd, yyyy • h:mm a')}
                 </div>
-                {selectedTransaction.status && (selectedTransaction.status === 'completed' ? <Badge className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white">
+                {selectedTransaction.status && (selectedTransaction.status === 'completed' ? <Badge className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white border-none">
                       <img src={checkCircleFilledIcon} alt="" className="h-3 w-3 mr-1" />
                       {selectedTransaction.status}
                     </Badge> : <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
