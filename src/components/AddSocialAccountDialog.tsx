@@ -11,6 +11,7 @@ import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import xLogo from "@/assets/x-logo.png";
 import xLogoLight from "@/assets/x-logo-light.png";
+import connectAccountIcon from "@/assets/connect-account-icon.svg";
 import { z } from "zod";
 
 // Helper function to extract username from URL based on platform
@@ -233,7 +234,7 @@ export function AddSocialAccountDialog({
       <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
         <div className="flex flex-col">
           {/* Embed Section */}
-          <div className="w-full h-[250px] border-b border-border">
+          <div className="w-full h-[220px] border-b border-border">
             <iframe src="https://joinvirality.com/accounts" className="w-full h-full" title="Connect Accounts" />
           </div>
           
@@ -303,11 +304,14 @@ export function AddSocialAccountDialog({
                   </div>
 
                   {/* Submit Button */}
-                  <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px]" disabled={uploading}>
+                  <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px] border-t-2 border-t-[#4a86ff]" disabled={uploading}>
                     {uploading ? <span className="flex items-center gap-2">
                         <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         Connecting...
-                      </span> : "Connect Account"}
+                      </span> : <span className="flex items-center gap-2">
+                        <img src={connectAccountIcon} alt="" className="h-5 w-5" />
+                        Connect Account
+                      </span>}
                   </Button>
                 </>}
             </form>
