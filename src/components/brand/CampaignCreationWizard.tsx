@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, Target, TrendingUp, ArrowRight, Save, Upload, X, Check, ExternalLink, ChevronRight } from "lucide-react";
+import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
@@ -303,23 +303,23 @@ export function CampaignCreationWizard({
                     field
                   }) => <FormItem>
                             <FormControl>
-                              <div className="space-y-4">
-                                {GOALS.map(goal => <button key={goal.id} type="button" onClick={() => field.onChange(goal.id)} className={`w-full flex items-start gap-4 p-5 rounded-xl border-2 text-left transition-all ${field.value === goal.id ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
+                              <div className="space-y-3">
+                                {GOALS.map(goal => <button key={goal.id} type="button" onClick={() => field.onChange(goal.id)} className={`w-full flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${field.value === goal.id ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
+                                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${field.value === goal.id ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
+                                      {field.value === goal.id && <Check className="w-3 h-3 text-white" />}
+                                    </div>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-semibold text-lg text-foreground">
+                                        <h3 className="font-semibold text-base text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                           {goal.title}
                                         </h3>
-                                        {goal.enterprise && <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                                        {goal.enterprise && <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                             Enterprise
                                           </Badge>}
                                       </div>
-                                      <p className="text-sm text-muted-foreground leading-relaxed">
+                                      <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                         {goal.description}
                                       </p>
-                                    </div>
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${field.value === goal.id ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
-                                      {field.value === goal.id && <Check className="w-3 h-3 text-white" />}
                                     </div>
                                   </button>)}
                               </div>
@@ -555,22 +555,20 @@ export function CampaignCreationWizard({
             {/* Bottom Action Bar */}
             <div className="border-t border-border px-8 lg:px-16 py-4 bg-background">
               <div className="max-w-2xl mx-auto flex items-center justify-between">
-                <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2">
-                  <Save className="h-4 w-4" />
+                <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  <Bookmark className="h-4 w-4" />
                   Save as Draft
                 </Button>
 
                 <div className="flex items-center gap-3">
-                  {currentStep > 1 && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting}>
+                  {currentStep > 1 && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} className="tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Back
                     </Button>}
                   
-                  {currentStep < 3 ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="gap-2 min-w-[120px]">
+                  {currentStep < 3 ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Continue
-                      <ChevronRight className="h-4 w-4" />
-                    </Button> : <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting} className="gap-2 min-w-[120px]">
+                    </Button> : <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                       {isSubmitting ? "Creating..." : "Finish"}
-                      <ArrowRight className="h-4 w-4" />
                     </Button>}
                 </div>
               </div>
@@ -661,20 +659,6 @@ export function CampaignCreationWizard({
                   />
                 </div>
 
-                {/* Enterprise CTA */}
-                {watchedValues.goal === "conversions" && (
-                  <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
-                    <Badge variant="secondary" className="bg-primary/20 text-primary tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Enterprise
-                    </Badge>
-                    <h4 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Looking for Done-for-you Management?
-                    </h4>
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Complete this 2-minute form to see if you qualify. Based on your goals, we'll guide you towards the best solution.
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
