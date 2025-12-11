@@ -3,12 +3,28 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus, Users } from "lucide-react";
+import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus, Users, ChevronDown } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { VideosTab } from "@/components/brand/VideosTab";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+export type TimeframeOption = "today" | "this_week" | "last_week" | "this_month" | "last_month";
+
+const TIMEFRAME_LABELS: Record<TimeframeOption, string> = {
+  today: "Today",
+  this_week: "This week",
+  last_week: "Last week",
+  this_month: "This month",
+  last_month: "Last month",
+};
 interface Campaign {
   id: string;
   title: string;
@@ -49,6 +65,7 @@ export function BrandCampaignDetailView({
   const [loading, setLoading] = useState(true);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("home");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [timeframe, setTimeframe] = useState<TimeframeOption>("this_month");
   const {
     isAdmin
   } = useAdminCheck();
@@ -116,6 +133,25 @@ export function BrandCampaignDetailView({
             </button>
           </div>
           <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted">
+                  {TIMEFRAME_LABELS[timeframe]}
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover">
+                {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map((option) => (
+                  <DropdownMenuItem
+                    key={option}
+                    className="focus:bg-muted focus:text-foreground"
+                    onClick={() => setTimeframe(option)}
+                  >
+                    {TIMEFRAME_LABELS[option]}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted" onClick={() => setEditDialogOpen(true)}>
               <Pencil className="h-3.5 w-3.5" />
               Edit Campaign
@@ -143,7 +179,7 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" && campaign.brand_id ? <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} /> : activeDetailTab === "videos" && campaign.brand_id ? <div className="p-4 py-0">
+          {activeDetailTab === "home" && campaign.brand_id ? <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} /> : activeDetailTab === "videos" && campaign.brand_id ? <div className="p-4 py-0">
               <VideosTab campaignId={campaignId} brandId={campaign.brand_id} isAdmin={true} approvedCreators={[]} />
             </div> : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0" /> : <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />}
         </div>
