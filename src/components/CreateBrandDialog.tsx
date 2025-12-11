@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Upload, X, Building2 } from "lucide-react";
+import { Plus, Upload, X } from "lucide-react";
 
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Brand name is required").max(100),
@@ -139,19 +139,14 @@ export function CreateBrandDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-sm bg-[#0a0a0a] border-[#1a1a1a] p-0 overflow-hidden">
+      <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
         {/* Header with gradient accent */}
         <div className="relative px-6 pt-8 pb-6">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
           <DialogHeader className="relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-primary" />
-              </div>
-              <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white">
-                Create Brand
-              </DialogTitle>
-            </div>
+            <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white mb-2">
+              Create Brand
+            </DialogTitle>
             <p className="text-sm text-neutral-500" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
               Set up your brand workspace to manage campaigns
             </p>
@@ -180,12 +175,9 @@ export function CreateBrandDialog({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-20 h-20 rounded-2xl border-2 border-dashed border-neutral-700 hover:border-primary/50 flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-primary/5 group"
+                  className="w-20 h-20 rounded-2xl border-2 border-dashed border-neutral-700 hover:border-primary/50 flex items-center justify-center transition-all hover:bg-primary/5 group"
                 >
                   <Upload className="h-5 w-5 text-neutral-500 group-hover:text-primary transition-colors" />
-                  <span className="text-[10px] text-neutral-500 group-hover:text-primary transition-colors" style={{ fontFamily: 'Inter' }}>
-                    Upload logo
-                  </span>
                 </button>
               )}
             </div>
