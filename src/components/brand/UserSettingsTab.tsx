@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { LogOut, Upload, Pencil } from "lucide-react";
+import { LogOut, Camera, ExternalLink, Settings, User, Building2, MapPin, Phone, Mail, Globe, Folder } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Brand {
   id: string;
@@ -71,20 +71,17 @@ export function UserSettingsTab() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate("/auth");
         return;
       }
       setUserEmail(user.email || "");
-      const {
-        data: profileData,
-        error
-      } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      const { data: profileData, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
       if (error) throw error;
       if (profileData) {
         setProfile({
@@ -104,18 +101,13 @@ export function UserSettingsTab() {
       setLoading(false);
     }
   };
+
   const handleSave = async () => {
     try {
       setSaving(true);
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const {
-        error
-      } = await supabase.from("profiles").update({
+      const { error } = await supabase.from("profiles").update({
         username: profile.username,
         full_name: profile.full_name,
         bio: profile.bio,
@@ -132,6 +124,7 @@ export function UserSettingsTab() {
       setSaving(false);
     }
   };
+
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -142,222 +135,282 @@ export function UserSettingsTab() {
       toast.error("Failed to sign out");
     }
   };
+
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const file = event.target.files?.[0];
       if (!file) return;
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/avatar.${fileExt}`;
-      const {
-        error: uploadError
-      } = await supabase.storage.from('avatars').upload(filePath, file, {
-        upsert: true
-      });
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
       if (uploadError) throw uploadError;
-      const {
-        data: {
-          publicUrl
-        }
-      } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      const {
-        error: updateError
-      } = await supabase.from('profiles').update({
-        avatar_url: publicUrl
-      }).eq('id', user.id);
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
       if (updateError) throw updateError;
-      setProfile({
-        ...profile,
-        avatar_url: publicUrl
-      });
+      setProfile({ ...profile, avatar_url: publicUrl });
       toast.success("Avatar updated successfully");
     } catch (error) {
       console.error("Error uploading avatar:", error);
       toast.error("Failed to upload avatar");
     }
   };
-  if (loading) {
-    return <div className="space-y-6">
-        <Skeleton className="h-8 w-48 bg-[#1a1a1a]" />
-        <Card className="bg-[#121212] border-none shadow-none">
-          <CardHeader>
-            <Skeleton className="h-6 w-40 bg-[#1a1a1a]" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Skeleton className="w-20 h-20 rounded-full bg-[#1a1a1a]" />
-              <div className="space-y-2">
-                <Skeleton className="h-5 w-32 bg-[#1a1a1a]" />
-                <Skeleton className="h-4 w-24 bg-[#1a1a1a]" />
-              </div>
-            </div>
-            <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
-            <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
-            <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
-            <div className="grid grid-cols-2 gap-4">
-              <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
-              <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
-            </div>
-            <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
-            <div className="flex gap-3 pt-4">
-              <Skeleton className="h-10 flex-1 bg-[#1a1a1a]" />
-              <Skeleton className="h-10 w-32 bg-[#1a1a1a]" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>;
-  }
-  return <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Settings</h2>
 
+  if (loading) {
+    return (
+      <div className="p-4 space-y-6 max-w-2xl">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-32 dark:bg-muted-foreground/20" />
+          <Skeleton className="h-4 w-48 dark:bg-muted-foreground/20" />
+        </div>
+        <div className="p-6 rounded-xl bg-muted/30 dark:bg-muted/50 space-y-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-20 h-20 rounded-full dark:bg-muted-foreground/20" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-32 dark:bg-muted-foreground/20" />
+              <Skeleton className="h-4 w-24 dark:bg-muted-foreground/20" />
+            </div>
+          </div>
+          <div className="grid gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-12 w-full dark:bg-muted-foreground/20" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 space-y-6 max-w-2xl">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
+          <p className="text-sm text-muted-foreground tracking-[-0.5px]">Manage your account and preferences</p>
+        </div>
+        <Button 
+          onClick={handleSignOut} 
+          variant="ghost" 
+          size="sm"
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign out
+        </Button>
+      </div>
+
+      {/* Brand Settings Section */}
       {isBrandMode && brand && (
-        <Card className="bg-[#121212] border-none shadow-none">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-white">Brand Settings</CardTitle>
-            <EditBrandDialog 
-              brand={brand} 
-              onSuccess={fetchBrand}
-              trigger={
-                <Button variant="ghost" size="sm" className="text-white/60 hover:text-white hover:bg-white/10">
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit Brand
-                </Button>
-              }
-            />
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="rounded-xl bg-muted/30 dark:bg-muted/50 overflow-hidden">
+          <div className="p-5 border-b border-border/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Building2 className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-medium tracking-[-0.5px]">Brand</h2>
+                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">Workspace settings</p>
+                </div>
+              </div>
+              <EditBrandDialog 
+                brand={brand} 
+                onSuccess={fetchBrand}
+                trigger={
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                }
+              />
+            </div>
+          </div>
+          
+          <div className="p-5 space-y-4">
             <div className="flex items-center gap-4">
               {brand.logo_url ? (
-                <img src={brand.logo_url} alt={brand.name} className="w-16 h-16 rounded-lg object-cover" />
+                <img src={brand.logo_url} alt={brand.name} className="w-14 h-14 rounded-xl object-cover ring-2 ring-border/50" />
               ) : (
-                <div className="w-16 h-16 rounded-lg bg-white/10 flex items-center justify-center text-white text-xl font-bold">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-lg font-semibold ring-2 ring-border/50">
                   {brand.name?.[0]?.toUpperCase() || "B"}
                 </div>
               )}
-              <div>
-                <p className="text-white font-medium text-lg">{brand.name}</p>
-                <p className="text-sm text-white/60">@{brand.slug}</p>
-                {brand.brand_type && (
-                  <p className="text-xs text-white/40 mt-1 capitalize">{brand.brand_type}</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium tracking-[-0.5px] truncate">{brand.name}</p>
+                <p className="text-sm text-muted-foreground tracking-[-0.5px]">@{brand.slug}</p>
+              </div>
+            </div>
+
+            {(brand.home_url || brand.assets_url) && (
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                {brand.home_url && (
+                  <a 
+                    href={brand.home_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-background/50 hover:bg-background transition-colors group"
+                  >
+                    <Globe className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-sm truncate tracking-[-0.5px]">Website</span>
+                    <ExternalLink className="h-3 w-3 text-muted-foreground/50 ml-auto" />
+                  </a>
+                )}
+                {brand.assets_url && (
+                  <a 
+                    href={brand.assets_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-background/50 hover:bg-background transition-colors group"
+                  >
+                    <Folder className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-sm truncate tracking-[-0.5px]">Assets</span>
+                    <ExternalLink className="h-3 w-3 text-muted-foreground/50 ml-auto" />
+                  </a>
                 )}
               </div>
-            </div>
-
-            {brand.description && (
-              <div className="space-y-1">
-                <Label className="text-white/60 text-xs">Description</Label>
-                <p className="text-sm text-white/80">{brand.description}</p>
-              </div>
             )}
-
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              {brand.home_url && (
-                <div className="space-y-1">
-                  <Label className="text-white/60 text-xs">Website</Label>
-                  <a href={brand.home_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline block truncate">
-                    {brand.home_url}
-                  </a>
-                </div>
-              )}
-              {brand.assets_url && (
-                <div className="space-y-1">
-                  <Label className="text-white/60 text-xs">Assets</Label>
-                  <a href={brand.assets_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline block truncate">
-                    {brand.assets_url}
-                  </a>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      <Card className="bg-[#121212] border-none shadow-none">
-        <CardHeader>
-          <CardTitle className="text-white">Profile Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              {profile.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-20 h-20 rounded-full object-cover" /> : <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center text-white text-2xl">
-                  {profile.username?.[0]?.toUpperCase() || "U"}
-                </div>}
-              <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 p-1.5 bg-primary rounded-full cursor-pointer hover:bg-primary/90">
-                <Upload className="h-3 w-3 text-white" />
-              </label>
-              <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+      {/* Profile Section */}
+      <div className="rounded-xl bg-muted/30 dark:bg-muted/50 overflow-hidden">
+        <div className="p-5 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <User className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-white font-medium">{profile.full_name || "Not set"}</p>
-              <p className="text-sm text-white/60">@{profile.username}</p>
+              <h2 className="font-medium tracking-[-0.5px]">Profile</h2>
+              <p className="text-xs text-muted-foreground tracking-[-0.5px]">Your personal information</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 space-y-6">
+          {/* Avatar Section */}
+          <div className="flex items-center gap-4">
+            <div className="relative group">
+              <Avatar className="w-20 h-20 ring-2 ring-border/50">
+                <AvatarImage src={profile.avatar_url} alt={profile.username} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                  {profile.username?.[0]?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <label 
+                htmlFor="avatar-upload" 
+                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+              >
+                <Camera className="h-5 w-5 text-white" />
+              </label>
+              <input 
+                id="avatar-upload" 
+                type="file" 
+                accept="image/*" 
+                onChange={handleAvatarUpload} 
+                className="hidden" 
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium tracking-[-0.5px] truncate">{profile.full_name || profile.username}</p>
+              <p className="text-sm text-muted-foreground tracking-[-0.5px]">@{profile.username}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1 tracking-[-0.5px]">Click avatar to change</p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">Email Address</Label>
-            <Input id="email" type="email" value={userEmail} disabled className="bg-[#191919] border-none text-white/60" />
-            <p className="text-xs text-white/40">Email cannot be changed</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="username" className="text-white">Username</Label>
-            <Input id="username" value={profile.username} onChange={e => setProfile({
-            ...profile,
-            username: e.target.value
-          })} className="bg-[#191919] border-none text-white" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="full_name" className="text-white">Full Name</Label>
-            <Input id="full_name" value={profile.full_name} onChange={e => setProfile({
-            ...profile,
-            full_name: e.target.value
-          })} className="bg-[#191919] border-none text-white" />
-          </div>
-
-          
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="country" className="text-white">Country</Label>
-              <Input id="country" value={profile.country} onChange={e => setProfile({
-              ...profile,
-              country: e.target.value
-            })} className="bg-[#191919] border-none text-white" />
+          {/* Form Fields */}
+          <div className="space-y-4">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground flex items-center gap-2 tracking-[-0.5px]">
+                <Mail className="h-3.5 w-3.5" />
+                Email
+              </Label>
+              <Input 
+                value={userEmail} 
+                disabled 
+                className="bg-background/50 border-border/50 text-muted-foreground h-11" 
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="city" className="text-white">City</Label>
-              <Input id="city" value={profile.city} onChange={e => setProfile({
-              ...profile,
-              city: e.target.value
-            })} className="bg-[#191919] border-none text-white" />
+            {/* Username & Full Name */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Username</Label>
+                <Input 
+                  value={profile.username}
+                  onChange={e => setProfile({ ...profile, username: e.target.value })}
+                  className="bg-background/50 border-border/50 h-11"
+                  placeholder="username"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Full Name</Label>
+                <Input 
+                  value={profile.full_name}
+                  onChange={e => setProfile({ ...profile, full_name: e.target.value })}
+                  className="bg-background/50 border-border/50 h-11"
+                  placeholder="John Doe"
+                />
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground flex items-center gap-2 tracking-[-0.5px]">
+                <MapPin className="h-3.5 w-3.5" />
+                Location
+              </Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Input 
+                  value={profile.country}
+                  onChange={e => setProfile({ ...profile, country: e.target.value })}
+                  className="bg-background/50 border-border/50 h-11"
+                  placeholder="Country"
+                />
+                <Input 
+                  value={profile.city}
+                  onChange={e => setProfile({ ...profile, city: e.target.value })}
+                  className="bg-background/50 border-border/50 h-11"
+                  placeholder="City"
+                />
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground flex items-center gap-2 tracking-[-0.5px]">
+                <Phone className="h-3.5 w-3.5" />
+                Phone Number
+              </Label>
+              <Input 
+                value={profile.phone_number}
+                onChange={e => setProfile({ ...profile, phone_number: e.target.value })}
+                className="bg-background/50 border-border/50 h-11"
+                placeholder="+1 (555) 000-0000"
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="text-white">Phone Number</Label>
-            <Input id="phone" value={profile.phone_number} onChange={e => setProfile({
-            ...profile,
-            phone_number: e.target.value
-          })} className="bg-[#191919] border-none text-white" placeholder="+1234567890" />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button onClick={handleSave} disabled={saving} className="flex-1 bg-primary hover:bg-primary/90">
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
-            <Button onClick={handleSignOut} variant="outline" className="border-none text-white hover:bg-white/10">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>;
+          {/* Save Button */}
+          <Button 
+            onClick={handleSave} 
+            disabled={saving}
+            className="w-full h-11"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
