@@ -1309,7 +1309,7 @@ export function CampaignAnalyticsTable({
 
         {/* CSV Period Selector */}
         {activeTab === 'analytics' && dateRanges.length > 0 && <div className="flex items-center gap-3 mt-4">
-              <Label className="text-muted-foreground text-sm">Period:</Label>
+              <Label className="text-foreground text-sm tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Period:</Label>
               <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
                 <SelectTrigger className="w-[200px] bg-muted/50 border-0 h-9">
                   <SelectValue placeholder="All periods" />
@@ -1339,6 +1339,11 @@ export function CampaignAnalyticsTable({
                   <Trash2 className="h-4 w-4 mr-1.5" />
                   Delete Period
                 </Button>}
+              <ImportCampaignStatsDialog
+                campaignId={campaignId}
+                onImportComplete={fetchAnalytics}
+                onMatchingRequired={() => {}}
+              />
             </div>}
 
         {/* Filters and Table */}
@@ -1438,11 +1443,6 @@ export function CampaignAnalyticsTable({
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <ImportCampaignStatsDialog
-                  campaignId={campaignId}
-                  onImportComplete={fetchAnalytics}
-                  onMatchingRequired={() => {}}
-                />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>

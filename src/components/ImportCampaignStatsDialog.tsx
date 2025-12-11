@@ -349,9 +349,9 @@ export function ImportCampaignStatsDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="bg-[#202020] text-white hover:bg-[#121212]">
-          <Upload className="h-4 w-4 mr-2" />
-          Import Analytics CSV
+        <Button variant="ghost" size="sm" className="bg-muted/50 hover:bg-muted gap-2 font-sans tracking-[-0.5px]">
+          <Upload className="h-3.5 w-3.5" />
+          Import CSV
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-[#202020] border-white/10 text-white max-w-xl">
