@@ -9,7 +9,6 @@ import { Upload, CheckCircle2 } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
-
 interface SubmitDemographicsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -18,7 +17,6 @@ interface SubmitDemographicsDialogProps {
   platform: string;
   username: string;
 }
-
 export function SubmitDemographicsDialog({
   open,
   onOpenChange,
@@ -31,7 +29,9 @@ export function SubmitDemographicsDialog({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
     switch (platform.toLowerCase()) {
@@ -81,7 +81,6 @@ export function SubmitDemographicsDialog({
       } = await supabase.from('demographic_submissions').select('submitted_at, reviewed_at, status').eq('social_account_id', socialAccountId).order('submitted_at', {
         ascending: false
       }).limit(1).maybeSingle();
-      
       if (lastSubmission) {
         // Cannot submit while pending
         if (lastSubmission.status === 'pending') {
@@ -93,13 +92,12 @@ export function SubmitDemographicsDialog({
           setUploading(false);
           return;
         }
-        
+
         // 30 days from reviewed_at if approved
         if (lastSubmission.status === 'approved' && lastSubmission.reviewed_at) {
           const reviewedDate = new Date(lastSubmission.reviewed_at);
           const nextSubmitDate = new Date(reviewedDate);
           nextSubmitDate.setDate(nextSubmitDate.getDate() + 30);
-          
           if (new Date() < nextSubmitDate) {
             const daysLeft = Math.ceil((nextSubmitDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
             toast({
@@ -117,7 +115,7 @@ export function SubmitDemographicsDialog({
       // Upload video with progress simulation
       const fileExt = videoFile.name.split('.').pop();
       const fileName = `${session.user.id}/demographics_${socialAccountId}_${Date.now()}.${fileExt}`;
-      
+
       // Simulate progress during upload
       setUploadProgress(0);
       const progressInterval = setInterval(() => {
@@ -126,18 +124,14 @@ export function SubmitDemographicsDialog({
           return prev + Math.random() * 15;
         });
       }, 300);
-
-      const { error: uploadError } = await supabase.storage
-        .from('verification-screenshots')
-        .upload(fileName, videoFile);
-      
+      const {
+        error: uploadError
+      } = await supabase.storage.from('verification-screenshots').upload(fileName, videoFile);
       clearInterval(progressInterval);
-      
       if (uploadError) {
         setUploadProgress(0);
         throw uploadError;
       }
-      
       setUploadProgress(100);
 
       // Get public URL
@@ -163,24 +157,16 @@ export function SubmitDemographicsDialog({
       }
 
       // Get user profile and social account details
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, email')
-        .eq('id', session.user.id)
-        .single();
-
-      const { data: account } = await supabase
-        .from('social_accounts')
-        .select('platform, username')
-        .eq('id', socialAccountId)
-        .single();
+      const {
+        data: profile
+      } = await supabase.from('profiles').select('username, email').eq('id', session.user.id).single();
+      const {
+        data: account
+      } = await supabase.from('social_accounts').select('platform, username').eq('id', socialAccountId).single();
 
       // Notify Discord webhook (non-blocking - don't fail if it fails)
       try {
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Webhook timeout')), 5000)
-        );
-        
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Webhook timeout')), 5000));
         const webhookPromise = supabase.functions.invoke('notify-demographic-submission', {
           body: {
             username: profile?.username || 'Unknown',
@@ -191,13 +177,11 @@ export function SubmitDemographicsDialog({
             submitted_at: submissionData?.submitted_at || new Date().toISOString()
           }
         });
-
         await Promise.race([webhookPromise, timeoutPromise]);
       } catch (webhookError) {
         console.error('Failed to send Discord notification (non-critical):', webhookError);
         // Don't fail the submission if webhook fails - it's non-critical
       }
-
       toast({
         title: "Success",
         description: "Demographics submitted successfully. Admin will review your submission."
@@ -244,10 +228,19 @@ export function SubmitDemographicsDialog({
     setVideoFile(file);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-neutral-950" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+      <DialogContent className="sm:max-w-[600px] bg-neutral-950" style={{
+      fontFamily: 'Inter',
+      letterSpacing: '-0.5px'
+    }}>
         <DialogHeader>
-          <DialogTitle style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Submit Account Demographics</DialogTitle>
-          <DialogDescription style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+          <DialogTitle style={{
+          fontFamily: 'Inter',
+          letterSpacing: '-0.5px'
+        }}>Submit Account Demographics</DialogTitle>
+          <DialogDescription style={{
+          fontFamily: 'Inter',
+          letterSpacing: '-0.3px'
+        }}>
             Upload a video showing your audience demographics
           </DialogDescription>
         </DialogHeader>
@@ -257,56 +250,55 @@ export function SubmitDemographicsDialog({
           <div className="flex items-center gap-3 p-4 rounded-lg border bg-[#070707]/50">
             {getPlatformIcon(platform)}
             <div className="flex flex-col">
-              <span className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>@{username}</span>
+              <span className="font-semibold text-sm" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.5px'
+            }}>@{username}</span>
               <span className="text-xs text-muted-foreground capitalize">{platform}</span>
             </div>
           </div>
 
           {/* Video Upload */}
           <div className="space-y-2">
-            <Label style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Demographics Video</Label>
-            <p className="text-xs text-muted-foreground mb-2">
-              Record a video showing your audience demographics from your platform's analytics
-            </p>
-            <div 
-              className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors" 
-              onClick={() => !uploading && fileInputRef.current?.click()}
-            >
-              {videoFile ? (
-                <div className="space-y-2">
+            <Label style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>Demographics Video</Label>
+            
+            <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors" onClick={() => !uploading && fileInputRef.current?.click()}>
+              {videoFile ? <div className="space-y-2">
                   <CheckCircle2 className="h-8 w-8 mx-auto text-primary" />
-                  <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{videoFile.name}</p>
+                  <p className="text-sm font-medium" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>{videoFile.name}</p>
                   <p className="text-xs text-muted-foreground">{!uploading && 'Click to change'}</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
+                </div> : <div className="space-y-2">
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Upload Video (Max 50MB)</p>
+                  <p className="text-sm text-muted-foreground" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>Upload Video (Max 50MB)</p>
                   <p className="text-xs text-muted-foreground">MP4, MOV, or other video formats</p>
-                </div>
-              )}
+                </div>}
             </div>
             <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileChange} className="hidden" required />
           </div>
 
           {/* Upload Progress */}
-          {uploading && (
-            <div className="space-y-2">
+          {uploading && <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Uploading...</span>
                 <span>{Math.round(uploadProgress)}%</span>
               </div>
               <Progress value={uploadProgress} className="h-2" />
-            </div>
-          )}
+            </div>}
 
           {/* Submit Button */}
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={uploading}
-            style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-          >
+          <Button type="submit" className="w-full" disabled={uploading} style={{
+          fontFamily: 'Inter',
+          letterSpacing: '-0.3px'
+        }}>
             {uploading ? "Uploading..." : "Submit Demographics"}
           </Button>
         </form>
