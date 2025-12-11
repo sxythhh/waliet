@@ -201,7 +201,22 @@ export function CreateBrandDialog({
 
             <FormField control={form.control} name="brand_type" render={({
             field
-          }) => {}} />
+          }) => <FormItem>
+                <FormLabel className="text-muted-foreground text-xs font-normal">Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Lead">Lead</SelectItem>
+                    <SelectItem value="DWY">DWY</SelectItem>
+                    <SelectItem value="Client">Client</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>} />
 
             <FormField control={form.control} name="description" render={({
             field
@@ -215,7 +230,13 @@ export function CreateBrandDialog({
 
             <FormField control={form.control} name="email" render={({
             field
-          }) => {}} />
+          }) => <FormItem>
+                <FormLabel className="text-muted-foreground text-xs font-normal">Admin Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="admin@company.com" type="email" className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>} />
 
             <div className="flex items-center gap-2 pt-2">
               <Button type="button" variant="ghost" onClick={() => {
@@ -226,7 +247,7 @@ export function CreateBrandDialog({
             }} disabled={isSubmitting} className="text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-[#1a1a1a] ml-auto">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button type="submit" disabled={isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90 tracking-[-0.5px]">
                 {isSubmitting ? "Creating..." : "Create"}
               </Button>
             </div>
