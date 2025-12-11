@@ -16,6 +16,7 @@ import instagramLogoBlack from "@/assets/instagram-logo-new.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-new.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import discordIconNew from "@/assets/discord-icon-new.png";
+import privateCampaignIcon from "@/assets/private-campaign-icon.svg";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -554,8 +555,8 @@ export function CampaignsTab({
         </div>
         <div className="flex gap-2">
           
-          <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="gap-2 border-black/0 font-medium text-sm">
-            <Plus className="h-4 w-4" />
+          <Button onClick={onOpenPrivateDialog} variant="outline" size="sm" className="gap-2 border-t-2 border-t-[#4b85f7] border-x-0 border-b-0 font-geist font-medium text-sm tracking-[-0.5px] rounded-t-none">
+            <img src={privateCampaignIcon} alt="" className="h-4 w-4" />
             Private Campaign 
           </Button>
         </div>
