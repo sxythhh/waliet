@@ -310,10 +310,7 @@ export default function Auth() {
               </div>
             </> : (/* Email Form */
         <div className="space-y-4">
-              <button onClick={() => setShowEmailForm(false)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </button>
+              
               
               
               
