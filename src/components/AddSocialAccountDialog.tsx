@@ -239,11 +239,7 @@ export function AddSocialAccountDialog({
           </div>
           
           <div className="p-6 pt-0">
-            <DialogHeader className="space-y-3">
-              <DialogTitle className="text-2xl font-bold font-inter tracking-[-0.5px]">
-                Connect Your Account
-              </DialogTitle>
-            </DialogHeader>
+            
 
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
               {/* Platform Selection - Icon Only */}
