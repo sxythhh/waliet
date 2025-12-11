@@ -2492,7 +2492,7 @@ export function CampaignAnalyticsTable({
                     </span>
                   </div>
 
-                  {getDemographicStatus(selectedAccountForDemo) === 'pending' && selectedAccountForDemo.demographic_submission.screenshot_url && <Button variant="outline" size="sm" onClick={() => window.open(selectedAccountForDemo.demographic_submission!.screenshot_url!, '_blank')} className="w-full mt-2 font-inter tracking-[-0.5px] bg-[#191818] border-black/0">
+{selectedAccountForDemo.demographic_submission.screenshot_url && <Button variant="outline" size="sm" onClick={() => window.open(selectedAccountForDemo.demographic_submission!.screenshot_url!, '_blank')} className="w-full mt-2 font-inter tracking-[-0.5px] bg-[#191818] border-black/0">
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                       View Submission
                     </Button>}
