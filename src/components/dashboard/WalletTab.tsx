@@ -958,7 +958,7 @@ export function WalletTab() {
     '1Y': '1 Year',
     'TW': 'This Week'
   };
-  return <div className="space-y-6 max-w-6xl mx-auto pt-6">
+  return <div className="space-y-6 max-w-6xl mx-auto pt-6 font-inter tracking-[-0.5px]">
 
       {/* Page Header */}
       <div className="flex items-start justify-between">
