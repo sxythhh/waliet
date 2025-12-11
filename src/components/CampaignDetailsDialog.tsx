@@ -88,7 +88,6 @@ const formatDate = (dateString: string) => {
     year: 'numeric'
   });
 };
-
 const getFaviconUrl = (url: string) => {
   try {
     const urlObj = new URL(url);
@@ -98,30 +97,19 @@ const getFaviconUrl = (url: string) => {
     return null;
   }
 };
-
 const renderDescriptionWithLinks = (text: string) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = text.split(urlRegex);
-  
   return parts.map((part, index) => {
     if (urlRegex.test(part)) {
       urlRegex.lastIndex = 0; // Reset regex
-      return (
-        <a
-          key={index}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#2060df] hover:underline"
-        >
+      return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-[#2060df] hover:underline">
           {part}
-        </a>
-      );
+        </a>;
     }
     return part;
   });
 };
-
 export function CampaignDetailsDialog({
   campaign,
   open,
@@ -198,37 +186,28 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Description with gradient + read more */}
-        {campaign.description && (
-          <div className="mb-4">
+        {campaign.description && <div className="mb-4">
             <div className="relative">
-              <div 
-                className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${
-                  showFullDescription ? '' : 'max-h-[100px]'
-                }`}
-                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-              >
+              <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
                 {renderDescriptionWithLinks(campaign.description)}
               </div>
-              {!showFullDescription && campaign.description.length > 200 && (
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-              )}
+              {!showFullDescription && campaign.description.length > 200 && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
             </div>
-            {campaign.description.length > 200 && (
-              <div className="flex justify-center mt-2">
-                <button
-                  onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                >
+            {campaign.description.length > 200 && <div className="flex justify-center mt-2">
+                <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
                   {showFullDescription ? 'Show less' : 'Show more'}
                 </button>
-              </div>
-            )}
-          </div>
-        )}
+              </div>}
+          </div>}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl bg-muted/30 mb-4">
+        <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl mb-4 bg-[#1f1f1f]/0">
           <div className="text-center">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
@@ -282,60 +261,57 @@ export function CampaignDetailsDialog({
         {/* Connected Accounts Section */}
         {(onConnectAccount || onManageAccount) && <div className="mb-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Your Connected Accounts</h4>
-              {onConnectAccount && <button 
-                onClick={onConnectAccount} 
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#2061de] hover:bg-[#1a4db8] transition-colors border-t border-[#4b85f7]"
-                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-              >
+              <h4 className="font-semibold text-sm" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>Your Connected Accounts</h4>
+              {onConnectAccount && <button onClick={onConnectAccount} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#2061de] hover:bg-[#1a4db8] transition-colors border-t border-[#4b85f7]" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
                 <Plus className="w-3.5 h-3.5" />
                 Add
               </button>}
             </div>
             
-            {hasConnectedAccounts ? (
-              <div className="flex flex-wrap gap-2">
-                {campaign.connected_accounts!.map(account => (
-                  <button 
-                    key={account.id} 
-                    onClick={() => onManageAccount?.(account)} 
-                    className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full bg-muted hover:bg-muted/80 transition-all duration-200 cursor-pointer"
-                  >
+            {hasConnectedAccounts ? <div className="flex flex-wrap gap-2">
+                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full bg-muted hover:bg-muted/80 transition-all duration-200 cursor-pointer">
                     <div className="w-7 h-7 rounded-full bg-background flex items-center justify-center shadow-sm">
                       <img src={platformIcons[account.platform.toLowerCase()]} alt={account.platform} className="w-4 h-4" />
                     </div>
-                    <span className="font-medium text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{account.username}</span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 p-4 rounded-xl border border-dashed border-border/60 bg-muted/20">
+                    <span className="font-medium text-sm" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>{account.username}</span>
+                  </button>)}
+              </div> : <div className="flex items-center gap-3 p-4 rounded-xl border border-dashed border-border/60 bg-muted/20">
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   <Plus className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>No accounts connected</p>
+                  <p className="text-sm font-medium" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>No accounts connected</p>
                   <p className="text-xs text-muted-foreground">Connect an account to start earning</p>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>}
 
         {/* Asset Links Section */}
         {hasAssetLinks && <div className="mb-4">
-            <h4 className="text-sm font-semibold mb-3" style={{ letterSpacing: '-0.5px' }}>Campaign Assets</h4>
+            <h4 className="text-sm font-semibold mb-3" style={{
+          letterSpacing: '-0.5px'
+        }}>Campaign Assets</h4>
             <div className="grid grid-cols-2 gap-2">
               {campaign.asset_links!.map((link, index) => {
-                const faviconUrl = getFaviconUrl(link.url);
-                return (
-                  <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
+            const faviconUrl = getFaviconUrl(link.url);
+            return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
                     <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center shrink-0 overflow-hidden">
-                      {faviconUrl ? (
-                        <img src={faviconUrl} alt="" className="w-6 h-6" onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }} />
-                      ) : null}
+                      {faviconUrl ? <img src={faviconUrl} alt="" className="w-6 h-6" onError={e => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }} /> : null}
                       <Link2 className={`w-5 h-5 text-[#2060df] ${faviconUrl ? 'hidden' : ''}`} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -343,15 +319,16 @@ export function CampaignDetailsDialog({
                       <p className="text-xs text-muted-foreground truncate">{link.url}</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
-                  </a>
-                );
-              })}
+                  </a>;
+          })}
             </div>
           </div>}
 
         {/* Requirements Section */}
         {hasRequirements && <div className="mb-4">
-            <h4 className="text-sm font-semibold mb-3" style={{ letterSpacing: '-0.5px' }}>Campaign Requirements</h4>
+            <h4 className="text-sm font-semibold mb-3" style={{
+          letterSpacing: '-0.5px'
+        }}>Campaign Requirements</h4>
             <div className="space-y-2">
               {campaign.requirements!.map((req, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
                   <div className="w-6 h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-xs font-semibold shrink-0 mt-0.5">
