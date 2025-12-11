@@ -1458,7 +1458,7 @@ export function WalletTab() {
               <div className="flex-1 p-6 space-y-5 border-black/0">
                 {/* Campaign/Source Card for earnings */}
                 {selectedTransaction.type === 'earning' && selectedTransaction.campaign && <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background flex items-center justify-center overflow-hidden">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-[#080808]/0">
                       {selectedTransaction.campaign.brand_logo_url ? <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-cover" /> : <DollarSign className="h-5 w-5 text-muted-foreground" />}
                     </div>
                     <div className="flex-1 min-w-0">
