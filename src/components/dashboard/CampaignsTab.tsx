@@ -565,14 +565,14 @@ export function CampaignsTab({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <button 
           onClick={() => navigate('/dashboard?tab=discover')}
-          className="flex items-start gap-4 p-4 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] transition-colors text-left"
+          className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left"
         >
-          <div className="w-10 h-10 rounded-lg bg-[#1f1f1f] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Start Learning</h3>
-            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.5px] leading-relaxed">
+            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
               Everything you need to master organic marketing for your business.
             </p>
           </div>
@@ -580,14 +580,14 @@ export function CampaignsTab({
         
         <button 
           onClick={() => navigate('/dashboard?tab=discover')}
-          className="flex items-start gap-4 p-4 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] transition-colors text-left"
+          className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left"
         >
-          <div className="w-10 h-10 rounded-lg bg-[#1f1f1f] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <Play className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Launch Campaign</h3>
-            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.5px] leading-relaxed">
+            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
               Connect with Virality's vetted network of video editors, clippers, and themepages
             </p>
           </div>
@@ -595,14 +595,14 @@ export function CampaignsTab({
         
         <button 
           onClick={() => navigate('/dashboard?tab=discover')}
-          className="flex items-start gap-4 p-4 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] transition-colors text-left"
+          className="flex items-start gap-4 p-4 rounded-xl bg-[#0f0f0f] hover:bg-[#141414] transition-colors text-left"
         >
-          <div className="w-10 h-10 rounded-lg bg-[#1f1f1f] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <Search className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Discover Winning Content</h3>
-            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.5px] leading-relaxed">
+            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
               Spy on your competitor's Viral videos through our curated content library
             </p>
           </div>
