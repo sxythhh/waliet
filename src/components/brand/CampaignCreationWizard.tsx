@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo.png";
@@ -753,9 +754,33 @@ export function CampaignCreationWizard({
                             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                           </div>
 
-                          {/* Delete button for edit mode */}
+                          {/* Pause toggle and Delete button for edit mode */}
                           {isEditMode && (
-                            <div className="pt-4 border-t border-border">
+                            <div className="pt-4 border-t border-border space-y-4">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                  <Label htmlFor="pause-campaign" className="text-sm font-medium">Pause Campaign</Label>
+                                  <p className="text-xs text-muted-foreground">Paused campaigns won't appear in discover</p>
+                                </div>
+                                <Switch
+                                  id="pause-campaign"
+                                  checked={campaign?.status === 'paused'}
+                                  onCheckedChange={async (checked) => {
+                                    if (!campaign?.id) return;
+                                    const newStatus = checked ? 'paused' : 'active';
+                                    const { error } = await supabase
+                                      .from('campaigns')
+                                      .update({ status: newStatus })
+                                      .eq('id', campaign.id);
+                                    if (error) {
+                                      toast.error('Failed to update campaign status');
+                                    } else {
+                                      toast.success(checked ? 'Campaign paused' : 'Campaign activated');
+                                      onSuccess?.();
+                                    }
+                                  }}
+                                />
+                              </div>
                               <Button type="button" variant="destructive" onClick={() => setDeleteDialogOpen(true)} className="gap-2">
                                 <Trash2 className="h-4 w-4" />
                                 Delete Campaign
