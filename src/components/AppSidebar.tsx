@@ -311,7 +311,10 @@ export function AppSidebar() {
                 </div> : item.tab === "creators" ? <div className="relative h-6 w-6">
                   <img src={creatorsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={creatorsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} />}
+                </div> : item.tab === "referrals" ? <div className="relative h-6 w-6">
+                  <img src={referralsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={referralsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                </div> : item.icon ? <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
               <span className="text-[10px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
             </button>;
       })}
