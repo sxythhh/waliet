@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import tiktokLogo from "@/assets/tiktok-logo.png";
@@ -242,20 +243,29 @@ export function AddSocialAccountDialog({
             
 
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              {/* Platform Selection - Icon Only */}
+              {/* Platform Selection - Dropdown */}
               <div className="space-y-3">
                 <Label className="text-sm font-medium font-inter tracking-[-0.5px]">Select Platform</Label>
-                <div className="flex gap-2">
-                  {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <button key={platform} type="button" onClick={() => setSelectedPlatform(platform)} className={`
-                        relative flex items-center justify-center p-2 rounded-lg
-                        transition-all duration-300 hover:scale-105
-                        ${selectedPlatform === platform ? 'bg-primary' : 'bg-muted/30 hover:bg-muted/50'}
-                      `}>
-                      <div className={`rounded-lg ${selectedPlatform === platform ? '' : 'bg-background/50'}`}>
-                        {getPlatformIcon(platform)}
+                <Select value={selectedPlatform} onValueChange={(value) => setSelectedPlatform(value as Platform)}>
+                  <SelectTrigger className="w-full bg-background border border-border font-inter tracking-[-0.5px]">
+                    <SelectValue>
+                      <div className="flex items-center gap-2">
+                        {getPlatformIcon(selectedPlatform)}
+                        <span>{getPlatformLabel(selectedPlatform)}</span>
                       </div>
-                    </button>)}
-                </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border border-border">
+                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
+                      <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
+                        <div className="flex items-center gap-2">
+                          {getPlatformIcon(platform)}
+                          <span>{getPlatformLabel(platform)}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Show OAuth button for Twitter, manual input for others */}
