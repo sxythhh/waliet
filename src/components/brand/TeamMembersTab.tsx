@@ -272,7 +272,7 @@ export function TeamMembersTab({ brandId }: TeamMembersTabProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCancelInvitation(invitation.id)}
-                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                      className="h-7 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                     >
                       Cancel
                     </Button>
