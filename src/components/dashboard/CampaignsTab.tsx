@@ -1041,6 +1041,30 @@ export function CampaignsTab({
         }}
       />
       
-      <JoinCampaignSheet campaign={selectedCampaignForJoin} open={joinCampaignSheetOpen} onOpenChange={setJoinCampaignSheetOpen} />
+      <JoinCampaignSheet 
+        campaign={selectedCampaignForJoin} 
+        open={joinCampaignSheetOpen} 
+        onOpenChange={setJoinCampaignSheetOpen}
+        onSuccess={() => {
+          // After successful join, open the campaign details dialog
+          if (selectedCampaignForJoin) {
+            // Find the full campaign data from campaigns to get connected accounts
+            const fullCampaign = campaigns.find(c => c.id === selectedCampaignForJoin.id);
+            if (fullCampaign) {
+              setSelectedCampaignForDetails(fullCampaign);
+            } else {
+              // If not found in campaigns yet, use the join data
+              setSelectedCampaignForDetails({
+                ...selectedCampaignForJoin,
+                connected_accounts: []
+              });
+            }
+            // Small delay to let the sheet close animation complete
+            setTimeout(() => {
+              setCampaignDetailsDialogOpen(true);
+            }, 300);
+          }
+        }}
+      />
     </div>;
 }

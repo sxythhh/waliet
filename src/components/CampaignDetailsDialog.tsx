@@ -163,6 +163,36 @@ export function CampaignDetailsDialog({
           </div>
         </div>
 
+        {/* Description with gradient + read more */}
+        {campaign.description && (
+          <div className="mb-6">
+            <div className="relative">
+              <div 
+                className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${
+                  showFullDescription ? '' : 'max-h-[100px]'
+                }`}
+                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+              >
+                {campaign.description}
+              </div>
+              {!showFullDescription && campaign.description.length > 200 && (
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+              )}
+            </div>
+            {campaign.description.length > 200 && (
+              <div className="flex justify-center mt-2">
+                <button
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                >
+                  {showFullDescription ? 'Show less' : 'Show more'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl bg-muted/30 mb-6">
           <div className="text-center">

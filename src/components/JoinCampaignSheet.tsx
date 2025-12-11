@@ -46,11 +46,13 @@ interface JoinCampaignSheetProps {
   campaign: Campaign | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 export function JoinCampaignSheet({
   campaign,
   open,
-  onOpenChange
+  onOpenChange,
+  onSuccess
 }: JoinCampaignSheetProps) {
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
@@ -390,6 +392,7 @@ export function JoinCampaignSheet({
       const successMessage = campaign.requires_application === false ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.` : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
       toast.success(successMessage);
       onOpenChange(false);
+      onSuccess?.();
       navigate("/dashboard?tab=campaigns");
     } catch (error: any) {
       console.error('=== SUBMISSION FAILED ===');
