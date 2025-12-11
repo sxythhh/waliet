@@ -16,7 +16,6 @@ import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
-
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -24,16 +23,18 @@ export default function Dashboard() {
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [currentBrand, setCurrentBrand] = useState<{ id: string; name: string; slug: string } | null>(null);
+  const [currentBrand, setCurrentBrand] = useState<{
+    id: string;
+    name: string;
+    slug: string;
+  } | null>(null);
   const navigate = useNavigate();
-  
   const currentTab = searchParams.get("tab") || "campaigns";
   const workspace = searchParams.get("workspace") || "creator";
   const selectedCampaignId = searchParams.get("campaign");
   const selectedBlueprintId = searchParams.get("blueprint");
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
-
   useEffect(() => {
     checkAuth();
     fetchCampaigns();
@@ -47,50 +48,43 @@ export default function Dashboard() {
       setCurrentBrand(null);
     }
   }, [workspace, isBrandMode]);
-
   const fetchBrandBySlug = async (slug: string) => {
-    const { data } = await supabase
-      .from("brands")
-      .select("id, name, slug")
-      .eq("slug", slug)
-      .single();
-    
+    const {
+      data
+    } = await supabase.from("brands").select("id, name, slug").eq("slug", slug).single();
     if (data) {
       setCurrentBrand(data);
     }
   };
-
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
       return;
     }
     setUserId(session.user.id);
-    
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-    
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
     setProfile(profileData);
-    
+
     // Onboarding disabled - keeping code for potential future use
     // if (profileData && !profileData.phone_number) {
     //   setShowOnboarding(true);
     // }
   };
-
   const fetchCampaigns = async () => {
-    const { data } = await supabase
-      .from("campaigns")
-      .select("*")
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
+    const {
+      data
+    } = await supabase.from("campaigns").select("*").eq("status", "active").order("created_at", {
+      ascending: false
+    });
     setCampaigns(data || []);
   };
-
   const renderContent = () => {
     // Brand mode with selected campaign - show detail view
     if (isBrandMode && currentBrand && selectedCampaignId) {
@@ -121,7 +115,7 @@ export default function Dashboard() {
     // Creator mode tabs
     switch (currentTab) {
       case "campaigns":
-        return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
+        return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} className="pb-[30px]" />;
       case "discover":
         return <DiscoverTab />;
       case "training":
@@ -136,19 +130,14 @@ export default function Dashboard() {
         return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
     }
   };
-
-  return (
-    <div className="flex h-screen w-full bg-background">
+  return <div className="flex h-screen w-full bg-background">
       <AppSidebar />
       
       {/* Main Content */}
       <main className="flex-1 h-screen overflow-hidden flex flex-col">
         <div className={`
           pt-14 pb-20 md:pt-0 md:pb-0 flex-1 overflow-y-auto
-          ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" 
-            ? "" 
-            : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"
-          }
+          ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
         `}>
           {renderContent()}
         </div>
@@ -156,13 +145,6 @@ export default function Dashboard() {
 
       <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
       
-      {userId && (
-        <OnboardingDialog
-          open={showOnboarding}
-          onOpenChange={setShowOnboarding}
-          userId={userId}
-        />
-      )}
-    </div>
-  );
+      {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
+    </div>;
 }
