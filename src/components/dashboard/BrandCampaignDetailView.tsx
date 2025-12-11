@@ -106,7 +106,7 @@ export function BrandCampaignDetailView({
   return <div className="p-[10px] h-full">
       <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
         {/* Header with back button and campaign title */}
-        <div className="flex items-center justify-between px-4 border-b border-border sm:px-[8px] py-[5px]">
+        <div className="flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px]">
           <div className="flex items-center gap-0">
             <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 hover:bg-transparent">
               <ArrowLeft className="h-4 w-4" />
@@ -127,18 +127,10 @@ export function BrandCampaignDetailView({
           </div>
         </div>
 
-        {campaign.brand_id && <CampaignCreationWizard 
-          brandId={campaign.brand_id} 
-          brandName={campaign.brand_name || ""} 
-          brandLogoUrl={campaign.brand_logo_url || undefined}
-          campaign={campaign} 
-          open={editDialogOpen} 
-          onOpenChange={setEditDialogOpen} 
-          onSuccess={() => {
-            fetchCampaign();
-            setEditDialogOpen(false);
-          }} 
-        />}
+        {campaign.brand_id && <CampaignCreationWizard brandId={campaign.brand_id} brandName={campaign.brand_name || ""} brandLogoUrl={campaign.brand_logo_url || undefined} campaign={campaign} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={() => {
+        fetchCampaign();
+        setEditDialogOpen(false);
+      }} />}
 
         {/* Tab Navigation - Horizontal bottom style */}
         <div className="border-b border-border">
