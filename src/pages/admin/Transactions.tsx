@@ -318,9 +318,10 @@ export default function Transactions() {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       completed: "default",
       pending: "secondary",
-      failed: "destructive"
+      failed: "destructive",
+      rejected: "destructive"
     };
-    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
+    return <Badge variant={variants[status] || "secondary"} className="capitalize font-inter tracking-[-0.5px]">{status}</Badge>;
   };
   const getPlatformIcon = (platform: string) => {
     const icons: Record<string, string> = {
@@ -462,43 +463,43 @@ export default function Transactions() {
       </div>
 
       {/* Desktop table view */}
-      <div className="hidden md:block rounded-lg border border-border overflow-hidden">
+      <div className="hidden md:block rounded-lg border border-[#141414] overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent bg-muted/30">
-              <TableHead className="w-[200px] font-medium">User</TableHead>
-              <TableHead className="w-[160px] font-medium">Date</TableHead>
-              <TableHead className="w-[120px] font-medium">Amount</TableHead>
-              <TableHead className="w-[140px] font-medium">Type</TableHead>
-              <TableHead className="font-medium">Details</TableHead>
-              <TableHead className="w-[100px] text-right font-medium">Status</TableHead>
+            <TableRow className="hover:bg-transparent border-b border-[#141414]">
+              <TableHead className="w-[200px] font-medium text-white font-inter tracking-[-0.5px]">User</TableHead>
+              <TableHead className="w-[160px] font-medium text-white font-inter tracking-[-0.5px]">Date</TableHead>
+              <TableHead className="w-[120px] font-medium text-white font-inter tracking-[-0.5px]">Amount</TableHead>
+              <TableHead className="w-[140px] font-medium text-white font-inter tracking-[-0.5px]">Type</TableHead>
+              <TableHead className="font-medium text-white font-inter tracking-[-0.5px]">Details</TableHead>
+              <TableHead className="w-[100px] text-right font-medium text-white font-inter tracking-[-0.5px]">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8 font-inter tracking-[-0.5px]">
                   Loading transactions...
                 </TableCell>
               </TableRow> : filteredTransactions.length === 0 ? <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground font-inter tracking-[-0.5px]">
                   No transactions found
                 </TableCell>
-              </TableRow> : filteredTransactions.map(tx => <TableRow key={tx.id} className="hover:bg-muted/30">
+              </TableRow> : filteredTransactions.map(tx => <TableRow key={tx.id} className="hover:bg-muted/30 border-b border-[#141414]">
                   <TableCell className="py-3">
-                    <span className="font-medium text-sm cursor-pointer hover:text-primary transition-colors" onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}>
+                    <span className="font-medium text-sm cursor-pointer hover:text-primary transition-colors font-inter tracking-[-0.5px]" onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}>
                       {tx.username || "Unknown"}
                     </span>
                   </TableCell>
-                  <TableCell className="py-3 text-sm text-muted-foreground">
+                  <TableCell className="py-3 text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                     {format(new Date(tx.created_at), "MMM d, yyyy · HH:mm")}
                   </TableCell>
                   <TableCell className="py-3">
-                    <span className={cn("font-semibold text-sm", tx.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
+                    <span className={cn("font-semibold text-sm font-inter tracking-[-0.5px]", tx.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
                       {tx.amount >= 0 ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
                     </span>
                   </TableCell>
                   <TableCell className="py-3">
-                    <Badge variant="outline" className="text-xs capitalize">
+                    <Badge variant="outline" className="text-xs capitalize font-inter tracking-[-0.5px]">
                       {tx.type === 'balance_correction' && tx.metadata?.adjustment_type === 'manual_budget_update'
                         ? 'Campaign Budget'
                         : tx.type.replace("_", " ")}
@@ -508,14 +509,32 @@ export default function Transactions() {
                     <div className="flex flex-col gap-1">
                       {tx.campaign_name && <div className="flex items-center gap-2">
                           {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt={`${tx.campaign_name} logo`} className="h-4 w-4 rounded object-cover" />}
-                          <span className="text-sm">{tx.campaign_name}</span>
+                          <span className="text-sm font-inter tracking-[-0.5px]">{tx.campaign_name}</span>
                         </div>}
                       {tx.metadata?.campaign_budget_before !== undefined && tx.metadata?.campaign_budget_after !== undefined ? (
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                           Budget: ${Number(tx.metadata.campaign_budget_before).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} → ${Number(tx.metadata.campaign_budget_after).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       ) : null}
-                      {tx.type === "earning" && tx.metadata?.account_username ? <span className="text-sm text-muted-foreground">@{tx.metadata.account_username}</span> : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? <span className="text-sm text-muted-foreground">To: @{tx.metadata.recipient_username}</span> : tx.type === "transfer_received" && tx.metadata?.sender_username ? <span className="text-sm text-muted-foreground">From: @{tx.metadata.sender_username}</span> : !tx.campaign_name && !tx.metadata?.campaign_budget_before && <span className="text-sm text-muted-foreground">{tx.description}</span>}
+                      {tx.type === "withdrawal" && tx.metadata?.payout_method ? (
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                          Withdrawal to {tx.metadata.payout_method === 'crypto' ? 'Crypto' : tx.metadata.payout_method === 'paypal' ? 'PayPal' : tx.metadata.payout_method}
+                          {tx.metadata.payout_details?.wallet_address && ` · ${tx.metadata.payout_details.wallet_address.slice(0, 6)}...${tx.metadata.payout_details.wallet_address.slice(-4)}`}
+                          {tx.metadata.payout_details?.paypal_email && ` · ${tx.metadata.payout_details.paypal_email}`}
+                        </span>
+                      ) : tx.type === "balance_correction" && !tx.metadata?.adjustment_type ? (
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                          Balance Correction{tx.description && ` · ${tx.description}`}
+                        </span>
+                      ) : tx.type === "earning" && tx.metadata?.account_username ? (
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">@{tx.metadata.account_username}</span>
+                      ) : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? (
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">To: @{tx.metadata.recipient_username}</span>
+                      ) : tx.type === "transfer_received" && tx.metadata?.sender_username ? (
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">From: @{tx.metadata.sender_username}</span>
+                      ) : !tx.campaign_name && !tx.metadata?.campaign_budget_before && tx.description ? (
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{tx.description}</span>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-right">
