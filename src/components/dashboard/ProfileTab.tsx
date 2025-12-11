@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, Check, Pencil, MapPin, Languages, Mail, RefreshCw, AtSign } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, Check, Pencil, MapPin, Languages, Mail, RefreshCw, AtSign, ChevronsUpDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -801,18 +804,33 @@ export function ProfileTab() {
             </div>
 
             {/* First name / Last name */}
-            <div>
-              <div className="flex gap-8 mb-2">
-                <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>First name</p>
-                <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Last name</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>First name</p>
+                <Input 
+                  value={profile.full_name?.split(' ')[0] || ""} 
+                  onChange={e => {
+                    const lastName = profile.full_name?.split(' ').slice(1).join(' ') || '';
+                    setProfile({ ...profile, full_name: `${e.target.value}${lastName ? ' ' + lastName : ''}` });
+                  }} 
+                  placeholder="First name" 
+                  className="h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                />
               </div>
-              <Input 
-                value={profile.full_name || ""} 
-                onChange={e => setProfile({ ...profile, full_name: e.target.value })} 
-                placeholder="Your name" 
-                className="h-10 bg-muted/30 border-muted/50 focus:border-muted focus-visible:ring-0 focus-visible:ring-offset-0"
-                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-              />
+              <div>
+                <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Last name</p>
+                <Input 
+                  value={profile.full_name?.split(' ').slice(1).join(' ') || ""} 
+                  onChange={e => {
+                    const firstName = profile.full_name?.split(' ')[0] || '';
+                    setProfile({ ...profile, full_name: `${firstName}${e.target.value ? ' ' + e.target.value : ''}` });
+                  }} 
+                  placeholder="Last name" 
+                  className="h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                />
+              </div>
             </div>
 
             {/* Username */}
@@ -824,7 +842,7 @@ export function ProfileTab() {
                   value={profile.username} 
                   onChange={e => setProfile({ ...profile, username: e.target.value })} 
                   placeholder="username" 
-                  className="h-10 pl-9 bg-muted/30 border-muted/50 focus:border-muted focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-10 pl-9 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                 />
               </div>
@@ -833,33 +851,143 @@ export function ProfileTab() {
             {/* Location */}
             <div>
               <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Location</p>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  value={profile.country || ""} 
-                  onChange={e => setProfile({ ...profile, country: e.target.value })} 
-                  placeholder="Your country" 
-                  className="h-10 pl-9 bg-muted/30 border-muted/50 focus:border-muted focus-visible:ring-0 focus-visible:ring-offset-0"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                />
-              </div>
+              <Select value={profile.country || ""} onValueChange={value => setProfile({ ...profile, country: value })}>
+                <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-0 focus:ring-offset-0">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Select country" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-popover max-h-[300px]">
+                  {["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Spain", "Italy", "Netherlands", "Brazil", "Mexico", "Argentina", "India", "Japan", "South Korea", "China", "Singapore", "Indonesia", "Philippines", "Thailand", "Vietnam", "Malaysia", "Nigeria", "South Africa", "Kenya", "Egypt", "UAE", "Saudi Arabia", "Turkey", "Poland", "Sweden", "Norway", "Denmark", "Finland", "Ireland", "Portugal", "Belgium", "Austria", "Switzerland", "New Zealand", "Russia", "Ukraine", "Czech Republic", "Romania", "Hungary", "Greece", "Israel", "Pakistan", "Bangladesh", "Colombia", "Chile", "Peru", "Venezuela"].map(country => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Languages */}
             <div>
               <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Languages you post in</p>
-              <div className="flex items-center gap-2 h-10 px-3 bg-muted/30 border border-muted/50 rounded-md">
-                <Languages className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                  {profile.content_languages?.length ? profile.content_languages.join(', ') : 'Not set'}
-                </span>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40">
+                    <div className="flex flex-wrap gap-1.5 py-1">
+                      {profile.content_languages?.length ? (
+                        profile.content_languages.map(lang => (
+                          <Badge key={lang} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                            {lang}
+                            <X 
+                              className="ml-1 h-3 w-3 cursor-pointer" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setProfile({ 
+                                  ...profile, 
+                                  content_languages: profile.content_languages?.filter(l => l !== lang) || [] 
+                                });
+                              }} 
+                            />
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Select languages</span>
+                      )}
+                    </div>
+                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 bg-popover" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search languages..." />
+                    <CommandList>
+                      <CommandEmpty>No language found.</CommandEmpty>
+                      <CommandGroup>
+                        {["English", "Spanish", "Portuguese", "French", "German", "Italian", "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Hindi", "Arabic", "Turkish", "Polish", "Vietnamese", "Thai", "Indonesian", "Tagalog", "Swedish", "Norwegian", "Danish", "Finnish", "Greek", "Hebrew", "Czech", "Romanian", "Hungarian", "Ukrainian"].map(lang => (
+                          <CommandItem 
+                            key={lang} 
+                            onSelect={() => {
+                              const current = profile.content_languages || [];
+                              if (current.includes(lang)) {
+                                setProfile({ ...profile, content_languages: current.filter(l => l !== lang) });
+                              } else {
+                                setProfile({ ...profile, content_languages: [...current, lang] });
+                              }
+                            }}
+                          >
+                            <Check className={`mr-2 h-4 w-4 ${profile.content_languages?.includes(lang) ? "opacity-100" : "opacity-0"}`} />
+                            {lang}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Content Style */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Preferred content style</p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40">
+                    <div className="flex flex-wrap gap-1.5 py-1">
+                      {profile.content_styles?.length ? (
+                        profile.content_styles.map(style => (
+                          <Badge key={style} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                            {style}
+                            <X 
+                              className="ml-1 h-3 w-3 cursor-pointer" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setProfile({ 
+                                  ...profile, 
+                                  content_styles: profile.content_styles?.filter(s => s !== style) || [] 
+                                });
+                              }} 
+                            />
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Select content styles</span>
+                      )}
+                    </div>
+                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 bg-popover" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search styles..." />
+                    <CommandList>
+                      <CommandEmpty>No style found.</CommandEmpty>
+                      <CommandGroup>
+                        {["Comedy/Entertainment", "Educational", "Lifestyle", "Gaming", "Beauty/Fashion", "Fitness/Health", "Food/Cooking", "Travel", "Tech/Reviews", "Music", "Dance", "Vlogs", "ASMR", "Reactions", "Storytelling", "Tutorials", "News/Commentary", "Motivation", "Art/Creative", "DIY/Crafts"].map(style => (
+                          <CommandItem 
+                            key={style} 
+                            onSelect={() => {
+                              const current = profile.content_styles || [];
+                              if (current.includes(style)) {
+                                setProfile({ ...profile, content_styles: current.filter(s => s !== style) });
+                              } else {
+                                setProfile({ ...profile, content_styles: [...current, style] });
+                              }
+                            }}
+                          >
+                            <Check className={`mr-2 h-4 w-4 ${profile.content_styles?.includes(style) ? "opacity-100" : "opacity-0"}`} />
+                            {style}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Email (read-only) */}
             <div>
               <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Email</p>
-              <div className="flex items-center gap-2 h-10 px-3 bg-muted/30 border border-muted/50 rounded-md">
+              <div className="flex items-center gap-2 h-10 px-3 bg-muted/30 rounded-md">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                   {profile.email || 'Not set'}
@@ -878,7 +1006,7 @@ export function ProfileTab() {
             </div>
 
             {/* Save Button */}
-            <div className="pt-2">
+            <div className="pt-2 flex justify-end">
               <Button type="submit" disabled={saving} className="gap-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                 {saving ? (
                   <>
