@@ -1,5 +1,4 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2 } from "lucide-react";
 import { useState } from "react";
@@ -171,22 +170,11 @@ export function CampaignDetailsDialog({
               </p>
             </div>
             <div className="text-right">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5 cursor-default">
-                    <div className="flex gap-0.5">
-                      {[...Array(7)].map((_, i) => <div key={i} className={`w-1.5 h-6 rounded-full transition-all ${i < 7 - nextPayout.daysUntil ? 'bg-[#2060df]' : 'bg-muted-foreground/20'}`} />)}
-                    </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {nextPayout.date.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </TooltipContent>
-              </Tooltip>
+              <div className="flex items-center gap-1.5">
+                <div className="flex gap-0.5">
+                  {[...Array(7)].map((_, i) => <div key={i} className={`w-1.5 h-6 rounded-full transition-all ${i < 7 - nextPayout.daysUntil ? 'bg-[#2060df]' : 'bg-muted-foreground/20'}`} />)}
+                </div>
+              </div>
               <p className="text-xs text-muted-foreground mt-1" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.3px'
