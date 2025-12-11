@@ -1,11 +1,18 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { useState } from "react";
 import tiktokIcon from "@/assets/tiktok-logo-black.png";
 import instagramIcon from "@/assets/instagram-logo-new.png";
 import youtubeIcon from "@/assets/youtube-logo-new.png";
 import xIcon from "@/assets/x-logo.png";
+
+interface ConnectedAccount {
+  id: string;
+  platform: string;
+  username: string;
+}
+
 interface Campaign {
   id: string;
   title: string;
@@ -21,19 +28,25 @@ interface Campaign {
   hashtags?: string[] | null;
   guidelines?: string | null;
   embed_url?: string | null;
+  connected_accounts?: ConnectedAccount[];
 }
+
 interface CampaignDetailsDialogProps {
   campaign: Campaign | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onJoin?: () => void;
+  onConnectAccount?: () => void;
+  onManageAccount?: (account: ConnectedAccount) => void;
 }
+
 const platformIcons: Record<string, string> = {
   tiktok: tiktokIcon,
   instagram: instagramIcon,
   youtube: youtubeIcon,
   x: xIcon
 };
+
 const calculateTimeAgo = (createdAt: string) => {
   const now = new Date();
   const created = new Date(createdAt);
@@ -43,6 +56,7 @@ const calculateTimeAgo = (createdAt: string) => {
   if (diffDays > 0) return `${diffDays}d ago`;
   return `${diffHours}h ago`;
 };
+
 const calculateDaysUntilEnd = (endDate: string | null) => {
   if (!endDate) return null;
   const now = new Date();
@@ -51,33 +65,41 @@ const calculateDaysUntilEnd = (endDate: string | null) => {
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   return diffDays > 0 ? diffDays : 0;
 };
+
 export function CampaignDetailsDialog({
   campaign,
   open,
   onOpenChange,
-  onJoin
+  onJoin,
+  onConnectAccount,
+  onManageAccount
 }: CampaignDetailsDialogProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   if (!campaign) return null;
+  
   const daysUntilEnd = calculateDaysUntilEnd(campaign.end_date);
   const timeAgo = calculateTimeAgo(campaign.created_at);
   const description = campaign.description || "";
   const isLongDescription = description.length > 300;
   const displayDescription = showFullDescription ? description : description.slice(0, 300);
-  return <Dialog open={open} onOpenChange={onOpenChange}>
+  const hasConnectedAccounts = campaign.connected_accounts && campaign.connected_accounts.length > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8">
         {/* Header */}
         <div className="flex items-start gap-4 mb-6">
-          {campaign.brand_logo_url && <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
+          {campaign.brand_logo_url && (
+            <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border bg-muted">
               <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
-            </div>}
+            </div>
+          )}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-xl font-bold">{campaign.brand_name}</h2>
               <Check className="w-4 h-4 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground mb-2">{timeAgo}</p>
-            
           </div>
         </div>
 
@@ -86,9 +108,11 @@ export function CampaignDetailsDialog({
           <div className="text-center">
             <p className="text-xs text-muted-foreground mb-1">Ends</p>
             <p className="font-bold text-base">{daysUntilEnd !== null ? `${daysUntilEnd}m` : "—"}</p>
-            {daysUntilEnd !== null && <p className="text-[10px] text-muted-foreground mt-0.5">
+            {daysUntilEnd !== null && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 {daysUntilEnd === 0 ? "100.00" : ((1 - daysUntilEnd / 365) * 100).toFixed(2)}% PAID OUT
-              </p>}
+              </p>
+            )}
           </div>
 
           <div className="text-center border-l border-border">
@@ -99,7 +123,9 @@ export function CampaignDetailsDialog({
           <div className="text-center border-l border-border">
             <p className="text-xs text-muted-foreground mb-1">Platforms</p>
             <div className="flex justify-center gap-1.5 mt-1">
-              {campaign.allowed_platforms?.map(platform => <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-5 h-5" />)}
+              {campaign.allowed_platforms?.map(platform => (
+                <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-5 h-5" />
+              ))}
             </div>
           </div>
 
@@ -114,6 +140,49 @@ export function CampaignDetailsDialog({
           </div>
         </div>
 
+        {/* Connected Accounts Section */}
+        {(onConnectAccount || onManageAccount) && (
+          <div className="mb-6 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-sm">Your Connected Accounts</h4>
+              {onConnectAccount && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onConnectAccount}
+                  className="gap-1.5 h-8 text-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Connect Account
+                </Button>
+              )}
+            </div>
+            
+            {hasConnectedAccounts ? (
+              <div className="flex flex-wrap gap-2">
+                {campaign.connected_accounts!.map(account => (
+                  <button
+                    key={account.id}
+                    onClick={() => onManageAccount?.(account)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-background hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    <img 
+                      src={platformIcons[account.platform.toLowerCase()]} 
+                      alt={account.platform} 
+                      className="w-4 h-4" 
+                    />
+                    <span className="font-medium">{account.username}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No accounts connected. Connect an account to start earning.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Details Section */}
         <div className="mb-6">
           <h4 className="text-xl font-bold mb-3">Details</h4>
@@ -121,13 +190,23 @@ export function CampaignDetailsDialog({
             {displayDescription || "No description available."}
             {isLongDescription && !showFullDescription && "..."}
           </div>
-          {isLongDescription && <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-sm font-medium text-foreground mt-2 flex items-center gap-1 hover:underline">
-              {showFullDescription ? <>Show less <ChevronUp className="w-4 h-4" /></> : <>Show more <ChevronDown className="w-4 h-4" /></>}
-            </button>}
+          {isLongDescription && (
+            <button 
+              onClick={() => setShowFullDescription(!showFullDescription)} 
+              className="text-sm font-medium text-foreground mt-2 flex items-center gap-1 hover:underline"
+            >
+              {showFullDescription ? (
+                <>Show less <ChevronUp className="w-4 h-4" /></>
+              ) : (
+                <>Show more <ChevronDown className="w-4 h-4" /></>
+              )}
+            </button>
+          )}
         </div>
 
         {/* What to include Section */}
-        {campaign.hashtags && campaign.hashtags.length > 0 && <div className="mb-6 pt-6 border-t border-border">
+        {campaign.hashtags && campaign.hashtags.length > 0 && (
+          <div className="mb-6 pt-6 border-t border-border">
             <h4 className="text-xl font-bold mb-4">What to include</h4>
             <div className="flex items-start gap-3">
               <MessageSquare className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -139,10 +218,12 @@ export function CampaignDetailsDialog({
                 </p>
               </div>
             </div>
-          </div>}
+          </div>
+        )}
 
         {/* Campaign Link Card */}
-        {campaign.embed_url && <div className="mb-6 p-4 rounded-xl border border-border">
+        {campaign.embed_url && (
+          <div className="mb-6 p-4 rounded-xl border border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -157,7 +238,8 @@ export function CampaignDetailsDialog({
                 <ExternalLink className="w-5 h-5 text-muted-foreground hover:text-foreground" />
               </a>
             </div>
-          </div>}
+          </div>
+        )}
 
         {/* Campaigns on Vyro Section */}
         <div className="mb-6 pt-6 border-t border-border">
@@ -206,9 +288,12 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Join Button */}
-        {onJoin && <Button onClick={onJoin} className="w-full h-14 text-lg font-semibold rounded-full" size="lg">
+        {onJoin && (
+          <Button onClick={onJoin} className="w-full h-14 text-lg font-semibold rounded-full" size="lg">
             Join campaign
-          </Button>}
+          </Button>
+        )}
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }

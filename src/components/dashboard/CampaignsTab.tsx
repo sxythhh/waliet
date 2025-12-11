@@ -883,32 +883,8 @@ export function CampaignsTab({
                   </div>}
               </div>
 
-              {/* Connected Accounts */}
-              {campaign.connected_accounts && campaign.connected_accounts.length > 0 && <div className="pt-1">
-                  <div className="flex flex-wrap gap-1.5">
-                    {campaign.connected_accounts.map(account => <div key={account.id} onClick={e => {
-                    e.stopPropagation();
-                    setSelectedAccount(account);
-                    setManageAccountDialogOpen(true);
-                  }} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-muted hover:brightness-95 transition-colors cursor-pointer border border-[#242424]/0">
-                        <div className="w-4 h-4">
-                          <img src={getPlatformIcon(account.platform) || ''} alt={account.platform} className="w-full h-full" />
-                        </div>
-                        <span className="font-medium">{account.username}</span>
-                      </div>)}
-                  </div>
-                </div>}
-
-              {/* No Connected Accounts Alert */}
-              {!isPending && (!campaign.connected_accounts || campaign.connected_accounts.length === 0) && <Alert variant="destructive" className="border-0 bg-red-500/10 px-0 py-[11px]">
-                  
-                  <AlertDescription className="text-[11px] font-inter font-semibold tracking-tight ml-6 mx-[25px] py-[5px]">
-                    You need to link an account to this campaign
-                  </AlertDescription>
-                </Alert>}
-
               {/* Application Status */}
-              {isPending ? <div className="mt-auto pt-2 space-y-2">
+              {isPending && <div className="mt-auto pt-2 space-y-2">
                   <div className="bg-muted/30 rounded-md px-2.5 py-1.5 flex items-center justify-center">
                     <span className="text-[11px] font-instrument tracking-tight text-muted-foreground font-semibold">
                       Pending Review
@@ -922,7 +898,9 @@ export function CampaignsTab({
                     <X className="w-3.5 h-3.5 mr-1.5" />
                     Withdraw Application
                   </Button>
-                </div> : isEnded ? <div className="mt-auto pt-2">
+                </div>}
+              
+              {isEnded && !isPending && <div className="mt-auto pt-2">
                   <Button variant="ghost" size="sm" onClick={e => {
                   e.stopPropagation();
                   setSelectedCampaignId(campaign.id);
@@ -930,14 +908,6 @@ export function CampaignsTab({
                 }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
                     <LogOut className="w-3.5 h-3.5 mr-1.5" />
                     Leave Campaign
-                  </Button>
-                </div> : <div className="mt-auto pt-2">
-                  <Button variant="ghost" size="sm" onClick={e => {
-                  e.stopPropagation();
-                  setDialogOpen(true);
-                }} className="font-medium font-sans text-justify">
-                    <Plus className="w-3.5 h-3.5 mr-1.5" />
-                    Connect Account  
                   </Button>
                 </div>}
             </CardContent>
@@ -1053,7 +1023,20 @@ export function CampaignsTab({
       }} />
       </>}
     
-      <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} />
+      <CampaignDetailsDialog 
+        campaign={selectedCampaignForDetails} 
+        open={campaignDetailsDialogOpen} 
+        onOpenChange={setCampaignDetailsDialogOpen}
+        onConnectAccount={() => {
+          setCampaignDetailsDialogOpen(false);
+          setDialogOpen(true);
+        }}
+        onManageAccount={(account) => {
+          setCampaignDetailsDialogOpen(false);
+          setSelectedAccount(account);
+          setManageAccountDialogOpen(true);
+        }}
+      />
       
       <JoinCampaignSheet campaign={selectedCampaignForJoin} open={joinCampaignSheetOpen} onOpenChange={setJoinCampaignSheetOpen} />
     </div>;
