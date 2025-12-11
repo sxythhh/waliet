@@ -151,7 +151,7 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Next Payout Card */}
-        <div className="mb-4 p-4 rounded-2xl ">
+        <div className="mb-4 p-4 rounded-2xl px-0 py-0">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground mb-0.5" style={{
@@ -275,7 +275,7 @@ export function CampaignDetailsDialog({
             </div>
             
             {hasConnectedAccounts ? <div className="flex flex-wrap gap-2">
-                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full bg-muted hover:bg-muted/80 transition-all duration-200 cursor-pointer">
+                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full transition-all duration-200 cursor-pointer bg-popover">
                     <div className="w-7 h-7 rounded-full bg-background flex items-center justify-center shadow-sm">
                       <img src={platformIcons[account.platform.toLowerCase()]} alt={account.platform} className="w-4 h-4" />
                     </div>
