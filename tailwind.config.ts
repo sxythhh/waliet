@@ -15,6 +15,7 @@ export default {
     extend: {
       fontFamily: {
         'geist': ['Geist', 'sans-serif'],
+        'inter': ['Inter', 'sans-serif'],
         'instrument': ['Geist', 'sans-serif'], // Alias for backward compatibility
         'chakra': ['Geist', 'sans-serif'],
         'clash': ['Clash Grotesk', 'sans-serif'],
