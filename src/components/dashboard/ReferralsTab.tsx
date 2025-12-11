@@ -266,9 +266,7 @@ export function ReferralsTab() {
         </div>
 
         {referrals.length === 0 ? <div className="text-center py-12 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-            <div className="w-12 h-12 rounded-full bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center mx-auto mb-4">
-              <Users className="w-6 h-6 text-muted-foreground" />
-            </div>
+            
             <h3 className="font-semibold mb-1">No referrals yet</h3>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               Start sharing your referral link to invite creators and earn rewards
