@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { DemographicStatusCard } from "@/components/DemographicStatusCard";
-import { ManageAccountDialog } from "@/components/ManageAccountDialog";
+
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -110,13 +110,6 @@ export function ProfileTab() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-  const [showManageAccountDialog, setShowManageAccountDialog] = useState(false);
-  const [selectedAccountForManaging, setSelectedAccountForManaging] = useState<{
-    id: string;
-    username: string;
-    platform: string;
-    account_link?: string | null;
-  } | null>(null);
   const [showDemographicsDialog, setShowDemographicsDialog] = useState(false);
   const [selectedAccountForDemographics, setSelectedAccountForDemographics] = useState<{
     id: string;
@@ -611,39 +604,11 @@ export function ProfileTab() {
                               {connectedCampaigns.length > 3 && (
                                 <span className="text-[11px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>+{connectedCampaigns.length - 3} more</span>
                               )}
-                              <button
-                                className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
-                                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                                onClick={() => {
-                                  setSelectedAccountForManaging({
-                                    id: account.id,
-                                    username: account.username,
-                                    platform: account.platform,
-                                    account_link: account.account_link
-                                  });
-                                  setShowManageAccountDialog(true);
-                                }}
-                              >
-                                Manage
-                              </button>
                             </>
                           ) : (
-                            <button
-                              className="group/link flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
-                              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                              onClick={() => {
-                                setSelectedAccountForManaging({
-                                  id: account.id,
-                                  username: account.username,
-                                  platform: account.platform,
-                                  account_link: account.account_link
-                                });
-                                setShowManageAccountDialog(true);
-                              }}
-                            >
-                              <Link2 className="w-3.5 h-3.5 text-muted-foreground group-hover/link:text-primary transition-colors" />
-                              <span className="text-[11px] text-muted-foreground group-hover/link:text-primary transition-colors">Link to campaign</span>
-                            </button>
+                            <span className="text-[11px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                              No campaigns linked
+                            </span>
                           )}
                         </div>
                       </div>
@@ -903,40 +868,5 @@ export function ProfileTab() {
       {/* Demographics Dialog */}
       {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
 
-      {/* Manage Account Dialog */}
-      {selectedAccountForManaging && <ManageAccountDialog open={showManageAccountDialog} onOpenChange={setShowManageAccountDialog} account={selectedAccountForManaging} demographicStatus={socialAccounts.find(acc => acc.id === selectedAccountForManaging.id)?.demographic_submissions?.[0]?.status as 'approved' | 'pending' | 'rejected' | null || null} daysUntilNext={(() => {
-      const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
-      const latestSubmission = account?.demographic_submissions?.[0];
-      if (latestSubmission?.status === 'approved' && latestSubmission.submitted_at) {
-        const submittedDate = new Date(latestSubmission.submitted_at);
-        const nextSubmissionDate = new Date(submittedDate);
-        nextSubmissionDate.setDate(submittedDate.getDate() + 7);
-        const daysLeft = Math.ceil((nextSubmissionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        return daysLeft > 0 ? daysLeft : null;
-      }
-      return null;
-    })()} lastSubmissionDate={(() => {
-      const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
-      return account?.demographic_submissions?.[0]?.submitted_at || null;
-    })()} nextSubmissionDate={(() => {
-      const account = socialAccounts.find(acc => acc.id === selectedAccountForManaging.id);
-      const latestSubmission = account?.demographic_submissions?.[0];
-      if (latestSubmission?.status === 'approved' && latestSubmission.submitted_at) {
-        const submittedDate = new Date(latestSubmission.submitted_at);
-        const nextSubmissionDate = new Date(submittedDate);
-        nextSubmissionDate.setDate(submittedDate.getDate() + 7);
-        return nextSubmissionDate;
-      }
-      return null;
-    })()} onUpdate={() => {
-      fetchSocialAccounts();
-    }} onSubmitDemographics={() => {
-      setSelectedAccountForDemographics({
-        id: selectedAccountForManaging.id,
-        platform: selectedAccountForManaging.platform,
-        username: selectedAccountForManaging.username
-      });
-      setShowDemographicsDialog(true);
-    }} platformIcon={getPlatformIcon(selectedAccountForManaging.platform)} />}
     </div>;
 }
