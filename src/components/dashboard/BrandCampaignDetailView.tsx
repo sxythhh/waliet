@@ -20,6 +20,8 @@ interface Campaign {
   banner_url: string | null;
   slug: string;
   brand_id: string | null;
+  brand_name: string;
+  brand_logo_url: string | null;
   guidelines: string | null;
   allowed_platforms: string[];
   application_questions: any;
@@ -33,7 +35,7 @@ interface Campaign {
   is_featured?: boolean;
   campaign_type?: string | null;
   category?: string | null;
-  hashtag?: string | null;
+  hashtags?: string[] | null;
 }
 interface BrandCampaignDetailViewProps {
   campaignId: string;
@@ -125,10 +127,18 @@ export function BrandCampaignDetailView({
           </div>
         </div>
 
-        {campaign.brand_id && <CampaignCreationWizard brandId={campaign.brand_id} brandName="" campaign={campaign} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={() => {
-        fetchCampaign();
-        setEditDialogOpen(false);
-      }} />}
+        {campaign.brand_id && <CampaignCreationWizard 
+          brandId={campaign.brand_id} 
+          brandName={campaign.brand_name || ""} 
+          brandLogoUrl={campaign.brand_logo_url || undefined}
+          campaign={campaign} 
+          open={editDialogOpen} 
+          onOpenChange={setEditDialogOpen} 
+          onSuccess={() => {
+            fetchCampaign();
+            setEditDialogOpen(false);
+          }} 
+        />}
 
         {/* Tab Navigation - Horizontal bottom style */}
         <div className="border-b border-border">
