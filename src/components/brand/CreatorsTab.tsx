@@ -182,15 +182,43 @@ export function CreatorsTab({
     return num.toString();
   };
   if (loading) {
-    return <div className="p-6 space-y-4">
+    return (
+      <div className="p-6 space-y-4">
+        {/* Header Skeleton */}
         <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-10 w-64" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-24 bg-muted/40 dark:bg-muted-foreground/10" />
+            <Skeleton className="h-4 w-48 bg-muted/40 dark:bg-muted-foreground/10" />
+          </div>
         </div>
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-20" />)}
+        {/* Table Header Skeleton */}
+        <div className="rounded-xl bg-muted/20 dark:bg-muted/30 p-4">
+          <div className="flex items-center gap-4 mb-4 pb-3 border-b border-border/30">
+            <Skeleton className="h-4 w-20 bg-muted/40 dark:bg-muted-foreground/10" />
+            <Skeleton className="h-4 w-20 bg-muted/40 dark:bg-muted-foreground/10" />
+            <div className="flex-1" />
+            <Skeleton className="h-4 w-16 bg-muted/40 dark:bg-muted-foreground/10" />
+            <Skeleton className="h-4 w-16 bg-muted/40 dark:bg-muted-foreground/10" />
+          </div>
+          {/* Row Skeletons */}
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="flex items-center gap-4 py-3">
+              <Skeleton className="h-10 w-10 rounded-full bg-muted/40 dark:bg-muted-foreground/10" />
+              <div className="space-y-1.5 flex-1">
+                <Skeleton className="h-4 w-32 bg-muted/40 dark:bg-muted-foreground/10" />
+                <Skeleton className="h-3 w-24 bg-muted/40 dark:bg-muted-foreground/10" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-7 w-20 rounded-full bg-muted/40 dark:bg-muted-foreground/10" />
+                <Skeleton className="h-7 w-20 rounded-full bg-muted/40 dark:bg-muted-foreground/10" />
+              </div>
+              <Skeleton className="h-4 w-20 bg-muted/40 dark:bg-muted-foreground/10" />
+              <Skeleton className="h-4 w-16 bg-muted/40 dark:bg-muted-foreground/10" />
+            </div>
+          ))}
         </div>
-      </div>;
+      </div>
+    );
   }
   return <div className="p-6 space-y-6 h-full flex flex-col">
       {/* Header */}

@@ -1,5 +1,6 @@
 import { DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PayoutsPanelProps {
   transactions: any[];
@@ -9,9 +10,36 @@ interface PayoutsPanelProps {
 export function PayoutsPanel({ transactions, loading }: PayoutsPanelProps) {
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mb-3" />
-        <p className="text-muted-foreground text-sm">Loading transactions...</p>
+      <div className="space-y-4">
+        {/* Header Skeleton */}
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-9 h-9 rounded-lg bg-muted/40 dark:bg-muted-foreground/10" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-32 bg-muted/40 dark:bg-muted-foreground/10" />
+            <Skeleton className="h-3 w-20 bg-muted/40 dark:bg-muted-foreground/10" />
+          </div>
+        </div>
+        {/* Transaction Row Skeletons */}
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/20 dark:bg-muted/30">
+              <div className="flex items-center gap-3 flex-1">
+                <Skeleton className="w-9 h-9 rounded-full bg-muted/40 dark:bg-muted-foreground/10" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-28 bg-muted/40 dark:bg-muted-foreground/10" />
+                  <Skeleton className="h-3 w-36 bg-muted/40 dark:bg-muted-foreground/10" />
+                </div>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="space-y-1 text-right">
+                  <Skeleton className="h-4 w-16 bg-muted/40 dark:bg-muted-foreground/10" />
+                  <Skeleton className="h-3 w-12 bg-muted/40 dark:bg-muted-foreground/10" />
+                </div>
+                <Skeleton className="h-3 w-14 bg-muted/40 dark:bg-muted-foreground/10" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
