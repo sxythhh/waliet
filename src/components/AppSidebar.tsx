@@ -325,7 +325,7 @@ export function AppSidebar() {
         </div>
 
         {/* Workspace Toggle */}
-        <div className="py-[3px] px-[8px]">
+        <div className="px-px py-0">
           <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
             <PopoverTrigger asChild>
               <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors rounded bg-[#121212]/0">
