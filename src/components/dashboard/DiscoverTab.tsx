@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, CheckCircle, PauseCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -376,11 +376,13 @@ export function DiscoverTab() {
                       <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                       <div className="absolute top-2 right-2 z-20">
                         {isEnded ? (
-                          <span className="text-red-500 text-xs font-medium px-2 py-1 bg-red-500/10 backdrop-blur-sm rounded">
+                          <span className="flex items-center gap-1 text-white text-xs font-medium px-2.5 py-1 font-['Inter'] tracking-[-0.5px]" style={{ backgroundColor: '#b60b0b', borderTop: '2px solid #ed3030', borderRadius: '10px' }}>
+                            <PauseCircle className="h-3.5 w-3.5" fill="white" stroke="#b60b0b" />
                             Ended
                           </span>
                         ) : (
-                          <span className="text-emerald-500 text-xs font-medium px-2 py-1 bg-emerald-500/10 backdrop-blur-sm rounded">
+                          <span className="flex items-center gap-1 text-white text-xs font-medium px-2.5 py-1 font-['Inter'] tracking-[-0.5px]" style={{ backgroundColor: '#1f6d36', borderTop: '2px solid #3c8544', borderRadius: '10px' }}>
+                            <CheckCircle className="h-3.5 w-3.5" fill="white" stroke="#1f6d36" />
                             Active
                           </span>
                         )}
