@@ -327,7 +327,6 @@ export function CampaignAnalyticsTable({
       // Use batched queries to avoid hitting the 1000 row limit
       if (unmatchedUsernames.length > 0) {
         // Get original (non-normalized) usernames from analytics data for the query
-        // since .in() is case-sensitive
         const unmatchedOriginalUsernames = [...new Set(
           (data || [])
             .filter(item => {
@@ -338,15 +337,23 @@ export function CampaignAnalyticsTable({
         )];
         
         // Batch fetch in chunks of 50 to avoid query size limits
+        // Use ilike for case-insensitive matching
         const batchSize = 50;
         for (let i = 0; i < unmatchedOriginalUsernames.length; i += batchSize) {
           const batch = unmatchedOriginalUsernames.slice(i, i + batchSize);
+          
+          // Fetch all social accounts and filter client-side for case-insensitive match
           const { data: globalAccounts } = await supabase
             .from("social_accounts")
-            .select("id, platform, username, user_id")
-            .in("username", batch);
+            .select("id, platform, username, user_id");
           
-          (globalAccounts || []).forEach(account => {
+          // Filter to only accounts that match our unmatched usernames (case-insensitive)
+          const batchLower = batch.map(u => u.toLowerCase());
+          const matchingAccounts = (globalAccounts || []).filter(account => 
+            batchLower.includes(account.username.toLowerCase())
+          );
+          
+          matchingAccounts.forEach(account => {
             const normalizedUsername = normalizeUsername(account.username);
             const normalizedPlatform = normalizePlatform(account.platform);
             const usernameKey = `${normalizedPlatform}_${normalizedUsername}`;
@@ -356,6 +363,9 @@ export function CampaignAnalyticsTable({
               socialAccountsByUsernameMap.set(usernameKey, account);
             }
           });
+          
+          // Break after first batch since we fetched all accounts
+          break;
         }
       }
 
@@ -399,10 +409,15 @@ export function CampaignAnalyticsTable({
         }
       });
 
+      // Debug: log what we found
+      console.log('Campaign accounts found:', allCampaignAccounts?.length || 0);
+      console.log('Social accounts map size:', socialAccountsByUsernameMap.size);
+      console.log('Profiles map size:', profilesMap.size);
+
       // Map everything together efficiently and collect records that need user_id updates
       const recordsToUpdate: { id: string; user_id: string }[] = [];
       
-      const analyticsWithProfiles = (data || []).map(item => {
+      const analyticsWithProfiles = (data || []).map((item, idx) => {
         let profile = null;
         let account = null;
         let submission = null;
@@ -415,6 +430,11 @@ export function CampaignAnalyticsTable({
           profile = profilesMap.get(item.user_id);
           const accountKey = `${item.user_id}_${normalizedPlatform}_${normalizedAnalyticsUsername}`;
           account = socialAccountsMap.get(accountKey);
+          
+          // Debug first few items
+          if (idx < 3) {
+            console.log(`Item ${idx}: ${item.account_username}, user_id: ${item.user_id}, profile found: ${!!profile}`);
+          }
         }
 
         // If no match by user_id, try matching by username + platform (globally)
@@ -1415,8 +1435,8 @@ export function CampaignAnalyticsTable({
             </div>
           </CardHeader>
           <CardContent className="p-0">
-          <div className="overflow-x-auto">
-              <Table className="dark:border dark:border-[#141414] rounded-lg overflow-hidden">
+          <div className="overflow-x-auto rounded-lg dark:border dark:border-[#141414]">
+              <Table>
                 <TableHeader>
                   <TableRow className="border-0 hover:bg-transparent dark:border-b dark:border-[#141414]">
                     <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] sticky left-0 bg-card/50 z-10 py-3" style={{ fontFamily: 'Inter, sans-serif' }}>Account</TableHead>
