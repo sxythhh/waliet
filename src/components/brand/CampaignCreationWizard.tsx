@@ -421,7 +421,7 @@ export function CampaignCreationWizard({
                       </div>
 
                       {/* Privacy Settings */}
-                      <div className="space-y-6 p-6 rounded-xl bg-muted/50 dark:bg-[#141414]">
+                      <div className="space-y-6 p-6 rounded-xl bg-[#1f1f1f]/0">
                         <h3 className="font-semibold text-foreground">Access Settings</h3>
                         
                         <FormField control={form.control} name="is_private" render={({
