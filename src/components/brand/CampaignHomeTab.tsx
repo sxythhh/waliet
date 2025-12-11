@@ -163,9 +163,9 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         : 0;
 
       const totalViews = analyticsData?.reduce((sum, a) => sum + (a.total_views || 0), 0) || 0;
-      const paidViews = analyticsData?.reduce((sum, a) => sum + (a.paid_views || 0), 0) || 0;
       const totalPayouts = transactionsData?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-      const effectiveCPM = paidViews > 0 ? (totalPayouts / paidViews) * 1000 : 0;
+      // Calculate effective CPM based on total views and total payouts
+      const effectiveCPM = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
 
       setStats({
         totalViews,
@@ -327,22 +327,58 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="p-4 space-y-4">
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-32 rounded-lg" />
+            <div key={i} className="p-4 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-3">
+              <Skeleton className="h-4 w-28 dark:bg-muted-foreground/20" />
+              <Skeleton className="h-8 w-20 dark:bg-muted-foreground/20" />
+              <Skeleton className="h-3 w-24 dark:bg-muted-foreground/20" />
+            </div>
           ))}
         </div>
-        <Skeleton className="h-64 rounded-lg" />
-        <Skeleton className="h-48 rounded-lg" />
+        {/* Chart Skeleton */}
+        <div className="p-5 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-40 dark:bg-muted-foreground/20" />
+            <Skeleton className="h-8 w-8 rounded dark:bg-muted-foreground/20" />
+          </div>
+          <div className="flex items-center gap-2">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-7 w-20 rounded-full dark:bg-muted-foreground/20" />
+            ))}
+          </div>
+          <Skeleton className="h-64 w-full dark:bg-muted-foreground/20" />
+        </div>
+        {/* Videos Skeleton */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-44 dark:bg-muted-foreground/20" />
+            <Skeleton className="h-4 w-24 dark:bg-muted-foreground/20" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="p-4 rounded-lg bg-muted/30 dark:bg-muted/50 flex gap-4">
+                <Skeleton className="w-24 h-36 rounded-lg dark:bg-muted-foreground/20" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-24 dark:bg-muted-foreground/20" />
+                  <Skeleton className="h-4 w-full dark:bg-muted-foreground/20" />
+                  <Skeleton className="h-4 w-3/4 dark:bg-muted-foreground/20" />
+                  <Skeleton className="h-3 w-20 dark:bg-muted-foreground/20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-4">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
@@ -560,7 +596,7 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         </div>
 
         {topVideos.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {topVideos.map((video, index) => (
               <a
                 key={video.ad_id}
