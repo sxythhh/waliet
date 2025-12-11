@@ -34,11 +34,31 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
   const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null);
   const [brandInfo, setBrandInfo] = useState<{ name: string; logoUrl?: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{ name: string; avatarUrl?: string } | null>(null);
 
   useEffect(() => {
     fetchBlueprints();
     fetchBrandInfo();
+    fetchUserInfo();
   }, [brandId]);
+
+  const fetchUserInfo = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, username, avatar_url")
+        .eq("id", user.id)
+        .single();
+      
+      if (data) {
+        setUserInfo({ 
+          name: data.full_name || data.username || "You", 
+          avatarUrl: data.avatar_url || undefined 
+        });
+      }
+    }
+  };
 
   const fetchBrandInfo = async () => {
     const { data } = await supabase
@@ -153,16 +173,12 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
           {blueprints.map((blueprint) => (
             <Card
               key={blueprint.id}
-              className="cursor-pointer hover:bg-[#0a0a0a] transition-colors group border-0 bg-transparent"
+              className="cursor-pointer bg-[#f5f5f5] hover:bg-[#e8e8e8] dark:bg-[#0e0e0e] dark:hover:bg-[#141414] transition-colors group border-0"
               onClick={() => openBlueprint(blueprint.id)}
             >
               {/* Content Preview Area */}
               <div 
-                className="mx-[10px] mt-[10px] p-4 rounded-md min-h-[100px]"
-                style={{ 
-                  backgroundColor: '#181717',
-                  borderTop: '1px solid #312f2f'
-                }}
+                className="mx-[10px] mt-[10px] p-4 rounded-md min-h-[100px] bg-[#e8e8e8] dark:bg-[#181717] border-t border-[#d0d0d0] dark:border-[#312f2f]"
               >
                 <p className="text-sm text-muted-foreground line-clamp-4">
                   {blueprint.content ? blueprint.content.replace(/<[^>]*>/g, '').slice(0, 250) + '...' : 'No content yet...'}
@@ -207,10 +223,18 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                   </DropdownMenu>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
-                    {blueprint.title.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="text-sm text-muted-foreground">Brand</span>
+                  {userInfo?.avatarUrl ? (
+                    <img 
+                      src={userInfo.avatarUrl} 
+                      alt={userInfo.name} 
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                      {(userInfo?.name || "U").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm text-muted-foreground">{userInfo?.name || "You"}</span>
                 </div>
               </div>
             </Card>
