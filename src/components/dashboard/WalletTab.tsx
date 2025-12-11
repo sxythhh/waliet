@@ -938,10 +938,6 @@ export function WalletTab() {
           <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
           <p className="text-sm text-muted-foreground mt-1">View your transactions and payment methods</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} disabled={payoutMethods.length >= 3} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Payment Method
-        </Button>
       </div>
 
       {/* Payment Methods Section */}
@@ -1002,24 +998,24 @@ export function WalletTab() {
             }
           };
           const methodIcon = getMethodIcon();
-          return <div key={method.id} className="group relative rounded-xl bg-card p-4 hover:bg-muted/50 transition-colors">
+          return <div key={method.id} className="group relative rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors p-4 border border-border dark:border-transparent">
                 {isDefault && (
                   <div className="absolute top-2 right-2">
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-0 font-inter tracking-[-0.4px]">
                       Default
                     </Badge>
                   </div>
                 )}
                 <div className="flex items-center gap-3">
                   {methodIcon && (
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
                       <img src={methodIcon} alt={getMethodLabel()} className="w-5 h-5" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">{getMethodLabel()}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{getMethodDetails()}</p>
-                    {method.method === 'crypto' && method.details?.network && <p className="text-[10px] text-muted-foreground/70 mt-0.5 uppercase tracking-wider">
+                    <p className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">{getMethodLabel()}</p>
+                    <p className="text-xs text-neutral-500 mt-0.5 truncate font-inter tracking-[-0.4px]">{getMethodDetails()}</p>
+                    {method.method === 'crypto' && method.details?.network && <p className="text-[10px] text-neutral-500/70 mt-0.5 uppercase font-inter tracking-[-0.4px]">
                         {method.details.network}
                       </p>}
                   </div>
@@ -1038,10 +1034,10 @@ export function WalletTab() {
         })}
           
           {/* Add Method Card */}
-          {payoutMethods.length < 3 && <button onClick={() => setDialogOpen(true)} className="group rounded-xl bg-card hover:bg-muted/50 transition-colors p-4 min-h-[80px]">
+          {payoutMethods.length < 3 && <button onClick={() => setDialogOpen(true)} className="group rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors p-4 min-h-[80px] border border-border dark:border-transparent">
               <div className="h-full flex items-center justify-center gap-2">
-                <Plus className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                <Plus className="h-4 w-4 text-neutral-500 group-hover:text-foreground dark:group-hover:text-white transition-colors" />
+                <span className="text-sm text-neutral-500 group-hover:text-foreground dark:group-hover:text-white transition-colors font-inter tracking-[-0.4px]">
                   Add Method
                 </span>
               </div>
