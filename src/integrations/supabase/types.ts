@@ -1300,6 +1300,72 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_milestone_rewards: {
+        Row: {
+          awarded_at: string
+          id: string
+          milestone_id: string
+          referral_id: string
+          reward_amount: number
+        }
+        Insert: {
+          awarded_at?: string
+          id?: string
+          milestone_id: string
+          referral_id: string
+          reward_amount: number
+        }
+        Update: {
+          awarded_at?: string
+          id?: string
+          milestone_id?: string
+          referral_id?: string
+          reward_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_milestone_rewards_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "referral_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_milestone_rewards_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_milestones: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          milestone_type: string
+          reward_amount: number
+          threshold: number
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          milestone_type: string
+          reward_amount: number
+          threshold?: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          milestone_type?: string
+          reward_amount?: number
+          threshold?: number
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           completed_at: string | null
