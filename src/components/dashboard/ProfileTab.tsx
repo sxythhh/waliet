@@ -781,9 +781,9 @@ export function ProfileTab() {
           <CardTitle className="text-xl font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Personal info</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSaveProfile} className="space-y-0">
+          <form onSubmit={handleSaveProfile} className="space-y-6">
             {/* Profile Picture */}
-            <div className="py-4">
+            <div>
               <p className="text-sm text-muted-foreground mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Profile picture</p>
               <Button 
                 type="button" 
@@ -799,122 +799,86 @@ export function ProfileTab() {
               </Button>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
             </div>
-            <div className="border-t border-border/50" />
 
             {/* First name / Last name */}
-            <div className="py-4 flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex gap-8 mb-1">
-                  <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>First name</p>
-                  <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Last name</p>
-                </div>
+            <div>
+              <div className="flex gap-8 mb-2">
+                <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>First name</p>
+                <p className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Last name</p>
+              </div>
+              <Input 
+                value={profile.full_name || ""} 
+                onChange={e => setProfile({ ...profile, full_name: e.target.value })} 
+                placeholder="Your name" 
+                className="h-10 bg-muted/30 border-muted/50 focus:border-muted focus-visible:ring-0 focus-visible:ring-offset-0"
+                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+              />
+            </div>
+
+            {/* Username */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Username</p>
+              <div className="relative">
+                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  value={profile.full_name || ""} 
-                  onChange={e => setProfile({ ...profile, full_name: e.target.value })} 
-                  placeholder="Your name" 
-                  className="border-0 p-0 h-auto text-base font-medium bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                  value={profile.username} 
+                  onChange={e => setProfile({ ...profile, username: e.target.value })} 
+                  placeholder="username" 
+                  className="h-10 pl-9 bg-muted/30 border-muted/50 focus:border-muted focus-visible:ring-0 focus-visible:ring-offset-0"
                   style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                 />
               </div>
-              <Pencil className="h-4 w-4 text-muted-foreground/50" />
             </div>
-            <div className="border-t border-border/50" />
-
-            {/* Username */}
-            <div className="py-4 flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Username</p>
-                <div className="flex items-center gap-1">
-                  <AtSign className="h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    value={profile.username} 
-                    onChange={e => setProfile({ ...profile, username: e.target.value })} 
-                    placeholder="username" 
-                    className="border-0 p-0 h-auto text-base font-medium bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                  />
-                </div>
-              </div>
-              <Pencil className="h-4 w-4 text-muted-foreground/50" />
-            </div>
-            <div className="border-t border-border/50" />
 
             {/* Location */}
-            <div className="py-4 flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Location</p>
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    value={profile.country || ""} 
-                    onChange={e => setProfile({ ...profile, country: e.target.value })} 
-                    placeholder="Your country" 
-                    className="border-0 p-0 h-auto text-base font-medium bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                  />
-                </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Location</p>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  value={profile.country || ""} 
+                  onChange={e => setProfile({ ...profile, country: e.target.value })} 
+                  placeholder="Your country" 
+                  className="h-10 pl-9 bg-muted/30 border-muted/50 focus:border-muted focus-visible:ring-0 focus-visible:ring-offset-0"
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                />
               </div>
-              <Pencil className="h-4 w-4 text-muted-foreground/50" />
             </div>
-            <div className="border-t border-border/50" />
 
             {/* Languages */}
-            <div className="py-4 flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Languages you post in</p>
-                <div className="flex items-center gap-1">
-                  <Languages className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-base font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                    {profile.content_languages?.length ? profile.content_languages.join(', ') : 'Not set'}
-                  </span>
-                </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Languages you post in</p>
+              <div className="flex items-center gap-2 h-10 px-3 bg-muted/30 border border-muted/50 rounded-md">
+                <Languages className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                  {profile.content_languages?.length ? profile.content_languages.join(', ') : 'Not set'}
+                </span>
               </div>
-              <Pencil className="h-4 w-4 text-muted-foreground/50" />
             </div>
-            <div className="border-t border-border/50" />
 
             {/* Email (read-only) */}
-            <div className="py-4">
-              <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Email</p>
-              <div className="flex items-center gap-1">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Email</p>
+              <div className="flex items-center gap-2 h-10 px-3 bg-muted/30 border border-muted/50 rounded-md">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-base font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                   {profile.email || 'Not set'}
                 </span>
               </div>
             </div>
-            <div className="border-t border-border/50" />
 
             {/* Phone */}
-            <div className="py-4 flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Phone number</p>
-                <PhoneInput 
-                  value={profile.phone_number || ""} 
-                  onChange={value => setProfile({ ...profile, phone_number: value })} 
-                  placeholder="Enter phone number"
-                />
-              </div>
-              <Pencil className="h-4 w-4 text-muted-foreground/50" />
-            </div>
-            <div className="border-t border-border/50" />
-
-            {/* Bio */}
-            <div className="py-4">
-              <p className="text-sm text-muted-foreground mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Bio</p>
-              <Textarea 
-                value={profile.bio || ""} 
-                onChange={e => setProfile({ ...profile, bio: e.target.value })} 
-                placeholder="Tell us about yourself..." 
-                className="border-0 p-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base resize-none min-h-[60px]"
-                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                maxLength={500}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Phone number</p>
+              <PhoneInput 
+                value={profile.phone_number || ""} 
+                onChange={value => setProfile({ ...profile, phone_number: value })} 
+                placeholder="Enter phone number"
               />
-              <p className="text-xs text-muted-foreground mt-1">{profile.bio?.length || 0}/500 characters</p>
             </div>
 
             {/* Save Button */}
-            <div className="pt-4">
+            <div className="pt-2">
               <Button type="submit" disabled={saving} className="gap-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                 {saving ? (
                   <>
