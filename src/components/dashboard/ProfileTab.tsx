@@ -891,13 +891,13 @@ export function ProfileTab() {
             {/* Username */}
             <div>
               <p className="text-sm text-muted-foreground mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Username</p>
-              <div className="relative">
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>virality.gg/</span>
                 <Input 
                   value={profile.username} 
-                  onChange={e => setProfile({ ...profile, username: e.target.value })} 
+                  onChange={e => setProfile({ ...profile, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })} 
                   placeholder="username" 
-                  className="h-10 pl-9 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-10 pl-[85px] bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                 />
               </div>
