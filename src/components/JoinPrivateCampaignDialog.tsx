@@ -93,17 +93,11 @@ export function JoinPrivateCampaignDialog({
               </div>
               <Input id="access-code" placeholder="XXXXXX" value={accessCode} onChange={e => setAccessCode(e.target.value)} autoComplete="off" className="pl-12 h-14 text-2xl font-bold tracking-[0.5em] text-center uppercase bg-muted/30 border-2 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/20 transition-all" maxLength={8} />
             </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Enter the invite code shared by the brand
-            </p>
-          </div>
-          <div className="flex gap-2 justify-end">
-            
-            <Button type="submit" disabled={loading}>
-              {loading ? "Validating..." : "Join Campaign"}
-            </Button>
-          </div>
-        </form>
+          <p className="text-xs text-muted-foreground text-center">
+            Enter the invite code shared by the brand
+          </p>
+        </div>
+      </form>
       </DialogContent>
     </Dialog>;
 }
