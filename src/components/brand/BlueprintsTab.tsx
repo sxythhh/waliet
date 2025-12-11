@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreVertical, Trash2, FileText } from "lucide-react";
+import { Plus, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CampaignCreationWizard } from "./CampaignCreationWizard";
 
 interface Blueprint {
   id: string;
@@ -30,10 +31,26 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
+  const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
+  const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null);
+  const [brandInfo, setBrandInfo] = useState<{ name: string; logoUrl?: string } | null>(null);
 
   useEffect(() => {
     fetchBlueprints();
+    fetchBrandInfo();
   }, [brandId]);
+
+  const fetchBrandInfo = async () => {
+    const { data } = await supabase
+      .from("brands")
+      .select("name, logo_url")
+      .eq("id", brandId)
+      .single();
+    
+    if (data) {
+      setBrandInfo({ name: data.name, logoUrl: data.logo_url || undefined });
+    }
+  };
 
   const fetchBlueprints = async () => {
     setLoading(true);
@@ -92,6 +109,11 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     });
   };
 
+  const handleActivateBlueprint = (blueprintId: string) => {
+    setSelectedBlueprintId(blueprintId);
+    setCreateCampaignOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="p-6 space-y-4">
@@ -127,7 +149,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {blueprints.map((blueprint) => (
             <Card
               key={blueprint.id}
@@ -136,52 +158,75 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
             >
               {/* Content Preview Area */}
               <div 
-                className="mx-[10px] mt-[10px] p-4 rounded-md"
+                className="mx-[10px] mt-[10px] p-4 rounded-md min-h-[100px]"
                 style={{ 
                   backgroundColor: '#181717',
                   borderTop: '1px solid #312f2f'
                 }}
               >
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {blueprint.content ? blueprint.content.replace(/<[^>]*>/g, '').slice(0, 150) + '...' : 'No content yet...'}
+                <p className="text-sm text-muted-foreground line-clamp-4">
+                  {blueprint.content ? blueprint.content.replace(/<[^>]*>/g, '').slice(0, 250) + '...' : 'No content yet...'}
                 </p>
               </div>
 
-              {/* Title and Actions */}
-              <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded bg-muted flex items-center justify-center text-sm font-medium">
+              {/* Title, User Info, and Actions */}
+              <div className="p-4 space-y-2">
+                <div className="flex items-start justify-between">
+                  <h3 className="font-medium text-base truncate flex-1 mr-2">{blueprint.title}</h3>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 shrink-0"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleActivateBlueprint(blueprint.id);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Campaign
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteBlueprint(blueprint.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
                     {blueprint.title.charAt(0).toUpperCase()}
                   </div>
-                  <h3 className="font-medium">{blueprint.title}</h3>
+                  <span className="text-sm text-muted-foreground">Brand</span>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteBlueprint(blueprint.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </Card>
           ))}
         </div>
+      )}
+
+      {brandInfo && (
+        <CampaignCreationWizard
+          brandId={brandId}
+          brandName={brandInfo.name}
+          brandLogoUrl={brandInfo.logoUrl}
+          onSuccess={() => {}}
+          open={createCampaignOpen}
+          onOpenChange={setCreateCampaignOpen}
+        />
       )}
     </div>
   );
