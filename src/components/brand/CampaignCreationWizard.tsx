@@ -336,18 +336,7 @@ export function CampaignCreationWizard({
 
                   {/* Step 2: Budget & Targeting */}
                   {currentStep === 2 && <div className="space-y-6">
-                      <div className="text-center mb-8">
-                        <h1 className="text-2xl font-bold text-foreground mb-2 tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                          Budget & Targeting
-                        </h1>
-                        <p className="text-muted-foreground tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                          Set your campaign budget and target platforms.
-                        </p>
-                      </div>
+                      
 
                       {/* Budget Section */}
                       <div className="space-y-4">
