@@ -183,37 +183,34 @@ export function CreatorsTab({
   };
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="p-4 space-y-4">
         {/* Header Skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-24 bg-muted/40 dark:bg-muted-foreground/10" />
-            <Skeleton className="h-4 w-48 bg-muted/40 dark:bg-muted-foreground/10" />
-          </div>
+        <div className="p-4 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-3">
+          <Skeleton className="h-5 w-24 dark:bg-muted-foreground/20" />
+          <Skeleton className="h-4 w-48 dark:bg-muted-foreground/20" />
         </div>
-        {/* Table Header Skeleton */}
-        <div className="rounded-xl bg-muted/20 dark:bg-muted/30 p-4">
-          <div className="flex items-center gap-4 mb-4 pb-3 border-b border-border/30">
-            <Skeleton className="h-4 w-20 bg-muted/40 dark:bg-muted-foreground/10" />
-            <Skeleton className="h-4 w-20 bg-muted/40 dark:bg-muted-foreground/10" />
+        {/* Table Skeleton */}
+        <div className="p-5 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-4">
+          <div className="flex items-center gap-4 pb-3 border-b border-border/30">
+            <Skeleton className="h-4 w-20 dark:bg-muted-foreground/20" />
+            <Skeleton className="h-4 w-20 dark:bg-muted-foreground/20" />
             <div className="flex-1" />
-            <Skeleton className="h-4 w-16 bg-muted/40 dark:bg-muted-foreground/10" />
-            <Skeleton className="h-4 w-16 bg-muted/40 dark:bg-muted-foreground/10" />
+            <Skeleton className="h-4 w-16 dark:bg-muted-foreground/20" />
+            <Skeleton className="h-4 w-16 dark:bg-muted-foreground/20" />
           </div>
-          {/* Row Skeletons */}
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="flex items-center gap-4 py-3">
-              <Skeleton className="h-10 w-10 rounded-full bg-muted/40 dark:bg-muted-foreground/10" />
-              <div className="space-y-1.5 flex-1">
-                <Skeleton className="h-4 w-32 bg-muted/40 dark:bg-muted-foreground/10" />
-                <Skeleton className="h-3 w-24 bg-muted/40 dark:bg-muted-foreground/10" />
+              <Skeleton className="h-10 w-10 rounded-full dark:bg-muted-foreground/20" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-32 dark:bg-muted-foreground/20" />
+                <Skeleton className="h-3 w-24 dark:bg-muted-foreground/20" />
               </div>
               <div className="flex items-center gap-2">
-                <Skeleton className="h-7 w-20 rounded-full bg-muted/40 dark:bg-muted-foreground/10" />
-                <Skeleton className="h-7 w-20 rounded-full bg-muted/40 dark:bg-muted-foreground/10" />
+                <Skeleton className="h-7 w-20 rounded-full dark:bg-muted-foreground/20" />
+                <Skeleton className="h-7 w-20 rounded-full dark:bg-muted-foreground/20" />
               </div>
-              <Skeleton className="h-4 w-20 bg-muted/40 dark:bg-muted-foreground/10" />
-              <Skeleton className="h-4 w-16 bg-muted/40 dark:bg-muted-foreground/10" />
+              <Skeleton className="h-4 w-20 dark:bg-muted-foreground/20" />
+              <Skeleton className="h-4 w-16 dark:bg-muted-foreground/20" />
             </div>
           ))}
         </div>
