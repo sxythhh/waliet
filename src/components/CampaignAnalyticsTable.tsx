@@ -1431,6 +1431,27 @@ export function CampaignAnalyticsTable({
                   onImportComplete={fetchAnalytics}
                   onMatchingRequired={() => {}}
                 />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          toast.info("Re-linking accounts...");
+                          fetchAnalytics();
+                        }}
+                        disabled={loading}
+                        className="h-8 w-8 p-0"
+                      >
+                        <RotateCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Re-link accounts</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </CardHeader>
