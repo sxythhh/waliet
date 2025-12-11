@@ -1048,7 +1048,7 @@ export function WalletTab() {
               <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
               letterSpacing: '-0.5px'
             }}>Your Earnings</p>
-              <div className="flex bg-muted/50 rounded-md p-0.5 py-0 px-0">
+              <div className="flex bg-muted/50 rounded-md p-0.5 py-[4px] px-[5px]">
                 {(['1D', '1W', '1M', 'ALL'] as const).map(period => <button key={period} onClick={() => setEarningsChartPeriod(period)} className={`px-2.5 py-1 text-xs font-medium font-['Inter'] rounded transition-all ${earningsChartPeriod === period ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`} style={{
                 letterSpacing: '-0.5px'
               }}>
