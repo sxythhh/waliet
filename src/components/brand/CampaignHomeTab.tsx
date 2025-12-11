@@ -122,9 +122,26 @@ export function CampaignHomeTab({ campaignId, brandId, timeframe = "this_month" 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [brand, setBrand] = useState<{ collection_name: string | null } | null>(null);
 
+  // Reset videos when timeframe changes to prevent stale data
   useEffect(() => {
-    fetchData();
-    fetchMetrics();
+    setTopVideos([]);
+    setTotalVideos(0);
+  }, [timeframe]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    
+    const loadData = async () => {
+      if (!isCancelled) await fetchData();
+    };
+    const loadMetrics = async () => {
+      if (!isCancelled) await fetchMetrics();
+    };
+    
+    loadData();
+    loadMetrics();
+    
+    return () => { isCancelled = true; };
   }, [campaignId, brandId, timeframe]);
 
   const fetchData = async () => {
@@ -241,7 +258,14 @@ export function CampaignHomeTab({ campaignId, brandId, timeframe = "this_month" 
         });
 
         if (!error && videosData?.videos) {
-          setTopVideos(videosData.videos);
+          // Deduplicate videos by ad_id
+          const uniqueVideos = videosData.videos.reduce((acc: VideoData[], video: VideoData) => {
+            if (!acc.find(v => v.ad_id === video.ad_id)) {
+              acc.push(video);
+            }
+            return acc;
+          }, []);
+          setTopVideos(uniqueVideos.slice(0, 3));
           setTotalVideos(videosData.pagination?.total || 0);
         }
       }
@@ -652,9 +676,9 @@ export function CampaignHomeTab({ campaignId, brandId, timeframe = "this_month" 
 
         {topVideos.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {topVideos.map((video, index) => (
+            {topVideos.slice(0, 3).map((video, index) => (
               <a
-                key={video.ad_id}
+                key={`${video.ad_id}-${index}`}
                 href={video.ad_link}
                 target="_blank"
                 rel="noopener noreferrer"
