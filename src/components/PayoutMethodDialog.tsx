@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Wallet, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import paypalLogo from "@/assets/paypal-logo.svg";
 import ethereumLogo from "@/assets/ethereum-logo.png";
 import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
+import walletIcon from "@/assets/wallet-active.svg";
 
 interface PayoutMethodDialogProps {
   open: boolean;
@@ -59,10 +60,10 @@ export default function PayoutMethodDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] p-0 gap-0 bg-background border-border overflow-hidden">
+      <DialogContent className="sm:max-w-[480px] p-0 gap-0 bg-background border-border overflow-hidden font-inter tracking-[-0.5px]">
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
-          <h2 className="text-lg font-semibold tracking-tight">
+          <h2 className="text-lg font-semibold">
             {isMaxMethodsReached ? "Maximum Methods Reached" : "Add Payout Method"}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -79,21 +80,21 @@ export default function PayoutMethodDialog({
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setSelectedMethod("crypto")}
-                  className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all duration-200 ${
+                  className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 ${
                     selectedMethod === "crypto"
-                      ? "border-primary bg-primary/5"
+                      ? "border-foreground/20 bg-muted"
                       : "border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50"
                   }`}
                 >
                   {selectedMethod === "crypto" && (
-                    <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                      <Check className="w-3 h-3 text-primary-foreground" />
+                    <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
+                      <Check className="w-3 h-3 text-background" />
                     </div>
                   )}
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    selectedMethod === "crypto" ? "bg-primary/10" : "bg-muted"
+                    selectedMethod === "crypto" ? "bg-foreground/10" : "bg-muted"
                   }`}>
-                    <Wallet className={`w-5 h-5 ${selectedMethod === "crypto" ? "text-primary" : "text-muted-foreground"}`} />
+                    <img src={walletIcon} alt="Wallet" className="w-5 h-5" />
                   </div>
                   <span className={`text-sm font-medium ${selectedMethod === "crypto" ? "text-foreground" : "text-muted-foreground"}`}>
                     Crypto Wallet
@@ -102,19 +103,19 @@ export default function PayoutMethodDialog({
 
                 <button
                   onClick={() => setSelectedMethod("paypal")}
-                  className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all duration-200 ${
+                  className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 ${
                     selectedMethod === "paypal"
-                      ? "border-primary bg-primary/5"
+                      ? "border-foreground/20 bg-muted"
                       : "border-border bg-muted/30 hover:border-muted-foreground/30 hover:bg-muted/50"
                   }`}
                 >
                   {selectedMethod === "paypal" && (
-                    <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                      <Check className="w-3 h-3 text-primary-foreground" />
+                    <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
+                      <Check className="w-3 h-3 text-background" />
                     </div>
                   )}
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    selectedMethod === "paypal" ? "bg-primary/10" : "bg-muted"
+                    selectedMethod === "paypal" ? "bg-foreground/10" : "bg-muted"
                   }`}>
                     <img src={paypalLogo} alt="PayPal" className="w-5 h-5" />
                   </div>
@@ -154,13 +155,13 @@ export default function PayoutMethodDialog({
                           onClick={() => setSelectedNetwork(network.id)}
                           className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all duration-200 ${
                             selectedNetwork === network.id
-                              ? "bg-primary/10 ring-1 ring-primary"
+                              ? "bg-muted ring-1 ring-foreground/20"
                               : "bg-muted/50 hover:bg-muted"
                           }`}
                         >
                           <img src={network.logo} alt={network.name} className="w-6 h-6" />
                           <span className={`text-xs font-medium ${
-                            selectedNetwork === network.id ? "text-primary" : "text-muted-foreground"
+                            selectedNetwork === network.id ? "text-foreground" : "text-muted-foreground"
                           }`}>
                             {network.name}
                           </span>
@@ -179,7 +180,7 @@ export default function PayoutMethodDialog({
                       placeholder="0x..."
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
-                      className="h-11 bg-muted/50 border-transparent focus:border-primary focus:bg-background placeholder:text-muted-foreground/50"
+                      className="h-11 bg-muted/50 border-transparent focus:border-foreground/20 focus:bg-background placeholder:text-muted-foreground/50 font-inter tracking-[-0.5px]"
                     />
                   </div>
                 </>
@@ -196,7 +197,7 @@ export default function PayoutMethodDialog({
                     placeholder="your@email.com"
                     value={paypalEmail}
                     onChange={(e) => setPaypalEmail(e.target.value)}
-                    className="h-11 bg-muted/50 border-transparent focus:border-primary focus:bg-background placeholder:text-muted-foreground/50"
+                    className="h-11 bg-muted/50 border-transparent focus:border-foreground/20 focus:bg-background placeholder:text-muted-foreground/50 font-inter tracking-[-0.5px]"
                   />
                   <p className="text-xs text-muted-foreground">
                     Make sure this matches your PayPal account email.
@@ -209,13 +210,13 @@ export default function PayoutMethodDialog({
             <div className="px-6 py-4 bg-muted/30 border-t border-border flex gap-3">
               <Button
                 variant="ghost"
-                className="flex-1 h-10"
+                className="flex-1 h-10 font-inter tracking-[-0.5px]"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-10"
+                className="flex-1 h-10 font-inter tracking-[-0.5px]"
                 onClick={handleSave}
                 disabled={isDisabled}
               >
@@ -229,7 +230,7 @@ export default function PayoutMethodDialog({
           <div className="px-6 py-4 bg-muted/30 border-t border-border">
             <Button
               variant="outline"
-              className="w-full h-10"
+              className="w-full h-10 font-inter tracking-[-0.5px]"
               onClick={() => onOpenChange(false)}
             >
               Close
