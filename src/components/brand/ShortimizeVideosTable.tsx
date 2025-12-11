@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, ArrowUpDown, X } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
+import type { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
@@ -45,6 +46,7 @@ interface ShortimizeVideosTableProps {
   brandId: string;
   collectionName?: string;
   campaignId?: string;
+  timeframe?: TimeframeOption;
 }
 
 type SortField = 'uploaded_at' | 'latest_views' | 'latest_likes' | 'latest_comments' | 'latest_shares';
@@ -84,17 +86,55 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
   }
 };
 
-export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: ShortimizeVideosTableProps) {
+// Calculate date range from timeframe
+const getDateRangeFromTimeframe = (timeframe: TimeframeOption | undefined): { start: Date | undefined; end: Date | undefined } => {
+  if (!timeframe || timeframe === 'all_time') {
+    return { start: undefined, end: undefined };
+  }
+  
+  const now = new Date();
+  const today = startOfDay(now);
+  
+  switch (timeframe) {
+    case 'today':
+      return { start: today, end: now };
+    case 'this_week':
+      return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
+    case 'last_week': {
+      const lastWeek = subWeeks(now, 1);
+      return { start: startOfWeek(lastWeek, { weekStartsOn: 1 }), end: endOfWeek(lastWeek, { weekStartsOn: 1 }) };
+    }
+    case 'this_month':
+      return { start: startOfMonth(now), end: endOfMonth(now) };
+    case 'last_month': {
+      const lastMonth = subMonths(now, 1);
+      return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
+    }
+    default:
+      return { start: undefined, end: undefined };
+  }
+};
+
+export function ShortimizeVideosTable({ brandId, collectionName, campaignId, timeframe }: ShortimizeVideosTableProps) {
   const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
   const [creatorMatches, setCreatorMatches] = useState<Map<string, CreatorInfo>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
-  const [startDate, setStartDate] = useState<Date | undefined>();
-  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
   const [sortField, setSortField] = useState<SortField>('uploaded_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 50, total_pages: 0 });
   const [selectedCreator, setSelectedCreator] = useState<CreatorInfo | null>(null);
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
+
+  // Calculate effective date range - custom dates override timeframe
+  const { startDate, endDate } = useMemo(() => {
+    if (customStartDate || customEndDate) {
+      return { startDate: customStartDate, endDate: customEndDate };
+    }
+    const range = getDateRangeFromTimeframe(timeframe);
+    return { startDate: range.start, endDate: range.end };
+  }, [timeframe, customStartDate, customEndDate]);
 
   const fetchCreatorMatches = async (usernames: string[]) => {
     if (usernames.length === 0) return;
@@ -206,7 +246,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
     if (brandId && (collectionName || campaignId)) {
       fetchVideos();
     }
-  }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page]);
+  }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page, startDate, endDate]);
 
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -300,9 +340,9 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
                     <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px] text-center">Start Date</p>
                     <Calendar
                       mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      disabled={(date) => endDate ? date > endDate : false}
+                      selected={customStartDate}
+                      onSelect={setCustomStartDate}
+                      disabled={(date) => customEndDate ? date > customEndDate : false}
                       initialFocus
                       className="rounded-md border-none"
                     />
@@ -311,9 +351,9 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
                     <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px] text-center">End Date</p>
                     <Calendar
                       mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      disabled={(date) => startDate ? date < startDate : false}
+                      selected={customEndDate}
+                      onSelect={setCustomEndDate}
+                      disabled={(date) => customStartDate ? date < customStartDate : false}
                       className="rounded-md border-none"
                     />
                   </div>
@@ -324,8 +364,8 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
                     size="sm" 
                     className="text-xs tracking-[-0.5px]"
                     onClick={() => {
-                      setStartDate(undefined);
-                      setEndDate(undefined);
+                      setCustomStartDate(undefined);
+                      setCustomEndDate(undefined);
                     }}
                   >
                     Clear
@@ -345,14 +385,14 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
             </PopoverContent>
           </Popover>
 
-          {(startDate || endDate) && (
+          {(customStartDate || customEndDate) && (
             <Button 
               variant="ghost" 
               size="icon"
               className="h-8 w-8"
               onClick={() => {
-                setStartDate(undefined);
-                setEndDate(undefined);
+                setCustomStartDate(undefined);
+                setCustomEndDate(undefined);
                 setPagination(prev => ({ ...prev, page: 1 }));
                 setTimeout(fetchVideos, 0);
               }}

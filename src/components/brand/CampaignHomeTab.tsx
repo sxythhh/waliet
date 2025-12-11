@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManualMetricsDialog } from "./ManualMetricsDialog";
 
-export type TimeframeOption = "today" | "this_week" | "last_week" | "this_month" | "last_month";
+export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 
 interface CampaignHomeTabProps {
   campaignId: string;
@@ -22,9 +22,11 @@ interface CampaignHomeTabProps {
   timeframe?: TimeframeOption;
 }
 
-const getDateRange = (timeframe: TimeframeOption): { start: Date; end: Date } => {
+const getDateRange = (timeframe: TimeframeOption): { start: Date; end: Date } | null => {
   const now = new Date();
   switch (timeframe) {
+    case "all_time":
+      return null;
     case "today":
       return { start: startOfDay(now), end: endOfDay(now) };
     case "this_week":

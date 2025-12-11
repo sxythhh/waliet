@@ -10,8 +10,9 @@ import { VideosTab } from "@/components/brand/VideosTab";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-export type TimeframeOption = "today" | "this_week" | "last_week" | "this_month" | "last_month";
+export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 const TIMEFRAME_LABELS: Record<TimeframeOption, string> = {
+  all_time: "All time",
   today: "Today",
   this_week: "This week",
   last_week: "Last week",
@@ -58,7 +59,7 @@ export function BrandCampaignDetailView({
   const [loading, setLoading] = useState(true);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("home");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [timeframe, setTimeframe] = useState<TimeframeOption>("this_month");
+  const [timeframe, setTimeframe] = useState<TimeframeOption>("all_time");
   const {
     isAdmin
   } = useAdminCheck();
@@ -167,7 +168,7 @@ export function BrandCampaignDetailView({
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
           {activeDetailTab === "home" && campaign.brand_id ? <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} /> : activeDetailTab === "videos" && campaign.brand_id ? <div className="p-4 py-0">
-              <VideosTab campaignId={campaignId} brandId={campaign.brand_id} isAdmin={true} approvedCreators={[]} />
+              <VideosTab campaignId={campaignId} brandId={campaign.brand_id} isAdmin={true} approvedCreators={[]} timeframe={timeframe} />
             </div> : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />}
         </div>
       </div>
