@@ -4,15 +4,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Play, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
+import { Play, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { toast } from "sonner";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManualMetricsDialog } from "./ManualMetricsDialog";
+
 interface CampaignHomeTabProps {
   campaignId: string;
   brandId: string;
@@ -47,6 +48,10 @@ interface MetricsData {
   likes: number;
   shares: number;
   bookmarks: number;
+  dailyViews: number;
+  dailyLikes: number;
+  dailyShares: number;
+  dailyBookmarks: number;
 }
 
 const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
@@ -54,7 +59,6 @@ const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/
 const extractPlatformId = (adLink: string, platform: string): string | null => {
   try {
     if (platform?.toLowerCase() === 'tiktok') {
-      // TikTok: /video/ or /photo/ (slideshows)
       const match = adLink.match(/\/(video|photo)\/(\d+)/);
       return match ? match[2] : null;
     } else if (platform?.toLowerCase() === 'instagram') {
@@ -72,14 +76,23 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
   }
 };
 
+type MetricType = 'views' | 'likes' | 'shares' | 'bookmarks';
+
+const METRIC_COLORS: Record<MetricType, string> = {
+  views: '#3b82f6',
+  likes: '#ef4444',
+  shares: '#22c55e',
+  bookmarks: '#f59e0b',
+};
+
 export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
   const { isAdmin } = useAdminCheck();
   const [stats, setStats] = useState<StatsData>({ totalViews: 0, totalPayouts: 0, effectiveCPM: 0, viewsLastWeek: 0, payoutsLastWeek: 0, viewsChangePercent: 0, payoutsChangePercent: 0 });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
-  const [chartData, setChartData] = useState<any[]>([]);
   const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
   const [chartMode, setChartMode] = useState<'daily' | 'cumulative'>('cumulative');
+  const [activeMetrics, setActiveMetrics] = useState<MetricType[]>(['views']);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [brand, setBrand] = useState<{ collection_name: string | null } | null>(null);
@@ -92,7 +105,6 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch brand info for collection name
       const { data: brandData } = await supabase
         .from('brands')
         .select('collection_name')
@@ -101,25 +113,21 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       
       setBrand(brandData);
 
-      // Fetch campaign analytics for stats
       const { data: analyticsData } = await supabase
         .from('campaign_account_analytics')
         .select('total_views, paid_views')
         .eq('campaign_id', campaignId);
 
-      // Fetch transactions for payouts
       const { data: transactionsData } = await supabase
         .from('wallet_transactions')
         .select('amount, created_at')
         .eq('metadata->>campaign_id', campaignId)
         .eq('type', 'earning');
 
-      // Calculate week boundaries
       const now = new Date();
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-      // Calculate payouts for current week vs last week
       const payoutsThisWeek = transactionsData?.filter(t => new Date(t.created_at) >= oneWeekAgo)
         .reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
       const payoutsLastWeek = transactionsData?.filter(t => {
@@ -127,7 +135,6 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         return date >= twoWeeksAgo && date < oneWeekAgo;
       }).reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
-      // Fetch metrics for views comparison (last week vs week before)
       const { data: metricsThisWeek } = await supabase
         .from('campaign_video_metrics')
         .select('total_views')
@@ -148,7 +155,6 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       const viewsThisWeekValue = metricsThisWeek?.[0]?.total_views || 0;
       const viewsLastWeekValue = metricsLastWeek?.[0]?.total_views || 0;
 
-      // Calculate percentage changes
       const viewsChangePercent = viewsLastWeekValue > 0 
         ? ((viewsThisWeekValue - viewsLastWeekValue) / viewsLastWeekValue) * 100 
         : 0;
@@ -171,11 +177,6 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
         payoutsChangePercent
       });
 
-      // Generate mock chart data based on transactions
-      const chartPoints = generateChartData(transactionsData || []);
-      setChartData(chartPoints);
-
-      // Fetch top videos from Shortimize - only if brand has API key configured
       if (brandData?.collection_name) {
         const { data: videosData, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
           body: {
@@ -202,20 +203,27 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
 
   const fetchMetrics = async () => {
     try {
-      const { data: metricsData } = await supabase
+      const { data: rawMetrics } = await supabase
         .from('campaign_video_metrics')
         .select('*')
         .eq('campaign_id', campaignId)
         .order('recorded_at', { ascending: true });
 
-      if (metricsData && metricsData.length > 0) {
-        const formattedMetrics = metricsData.map(m => ({
-          date: format(new Date(m.recorded_at), 'MMM d'),
-          views: m.total_views,
-          likes: m.total_likes,
-          shares: m.total_shares,
-          bookmarks: m.total_bookmarks,
-        }));
+      if (rawMetrics && rawMetrics.length > 0) {
+        const formattedMetrics = rawMetrics.map((m, index) => {
+          const prev = index > 0 ? rawMetrics[index - 1] : null;
+          return {
+            date: format(new Date(m.recorded_at), 'MMM d'),
+            views: m.total_views,
+            likes: m.total_likes,
+            shares: m.total_shares,
+            bookmarks: m.total_bookmarks,
+            dailyViews: prev ? Math.max(0, m.total_views - prev.total_views) : m.total_views,
+            dailyLikes: prev ? Math.max(0, m.total_likes - prev.total_likes) : m.total_likes,
+            dailyShares: prev ? Math.max(0, m.total_shares - prev.total_shares) : m.total_shares,
+            dailyBookmarks: prev ? Math.max(0, m.total_bookmarks - prev.total_bookmarks) : m.total_bookmarks,
+          };
+        });
         setMetricsData(formattedMetrics);
       }
     } catch (error) {
@@ -226,64 +234,41 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      console.log('[CampaignHomeTab] Starting metrics refresh for campaign:', campaignId);
-      
-      // Trigger the sync edge function for this specific campaign
       const { data, error } = await supabase.functions.invoke('sync-campaign-video-metrics', {
         body: { campaignId }
       });
       
-      console.log('[CampaignHomeTab] Sync response:', { data, error });
-      
       if (error) {
-        console.error('[CampaignHomeTab] Error from sync function:', error);
         toast.error('Failed to sync metrics: ' + error.message);
         return;
       }
       
-      // Check if the sync was successful
       if (data && !data.success) {
-        const errorMsg = data.errorMessage || 'Unknown error during sync';
-        console.error('[CampaignHomeTab] Sync failed:', errorMsg);
-        toast.error('Sync failed: ' + errorMsg);
+        toast.error('Sync failed: ' + (data.errorMessage || 'Unknown error'));
         return;
       }
       
       if (data?.synced > 0) {
-        toast.success(`Successfully synced metrics for ${data.synced} campaign(s)`);
-      } else if (data?.errors > 0) {
-        toast.warning('Sync completed with errors: ' + (data.errorMessage || 'Check logs for details'));
+        toast.success(`Successfully synced metrics`);
       }
       
-      // Refetch data
       await fetchMetrics();
       await fetchData();
-      
-      console.log('[CampaignHomeTab] Refresh complete');
     } catch (error) {
-      console.error('[CampaignHomeTab] Error refreshing metrics:', error);
+      console.error('Error refreshing metrics:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to refresh metrics');
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  const generateChartData = (transactions: any[]) => {
-    // Group by date and generate cumulative/daily data
-    const grouped: Record<string, number> = {};
-    transactions.forEach(t => {
-      const date = format(new Date(t.created_at), 'MMM d');
-      grouped[date] = (grouped[date] || 0) + t.amount;
-    });
-
-    let cumulative = 0;
-    return Object.entries(grouped).map(([date, amount]) => {
-      cumulative += amount;
-      return {
-        date,
-        daily: amount,
-        cumulative
-      };
+  const toggleMetric = (metric: MetricType) => {
+    setActiveMetrics(prev => {
+      if (prev.includes(metric)) {
+        if (prev.length === 1) return prev;
+        return prev.filter(m => m !== metric);
+      }
+      return [...prev, metric];
     });
   };
 
@@ -314,6 +299,13 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
     const platformId = extractPlatformId(video.ad_link, video.platform);
     if (!platformId) return null;
     return `${THUMBNAIL_BASE_URL}/${video.username}/${platformId}_${video.platform}.jpg`;
+  };
+
+  const getChartDataKey = (metric: MetricType) => {
+    if (chartMode === 'daily') {
+      return `daily${metric.charAt(0).toUpperCase() + metric.slice(1)}` as keyof MetricsData;
+    }
+    return metric as keyof MetricsData;
   };
 
   if (isLoading) {
@@ -372,8 +364,8 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
       </div>
 
       {/* Metrics Chart */}
-      <Card className="p-4 bg-card/30 border-table-border">
-        <div className="flex items-center justify-between mb-4">
+      <Card className="p-5 bg-card/30 border-table-border">
+        <div className="flex items-center justify-between mb-5">
           <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
           <div className="flex items-center gap-2">
             {isAdmin && (
@@ -392,116 +384,122 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
             >
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
-            <div className="flex items-center gap-0 border border-table-border rounded-md overflow-hidden">
-              <button
-                onClick={() => setChartMode('daily')}
-                className={`px-3 py-1.5 text-xs tracking-[-0.5px] transition-colors ${
-                  chartMode === 'daily' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Daily
-              </button>
-              <button
-                onClick={() => setChartMode('cumulative')}
-                className={`px-3 py-1.5 text-xs tracking-[-0.5px] transition-colors ${
-                  chartMode === 'cumulative' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Cumulative
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Legend */}
-        <div className="flex items-center gap-4 mb-4 text-xs">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-[#3b82f6]" />
-            <span className="text-muted-foreground">Views</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-[#ef4444]" />
-            <span className="text-muted-foreground">Likes</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-[#22c55e]" />
-            <span className="text-muted-foreground">Shares</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-[#f59e0b]" />
-            <span className="text-muted-foreground">Bookmarks</span>
           </div>
         </div>
 
-        <div className="h-64">
+        {/* Controls Row */}
+        <div className="flex items-center justify-between mb-5">
+          {/* Metric Toggles */}
+          <div className="flex items-center gap-2">
+            {(['views', 'likes', 'shares', 'bookmarks'] as MetricType[]).map((metric) => (
+              <button
+                key={metric}
+                onClick={() => toggleMetric(metric)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  activeMetrics.includes(metric)
+                    ? 'bg-white/10 text-white'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <div 
+                  className={`w-2 h-2 rounded-full transition-opacity ${activeMetrics.includes(metric) ? 'opacity-100' : 'opacity-40'}`}
+                  style={{ backgroundColor: METRIC_COLORS[metric] }}
+                />
+                <span className="capitalize">{metric}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Daily/Cumulative Toggle */}
+          <div className="flex items-center gap-0 bg-muted/30 rounded-lg p-0.5">
+            <button
+              onClick={() => setChartMode('daily')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                chartMode === 'daily' 
+                  ? 'bg-white/10 text-white' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Daily
+            </button>
+            <button
+              onClick={() => setChartMode('cumulative')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                chartMode === 'cumulative' 
+                  ? 'bg-white/10 text-white' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Cumulative
+            </button>
+          </div>
+        </div>
+
+        <div className="h-72">
           {metricsData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={metricsData}>
+              <AreaChart data={metricsData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorLikes" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorShares" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorBookmarks" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
-                  </linearGradient>
+                  {(['views', 'likes', 'shares', 'bookmarks'] as MetricType[]).map((metric) => (
+                    <linearGradient key={metric} id={`gradient-${metric}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={METRIC_COLORS[metric]} stopOpacity={0.2}/>
+                      <stop offset="100%" stopColor={METRIC_COLORS[metric]} stopOpacity={0}/>
+                    </linearGradient>
+                  ))}
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => formatNumber(value)} />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="hsl(var(--border))" 
+                  opacity={0.2}
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                  axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.3 }}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => formatNumber(value)}
+                  width={50}
+                />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--popover))', 
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                   }}
-                  formatter={(value: number) => formatNumber(value)}
+                  labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 500, marginBottom: 4 }}
+                  itemStyle={{ color: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  formatter={(value: number, name: string) => [formatNumber(value), name.replace('daily', '').toLowerCase()]}
+                  cursor={{ stroke: 'white', strokeWidth: 1, strokeOpacity: 0.5 }}
                 />
-                <Area
-                  type="linear"
-                  dataKey="views"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorViews)"
-                />
-                <Area
-                  type="linear"
-                  dataKey="likes"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorLikes)"
-                />
-                <Area
-                  type="linear"
-                  dataKey="shares"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorShares)"
-                />
-                <Area
-                  type="linear"
-                  dataKey="bookmarks"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorBookmarks)"
-                />
+                {activeMetrics.map((metric) => (
+                  <Area
+                    key={metric}
+                    type="monotone"
+                    dataKey={getChartDataKey(metric)}
+                    name={metric}
+                    stroke={METRIC_COLORS[metric]}
+                    strokeWidth={2}
+                    fill={`url(#gradient-${metric})`}
+                    dot={false}
+                    activeDot={{ 
+                      r: 5, 
+                      fill: METRIC_COLORS[metric],
+                      stroke: 'white',
+                      strokeWidth: 2
+                    }}
+                  />
+                ))}
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm tracking-[-0.5px] gap-2">
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm tracking-[-0.5px] gap-3">
               <p>No metrics data yet</p>
               <Button
                 type="button"
@@ -539,7 +537,6 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
               >
                 <Card className="p-4 bg-card/30 border-table-border hover:bg-muted/20 transition-colors">
                   <div className="flex gap-4">
-                    {/* Video Thumbnail */}
                     <div className="relative flex-shrink-0">
                       <Badge className="absolute top-1 left-1 z-10 bg-black/70 text-white text-xs px-1.5 py-0.5">
                         #{index + 1}
@@ -561,7 +558,6 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
                       </div>
                     </div>
 
-                    {/* Video Info */}
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex items-center gap-2">
                         {getPlatformIcon(video.platform)}
