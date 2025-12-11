@@ -285,7 +285,7 @@ export function CampaignCreationWizard({
           {/* Left Column - Main Content */}
           <div className="flex flex-col min-h-0 overflow-hidden">
             {/* Main Form Area */}
-            <div className="flex-1 overflow-y-auto px-8 lg:px-16 py-10">
+            <div className="flex-1 overflow-y-auto px-8 py-[20px] lg:px-[30px]">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl mx-auto">
                   {/* Step 1: Goal Selection */}
@@ -310,14 +310,20 @@ export function CampaignCreationWizard({
                                     </div>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-semibold text-base text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        <h3 className="font-semibold text-base text-foreground tracking-[-0.5px]" style={{
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
                                           {goal.title}
                                         </h3>
-                                        {goal.enterprise && <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        {goal.enterprise && <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs tracking-[-0.5px]" style={{
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
                                             Enterprise
                                           </Badge>}
                                       </div>
-                                      <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                      <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]" style={{
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
                                         {goal.description}
                                       </p>
                                     </div>
@@ -331,24 +337,34 @@ export function CampaignCreationWizard({
                   {/* Step 2: Budget & Targeting */}
                   {currentStep === 2 && <div className="space-y-6">
                       <div className="text-center mb-8">
-                        <h1 className="text-2xl font-bold text-foreground mb-2 tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <h1 className="text-2xl font-bold text-foreground mb-2 tracking-[-0.5px]" style={{
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
                           Budget & Targeting
                         </h1>
-                        <p className="text-muted-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <p className="text-muted-foreground tracking-[-0.5px]" style={{
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
                           Set your campaign budget and target platforms.
                         </p>
                       </div>
 
                       {/* Budget Section */}
                       <div className="space-y-4">
-                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Budget Settings</h3>
+                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
+                      fontFamily: 'Inter, sans-serif'
+                    }}>Budget Settings</h3>
                         
                         <FormField control={form.control} name="is_infinite_budget" render={({
                       field
                     }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Unlimited Budget</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>Unlimited Budget</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                                   No cap on campaign spending
                                 </p>
                               </div>
@@ -360,9 +376,13 @@ export function CampaignCreationWizard({
                         {!watchedValues.is_infinite_budget && <FormField control={form.control} name="budget" render={({
                       field
                     }) => <FormItem>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Total Budget ($)</FormLabel>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                        fontFamily: 'Inter, sans-serif'
+                      }}>Total Budget ($)</FormLabel>
                                 <FormControl>
-                                  <Input type="number" placeholder="10000" className="bg-background border-border tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
+                                  <Input type="number" placeholder="10000" className="bg-background border-border tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }} {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>} />}
@@ -370,12 +390,18 @@ export function CampaignCreationWizard({
                         <FormField control={form.control} name="rpm_rate" render={({
                       field
                     }) => <FormItem>
-                              <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>CPM Rate ($)</FormLabel>
-                              <p className="text-xs text-muted-foreground mb-2 tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                        fontFamily: 'Inter, sans-serif'
+                      }}>CPM Rate ($)</FormLabel>
+                              <p className="text-xs text-muted-foreground mb-2 tracking-[-0.3px]" style={{
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
                                 Cost per 1,000 views paid to creators
                               </p>
                               <FormControl>
-                                <Input type="number" placeholder="5" className="bg-background border-border tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
+                                <Input type="number" placeholder="5" className="bg-background border-border tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>} />
@@ -383,7 +409,9 @@ export function CampaignCreationWizard({
 
                       {/* Platform Targeting */}
                       <div className="space-y-4">
-                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Platform Targeting</h3>
+                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
+                      fontFamily: 'Inter, sans-serif'
+                    }}>Platform Targeting</h3>
                         
                         <FormField control={form.control} name="allowed_platforms" render={({
                       field
@@ -412,7 +440,9 @@ export function CampaignCreationWizard({
                                           {isSelected && <Check className="w-3 h-3 text-white" />}
                                         </div>
                                         <img src={platform.logo} alt={platform.label} className="w-6 h-6 object-contain" />
-                                        <span className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        <span className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
                                           {platform.label}
                                         </span>
                                       </button>;
@@ -425,14 +455,20 @@ export function CampaignCreationWizard({
 
                       {/* Privacy Settings */}
                       <div className="space-y-4">
-                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Access Settings</h3>
+                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
+                      fontFamily: 'Inter, sans-serif'
+                    }}>Access Settings</h3>
                         
                         <FormField control={form.control} name="is_private" render={({
                       field
                     }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Private Campaign</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>Private Campaign</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                                   Only accessible via invite code
                                 </p>
                               </div>
@@ -444,9 +480,13 @@ export function CampaignCreationWizard({
                         {watchedValues.is_private && <FormField control={form.control} name="access_code" render={({
                       field
                     }) => <FormItem>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Access Code</FormLabel>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                        fontFamily: 'Inter, sans-serif'
+                      }}>Access Code</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="BRAND2024" className="bg-background border-border uppercase tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
+                                  <Input placeholder="BRAND2024" className="bg-background border-border uppercase tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }} {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>} />}
@@ -455,8 +495,12 @@ export function CampaignCreationWizard({
                       field
                     }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Require Application</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>Require Application</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                                   Creators must apply to join
                                 </p>
                               </div>
@@ -558,19 +602,27 @@ export function CampaignCreationWizard({
             {/* Bottom Action Bar */}
             <div className="border-t border-border px-8 lg:px-16 py-4 bg-background">
               <div className="max-w-2xl mx-auto flex items-center justify-between">
-                <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{
+                fontFamily: 'Inter, sans-serif'
+              }}>
                   <Bookmark className="h-4 w-4" />
                   Save as Draft
                 </Button>
 
                 <div className="flex items-center gap-3">
-                  {currentStep > 1 && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} className="tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  {currentStep > 1 && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} className="tracking-[-0.5px]" style={{
+                  fontFamily: 'Inter, sans-serif'
+                }}>
                       Back
                     </Button>}
                   
-                  {currentStep < 3 ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  {currentStep < 3 ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
+                  fontFamily: 'Inter, sans-serif'
+                }}>
                       Continue
-                    </Button> : <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    </Button> : <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
+                  fontFamily: 'Inter, sans-serif'
+                }}>
                       {isSubmitting ? "Creating..." : "Finish"}
                     </Button>}
                 </div>
@@ -583,7 +635,9 @@ export function CampaignCreationWizard({
             {/* Preview Header */}
             <div className="px-6 py-4 border-b border-border flex items-center justify-center gap-2 text-muted-foreground">
               <Eye className="h-4 w-4" />
-              <span className="text-sm font-medium tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Preview</span>
+              <span className="text-sm font-medium tracking-[-0.5px]" style={{
+              fontFamily: 'Inter, sans-serif'
+            }}>Preview</span>
             </div>
 
             {/* Preview Content */}
@@ -591,47 +645,37 @@ export function CampaignCreationWizard({
               {/* Campaign Preview Card */}
               <div className="rounded-xl overflow-hidden">
                 {/* Banner Area */}
-                {bannerPreview ? (
-                  <div className="h-28 relative">
-                    <img 
-                      src={bannerPreview} 
-                      alt="Campaign banner" 
-                      className="w-full h-full object-cover"
-                    />
+                {bannerPreview ? <div className="h-28 relative">
+                    <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
                     <div className="absolute bottom-3 left-3">
-                      {brandLogoUrl ? (
-                        <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
+                      {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" /> : <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
                           <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
-                        </div>
-                      )}
+                        </div>}
                     </div>
-                  </div>
-                ) : (
-                  <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d] flex items-end p-3">
-                    {brandLogoUrl ? (
-                      <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
+                  </div> : <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d] flex items-end p-3">
+                    {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background shadow-lg" /> : <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shadow-lg">
                         <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </div>}
+                  </div>}
               </div>
 
               {/* Campaign Info */}
               <div className="mt-4 space-y-4">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
+                  fontFamily: 'Inter, sans-serif'
+                }}>
                     {watchedValues.title || "Untitled"}
                   </h3>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
                       Draft
                     </Badge>
-                    <Badge variant="outline" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <Badge variant="outline" className="text-xs tracking-[-0.5px]" style={{
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
                       Clipping
                     </Badge>
                   </div>
@@ -640,26 +684,24 @@ export function CampaignCreationWizard({
                 {/* Progress Indicator */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <span className="text-muted-foreground tracking-[-0.5px]" style={{
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
                       Step {currentStep}: {STEPS[currentStep - 1]?.label}
                     </span>
                   </div>
                   <div className="h-1 bg-muted rounded-full overflow-hidden">
                     <div className="h-full bg-primary transition-all duration-300" style={{
-                      width: `${getStepProgress()}%`
-                    }} />
+                    width: `${getStepProgress()}%`
+                  }} />
                   </div>
                 </div>
 
                 {/* Pricing Embed */}
                 <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
-                  <iframe 
-                    src="https://joinvirality.com/pickplan-3" 
-                    className="w-full border-0" 
-                    style={{ height: '350px' }}
-                    scrolling="no"
-                    title="Pricing Plans" 
-                  />
+                  <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{
+                  height: '350px'
+                }} scrolling="no" title="Pricing Plans" />
                 </div>
 
               </div>
