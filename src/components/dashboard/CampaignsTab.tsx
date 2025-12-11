@@ -564,9 +564,11 @@ export function CampaignsTab({
             <img src={discordWhiteIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Start Learning</h3>
+            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Join Discord </h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-              Everything you need to master organic marketing for your business.
+              
+Connect with our community and be the first to
+know about new campaigns.   
             </p>
           </div>
         </button>
@@ -576,9 +578,9 @@ export function CampaignsTab({
             <img src={settingsCinematicIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Launch Campaign</h3>
+            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Connect Accounts </h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-              Connect with Virality's vetted network of video editors, clippers, and themepages
+              Link the social media accounts where you post content to join opportunities       
             </p>
           </div>
         </button>
@@ -588,9 +590,11 @@ export function CampaignsTab({
             <img src={creditCardIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Discover Winning Content</h3>
+            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Manage Payouts </h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-              Spy on your competitor's Viral videos through our curated content library
+              Set up your wallet
+and cash out your earnings
+
             </p>
           </div>
         </button>
