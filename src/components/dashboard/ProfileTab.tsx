@@ -778,13 +778,13 @@ export function ProfileTab() {
                             </div>
                             {/* Campaign count below username */}
                             <div className="flex items-center gap-1.5 mt-1.5 ml-7">
-                              <span className="text-[11px] text-muted-foreground/70" style={{
+                              <span className="text-[11px] text-foreground" style={{
                           fontFamily: 'Inter',
                           letterSpacing: '-0.3px'
                         }}>
                                 {connectedCampaigns.length} campaign{connectedCampaigns.length !== 1 ? 's' : ''} linked
                               </span>
-                              <ChevronDown className="w-3 h-3 text-muted-foreground/70" />
+                              <ChevronDown className="w-3 h-3 text-foreground" />
                             </div>
                           </div>
                         </PopoverTrigger>
@@ -1254,7 +1254,7 @@ export function ProfileTab() {
                           {campaign.brand_name?.[0]?.toUpperCase()}
                         </span>
                       </div>}
-                    <div className="flex-1 text-center">
+                    <div className="flex-1 flex items-center">
                       <p className="font-medium text-sm" style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}>{campaign.title}</p>
                     </div>
                     {isLinked ? <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }} onClick={() => handleUnlinkCampaign(linkedConnection.connection_id, campaign.title)}>
