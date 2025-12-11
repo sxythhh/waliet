@@ -244,10 +244,10 @@ export function AddSocialAccountDialog({
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
         <div className="flex flex-col">
           {/* Embed Section */}
-          <div className="w-full h-[200px] border-b border-border">
+          <div className="w-full h-[320px] border-b border-border">
             <iframe 
               src="https://joinvirality.com/accounts" 
               className="w-full h-full"
