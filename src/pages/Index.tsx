@@ -72,7 +72,7 @@ export default function Index() {
       {/* Embedded Content */}
       <div className="flex-1 pt-14">
         <iframe
-          src="https://virality.gg"
+          src="https://join.virality.gg"
           className="w-full h-full border-0"
           title="Virality"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
