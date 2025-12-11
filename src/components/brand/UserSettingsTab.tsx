@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Settings, Building2, Globe, Folder, ExternalLink, Plus } from "lucide-react";
+import { Settings, Globe, Folder, ExternalLink, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -195,10 +195,7 @@ export function UserSettingsTab() {
               Create and manage brand workspaces
             </p>
           </div>
-          <Button variant="outline" className="w-full h-11 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5" onClick={() => setShowCreateBrandDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Brand Workspace
-          </Button>
+          
         </div>}
 
       {/* Billing Information */}
@@ -214,7 +211,7 @@ export function UserSettingsTab() {
           {/* Legal Business Name */}
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground flex items-center gap-2 tracking-[-0.5px]">
-              <Building2 className="h-3.5 w-3.5" />
+              
               Legal Business Name
             </Label>
             <Input value={profile.legal_business_name} onChange={e => setProfile({
