@@ -6,18 +6,15 @@ import tiktokIcon from "@/assets/tiktok-logo-black.png";
 import instagramIcon from "@/assets/instagram-logo-new.png";
 import youtubeIcon from "@/assets/youtube-logo-new.png";
 import xIcon from "@/assets/x-logo.png";
-
 interface ConnectedAccount {
   id: string;
   platform: string;
   username: string;
 }
-
 interface AssetLink {
   label: string;
   url: string;
 }
-
 interface Campaign {
   id: string;
   title: string;
@@ -38,7 +35,6 @@ interface Campaign {
   asset_links?: AssetLink[] | null;
   requirements?: string[] | null;
 }
-
 interface CampaignDetailsDialogProps {
   campaign: Campaign | null;
   open: boolean;
@@ -47,14 +43,12 @@ interface CampaignDetailsDialogProps {
   onConnectAccount?: () => void;
   onManageAccount?: (account: ConnectedAccount) => void;
 }
-
 const platformIcons: Record<string, string> = {
   tiktok: tiktokIcon,
   instagram: instagramIcon,
   youtube: youtubeIcon,
   x: xIcon
 };
-
 const calculateTimeAgo = (createdAt: string) => {
   const now = new Date();
   const created = new Date(createdAt);
@@ -64,7 +58,6 @@ const calculateTimeAgo = (createdAt: string) => {
   if (diffDays > 0) return `${diffDays}d ago`;
   return `${diffHours}h ago`;
 };
-
 const calculateDaysUntilEnd = (endDate: string | null) => {
   if (!endDate) return null;
   const now = new Date();
@@ -73,7 +66,6 @@ const calculateDaysUntilEnd = (endDate: string | null) => {
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   return diffDays > 0 ? diffDays : 0;
 };
-
 const getNextPayoutDate = () => {
   const now = new Date();
   const dayOfWeek = now.getDay();
@@ -83,14 +75,19 @@ const getNextPayoutDate = () => {
   const nextTuesday = new Date(now);
   nextTuesday.setDate(now.getDate() + daysUntilTuesday);
   nextTuesday.setHours(12, 0, 0, 0);
-  return { date: nextTuesday, daysUntil: daysUntilTuesday };
+  return {
+    date: nextTuesday,
+    daysUntil: daysUntilTuesday
+  };
 };
-
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 };
-
 export function CampaignDetailsDialog({
   campaign,
   open,
@@ -101,7 +98,6 @@ export function CampaignDetailsDialog({
 }: CampaignDetailsDialogProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   if (!campaign) return null;
-  
   const daysUntilEnd = calculateDaysUntilEnd(campaign.end_date);
   const timeAgo = calculateTimeAgo(campaign.created_at);
   const hasConnectedAccounts = campaign.connected_accounts && campaign.connected_accounts.length > 0;
@@ -109,20 +105,22 @@ export function CampaignDetailsDialog({
   const hasRequirements = campaign.requirements && campaign.requirements.length > 0;
   const nextPayout = getNextPayoutDate();
   const startDate = campaign.start_date || campaign.created_at;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8">
         {/* Header */}
         <div className="flex items-start gap-4 mb-6">
-          {campaign.brand_logo_url && (
-            <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border/50 bg-muted">
+          {campaign.brand_logo_url && <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border/50 bg-muted">
               <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
-            </div>
-          )}
+            </div>}
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>{campaign.brand_name}</h2>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+            <h2 className="text-lg font-semibold mb-1" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>{campaign.brand_name}</h2>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
               <span>Started {formatDate(startDate)}</span>
               <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
               <span>{timeAgo}</span>
@@ -134,27 +132,31 @@ export function CampaignDetailsDialog({
         <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#2060df]/10 via-[#4f89ff]/5 to-transparent">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground mb-0.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Next Payout</p>
-              <p className="text-sm font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-                {nextPayout.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+              <p className="text-xs text-muted-foreground mb-0.5" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Next Payout</p>
+              <p className="text-sm font-semibold" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.5px'
+            }}>
+                {nextPayout.date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric'
+              })}
               </p>
             </div>
             <div className="text-right">
               <div className="flex items-center gap-1.5">
                 <div className="flex gap-0.5">
-                  {[...Array(7)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-1.5 h-6 rounded-full transition-all ${
-                        i < (7 - nextPayout.daysUntil) 
-                          ? 'bg-[#2060df]' 
-                          : 'bg-muted-foreground/20'
-                      }`}
-                    />
-                  ))}
+                  {[...Array(7)].map((_, i) => <div key={i} className={`w-1.5 h-6 rounded-full transition-all ${i < 7 - nextPayout.daysUntil ? 'bg-[#2060df]' : 'bg-muted-foreground/20'}`} />)}
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              <p className="text-xs text-muted-foreground mt-1" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
                 {nextPayout.daysUntil === 1 ? 'Tomorrow' : `${nextPayout.daysUntil} days`}
               </p>
             </div>
@@ -164,91 +166,80 @@ export function CampaignDetailsDialog({
         {/* Stats Grid */}
         <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl bg-muted/30 mb-6">
           <div className="text-center">
-            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Ends</p>
-            <p className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>{daysUntilEnd !== null ? `${daysUntilEnd}d` : "—"}</p>
+            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
+            fontFamily: 'Inter'
+          }}>Ends</p>
+            <p className="font-semibold text-sm" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>{daysUntilEnd !== null ? `${daysUntilEnd}d` : "—"}</p>
           </div>
 
           <div className="text-center">
-            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Language</p>
-            <p className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>English</p>
+            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
+            fontFamily: 'Inter'
+          }}>Language</p>
+            <p className="font-semibold text-sm" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>English</p>
           </div>
 
           <div className="text-center">
-            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Platforms</p>
+            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
+            fontFamily: 'Inter'
+          }}>Platforms</p>
             <div className="flex justify-center gap-2 mt-1.5">
-              {campaign.allowed_platforms?.map(platform => (
-                <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-6 h-6" />
-              ))}
+              {campaign.allowed_platforms?.map(platform => <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-6 h-6" />)}
             </div>
           </div>
 
           <div className="text-center">
-            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Pay Type</p>
-            <p className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Per view</p>
+            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
+            fontFamily: 'Inter'
+          }}>Pay Type</p>
+            <p className="font-semibold text-sm" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>Per view</p>
           </div>
 
           <div className="text-center">
-            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Per 1M Views</p>
-            <p className="font-semibold text-sm text-[#2060df]" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>${(campaign.rpm_rate * 1000).toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
+            fontFamily: 'Inter'
+          }}>Per 1M Views</p>
+            <p className="font-semibold text-sm text-[#2060df]" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>${(campaign.rpm_rate * 1000).toLocaleString()}</p>
           </div>
         </div>
 
         {/* Connected Accounts Section */}
-        {(onConnectAccount || onManageAccount) && (
-          <div className="mb-6 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+        {(onConnectAccount || onManageAccount) && <div className="mb-6 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold text-sm">Your Connected Accounts</h4>
-              {onConnectAccount && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={onConnectAccount}
-                  className="gap-1.5 h-8 text-xs"
-                >
+              {onConnectAccount && <Button variant="ghost" size="sm" onClick={onConnectAccount} className="gap-1.5 h-8 text-xs">
                   <Plus className="w-3.5 h-3.5" />
                   Connect Account
-                </Button>
-              )}
+                </Button>}
             </div>
             
-            {hasConnectedAccounts ? (
-              <div className="flex flex-wrap gap-2">
-                {campaign.connected_accounts!.map(account => (
-                  <button
-                    key={account.id}
-                    onClick={() => onManageAccount?.(account)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-background hover:bg-muted transition-colors cursor-pointer"
-                  >
-                    <img 
-                      src={platformIcons[account.platform.toLowerCase()]} 
-                      alt={account.platform} 
-                      className="w-4 h-4" 
-                    />
+            {hasConnectedAccounts ? <div className="flex flex-wrap gap-2">
+                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-background hover:bg-muted transition-colors cursor-pointer">
+                    <img src={platformIcons[account.platform.toLowerCase()]} alt={account.platform} className="w-4 h-4" />
                     <span className="font-medium">{account.username}</span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
+                  </button>)}
+              </div> : <p className="text-sm text-muted-foreground">
                 No accounts connected. Connect an account to start earning.
-              </p>
-            )}
-          </div>
-        )}
+              </p>}
+          </div>}
 
         {/* Asset Links Section */}
-        {hasAssetLinks && (
-          <div className="mb-6">
+        {hasAssetLinks && <div className="mb-6">
             <h4 className="text-sm font-semibold mb-3">Campaign Assets</h4>
             <div className="grid grid-cols-2 gap-2">
-              {campaign.asset_links!.map((link, index) => (
-                <a
-                  key={index}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group"
-                >
+              {campaign.asset_links!.map((link, index) => <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
                   <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center shrink-0">
                     <Link2 className="w-5 h-5 text-[#2060df]" />
                   </div>
@@ -257,35 +248,25 @@ export function CampaignDetailsDialog({
                     <p className="text-xs text-muted-foreground truncate">{link.url}</p>
                   </div>
                   <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
-                </a>
-              ))}
+                </a>)}
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Requirements Section */}
-        {hasRequirements && (
-          <div className="mb-6">
+        {hasRequirements && <div className="mb-6">
             <h4 className="text-sm font-semibold mb-3">Campaign Requirements</h4>
             <div className="space-y-2">
-              {campaign.requirements!.map((req, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-start gap-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]"
-                >
+              {campaign.requirements!.map((req, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
                   <div className="w-6 h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-xs font-semibold shrink-0 mt-0.5">
                     {index + 1}
                   </div>
                   <p className="text-sm leading-relaxed">{req}</p>
-                </div>
-              ))}
+                </div>)}
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* What to include Section */}
-        {campaign.hashtags && campaign.hashtags.length > 0 && (
-          <div className="mb-6 pt-6 border-t border-border">
+        {campaign.hashtags && campaign.hashtags.length > 0 && <div className="mb-6 pt-6 border-t border-border">
             <h4 className="text-xl font-bold mb-4">What to include</h4>
             <div className="flex items-start gap-3">
               <MessageSquare className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -297,12 +278,10 @@ export function CampaignDetailsDialog({
                 </p>
               </div>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Campaign Link Card */}
-        {campaign.embed_url && (
-          <div className="mb-6 p-4 rounded-xl border border-border">
+        {campaign.embed_url && <div className="mb-6 p-4 rounded-xl border border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -317,62 +296,15 @@ export function CampaignDetailsDialog({
                 <ExternalLink className="w-5 h-5 text-muted-foreground hover:text-foreground" />
               </a>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Campaigns on Vyro Section */}
-        <div className="mb-6 pt-6 border-t border-border">
-          <p className="text-xs font-semibold text-muted-foreground tracking-wider mb-2">CAMPAIGNS ON VYRO</p>
-          <h4 className="text-xl font-bold mb-6">How it works</h4>
-          
-          <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <CheckCircle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-sm mb-1">Clip approval</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  After you post, clients review to confirm your clip complies with all stated requirements, in its discretion. Only approved clips count toward your views, so be sure to follow all of the campaign instructions.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <TrendingUp className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-sm mb-1">View requirements</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  A minimum of 1,000 total views is required to be eligible for payout. Views from all approved clips will be added together.
-                  <br />Max earnings per post: $1,000
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <AlertTriangle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-sm mb-1">No botting, stealing, or reposting</p>
-                <ul className="text-sm text-muted-foreground leading-relaxed list-disc list-inside space-y-1">
-                  <li>Using bots to inflate views is strictly prohibited and will result in a ban.</li>
-                  <li>Clips must be your own. Posting someone else's clips is not allowed.</li>
-                  <li>Posting the same clip multiple times on the same social account is not allowed.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-sm text-center text-muted-foreground mt-6">
-            All posts must comply with the{" "}
-            <a href="#" className="underline text-foreground hover:text-primary">Content Requirements.</a>
-          </p>
-        </div>
+        
 
         {/* Join Button */}
-        {onJoin && (
-          <Button onClick={onJoin} className="w-full h-14 text-lg font-semibold rounded-full" size="lg">
+        {onJoin && <Button onClick={onJoin} className="w-full h-14 text-lg font-semibold rounded-full" size="lg">
             Join campaign
-          </Button>
-        )}
+          </Button>}
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
