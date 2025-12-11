@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon, PanelLeftClose, PanelLeft } from "lucide-react";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
@@ -108,6 +108,7 @@ export function AppSidebar() {
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
   useEffect(() => {
     if (user) {
@@ -322,89 +323,109 @@ export function AppSidebar() {
       </nav>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-56 lg:w-64 h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414]">
+      <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414] transition-all duration-200`}>
         {/* Logo */}
         <div className="flex items-center justify-between py-[10px] px-[10px]">
-          <div className="flex items-center gap-2.5">
+          <div className={`flex items-center gap-2.5 ${isCollapsed ? 'justify-center w-full' : ''}`}>
             <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
-            <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
-              VIRALITY
-            </span>
+            {!isCollapsed && (
+              <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
+                VIRALITY
+              </span>
+            )}
           </div>
-          <ThemeToggle />
+          {!isCollapsed && (
+            <button 
+              onClick={() => setIsCollapsed(true)}
+              className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-[#1f1f1f] text-neutral-400 hover:text-white transition-colors"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Workspace Toggle */}
-        <div className="px-[5px] py-[5px]">
-          <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
-            <PopoverTrigger asChild>
-              <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors hover:bg-[#0e0e0e] rounded-md">
-                <div className="flex items-center gap-2">
-                  {isCreatorMode ? <Avatar className="w-6 h-6">
+        {!isCollapsed ? (
+          <div className="px-[5px] py-[5px]">
+            <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
+              <PopoverTrigger asChild>
+                <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors hover:bg-[#0e0e0e] rounded-md">
+                  <div className="flex items-center gap-2">
+                    {isCreatorMode ? <Avatar className="w-6 h-6">
+                        <AvatarImage src={avatarUrl || undefined} />
+                        <AvatarFallback className="bg-[#1f1f1f] text-[10px] text-neutral-400">
+                          {displayName?.charAt(0)?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
+                          <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                        </div>}
+                    <p className="text-xs font-medium text-white truncate max-w-[120px] tracking-[-0.5px]">{getWorkspaceDisplayName()}</p>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1.5 bg-[#141414] border-0" align="start" sideOffset={4}>
+                <div className="space-y-0.5 max-h-[400px] overflow-y-auto font-inter tracking-[-0.5px]">
+                  <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
+                    <Avatar className="w-5 h-5">
                       <AvatarImage src={avatarUrl || undefined} />
                       <AvatarFallback className="bg-[#1f1f1f] text-[10px] text-neutral-400">
                         {displayName?.charAt(0)?.toUpperCase() || 'U'}
                       </AvatarFallback>
-                    </Avatar> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
-                        <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-                      </div>}
-                  <p className="text-xs font-medium text-white truncate max-w-[120px] tracking-[-0.5px]">{getWorkspaceDisplayName()}</p>
+                    </Avatar>
+                    <span className="text-sm font-medium text-white">Creator Dashboard</span>
+                  </button>
+                  {isAdmin && allBrands.length > 0 && <>
+                      
+                      {allBrands.map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
+                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                              <Building2 className="w-3 h-3 text-neutral-400" />
+                            </div>}
+                          <span className="text-sm font-medium text-white truncate">{brand.name}</span>
+                        </button>)}
+                    </>}
+                {!isAdmin && brandMemberships.length > 0 && <>
+                      <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
+                      {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
+                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                              <Building2 className="w-3 h-3 text-neutral-400" />
+                            </div>}
+                          <span className="text-sm font-medium text-white truncate">{membership.brands.name}</span>
+                        </button>)}
+                    </>}
+                  {!isAdmin && <>
+                      
+                      <button onClick={() => {
+                    setWorkspaceOpen(false);
+                    setShowCreateBrandDialog(true);
+                  }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
+                        <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
+                          <Plus className="w-3 h-3" />
+                        </div>
+                        <span className="text-sm font-medium">Create Brand</span>
+                      </button>
+                    </>}
                 </div>
-                <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1.5 bg-[#141414] border-0" align="start" sideOffset={4}>
-              <div className="space-y-0.5 max-h-[400px] overflow-y-auto font-inter tracking-[-0.5px]">
-                <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
-                  <Avatar className="w-5 h-5">
-                    <AvatarImage src={avatarUrl || undefined} />
-                    <AvatarFallback className="bg-[#1f1f1f] text-[10px] text-neutral-400">
-                      {displayName?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium text-white">Creator Dashboard</span>
-                </button>
-                {isAdmin && allBrands.length > 0 && <>
-                    
-                    {allBrands.map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
-                        {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
-                            <Building2 className="w-3 h-3 text-neutral-400" />
-                          </div>}
-                        <span className="text-sm font-medium text-white truncate">{brand.name}</span>
-                      </button>)}
-                  </>}
-              {!isAdmin && brandMemberships.length > 0 && <>
-                    <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
-                    {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
-                        {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
-                            <Building2 className="w-3 h-3 text-neutral-400" />
-                          </div>}
-                        <span className="text-sm font-medium text-white truncate">{membership.brands.name}</span>
-                      </button>)}
-                  </>}
-                {!isAdmin && <>
-                    
-                    <button onClick={() => {
-                  setWorkspaceOpen(false);
-                  setShowCreateBrandDialog(true);
-                }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
-                      <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
-                        <Plus className="w-3 h-3" />
-                      </div>
-                      <span className="text-sm font-medium">Create Brand</span>
-                    </button>
-                  </>}
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        ) : (
+          <div className="px-2 py-2 flex justify-center">
+            <button 
+              onClick={() => setIsCollapsed(false)}
+              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#1f1f1f] text-neutral-400 hover:text-white transition-colors"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Main Navigation */}
         <nav className="flex-1 py-0 px-0">
           <div>
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center gap-2 px-3 py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`}>
+            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`} title={isCollapsed ? item.title : undefined}>
                   {item.tab === "campaigns" ? <div className="relative h-[21px] w-[21px]">
                       <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={webStoriesActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
@@ -427,7 +448,7 @@ export function AppSidebar() {
                       <img src={referralsInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={referralsActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.icon ? <item.icon className={`h-[21px] w-[21px] ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
-                  <span className="font-['Inter'] text-[14px] font-medium tracking-[-0.5px]">{item.title}</span>
+                  {!isCollapsed && <span className="font-['Inter'] text-[14px] font-medium tracking-[-0.5px]">{item.title}</span>}
                 </button>;
           })}
           </div>
@@ -439,21 +460,25 @@ export function AppSidebar() {
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-2">
+        <div className={`p-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
           <Popover>
             <PopoverTrigger asChild>
-              <button className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-[#141414] transition-colors">
-                <Avatar className="w-9 h-9">
+              <button className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full gap-3 p-2.5'} flex items-center rounded-lg hover:bg-[#141414] transition-colors`}>
+                <Avatar className={isCollapsed ? "w-8 h-8" : "w-9 h-9"}>
                   <AvatarImage src={avatarUrl || undefined} alt={displayName} />
                   <AvatarFallback className="bg-neutral-800 text-neutral-300 text-sm">
                     {getInitial()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">{displayName}</p>
-                  <p className="text-xs text-neutral-500 truncate font-inter tracking-[-0.5px]">{user?.email}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-neutral-500" />
+                {!isCollapsed && (
+                  <>
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">{displayName}</p>
+                      <p className="text-xs text-neutral-500 truncate font-inter tracking-[-0.5px]">{user?.email}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-neutral-500" />
+                  </>
+                )}
               </button>
             </PopoverTrigger>
             <PopoverContent 
