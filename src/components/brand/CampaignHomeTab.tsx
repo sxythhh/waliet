@@ -347,8 +347,8 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
             <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(stats.totalViews)}</p>
-              <div className={`text-xs px-2 py-1 rounded-full ${stats.viewsChangePercent >= 0 ? 'bg-[#173e23] text-[#4ade80] border-t border-[#35663b]' : 'bg-[#3e1717] text-[#f87171] border-t border-[#663535]'}`}>
+              <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews)}</p>
+              <div className={`text-xs px-2 py-1 rounded-full tracking-[-0.5px] ${stats.viewsChangePercent >= 0 ? 'bg-[#173e23] text-[#4ade80]' : 'bg-[#3e1717] text-[#f87171]'}`}>
                 {stats.viewsChangePercent >= 0 ? '+' : ''}{stats.viewsChangePercent.toFixed(1)}%
               </div>
             </div>
@@ -371,7 +371,7 @@ export function CampaignHomeTab({ campaignId, brandId }: CampaignHomeTabProps) {
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Payouts</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
-              <div className={`text-xs px-2 py-1 rounded-full ${stats.payoutsChangePercent >= 0 ? 'bg-[#173e23] text-[#4ade80] border-t border-[#35663b]' : 'bg-[#3e1717] text-[#f87171] border-t border-[#663535]'}`}>
+              <div className={`text-xs px-2 py-1 rounded-full tracking-[-0.5px] ${stats.payoutsChangePercent >= 0 ? 'bg-[#173e23] text-[#4ade80]' : 'bg-[#3e1717] text-[#f87171]'}`}>
                 {stats.payoutsChangePercent >= 0 ? '+' : ''}{stats.payoutsChangePercent.toFixed(1)}%
               </div>
             </div>
