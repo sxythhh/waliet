@@ -250,53 +250,37 @@ export function DiscoverTab() {
             {/* Search Input */}
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-              <Input 
-                placeholder="Search campaigns..." 
-                value={searchQuery} 
-                onChange={e => setSearchQuery(e.target.value)} 
-                className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-muted-foreground/20" 
-              />
+              <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-muted-foreground/20" />
             </div>
 
             {/* Platform Pills */}
             <div className="flex items-center gap-1.5">
-              {[
-                { value: "all", label: "All" },
-                { value: "tiktok", label: "TikTok" },
-                { value: "instagram", label: "Instagram" },
-                { value: "youtube", label: "YouTube" }
-              ].map((platform) => (
-                <button
-                  key={platform.value}
-                  onClick={() => setSelectedPlatform(platform.value === "all" ? null : platform.value)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    (selectedPlatform === null && platform.value === "all") || selectedPlatform === platform.value
-                      ? "bg-foreground text-background"
-                      : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
-                  }`}
-                >
+              {[{
+            value: "all",
+            label: "All"
+          }, {
+            value: "tiktok",
+            label: "TikTok"
+          }, {
+            value: "instagram",
+            label: "Instagram"
+          }, {
+            value: "youtube",
+            label: "YouTube"
+          }].map(platform => <button key={platform.value} onClick={() => setSelectedPlatform(platform.value === "all" ? null : platform.value)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedPlatform === null && platform.value === "all" || selectedPlatform === platform.value ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
                   {platform.label}
-                </button>
-              ))}
+                </button>)}
             </div>
 
             {/* Filter Toggle */}
-            <button 
-              onClick={() => setFiltersOpen(!filtersOpen)} 
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                filtersOpen 
-                  ? "bg-foreground text-background" 
-                  : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
-              }`}
-            >
+            <button onClick={() => setFiltersOpen(!filtersOpen)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filtersOpen ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
               <SlidersHorizontal className="h-3.5 w-3.5" />
               Filters
             </button>
           </div>
 
           {/* Expanded Filters */}
-          {filtersOpen && (
-            <div className="flex flex-wrap gap-2 items-center pt-1">
+          {filtersOpen && <div className="flex flex-wrap gap-2 items-center pt-1">
               {/* Sort By */}
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-auto h-8 px-3 border-0 bg-muted/30 rounded-md text-xs gap-1.5 focus:ring-0">
@@ -340,8 +324,7 @@ export function DiscoverTab() {
                   <SelectItem value="ended">Ended</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-          )}
+            </div>}
         </div>
 
         {/* Campaigns and Bounties Grid */}
@@ -389,24 +372,28 @@ export function DiscoverTab() {
                           <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline">
                             {campaign.title}
                           </h3>
-                          {isEnded ? (
-                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{ backgroundColor: '#b60b0b', borderTop: '1px solid #ed3030', borderRadius: '20px' }}>
+                          {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                        backgroundColor: '#b60b0b',
+                        borderTop: '1px solid #ed3030',
+                        borderRadius: '20px'
+                      }}>
                               <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
                               Ended
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{ backgroundColor: '#1f6d36', borderTop: '1px solid #3c8544', borderRadius: '20px' }}>
+                            </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                        backgroundColor: '#1f6d36',
+                        borderTop: '1px solid #3c8544',
+                        borderRadius: '20px'
+                      }}>
                               <img src={checkCircleIcon} alt="" className="h-2.5 w-2.5" />
                               Active
-                            </span>
-                          )}
+                            </span>}
                         </div>
                         <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
                       </div>
                     </div>
 
                     {/* Budget Section */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-card">
+                    <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
                       {campaign.is_infinite_budget ? <>
                           <div className="flex items-baseline justify-between">
                             <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
