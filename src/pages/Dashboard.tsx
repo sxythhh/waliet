@@ -138,16 +138,16 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <AppSidebar />
       
       {/* Main Content */}
-      <main className="flex-1 min-h-screen">
+      <main className="flex-1 h-screen overflow-hidden">
         <div className={`
-          pt-14 pb-20 md:pt-0 md:pb-0
+          pt-14 pb-20 md:pt-0 md:pb-0 h-full
           ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" 
-            ? "" 
-            : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"
+            ? "overflow-auto" 
+            : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8 overflow-auto"
           }
         `}>
           {renderContent()}

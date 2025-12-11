@@ -113,10 +113,10 @@ export function BrandCampaignDetailView({
         <p className="text-muted-foreground">Campaign not found</p>
       </div>;
   }
-  return <div className="p-[10px] h-full">
+  return <div className="p-[10px] h-full flex flex-col">
       <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
         {/* Header with back button and campaign title - Fixed */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background/80 backdrop-blur-xl">
+        <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background">
           <div className="flex items-center gap-0">
             <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 hover:bg-transparent">
               <ArrowLeft className="h-4 w-4" />
@@ -156,7 +156,7 @@ export function BrandCampaignDetailView({
       }} />}
 
         {/* Tab Navigation - Horizontal bottom style */}
-        <div className="sticky top-[53px] z-10 border-b border-border bg-background/80 backdrop-blur-xl">
+        <div className="flex-shrink-0 border-b border-border bg-background">
           <nav className="flex gap-0">
             {detailTabs.map(tab => <button key={tab.id} onClick={() => setActiveDetailTab(tab.id)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
