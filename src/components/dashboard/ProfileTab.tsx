@@ -568,37 +568,31 @@ export function ProfileTab() {
             return <div key={account.id} className="group relative p-4 rounded-xl bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-all duration-300">
                     {/* Main Layout */}
                     <div className="flex items-center gap-4">
-                      {/* Platform Icon - Larger */}
-                      <div 
-                        onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
-                        className="w-14 h-14 rounded-2xl bg-foreground/5 dark:bg-foreground/10 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
-                      >
-                        <div className="w-8 h-8">
-                          {getPlatformIcon(account.platform)}
-                        </div>
-                      </div>
-                      
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        {/* Username Row */}
+                        {/* Username Row with Platform Icon */}
                         <div 
                           onClick={() => account.account_link && window.open(account.account_link, '_blank')} 
-                          className="cursor-pointer group/link inline-flex items-center gap-2"
+                          className="cursor-pointer group/link inline-flex items-center gap-2.5"
                         >
-                          <span className="font-semibold text-base text-foreground group-hover/link:underline tracking-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                          <div className="w-6 h-6 flex-shrink-0">
+                            {getPlatformIcon(account.platform)}
+                          </div>
+                          <span className="font-semibold text-base text-foreground group-hover/link:underline" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                             {account.username}
                           </span>
                           <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-opacity" />
                         </div>
                         
                         {/* Linked Campaigns Row */}
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <div className="flex items-center gap-2 mt-3 flex-wrap">
                           {connectedCampaigns.length > 0 ? (
                             <>
                               {connectedCampaigns.slice(0, 3).map(({ campaign }) => (
                                 <div 
                                   key={campaign.id} 
                                   className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-[11px]"
+                                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                                 >
                                   {campaign.brand_logo_url && (
                                     <img 
@@ -607,33 +601,46 @@ export function ProfileTab() {
                                       className="w-4 h-4 rounded-full object-cover" 
                                     />
                                   )}
-                                  <span className="font-medium tracking-tight text-foreground">{campaign.title}</span>
+                                  <span className="font-medium text-foreground">{campaign.title}</span>
                                 </div>
                               ))}
                               {connectedCampaigns.length > 3 && (
-                                <span className="text-[11px] text-muted-foreground">+{connectedCampaigns.length - 3} more</span>
+                                <span className="text-[11px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>+{connectedCampaigns.length - 3} more</span>
                               )}
+                              <button
+                                className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+                                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                                onClick={() => {
+                                  setSelectedAccountForManaging({
+                                    id: account.id,
+                                    username: account.username,
+                                    platform: account.platform,
+                                    account_link: account.account_link
+                                  });
+                                  setShowManageAccountDialog(true);
+                                }}
+                              >
+                                Manage
+                              </button>
                             </>
                           ) : (
-                            <span className="text-[11px] text-muted-foreground">No campaigns linked</span>
+                            <button
+                              className="group/link flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                              onClick={() => {
+                                setSelectedAccountForManaging({
+                                  id: account.id,
+                                  username: account.username,
+                                  platform: account.platform,
+                                  account_link: account.account_link
+                                });
+                                setShowManageAccountDialog(true);
+                              }}
+                            >
+                              <Link2 className="w-3.5 h-3.5 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                              <span className="text-[11px] text-muted-foreground group-hover/link:text-primary transition-colors">Link to campaign</span>
+                            </button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                            onClick={() => {
-                              setSelectedAccountForManaging({
-                                id: account.id,
-                                username: account.username,
-                                platform: account.platform,
-                                account_link: account.account_link
-                              });
-                              setShowManageAccountDialog(true);
-                            }}
-                          >
-                            <Link2 className="w-3 h-3 mr-1" />
-                            {connectedCampaigns.length > 0 ? 'Manage' : 'Link'}
-                          </Button>
                         </div>
                       </div>
                       
@@ -656,7 +663,7 @@ export function ProfileTab() {
                               <img src={demographicsIcon} alt="" className="w-4 h-4 opacity-80" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(2615%) hue-rotate(344deg) brightness(87%) contrast(93%)' }} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <span className="text-[11px] font-medium text-destructive block truncate">
+                              <span className="text-[11px] font-medium text-destructive block truncate" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                                 {demographicStatus === 'rejected' ? 'Resubmit' : 'Required'}
                               </span>
                               <span className="text-[10px] text-destructive/70">Tap to submit</span>
