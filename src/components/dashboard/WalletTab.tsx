@@ -30,6 +30,7 @@ import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import paypalLogo from "@/assets/paypal-logo.svg";
 import walletActiveIcon from "@/assets/wallet-active.svg";
+import checkCircleFilledIcon from "@/assets/check-circle-filled.svg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { P2PTransferDialog } from "@/components/P2PTransferDialog";
 interface WalletData {
@@ -1429,7 +1430,7 @@ export function WalletTab() {
 
       {/* Transaction Receipt Sheet */}
       <Sheet open={transactionSheetOpen} onOpenChange={setTransactionSheetOpen}>
-        <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0">
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Hero Header with Amount */}
               <div className="px-6 pt-8 pb-6 text-center border-b border-border/50">
@@ -1445,15 +1446,25 @@ export function WalletTab() {
                 <div className="text-sm text-muted-foreground mb-3">
                   {format(selectedTransaction.date, 'MMM dd, yyyy • h:mm a')}
                 </div>
-                {selectedTransaction.status && <Badge 
-                  variant={selectedTransaction.status === 'completed' ? 'default' : selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} 
-                  className="capitalize"
-                >
-                  {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
-                  {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-                  {selectedTransaction.status === 'completed' && <Check className="h-3 w-3 mr-1" />}
-                  {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
-                </Badge>}
+                {selectedTransaction.status && (
+                  selectedTransaction.status === 'completed' ? (
+                    <Badge 
+                      className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white"
+                    >
+                      <img src={checkCircleFilledIcon} alt="" className="h-3 w-3 mr-1" />
+                      {selectedTransaction.status}
+                    </Badge>
+                  ) : (
+                    <Badge 
+                      variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} 
+                      className="capitalize"
+                    >
+                      {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
+                      {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                      {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
+                    </Badge>
+                  )
+                )}
               </div>
 
               {/* Content */}
