@@ -189,9 +189,7 @@ export function ReferralsTab() {
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
-        <p className="text-muted-foreground text-sm">
-          Invite creators and earn up to ${totalPotentialPerReferral.toFixed(2)} per referral through milestone rewards.
-        </p>
+        
       </div>
 
       {/* Stats Grid */}
