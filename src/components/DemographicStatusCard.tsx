@@ -161,8 +161,8 @@ export function DemographicStatusCard({
       <div className="space-y-2">
         {/* Current Status */}
         <div className="flex items-center justify-between gap-2">
-          <Badge variant="outline" className={`text-[10px] font-medium px-1.5 py-0 ${statusConfig.color}`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotColor} mr-1`} />
+          <Badge variant="secondary" className={`text-[10px] font-medium px-1.5 py-0 border-0 ${statusConfig.color}`} style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+            <div className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotColor} mr-1 animate-pulse`} />
             {statusConfig.label}
           </Badge>
           {status === 'approved' && latestSubmission?.score && (
