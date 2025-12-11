@@ -233,12 +233,14 @@ export function DiscoverTab() {
   const platforms = ["TikTok", "Instagram", "YouTube"];
   const totalActiveCampaigns = activeCampaigns.length;
   const totalBounties = bounties.filter(b => b.status !== "ended").length;
-  return <div className="px-6 pt-8 pb-6 space-y-8">
-        {/* Header Section */}
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">Discover Opportunities</h1>
-          <p className="text-muted-foreground">Find campaigns and bounties that match your content style</p>
-        </div>
+  return <div className="h-full flex flex-col">
+        {/* Sticky Header and Filters */}
+        <div className="sticky top-0 z-20 bg-background px-6 pt-8 pb-4 space-y-6">
+          {/* Header Section */}
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight">Discover Opportunities</h1>
+            <p className="text-muted-foreground">Find campaigns and bounties that match your content style</p>
+          </div>
 
         {/* Quick Stats */}
         
@@ -326,7 +328,10 @@ export function DiscoverTab() {
               </Select>
             </div>}
         </div>
+        </div>
 
+        {/* Scrollable Campaigns Section */}
+        <div className="flex-1 overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
         {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             <Skeleton className="h-[350px] rounded-lg" />
@@ -504,6 +509,7 @@ export function DiscoverTab() {
                 </div>
               </div>}
           </div>}
+        </div>
 
       <JoinCampaignSheet campaign={selectedCampaign} open={sheetOpen} onOpenChange={setSheetOpen} />
       
