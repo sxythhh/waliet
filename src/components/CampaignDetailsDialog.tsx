@@ -92,7 +92,8 @@ const formatDate = (dateString: string) => {
 const getFaviconUrl = (url: string) => {
   try {
     const urlObj = new URL(url);
-    return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
+    // Use Clearbit for high-quality logos
+    return `https://logo.clearbit.com/${urlObj.hostname}`;
   } catch {
     return null;
   }
