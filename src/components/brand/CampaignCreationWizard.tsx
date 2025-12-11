@@ -633,7 +633,7 @@ export function CampaignCreationWizard({
           {/* Right Column - Preview Sidebar */}
           <div className="hidden lg:flex flex-col bg-muted/30 dark:bg-[#0f0f0f] border-l border-border">
             {/* Preview Header */}
-            <div className="px-6 py-4 border-b border-border flex items-center justify-center gap-2 text-muted-foreground">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-center gap-2 text-primary-foreground">
               <Eye className="h-4 w-4" />
               <span className="text-sm font-medium tracking-[-0.5px]" style={{
               fontFamily: 'Inter, sans-serif'
