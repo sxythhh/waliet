@@ -60,10 +60,34 @@ export function JoinCampaignSheet({
   }>({});
   const [submitting, setSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const navigate = useNavigate();
   const {
     theme
   } = useTheme();
+
+  // Helper to parse links in text
+  const parseTextWithLinks = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#4f89ff] hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
 
   // Check authentication when sheet opens
   useEffect(() => {
@@ -419,11 +443,33 @@ export function JoinCampaignSheet({
             </div>
           </div>
 
-          {/* Description */}
-          {campaign.description && <div>
-              <p className="text-sm text-slate-50 font-medium">{campaign.description}</p>
-            </div>}
-
+          {/* Description with expandable "Show more" */}
+          {campaign.description && (
+            <div className="space-y-2">
+              <div className="relative">
+                <div 
+                  className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all ${
+                    descriptionExpanded ? '' : 'max-h-[100px]'
+                  }`}
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                >
+                  {parseTextWithLinks(campaign.description)}
+                </div>
+                {!descriptionExpanded && campaign.description.length > 200 && (
+                  <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                )}
+              </div>
+              {campaign.description.length > 200 && (
+                <button
+                  onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                >
+                  {descriptionExpanded ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Budget & RPM */}
           {!campaign.is_infinite_budget}
@@ -434,73 +480,111 @@ export function JoinCampaignSheet({
               <span className="font-medium">View Campaign Details</span>
             </Button>}
 
-
-          {/* Account Selection or Create Account */}
-          {!isLoggedIn ? <div className="space-y-3">
+          {/* Account Selection or Create Account - only show for campaigns requiring application */}
+          {!isLoggedIn ? (
+            <div className="space-y-3">
               <div className="p-6 rounded-lg bg-muted/50 text-center space-y-4">
                 <p className="text-sm font-medium text-foreground">Join this campaign</p>
                 <p className="text-xs text-muted-foreground">Create an account to start earning from your content</p>
                 <Button onClick={() => {
-              onOpenChange(false);
-              navigate('/auth');
-            }} className="w-full">
+                  onOpenChange(false);
+                  navigate('/auth');
+                }} className="w-full">
                   Create Account
                 </Button>
               </div>
-            </div> : <div className="space-y-3">
+            </div>
+          ) : campaign.requires_application !== false ? (
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label>Select Social Accounts *</Label>
-                {socialAccounts.length > 0}
               </div>
-            {socialAccounts.length === 0 ? <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
-                <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
-                <p className="text-sm font-medium text-foreground">No available accounts</p>
-                <Button onClick={() => setShowAddAccountDialog(true)} size="sm" className="border-0" style={{
-              backgroundColor: '#1F1F1F'
-            }}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Account
-                </Button>
-              </div> : <div className="grid gap-2">
-                {socialAccounts.map(account => {
-              const platformIcon = getPlatformIcon(account.platform);
-              const isSelected = selectedAccounts.includes(account.id);
-              return <button key={account.id} type="button" onClick={() => toggleAccountSelection(account.id)} className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? "border-blue-500 bg-blue-500/10" : "border-border hover:border-muted-foreground/50 bg-card"}`}>
-                      {platformIcon && <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-blue-500" : "bg-muted"}`}>
-                          <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
-                        </div>}
-                      <div className="flex-1 text-left">
-                        <p className="font-medium text-sm">{account.username}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
-                      </div>
-                      {isSelected && <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>}
-                    </button>;
-            })}
-              </div>}
-            </div>}
+              {socialAccounts.length === 0 ? (
+                <div className="p-6 rounded-lg bg-muted/50 text-center space-y-3">
+                  <img src={emptyAccountsImage} alt="No accounts" className="w-20 h-20 mx-auto opacity-80 object-cover" />
+                  <p className="text-sm font-medium text-foreground">No available accounts</p>
+                  <Button onClick={() => setShowAddAccountDialog(true)} size="sm" className="border-0" style={{ backgroundColor: '#1F1F1F' }}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Account
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-2">
+                  {socialAccounts.map(account => {
+                    const platformIcon = getPlatformIcon(account.platform);
+                    const isSelected = selectedAccounts.includes(account.id);
+                    return (
+                      <button 
+                        key={account.id} 
+                        type="button" 
+                        onClick={() => toggleAccountSelection(account.id)} 
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? "border-blue-500 bg-blue-500/10" : "border-border hover:border-muted-foreground/50 bg-card"}`}
+                      >
+                        {platformIcon && (
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-blue-500" : "bg-muted"}`}>
+                            <img src={platformIcon} alt={account.platform} className="w-6 h-6" />
+                          </div>
+                        )}
+                        <div className="flex-1 text-left">
+                          <p className="font-medium text-sm">{account.username}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{account.platform}</p>
+                        </div>
+                        {isSelected && (
+                          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : null}
 
           {/* Application Questions - only show if logged in and campaign requires application */}
-          {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
+          {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => (
+            <div key={index} className="space-y-2">
               <Label htmlFor={`question-${index}`}>
                 {question} *
               </Label>
-              <Textarea id={`question-${index}`} value={answers[index] || ""} onChange={e => setAnswers({
-            ...answers,
-            [index]: e.target.value
-          })} placeholder="Your answer..." rows={3} className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none" />
-            </div>)}
+              <Textarea 
+                id={`question-${index}`} 
+                value={answers[index] || ""} 
+                onChange={e => setAnswers({
+                  ...answers,
+                  [index]: e.target.value
+                })} 
+                placeholder="Your answer..." 
+                rows={3} 
+                className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none" 
+              />
+            </div>
+          ))}
 
           {/* Submit Button - only show if logged in */}
-          {isLoggedIn && <div className="flex gap-2 pt-4">
-              <Button variant="outline" className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => onOpenChange(false)} disabled={submitting}>
+          {isLoggedIn && (
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                className="flex-1 bg-muted border-0 hover:bg-destructive/10 hover:text-destructive transition-colors" 
+                onClick={() => onOpenChange(false)} 
+                disabled={submitting}
+              >
                 Cancel
               </Button>
-              <Button className="flex-1" onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
-                {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
+              <Button 
+                className="flex-1" 
+                onClick={handleSubmit} 
+                disabled={submitting || (campaign.requires_application !== false && selectedAccounts.length === 0)}
+              >
+                {submitting 
+                  ? campaign.requires_application === false ? "Joining..." : "Submitting..." 
+                  : campaign.requires_application === false ? "Join Campaign" : "Submit Application"
+                }
               </Button>
-            </div>}
+            </div>
+          )}
         </div>
       </SheetContent>
 
