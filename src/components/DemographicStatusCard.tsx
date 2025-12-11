@@ -197,9 +197,9 @@ export function DemographicStatusCard({
 
         {/* Action Button */}
         <Button
-          variant={availability.canSubmit ? "default" : "outline"}
+          variant={availability.canSubmit ? "default" : "ghost"}
           size="sm"
-          className="w-full h-8"
+          className={`w-full h-8 ${!availability.canSubmit ? 'border-0 hover:bg-transparent cursor-default' : ''}`}
           style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
           disabled={!availability.canSubmit}
           onClick={onSubmitNew}
