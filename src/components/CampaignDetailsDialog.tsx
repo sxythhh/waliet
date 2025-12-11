@@ -232,7 +232,7 @@ export function CampaignDetailsDialog({
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
           }}>Platforms</p>
-            <div className="flex justify-center gap-2 mt-1.5">
+            <div className="flex justify-center gap-1 mt-1.5">
               {campaign.allowed_platforms?.map(platform => <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-6 h-6" />)}
             </div>
           </div>
