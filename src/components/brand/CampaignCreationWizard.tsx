@@ -22,7 +22,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
-  goal: z.enum(["attention", "leads", "conversions"]),
+  goal: z.enum(["attention", "leads", "conversions"]).optional(),
   description: z.string().trim().max(500).optional(),
   campaign_type: z.string().optional(),
   is_infinite_budget: z.boolean().default(false),
@@ -777,6 +777,12 @@ export function CampaignCreationWizard({
                       <Button 
                         type="button" 
                         onClick={async () => {
+                          // Skip validation for edit mode (existing campaigns may not have all new fields)
+                          if (isEditMode) {
+                            form.handleSubmit(onSubmit)();
+                            return;
+                          }
+                          // Validate for new campaigns
                           const isValid = await form.trigger();
                           if (!isValid) {
                             const errors = form.formState.errors;
