@@ -20,7 +20,6 @@ import tiktokLogo from "@/assets/tiktok-logo.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   goal: z.enum(["attention", "leads", "conversions"]).optional(),
@@ -44,7 +43,7 @@ const campaignSchema = z.object({
     url: z.string()
   })).default([]),
   requirements: z.array(z.string()).default([]),
-  application_questions: z.array(z.string().trim().min(1)).max(5, "Maximum 5 questions allowed").default([]),
+  application_questions: z.array(z.string().trim().min(1)).max(5, "Maximum 5 questions allowed").default([])
 }).refine(data => {
   if (data.is_private) {
     return data.access_code && data.access_code.length >= 6;
@@ -62,9 +61,7 @@ const campaignSchema = z.object({
   message: "Budget must be a positive number",
   path: ["budget"]
 });
-
 type CampaignFormValues = z.infer<typeof campaignSchema>;
-
 interface Campaign {
   id: string;
   title: string;
@@ -86,11 +83,13 @@ interface Campaign {
   status?: string;
   is_infinite_budget?: boolean;
   hashtags?: string[] | null;
-  asset_links?: { label: string; url: string }[] | null;
+  asset_links?: {
+    label: string;
+    url: string;
+  }[] | null;
   requirements?: string[] | null;
   application_questions?: string[] | null;
 }
-
 interface CampaignCreationWizardProps {
   brandId: string;
   brandName: string;
@@ -101,7 +100,6 @@ interface CampaignCreationWizardProps {
   campaign?: Campaign;
   onDelete?: () => void;
 }
-
 const STEPS = [{
   id: 1,
   label: "Your Goal"
@@ -112,7 +110,6 @@ const STEPS = [{
   id: 3,
   label: "Campaign Details"
 }];
-
 const GOALS = [{
   id: "attention",
   title: "Attention",
@@ -130,7 +127,6 @@ const GOALS = [{
   icon: TrendingUp,
   enterprise: true
 }];
-
 export function CampaignCreationWizard({
   brandId,
   brandName,
@@ -149,13 +145,14 @@ export function CampaignCreationWizard({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [shortimizeApiKey, setShortimizeApiKey] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isAdmin } = useAdminCheck();
-
+  const {
+    isAdmin
+  } = useAdminCheck();
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
       title: campaign?.title || "",
-      goal: (campaign?.category as "attention" | "leads" | "conversions") || "attention",
+      goal: campaign?.category as "attention" | "leads" | "conversions" || "attention",
       description: campaign?.description || "",
       campaign_type: campaign?.campaign_type || "clipping",
       is_infinite_budget: campaign?.is_infinite_budget || false,
@@ -171,29 +168,28 @@ export function CampaignCreationWizard({
       hashtags: campaign?.hashtags || [],
       asset_links: campaign?.asset_links || [],
       requirements: campaign?.requirements || [],
-      application_questions: campaign?.application_questions || [],
+      application_questions: campaign?.application_questions || []
     }
   });
-
   const [newAssetLabel, setNewAssetLabel] = useState("");
   const [newAssetUrl, setNewAssetUrl] = useState("");
   const [newRequirement, setNewRequirement] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
-
   const addAssetLink = () => {
     if (newAssetLabel.trim() && newAssetUrl.trim()) {
       const currentLinks = form.getValues("asset_links") || [];
-      form.setValue("asset_links", [...currentLinks, { label: newAssetLabel.trim(), url: newAssetUrl.trim() }]);
+      form.setValue("asset_links", [...currentLinks, {
+        label: newAssetLabel.trim(),
+        url: newAssetUrl.trim()
+      }]);
       setNewAssetLabel("");
       setNewAssetUrl("");
     }
   };
-
   const removeAssetLink = (index: number) => {
     const currentLinks = form.getValues("asset_links") || [];
     form.setValue("asset_links", currentLinks.filter((_, i) => i !== index));
   };
-
   const addRequirement = () => {
     if (newRequirement.trim()) {
       const currentReqs = form.getValues("requirements") || [];
@@ -201,12 +197,10 @@ export function CampaignCreationWizard({
       setNewRequirement("");
     }
   };
-
   const removeRequirement = (index: number) => {
     const currentReqs = form.getValues("requirements") || [];
     form.setValue("requirements", currentReqs.filter((_, i) => i !== index));
   };
-
   const addQuestion = () => {
     if (newQuestion.trim()) {
       const currentQuestions = form.getValues("application_questions") || [];
@@ -216,7 +210,6 @@ export function CampaignCreationWizard({
       }
     }
   };
-
   const removeQuestion = (index: number) => {
     const currentQuestions = form.getValues("application_questions") || [];
     form.setValue("application_questions", currentQuestions.filter((_, i) => i !== index));
@@ -226,7 +219,7 @@ export function CampaignCreationWizard({
     if (open) {
       form.reset({
         title: campaign?.title || "",
-        goal: (campaign?.category as "attention" | "leads" | "conversions") || "attention",
+        goal: campaign?.category as "attention" | "leads" | "conversions" || "attention",
         description: campaign?.description || "",
         campaign_type: campaign?.campaign_type || "clipping",
         is_infinite_budget: campaign?.is_infinite_budget || false,
@@ -242,7 +235,7 @@ export function CampaignCreationWizard({
         hashtags: campaign?.hashtags || [],
         asset_links: campaign?.asset_links || [],
         requirements: campaign?.requirements || [],
-        application_questions: campaign?.application_questions || [],
+        application_questions: campaign?.application_questions || []
       });
       setBannerPreview(campaign?.banner_url || null);
       setCurrentStep(isEditMode ? 3 : 1);
@@ -257,20 +250,16 @@ export function CampaignCreationWizard({
   useEffect(() => {
     const loadShortimizeApiKey = async () => {
       if (open && brandId && isAdmin) {
-        const { data } = await supabase
-          .from('brands')
-          .select('shortimize_api_key')
-          .eq('id', brandId)
-          .single();
+        const {
+          data
+        } = await supabase.from('brands').select('shortimize_api_key').eq('id', brandId).single();
         setShortimizeApiKey(data?.shortimize_api_key || "");
       }
     };
     loadShortimizeApiKey();
   }, [open, brandId, isAdmin]);
-
   const watchedValues = form.watch();
   const selectedGoal = GOALS.find(g => g.id === watchedValues.goal);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -282,7 +271,6 @@ export function CampaignCreationWizard({
       reader.readAsDataURL(file);
     }
   };
-
   const removeBanner = () => {
     setBannerFile(null);
     setBannerPreview(null);
@@ -290,18 +278,22 @@ export function CampaignCreationWizard({
       fileInputRef.current.value = "";
     }
   };
-
   const uploadBanner = async (): Promise<string | null> => {
     if (!bannerFile) return campaign?.banner_url || null;
     const fileExt = bannerFile.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
-    const { error: uploadError } = await supabase.storage.from("campaign-banners").upload(filePath, bannerFile);
+    const {
+      error: uploadError
+    } = await supabase.storage.from("campaign-banners").upload(filePath, bannerFile);
     if (uploadError) throw uploadError;
-    const { data: { publicUrl } } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
+    const {
+      data: {
+        publicUrl
+      }
+    } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
     return publicUrl;
   };
-
   const handleNext = async () => {
     if (currentStep === 1) {
       const isValid = await form.trigger("goal");
@@ -311,24 +303,22 @@ export function CampaignCreationWizard({
       if (isValid) setCurrentStep(3);
     }
   };
-
   const handleBack = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
-
   const handleSaveDraft = async () => {
     setIsSubmitting(true);
     try {
       const values = form.getValues();
       const bannerUrl = await uploadBanner();
-      const { data: brandData } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
-      
+      const {
+        data: brandData
+      } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
       const generateSlug = (title: string) => {
         const baseSlug = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim() || 'untitled';
         const randomSuffix = Math.random().toString(36).substring(2, 10);
         return `${baseSlug}-${randomSuffix}`;
       };
-
       const campaignData = {
         title: values.title || "Untitled Campaign",
         description: values.description || null,
@@ -352,17 +342,19 @@ export function CampaignCreationWizard({
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
         is_featured: false,
-        hashtags: values.hashtags || [],
+        hashtags: values.hashtags || []
       };
-
-      const { error } = await supabase.from("campaigns").insert(campaignData);
+      const {
+        error
+      } = await supabase.from("campaigns").insert(campaignData);
       if (error) throw error;
-      
+
       // Save shortimize API key to brand if admin
       if (isAdmin && shortimizeApiKey) {
-        await supabase.from("brands").update({ shortimize_api_key: shortimizeApiKey }).eq("id", brandId);
+        await supabase.from("brands").update({
+          shortimize_api_key: shortimizeApiKey
+        }).eq("id", brandId);
       }
-      
       toast.success("Campaign saved as draft!");
       onOpenChange(false);
       form.reset();
@@ -377,14 +369,14 @@ export function CampaignCreationWizard({
       setIsSubmitting(false);
     }
   };
-
   const onSubmit = async (values: CampaignFormValues) => {
     console.log('Form submitted with values:', values);
     setIsSubmitting(true);
     try {
       const bannerUrl = await uploadBanner();
-      const { data: brandData } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
-      
+      const {
+        data: brandData
+      } = await supabase.from('brands').select('logo_url').eq('id', brandId).single();
       if (isEditMode && campaign) {
         // Update existing campaign - only include editable fields
         const updateData = {
@@ -393,7 +385,7 @@ export function CampaignCreationWizard({
           campaign_type: values.campaign_type || "clipping",
           category: values.goal || null,
           is_infinite_budget: values.is_infinite_budget,
-          budget: values.is_infinite_budget ? 0 : (Number(values.budget) || 0),
+          budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           rpm_rate: Number(values.rpm_rate) || 5,
           guidelines: values.guidelines || null,
           embed_url: values.embed_url || null,
@@ -406,11 +398,15 @@ export function CampaignCreationWizard({
           asset_links: values.asset_links || [],
           requirements: values.requirements || [],
           application_questions: values.application_questions || [],
-          ...(bannerFile ? { banner_url: bannerUrl } : {}),
+          ...(bannerFile ? {
+            banner_url: bannerUrl
+          } : {})
         };
-        
         console.log('Updating campaign with data:', updateData);
-        const { data, error } = await supabase.from("campaigns").update(updateData).eq("id", campaign.id).select();
+        const {
+          data,
+          error
+        } = await supabase.from("campaigns").update(updateData).eq("id", campaign.id).select();
         if (error) {
           console.error('Supabase update error:', error);
           throw error;
@@ -424,14 +420,13 @@ export function CampaignCreationWizard({
           const randomSuffix = Math.random().toString(36).substring(2, 10);
           return `${baseSlug}-${randomSuffix}`;
         })();
-
         const insertData = {
           title: values.title,
           description: values.description || null,
           campaign_type: values.campaign_type || "clipping",
           category: values.goal || null,
           is_infinite_budget: values.is_infinite_budget,
-          budget: values.is_infinite_budget ? 0 : (Number(values.budget) || 0),
+          budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           rpm_rate: Number(values.rpm_rate) || 5,
           guidelines: values.guidelines || null,
           embed_url: values.embed_url || null,
@@ -450,19 +445,21 @@ export function CampaignCreationWizard({
           brand_logo_url: brandData?.logo_url || null,
           status: "active",
           slug: slug,
-          is_featured: false,
+          is_featured: false
         };
-
-        const { error } = await supabase.from("campaigns").insert(insertData);
+        const {
+          error
+        } = await supabase.from("campaigns").insert(insertData);
         if (error) throw error;
         toast.success("Campaign created successfully!");
       }
 
       // Save shortimize API key to brand if admin
       if (isAdmin && shortimizeApiKey) {
-        await supabase.from("brands").update({ shortimize_api_key: shortimizeApiKey }).eq("id", brandId);
+        await supabase.from("brands").update({
+          shortimize_api_key: shortimizeApiKey
+        }).eq("id", brandId);
       }
-      
       onOpenChange(false);
       form.reset();
       setCurrentStep(1);
@@ -476,12 +473,13 @@ export function CampaignCreationWizard({
       setIsSubmitting(false);
     }
   };
-
   const handleDelete = async () => {
     if (!campaign) return;
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("campaigns").delete().eq("id", campaign.id);
+      const {
+        error
+      } = await supabase.from("campaigns").delete().eq("id", campaign.id);
       if (error) throw error;
       toast.success("Campaign deleted successfully!");
       setDeleteDialogOpen(false);
@@ -495,13 +493,10 @@ export function CampaignCreationWizard({
       setIsSubmitting(false);
     }
   };
-
   const getStepProgress = () => {
     return currentStep / STEPS.length * 100;
   };
-
-  return (
-    <>
+  return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[1400px] w-[95vw] max-h-[90vh] bg-white dark:bg-[#0a0a0a] border-border p-0 overflow-hidden flex flex-col">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] flex-1 min-h-0 overflow-hidden">
@@ -512,8 +507,7 @@ export function CampaignCreationWizard({
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl mx-auto">
                     {/* Step 1: Goal Selection */}
-                    {currentStep === 1 && (
-                      <div className="space-y-8">
+                    {currentStep === 1 && <div className="space-y-8">
                         <div className="text-center mb-10">
                           <h1 className="text-2xl font-bold text-foreground mb-2">
                             Select Your Campaign Goal
@@ -523,207 +517,221 @@ export function CampaignCreationWizard({
                           </p>
                         </div>
 
-                        <FormField control={form.control} name="goal" render={({ field }) => (
-                          <FormItem>
+                        <FormField control={form.control} name="goal" render={({
+                      field
+                    }) => <FormItem>
                             <FormControl>
                               <div className="space-y-3">
-                                {GOALS.map(goal => (
-                                  <button key={goal.id} type="button" onClick={() => field.onChange(goal.id)} className={`w-full flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${field.value === goal.id ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
+                                {GOALS.map(goal => <button key={goal.id} type="button" onClick={() => field.onChange(goal.id)} className={`w-full flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${field.value === goal.id ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
                                     <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${field.value === goal.id ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
                                       {field.value === goal.id && <Check className="w-3 h-3 text-white" />}
                                     </div>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-semibold text-base text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        <h3 className="font-semibold text-base text-foreground tracking-[-0.5px]" style={{
+                                  fontFamily: 'Inter, sans-serif'
+                                }}>
                                           {goal.title}
                                         </h3>
-                                        {goal.enterprise && (
-                                          <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        {goal.enterprise && <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs tracking-[-0.5px]" style={{
+                                  fontFamily: 'Inter, sans-serif'
+                                }}>
                                             Enterprise
-                                          </Badge>
-                                        )}
+                                          </Badge>}
                                       </div>
-                                      <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                      <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]" style={{
+                                fontFamily: 'Inter, sans-serif'
+                              }}>
                                         {goal.description}
                                       </p>
                                     </div>
-                                  </button>
-                                ))}
+                                  </button>)}
                               </div>
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )} />
-                      </div>
-                    )}
+                          </FormItem>} />
+                      </div>}
 
                     {/* Step 2: Budget & Targeting */}
-                    {currentStep === 2 && (
-                      <div className="space-y-6">
+                    {currentStep === 2 && <div className="space-y-6">
                         {/* Budget Section */}
                         <div className="space-y-4">
-                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Budget Settings</h3>
+                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
+                        fontFamily: 'Inter, sans-serif'
+                      }}>Budget Settings</h3>
                           
-                          <FormField control={form.control} name="is_infinite_budget" render={({ field }) => (
-                            <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                          <FormField control={form.control} name="is_infinite_budget" render={({
+                        field
+                      }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Unlimited Budget</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }}>Unlimited Budget</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }}>
                                   No cap on campaign spending
                                 </p>
                               </div>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>
-                          )} />
+                            </FormItem>} />
 
-                          {!watchedValues.is_infinite_budget && (
-                            <FormField control={form.control} name="budget" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Total Budget ($)</FormLabel>
+                          {!watchedValues.is_infinite_budget && <FormField control={form.control} name="budget" render={({
+                        field
+                      }) => <FormItem>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>Total Budget ($)</FormLabel>
                                 <FormControl>
-                                  <Input type="number" placeholder="10000" className="bg-background border-border tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
+                                  <Input type="number" placeholder="10000" className="bg-background border-border tracking-[-0.5px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }} {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>
-                            )} />
-                          )}
+                              </FormItem>} />}
 
-                          <FormField control={form.control} name="rpm_rate" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>CPM Rate ($)</FormLabel>
-                              <p className="text-xs text-muted-foreground mb-2 tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          <FormField control={form.control} name="rpm_rate" render={({
+                        field
+                      }) => <FormItem>
+                              <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>CPM Rate ($)</FormLabel>
+                              <p className="text-xs text-muted-foreground mb-2 tracking-[-0.3px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                                 Cost per 1,000 views paid to creators
                               </p>
                               <FormControl>
-                                <Input type="number" placeholder="5" className="bg-background border-border tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
+                                <Input type="number" placeholder="5" className="bg-background border-border tracking-[-0.5px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )} />
+                            </FormItem>} />
                         </div>
 
                         {/* Platform Targeting */}
                         <div className="space-y-4">
-                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Platform Targeting</h3>
+                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
+                        fontFamily: 'Inter, sans-serif'
+                      }}>Platform Targeting</h3>
                           
-                          <FormField control={form.control} name="allowed_platforms" render={({ field }) => (
-                            <FormItem>
+                          <FormField control={form.control} name="allowed_platforms" render={({
+                        field
+                      }) => <FormItem>
                               <FormControl>
                                 <div className="space-y-2">
                                   {[{
-                                    id: "tiktok",
-                                    label: "TikTok",
-                                    logo: tiktokLogo
-                                  }, {
-                                    id: "instagram",
-                                    label: "Instagram",
-                                    logo: instagramLogo
-                                  }, {
-                                    id: "youtube",
-                                    label: "YouTube",
-                                    logo: youtubeLogo
-                                  }].map(platform => {
-                                    const isSelected = field.value.includes(platform.id);
-                                    return (
-                                      <button key={platform.id} type="button" onClick={() => {
-                                        const newValue = isSelected ? field.value.filter(p => p !== platform.id) : [...field.value, platform.id];
-                                        field.onChange(newValue);
-                                      }} className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${isSelected ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
+                              id: "tiktok",
+                              label: "TikTok",
+                              logo: tiktokLogo
+                            }, {
+                              id: "instagram",
+                              label: "Instagram",
+                              logo: instagramLogo
+                            }, {
+                              id: "youtube",
+                              label: "YouTube",
+                              logo: youtubeLogo
+                            }].map(platform => {
+                              const isSelected = field.value.includes(platform.id);
+                              return <button key={platform.id} type="button" onClick={() => {
+                                const newValue = isSelected ? field.value.filter(p => p !== platform.id) : [...field.value, platform.id];
+                                field.onChange(newValue);
+                              }} className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${isSelected ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
                                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
                                           {isSelected && <Check className="w-3 h-3 text-white" />}
                                         </div>
                                         <img src={platform.logo} alt={platform.label} className="w-6 h-6 object-contain" />
-                                        <span className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        <span className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{
+                                  fontFamily: 'Inter, sans-serif'
+                                }}>
                                           {platform.label}
                                         </span>
-                                      </button>
-                                    );
-                                  })}
+                                      </button>;
+                            })}
                                 </div>
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )} />
+                            </FormItem>} />
                         </div>
 
                         {/* Privacy Settings */}
                         <div className="space-y-4">
-                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Access Settings</h3>
+                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
+                        fontFamily: 'Inter, sans-serif'
+                      }}>Access Settings</h3>
                           
-                          <FormField control={form.control} name="is_private" render={({ field }) => (
-                            <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                          <FormField control={form.control} name="is_private" render={({
+                        field
+                      }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Private Campaign</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }}>Private Campaign</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }}>
                                   Only accessible via invite code
                                 </p>
                               </div>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>
-                          )} />
+                            </FormItem>} />
 
-                          {watchedValues.is_private && (
-                            <FormField control={form.control} name="access_code" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Access Code</FormLabel>
+                          {watchedValues.is_private && <FormField control={form.control} name="access_code" render={({
+                        field
+                      }) => <FormItem>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>Access Code</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="BRAND2024" className="bg-background border-border uppercase tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }} {...field} />
+                                  <Input placeholder="BRAND2024" className="bg-background border-border uppercase tracking-[-0.5px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }} {...field} />
                                 </FormControl>
                                 <FormMessage />
-                              </FormItem>
-                            )} />
-                          )}
+                              </FormItem>} />}
 
-                          <FormField control={form.control} name="requires_application" render={({ field }) => (
-                            <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                          <FormField control={form.control} name="requires_application" render={({
+                        field
+                      }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                               <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Require Application</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }}>Require Application</FormLabel>
+                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
+                            fontFamily: 'Inter, sans-serif'
+                          }}>
                                   Creators must apply to join
                                 </p>
                               </div>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
-                            </FormItem>
-                          )} />
+                            </FormItem>} />
 
                           {/* Application Questions - only shown when requires_application is true */}
-                          {watchedValues.requires_application && (
-                            <div className="space-y-3">
-                              <label className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          {watchedValues.requires_application && <div className="space-y-3">
+                              <label className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
                                 Application Questions
                               </label>
                               <p className="text-xs text-muted-foreground">
                                 Add up to 5 questions creators must answer when applying
                               </p>
                               <div className="flex gap-2">
-                                <Input
-                                  placeholder="Add a question..."
-                                  value={newQuestion}
-                                  onChange={(e) => setNewQuestion(e.target.value)}
-                                  className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground/50"
-                                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addQuestion())}
-                                />
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  size="icon" 
-                                  onClick={addQuestion} 
-                                  className="shrink-0"
-                                  disabled={(form.watch("application_questions")?.length || 0) >= 5}
-                                >
+                                <Input placeholder="Add a question..." value={newQuestion} onChange={e => setNewQuestion(e.target.value)} className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground/50" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addQuestion())} />
+                                <Button type="button" variant="outline" size="icon" onClick={addQuestion} className="shrink-0" disabled={(form.watch("application_questions")?.length || 0) >= 5}>
                                   <Check className="h-4 w-4" />
                                 </Button>
                               </div>
-                              {form.watch("application_questions")?.length > 0 && (
-                                <div className="space-y-2">
-                                  {form.watch("application_questions")?.map((question, index) => (
-                                    <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border">
+                              {form.watch("application_questions")?.length > 0 && <div className="space-y-2">
+                                  {form.watch("application_questions")?.map((question, index) => <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border">
                                       <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                         <span className="text-xs text-primary font-semibold">{index + 1}</span>
                                       </div>
@@ -731,19 +739,14 @@ export function CampaignCreationWizard({
                                       <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeQuestion(index)}>
                                         <X className="h-3 w-3" />
                                       </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
+                                    </div>)}
+                                </div>}
+                            </div>}
                         </div>
-                      </div>
-                    )}
+                      </div>}
 
                     {/* Step 3: Campaign Details */}
-                    {currentStep === 3 && (
-                      <div className="space-y-6">
+                    {currentStep === 3 && <div className="space-y-6">
                         <div className="mb-8">
                           <h1 className="text-xl font-semibold text-foreground tracking-[-0.5px]">
                             {isEditMode ? "Edit Campaign" : "Campaign Details"}
@@ -754,20 +757,23 @@ export function CampaignCreationWizard({
                         </div>
 
                         <div className="space-y-5">
-                          <FormField control={form.control} name="title" render={({ field }) => (
-                            <FormItem className="space-y-2">
+                          <FormField control={form.control} name="title" render={({
+                        field
+                      }) => <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Campaign Name
                               </FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter campaign name" className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{ letterSpacing: '-0.3px' }} {...field} />
+                                <Input placeholder="Enter campaign name" className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
+                            letterSpacing: '-0.3px'
+                          }} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )} />
+                            </FormItem>} />
 
-                          <FormField control={form.control} name="description" render={({ field }) => (
-                            <FormItem className="space-y-2">
+                          <FormField control={form.control} name="description" render={({
+                        field
+                      }) => <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Campaign Description
                               </FormLabel>
@@ -775,19 +781,16 @@ export function CampaignCreationWizard({
                                 Describe your campaign, requirements, and what creators should know
                               </p>
                               <FormControl>
-                                <Textarea 
-                                  placeholder="Enter campaign description..." 
-                                  className="min-h-[120px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none" 
-                                  style={{ letterSpacing: '-0.3px' }} 
-                                  {...field} 
-                                />
+                                <Textarea placeholder="Enter campaign description..." className="min-h-[120px] bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0 resize-none" style={{
+                            letterSpacing: '-0.3px'
+                          }} {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )} />
+                            </FormItem>} />
 
-                          <FormField control={form.control} name="hashtags" render={({ field }) => (
-                            <FormItem className="space-y-2">
+                          <FormField control={form.control} name="hashtags" render={({
+                        field
+                      }) => <FormItem className="space-y-2">
                               <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Campaign Hashtags
                               </FormLabel>
@@ -799,66 +802,47 @@ export function CampaignCreationWizard({
                                   <div className="flex gap-2">
                                     <div className="relative flex-1">
                                       <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                      <Input 
-                                        placeholder="Add hashtag and press Enter" 
-                                        className="h-11 pl-9 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" 
-                                        style={{ letterSpacing: '-0.3px' }}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            const input = e.currentTarget;
-                                            const value = input.value.trim().replace(/^#/, '');
-                                            if (value && !field.value?.includes(value)) {
-                                              field.onChange([...(field.value || []), value]);
-                                              input.value = '';
-                                            }
-                                          }
-                                        }}
-                                      />
+                                      <Input placeholder="Add hashtag and press Enter" className="h-11 pl-9 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
+                                  letterSpacing: '-0.3px'
+                                }} onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const input = e.currentTarget;
+                                    const value = input.value.trim().replace(/^#/, '');
+                                    if (value && !field.value?.includes(value)) {
+                                      field.onChange([...(field.value || []), value]);
+                                      input.value = '';
+                                    }
+                                  }
+                                }} />
                                     </div>
                                   </div>
-                                  {field.value && field.value.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                      {field.value.map((tag: string, index: number) => (
-                                        <Badge key={index} variant="secondary" className="gap-1 px-2 py-1">
+                                  {field.value && field.value.length > 0 && <div className="flex flex-wrap gap-2">
+                                      {field.value.map((tag: string, index: number) => <Badge key={index} variant="secondary" className="gap-1 px-2 py-1">
                                           #{tag}
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              field.onChange(field.value.filter((_: string, i: number) => i !== index));
-                                            }}
-                                            className="ml-1 hover:text-destructive"
-                                          >
+                                          <button type="button" onClick={() => {
+                                  field.onChange(field.value.filter((_: string, i: number) => i !== index));
+                                }} className="ml-1 hover:text-destructive">
                                             <X className="h-3 w-3" />
                                           </button>
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  )}
+                                        </Badge>)}
+                                    </div>}
                                 </div>
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )} />
+                            </FormItem>} />
 
-                          {isAdmin && (
-                            <div className="space-y-2">
+                          {isAdmin && <div className="space-y-2">
                               <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
                                 Shortimize API Key
                               </label>
-                              <Input
-                                type="password"
-                                placeholder="Enter Shortimize API key"
-                                value={shortimizeApiKey}
-                                onChange={(e) => setShortimizeApiKey(e.target.value)}
-                                className="bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0"
-                                style={{ letterSpacing: '-0.3px' }}
-                              />
+                              <Input type="password" placeholder="Enter Shortimize API key" value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
+                          letterSpacing: '-0.3px'
+                        }} />
                               <p className="text-xs text-muted-foreground">
                                 Used for video tracking and analytics
                               </p>
-                            </div>
-                          )}
+                            </div>}
 
                           {/* Asset Links */}
                           <div className="space-y-3">
@@ -867,37 +851,22 @@ export function CampaignCreationWizard({
                             </label>
                             <p className="text-xs text-muted-foreground">Add links to Google Drive, Dropbox, or other resources</p>
                             <div className="flex gap-2">
-                              <Input
-                                placeholder="Label (e.g. Google Drive)"
-                                value={newAssetLabel}
-                                onChange={(e) => setNewAssetLabel(e.target.value)}
-                                className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50"
-                              />
-                              <Input
-                                placeholder="URL"
-                                value={newAssetUrl}
-                                onChange={(e) => setNewAssetUrl(e.target.value)}
-                                className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50"
-                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addAssetLink())}
-                              />
+                              <Input placeholder="Label (e.g. Google Drive)" value={newAssetLabel} onChange={e => setNewAssetLabel(e.target.value)} className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50" />
+                              <Input placeholder="URL" value={newAssetUrl} onChange={e => setNewAssetUrl(e.target.value)} className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addAssetLink())} />
                               <Button type="button" variant="outline" size="icon" onClick={addAssetLink} className="shrink-0">
                                 <Check className="h-4 w-4" />
                               </Button>
                             </div>
-                            {form.watch("asset_links")?.length > 0 && (
-                              <div className="space-y-2">
-                                {form.watch("asset_links")?.map((link, index) => (
-                                  <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
+                            {form.watch("asset_links")?.length > 0 && <div className="space-y-2">
+                                {form.watch("asset_links")?.map((link, index) => <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
                                     <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
                                     <span className="font-medium text-sm">{link.label}</span>
                                     <span className="text-xs text-muted-foreground truncate flex-1">{link.url}</span>
                                     <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeAssetLink(index)}>
                                       <X className="h-3 w-3" />
                                     </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                                  </div>)}
+                              </div>}
                           </div>
 
                           {/* Requirements */}
@@ -907,21 +876,13 @@ export function CampaignCreationWizard({
                             </label>
                             <p className="text-xs text-muted-foreground">List the requirements creators must follow</p>
                             <div className="flex gap-2">
-                              <Input
-                                placeholder="Add a requirement"
-                                value={newRequirement}
-                                onChange={(e) => setNewRequirement(e.target.value)}
-                                className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50"
-                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
-                              />
+                              <Input placeholder="Add a requirement" value={newRequirement} onChange={e => setNewRequirement(e.target.value)} className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addRequirement())} />
                               <Button type="button" variant="outline" size="icon" onClick={addRequirement} className="shrink-0">
                                 <Check className="h-4 w-4" />
                               </Button>
                             </div>
-                            {form.watch("requirements")?.length > 0 && (
-                              <div className="space-y-2">
-                                {form.watch("requirements")?.map((req, index) => (
-                                  <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
+                            {form.watch("requirements")?.length > 0 && <div className="space-y-2">
+                                {form.watch("requirements")?.map((req, index) => <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
                                     <div className="w-5 h-5 rounded-full bg-[#2060df]/10 flex items-center justify-center shrink-0">
                                       <span className="text-xs text-[#2060df] font-semibold">{index + 1}</span>
                                     </div>
@@ -929,10 +890,8 @@ export function CampaignCreationWizard({
                                     <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeRequirement(index)}>
                                       <X className="h-3 w-3" />
                                     </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                                  </div>)}
+                              </div>}
                           </div>
 
                           {/* Banner Upload */}
@@ -940,69 +899,58 @@ export function CampaignCreationWizard({
                             <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
                               Campaign Banner
                             </label>
-                            {bannerPreview ? (
-                              <div className="relative w-full h-36 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#1a1a1a]">
+                            {bannerPreview ? <div className="relative w-full h-36 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#1a1a1a]">
                                 <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
                                 <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-destructive/90 text-white" onClick={removeBanner}>
                                   <X className="h-4 w-4" />
                                 </Button>
-                              </div>
-                            ) : (
-                              <div className="w-full h-36 rounded-lg flex items-center justify-center cursor-pointer transition-all bg-[#0a0a0a] border border-dashed border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#0f0f0f]" onClick={() => fileInputRef.current?.click()}>
+                              </div> : <div className="w-full h-36 rounded-lg flex items-center justify-center cursor-pointer transition-all bg-[#0a0a0a] border border-dashed border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#0f0f0f]" onClick={() => fileInputRef.current?.click()}>
                                 <div className="text-center">
                                   <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
                                     <Upload className="h-4 w-4 text-muted-foreground" />
                                   </div>
-                                  <p className="text-sm text-muted-foreground" style={{ letterSpacing: '-0.3px' }}>
+                                  <p className="text-sm text-muted-foreground" style={{
+                              letterSpacing: '-0.3px'
+                            }}>
                                     Click to upload
                                   </p>
                                   <p className="text-xs text-muted-foreground/60 mt-1">
                                     PNG, JPG up to 10MB
                                   </p>
                                 </div>
-                              </div>
-                            )}
+                              </div>}
                             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                           </div>
 
                           {/* Pause toggle and Delete button for edit mode */}
-                          {isEditMode && (
-                            <div className="pt-4 border-t border-border space-y-4">
+                          {isEditMode && <div className="pt-4 border-t border-border space-y-4">
                               <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                   <Label htmlFor="pause-campaign" className="text-sm font-medium">Pause Campaign</Label>
                                   <p className="text-xs text-muted-foreground">Paused campaigns won't appear in discover</p>
                                 </div>
-                                <Switch
-                                  id="pause-campaign"
-                                  checked={campaign?.status === 'paused'}
-                                  onCheckedChange={async (checked) => {
-                                    if (!campaign?.id) return;
-                                    const newStatus = checked ? 'paused' : 'active';
-                                    const { error } = await supabase
-                                      .from('campaigns')
-                                      .update({ status: newStatus })
-                                      .eq('id', campaign.id);
-                                    if (error) {
-                                      toast.error('Failed to update campaign status');
-                                    } else {
-                                      toast.success(checked ? 'Campaign paused' : 'Campaign activated');
-                                      onSuccess?.();
-                                    }
-                                  }}
-                                />
+                                <Switch id="pause-campaign" checked={campaign?.status === 'paused'} onCheckedChange={async checked => {
+                            if (!campaign?.id) return;
+                            const newStatus = checked ? 'paused' : 'active';
+                            const {
+                              error
+                            } = await supabase.from('campaigns').update({
+                              status: newStatus
+                            }).eq('id', campaign.id);
+                            if (error) {
+                              toast.error('Failed to update campaign status');
+                            } else {
+                              toast.success(checked ? 'Campaign paused' : 'Campaign activated');
+                              onSuccess?.();
+                            }
+                          }} />
                               </div>
                               <div className="flex gap-2">
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  onClick={() => {
-                                    const link = `${window.location.origin}/join/${campaign?.slug}`;
-                                    navigator.clipboard.writeText(link);
-                                    toast.success('Invite link copied to clipboard');
-                                  }} 
-                                  className="gap-2"
-                                >
+                                <Button type="button" variant="outline" onClick={() => {
+                            const link = `${window.location.origin}/join/${campaign?.slug}`;
+                            navigator.clipboard.writeText(link);
+                            toast.success('Invite link copied to clipboard');
+                          }} className="gap-2 border-black/0">
                                   <Copy className="h-4 w-4" />
                                   Copy Invite Link
                                 </Button>
@@ -1011,11 +959,9 @@ export function CampaignCreationWizard({
                                   Delete Campaign
                                 </Button>
                               </div>
-                            </div>
-                          )}
+                            </div>}
                         </div>
-                      </div>
-                    )}
+                      </div>}
                   </form>
                 </Form>
               </div>
@@ -1023,55 +969,47 @@ export function CampaignCreationWizard({
               {/* Bottom Action Bar */}
               <div className="border-t border-border lg:px-16 py-4 bg-neutral-950/0 px-[12px]">
                 <div className="max-w-2xl mx-auto flex items-center justify-between">
-                  {!isEditMode ? (
-                    <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  {!isEditMode ? <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{
+                  fontFamily: 'Inter, sans-serif'
+                }}>
                       <Bookmark className="h-4 w-4" />
                       Save as Draft
-                    </Button>
-                  ) : (
-                    <div />
-                  )}
+                    </Button> : <div />}
 
                   <div className="flex items-center gap-3">
-                    {currentStep > 1 && !isEditMode && (
-                      <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} style={{ fontFamily: 'Inter, sans-serif' }} className="tracking-[-0.5px] border-black/0">
+                    {currentStep > 1 && !isEditMode && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} style={{
+                    fontFamily: 'Inter, sans-serif'
+                  }} className="tracking-[-0.5px] border-black/0">
                         Back
-                      </Button>
-                    )}
+                      </Button>}
                     
-                    {currentStep < 3 && !isEditMode ? (
-                      <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    {currentStep < 3 && !isEditMode ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
                         Continue
-                      </Button>
-                    ) : (
-                      <Button 
-                        type="button" 
-                        onClick={async () => {
-                          // Skip validation for edit mode - call onSubmit directly
-                          if (isEditMode) {
-                            const values = form.getValues();
-                            console.log('Edit mode - submitting with values:', values);
-                            await onSubmit(values as CampaignFormValues);
-                            return;
-                          }
-                          // Validate for new campaigns
-                          const isValid = await form.trigger();
-                          if (!isValid) {
-                            const errors = form.formState.errors;
-                            const errorMessages = Object.entries(errors).map(([key, error]) => `${key}: ${error?.message}`).join(', ');
-                            toast.error(`Please fix form errors: ${errorMessages}`);
-                            console.log('Form errors:', errors);
-                            return;
-                          }
-                          form.handleSubmit(onSubmit)();
-                        }} 
-                        disabled={isSubmitting} 
-                        className="min-w-[120px] tracking-[-0.5px]" 
-                        style={{ fontFamily: 'Inter, sans-serif' }}
-                      >
-                        {isSubmitting ? (isEditMode ? "Saving..." : "Creating...") : (isEditMode ? "Save Changes" : "Finish")}
-                      </Button>
-                    )}
+                      </Button> : <Button type="button" onClick={async () => {
+                    // Skip validation for edit mode - call onSubmit directly
+                    if (isEditMode) {
+                      const values = form.getValues();
+                      console.log('Edit mode - submitting with values:', values);
+                      await onSubmit(values as CampaignFormValues);
+                      return;
+                    }
+                    // Validate for new campaigns
+                    const isValid = await form.trigger();
+                    if (!isValid) {
+                      const errors = form.formState.errors;
+                      const errorMessages = Object.entries(errors).map(([key, error]) => `${key}: ${error?.message}`).join(', ');
+                      toast.error(`Please fix form errors: ${errorMessages}`);
+                      console.log('Form errors:', errors);
+                      return;
+                    }
+                    form.handleSubmit(onSubmit)();
+                  }} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                        {isSubmitting ? isEditMode ? "Saving..." : "Creating..." : isEditMode ? "Save Changes" : "Finish"}
+                      </Button>}
                   </div>
                 </div>
               </div>
@@ -1082,7 +1020,9 @@ export function CampaignCreationWizard({
               {/* Preview Header */}
               <div className="px-6 py-4 border-b border-border flex items-center justify-center gap-2 text-primary-foreground">
                 <Eye className="h-4 w-4" />
-                <span className="text-sm font-medium tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>Preview</span>
+                <span className="text-sm font-medium tracking-[-0.5px]" style={{
+                fontFamily: 'Inter, sans-serif'
+              }}>Preview</span>
               </div>
 
               {/* Preview Content */}
@@ -1090,66 +1030,62 @@ export function CampaignCreationWizard({
                 {/* Campaign Preview Card */}
                 <div className="rounded-xl overflow-hidden">
                   {/* Banner Area */}
-                  {bannerPreview ? (
-                    <div className="h-28">
+                  {bannerPreview ? <div className="h-28">
                       <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d]" />
-                  )}
+                    </div> : <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d]" />}
                 </div>
 
                 {/* Campaign Info */}
                 <div className="mt-4 space-y-4">
                   <div className="flex items-center gap-3">
                     {/* Brand Logo */}
-                    {brandLogoUrl ? (
-                      <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background flex-shrink-0" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                    {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                         <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
-                      </div>
-                    )}
+                      </div>}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
+                        fontFamily: 'Inter, sans-serif'
+                      }}>
                           {watchedValues.title || "Untitled"}
                         </h3>
                         <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                            {isEditMode ? (campaign?.status || "Active") : "Draft"}
+                          <Badge variant="secondary" className="text-xs tracking-[-0.5px]" style={{
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
+                            {isEditMode ? campaign?.status || "Active" : "Draft"}
                           </Badge>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {watchedValues.hashtags && watchedValues.hashtags.length > 0 && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                  {watchedValues.hashtags && watchedValues.hashtags.length > 0 && <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                       <Hash className="h-4 w-4" />
-                      {watchedValues.hashtags.map((tag: string, i: number) => (
-                        <span key={i}>#{tag}{i < watchedValues.hashtags!.length - 1 ? ',' : ''}</span>
-                      ))}
-                    </div>
-                  )}
+                      {watchedValues.hashtags.map((tag: string, i: number) => <span key={i}>#{tag}{i < watchedValues.hashtags!.length - 1 ? ',' : ''}</span>)}
+                    </div>}
 
                   {/* Progress Indicator */}
-                  {!isEditMode && (
-                    <div className="space-y-2">
+                  {!isEditMode && <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground tracking-[-0.5px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <span className="text-muted-foreground tracking-[-0.5px]" style={{
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
                           Step {currentStep}: {STEPS[currentStep - 1]?.label}
                         </span>
                       </div>
                       <div className="h-1 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary transition-all duration-300" style={{ width: `${getStepProgress()}%` }} />
+                        <div className="h-full bg-primary transition-all duration-300" style={{
+                      width: `${getStepProgress()}%`
+                    }} />
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
                   {/* Pricing Embed */}
                   <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
-                    <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{ height: '350px' }} scrolling="no" title="Pricing Plans" />
+                    <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{
+                    height: '350px'
+                  }} scrolling="no" title="Pricing Plans" />
                   </div>
                 </div>
               </div>
@@ -1175,6 +1111,5 @@ export function CampaignCreationWizard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 }
