@@ -396,24 +396,18 @@ export function JoinCampaignSheet({
             <div className="flex-1">
               <h3 className="font-semibold text-2xl">{campaign.title}</h3>
               <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
-              {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-2 mt-2">
-                  {campaign.campaign_type && <span className="px-2.5 py-1 text-xs font-medium bg-[#2060df] text-white border-t border-primary/20" style={{
-                borderRadius: '8px'
-              }}>
+              {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                  {campaign.campaign_type && <span className="px-3 py-1.5 text-[11px] font-medium bg-[#2060df]/15 text-[#4f89ff] rounded-full" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                       {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
                     </span>}
-                  {campaign.category && <span className="px-2.5 py-1 text-xs font-medium bg-muted text-foreground border-t border-border" style={{
-                borderRadius: '8px'
-              }}>
+                  {campaign.category && <span className="px-3 py-1.5 text-[11px] font-medium bg-muted/50 text-muted-foreground rounded-full" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                       {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </span>}
-                  {campaign.platforms.length > 0 && <span className="px-2.5 py-1 flex items-center gap-1.5 bg-card border-t border-border" style={{
-                borderRadius: '8px'
-              }}>
+                  {campaign.platforms.length > 0 && <span className="px-2.5 py-1.5 flex items-center gap-1 bg-muted/30 rounded-full">
                     {campaign.platforms.map(platform => {
-                  const platformIcon = getPlatformIcon(platform);
-                  return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-5 h-5" /> : null;
-                })}
+                      const platformIcon = getPlatformIcon(platform);
+                      return platformIcon ? <img key={platform} src={platformIcon} alt={platform} className="w-4 h-4 opacity-70" /> : null;
+                    })}
                   </span>}
                 </div>}
             </div>
