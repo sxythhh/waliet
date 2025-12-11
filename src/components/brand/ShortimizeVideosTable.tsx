@@ -293,7 +293,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-4 bg-background/80 dark:bg-black/70 backdrop-blur-xl border-border/50" align="end">
+            <PopoverContent className="w-auto p-4 bg-black/50 backdrop-blur-xl border-none" align="end">
               <div className="space-y-4">
                 <div className="flex gap-4">
                   <div className="space-y-2">
@@ -304,7 +304,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
                       onSelect={setStartDate}
                       disabled={(date) => endDate ? date > endDate : false}
                       initialFocus
-                      className="rounded-md border border-border/50"
+                      className="rounded-md border-none"
                     />
                   </div>
                   <div className="space-y-2">
@@ -314,7 +314,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId }: S
                       selected={endDate}
                       onSelect={setEndDate}
                       disabled={(date) => startDate ? date < startDate : false}
-                      className="rounded-md border border-border/50"
+                      className="rounded-md border-none"
                     />
                   </div>
                 </div>
