@@ -16,6 +16,8 @@ import blueprintsInactive from "@/assets/blueprints-inactive.svg";
 import blueprintsActive from "@/assets/blueprints-active.svg";
 import creatorsInactive from "@/assets/creators-inactive.svg";
 import creatorsActive from "@/assets/creators-active.svg";
+import referralsInactive from "@/assets/referrals-inactive.svg";
+import referralsActive from "@/assets/referrals-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,10 @@ const creatorMenuItems = [{
   title: "Discover",
   tab: "discover",
   icon: Compass
+}, {
+  title: "Referrals",
+  tab: "referrals",
+  icon: null as any
 }, {
   title: "Profile",
   tab: "profile",
@@ -328,7 +334,7 @@ export function AppSidebar() {
         <div className="px-px py-0">
           <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
             <PopoverTrigger asChild>
-              <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors rounded bg-[#121212]/0">
+              <button className="w-full flex items-center justify-between px-2.5 py-2 transition-colors rounded hover:bg-[#0e0e0e]">
                 <div className="flex items-center gap-2">
                   {isCreatorMode ? <Avatar className="w-6 h-6">
                       <AvatarImage src={avatarUrl || undefined} />
@@ -343,7 +349,7 @@ export function AppSidebar() {
                 <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-[220px] p-1.5 bg-[#141414] border-0" align="start" sideOffset={4}>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1.5 bg-[#141414] border-0" align="start" sideOffset={4}>
               <div className="space-y-0.5 max-h-[400px] overflow-y-auto font-inter tracking-[-0.5px]">
                 <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
                   <Avatar className="w-5 h-5">
@@ -413,6 +419,9 @@ export function AppSidebar() {
                     </div> : item.tab === "creators" ? <div className="relative h-[21px] w-[21px]">
                       <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={creatorsActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "referrals" ? <div className="relative h-[21px] w-[21px]">
+                      <img src={referralsInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={referralsActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : <item.icon className={`h-[21px] w-[21px] ${isActive ? 'text-[#2060df]' : ''}`} />}
                   <span className="font-['Inter'] text-[14px] font-medium tracking-[-0.5px]">{item.title}</span>
                 </button>;
