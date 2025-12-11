@@ -2,14 +2,45 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, DollarSign, TrendingUp, Copy, Check, Gift, Pencil, X } from "lucide-react";
+import { Users, Copy, Check, Gift, Pencil, CheckCircle2, Circle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
+interface Milestone {
+  id: string;
+  milestone_type: string;
+  threshold: number;
+  reward_amount: number;
+  display_name: string;
+}
+
+interface MilestoneReward {
+  milestone_id: string;
+  reward_amount: number;
+  awarded_at: string;
+}
+
+interface ReferralWithMilestones {
+  id: string;
+  referrer_id: string;
+  referred_id: string;
+  status: string;
+  reward_earned: number;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+    full_name: string | null;
+    total_earnings: number | null;
+  } | null;
+  milestone_rewards?: MilestoneReward[];
+}
+
 export function ReferralsTab() {
   const [profile, setProfile] = useState<any>(null);
-  const [referrals, setReferrals] = useState<any[]>([]);
+  const [referrals, setReferrals] = useState<ReferralWithMilestones[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newReferralCode, setNewReferralCode] = useState("");
@@ -19,6 +50,7 @@ export function ReferralsTab() {
   useEffect(() => {
     fetchProfile();
     fetchReferrals();
+    fetchMilestones();
   }, []);
 
   const fetchProfile = async () => {
@@ -31,23 +63,49 @@ export function ReferralsTab() {
     }
   };
 
+  const fetchMilestones = async () => {
+    const { data } = await supabase
+      .from("referral_milestones")
+      .select("*")
+      .order("threshold", { ascending: true });
+    setMilestones(data || []);
+  };
+
   const fetchReferrals = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase
+    
+    const { data: referralsData } = await supabase
       .from("referrals")
-      .select(`
-        *,
-        profiles:referred_id (
-          username,
-          avatar_url,
-          full_name,
-          total_earnings
-        )
-      `)
+      .select("*")
       .eq("referrer_id", user.id)
       .order("created_at", { ascending: false });
-    setReferrals(data || []);
+
+    if (referralsData && referralsData.length > 0) {
+      // Fetch profiles for referred users
+      const referredIds = referralsData.map(r => r.referred_id);
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url, full_name, total_earnings")
+        .in("id", referredIds);
+
+      // Fetch milestone rewards for each referral
+      const referralIds = referralsData.map(r => r.id);
+      const { data: rewards } = await supabase
+        .from("referral_milestone_rewards")
+        .select("*")
+        .in("referral_id", referralIds);
+
+      const referralsWithMilestones: ReferralWithMilestones[] = referralsData.map(referral => ({
+        ...referral,
+        profiles: profilesData?.find(p => p.id === referral.referred_id) || null,
+        milestone_rewards: rewards?.filter(r => r.referral_id === referral.id) || []
+      }));
+
+      setReferrals(referralsWithMilestones);
+    } else {
+      setReferrals([]);
+    }
   };
 
   const referralLink = profile?.referral_code 
@@ -89,7 +147,6 @@ export function ReferralsTab() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Check if code is already taken
     const { data: existing } = await supabase
       .from("profiles")
       .select("id")
@@ -129,8 +186,13 @@ export function ReferralsTab() {
     setSaving(false);
   };
 
-  const pendingReferrals = referrals.filter(r => r.status === 'pending').length;
-  const completedReferrals = referrals.filter(r => r.status === 'completed').length;
+  // Calculate total potential earnings from milestones
+  const totalPotentialPerReferral = milestones.reduce((sum, m) => sum + m.reward_amount, 0);
+
+  // Get milestones achieved for a specific referral
+  const getMilestoneStatus = (referral: ReferralWithMilestones, milestone: Milestone) => {
+    return referral.milestone_rewards?.some(r => r.milestone_id === milestone.id) || false;
+  };
 
   return (
     <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-8 max-w-4xl">
@@ -138,14 +200,14 @@ export function ReferralsTab() {
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
         <p className="text-muted-foreground text-sm">
-          Invite creators and earn rewards when they start earning on Virality.
+          Invite creators and earn up to ${totalPotentialPerReferral.toFixed(2)} per referral through milestone rewards.
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3">
         <div className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-          <p className="text-2xl font-semibold tracking-tight">{profile?.total_referrals || 0}</p>
+          <p className="text-2xl font-semibold tracking-tight">{referrals.length}</p>
           <p className="text-xs text-muted-foreground mt-1">Total Referrals</p>
         </div>
 
@@ -235,37 +297,26 @@ export function ReferralsTab() {
         )}
       </div>
 
-      {/* How it Works */}
+      {/* Milestone Rewards */}
       <div className="space-y-4">
-        <h3 className="font-semibold text-sm">How it works</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-            <div className="w-6 h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-xs font-semibold shrink-0">
-              1
+        <h3 className="font-semibold text-sm">Milestone Rewards</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {milestones.map((milestone, index) => (
+            <div 
+              key={milestone.id}
+              className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-medium">
+                  {milestone.milestone_type === 'signup' ? 'On Signup' : `$${milestone.threshold} Earned`}
+                </span>
+                <span className="text-sm font-semibold text-[#2060df]">
+                  +${milestone.reward_amount.toFixed(2)}
+                </span>
+              </div>
+              <p className="text-sm font-medium">{milestone.display_name}</p>
             </div>
-            <div>
-              <p className="text-sm font-medium">Share your link</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Send it to creators you know</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-            <div className="w-6 h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-xs font-semibold shrink-0">
-              2
-            </div>
-            <div>
-              <p className="text-sm font-medium">They sign up</p>
-              <p className="text-xs text-muted-foreground mt-0.5">And join campaigns</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-            <div className="w-6 h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-xs font-semibold shrink-0">
-              3
-            </div>
-            <div>
-              <p className="text-sm font-medium">You earn rewards</p>
-              <p className="text-xs text-muted-foreground mt-0.5">When they start earning</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -287,46 +338,76 @@ export function ReferralsTab() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {referrals.map(referral => (
-              <div 
-                key={referral.id} 
-                className="flex items-center justify-between p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={referral.profiles?.avatar_url} />
-                    <AvatarFallback className="bg-[#e0e0e0] dark:bg-[#1a1a1a] text-sm">
-                      {referral.profiles?.username?.[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium text-sm">
-                      {referral.profiles?.full_name || referral.profiles?.username}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      @{referral.profiles?.username}
-                    </p>
+          <div className="space-y-3">
+            {referrals.map(referral => {
+              const achievedMilestones = referral.milestone_rewards?.length || 0;
+              const totalMilestones = milestones.length;
+              const totalEarned = referral.reward_earned || 0;
+              
+              return (
+                <div 
+                  key={referral.id} 
+                  className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-3"
+                >
+                  {/* User Info Row */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={referral.profiles?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-[#e0e0e0] dark:bg-[#1a1a1a] text-sm">
+                          {referral.profiles?.username?.[0]?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm">
+                          {referral.profiles?.full_name || referral.profiles?.username}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          @{referral.profiles?.username}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-[#2060df]">
+                        +${totalEarned.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {achievedMilestones}/{totalMilestones} milestones
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Milestone Progress */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {milestones.map(milestone => {
+                      const achieved = getMilestoneStatus(referral, milestone);
+                      return (
+                        <div
+                          key={milestone.id}
+                          className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${
+                            achieved 
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                              : 'bg-muted/50 text-muted-foreground'
+                          }`}
+                        >
+                          {achieved ? (
+                            <CheckCircle2 className="w-3 h-3" />
+                          ) : (
+                            <Circle className="w-3 h-3" />
+                          )}
+                          <span>
+                            {milestone.milestone_type === 'signup' 
+                              ? 'Signup' 
+                              : `$${milestone.threshold}`
+                            }
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                <div className="text-right flex items-center gap-3">
-                  {referral.status === 'completed' && (
-                    <span className="text-sm text-muted-foreground">
-                      ${referral.profiles?.total_earnings?.toFixed(2) || "0.00"} earned
-                    </span>
-                  )}
-                  <Badge 
-                    variant={referral.status === 'completed' ? 'default' : 'secondary'}
-                    className={referral.status === 'completed' 
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0' 
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-0'
-                    }
-                  >
-                    {referral.status === 'completed' ? 'Active' : 'Pending'}
-                  </Badge>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
