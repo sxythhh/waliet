@@ -586,7 +586,7 @@ export function CampaignsTab({
                     <Skeleton className="h-3 w-12" />
                   </div>
                   <div className="h-1.5 w-full bg-muted/40 rounded-full overflow-hidden">
-                    <Skeleton className="h-full w-1/3 rounded-full" />
+                    <div className="h-full w-1/3 bg-muted/70 rounded-full animate-pulse" />
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-1">
@@ -727,7 +727,7 @@ export function CampaignsTab({
                           <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                         </div>}
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline">
+                        <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline font-['Inter'] tracking-[-0.5px]">
                           {campaign.title}
                         </h3>
                         <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
@@ -803,7 +803,7 @@ export function CampaignsTab({
                         <img src={application.boost_campaigns.brands.logo_url} alt={application.boost_campaigns.brands.name || ''} className="w-full h-full object-cover" />
                       </div>}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
+                      <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 font-['Inter'] tracking-[-0.5px]">
                         {application.boost_campaigns.title}
                       </h3>
                       <p className="text-xs text-muted-foreground font-semibold">
@@ -871,7 +871,7 @@ export function CampaignsTab({
                   </div>}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 flex-1">
+                    <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 flex-1 font-['Inter'] tracking-[-0.5px]">
                       {campaign.title}
                     </h3>
                     {isEnded && !campaign.banner_url && <Badge variant="secondary" className="bg-muted/90 text-muted-foreground font-semibold text-[10px]">

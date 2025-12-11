@@ -366,7 +366,7 @@ export function DiscoverTab() {
                       <Skeleton className="h-3 w-12" />
                     </div>
                     <div className="h-1.5 w-full bg-muted/40 rounded-full overflow-hidden">
-                      <Skeleton className="h-full w-1/3 rounded-full" />
+                      <div className="h-full w-1/3 bg-muted/70 rounded-full animate-pulse" />
                     </div>
                   </div>
                   {/* Bottom row */}
@@ -410,7 +410,7 @@ export function DiscoverTab() {
                           <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                         </div>}
                       <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline">
+                        <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
                           {campaign.title}
                         </h3>
                         {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
