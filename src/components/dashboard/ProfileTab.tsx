@@ -1218,9 +1218,9 @@ export function ProfileTab() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle style={{
-            fontFamily: 'Inter',
+            fontFamily: 'Geist',
             letterSpacing: '-0.5px'
-          }}>Manage Campaign Links</DialogTitle>
+          }}>Manage Account</DialogTitle>
             <DialogDescription style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px'
@@ -1254,14 +1254,13 @@ export function ProfileTab() {
                           {campaign.brand_name?.[0]?.toUpperCase()}
                         </span>
                       </div>}
-                    <div className="flex-1 text-left">
-                      <p className="font-medium text-sm">{campaign.title}</p>
-                      <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+                    <div className="flex-1 text-center">
+                      <p className="font-medium text-sm" style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}>{campaign.title}</p>
                     </div>
-                    {isLinked ? <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleUnlinkCampaign(linkedConnection.connection_id, campaign.title)}>
+                    {isLinked ? <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }} onClick={() => handleUnlinkCampaign(linkedConnection.connection_id, campaign.title)}>
                         <Unlink className="w-3.5 h-3.5 mr-1" />
                         Unlink
-                      </Button> : <Button variant="ghost" size="sm" disabled={linkingCampaign} onClick={() => handleLinkCampaign(campaign.id)} className="text-primary hover:text-primary hover:bg-primary/10">
+                      </Button> : <Button variant="ghost" size="sm" disabled={linkingCampaign} onClick={() => handleLinkCampaign(campaign.id)} className="text-primary hover:text-primary hover:bg-primary/10" style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}>
                         <Link2 className="w-3.5 h-3.5 mr-1" />
                         Link
                       </Button>}
