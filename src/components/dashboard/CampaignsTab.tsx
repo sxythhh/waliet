@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell, GraduationCap, Play, Search } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
@@ -561,10 +561,55 @@ export function CampaignsTab({
         </div>
       </div>
 
-      {/* Stats Header */}
-      
+      {/* Actions Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <button 
+          onClick={() => navigate('/dashboard?tab=discover')}
+          className="flex items-start gap-4 p-4 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] transition-colors text-left"
+        >
+          <div className="w-10 h-10 rounded-lg bg-[#1f1f1f] flex items-center justify-center flex-shrink-0">
+            <GraduationCap className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Start Learning</h3>
+            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.5px] leading-relaxed">
+              Everything you need to master organic marketing for your business.
+            </p>
+          </div>
+        </button>
+        
+        <button 
+          onClick={() => navigate('/dashboard?tab=discover')}
+          className="flex items-start gap-4 p-4 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] transition-colors text-left"
+        >
+          <div className="w-10 h-10 rounded-lg bg-[#1f1f1f] flex items-center justify-center flex-shrink-0">
+            <Play className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Launch Campaign</h3>
+            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.5px] leading-relaxed">
+              Connect with Virality's vetted network of video editors, clippers, and themepages
+            </p>
+          </div>
+        </button>
+        
+        <button 
+          onClick={() => navigate('/dashboard?tab=discover')}
+          className="flex items-start gap-4 p-4 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] transition-colors text-left"
+        >
+          <div className="w-10 h-10 rounded-lg bg-[#1f1f1f] flex items-center justify-center flex-shrink-0">
+            <Search className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">Discover Winning Content</h3>
+            <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.5px] leading-relaxed">
+              Spy on your competitor's Viral videos through our curated content library
+            </p>
+          </div>
+        </button>
+      </div>
 
-      {/* Recommended Campaigns Section */}
+      {/* Stats Header */}
       {recommendedCampaigns.length > 0 && <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Recommended for You</h3>
