@@ -121,10 +121,7 @@ export function CampaignDetailsDialog({
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-lg font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>{campaign.brand_name}</h2>
-              <Check className="w-4 h-4 text-[#2060df]" />
-            </div>
+            <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>{campaign.brand_name}</h2>
             <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
               <span>Started {formatDate(startDate)}</span>
               <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
@@ -134,18 +131,13 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Next Payout Card */}
-        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#2060df]/10 via-[#4f89ff]/5 to-transparent border border-[#2060df]/20">
+        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#2060df]/10 via-[#4f89ff]/5 to-transparent">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#2060df]/15 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-[#2060df]" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Next Payout</p>
-                <p className="text-sm font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-                  {nextPayout.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                </p>
-              </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Next Payout</p>
+              <p className="text-sm font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                {nextPayout.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+              </p>
             </div>
             <div className="text-right">
               <div className="flex items-center gap-1.5">
@@ -176,28 +168,28 @@ export function CampaignDetailsDialog({
             <p className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>{daysUntilEnd !== null ? `${daysUntilEnd}d` : "—"}</p>
           </div>
 
-          <div className="text-center border-l border-border/50">
+          <div className="text-center">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Language</p>
             <p className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>English</p>
           </div>
 
-          <div className="text-center border-l border-border/50">
+          <div className="text-center">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Platforms</p>
-            <div className="flex justify-center gap-1.5 mt-1">
+            <div className="flex justify-center gap-2 mt-1.5">
               {campaign.allowed_platforms?.map(platform => (
-                <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-4 h-4 opacity-80" />
+                <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-6 h-6" />
               ))}
             </div>
           </div>
 
-          <div className="text-center border-l border-border/50">
+          <div className="text-center">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Pay Type</p>
             <p className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Per view</p>
           </div>
 
-          <div className="text-center border-l border-border/50">
-            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Payout</p>
-            <p className="font-semibold text-sm text-[#2060df]" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>${campaign.rpm_rate.toFixed(2)}</p>
+          <div className="text-center">
+            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Per 1M Views</p>
+            <p className="font-semibold text-sm text-[#2060df]" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>${(campaign.rpm_rate * 1000).toLocaleString()}</p>
           </div>
         </div>
 
