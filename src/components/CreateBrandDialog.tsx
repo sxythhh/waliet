@@ -130,10 +130,7 @@ export function CreateBrandDialog({
   };
   return <Dialog open={open} onOpenChange={setOpen}>
       {!hideTrigger && <DialogTrigger asChild>
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Brand
-          </Button>
+          
         </DialogTrigger>}
       <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
         {/* Header with gradient accent */}
