@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,6 +15,7 @@ interface WorkspaceContextType {
   setWorkspace: (workspace: "creator" | string) => void;
   isCreatorMode: boolean;
   isBrandMode: boolean;
+  refreshBrands: () => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -22,6 +23,7 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefin
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentBrand, setCurrentBrand] = useState<Brand | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   const workspaceParam = searchParams.get("workspace") || "creator";
   const currentWorkspace = workspaceParam;
@@ -34,7 +36,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     } else {
       setCurrentBrand(null);
     }
-  }, [currentWorkspace, isBrandMode]);
+  }, [currentWorkspace, isBrandMode, refreshTrigger]);
 
   const fetchBrandBySlug = async (slug: string) => {
     const { data } = await supabase
@@ -60,13 +62,18 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setSearchParams(newParams);
   };
 
+  const refreshBrands = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
+
   return (
     <WorkspaceContext.Provider value={{ 
       currentWorkspace, 
       currentBrand, 
       setWorkspace,
       isCreatorMode,
-      isBrandMode
+      isBrandMode,
+      refreshBrands
     }}>
       {children}
     </WorkspaceContext.Provider>
