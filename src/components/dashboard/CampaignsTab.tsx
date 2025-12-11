@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
+import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { OptimizedImage } from "@/components/OptimizedImage";
 interface Campaign {
   id: string;
@@ -109,6 +110,8 @@ export function CampaignsTab({
   const [submitDemographicsDialogOpen, setSubmitDemographicsDialogOpen] = useState(false);
   const [campaignDetailsDialogOpen, setCampaignDetailsDialogOpen] = useState(false);
   const [selectedCampaignForDetails, setSelectedCampaignForDetails] = useState<Campaign | null>(null);
+  const [joinCampaignSheetOpen, setJoinCampaignSheetOpen] = useState(false);
+  const [selectedCampaignForJoin, setSelectedCampaignForJoin] = useState<any>(null);
   const [selectedAccount, setSelectedAccount] = useState<{
     id: string;
     platform: string;
@@ -611,7 +614,28 @@ export function CampaignsTab({
             {recommendedCampaigns.map(campaign => {
           const budgetUsed = campaign.budget_used || 0;
           const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-          return <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer" onClick={() => navigate(`/campaign/preview/${campaign.id}`)}>
+          return <Card key={campaign.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer" onClick={() => {
+            setSelectedCampaignForJoin({
+              id: campaign.id,
+              title: campaign.title,
+              description: '',
+              brand_name: campaign.brand_name,
+              brand_logo_url: campaign.brand_logo_url || '',
+              budget: campaign.budget,
+              budget_used: campaign.budget_used || 0,
+              rpm_rate: campaign.rpm_rate,
+              status: 'active',
+              start_date: null,
+              banner_url: campaign.banner_url,
+              platforms: campaign.allowed_platforms || [],
+              slug: campaign.slug,
+              guidelines: null,
+              application_questions: [],
+              requires_application: false,
+              is_infinite_budget: campaign.is_infinite_budget
+            });
+            setJoinCampaignSheetOpen(true);
+          }}>
                   {/* Banner Image */}
                   {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                       <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
@@ -1016,5 +1040,7 @@ export function CampaignsTab({
       </>}
     
       <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} />
+      
+      <JoinCampaignSheet campaign={selectedCampaignForJoin} open={joinCampaignSheetOpen} onOpenChange={setJoinCampaignSheetOpen} />
     </div>;
 }
