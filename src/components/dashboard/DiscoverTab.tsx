@@ -368,32 +368,29 @@ export function DiscoverTab() {
                   {/* Content Section */}
                   <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
                     {/* Brand Logo + Title */}
-                    <div className="flex items-start gap-2.5">
+                    <div className="flex items-center gap-2.5">
                       {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
                           <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                         </div>}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline">
-                            {campaign.title}
-                          </h3>
-                          {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                        backgroundColor: '#b60b0b',
-                        borderTop: '1px solid #ed3030',
-                        borderRadius: '20px'
-                      }}>
-                              <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
-                              Ended
-                            </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                        backgroundColor: '#1f6d36',
-                        borderTop: '1px solid #3c8544',
-                        borderRadius: '20px'
-                      }}>
-                              <img src={checkCircleIcon} alt="" className="h-2.5 w-2.5" />
-                              Active
-                            </span>}
-                        </div>
-                        <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline">
+                          {campaign.title}
+                        </h3>
+                        {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                      backgroundColor: '#b60b0b',
+                      borderTop: '1px solid #ed3030',
+                      borderRadius: '20px'
+                    }}>
+                            <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
+                            Ended
+                          </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                      backgroundColor: '#1f6d36',
+                      borderTop: '1px solid #3c8544',
+                      borderRadius: '20px'
+                    }}>
+                            <img src={checkCircleIcon} alt="" className="h-2.5 w-2.5" />
+                            Active
+                          </span>}
                       </div>
                     </div>
 
@@ -420,11 +417,11 @@ export function DiscoverTab() {
                           </div>
                         </> : <>
                           <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                              <span className="text-base font-bold tabular-nums">
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-base font-bold tabular-nums" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                                 ${budgetUsed.toLocaleString()}
                               </span>
-                              <span className="text-xs text-muted-foreground font-semibold">
+                              <span className="text-xs text-muted-foreground font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
                                 / ${campaign.budget.toLocaleString()}
                               </span>
                             </div>
