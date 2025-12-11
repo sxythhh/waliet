@@ -368,25 +368,12 @@ export function DiscoverTab() {
               }
             };
             const isEnded = campaign.status === "ended";
-            return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
+            return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
                   {/* Gradient overlay for ended campaigns */}
                   {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                   {/* Banner Image */}
                   {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                       <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                      <div className="absolute top-2 right-2 z-20">
-                        {isEnded ? (
-                          <span className="flex items-center gap-1 text-white text-xs font-medium px-2.5 py-1 font-['Inter'] tracking-[-0.5px]" style={{ backgroundColor: '#b60b0b', borderTop: '2px solid #ed3030', borderRadius: '10px' }}>
-                            <PauseCircle className="h-3.5 w-3.5" fill="white" stroke="#b60b0b" />
-                            Ended
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1 text-white text-xs font-medium px-2.5 py-1 font-['Inter'] tracking-[-0.5px]" style={{ backgroundColor: '#1f6d36', borderTop: '2px solid #3c8544', borderRadius: '10px' }}>
-                            <CheckCircle className="h-3.5 w-3.5" fill="white" stroke="#1f6d36" />
-                            Active
-                          </span>
-                        )}
-                      </div>
                     </div>}
 
                   {/* Content Section */}
@@ -397,9 +384,22 @@ export function DiscoverTab() {
                           <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                         </div>}
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline">
-                          {campaign.title}
-                        </h3>
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline">
+                            {campaign.title}
+                          </h3>
+                          {isEnded ? (
+                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{ backgroundColor: '#b60b0b', borderTop: '1px solid #ed3030', borderRadius: '6px' }}>
+                              <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
+                              Ended
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{ backgroundColor: '#1f6d36', borderTop: '1px solid #3c8544', borderRadius: '6px' }}>
+                              <CheckCircle className="h-2.5 w-2.5" fill="white" stroke="#1f6d36" />
+                              Active
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
                       </div>
                     </div>
