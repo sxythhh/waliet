@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, CheckCircle, PauseCircle } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle } from "lucide-react";
+import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -389,13 +390,13 @@ export function DiscoverTab() {
                             {campaign.title}
                           </h3>
                           {isEnded ? (
-                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{ backgroundColor: '#b60b0b', borderTop: '1px solid #ed3030', borderRadius: '6px' }}>
+                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{ backgroundColor: '#b60b0b', borderTop: '1px solid #ed3030', borderRadius: '20px' }}>
                               <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
                               Ended
                             </span>
                           ) : (
-                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{ backgroundColor: '#1f6d36', borderTop: '1px solid #3c8544', borderRadius: '6px' }}>
-                              <CheckCircle className="h-2.5 w-2.5" fill="white" stroke="#1f6d36" />
+                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{ backgroundColor: '#1f6d36', borderTop: '1px solid #3c8544', borderRadius: '20px' }}>
+                              <img src={checkCircleIcon} alt="" className="h-2.5 w-2.5" />
                               Active
                             </span>
                           )}
