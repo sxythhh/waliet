@@ -176,12 +176,12 @@ export function UserSettingsTab() {
     }
   };
   if (loading) {
-    return <div className="p-4 space-y-6 max-w-2xl">
+    return <div className="p-4 space-y-6 max-w-2xl mx-auto">
         <div className="space-y-2">
           <Skeleton className="h-8 w-32 dark:bg-muted-foreground/20" />
           <Skeleton className="h-4 w-48 dark:bg-muted-foreground/20" />
         </div>
-        <div className="p-6 rounded-xl bg-muted/30 dark:bg-muted/50 space-y-6">
+        <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Skeleton className="w-20 h-20 rounded-full dark:bg-muted-foreground/20" />
             <div className="space-y-2">
@@ -195,7 +195,8 @@ export function UserSettingsTab() {
         </div>
       </div>;
   }
-  return <div className="p-4 space-y-6 max-w-2xl">
+
+  return <div className="p-4 space-y-6 max-w-2xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -206,28 +207,21 @@ export function UserSettingsTab() {
       </div>
 
       {/* Brand Settings Section */}
-      {isBrandMode && brand && <div className="rounded-xl bg-muted/30 dark:bg-muted/50 overflow-hidden">
-          <div className="p-5 border-b border-border/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Building2 className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <h2 className="font-medium tracking-[-0.5px]">Brand</h2>
-                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">Workspace settings</p>
-                </div>
-              </div>
-              <EditBrandDialog brand={brand} onSuccess={fetchBrand} trigger={<Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>} />
+      {isBrandMode && brand && <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-medium tracking-[-0.5px]">Brand</h2>
+              <p className="text-xs text-muted-foreground tracking-[-0.5px]">Workspace settings</p>
             </div>
+            <EditBrandDialog brand={brand} onSuccess={fetchBrand} trigger={<Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>} />
           </div>
           
-          <div className="p-5 space-y-4">
+          <div className="space-y-4">
             <div className="flex items-center gap-4">
-              {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-14 h-14 rounded-xl object-cover ring-2 ring-border/50" /> : <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-lg font-semibold ring-2 ring-border/50">
+              {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-14 h-14 rounded-xl object-cover" /> : <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-lg font-semibold">
                   {brand.name?.[0]?.toUpperCase() || "B"}
                 </div>}
               <div className="flex-1 min-w-0">
@@ -236,13 +230,13 @@ export function UserSettingsTab() {
               </div>
             </div>
 
-            {(brand.home_url || brand.assets_url) && <div className="grid grid-cols-2 gap-3 pt-2">
-                {brand.home_url && <a href={brand.home_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-background/50 hover:bg-background transition-colors group">
+            {(brand.home_url || brand.assets_url) && <div className="grid grid-cols-2 gap-3">
+                {brand.home_url && <a href={brand.home_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group">
                     <Globe className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     <span className="text-sm truncate tracking-[-0.5px]">Website</span>
                     <ExternalLink className="h-3 w-3 text-muted-foreground/50 ml-auto" />
                   </a>}
-                {brand.assets_url && <a href={brand.assets_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-background/50 hover:bg-background transition-colors group">
+                {brand.assets_url && <a href={brand.assets_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group">
                     <Folder className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     <span className="text-sm truncate tracking-[-0.5px]">Assets</span>
                     <ExternalLink className="h-3 w-3 text-muted-foreground/50 ml-auto" />
@@ -252,24 +246,17 @@ export function UserSettingsTab() {
         </div>}
 
       {/* Profile Section */}
-      <div className="rounded-xl bg-muted/30 dark:bg-muted/50 overflow-hidden">
-        <div className="p-5 border-b border-border/50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <User className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h2 className="font-medium tracking-[-0.5px]">Profile</h2>
-              <p className="text-xs text-muted-foreground tracking-[-0.5px]">Your personal information</p>
-            </div>
-          </div>
+      <div className="space-y-4">
+        <div>
+          <h2 className="font-medium tracking-[-0.5px]">Profile</h2>
+          <p className="text-xs text-muted-foreground tracking-[-0.5px]">Your personal information</p>
         </div>
 
-        <div className="p-5 space-y-6">
+        <div className="space-y-6">
           {/* Avatar Section */}
           <div className="flex items-center gap-4">
             <div className="relative group">
-              <Avatar className="w-20 h-20 ring-2 ring-border/50">
+              <Avatar className="w-20 h-20">
                 <AvatarImage src={profile.avatar_url} alt={profile.username} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
                   {profile.username?.[0]?.toUpperCase() || "U"}
@@ -295,7 +282,7 @@ export function UserSettingsTab() {
                 <Mail className="h-3.5 w-3.5" />
                 Email
               </Label>
-              <Input value={userEmail} disabled className="bg-background/50 border-border/50 text-muted-foreground h-11" />
+              <Input value={userEmail} disabled className="bg-muted/30 border-0 text-muted-foreground h-11" />
             </div>
 
             {/* Username & Full Name */}
@@ -305,14 +292,14 @@ export function UserSettingsTab() {
                 <Input value={profile.username} onChange={e => setProfile({
                 ...profile,
                 username: e.target.value
-              })} className="bg-background/50 border-border/50 h-11" placeholder="username" />
+              })} className="bg-muted/30 border-0 h-11" placeholder="username" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Full Name</Label>
                 <Input value={profile.full_name} onChange={e => setProfile({
                 ...profile,
                 full_name: e.target.value
-              })} className="bg-background/50 border-border/50 h-11" placeholder="John Doe" />
+              })} className="bg-muted/30 border-0 h-11" placeholder="John Doe" />
               </div>
             </div>
 
@@ -326,11 +313,11 @@ export function UserSettingsTab() {
                 <Input value={profile.country} onChange={e => setProfile({
                 ...profile,
                 country: e.target.value
-              })} className="bg-background/50 border-border/50 h-11" placeholder="Country" />
+              })} className="bg-muted/30 border-0 h-11" placeholder="Country" />
                 <Input value={profile.city} onChange={e => setProfile({
                 ...profile,
                 city: e.target.value
-              })} className="bg-background/50 border-border/50 h-11" placeholder="City" />
+              })} className="bg-muted/30 border-0 h-11" placeholder="City" />
               </div>
             </div>
 
@@ -343,7 +330,7 @@ export function UserSettingsTab() {
               <Input value={profile.phone_number} onChange={e => setProfile({
               ...profile,
               phone_number: e.target.value
-            })} className="bg-background/50 border-border/50 h-11" placeholder="+1 (555) 000-0000" />
+            })} className="bg-muted/30 border-0 h-11" placeholder="+1 (555) 000-0000" />
             </div>
           </div>
 
