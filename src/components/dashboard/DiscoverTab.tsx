@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle } from "lucide-react";
@@ -78,7 +79,21 @@ export function DiscoverTab() {
   const [selectedBounty, setSelectedBounty] = useState<BountyCampaign | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bountySheetOpen, setBountySheetOpen] = useState(false);
+  const [joinPrivateDialogOpen, setJoinPrivateDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Auto-open private campaign dialog if joinPrivate param is present
+  useEffect(() => {
+    if (searchParams.get("joinPrivate") === "true") {
+      setJoinPrivateDialogOpen(true);
+      // Remove the param from URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("joinPrivate");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+  
   useEffect(() => {
     fetchCampaigns();
   }, []);
@@ -551,5 +566,7 @@ export function DiscoverTab() {
       setBountySheetOpen(false);
       fetchCampaigns();
     }} />
+      
+      <JoinPrivateCampaignDialog open={joinPrivateDialogOpen} onOpenChange={setJoinPrivateDialogOpen} />
     </div>;
 }
