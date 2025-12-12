@@ -144,10 +144,78 @@ export function CampaignCreationWizard({
   const [bannerPreview, setBannerPreview] = useState<string | null>(campaign?.banner_url || null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [shortimizeApiKey, setShortimizeApiKey] = useState("");
+  const [manualBudgetUsed, setManualBudgetUsed] = useState<string>("");
+  const [isAdjustingBudget, setIsAdjustingBudget] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     isAdmin
   } = useAdminCheck();
+
+  // Initialize manual budget used with current value
+  useEffect(() => {
+    if (campaign?.budget_used !== undefined) {
+      setManualBudgetUsed(campaign.budget_used.toString());
+    }
+  }, [campaign?.budget_used]);
+
+  const handleManualBudgetAdjustment = async () => {
+    if (!campaign?.id || !manualBudgetUsed) return;
+    
+    const newBudgetUsed = parseFloat(manualBudgetUsed);
+    if (isNaN(newBudgetUsed) || newBudgetUsed < 0) {
+      toast.error("Please enter a valid positive number");
+      return;
+    }
+
+    const oldBudgetUsed = campaign.budget_used || 0;
+    const difference = newBudgetUsed - oldBudgetUsed;
+
+    if (difference === 0) {
+      toast.info("No change in budget used");
+      return;
+    }
+
+    setIsAdjustingBudget(true);
+    try {
+      // Update the campaign budget_used
+      const { error: updateError } = await supabase
+        .from('campaigns')
+        .update({ budget_used: newBudgetUsed })
+        .eq('id', campaign.id);
+
+      if (updateError) throw updateError;
+
+      // Record the adjustment as a transaction
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error: txError } = await supabase
+        .from('wallet_transactions')
+        .insert({
+          user_id: user?.id,
+          amount: difference,
+          type: 'balance_correction',
+          status: 'completed',
+          description: `Manual budget adjustment for ${campaign.title}`,
+          created_by: user?.id,
+          metadata: {
+            campaign_id: campaign.id,
+            campaign_title: campaign.title,
+            old_budget_used: oldBudgetUsed,
+            new_budget_used: newBudgetUsed,
+            adjustment_type: 'manual_budget_update'
+          }
+        });
+
+      if (txError) throw txError;
+
+      toast.success(`Budget used updated: $${oldBudgetUsed.toFixed(2)} → $${newBudgetUsed.toFixed(2)}`);
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Budget adjustment error:', error);
+      toast.error(error.message || 'Failed to adjust budget');
+    } finally {
+      setIsAdjustingBudget(false);
+    }
+  };
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
@@ -924,6 +992,43 @@ export function CampaignCreationWizard({
 
                           {/* Pause toggle and Delete button for edit mode */}
                           {isEditMode && <div className="pt-4 border-t border-border space-y-4">
+                              {/* Manual Budget Adjustment - Admin Only */}
+                              {isAdmin && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium">Manual Budget Used Adjustment</Label>
+                                  <p className="text-xs text-muted-foreground">Current: ${(campaign?.budget_used || 0).toFixed(2)}</p>
+                                  <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                      <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={manualBudgetUsed}
+                                        onChange={(e) => setManualBudgetUsed(e.target.value)}
+                                        placeholder="New budget used"
+                                        className="pl-7"
+                                      />
+                                    </div>
+                                    <Button 
+                                      type="button" 
+                                      variant="outline" 
+                                      onClick={handleManualBudgetAdjustment}
+                                      disabled={isAdjustingBudget || !manualBudgetUsed}
+                                      className="shrink-0"
+                                    >
+                                      {isAdjustingBudget ? "Saving..." : "Update"}
+                                    </Button>
+                                  </div>
+                                  {manualBudgetUsed && !isNaN(parseFloat(manualBudgetUsed)) && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Change: {parseFloat(manualBudgetUsed) - (campaign?.budget_used || 0) >= 0 ? '+' : ''}
+                                      ${(parseFloat(manualBudgetUsed) - (campaign?.budget_used || 0)).toFixed(2)}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
                               <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                   <Label htmlFor="pause-campaign" className="text-sm font-medium">Pause Campaign</Label>
