@@ -243,14 +243,14 @@ export function AddSocialAccountDialog({
             <iframe src="https://joinvirality.com/accounts" className="w-full h-full" title="Connect Accounts" />
           </div>
           
-          <div className="p-6 pt-0">
+          <div className="p-6 pt-0 px-[10px]">
             
 
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
               {/* Platform Selection - Dropdown */}
               <div className="space-y-3">
                 <Label className="text-sm font-medium font-inter tracking-[-0.5px]">Select Platform</Label>
-                <Select value={selectedPlatform} onValueChange={(value) => setSelectedPlatform(value as Platform)}>
+                <Select value={selectedPlatform} onValueChange={value => setSelectedPlatform(value as Platform)}>
                   <SelectTrigger className="w-full bg-background border border-border font-inter tracking-[-0.5px]">
                     <SelectValue>
                       <div className="flex items-center gap-2">
@@ -260,14 +260,12 @@ export function AddSocialAccountDialog({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-background border border-border">
-                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
-                      <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
+                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
                         <div className="flex items-center gap-2">
                           {getPlatformIcon(platform)}
                           <span>{getPlatformLabel(platform)}</span>
                         </div>
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
