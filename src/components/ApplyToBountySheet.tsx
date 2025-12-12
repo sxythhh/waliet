@@ -11,7 +11,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import discordIcon from "@/assets/discord-icon.png";
-import tiktokLogo from "@/assets/tiktok-logo.png";
+import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 
 interface BountyCampaign {

@@ -25,7 +25,7 @@ import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
-import tiktokLogo from "@/assets/tiktok-logo.png";
+import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import paypalLogo from "@/assets/paypal-logo.svg";

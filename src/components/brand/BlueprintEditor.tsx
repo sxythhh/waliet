@@ -8,7 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { debounce } from "@/lib/utils";
 import { RichTextEditor } from "@/components/RichTextEditor";
-import tiktokLogo from "@/assets/tiktok-logo-black.png";
+import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import xLogo from "@/assets/x-logo.png";
