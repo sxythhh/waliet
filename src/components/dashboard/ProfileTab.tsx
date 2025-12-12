@@ -773,15 +773,15 @@ export function ProfileTab() {
                               <div className="flex-1 min-w-0">
                                 {/* Username Row */}
                                 <div className="flex items-center gap-2">
+                                  <div className="w-4 h-4 flex-shrink-0">
+                                    {getPlatformIcon(account.platform)}
+                                  </div>
                                   <span className="font-semibold text-base text-foreground truncate" style={{
                               fontFamily: 'Inter',
                               letterSpacing: '-0.5px'
                             }}>
                                     {account.username}
                                   </span>
-                                  <div className="w-4 h-4 flex-shrink-0">
-                                    {getPlatformIcon(account.platform)}
-                                  </div>
                                 </div>
                                 
                                 {/* Stats Row */}
