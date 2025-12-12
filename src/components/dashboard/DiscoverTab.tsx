@@ -760,11 +760,11 @@ export function DiscoverTab() {
                         
                         {/* Description with gradient fade */}
                         {bounty.description && (
-                          <div className="relative flex-1 overflow-hidden">
-                            <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed font-['Inter'] tracking-[-0.5px] pb-2">
+                          <div className="relative flex-1 overflow-hidden max-h-24">
+                            <p className="text-xs text-muted-foreground leading-relaxed font-['Inter'] tracking-[-0.5px]">
                               {bounty.description}
                             </p>
-                            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-card group-hover:from-[#0f0f0f] dark:group-hover:from-[#0f0f0f] to-transparent pointer-events-none transition-none" />
+                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card group-hover:from-[#0f0f0f] dark:group-hover:from-[#0f0f0f] to-transparent pointer-events-none transition-colors duration-300" />
                           </div>
                         )}
                         
