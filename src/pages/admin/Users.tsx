@@ -1214,52 +1214,52 @@ export default function AdminUsers() {
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px]",
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
                     hasDiscord === true ? "bg-[#5865F2]/20 text-[#5865F2]" : 
-                    hasDiscord === false ? "bg-red-500/10 text-red-400" : "bg-card/50"
+                    hasDiscord === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
                   )}
                   onClick={() => setHasDiscord(hasDiscord === true ? false : hasDiscord === false ? null : true)}
                 >
-                  Discord {hasDiscord === true ? "✓" : hasDiscord === false ? "✗" : ""}
+                  Discord {hasDiscord === true ? "Yes" : hasDiscord === false ? "No" : ""}
                 </Button>
                 
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px]",
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
                     hasPhone === true ? "bg-green-500/20 text-green-400" : 
-                    hasPhone === false ? "bg-red-500/10 text-red-400" : "bg-card/50"
+                    hasPhone === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
                   )}
                   onClick={() => setHasPhone(hasPhone === true ? false : hasPhone === false ? null : true)}
                 >
-                  Phone {hasPhone === true ? "✓" : hasPhone === false ? "✗" : ""}
+                  Phone {hasPhone === true ? "Yes" : hasPhone === false ? "No" : ""}
                 </Button>
                 
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px]",
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
                     hasSocialAccount === true ? "bg-blue-500/20 text-blue-400" : 
-                    hasSocialAccount === false ? "bg-red-500/10 text-red-400" : "bg-card/50"
+                    hasSocialAccount === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
                   )}
                   onClick={() => setHasSocialAccount(hasSocialAccount === true ? false : hasSocialAccount === false ? null : true)}
                 >
-                  Social {hasSocialAccount === true ? "✓" : hasSocialAccount === false ? "✗" : ""}
+                  Social {hasSocialAccount === true ? "Yes" : hasSocialAccount === false ? "No" : ""}
                 </Button>
                 
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px]",
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
                     hasApprovedDemographics === true ? "bg-emerald-500/20 text-emerald-400" : 
-                    hasApprovedDemographics === false ? "bg-red-500/10 text-red-400" : "bg-card/50"
+                    hasApprovedDemographics === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
                   )}
                   onClick={() => setHasApprovedDemographics(hasApprovedDemographics === true ? false : hasApprovedDemographics === false ? null : true)}
                 >
-                  Demographics {hasApprovedDemographics === true ? "✓" : hasApprovedDemographics === false ? "✗" : ""}
+                  Demographics {hasApprovedDemographics === true ? "Yes" : hasApprovedDemographics === false ? "No" : ""}
                 </Button>
               </div>
 
@@ -1267,7 +1267,7 @@ export default function AdminUsers() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 px-3 text-xs font-inter tracking-[-0.5px] bg-card/50 ml-auto gap-1.5"
+                className="h-9 px-3 text-xs font-inter tracking-[-0.5px] bg-card/50 ml-auto gap-1.5 hover:bg-muted"
                 onClick={() => setFiltersExpanded(!filtersExpanded)}
               >
                 {filtersExpanded ? "Less filters" : "More filters"}
@@ -1398,7 +1398,8 @@ export default function AdminUsers() {
             <div className="flex items-center justify-between text-xs text-muted-foreground font-inter tracking-[-0.5px]">
               <span>
                 {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} 
-                {filteredUsers.length !== users.length && ` (filtered from ${users.length})`}
+                {filteredUsers.length !== users.length && ` (filtered from ${users.length} loaded)`}
+                {totalUserCount > users.length && <span className="text-amber-500 ml-1">• {totalUserCount} total in database</span>}
               </span>
               {(selectedCampaign !== "all" || minEarnings || minBalance || hasDiscord !== null || hasPhone !== null || hasSocialAccount !== null || hasApprovedDemographics !== null || signupTimeframe !== "all") && (
                 <span className="text-primary">
