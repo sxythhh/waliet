@@ -1505,7 +1505,7 @@ export function WalletTab() {
 
       {/* Transaction Receipt Sheet */}
       <Sheet open={transactionSheetOpen} onOpenChange={setTransactionSheetOpen}>
-        <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0">
+        <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0 font-inter tracking-[-0.3px]">
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Hero Header with Amount */}
               <div className="px-6 pt-8 pb-6 text-center border-b border-[#242424]/0 relative">
@@ -1515,7 +1515,7 @@ export function WalletTab() {
                 >
                   <X className="w-4 h-4" />
                 </button>
-                <div className={`text-4xl font-bold tracking-tight mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
+                <div className={`text-4xl font-bold tracking-[-0.5px] mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
                   {selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? '+' : selectedTransaction.amount < 0 ? '-' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
                 </div>
                 <div className="text-sm text-muted-foreground mb-3">
@@ -1539,7 +1539,7 @@ export function WalletTab() {
                       {selectedTransaction.campaign.brand_logo_url ? <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-cover" /> : <DollarSign className="h-5 w-5 text-muted-foreground" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{selectedTransaction.campaign.title}</div>
+                      <div className="text-sm font-medium tracking-[-0.5px] truncate">{selectedTransaction.campaign.title}</div>
                       <div className="text-xs text-muted-foreground truncate">{selectedTransaction.campaign.brand_name}</div>
                     </div>
                   </div>}
@@ -1555,14 +1555,14 @@ export function WalletTab() {
                   })()}
                           <span className="text-xs text-muted-foreground">Account</span>
                         </div>
-                        <div className="text-sm font-medium truncate">@{selectedTransaction.metadata.account_username}</div>
+                        <div className="text-sm font-medium tracking-[-0.5px] truncate">@{selectedTransaction.metadata.account_username}</div>
                       </div>}
                     {selectedTransaction.metadata.views !== undefined && <div className="p-3 rounded-xl bg-muted/30">
                         <div className="flex items-center gap-2 mb-1">
                           <Eye className="w-4 h-4 text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">Views</span>
                         </div>
-                        <div className="text-sm font-medium">{selectedTransaction.metadata.views.toLocaleString()}</div>
+                        <div className="text-sm font-medium tracking-[-0.5px]">{selectedTransaction.metadata.views.toLocaleString()}</div>
                       </div>}
                   </div>}
 
@@ -1571,7 +1571,7 @@ export function WalletTab() {
                     <div className="flex items-start gap-2">
                       <X className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
                       <div>
-                        <div className="text-xs font-medium text-destructive mb-1">Rejection Reason</div>
+                        <div className="text-xs font-medium tracking-[-0.5px] text-destructive mb-1">Rejection Reason</div>
                         <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
                       </div>
                     </div>
@@ -1581,11 +1581,11 @@ export function WalletTab() {
                 {(selectedTransaction.type === 'transfer_sent' || selectedTransaction.type === 'transfer_received') && selectedTransaction.metadata && <div className="p-3 rounded-xl bg-muted/30 space-y-2">
                     {selectedTransaction.type === 'transfer_sent' && selectedTransaction.metadata.recipient_username && <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">Sent To</span>
-                        <span className="text-sm font-medium">@{selectedTransaction.metadata.recipient_username}</span>
+                        <span className="text-sm font-medium tracking-[-0.5px]">@{selectedTransaction.metadata.recipient_username}</span>
                       </div>}
                     {selectedTransaction.type === 'transfer_received' && selectedTransaction.metadata.sender_username && <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">From</span>
-                        <span className="text-sm font-medium">@{selectedTransaction.metadata.sender_username}</span>
+                        <span className="text-sm font-medium tracking-[-0.5px]">@{selectedTransaction.metadata.sender_username}</span>
                       </div>}
                     {selectedTransaction.metadata.note && <div className="pt-2 border-t border-border/50">
                         <div className="text-xs text-muted-foreground mb-1">Note</div>
@@ -1597,7 +1597,7 @@ export function WalletTab() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between py-2.5">
                     <span className="text-sm text-muted-foreground">Type</span>
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium tracking-[-0.5px]">
                       {selectedTransaction.type === 'earning' ? 'Earnings' : selectedTransaction.type === 'referral' ? 'Referral Bonus' : selectedTransaction.type === 'balance_correction' ? 'Balance Correction' : selectedTransaction.type === 'transfer_sent' ? 'Transfer Sent' : selectedTransaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
                     </span>
                   </div>
@@ -1623,12 +1623,12 @@ export function WalletTab() {
 
                   {selectedTransaction.source && <div className="flex items-center justify-between py-2.5">
                       <span className="text-sm text-muted-foreground">From</span>
-                      <span className="text-sm font-medium text-right max-w-[180px] truncate">{selectedTransaction.source}</span>
+                      <span className="text-sm font-medium tracking-[-0.5px] text-right max-w-[180px] truncate">{selectedTransaction.source}</span>
                     </div>}
 
                   {selectedTransaction.destination && <div className="flex items-center justify-between py-2.5">
                       <span className="text-sm text-muted-foreground">To</span>
-                      <span className="text-sm font-medium text-right max-w-[180px] truncate">
+                      <span className="text-sm font-medium tracking-[-0.5px] text-right max-w-[180px] truncate">
                         {(() => {
                     const details = selectedTransaction.metadata?.payoutDetails;
                     if (details?.address) return `${details.address.slice(0, 6)}...${details.address.slice(-4)}`;
@@ -1643,11 +1643,11 @@ export function WalletTab() {
                 {/* Payout Method Details */}
                 {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (() => {
               return <div className="space-y-1 pt-4">
-                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Payout Details</div>
+                      <div className="text-xs font-medium tracking-[-0.5px] text-muted-foreground uppercase tracking-wide mb-3">Payout Details</div>
                       
                       {selectedTransaction.metadata.payout_method && <div className="flex items-center justify-between py-2.5">
                           <span className="text-sm text-muted-foreground">Method</span>
-                          <span className="text-sm font-medium capitalize">{selectedTransaction.metadata.payout_method}</span>
+                          <span className="text-sm font-medium tracking-[-0.5px] capitalize">{selectedTransaction.metadata.payout_method}</span>
                         </div>}
                       
                       {selectedTransaction.metadata.network && (() => {
