@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { useTheme } from "next-themes";
 import tiktokLogo from "@/assets/tiktok-logo.png";
-import instagramLogo from "@/assets/instagram-logo-new.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
-import instagramLogoBlack from "@/assets/instagram-logo-new.png";
+import instagramLogoBlack from "@/assets/instagram-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-new.png";
 
 interface ConnectedAccount {

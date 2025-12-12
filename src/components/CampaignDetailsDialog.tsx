@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2 } from "lucide-react";
 import { useState } from "react";
 import tiktokIcon from "@/assets/tiktok-logo-black.png";
-import instagramIcon from "@/assets/instagram-logo-new.png";
+import instagramIcon from "@/assets/instagram-logo-white.png";
 import youtubeIcon from "@/assets/youtube-logo-new.png";
 import xIcon from "@/assets/x-logo.png";
 interface ConnectedAccount {

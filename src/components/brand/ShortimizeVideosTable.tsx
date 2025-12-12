@@ -13,7 +13,7 @@ import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, E
 import { format, startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import type { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
-import instagramLogo from "@/assets/instagram-logo-new.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 
 interface ShortimizeVideo {
