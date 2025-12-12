@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayoutDashboard, Package, LogOut, DollarSign, Users, TrendingUp, Receipt, Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,13 +8,24 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const menuItems = [
-  { title: "Overview", icon: LayoutDashboard, path: "/admin" },
-  { title: "Brands", icon: Package, path: "/admin/brands" },
-  { title: "Campaigns", icon: TrendingUp, path: "/admin/campaigns" },
-  { title: "Users", icon: Users, path: "/admin/users" },
-  { title: "Payouts", icon: DollarSign, path: "/admin/payouts" },
-  { title: "Transactions", icon: Receipt, path: "/admin/transactions" },
+  { title: "Overview", icon: "dashboard", path: "/admin" },
+  { title: "Brands", icon: "inventory_2", path: "/admin/brands" },
+  { title: "Campaigns", icon: "trending_up", path: "/admin/campaigns" },
+  { title: "Users", icon: "group", path: "/admin/users" },
+  { title: "Payouts", icon: "payments", path: "/admin/payouts" },
+  { title: "Transactions", icon: "receipt_long", path: "/admin/transactions" },
 ];
+
+function MaterialIcon({ name, className }: { name: string; className?: string }) {
+  return (
+    <span 
+      className={cn("material-symbols-rounded", className)}
+      style={{ fontSize: 'inherit' }}
+    >
+      {name}
+    </span>
+  );
+}
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const navigate = useNavigate();
@@ -31,12 +42,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4">
-        <h2 className="text-lg font-semibold tracking-tight">Admin</h2>
+    <div className="flex flex-col h-full bg-[#0a0a0a]">
+      <div className="p-4 pb-6">
+        <h2 className="text-base font-semibold font-inter tracking-[-0.5px] text-foreground">Admin</h2>
       </div>
       
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 px-2">
         {menuItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -45,26 +56,32 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
+                "flex items-center gap-3 px-3 py-2.5 text-sm font-inter tracking-[-0.5px] transition-colors",
                 active
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  ? "text-[#2060df] font-medium"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <MaterialIcon 
+                name={item.icon} 
+                className={cn(
+                  "text-lg",
+                  active ? "text-[#2060df]" : ""
+                )} 
+              />
               <span>{item.title}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="p-3">
+      <div className="p-2 mt-auto">
         <Button
           onClick={handleSignOut}
           variant="ghost"
-          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          className="w-full justify-start gap-3 px-3 text-sm font-inter tracking-[-0.5px] text-muted-foreground hover:text-destructive hover:bg-destructive/10"
         >
-          <LogOut className="h-4 w-4" />
+          <MaterialIcon name="logout" className="text-lg" />
           <span>Sign Out</span>
         </Button>
       </div>
@@ -89,7 +106,7 @@ export function AdminSidebar() {
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 bg-card">
+          <SheetContent side="left" className="w-64 p-0 bg-[#0a0a0a] border-r border-[#141414]">
             <SidebarContent onNavigate={() => setOpen(false)} />
           </SheetContent>
         </Sheet>
@@ -98,7 +115,7 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="hidden md:flex h-screen w-56 flex-col bg-card sticky top-0">
+    <aside className="hidden md:flex h-screen w-56 flex-col bg-[#0a0a0a] border-r border-[#141414] sticky top-0">
       <SidebarContent />
     </aside>
   );
