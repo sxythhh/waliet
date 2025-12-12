@@ -340,7 +340,7 @@ export function ApplyToBountySheet({
           </SheetHeader>
 
           {/* Stats Row - Clean horizontal layout */}
-          <div className="flex items-center gap-6 py-4 border-y border-white/10">
+          <div className="flex items-center gap-6 py-4">
             <div className="flex-1">
               <p className="text-2xl font-bold text-white font-['Inter'] tracking-[-0.5px]">
                 ${bounty.monthly_retainer.toLocaleString()}
@@ -348,16 +348,12 @@ export function ApplyToBountySheet({
               <p className="text-xs text-white/50 font-medium">per month</p>
             </div>
             
-            <div className="w-px h-10 bg-white/10" />
-            
             <div className="flex-1">
               <p className="text-2xl font-bold text-white font-['Inter'] tracking-[-0.5px]">
                 {bounty.videos_per_month}
               </p>
               <p className="text-xs text-white/50 font-medium">videos/month</p>
             </div>
-            
-            <div className="w-px h-10 bg-white/10" />
             
             <div className="flex-1">
               <p className={`text-2xl font-bold font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-white/40' : 'text-white'}`}>
@@ -370,7 +366,7 @@ export function ApplyToBountySheet({
           </div>
 
           {/* Content Requirements */}
-          <div className="rounded-lg bg-white/5 p-4">
+          <div className="rounded-lg p-4">
             <h3 className="text-sm font-semibold text-white mb-2">Content Style Requirements</h3>
             <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">
               {bounty.content_style_requirements}
@@ -407,7 +403,7 @@ export function ApplyToBountySheet({
                 value={applicationText}
                 onChange={(e) => setApplicationText(e.target.value)}
                 placeholder="Tell the brand why you'd be perfect for this boost..."
-                className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[120px] resize-none"
+                className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[120px] resize-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
 
