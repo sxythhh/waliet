@@ -24,6 +24,8 @@ interface UserProfile {
   discord_id?: string | null;
   discord_username?: string | null;
   discord_avatar?: string | null;
+  phone_number?: string | null;
+  created_at?: string | null;
   wallets?: {
     balance: number;
     total_earned: number;
@@ -392,31 +394,50 @@ export function UserDetailsDialog({
         {/* Header Section */}
         <div className="">
           <div className="flex items-center gap-4">
-            {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#2a2a2a]" /> : <div className="h-14 w-14 rounded-full bg-[#1a1a1a] flex items-center justify-center ring-2 ring-[#2a2a2a]">
-                <UsersIcon className="h-6 w-6 text-muted-foreground" />
-              </div>}
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt={user.username} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#2a2a2a]" />
+            ) : (
+              <div className="h-14 w-14 rounded-full bg-[#1a1a1a] flex items-center justify-center ring-2 ring-[#2a2a2a]">
+                <span className="text-xl font-semibold text-muted-foreground uppercase">
+                  {user.username?.charAt(0) || '?'}
+                </span>
+              </div>
+            )}
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-semibold text-foreground truncate" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.5px'
-            }}>
-                {user.username}
-              </h2>
-              {user.full_name && <p className="text-sm text-muted-foreground truncate">{user.full_name}</p>}
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-foreground truncate" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
+                  {user.username}
+                </h2>
+                {user.discord_id && (
+                  <Badge variant="outline" className="bg-[#5865F2] text-white border-0 px-2 py-0.5">
+                    <img src={discordIcon} alt="Discord" className="w-3 h-3 mr-1 brightness-0 invert" />
+                    {user.discord_username || "Connected"}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                {user.full_name && <span>{user.full_name}</span>}
+                {user.phone_number && (
+                  <>
+                    {user.full_name && <span className="text-[#2a2a2a]">•</span>}
+                    <span>{user.phone_number}</span>
+                  </>
+                )}
+                {user.created_at && (
+                  <>
+                    {(user.full_name || user.phone_number) && <span className="text-[#2a2a2a]">•</span>}
+                    <span>Joined {format(new Date(user.created_at), 'MMM d, yyyy')}</span>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Discord connection indicator */}
-              {user.discord_id && (
-                <Badge variant="outline" className="bg-[#5865F2]/10 text-[#5865F2] border-0 px-2 py-1">
-                  <img src={discordIcon} alt="Discord" className="w-3 h-3 mr-1" />
-                  {user.discord_username || "Connected"}
-                </Badge>
-              )}
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-0 px-2 py-1">
-                <Diamond className="w-3 h-3 mr-1 fill-emerald-400" />
-                {user.trust_score ?? 0}
-              </Badge>
-            </div>
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-0 px-2 py-1">
+              <Diamond className="w-3 h-3 mr-1 fill-emerald-400" />
+              {user.trust_score ?? 0}
+            </Badge>
           </div>
 
           {/* Stats Row */}
