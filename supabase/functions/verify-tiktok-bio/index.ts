@@ -71,23 +71,41 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   }
 
   const data = await response.json();
-  console.log('Instagram API response received');
+  console.log('Instagram API response received:', JSON.stringify(data).slice(0, 500));
 
-  if (!data || data.error) {
-    throw new Error(data?.error || 'User not found on Instagram');
+  // instagram120 may wrap profile data under a `profile` or `data` key
+  const profile = (data as any).profile || (data as any).data || data;
+
+  if (!profile || (!profile.username && !profile.id)) {
+    throw new Error('User not found on Instagram');
   }
 
-  const bio = data.biography || data.bio || '';
-  const verified = bio.includes(verificationCode);
+  const bioRaw =
+    (profile as any).biography ||
+    (profile as any).bio ||
+    (profile as any).biography_with_entities?.raw_text ||
+    '';
+
+  const bio = typeof bioRaw === 'string' ? bioRaw : String(bioRaw ?? '');
+  const verified = bio.toLowerCase().includes(verificationCode.toLowerCase());
 
   return {
     verified,
     bio,
     user: {
-      nickname: data.full_name || data.username,
-      avatar: data.profile_pic_url || data.profile_pic_url_hd,
-      followerCount: data.follower_count || data.edge_followed_by?.count || 0,
-      isVerified: data.is_verified || false,
+      nickname: (profile as any).full_name || (profile as any).name || (profile as any).username,
+      avatar:
+        (profile as any).profile_pic_url ||
+        (profile as any).profile_pic_url_hd ||
+        (profile as any).avatar_hd ||
+        (profile as any).avatar,
+      followerCount:
+        (profile as any).follower_count ||
+        (profile as any).followers_count ||
+        (profile as any).followers ||
+        (profile as any).edge_followed_by?.count ||
+        0,
+      isVerified: (profile as any).is_verified || false,
     },
   };
 }
