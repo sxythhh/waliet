@@ -38,14 +38,15 @@ export default function AuthDialog({
   // Check if user needs onboarding
   useEffect(() => {
     const checkOnboardingStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("account_type, phone_number")
-        .eq("id", session.user.id)
-        .single();
+      const {
+        data: profile
+      } = await supabase.from("profiles").select("account_type, phone_number").eq("id", session.user.id).single();
 
       // Show onboarding if user doesn't have phone number set
       if (profile && !profile.phone_number) {
@@ -54,7 +55,6 @@ export default function AuthDialog({
         onOpenChange(false);
       }
     };
-
     if (open) {
       checkOnboardingStatus();
     }
@@ -131,7 +131,6 @@ export default function AuthDialog({
       });
     }
   };
-
   const handleDiscordSignIn = async () => {
     setLoading(true);
     const {
@@ -229,7 +228,7 @@ export default function AuthDialog({
                       <Button variant="outline" className="w-full h-12 bg-[#5865F2] hover:bg-[#5865F2]/90 text-white hover:text-white border-0 font-semibold font-geist gap-3" style={{
                     letterSpacing: '-0.5px'
                   }} onClick={handleDiscordSignIn} disabled={loading}>
-                        <img src={discordIcon} alt="Discord" className="h-5 w-5" />
+                        <img alt="Discord" className="h-5 w-5" src="/lovable-uploads/7cbccb5b-27cd-4ef1-9051-677ab8901520.webp" />
                         Continue with Discord
                       </Button>
 
@@ -309,13 +308,7 @@ export default function AuthDialog({
       </Dialog>
 
       {/* Onboarding Dialog */}
-      {newUserId && (
-        <OnboardingDialog
-          open={showOnboarding}
-          onOpenChange={setShowOnboarding}
-          userId={newUserId}
-        />
-      )}
+      {newUserId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={newUserId} />}
 
       {/* Password Reset Dialog */}
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
