@@ -73,8 +73,8 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   const data = await response.json();
   console.log('Instagram API response received:', JSON.stringify(data).slice(0, 500));
 
-  // instagram120 may wrap profile data under a `profile` or `data` key
-  const profile = (data as any).profile || (data as any).data || data;
+  // instagram120 wraps profile data under `result` key
+  const profile = (data as any).result || (data as any).profile || (data as any).data || data;
 
   if (!profile || (!profile.username && !profile.id)) {
     throw new Error('User not found on Instagram');
