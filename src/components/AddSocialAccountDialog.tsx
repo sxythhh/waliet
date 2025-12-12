@@ -221,7 +221,7 @@ export function AddSocialAccountDialog({
                   Platform
                 </Label>
                 <Select value={selectedPlatform} onValueChange={(value) => setSelectedPlatform(value as Platform)}>
-                  <SelectTrigger className="w-full h-12 bg-[#0a0a0a] border-border/50 font-inter tracking-[-0.5px]">
+                  <SelectTrigger className="w-full h-12 bg-[#141414] border-0 font-inter tracking-[-0.5px]">
                     <SelectValue>
                       <div className="flex items-center gap-3">
                         {getPlatformIcon(selectedPlatform)}
@@ -229,7 +229,7 @@ export function AddSocialAccountDialog({
                       </div>
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-border/50">
+                  <SelectContent className="bg-[#141414] border-0">
                     {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map((platform) => (
                       <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
                         <div className="flex items-center gap-3">
@@ -254,7 +254,7 @@ export function AddSocialAccountDialog({
                     placeholder="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value.replace(/@/g, "").trim())}
-                    className="h-12 bg-[#0a0a0a] border-border/50 pl-8 font-inter tracking-[-0.5px]"
+                    className="h-12 bg-[#141414] border-0 pl-8 font-inter tracking-[-0.5px]"
                   />
                 </div>
               </div>
