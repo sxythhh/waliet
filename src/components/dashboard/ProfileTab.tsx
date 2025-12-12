@@ -941,40 +941,76 @@ export function ProfileTab() {
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
             </div>
 
-            {/* First name / Last name */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>First name</p>
-                <Input value={profile.full_name?.split(' ')[0] || ""} onChange={e => {
-                const lastName = profile.full_name?.split(' ').slice(1).join(' ') || '';
-                setProfile({
-                  ...profile,
-                  full_name: `${e.target.value}${lastName ? ' ' + lastName : ''}`
-                });
-              }} placeholder="First name" className="h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }} />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-2" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>Last name</p>
-                <Input value={profile.full_name?.split(' ').slice(1).join(' ') || ""} onChange={e => {
-                const firstName = profile.full_name?.split(' ')[0] || '';
-                setProfile({
-                  ...profile,
-                  full_name: `${firstName}${e.target.value ? ' ' + e.target.value : ''}`
-                });
-              }} placeholder="Last name" className="h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }} />
-              </div>
+            {/* Discord Account */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Discord</p>
+              {profile.discord_username ? (
+                <div className="flex items-center justify-between h-10 px-3 bg-muted/30 rounded-md">
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"} 
+                      alt="Discord" 
+                      className="w-5 h-5 rounded-full" 
+                    />
+                    <span className="text-sm" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.3px'
+                    }}>
+                      {profile.discord_username}
+                    </span>
+                  </div>
+                  <DiscordLinkDialog 
+                    userId={profile.id} 
+                    discordUsername={profile.discord_username} 
+                    discordAvatar={profile.discord_avatar || undefined}
+                    onSuccess={fetchProfile}
+                  />
+                </div>
+              ) : (
+                <DiscordLinkDialog 
+                  userId={profile.id} 
+                  onSuccess={fetchProfile}
+                />
+              )}
+            </div>
+
+            {/* First name */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>First name</p>
+              <Input value={profile.full_name?.split(' ')[0] || ""} onChange={e => {
+              const lastName = profile.full_name?.split(' ').slice(1).join(' ') || '';
+              setProfile({
+                ...profile,
+                full_name: `${e.target.value}${lastName ? ' ' + lastName : ''}`
+              });
+            }} placeholder="First name" className="w-full h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }} />
+            </div>
+
+            {/* Last name */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>Last name</p>
+              <Input value={profile.full_name?.split(' ').slice(1).join(' ') || ""} onChange={e => {
+              const firstName = profile.full_name?.split(' ')[0] || '';
+              setProfile({
+                ...profile,
+                full_name: `${firstName}${e.target.value ? ' ' + e.target.value : ''}`
+              });
+            }} placeholder="Last name" className="w-full h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }} />
             </div>
 
             {/* Username */}
@@ -1195,41 +1231,6 @@ export function ProfileTab() {
             })} placeholder="Enter phone number" />
             </div>
 
-            {/* Discord Account */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Discord</p>
-              {profile.discord_username ? (
-                <div className="flex items-center justify-between h-10 px-3 bg-muted/30 rounded-md">
-                  <div className="flex items-center gap-2">
-                    <img 
-                      src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"} 
-                      alt="Discord" 
-                      className="w-5 h-5 rounded-full" 
-                    />
-                    <span className="text-sm" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.3px'
-                    }}>
-                      {profile.discord_username}
-                    </span>
-                  </div>
-                  <DiscordLinkDialog 
-                    userId={profile.id} 
-                    discordUsername={profile.discord_username} 
-                    discordAvatar={profile.discord_avatar || undefined}
-                    onSuccess={fetchProfile}
-                  />
-                </div>
-              ) : (
-                <DiscordLinkDialog 
-                  userId={profile.id} 
-                  onSuccess={fetchProfile}
-                />
-              )}
-            </div>
 
             {/* Save Button */}
             <div className="pt-2 flex justify-end">
