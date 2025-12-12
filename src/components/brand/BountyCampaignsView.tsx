@@ -1,12 +1,11 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Video, Users, Trash2, Copy, Check, Lock } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { EditBountyDialog } from "./EditBountyDialog";
+import { BoostDetailView } from "./BoostDetailView";
 
 interface BountyCampaign {
   id: string;
@@ -29,12 +28,12 @@ interface BountyCampaignsViewProps {
   bounties: BountyCampaign[];
   onViewApplications?: (bounty: { id: string; title: string; maxAccepted: number; currentAccepted: number }) => void;
   onDelete?: (bounty: BountyCampaign) => void;
+  onRefresh?: () => void;
 }
 
-export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: BountyCampaignsViewProps) {
-  const navigate = useNavigate();
+export function BountyCampaignsView({ bounties, onViewApplications, onDelete, onRefresh }: BountyCampaignsViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [editingBountyId, setEditingBountyId] = useState<string | null>(null);
+  const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
 
   const handleCopyUrl = (bountyId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,9 +45,18 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
   };
 
   const handleCardClick = (bountyId: string) => {
-    // Navigate to management page instead of edit dialog
-    navigate(`/boost/${bountyId}/manage`);
+    setSelectedBoostId(bountyId);
   };
+
+  const handleBack = () => {
+    setSelectedBoostId(null);
+    onRefresh?.();
+  };
+
+  // Show detail view if a boost is selected
+  if (selectedBoostId) {
+    return <BoostDetailView boostId={selectedBoostId} onBack={handleBack} />;
+  }
 
   if (bounties.length === 0) {
     return (
@@ -89,22 +97,24 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
                   <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-1">
                     {bounty.title}
                   </h3>
-                  <Badge
-                    variant="outline"
-                    className={
-                      bounty.status === 'active'
-                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                        : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
-                    }
-                  >
-                    {bounty.status}
-                  </Badge>
-                  {bounty.is_private && (
-                    <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20 ml-1">
-                      <Lock className="h-3 w-3 mr-1" />
-                      Private
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <Badge
+                      variant="outline"
+                      className={
+                        bounty.status === 'active'
+                          ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                          : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                      }
+                    >
+                      {bounty.status}
                     </Badge>
-                  )}
+                    {bounty.is_private && (
+                      <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
+                        <Lock className="h-3 w-3 mr-1" />
+                        Private
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 {onDelete && (
                   <Button
@@ -165,41 +175,11 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
                   )}
                   {copiedId === bounty.id ? 'Copied!' : 'Copy Link'}
                 </Button>
-                {onViewApplications && (
-                  <Button
-                    size="sm"
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onViewApplications({
-                        id: bounty.id,
-                        title: bounty.title,
-                        maxAccepted: bounty.max_accepted_creators,
-                        currentAccepted: bounty.accepted_creators_count
-                      });
-                    }}
-                  >
-                    View Applications
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>
         );
       })}
-
-      {editingBountyId && (
-        <EditBountyDialog
-          open={!!editingBountyId}
-          onOpenChange={(open) => !open && setEditingBountyId(null)}
-          bountyId={editingBountyId}
-          onSuccess={() => {
-            setEditingBountyId(null);
-            // Trigger parent refresh if needed
-            window.location.reload();
-          }}
-        />
-      )}
     </div>
   );
 }
