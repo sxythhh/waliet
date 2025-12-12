@@ -131,24 +131,20 @@ export default function AuthDialog({
       });
     }
   };
-  const handleDiscordSignIn = async () => {
+  const handleDiscordSignIn = () => {
     setLoading(true);
-    const {
-      error
-    } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`
-      }
-    });
-    if (error) {
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message
-      });
-    }
+    const DISCORD_CLIENT_ID = '1358047837250478110';
+    const redirectUri = `${window.location.origin}/discord/callback`;
+    const state = btoa(JSON.stringify({ action: 'auth' }));
+    
+    const discordAuthUrl = new URL('https://discord.com/api/oauth2/authorize');
+    discordAuthUrl.searchParams.set('client_id', DISCORD_CLIENT_ID);
+    discordAuthUrl.searchParams.set('redirect_uri', redirectUri);
+    discordAuthUrl.searchParams.set('response_type', 'code');
+    discordAuthUrl.searchParams.set('scope', 'identify email');
+    discordAuthUrl.searchParams.set('state', state);
+    
+    window.location.href = discordAuthUrl.toString();
   };
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
