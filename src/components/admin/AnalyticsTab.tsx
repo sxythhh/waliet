@@ -262,10 +262,12 @@ export function AnalyticsTab() {
       .eq("status", "pending");
 
     // Fetch payout stats
-    const { count: pendingPayouts } = await supabase
+    const { data: pendingPayoutData } = await supabase
       .from("payout_requests")
-      .select("*", { count: "exact", head: true })
+      .select("amount")
       .eq("status", "pending");
+    
+    const pendingPayoutsAmount = pendingPayoutData?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
     const { count: completedPayouts } = await supabase
       .from("payout_requests")
@@ -328,7 +330,7 @@ export function AnalyticsTab() {
       accountsPreviousPeriod: accountsPreviousPeriod || 0,
       pendingApplications: pendingApplications || 0,
       pendingDemographicReviews: pendingDemographicReviews || 0,
-      pendingPayouts: pendingPayouts || 0,
+      pendingPayouts: pendingPayoutsAmount,
       completedPayouts: completedPayouts || 0,
       avgWithdrawalAmount,
       activeMembers,
@@ -907,7 +909,7 @@ export function AnalyticsTab() {
             </div>
 
             <div className="bg-white/[0.02] rounded-xl p-4">
-              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-orange-400">{analytics.pendingPayouts}</div>
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-orange-400">${analytics.pendingPayouts.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
               <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Payouts</p>
             </div>
 
