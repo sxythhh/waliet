@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, Film, UserCheck } from "lucide-react";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import checkCircleWhiteIcon from "@/assets/check-circle-white.svg";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -743,11 +743,11 @@ export function DiscoverTab() {
                         {/* Metadata Row */}
                         <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
                           <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
-                            <Video className="h-3 w-3" />
+                            <Film className="h-3 w-3" />
                             {bounty.videos_per_month} videos/mo
                           </span>
                           <span className={`flex items-center gap-1 font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-400' : ''}`}>
-                            <Users className="h-3 w-3" />
+                            <UserCheck className="h-3 w-3" />
                             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : 'Full'}
                           </span>
                           {bounty.start_date && (
@@ -758,22 +758,19 @@ export function DiscoverTab() {
                           )}
                         </div>
                         
-                        {/* Description with gradient fade */}
+                        {/* Description */}
                         {bounty.description && (
-                          <div className="relative flex-1 overflow-hidden max-h-24">
-                            <p className="text-xs text-muted-foreground leading-relaxed font-['Inter'] tracking-[-0.5px]">
-                              {bounty.description}
-                            </p>
-                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card group-hover:from-[#0f0f0f] dark:group-hover:from-[#0f0f0f] to-transparent pointer-events-none transition-colors duration-300" />
-                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed font-['Inter'] tracking-[-0.5px]">
+                            {bounty.description}
+                          </p>
                         )}
                         
                         {/* Retainer Amount */}
                         <div className="flex items-baseline gap-1 mt-auto pt-2">
-                          <span className="text-2xl font-bold text-foreground font-['Inter'] tracking-[-0.5px]">
+                          <span className="text-lg font-bold text-foreground font-['Inter'] tracking-[-0.5px]">
                             ${bounty.monthly_retainer.toLocaleString()}
                           </span>
-                          <span className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">/month</span>
+                          <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">/month</span>
                         </div>
                       </CardContent>
                     </Card>;
