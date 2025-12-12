@@ -530,13 +530,21 @@ export function JoinCampaignSheet({
 
         {/* Sticky Submit Button at bottom */}
         {isLoggedIn && <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-border">
-            <Button className="w-full text-white" style={{
-          fontFamily: 'Geist',
-          letterSpacing: '-0.5px',
-          backgroundColor: '#2060df'
-        }} onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
-              {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button className="w-full text-white" style={{
+            fontFamily: 'Geist',
+            letterSpacing: '-0.5px',
+            backgroundColor: '#2060df'
+          }} onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
+                {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
+              </Button>
+              <Button variant="ghost" className="w-full md:hidden" style={{
+            fontFamily: 'Geist',
+            letterSpacing: '-0.5px'
+          }} onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+            </div>
           </div>}
       </SheetContent>
 
