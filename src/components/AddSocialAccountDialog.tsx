@@ -157,14 +157,27 @@ export function AddSocialAccountDialog({
     setStep("verification");
   };
 
+  const getAccountLink = (platform: Platform, username: string) => {
+    switch (platform) {
+      case "tiktok":
+        return `https://tiktok.com/@${username}`;
+      case "instagram":
+        return `https://instagram.com/${username}`;
+      case "youtube":
+        return `https://youtube.com/@${username}`;
+      case "twitter":
+        return `https://x.com/${username}`;
+    }
+  };
+
   const handleCheckVerification = useCallback(async () => {
     if (isChecking) return;
     
     setIsChecking(true);
     
     try {
-      // Only TikTok is supported for now
-      if (selectedPlatform !== "tiktok") {
+      // Only TikTok and Instagram are supported for now
+      if (selectedPlatform !== "tiktok" && selectedPlatform !== "instagram") {
         toast({
           variant: "destructive",
           title: "Not Supported",
@@ -175,7 +188,7 @@ export function AddSocialAccountDialog({
       }
 
       const { data, error } = await supabase.functions.invoke('verify-tiktok-bio', {
-        body: { username, verificationCode }
+        body: { username, verificationCode, platform: selectedPlatform }
       });
 
       if (error) {
@@ -197,7 +210,7 @@ export function AddSocialAccountDialog({
             user_id: user.id,
             platform: selectedPlatform,
             username: username,
-            account_link: `https://tiktok.com/@${username}`,
+            account_link: getAccountLink(selectedPlatform, username),
             follower_count: data.user?.followerCount || null,
             is_verified: true
           });
