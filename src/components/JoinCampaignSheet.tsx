@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, ArrowUp, Plus } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -65,7 +65,7 @@ export function JoinCampaignSheet({
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const navigate = useNavigate();
   const {
-    theme
+    resolvedTheme
   } = useTheme();
 
   // Helper to parse links in text
@@ -103,8 +103,7 @@ export function JoinCampaignSheet({
     }
   };
   const getPlatformIcon = (platform: string) => {
-    const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const isLightMode = theme === "light" || theme === "system" && systemIsLight;
+    const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
       case "tiktok":
         return isLightMode ? tiktokLogoBlack : tiktokLogo;

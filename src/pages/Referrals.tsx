@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, DollarSign, Copy, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import voteIconLight from "@/assets/vote-icon-light.svg";
 import voteIconDark from "@/assets/vote-icon-dark.svg";
 
@@ -30,7 +30,7 @@ export default function Referrals() {
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
   const { toast } = useToast();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     fetchReferralData();
@@ -181,7 +181,7 @@ export default function Referrals() {
             {referredUsers.length === 0 ? (
               <div className="text-center py-12">
                 <img 
-                  src={theme === "dark" ? voteIconLight : voteIconDark}
+                  src={resolvedTheme === "dark" ? voteIconLight : voteIconDark}
                   alt=""
                   className="mx-auto h-12 w-12 mb-4"
                 />

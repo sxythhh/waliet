@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import xLogo from "@/assets/x-logo.png";
 import xLogoLight from "@/assets/x-logo-light.png";
 import connectAccountIcon from "@/assets/connect-account-icon.svg";
@@ -89,7 +92,7 @@ export function AddSocialAccountDialog({
     toast
   } = useToast();
   const {
-    theme
+    resolvedTheme
   } = useTheme();
   const handleXOAuth = async () => {
     const REDIRECT_URI = `${window.location.origin}/x/callback`;
@@ -220,15 +223,16 @@ export function AddSocialAccountDialog({
   };
   const getPlatformIcon = (platform: Platform) => {
     const iconClass = "h-5 w-5";
+    const isLightMode = resolvedTheme === "light";
     switch (platform) {
       case "tiktok":
-        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
+        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={iconClass} />;
       case "instagram":
-        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
+        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className={iconClass} />;
       case "youtube":
-        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
+        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className={iconClass} />;
       case "twitter":
-        return <img src={theme === "light" ? xLogoLight : xLogo} alt="X" className={iconClass} />;
+        return <img src={isLightMode ? xLogoLight : xLogo} alt="X" className={iconClass} />;
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
