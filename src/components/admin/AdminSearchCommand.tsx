@@ -280,10 +280,7 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
-        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-          <MaterialIcon name="search" className="text-base text-white" />
-        </div>
+      <div className="px-3 py-2">
         <CommandInput
           placeholder="Search users, brands, campaigns, accounts..."
           value={query}
@@ -293,7 +290,7 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
       </div>
       
       {/* Filter tabs */}
-      <div className="flex items-center gap-1 px-3 py-2 border-b border-white/5">
+      <div className="flex items-center gap-1 px-3 py-1.5">
         {filterOptions.map((opt) => (
           <button
             key={opt.value}
