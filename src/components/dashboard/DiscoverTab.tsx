@@ -18,6 +18,8 @@ import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+
 interface Campaign {
   id: string;
   title: string;
@@ -80,6 +82,8 @@ export function DiscoverTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bountySheetOpen, setBountySheetOpen] = useState(false);
   const [joinPrivateDialogOpen, setJoinPrivateDialogOpen] = useState(false);
+  const [bookmarkedCampaignIds, setBookmarkedCampaignIds] = useState<string[]>([]);
+  const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -139,7 +143,56 @@ export function DiscoverTab() {
 
   useEffect(() => {
     fetchCampaigns();
+    fetchBookmarks();
   }, []);
+
+  const fetchBookmarks = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("campaign_bookmarks")
+      .select("campaign_id")
+      .eq("user_id", user.id);
+    
+    if (!error && data) {
+      setBookmarkedCampaignIds(data.map(b => b.campaign_id));
+    }
+  };
+
+  const toggleBookmark = async (campaignId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to bookmark campaigns");
+      return;
+    }
+    
+    const isBookmarked = bookmarkedCampaignIds.includes(campaignId);
+    
+    if (isBookmarked) {
+      const { error } = await supabase
+        .from("campaign_bookmarks")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("campaign_id", campaignId);
+      
+      if (!error) {
+        setBookmarkedCampaignIds(prev => prev.filter(id => id !== campaignId));
+        toast.success("Bookmark removed");
+      }
+    } else {
+      const { error } = await supabase
+        .from("campaign_bookmarks")
+        .insert({ user_id: user.id, campaign_id: campaignId });
+      
+      if (!error) {
+        setBookmarkedCampaignIds(prev => [...prev, campaignId]);
+        toast.success("Campaign bookmarked");
+      }
+    }
+  };
 
   const fetchCampaigns = async () => {
     setLoading(true);
@@ -215,7 +268,8 @@ export function DiscoverTab() {
     const matchesInfiniteBudget = !hideInfiniteBudget || !campaign.is_infinite_budget;
     const matchesLowBudget = !hideLowBudget || campaign.budget >= 1000;
     const matchesEnded = !hideEnded || campaign.status !== "ended";
-    return matchesPlatform && matchesSearch && matchesStatus && matchesInfiniteBudget && matchesLowBudget && matchesEnded;
+    const matchesBookmarked = !showBookmarkedOnly || bookmarkedCampaignIds.includes(campaign.id);
+    return matchesPlatform && matchesSearch && matchesStatus && matchesInfiniteBudget && matchesLowBudget && matchesEnded && matchesBookmarked;
   });
 
   // Separate active and ended campaigns
@@ -332,6 +386,12 @@ export function DiscoverTab() {
                   {platform.label}
                 </button>)}
             </div>
+
+            {/* Bookmarked Toggle */}
+            <button onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${showBookmarkedOnly ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
+              <Bookmark className={`h-3.5 w-3.5 ${showBookmarkedOnly ? "fill-current" : ""}`} />
+              Saved
+            </button>
 
             {/* Filter Toggle */}
             <button onClick={() => setFiltersOpen(!filtersOpen)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filtersOpen ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
@@ -453,9 +513,19 @@ export function DiscoverTab() {
               }
             };
             const isEnded = campaign.status === "ended";
+            const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
             return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
                   {/* Gradient overlay for ended campaigns */}
                   {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
+                  
+                  {/* Bookmark Button */}
+                  <button
+                    onClick={(e) => toggleBookmark(campaign.id, e)}
+                    className={`absolute top-2 right-2 z-20 p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
+                  >
+                    <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+                  </button>
+                  
                   {/* Banner Image */}
                   {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                       <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
