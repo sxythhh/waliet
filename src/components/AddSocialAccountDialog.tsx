@@ -273,104 +273,90 @@ export function AddSocialAccountDialog({
           </div>
         ) : (
           /* Step 2: Verification */
-          <div className="p-6">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="h-12 w-12 rounded-lg bg-[#0a0a0a] flex items-center justify-center">
-                {getPlatformIcon(selectedPlatform, "h-7 w-7")}
+          <div className="p-5">
+            {/* Compact Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-[#141414] flex items-center justify-center">
+                  {getPlatformIcon(selectedPlatform, "h-5 w-5")}
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">
+                    @{username}
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                    {getPlatformLabel(selectedPlatform)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
-                  Verify @{username}
-                </h2>
-                <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                  {getPlatformLabel(selectedPlatform)} Account
-                </p>
-              </div>
-            </div>
-
-            {/* Status Badge */}
-            <div className="flex justify-center mb-6">
-              <span className="px-4 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/30 font-inter tracking-[-0.5px]">
-                Waiting for Verification
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 font-inter tracking-[-0.5px]">
+                Pending
               </span>
             </div>
 
-            {/* Verification Code Section */}
-            <div className="space-y-2 mb-6">
-              <Label className="text-sm font-medium font-inter tracking-[-0.5px]">
-                Verification Code
-              </Label>
-              <div className="flex gap-2">
-                <div className="flex-1 h-14 bg-[#0a0a0a] rounded-lg flex items-center justify-center border border-border/30">
-                  <span className="text-xl font-bold font-mono tracking-[0.2em]">
-                    {verificationCode}
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
+            {/* Verification Code - Compact */}
+            <div className="bg-[#141414] rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                  Add to your bio
+                </span>
+                <button
                   onClick={handleCopyCode}
-                  className="h-14 w-14 bg-[#0a0a0a] border-border/30 hover:bg-[#2a2a2a]"
+                  className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]"
                 >
                   {copied ? (
-                    <Check className="h-5 w-5 text-green-500" />
+                    <>
+                      <Check className="h-3.5 w-3.5" />
+                      Copied
+                    </>
                   ) : (
-                    <Copy className="h-5 w-5" />
+                    <>
+                      <Copy className="h-3.5 w-3.5" />
+                      Copy
+                    </>
                   )}
-                </Button>
+                </button>
               </div>
-              <p className="text-sm text-muted-foreground text-center font-inter tracking-[-0.5px]">
-                Add this code to your {getPlatformLabel(selectedPlatform)} bio
-              </p>
-            </div>
-
-            {/* Time Remaining */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                  Time Remaining
-                </span>
-                <span className="text-lg font-semibold font-mono">
-                  {formatTime(timeRemaining)}
+              <div className="bg-[#0a0a0a] rounded-md py-3 px-4 text-center">
+                <span className="text-lg font-bold font-mono tracking-[0.25em]">
+                  {verificationCode}
                 </span>
               </div>
-              <Progress 
-                value={progressPercent} 
-                className="h-1.5 bg-[#0a0a0a]"
-              />
             </div>
 
-            {/* Check Verification Button */}
+            {/* Timer - Inline */}
+            <div className="flex items-center justify-between mb-4 px-1">
+              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                Expires in
+              </span>
+              <span className="text-sm font-semibold font-mono text-foreground">
+                {formatTime(timeRemaining)}
+              </span>
+            </div>
+
+            {/* Check Button */}
             <Button
               onClick={handleCheckVerification}
               disabled={isChecking || timeRemaining === 0}
-              className="w-full h-12 bg-[#2a2a2a] hover:bg-[#3a3a3a] border border-border/30 font-inter tracking-[-0.5px] mb-4"
+              className="w-full h-11 bg-primary hover:bg-primary/90 border-0 border-t border-t-[#4a86ff]/50 font-inter tracking-[-0.5px]"
             >
               {isChecking ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Checking...
+                  Verifying...
                 </span>
               ) : (
-                <span className="flex items-center gap-2">
-                  Check Verification Status
-                  <ArrowRight className="h-4 w-4" />
-                </span>
+                "Check Verification"
               )}
             </Button>
 
-            <p className="text-xs text-muted-foreground text-center font-inter tracking-[-0.5px]">
-              We'll automatically check every 10 seconds, or click the button above to check now.
-            </p>
-
-            {/* Back Button */}
+            {/* Back Link */}
             <button
               onClick={handleBack}
-              className="w-full mt-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-2"
+              className="w-full mt-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Go back
             </button>
           </div>
         )}
