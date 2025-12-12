@@ -188,18 +188,25 @@ export function CampaignHomeTab({
       setBrand(brandData);
 
       // Get date range based on timeframe
-      const {
-        start: rangeStart,
-        end: rangeEnd
-      } = getDateRange(timeframe);
+      const dateRange = getDateRange(timeframe);
       const {
         data: analyticsData
       } = await supabase.from('campaign_account_analytics').select('total_views, paid_views').eq('campaign_id', campaignId);
 
-      // Fetch transactions filtered by timeframe
-      const {
-        data: transactionsData
-      } = await supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning').gte('created_at', rangeStart.toISOString()).lte('created_at', rangeEnd.toISOString());
+      // Build transactions query with optional date filter
+      let transactionsQuery = supabase
+        .from('wallet_transactions')
+        .select('amount, created_at')
+        .eq('metadata->>campaign_id', campaignId)
+        .eq('type', 'earning');
+      
+      if (dateRange) {
+        transactionsQuery = transactionsQuery
+          .gte('created_at', dateRange.start.toISOString())
+          .lte('created_at', dateRange.end.toISOString());
+      }
+      
+      const { data: transactionsData } = await transactionsQuery;
 
       // Fetch all transactions for total calculation
       const {
@@ -214,12 +221,22 @@ export function CampaignHomeTab({
         return date >= twoWeeksAgo && date < oneWeekAgo;
       }).reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
-      // Get metrics for the selected timeframe
-      const {
-        data: metricsInRange
-      } = await supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).gte('recorded_at', rangeStart.toISOString()).lte('recorded_at', rangeEnd.toISOString()).order('recorded_at', {
-        ascending: false
-      }).limit(1);
+      // Build metrics query with optional date filter
+      let metricsQuery = supabase
+        .from('campaign_video_metrics')
+        .select('total_views')
+        .eq('campaign_id', campaignId)
+        .order('recorded_at', { ascending: false })
+        .limit(1);
+      
+      if (dateRange) {
+        metricsQuery = metricsQuery
+          .gte('recorded_at', dateRange.start.toISOString())
+          .lte('recorded_at', dateRange.end.toISOString());
+      }
+      
+      const { data: metricsInRange } = await metricsQuery;
+      
       const {
         data: metricsThisWeek
       } = await supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).gte('recorded_at', oneWeekAgo.toISOString()).order('recorded_at', {
@@ -250,20 +267,25 @@ export function CampaignHomeTab({
         payoutsChangePercent
       });
       if (brandData?.collection_name) {
+        const fetchVideoBody: Record<string, unknown> = {
+          brandId,
+          campaignId,
+          page: 1,
+          limit: 3,
+          orderBy: 'latest_views',
+          orderDirection: 'desc'
+        };
+        
+        if (dateRange) {
+          fetchVideoBody.uploadedAtStart = dateRange.start.toISOString();
+          fetchVideoBody.uploadedAtEnd = dateRange.end.toISOString();
+        }
+        
         const {
           data: videosData,
           error
         } = await supabase.functions.invoke('fetch-shortimize-videos', {
-          body: {
-            brandId,
-            campaignId,
-            page: 1,
-            limit: 3,
-            orderBy: 'latest_views',
-            orderDirection: 'desc',
-            uploadedAtStart: rangeStart.toISOString(),
-            uploadedAtEnd: rangeEnd.toISOString()
-          }
+          body: fetchVideoBody
         });
         if (!error && videosData?.videos) {
           // Deduplicate videos by ad_id
@@ -285,44 +307,52 @@ export function CampaignHomeTab({
   };
   const fetchMetrics = async () => {
     try {
-      const {
-        start: rangeStart,
-        end: rangeEnd
-      } = getDateRange(timeframe);
-      const {
-        data: rawMetrics
-      } = await supabase.from('campaign_video_metrics').select('*').eq('campaign_id', campaignId).gte('recorded_at', rangeStart.toISOString()).lte('recorded_at', rangeEnd.toISOString()).order('recorded_at', {
-        ascending: true
-      });
-      if (rawMetrics && rawMetrics.length > 0) {
-        let cumViews = 0,
-          cumLikes = 0,
-          cumShares = 0,
-          cumBookmarks = 0;
-        const formattedMetrics = rawMetrics.map(m => {
-          // Raw daily values from database
-          const dailyViews = m.total_views || 0;
-          const dailyLikes = m.total_likes || 0;
-          const dailyShares = m.total_shares || 0;
-          const dailyBookmarks = m.total_bookmarks || 0;
+      const dateRange = getDateRange(timeframe);
+      
+      let query = supabase
+        .from('campaign_video_metrics')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .order('recorded_at', { ascending: true });
+      
+      // Only apply date filters if we have a range (not all_time)
+      if (dateRange) {
+        query = query
+          .gte('recorded_at', dateRange.start.toISOString())
+          .lte('recorded_at', dateRange.end.toISOString());
+      }
 
-          // Cumulative = running sum of all daily values
-          cumViews += dailyViews;
-          cumLikes += dailyLikes;
-          cumShares += dailyShares;
-          cumBookmarks += dailyBookmarks;
+      const { data: rawMetrics } = await query;
+      
+      if (rawMetrics && rawMetrics.length > 0) {
+        // Database stores snapshot totals at each recorded_at time
+        // So each row is the cumulative total at that point
+        const formattedMetrics = rawMetrics.map((m, index) => {
+          // Current snapshot values (these are already cumulative from the source)
+          const views = m.total_views || 0;
+          const likes = m.total_likes || 0;
+          const shares = m.total_shares || 0;
+          const bookmarks = m.total_bookmarks || 0;
+
+          // Calculate daily change from previous record
+          const prevRecord = index > 0 ? rawMetrics[index - 1] : null;
+          const dailyViews = prevRecord ? views - (prevRecord.total_views || 0) : views;
+          const dailyLikes = prevRecord ? likes - (prevRecord.total_likes || 0) : likes;
+          const dailyShares = prevRecord ? shares - (prevRecord.total_shares || 0) : shares;
+          const dailyBookmarks = prevRecord ? bookmarks - (prevRecord.total_bookmarks || 0) : bookmarks;
+
           return {
             date: format(new Date(m.recorded_at), 'MMM d'),
-            // Cumulative values (running sum)
-            views: cumViews,
-            likes: cumLikes,
-            shares: cumShares,
-            bookmarks: cumBookmarks,
-            // Daily values (raw from DB)
-            dailyViews,
-            dailyLikes,
-            dailyShares,
-            dailyBookmarks
+            // Cumulative values (snapshot from DB)
+            views,
+            likes,
+            shares,
+            bookmarks,
+            // Daily values (change since previous record)
+            dailyViews: Math.max(0, dailyViews),
+            dailyLikes: Math.max(0, dailyLikes),
+            dailyShares: Math.max(0, dailyShares),
+            dailyBookmarks: Math.max(0, dailyBookmarks)
           };
         });
         setMetricsData(formattedMetrics);
