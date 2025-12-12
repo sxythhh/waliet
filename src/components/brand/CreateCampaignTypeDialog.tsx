@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Sparkles, Crown, FileText } from "lucide-react";
+import { Plus, Sparkles, Crown, FileText, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 
@@ -14,6 +14,7 @@ interface Blueprint {
 interface CreateCampaignTypeDialogProps {
   onSelectClipping: (blueprintId?: string) => void;
   onSelectManaged: (blueprintId?: string) => void;
+  onSelectBoost?: () => void;
   trigger?: React.ReactNode;
   brandId?: string;
 }
@@ -21,6 +22,7 @@ interface CreateCampaignTypeDialogProps {
 export function CreateCampaignTypeDialog({ 
   onSelectClipping, 
   onSelectManaged,
+  onSelectBoost,
   trigger,
   brandId
 }: CreateCampaignTypeDialogProps) {
@@ -64,6 +66,11 @@ export function CreateCampaignTypeDialog({
     onSelectManaged(selectedBlueprint || undefined);
   };
 
+  const handleBoostClick = () => {
+    setOpen(false);
+    onSelectBoost?.();
+  };
+
   const handleCreateBlueprint = () => {
     setOpen(false);
     const newParams = new URLSearchParams(searchParams);
@@ -85,7 +92,7 @@ export function CreateCampaignTypeDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[520px] bg-white dark:bg-[#0a0a0a] border-border">
+      <DialogContent className="sm:max-w-[520px] bg-[#f5f5f5] dark:bg-[#050505] border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Create New Campaign</DialogTitle>
         </DialogHeader>
@@ -123,23 +130,23 @@ export function CreateCampaignTypeDialog({
 
           {/* Campaign Workflow Selection */}
           <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">Select a Campaign Workflow</p>
+            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Select a Campaign Workflow</p>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {/* Clipping Option */}
               <button
                 onClick={handleClippingClick}
                 disabled={!hasBlueprints}
                 className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-2 mb-2">
                   <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: '#a7751e', borderTop: '2px solid #dda038' }}
                   >
-                    <Sparkles className="h-5 w-5 text-white" />
+                    <Sparkles className="h-4 w-4 text-white" />
                   </div>
-                  <span className="font-semibold tracking-[-0.5px]">Clipping</span>
+                  <span className="font-semibold tracking-[-0.5px] text-sm">Clipping</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
                   Pay a fixed CPM. Select your budget, payment terms, and requirements.
@@ -152,17 +159,36 @@ export function CreateCampaignTypeDialog({
                 disabled={!hasBlueprints}
                 className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-2 mb-2">
                   <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: '#1e5aa7', borderTop: '2px solid #3888dd' }}
                   >
-                    <Crown className="h-5 w-5 text-white" />
+                    <Crown className="h-4 w-4 text-white" />
                   </div>
-                  <span className="font-semibold tracking-[-0.5px]">Managed</span>
+                  <span className="font-semibold tracking-[-0.5px] text-sm">Managed</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
                   Fully done-for-you campaign implementation and management
+                </p>
+              </button>
+
+              {/* Boost Option */}
+              <button
+                onClick={handleBoostClick}
+                className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div 
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#7e1ea7', borderTop: '2px solid #a738dd' }}
+                  >
+                    <Rocket className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-semibold tracking-[-0.5px] text-sm">Boost</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
+                  Retainer-based campaign with monthly creator positions
                 </p>
               </button>
             </div>
