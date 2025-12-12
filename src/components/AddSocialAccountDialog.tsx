@@ -164,11 +164,26 @@ export function AddSocialAccountDialog({
       case "instagram":
         return `https://instagram.com/${username}`;
       case "youtube":
+        // Handle channel ID or URL
+        if (username.startsWith('UC') || username.includes('youtube.com')) {
+          return username.includes('youtube.com') ? username : `https://youtube.com/channel/${username}`;
+        }
         return `https://youtube.com/@${username}`;
       case "twitter":
         return `https://x.com/${username}`;
     }
   };
+
+  const getPlaceholderText = (platform: Platform) => {
+    switch (platform) {
+      case "youtube":
+        return "Channel ID or @handle";
+      default:
+        return "username";
+    }
+  };
+
+  const showAtSymbol = selectedPlatform !== "youtube";
 
   const handleCheckVerification = useCallback(async () => {
     if (isChecking) return;
@@ -176,8 +191,8 @@ export function AddSocialAccountDialog({
     setIsChecking(true);
     
     try {
-      // Only TikTok and Instagram are supported for now
-      if (selectedPlatform !== "tiktok" && selectedPlatform !== "instagram") {
+      // Only TikTok, Instagram, and YouTube are supported for now
+      if (selectedPlatform !== "tiktok" && selectedPlatform !== "instagram" && selectedPlatform !== "youtube") {
         toast({
           variant: "destructive",
           title: "Not Supported",
@@ -302,16 +317,18 @@ export function AddSocialAccountDialog({
               {/* Username Input */}
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-sm font-medium font-inter tracking-[-0.5px]">
-                  Username
+                  {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Username"}
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+                  {showAtSymbol && (
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+                  )}
                   <Input
                     id="username"
-                    placeholder="username"
+                    placeholder={getPlaceholderText(selectedPlatform)}
                     value={username}
-                    onChange={(e) => setUsername(e.target.value.replace(/@/g, "").trim())}
-                    className="h-12 bg-[#141414] border-0 pl-8 font-inter tracking-[-0.5px]"
+                    onChange={(e) => setUsername(showAtSymbol ? e.target.value.replace(/@/g, "").trim() : e.target.value.trim())}
+                    className={`h-12 bg-[#141414] border-0 font-inter tracking-[-0.5px] ${showAtSymbol ? 'pl-8' : 'pl-4'}`}
                   />
                 </div>
               </div>
