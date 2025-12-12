@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.sync-campaign-video-metrics]
 verify_jwt = false
+
+[functions.verify-tiktok-bio]
+verify_jwt = true

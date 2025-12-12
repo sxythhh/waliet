@@ -163,17 +163,61 @@ export function AddSocialAccountDialog({
     setIsChecking(true);
     
     try {
-      // TODO: This will call the API to scrape and verify
-      // For now, this is just a placeholder that will be implemented with the API
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Checking...",
-        description: "Verification API will be connected in next step",
+      // Only TikTok is supported for now
+      if (selectedPlatform !== "tiktok") {
+        toast({
+          variant: "destructive",
+          title: "Not Supported",
+          description: `${getPlatformLabel(selectedPlatform)} verification is not yet available.`,
+        });
+        setIsChecking(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('verify-tiktok-bio', {
+        body: { username, verificationCode }
       });
-      
+
+      if (error) {
+        throw new Error(error.message || 'Failed to verify');
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Verification failed');
+      }
+
+      if (data.verified) {
+        // Success! Save the account
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Not authenticated");
+
+        const { error: insertError } = await supabase
+          .from("social_accounts")
+          .insert({
+            user_id: user.id,
+            platform: selectedPlatform,
+            username: username,
+            account_link: `https://tiktok.com/@${username}`,
+            follower_count: data.user?.followerCount || null,
+            is_verified: true
+          });
+
+        if (insertError) throw insertError;
+
+        toast({
+          title: "Account Verified!",
+          description: `@${username} has been connected successfully.`,
+        });
+
+        onSuccess();
+        onOpenChange(false);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Code Not Found",
+          description: "The verification code was not found in your bio. Please add it and try again.",
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -183,7 +227,7 @@ export function AddSocialAccountDialog({
     } finally {
       setIsChecking(false);
     }
-  }, [isChecking, toast]);
+  }, [isChecking, toast, selectedPlatform, username, verificationCode, onSuccess, onOpenChange]);
 
   const handleBack = () => {
     setStep("input");
@@ -324,14 +368,20 @@ export function AddSocialAccountDialog({
               </div>
             </div>
 
-            {/* Timer - Inline */}
-            <div className="flex items-center justify-between mb-4 px-1">
-              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                Expires in
-              </span>
-              <span className="text-sm font-semibold font-mono text-foreground">
-                {formatTime(timeRemaining)}
-              </span>
+            {/* Timer with Progress Bar */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                  Expires in
+                </span>
+                <span className="text-sm font-semibold font-mono text-foreground">
+                  {formatTime(timeRemaining)}
+                </span>
+              </div>
+              <Progress 
+                value={progressPercent} 
+                className="h-1.5 bg-[#1a1a1a]"
+              />
             </div>
 
             {/* Check Button */}
