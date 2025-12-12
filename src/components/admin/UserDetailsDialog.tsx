@@ -688,7 +688,18 @@ export function UserDetailsDialog({
                           {/* Transaction ID */}
                           <div className="bg-[#0a0a0a] rounded-lg p-2.5">
                             <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Transaction ID</span>
-                            <p className="text-xs font-mono text-foreground mt-0.5 truncate">{transaction.id.slice(0, 8)}...</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <p className="text-xs font-mono text-foreground truncate">{transaction.id.slice(0, 8)}...</p>
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(transaction.id);
+                                  toast({ title: "Copied", description: "Transaction ID copied to clipboard" });
+                                }}
+                                className="p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            </div>
                           </div>
                           
                           {/* Date */}
@@ -703,7 +714,12 @@ export function UserDetailsDialog({
                           {metadata?.campaign_name && (
                             <div className="bg-[#0a0a0a] rounded-lg p-2.5">
                               <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Campaign</span>
-                              <p className="text-xs text-foreground mt-0.5 truncate font-inter" style={{ letterSpacing: '-0.5px' }}>{metadata.campaign_name}</p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                {metadata.campaign_logo_url && (
+                                  <img src={metadata.campaign_logo_url} alt="" className="h-3.5 w-3.5 rounded object-cover" />
+                                )}
+                                <p className="text-xs text-foreground truncate font-inter" style={{ letterSpacing: '-0.5px' }}>{metadata.campaign_name}</p>
+                              </div>
                             </div>
                           )}
                           
