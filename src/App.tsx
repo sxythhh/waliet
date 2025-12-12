@@ -44,6 +44,7 @@ import Referrals from "./pages/Referrals";
 import Leaderboard from "./pages/Leaderboard";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBoost from "./pages/PublicBounty";
+import BoostManagement from "./pages/BoostManagement";
 import CreatorTerms from "./pages/CreatorTerms";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -138,6 +139,7 @@ const App = () => (
             <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
             <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
             <Route path="/boost/:id" element={<BrandLayout><BoostCampaignDetail /></BrandLayout>} />
+            <Route path="/boost/:id/manage" element={<BoostManagement />} />
             <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
             <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
