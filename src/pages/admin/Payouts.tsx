@@ -824,7 +824,7 @@ export default function AdminPayouts() {
                       </div>
 
                       {/* Payment Details Row */}
-                      <div className="flex items-center gap-6 py-3 border-t border-border/30">
+                      <div className="flex items-center gap-6 py-3">
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Method</span>
                           <span className="text-sm font-medium font-inter tracking-[-0.5px] capitalize">
@@ -859,7 +859,7 @@ export default function AdminPayouts() {
 
                       {/* Additional Info */}
                       {(request.transaction_id || request.rejection_reason || request.notes) && (
-                        <div className="flex flex-wrap gap-2 py-3 border-t border-border/30">
+                        <div className="flex flex-wrap gap-2 py-3">
                           {request.transaction_id && (
                             <div className="px-2.5 py-1.5 bg-muted/40 rounded-md">
                               <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">TX: </span>
@@ -880,7 +880,7 @@ export default function AdminPayouts() {
                       )}
 
                       {/* Actions */}
-                      <div className="flex gap-2 pt-3 border-t border-border/30">
+                      <div className="flex gap-2 pt-3">
                         {request.status === 'pending' && (
                           <>
                             <Button 
