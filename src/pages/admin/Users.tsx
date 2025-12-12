@@ -406,6 +406,182 @@ export default function AdminUsers() {
     setFilteredUsers(filtered);
     setLoading(false);
   };
+
+  const applyFiltersAcrossAllUsers = async () => {
+    setLoading(true);
+
+    try {
+      const pageSize = 1000;
+      let offset = 0;
+      let allUsers: User[] = [];
+      let totalCount: number | null = null;
+
+      while (true) {
+        let query = supabase.from("profiles").select(`
+          *,
+          wallets (
+            balance,
+            total_earned,
+            total_withdrawn
+          ),
+          social_accounts (
+            id,
+            platform,
+            username,
+            follower_count,
+            demographic_submissions (
+              status
+            )
+          )
+        `, { count: 'exact' });
+
+        // Reuse the same base filters as filterUsers
+        if (debouncedSearchQuery) {
+          const searchTerm = debouncedSearchQuery.toLowerCase();
+          query = query.or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+        }
+
+        if (hasDiscord === true) {
+          query = query.not('discord_id', 'is', null);
+        } else if (hasDiscord === false) {
+          query = query.is('discord_id', null);
+        }
+
+        if (hasPhone === true) {
+          query = query.not('phone_number', 'is', null);
+        } else if (hasPhone === false) {
+          query = query.is('phone_number', null);
+        }
+
+        if (signupTimeframe !== "all" && signupTimeframe) {
+          const now = new Date();
+          let cutoffDate: Date;
+
+          switch (signupTimeframe) {
+            case "24h":
+              cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+              break;
+            case "7d":
+              cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              break;
+            case "30d":
+              cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+              break;
+            case "90d":
+              cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+              break;
+            default:
+              cutoffDate = new Date(0);
+          }
+          query = query.gte('created_at', cutoffDate.toISOString());
+        }
+
+        query = query.order("created_at", { ascending: false }).range(offset, offset + pageSize - 1);
+
+        const { data, error, count } = await query;
+
+        if (error) {
+          console.error('Filter all users error:', error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to filter all users"
+          });
+          return;
+        }
+
+        if (data && data.length > 0) {
+          allUsers = allUsers.concat(data as User[]);
+        }
+
+        if (totalCount === null && typeof count === 'number') {
+          totalCount = count;
+        }
+
+        if (!data || data.length < pageSize) {
+          break;
+        }
+
+        offset += pageSize;
+      }
+
+      let filtered = allUsers;
+
+      // Apply the same client-side filters as filterUsers
+      if (selectedCampaign !== "all") {
+        const { data: submissions } = await supabase
+          .from("campaign_submissions")
+          .select("creator_id")
+          .eq("campaign_id", selectedCampaign);
+        if (submissions) {
+          const creatorIds = submissions.map(s => s.creator_id);
+          filtered = filtered.filter(user => creatorIds.includes(user.id));
+        }
+      }
+
+      if (hasSocialAccount === true) {
+        filtered = filtered.filter(user => user.social_accounts && user.social_accounts.length > 0);
+      } else if (hasSocialAccount === false) {
+        filtered = filtered.filter(user => !user.social_accounts || user.social_accounts.length === 0);
+      }
+
+      if (hasApprovedDemographics === true) {
+        filtered = filtered.filter(user =>
+          user.social_accounts?.some(account =>
+            account.demographic_submissions?.some(sub => sub.status === 'approved')
+          )
+        );
+      } else if (hasApprovedDemographics === false) {
+        filtered = filtered.filter(user =>
+          !user.social_accounts?.some(account =>
+            account.demographic_submissions?.some(sub => sub.status === 'approved')
+          )
+        );
+      }
+
+      if (minEarnings && parseFloat(minEarnings) > 0) {
+        const minEarningsValue = parseFloat(minEarnings);
+        filtered = filtered.filter(user => (user.wallets?.total_earned || 0) >= minEarningsValue);
+      }
+
+      if (minBalance && parseFloat(minBalance) > 0) {
+        const minBalanceValue = parseFloat(minBalance);
+        filtered = filtered.filter(user => (user.wallets?.balance || 0) >= minBalanceValue);
+      }
+
+      if (sortField) {
+        filtered = [...filtered].sort((a, b) => {
+          let aValue = 0;
+          let bValue = 0;
+
+          if (sortField === "balance") {
+            aValue = a.wallets?.balance || 0;
+            bValue = b.wallets?.balance || 0;
+          } else if (sortField === "totalEarned") {
+            aValue = a.wallets?.total_earned || 0;
+            bValue = b.wallets?.total_earned || 0;
+          }
+
+          if (sortOrder === "asc") {
+            return aValue - bValue;
+          } else {
+            return bValue - aValue;
+          }
+        });
+      }
+
+      if (totalCount !== null) {
+        setTotalUserCount(totalCount);
+      } else {
+        setTotalUserCount(filtered.length);
+      }
+
+      setFilteredUsers(filtered);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const openPayDialog = (user: User) => {
     setSelectedUser(user);
     setPaymentAmount("");
@@ -1336,25 +1512,37 @@ export default function AdminUsers() {
                   />
                 </div>
 
-                {/* Clear all filters */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px] ml-auto"
-                  onClick={() => {
-                    setSelectedCampaign("all");
-                    setMinEarnings("");
-                    setMinBalance("");
-                    setHasDiscord(null);
-                    setHasPhone(null);
-                    setHasSocialAccount(null);
-                    setHasApprovedDemographics(null);
-                    setSignupTimeframe("all");
-                    setSortField(null);
-                  }}
-                >
-                  Clear all filters
-                </Button>
+                {/* Clear all filters & apply to all users */}
+                <div className="flex items-center gap-2 ml-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs font-inter tracking-[-0.5px]"
+                    onClick={applyFiltersAcrossAllUsers}
+                    disabled={loading}
+                  >
+                    Apply to all users
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]"
+                    onClick={() => {
+                      setSelectedCampaign("all");
+                      setMinEarnings("");
+                      setMinBalance("");
+                      setHasDiscord(null);
+                      setHasPhone(null);
+                      setHasSocialAccount(null);
+                      setHasApprovedDemographics(null);
+                      setSignupTimeframe("all");
+                      setSortField(null);
+                    }}
+                    disabled={loading}
+                  >
+                    Clear all filters
+                  </Button>
+                </div>
               </div>
             )}
 
