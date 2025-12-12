@@ -5,6 +5,7 @@ import { DollarSign, Video, Users, Trash2, Copy, Check } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { EditBountyDialog } from "./EditBountyDialog";
 
 interface BountyCampaign {
@@ -30,6 +31,7 @@ interface BountyCampaignsViewProps {
 }
 
 export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: BountyCampaignsViewProps) {
+  const navigate = useNavigate();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingBountyId, setEditingBountyId] = useState<string | null>(null);
 
@@ -43,7 +45,8 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
   };
 
   const handleCardClick = (bountyId: string) => {
-    setEditingBountyId(bountyId);
+    // Navigate to management page instead of edit dialog
+    navigate(`/boost/${bountyId}/manage`);
   };
 
   if (bounties.length === 0) {
