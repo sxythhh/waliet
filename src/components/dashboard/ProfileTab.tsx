@@ -745,7 +745,7 @@ export function ProfileTab() {
         </CardHeader>
         <CardContent className="px-0">
             {socialAccounts.length === 0 ? <div className="text-center py-12">
-              <img src={emptyAccountsImage} alt="No accounts" className="w-24 h-24 mx-auto mb-4 opacity-80 object-cover" />
+              
               <p className="text-base font-medium text-foreground">No connected accounts yet</p>
               <p className="text-sm mt-2 text-muted-foreground">Add your accounts to link them to a campaign</p>
             </div> : <div className="space-y-3">
@@ -947,34 +947,18 @@ export function ProfileTab() {
               fontFamily: 'Inter',
               letterSpacing: '-0.3px'
             }}>Discord</p>
-              {profile.discord_username ? (
-                <div className="flex items-center justify-between h-10 px-3 bg-muted/30 rounded-md">
+              {profile.discord_username ? <div className="flex items-center justify-between h-10 px-3 bg-muted/30 rounded-md">
                   <div className="flex items-center gap-2">
-                    <img 
-                      src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"} 
-                      alt="Discord" 
-                      className="w-5 h-5 rounded-full" 
-                    />
+                    <img src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"} alt="Discord" className="w-5 h-5 rounded-full" />
                     <span className="text-sm" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.3px'
-                    }}>
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }}>
                       {profile.discord_username}
                     </span>
                   </div>
-                  <DiscordLinkDialog 
-                    userId={profile.id} 
-                    discordUsername={profile.discord_username} 
-                    discordAvatar={profile.discord_avatar || undefined}
-                    onSuccess={fetchProfile}
-                  />
-                </div>
-              ) : (
-                <DiscordLinkDialog 
-                  userId={profile.id} 
-                  onSuccess={fetchProfile}
-                />
-              )}
+                  <DiscordLinkDialog userId={profile.id} discordUsername={profile.discord_username} discordAvatar={profile.discord_avatar || undefined} onSuccess={fetchProfile} />
+                </div> : <DiscordLinkDialog userId={profile.id} onSuccess={fetchProfile} />}
             </div>
 
             {/* First name */}
