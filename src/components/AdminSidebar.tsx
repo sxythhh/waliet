@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AdminSearchCommand } from "@/components/admin/AdminSearchCommand";
 
 const menuItems = [
   { title: "Overview", icon: "dashboard", path: "/admin" },
@@ -27,7 +28,7 @@ function MaterialIcon({ name, className }: { name: string; className?: string })
   );
 }
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void; onSearchOpen: () => void }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,8 +44,22 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex flex-col h-full bg-[#0a0a0a]">
-      <div className="p-4 pb-6">
+      <div className="p-4 pb-4">
         <h2 className="text-base font-semibold font-inter tracking-[-0.5px] text-foreground">Admin</h2>
+      </div>
+
+      {/* Search Bar */}
+      <div className="px-3 pb-4">
+        <button
+          onClick={onSearchOpen}
+          className="w-full flex items-center gap-2.5 px-3 py-2 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors text-left"
+        >
+          <MaterialIcon name="search" className="text-xl text-muted-foreground" />
+          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px] flex-1">Search...</span>
+          <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px] text-muted-foreground">
+            ⌘K
+          </kbd>
+        </button>
       </div>
       
       <nav className="flex-1 px-2">
@@ -65,7 +80,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               <MaterialIcon 
                 name={item.icon} 
                 className={cn(
-                  "text-lg",
+                  "text-xl",
                   active ? "text-[#2060df]" : ""
                 )} 
               />
@@ -81,7 +96,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           variant="ghost"
           className="w-full justify-start gap-3 px-3 text-sm font-inter tracking-[-0.5px] text-muted-foreground hover:text-destructive hover:bg-destructive/10"
         >
-          <MaterialIcon name="logout" className="text-lg" />
+          <MaterialIcon name="logout" className="text-xl" />
           <span>Sign Out</span>
         </Button>
       </div>
@@ -92,6 +107,20 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function AdminSidebar() {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Keyboard shortcut for search
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
   if (isMobile) {
     return (
@@ -107,16 +136,20 @@ export function AdminSidebar() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0 bg-[#0a0a0a] border-r border-[#141414]">
-            <SidebarContent onNavigate={() => setOpen(false)} />
+            <SidebarContent onNavigate={() => setOpen(false)} onSearchOpen={() => setSearchOpen(true)} />
           </SheetContent>
         </Sheet>
+        <AdminSearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
       </>
     );
   }
 
   return (
-    <aside className="hidden md:flex h-screen w-56 flex-col bg-[#0a0a0a] border-r border-[#141414] sticky top-0">
-      <SidebarContent />
-    </aside>
+    <>
+      <aside className="hidden md:flex h-screen w-56 flex-col bg-[#0a0a0a] border-r border-[#141414] sticky top-0">
+        <SidebarContent onSearchOpen={() => setSearchOpen(true)} />
+      </aside>
+      <AdminSearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
+    </>
   );
 }
