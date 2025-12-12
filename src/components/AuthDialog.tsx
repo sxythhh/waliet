@@ -145,15 +145,15 @@ export default function AuthDialog({
     setLoading(true);
     const DISCORD_CLIENT_ID = '1358316231341375518';
     const redirectUri = `${window.location.origin}/discord/callback`;
-    const state = btoa(JSON.stringify({ action: 'auth' }));
-    
+    const state = btoa(JSON.stringify({
+      action: 'auth'
+    }));
     const discordAuthUrl = new URL('https://discord.com/api/oauth2/authorize');
     discordAuthUrl.searchParams.set('client_id', DISCORD_CLIENT_ID);
     discordAuthUrl.searchParams.set('redirect_uri', redirectUri);
     discordAuthUrl.searchParams.set('response_type', 'code');
     discordAuthUrl.searchParams.set('scope', 'identify email');
     discordAuthUrl.searchParams.set('state', state);
-    
     window.location.href = discordAuthUrl.toString();
   };
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -202,7 +202,7 @@ export default function AuthDialog({
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-[380px] border-0 bg-[#0a0a0a]/98 backdrop-blur-xl shadow-2xl p-0">
-          <div className="p-6 pb-8 rounded-xl bg-black/[0.43]">
+          <div className="p-6 pb-8 rounded-xl bg-black/[0.72]">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex items-center justify-center gap-2">
                 <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
@@ -255,7 +255,7 @@ export default function AuthDialog({
                     
                   </div>
                 </> : (/* Email Form */
-              <div className="space-y-4">
+            <div className="space-y-4">
                   <form onSubmit={handleEmailAuth} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium text-white">Email</Label>
