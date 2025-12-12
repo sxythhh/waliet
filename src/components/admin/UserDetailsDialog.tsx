@@ -35,6 +35,9 @@ interface SocialAccount {
   platform: string;
   username: string;
   account_link: string;
+  avatar_url?: string | null;
+  follower_count?: number | null;
+  bio?: string | null;
   social_account_campaigns?: Array<{
     campaigns: {
       id: string;
@@ -419,11 +422,8 @@ export function UserDetailsDialog({
           {/* Stats Row */}
           <div className="grid grid-cols-3 gap-3 mt-5">
             <div className="bg-[#111] rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Balance</span>
-              </div>
-              <p className="text-lg font-semibold text-green-400" style={{
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Balance</span>
+              <p className="text-lg font-semibold text-green-400 mt-1" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
             }}>
@@ -431,11 +431,8 @@ export function UserDetailsDialog({
               </p>
             </div>
             <div className="bg-[#111] rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Earned</span>
-              </div>
-              <p className="text-lg font-semibold text-foreground" style={{
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Earned</span>
+              <p className="text-lg font-semibold text-foreground mt-1" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
             }}>
@@ -443,11 +440,8 @@ export function UserDetailsDialog({
               </p>
             </div>
             <div className="bg-[#111] rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingDown className="w-3.5 h-3.5 text-orange-400" />
-                <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Withdrawn</span>
-              </div>
-              <p className="text-lg font-semibold text-foreground" style={{
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Withdrawn</span>
+              <p className="text-lg font-semibold text-foreground mt-1" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
             }}>
@@ -456,6 +450,8 @@ export function UserDetailsDialog({
             </div>
           </div>
         </div>
+
+        <div className="h-6" />
 
         {/* Tabs Section */}
         <Tabs defaultValue="accounts" className="flex-1">
@@ -483,40 +479,71 @@ export function UserDetailsDialog({
                   Loading...
                 </div> : socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <Link2 className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm">No connected accounts</p>
-                </div> : <div className="space-y-2">
+                  <p className="text-sm font-inter" style={{ letterSpacing: '-0.5px' }}>No connected accounts</p>
+                </div> : <div className="space-y-3">
                   {socialAccounts.map(account => {
                 const latestDemographic = account.demographic_submissions?.[0];
                 const demographicStatus = latestDemographic?.status;
                 const linkedCampaign = account.social_account_campaigns?.[0]?.campaigns;
-                return <div key={account.id} className="p-3 rounded-lg bg-[#111] group">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#1a1a1a] flex items-center justify-center shrink-0">
-                            {getPlatformIconElement(account.platform)}
-                          </div>
+                const formatFollowers = (count: number | null | undefined) => {
+                  if (!count) return null;
+                  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+                  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+                  return count.toString();
+                };
+                return <div key={account.id} className="p-4 rounded-lg bg-[#111] group">
+                        <div className="flex items-start gap-3">
+                          {/* Avatar or Platform Icon */}
+                          {account.avatar_url ? (
+                            <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center shrink-0">
+                              {getPlatformIconElement(account.platform)}
+                            </div>
+                          )}
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium text-sm hover:underline truncate">
+                              <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium text-sm hover:underline truncate font-inter" style={{ letterSpacing: '-0.5px' }}>
                                 @{account.username}
                               </a>
+                              {getPlatformIconElement(account.platform) && (
+                                <span className="shrink-0">{getPlatformIconElement(account.platform)}</span>
+                              )}
                               {demographicStatus === 'approved' && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />}
                               {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />}
                               {demographicStatus === 'pending' && <AlertCircle className="h-3.5 w-3.5 text-orange-500 shrink-0" />}
                             </div>
                             
-                            <div className="flex items-center gap-2 mt-0.5">
-                              {linkedCampaign ? <span className="text-xs text-muted-foreground truncate">
+                            {/* Followers and Bio */}
+                            <div className="flex items-center gap-3 mt-1">
+                              {account.follower_count && (
+                                <span className="text-xs text-muted-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>
+                                  {formatFollowers(account.follower_count)} followers
+                                </span>
+                              )}
+                              {linkedCampaign && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-[#1a1a1a]">
                                   {linkedCampaign.title}
-                                </span> : <span className="text-xs text-muted-foreground/50 italic">Not linked</span>}
-                              {latestDemographic?.status === 'approved' && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-[#1a1a1a] hover:bg-[#222] cursor-pointer" onClick={() => onEditScore?.(account)}>
+                                </Badge>
+                              )}
+                              {latestDemographic?.status === 'approved' && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 cursor-pointer" onClick={() => onEditScore?.(account)}>
                                   T1: {latestDemographic.tier1_percentage}%
-                                </Badge>}
+                                </Badge>
+                              )}
                             </div>
+                            
+                            {/* Bio excerpt */}
+                            {account.bio && (
+                              <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 font-inter" style={{ letterSpacing: '-0.5px' }}>
+                                {account.bio}
+                              </p>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {linkedCampaign && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive" onClick={() => {
+                            {linkedCampaign && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive font-inter" style={{ letterSpacing: '-0.5px' }} onClick={() => {
                         const campaignId = account.social_account_campaigns?.[0]?.campaigns?.id;
                         if (campaignId) handleUnlinkAccount(account.id, campaignId);
                       }} disabled={unlinkingAccountId === account.id}>
@@ -620,49 +647,100 @@ export function UserDetailsDialog({
                   Loading...
                 </div> : transactions.length === 0 ? <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <Clock className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm">No transactions</p>
-                </div> : <div className="space-y-2">
+                  <p className="text-sm font-inter" style={{ letterSpacing: '-0.5px' }}>No transactions</p>
+                </div> : <div className="space-y-3">
                   {transactions.map(transaction => {
                 const metadata = transaction.metadata as any;
                 const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
-                return <div key={transaction.id} className="p-3 rounded-lg bg-[#111]">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${transaction.amount < 0 ? 'bg-red-500/10' : 'bg-green-500/10'}`}>
-                              {transaction.amount < 0 ? <TrendingDown className="w-4 h-4 text-red-400" /> : <TrendingUp className="w-4 h-4 text-green-400" />}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium capitalize truncate" style={{
-                          fontFamily: 'Inter',
-                          letterSpacing: '-0.5px'
-                        }}>
-                                {transaction.type.replace('_', ' ')}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(transaction.created_at), {
-                            addSuffix: true
-                          })}
-                              </p>
-                            </div>
-                          </div>
+                const isEarning = transaction.type === 'earning';
+                return <div key={transaction.id} className="p-4 rounded-lg bg-[#111]">
+                        {/* Header Row */}
+                        <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 border-0 ${transaction.status === 'completed' ? 'bg-green-500/10 text-green-400' : transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-400' : transaction.status === 'rejected' ? 'bg-red-500/10 text-red-400' : 'bg-muted text-muted-foreground'}`}>
+                            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 h-5 border-0 font-inter capitalize ${
+                              transaction.type === 'earning' ? 'bg-green-500/10 text-green-400' :
+                              transaction.type === 'withdrawal' ? 'bg-orange-500/10 text-orange-400' :
+                              transaction.type === 'referral' ? 'bg-purple-500/10 text-purple-400' :
+                              transaction.type === 'balance_correction' ? 'bg-red-500/10 text-red-400' :
+                              'bg-muted text-muted-foreground'
+                            }`} style={{ letterSpacing: '-0.5px' }}>
+                              {transaction.type.replace('_', ' ')}
+                            </Badge>
+                            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 h-5 border-0 font-inter ${
+                              transaction.status === 'completed' ? 'bg-green-500/10 text-green-400' : 
+                              transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-400' : 
+                              transaction.status === 'rejected' ? 'bg-red-500/10 text-red-400' : 
+                              'bg-muted text-muted-foreground'
+                            }`} style={{ letterSpacing: '-0.5px' }}>
                               {transaction.status}
                             </Badge>
-                            <p className={`text-sm font-semibold tabular-nums ${transaction.amount < 0 ? 'text-red-400' : 'text-green-400'}`} style={{
+                          </div>
+                          <p className={`text-base font-semibold tabular-nums ${transaction.amount < 0 ? 'text-red-400' : 'text-green-400'}`} style={{
                         fontFamily: 'Inter',
                         letterSpacing: '-0.5px'
                       }}>
                               {transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                             </p>
-                          </div>
                         </div>
                         
-                        {/* Extra details for withdrawals */}
-                        {isWithdrawal && metadata?.network && <div className="mt-2 pt-2 border-t border-[#1a1a1a] flex items-center gap-4 text-xs text-muted-foreground">
-                            {metadata.payout_method && <span className="capitalize">{metadata.payout_method}</span>}
-                            {metadata.network && <span className="capitalize">{metadata.network}</span>}
-                          </div>}
+                        {/* Details Grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Transaction ID */}
+                          <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Transaction ID</span>
+                            <p className="text-xs font-mono text-foreground mt-0.5 truncate">{transaction.id.slice(0, 8)}...</p>
+                          </div>
+                          
+                          {/* Date */}
+                          <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Date</span>
+                            <p className="text-xs text-foreground mt-0.5 font-inter" style={{ letterSpacing: '-0.5px' }}>
+                              {format(new Date(transaction.created_at), "MMM d, yyyy · HH:mm")}
+                            </p>
+                          </div>
+                          
+                          {/* Campaign (if applicable) */}
+                          {metadata?.campaign_name && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Campaign</span>
+                              <p className="text-xs text-foreground mt-0.5 truncate font-inter" style={{ letterSpacing: '-0.5px' }}>{metadata.campaign_name}</p>
+                            </div>
+                          )}
+                          
+                          {/* Account (if applicable) */}
+                          {metadata?.account_username && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Account</span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                {metadata.platform && getPlatformIconElement(metadata.platform)}
+                                <p className="text-xs text-foreground truncate font-inter" style={{ letterSpacing: '-0.5px' }}>@{metadata.account_username}</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Payout Method (for withdrawals) */}
+                          {isWithdrawal && metadata?.payout_method && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Payout Method</span>
+                              <p className="text-xs text-foreground mt-0.5 capitalize font-inter" style={{ letterSpacing: '-0.5px' }}>{metadata.payout_method}</p>
+                            </div>
+                          )}
+                          
+                          {/* Network (for crypto withdrawals) */}
+                          {isWithdrawal && metadata?.network && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Network</span>
+                              <p className="text-xs text-foreground mt-0.5 capitalize font-inter" style={{ letterSpacing: '-0.5px' }}>{metadata.network}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Description (if exists) */}
+                        {transaction.description && (
+                          <div className="mt-3 pt-3 border-t border-[#1a1a1a]">
+                            <p className="text-xs text-muted-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>{transaction.description}</p>
+                          </div>
+                        )}
                       </div>;
               })}
                 </div>}
