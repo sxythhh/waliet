@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar } from "lucide-react";
+import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck, ArrowUpRight, ArrowDownRight, Calendar } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, BarChart, ComposedChart, PieChart, Pie, Cell } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, subDays, subMonths, startOfWeek, startOfDay, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -556,57 +557,63 @@ export function AnalyticsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Time period selector - at top */}
+      {/* Time period selector - dropdown */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg">
-          {TIME_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setTimePeriod(option.value as TimePeriod)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all",
-                timePeriod === option.value
-                  ? "bg-white/10 text-white"
-                  : "text-white/50 hover:text-white/70"
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <Select
+          value={timePeriod}
+          onValueChange={(value) => {
+            if (value === 'CUSTOM') {
+              setIsDatePickerOpen(true);
+            } else {
+              setTimePeriod(value as TimePeriod);
+            }
+          }}
+        >
+          <SelectTrigger className="w-[130px] h-8 text-xs font-inter tracking-[-0.5px] bg-white/5 border-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-[#0a0a0a] border-white/10">
+            {TIME_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value} className="text-xs font-inter tracking-[-0.5px]">
+                {option.label}
+              </SelectItem>
+            ))}
+            <SelectItem value="CUSTOM" className="text-xs font-inter tracking-[-0.5px]">
+              Custom Range
+            </SelectItem>
+          </SelectContent>
+        </Select>
         
-        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "gap-2 text-xs font-inter tracking-[-0.5px]",
-                timePeriod === 'CUSTOM' ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"
-              )}
-            >
-              <Calendar className="h-3.5 w-3.5" />
-              {timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to 
-                ? `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`
-                : 'Custom'}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-white/10" align="start">
-            <CalendarComponent
-              mode="range"
-              selected={{ from: customDateRange.from, to: customDateRange.to }}
-              onSelect={(range) => {
-                setCustomDateRange({ from: range?.from, to: range?.to });
-                if (range?.from && range?.to) {
-                  setTimePeriod('CUSTOM');
-                  setIsDatePickerOpen(false);
-                }
-              }}
-              numberOfMonths={2}
-              className="rounded-md"
-            />
-          </PopoverContent>
-        </Popover>
+        {timePeriod === 'CUSTOM' && (
+          <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-inter tracking-[-0.5px] bg-white/5 border-0"
+              >
+                <Calendar className="h-3.5 w-3.5 mr-2" />
+                {customDateRange.from && customDateRange.to 
+                  ? `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`
+                  : 'Select dates'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-white/10" align="start">
+              <CalendarComponent
+                mode="range"
+                selected={{ from: customDateRange.from, to: customDateRange.to }}
+                onSelect={(range) => {
+                  setCustomDateRange({ from: range?.from, to: range?.to });
+                  if (range?.from && range?.to) {
+                    setIsDatePickerOpen(false);
+                  }
+                }}
+                numberOfMonths={2}
+                className="rounded-md"
+              />
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
 
       {/* Key metrics - redesigned */}
