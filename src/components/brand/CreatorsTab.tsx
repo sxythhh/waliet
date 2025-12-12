@@ -100,15 +100,33 @@ export function CreatorsTab({
     // Get unique user IDs
     const userIds = [...new Set(connections.map(c => c.user_id))];
 
-    // Get user profiles
-    const {
-      data: profiles
-    } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email, total_earnings").in("id", userIds);
+    // Fetch profiles in batches to avoid Supabase 1000-row limit
+    const BATCH_SIZE = 500;
+    const profiles: any[] = [];
+    for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+      const batchIds = userIds.slice(i, i + BATCH_SIZE);
+      const { data: batchProfiles } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url, email, total_earnings")
+        .in("id", batchIds);
+      if (batchProfiles) {
+        profiles.push(...batchProfiles);
+      }
+    }
 
-    // Get analytics data for these users in brand campaigns
-    const {
-      data: analytics
-    } = await supabase.from("campaign_account_analytics").select("user_id, total_views, paid_views").in("campaign_id", campaignIds).in("user_id", userIds);
+    // Fetch analytics in batches
+    const analytics: any[] = [];
+    for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+      const batchIds = userIds.slice(i, i + BATCH_SIZE);
+      const { data: batchAnalytics } = await supabase
+        .from("campaign_account_analytics")
+        .select("user_id, total_views, paid_views")
+        .in("campaign_id", campaignIds)
+        .in("user_id", batchIds);
+      if (batchAnalytics) {
+        analytics.push(...batchAnalytics);
+      }
+    }
 
     // Aggregate data by user
     const creatorMap = new Map<string, Creator>();
@@ -158,8 +176,7 @@ export function CreatorsTab({
       }
     }
 
-    // Add analytics data
-    if (analytics) {
+    if (analytics && analytics.length > 0) {
       for (const analytic of analytics) {
         const creator = creatorMap.get(analytic.user_id);
         if (creator) {
@@ -168,11 +185,21 @@ export function CreatorsTab({
       }
     }
 
-    // Get earnings from wallet transactions for this brand's campaigns
-    const {
-      data: transactions
-    } = await supabase.from("wallet_transactions").select("user_id, amount, metadata").eq("type", "earning").in("user_id", userIds);
-    if (transactions) {
+    // Fetch wallet transactions in batches
+    const transactions: any[] = [];
+    for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+      const batchIds = userIds.slice(i, i + BATCH_SIZE);
+      const { data: batchTx } = await supabase
+        .from("wallet_transactions")
+        .select("user_id, amount, metadata")
+        .eq("type", "earning")
+        .in("user_id", batchIds);
+      if (batchTx) {
+        transactions.push(...batchTx);
+      }
+    }
+    
+    if (transactions.length > 0) {
       for (const tx of transactions) {
         const campaignId = (tx.metadata as any)?.campaign_id;
         if (campaignId && campaignIds.includes(campaignId)) {
@@ -183,6 +210,8 @@ export function CreatorsTab({
         }
       }
     }
+    
+    console.log("CreatorsTab - total creators found:", creatorMap.size);
     setCreators(Array.from(creatorMap.values()));
     setLoading(false);
   };
