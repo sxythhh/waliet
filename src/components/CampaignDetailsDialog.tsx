@@ -145,24 +145,24 @@ export function CampaignDetailsDialog({
   const nextPayout = getNextPayoutDate();
   const startDate = campaign.start_date || campaign.created_at;
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-8">
         {/* Header */}
-        <div className="flex items-start gap-4 mb-4">
-          {campaign.brand_logo_url && <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border/50 bg-muted">
+        <div className="flex items-start gap-3 sm:gap-4 mb-4">
+          {campaign.brand_logo_url && <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border/50 bg-muted">
               <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
             </div>}
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-semibold mb-1" style={{
+            <h2 className="text-base sm:text-lg font-semibold mb-1" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
           }}>{campaign.brand_name}</h2>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-muted-foreground" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px'
           }}>
               <span>Started {formatDate(startDate)}</span>
-              <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
-              <span>{timeAgo}</span>
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/40 hidden sm:block" />
+              <span className="hidden sm:inline">{timeAgo}</span>
             </div>
           </div>
         </div>
@@ -189,7 +189,7 @@ export function CampaignDetailsDialog({
             <div className="text-right">
               <div className="flex items-center gap-1.5">
                 <div className="flex gap-0.5">
-                  {[...Array(7)].map((_, i) => <div key={i} className={`w-1.5 h-6 rounded-full transition-all ${i < 7 - nextPayout.daysUntil ? 'bg-[#2060df]' : 'bg-muted-foreground/20'}`} />)}
+                  {[...Array(7)].map((_, i) => <div key={i} className={`w-1.5 h-5 sm:h-6 rounded-full transition-all ${i < 7 - nextPayout.daysUntil ? 'bg-[#2060df]' : 'bg-muted-foreground/20'}`} />)}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-1" style={{
@@ -223,19 +223,19 @@ export function CampaignDetailsDialog({
               </div>}
           </div>}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-5 gap-3 p-4 rounded-2xl mb-4 bg-sidebar">
+        {/* Stats Grid - responsive layout */}
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 p-3 sm:p-4 rounded-2xl mb-4 bg-sidebar">
           <div className="text-center">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
           }}>Ends</p>
-            <p className="font-semibold text-sm" style={{
+            <p className="font-semibold text-xs sm:text-sm" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
           }}>{daysUntilEnd !== null ? `${daysUntilEnd}d` : "—"}</p>
           </div>
 
-          <div className="text-center">
+          <div className="text-center hidden sm:block">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
           }}>Language</p>
@@ -252,12 +252,12 @@ export function CampaignDetailsDialog({
             <div className="flex justify-center gap-1 mt-1.5">
               {campaign.allowed_platforms?.map(platform => {
                 const iconSrc = getPlatformIcon(platform);
-                return iconSrc ? <img key={platform} src={iconSrc} alt={platform} className="w-4 h-4" /> : null;
+                return iconSrc ? <img key={platform} src={iconSrc} alt={platform} className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : null;
               })}
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="text-center hidden sm:block">
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
           }}>Pay Type</p>
@@ -271,7 +271,7 @@ export function CampaignDetailsDialog({
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
           }}>Per 1M Views</p>
-            <p className="font-semibold text-sm text-[#2060df]" style={{
+            <p className="font-semibold text-xs sm:text-sm text-[#2060df]" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
           }}>${(campaign.rpm_rate * 1000).toLocaleString()}</p>
@@ -323,20 +323,20 @@ export function CampaignDetailsDialog({
             <h4 className="text-sm font-semibold mb-3" style={{
           letterSpacing: '-0.5px'
         }}>Campaign Assets</h4>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {campaign.asset_links!.map((link, index) => {
             const faviconUrl = getFaviconUrl(link.url);
-            return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
-                    <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center shrink-0 overflow-hidden">
-                      {faviconUrl ? <img src={faviconUrl} alt="" className="w-6 h-6" onError={e => {
+            return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center shrink-0 overflow-hidden">
+                      {faviconUrl ? <img src={faviconUrl} alt="" className="w-5 h-5 sm:w-6 sm:h-6" onError={e => {
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
                 }} /> : null}
-                      <Link2 className={`w-5 h-5 text-[#2060df] ${faviconUrl ? 'hidden' : ''}`} />
+                      <Link2 className={`w-4 h-4 sm:w-5 sm:h-5 text-[#2060df] ${faviconUrl ? 'hidden' : ''}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{link.label}</p>
-                      <p className="text-xs text-muted-foreground truncate">{link.url}</p>
+                      <p className="font-medium text-xs sm:text-sm truncate">{link.label}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{link.url}</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                   </a>;
@@ -350,11 +350,11 @@ export function CampaignDetailsDialog({
           letterSpacing: '-0.5px'
         }}>Campaign Requirements</h4>
             <div className="space-y-2">
-              {campaign.requirements!.map((req, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-                  <div className="w-6 h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-xs font-semibold shrink-0 mt-0.5">
+              {campaign.requirements!.map((req, index) => <div key={index} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shrink-0 mt-0.5">
                     {index + 1}
                   </div>
-                  <p className="text-sm leading-relaxed">{req}</p>
+                  <p className="text-xs sm:text-sm leading-relaxed">{req}</p>
                 </div>)}
             </div>
           </div>}
@@ -378,7 +378,7 @@ export function CampaignDetailsDialog({
           </div>}
 
         {/* Join Button */}
-        {onJoin && <Button onClick={onJoin} className="w-full h-14 text-lg font-semibold rounded-full" size="lg">
+        {onJoin && <Button onClick={onJoin} className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-full" size="lg">
             Join campaign
           </Button>}
       </DialogContent>
