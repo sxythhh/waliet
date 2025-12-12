@@ -612,95 +612,77 @@ export default function AdminPayouts() {
       <div className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Filter and Sort Controls */}
-          <Card className="mb-6 bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium">Filters & Sort</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-                {/* Payment Method Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Payment Method</Label>
-                  <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Methods</SelectItem>
-                      <SelectItem value="paypal">PayPal</SelectItem>
-                      <SelectItem value="crypto">Crypto</SelectItem>
-                      <SelectItem value="wise">Wise</SelectItem>
-                      <SelectItem value="revolut">Revolut</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          <div className="mb-6 space-y-4">
+            {/* Filter Row */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Payment Method Filter */}
+              <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                <SelectTrigger className="w-[140px] h-9 bg-card/50 border-0 text-sm font-inter tracking-[-0.5px]">
+                  <Wallet className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="font-inter tracking-[-0.5px]">All Methods</SelectItem>
+                  <SelectItem value="paypal" className="font-inter tracking-[-0.5px]">PayPal</SelectItem>
+                  <SelectItem value="crypto" className="font-inter tracking-[-0.5px]">Crypto</SelectItem>
+                  <SelectItem value="wise" className="font-inter tracking-[-0.5px]">Wise</SelectItem>
+                  <SelectItem value="revolut" className="font-inter tracking-[-0.5px]">Revolut</SelectItem>
+                </SelectContent>
+              </Select>
 
-                {/* Min Amount Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Min Amount ($)</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={minAmount}
-                    onChange={(e) => setMinAmount(e.target.value)}
-                    className="bg-background"
-                  />
-                </div>
-
-                {/* Max Amount Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Max Amount ($)</Label>
-                  <Input
-                    type="number"
-                    placeholder="No limit"
-                    value={maxAmount}
-                    onChange={(e) => setMaxAmount(e.target.value)}
-                    className="bg-background"
-                  />
-                </div>
-
-                {/* Sort By */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Sort By</Label>
-                  <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="date">Date</SelectItem>
-                      <SelectItem value="amount">Amount</SelectItem>
-                      <SelectItem value="username">Username</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Sort Order */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Order</Label>
-                  <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="desc">
-                        <div className="flex items-center gap-2">
-                          <ArrowUpDown className="h-3 w-3" />
-                          Descending
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="asc">
-                        <div className="flex items-center gap-2">
-                          <ArrowUpDown className="h-3 w-3 rotate-180" />
-                          Ascending
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Amount Range */}
+              <div className="flex items-center gap-2 bg-card/50 rounded-lg px-3 h-9">
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={minAmount}
+                  onChange={(e) => setMinAmount(e.target.value)}
+                  className="w-16 h-7 bg-transparent border-0 text-sm font-inter tracking-[-0.5px] p-0 focus-visible:ring-0"
+                />
+                <span className="text-muted-foreground text-xs">—</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={maxAmount}
+                  onChange={(e) => setMaxAmount(e.target.value)}
+                  className="w-16 h-7 bg-transparent border-0 text-sm font-inter tracking-[-0.5px] p-0 focus-visible:ring-0"
+                />
               </div>
 
-              {/* Clear Filters Button */}
+              {/* Sort Controls */}
+              <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                <SelectTrigger className="w-[120px] h-9 bg-card/50 border-0 text-sm font-inter tracking-[-0.5px]">
+                  <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date" className="font-inter tracking-[-0.5px]">Date</SelectItem>
+                  <SelectItem value="amount" className="font-inter tracking-[-0.5px]">Amount</SelectItem>
+                  <SelectItem value="username" className="font-inter tracking-[-0.5px]">Username</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className="h-9 px-3 bg-card/50 text-sm font-inter tracking-[-0.5px] gap-1.5"
+              >
+                {sortOrder === 'desc' ? (
+                  <>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                    Newest
+                  </>
+                ) : (
+                  <>
+                    <ChevronUp className="h-3.5 w-3.5" />
+                    Oldest
+                  </>
+                )}
+              </Button>
+
+              {/* Clear Filters */}
               {(paymentMethodFilter !== 'all' || minAmount || maxAmount || sortBy !== 'date' || sortOrder !== 'desc') && (
                 <Button
                   variant="ghost"
@@ -712,30 +694,45 @@ export default function AdminPayouts() {
                     setSortBy('date');
                     setSortOrder('desc');
                   }}
-                  className="mt-3 h-8 text-xs"
+                  className="h-9 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground"
                 >
                   <RotateCcw className="h-3 w-3 mr-1.5" />
-                  Clear Filters
+                  Reset
                 </Button>
               )}
-            </CardContent>
-          </Card>
+            </div>
 
-          <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6 bg-[#111111]">
-            <TabsTrigger value="pending" className="gap-2 bg-[#1c1c1c]/0">
-              <Clock className="h-4 w-4" />
-              Pending
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="gap-2">
-              <DollarSign className="h-4 w-4" />
-              Completed
-            </TabsTrigger>
-            <TabsTrigger value="rejected" className="gap-2">
-              <XCircle className="h-4 w-4" />
-              Rejected
-            </TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
-          </TabsList>
+            {/* Status Tabs */}
+            <TabsList className="bg-muted/30 border-0 p-1 h-auto w-auto inline-flex">
+              <TabsTrigger 
+                value="pending" 
+                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500 px-4 py-2 gap-1.5"
+              >
+                <Clock className="h-3.5 w-3.5" />
+                Pending ({stats.pending})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="completed" 
+                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-500 px-4 py-2 gap-1.5"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Completed ({stats.completed})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="rejected" 
+                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive px-4 py-2 gap-1.5"
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                Rejected ({stats.rejected})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="all" 
+                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card px-4 py-2"
+              >
+                All ({allRequests.length})
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value={activeTab}>
             {loading ? <div className="flex items-center justify-center py-12">
