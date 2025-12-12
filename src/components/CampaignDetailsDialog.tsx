@@ -145,7 +145,7 @@ export function CampaignDetailsDialog({
   const nextPayout = getNextPayoutDate();
   const startDate = campaign.start_date || campaign.created_at;
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-8">
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-8">
         {/* Header */}
         <div className="flex items-start gap-3 sm:gap-4 mb-4">
           {campaign.brand_logo_url && <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-border/50 bg-muted">
