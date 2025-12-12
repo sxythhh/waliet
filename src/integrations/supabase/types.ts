@@ -1769,6 +1769,8 @@ export type Database = {
       social_accounts: {
         Row: {
           account_link: string | null
+          avatar_url: string | null
+          bio: string | null
           campaign_id: string | null
           connected_at: string | null
           follower_count: number | null
@@ -1781,6 +1783,8 @@ export type Database = {
         }
         Insert: {
           account_link?: string | null
+          avatar_url?: string | null
+          bio?: string | null
           campaign_id?: string | null
           connected_at?: string | null
           follower_count?: number | null
@@ -1793,6 +1797,8 @@ export type Database = {
         }
         Update: {
           account_link?: string | null
+          avatar_url?: string | null
+          bio?: string | null
           campaign_id?: string | null
           connected_at?: string | null
           follower_count?: number | null
