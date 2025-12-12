@@ -28,6 +28,9 @@ interface User {
   full_name: string;
   avatar_url: string | null;
   total_earnings: number;
+  discord_id?: string | null;
+  discord_username?: string | null;
+  discord_avatar?: string | null;
   wallets: {
     balance: number;
     total_earned: number;
