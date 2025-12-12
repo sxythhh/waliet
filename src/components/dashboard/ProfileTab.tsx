@@ -773,8 +773,8 @@ export function ProfileTab() {
                                   className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border/50"
                                 />
                               ) : (
-                                <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                  {getPlatformIcon(account.platform)}
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-base">
+                                  {account.username.charAt(0).toUpperCase()}
                                 </div>
                               )}
                               
