@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Check } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,6 +95,7 @@ export function AnalyticsTab() {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1W');
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getTimePeriodLabel = () => {
     if (timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to) {
@@ -135,13 +137,20 @@ export function AnalyticsTab() {
   };
 
   useEffect(() => {
-    fetchAnalytics();
-    fetchUserGrowthData();
-    fetchCampaignData();
-    fetchWithdrawalData();
-    fetchPayoutStatusData();
-    fetchEarningsVsWithdrawalsData();
-    fetchCreatorFunnelData();
+    const fetchAllData = async () => {
+      setIsLoading(true);
+      await Promise.all([
+        fetchAnalytics(),
+        fetchUserGrowthData(),
+        fetchCampaignData(),
+        fetchWithdrawalData(),
+        fetchPayoutStatusData(),
+        fetchEarningsVsWithdrawalsData(),
+        fetchCreatorFunnelData(),
+      ]);
+      setIsLoading(false);
+    };
+    fetchAllData();
   }, [timePeriod, customDateRange]);
 
   const fetchAnalytics = async () => {
@@ -282,12 +291,14 @@ export function AnalyticsTab() {
       .gte("processed_at", thirtyDaysAgo.toISOString());
     const activeMembers = new Set(activePayouts?.map(p => p.user_id) || []).size;
 
-    // Calculate registration-to-join conversion rate
-    const { count: usersWhoJoined } = await supabase
-      .from("campaign_submissions")
-      .select("creator_id", { count: "exact", head: true });
+    // Calculate registration-to-join conversion rate (unique users)
+    const { data: usersWhoJoinedData } = await supabase
+      .from("social_account_campaigns")
+      .select("user_id")
+      .eq("status", "active");
+    const uniqueUsersWhoJoined = new Set(usersWhoJoinedData?.map(s => s.user_id) || []).size;
     const registrationToJoinRate = totalUsers && totalUsers > 0 
-      ? ((usersWhoJoined || 0) / totalUsers) * 100 
+      ? (uniqueUsersWhoJoined / totalUsers) * 100 
       : 0;
 
     // Calculate registration-to-payout conversion rate
@@ -705,168 +716,168 @@ export function AnalyticsTab() {
 
       {/* Key metrics - redesigned */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white/[0.03] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">New Users</p>
-            <div className={cn(
-              "flex items-center gap-1 text-[10px] font-semibold font-inter",
-              userChange.isPositive ? "text-green-400" : "text-red-400"
-            )}>
-              {userChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-              {userChange.change.toFixed(0)}%
+        {isLoading ? (
+          <>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white/[0.03] rounded-xl p-5">
+                <Skeleton className="h-4 w-20 mb-3" />
+                <Skeleton className="h-8 w-24 mb-1" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="bg-white/[0.03] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">New Users</p>
+                <div className={cn(
+                  "flex items-center gap-1 text-[10px] font-semibold font-inter",
+                  userChange.isPositive ? "text-green-400" : "text-red-400"
+                )}>
+                  {userChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                  {userChange.change.toFixed(0)}%
+                </div>
+              </div>
+              <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
+                {timePeriod === 'ALL' ? analytics.totalUsers.toLocaleString() : analytics.newUsersCurrentPeriod.toLocaleString()}
+              </div>
+              <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
+                vs {analytics.newUsersPreviousPeriod} previous
+              </p>
             </div>
-          </div>
-          <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
-            {timePeriod === 'ALL' ? analytics.totalUsers.toLocaleString() : analytics.newUsersCurrentPeriod.toLocaleString()}
-          </div>
-          <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
-            vs {analytics.newUsersPreviousPeriod} previous
-          </p>
-        </div>
 
-        <div className="bg-white/[0.03] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Earnings</p>
-            <div className={cn(
-              "flex items-center gap-1 text-[10px] font-semibold font-inter",
-              earningsChange.isPositive ? "text-green-400" : "text-red-400"
-            )}>
-              {earningsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-              {earningsChange.change.toFixed(0)}%
+            <div className="bg-white/[0.03] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Earnings</p>
+                <div className={cn(
+                  "flex items-center gap-1 text-[10px] font-semibold font-inter",
+                  earningsChange.isPositive ? "text-green-400" : "text-red-400"
+                )}>
+                  {earningsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                  {earningsChange.change.toFixed(0)}%
+                </div>
+              </div>
+              <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
+                ${timePeriod === 'ALL' ? analytics.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : analytics.earningsCurrentPeriod.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
+                vs ${analytics.earningsPreviousPeriod.toFixed(2)} previous
+              </p>
             </div>
-          </div>
-          <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
-            ${timePeriod === 'ALL' ? analytics.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : analytics.earningsCurrentPeriod.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
-            vs ${analytics.earningsPreviousPeriod.toFixed(2)} previous
-          </p>
-        </div>
 
-        <div className="bg-white/[0.03] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Paid Out</p>
-            <div className={cn(
-              "flex items-center gap-1 text-[10px] font-semibold font-inter",
-              withdrawalsChange.isPositive ? "text-green-400" : "text-red-400"
-            )}>
-              {withdrawalsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-              {withdrawalsChange.change.toFixed(0)}%
+            <div className="bg-white/[0.03] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Paid Out</p>
+                <div className={cn(
+                  "flex items-center gap-1 text-[10px] font-semibold font-inter",
+                  withdrawalsChange.isPositive ? "text-green-400" : "text-red-400"
+                )}>
+                  {withdrawalsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                  {withdrawalsChange.change.toFixed(0)}%
+                </div>
+              </div>
+              <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
+                ${timePeriod === 'ALL' ? analytics.totalWithdrawals.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : analytics.withdrawalsCurrentPeriod.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
+                vs ${analytics.withdrawalsPreviousPeriod.toFixed(2)} previous
+              </p>
             </div>
-          </div>
-          <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
-            ${timePeriod === 'ALL' ? analytics.totalWithdrawals.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : analytics.withdrawalsCurrentPeriod.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
-            vs ${analytics.withdrawalsPreviousPeriod.toFixed(2)} previous
-          </p>
-        </div>
 
-        <div className="bg-white/[0.03] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Accounts</p>
-            <div className={cn(
-              "flex items-center gap-1 text-[10px] font-semibold font-inter",
-              accountsChange.isPositive ? "text-green-400" : "text-red-400"
-            )}>
-              {accountsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-              {accountsChange.change.toFixed(0)}%
+            <div className="bg-white/[0.03] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Accounts</p>
+                <div className={cn(
+                  "flex items-center gap-1 text-[10px] font-semibold font-inter",
+                  accountsChange.isPositive ? "text-green-400" : "text-red-400"
+                )}>
+                  {accountsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                  {accountsChange.change.toFixed(0)}%
+                </div>
+              </div>
+              <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
+                {timePeriod === 'ALL' ? analytics.totalAccounts.toLocaleString() : analytics.accountsCurrentPeriod.toLocaleString()}
+              </div>
+              <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
+                vs {analytics.accountsPreviousPeriod} previous
+              </p>
             </div>
-          </div>
-          <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
-            {timePeriod === 'ALL' ? analytics.totalAccounts.toLocaleString() : analytics.accountsCurrentPeriod.toLocaleString()}
-          </div>
-          <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
-            vs {analytics.accountsPreviousPeriod} previous
-          </p>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Secondary metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white/[0.02] rounded-xl p-4">
-          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-green-400">{analytics.activeMembers}</div>
-          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Active Members (30d)</p>
-        </div>
+        {isLoading ? (
+          <>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white/[0.02] rounded-xl p-4">
+                <Skeleton className="h-6 w-12 mb-1" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="bg-white/[0.02] rounded-xl p-4">
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-green-400">{analytics.activeMembers}</div>
+              <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Active Members (30d)</p>
+            </div>
 
-        <div className="bg-white/[0.02] rounded-xl p-4">
-          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.totalCampaigns}</div>
-          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Campaigns ({analytics.activeCampaigns} active)</p>
-        </div>
+            <div className="bg-white/[0.02] rounded-xl p-4">
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.totalCampaigns}</div>
+              <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Campaigns ({analytics.activeCampaigns} active)</p>
+            </div>
 
-        <div className="bg-white/[0.02] rounded-xl p-4">
-          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-cyan-400">{analytics.registrationToJoinRate.toFixed(1)}%</div>
-          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Reg → Campaign Join</p>
-        </div>
+            <div className="bg-white/[0.02] rounded-xl p-4">
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-cyan-400">{analytics.registrationToJoinRate.toFixed(1)}%</div>
+              <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Reg → Campaign Join</p>
+            </div>
 
-        <div className="bg-white/[0.02] rounded-xl p-4">
-          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-purple-400">{analytics.registrationToPayoutRate.toFixed(1)}%</div>
-          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Reg → First Payout</p>
-        </div>
+            <div className="bg-white/[0.02] rounded-xl p-4">
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-purple-400">{analytics.registrationToPayoutRate.toFixed(1)}%</div>
+              <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Reg → First Payout</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Tertiary metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white/[0.02] rounded-xl p-4">
-          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingApplications}</div>
-          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Apps</p>
-        </div>
-
-        <div className="bg-white/[0.02] rounded-xl p-4">
-          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingDemographicReviews}</div>
-          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Demographics Review</p>
-        </div>
-
-        <div className="bg-white/[0.02] rounded-xl p-4">
-          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-orange-400">{analytics.pendingPayouts}</div>
-          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Payouts</p>
-        </div>
-
-        <div className="bg-white/[0.02] rounded-xl p-4">
-          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-green-400">{analytics.completedPayouts}</div>
-          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Completed Payouts</p>
-        </div>
-      </div>
-
-      {/* Creator Funnel Chart */}
-      <Card className="bg-card/50 border-0">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">Creator Economy Funnel</CardTitle>
-          <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Distribution of creators by number of payouts received</p>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[200px]">
-            {creatorFunnelData.length > 0 && creatorFunnelData.some(d => d.value > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={creatorFunnelData} layout="vertical">
-                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6 }} />
-                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6 }} width={90} />
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (!active || !payload || !payload.length) return null;
-                      return (
-                        <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
-                          <p className="text-xs text-white font-inter font-semibold">{payload[0].payload.name}</p>
-                          <p className="text-sm text-white/70 font-inter">{payload[0].value} creators</p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                    {creatorFunnelData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
-                No payout data available
+        {isLoading ? (
+          <>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white/[0.02] rounded-xl p-4">
+                <Skeleton className="h-6 w-12 mb-1" />
+                <Skeleton className="h-3 w-20" />
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="bg-white/[0.02] rounded-xl p-4">
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingApplications}</div>
+              <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Apps</p>
+            </div>
+
+            <div className="bg-white/[0.02] rounded-xl p-4">
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingDemographicReviews}</div>
+              <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Demographics Review</p>
+            </div>
+
+            <div className="bg-white/[0.02] rounded-xl p-4">
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-orange-400">{analytics.pendingPayouts}</div>
+              <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Payouts</p>
+            </div>
+
+            <div className="bg-white/[0.02] rounded-xl p-4">
+              <div className="text-lg font-bold font-inter tracking-[-0.5px] text-green-400">{analytics.completedPayouts}</div>
+              <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Completed Payouts</p>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Withdrawals Over Time - Full Width */}
       <Card className="bg-card/50 border-0">
@@ -935,6 +946,99 @@ export function AnalyticsTab() {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* User Growth */}
+        <Card className="bg-card/50 border-0">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">User Growth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px]">
+              {userGrowthData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={userGrowthData}>
+                    <defs>
+                      <linearGradient id="userGrowthGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={CHART_COLORS.purple} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={CHART_COLORS.purple} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                      style={{ opacity: 0.6 }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                      style={{ opacity: 0.6 }}
+                    />
+                    <Tooltip content={<CustomTooltip type="users" />} />
+                    <Area 
+                      type="linear" 
+                      dataKey="users" 
+                      stroke={CHART_COLORS.purple} 
+                      strokeWidth={2} 
+                      fill="url(#userGrowthGradient)" 
+                      dot={false}
+                      isAnimationActive={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
+                  No user data for this period
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Creator Funnel Chart */}
+        <Card className="bg-card/50 border-0">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">Creator Economy Funnel</CardTitle>
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Distribution of creators by number of payouts received</p>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px]">
+              {creatorFunnelData.length > 0 && creatorFunnelData.some(d => d.value > 0) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={creatorFunnelData} layout="vertical">
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6 }} />
+                    <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6 }} width={90} />
+                    <Tooltip 
+                      cursor={false}
+                      content={({ active, payload }) => {
+                        if (!active || !payload || !payload.length) return null;
+                        return (
+                          <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
+                            <p className="text-xs text-white font-inter font-semibold">{payload[0].payload.name}</p>
+                            <p className="text-sm text-white/70 font-inter">{payload[0].value} creators</p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                      {creatorFunnelData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
+                  No payout data available
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Earnings vs Withdrawals */}
         <Card className="bg-card/50 border-0">
           <CardHeader>
@@ -1030,58 +1134,6 @@ export function AnalyticsTab() {
                   </div>
                 ))}
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* User Growth */}
-        <Card className="bg-card/50 border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">User Growth</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px]">
-              {userGrowthData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={userGrowthData}>
-                    <defs>
-                      <linearGradient id="userGrowthGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={CHART_COLORS.purple} stopOpacity={0.3} />
-                        <stop offset="100%" stopColor={CHART_COLORS.purple} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis 
-                      dataKey="month" 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12} 
-                      tickLine={false} 
-                      axisLine={false}
-                      style={{ opacity: 0.6 }}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12} 
-                      tickLine={false} 
-                      axisLine={false}
-                      style={{ opacity: 0.6 }}
-                    />
-                    <Tooltip content={<CustomTooltip type="users" />} />
-                    <Area 
-                      type="linear" 
-                      dataKey="users" 
-                      stroke={CHART_COLORS.purple} 
-                      strokeWidth={2} 
-                      fill="url(#userGrowthGradient)" 
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
-                  No user data for this period
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
