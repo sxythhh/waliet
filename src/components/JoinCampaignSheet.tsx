@@ -399,7 +399,7 @@ export function JoinCampaignSheet({
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">
         <div className="flex-1 overflow-y-auto px-6 pb-24">
-          <div className="mt-6 space-y-6">
+          <div className="mt-6 space-y-6 pb-[80px]">
             {/* Campaign Banner */}
             {campaign.banner_url && <div className="relative w-full h-40 rounded-lg overflow-hidden">
                 <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
