@@ -238,7 +238,7 @@ export default function AuthDialog({
                         Continue with Discord
                       </Button>
 
-                      <Button variant="outline" className="w-full h-12 bg-white/10 hover:bg-white/20 border-0 font-semibold font-geist gap-3 text-white" style={{
+                      <Button variant="outline" className="w-full h-12 bg-white/5 hover:bg-white/10 border-0 font-semibold font-geist gap-3 text-white" style={{
                     letterSpacing: '-0.5px'
                   }} onClick={() => setShowEmailForm(true)} disabled={loading}>
                         <Mail className="h-5 w-5" />
