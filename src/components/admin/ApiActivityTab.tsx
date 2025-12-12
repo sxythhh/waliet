@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ArrowUpRight, ArrowDownLeft, Link2, Users, DollarSign, PieChart } from "lucide-react";
 import { format } from "date-fns";
-import tiktokLogo from "@/assets/tiktok-logo-black.png";
+import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import xLogo from "@/assets/x-logo.png";
