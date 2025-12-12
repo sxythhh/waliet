@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -1152,7 +1153,43 @@ export default function AdminUsers() {
           </div>
 
           {/* Users List */}
-          {filteredUsers.length === 0 ? (
+          {loading ? (
+            <div className="space-y-1">
+              {/* Header */}
+              <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
+                <div className="col-span-3">User</div>
+                <div className="col-span-4">Accounts</div>
+                <div className="col-span-1 text-right">Balance</div>
+                <div className="col-span-1 text-right">Earned</div>
+                <div className="col-span-3 text-right">Actions</div>
+              </div>
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="grid grid-cols-12 gap-4 px-4 py-3 bg-card/50 rounded-lg items-center">
+                  <div className="col-span-3 flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <div className="col-span-4 flex gap-1.5">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <Skeleton className="h-4 w-14" />
+                  </div>
+                  <div className="col-span-3 flex justify-end gap-2">
+                    <Skeleton className="h-8 w-16" />
+                    <Skeleton className="h-8 w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <UsersIcon className="h-10 w-10 mb-3 opacity-50" />
               <p className="font-inter tracking-[-0.5px]">No users found</p>

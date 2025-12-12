@@ -31,7 +31,6 @@ import Training from "./pages/Training";
 import CourseDetail from "./pages/CourseDetail";
 import AdminOverview from "./pages/admin/Overview";
 import AdminBrands from "./pages/admin/Brands";
-import AdminCampaigns from "./pages/admin/Campaigns";
 import AdminUsers from "./pages/admin/Users";
 import AdminPayouts from "./pages/admin/Payouts";
 import AdminCourses from "./pages/admin/Courses";
@@ -141,7 +140,6 @@ const App = () => (
             <Route path="/boost/:id" element={<BrandLayout><BoostCampaignDetail /></BrandLayout>} />
             <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
             <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
-            <Route path="/admin/campaigns" element={<AdminLayout><AdminCampaigns /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
             <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
             <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />

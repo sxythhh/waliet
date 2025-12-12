@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu } from "lucide-react";
+import { Menu, LayoutDashboard, Building2, Users, CreditCard, Receipt, LogOut, Search } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,24 +9,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminSearchCommand } from "@/components/admin/AdminSearchCommand";
 
 const menuItems = [
-  { title: "Overview", icon: "dashboard", path: "/admin" },
-  { title: "Brands", icon: "inventory_2", path: "/admin/brands" },
-  { title: "Campaigns", icon: "trending_up", path: "/admin/campaigns" },
-  { title: "Users", icon: "group", path: "/admin/users" },
-  { title: "Payouts", icon: "payments", path: "/admin/payouts" },
-  { title: "Transactions", icon: "receipt_long", path: "/admin/transactions" },
+  { title: "Overview", icon: LayoutDashboard, path: "/admin" },
+  { title: "Brands", icon: Building2, path: "/admin/brands" },
+  { title: "Users", icon: Users, path: "/admin/users" },
+  { title: "Payouts", icon: CreditCard, path: "/admin/payouts" },
+  { title: "Transactions", icon: Receipt, path: "/admin/transactions" },
 ];
-
-function MaterialIcon({ name, className }: { name: string; className?: string }) {
-  return (
-    <span 
-      className={cn("material-symbols-rounded", className)}
-      style={{ fontSize: 'inherit' }}
-    >
-      {name}
-    </span>
-  );
-}
 
 function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void; onSearchOpen: () => void }) {
   const navigate = useNavigate();
@@ -48,28 +36,30 @@ function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void;
       <div className="px-3 py-4">
         <button
           onClick={onSearchOpen}
-          className="w-full flex items-center gap-2.5 px-3 py-2 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors text-left"
+          className="w-full flex items-center gap-2.5 px-3 py-1.5 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors text-left"
         >
-          <MaterialIcon name="search" className="text-xl text-muted-foreground" />
+          <Search className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px] flex-1">Search...</span>
         </button>
       </div>
       
-      <nav className="flex-1 px-2">
+      <nav className="flex-1 px-2 space-y-0.5">
         {menuItems.map((item) => {
           const active = isActive(item.path);
+          const Icon = item.icon;
           return (
             <NavLink
               key={item.title}
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 text-sm font-inter tracking-[-0.5px] transition-colors rounded-md",
+                "flex items-center gap-2.5 px-3 py-2 text-sm font-inter tracking-[-0.5px] transition-colors rounded-md",
                 active
                   ? "bg-white/10 text-white font-medium"
                   : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               )}
             >
+              <Icon className="h-4 w-4" />
               <span>{item.title}</span>
             </NavLink>
           );
@@ -80,9 +70,9 @@ function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void;
         <Button
           onClick={handleSignOut}
           variant="ghost"
-          className="w-full justify-start gap-3 px-3 text-sm font-inter tracking-[-0.5px] text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          className="w-full justify-start gap-2.5 px-3 h-9 text-sm font-inter tracking-[-0.5px] text-muted-foreground hover:text-destructive hover:bg-destructive/10"
         >
-          <MaterialIcon name="logout" className="text-xl" />
+          <LogOut className="h-4 w-4" />
           <span>Sign Out</span>
         </Button>
       </div>
