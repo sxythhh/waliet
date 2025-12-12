@@ -202,7 +202,7 @@ export default function Auth() {
     }
   };
   if (isRecoveryMode) {
-    return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
         <Card className="w-full max-w-md border-0 bg-card/50 backdrop-blur-sm shadow-xl">
           <CardHeader className="text-center space-y-4 pb-2">
             <div className="flex justify-center">
@@ -232,7 +232,7 @@ export default function Auth() {
         </Card>
       </div>;
   }
-  return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+  return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
       
       <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
         <CardHeader className="text-center space-y-4 pb-2 pt-8">
