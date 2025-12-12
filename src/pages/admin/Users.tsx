@@ -32,6 +32,8 @@ interface User {
   discord_id?: string | null;
   discord_username?: string | null;
   discord_avatar?: string | null;
+  phone_number?: string | null;
+  created_at?: string | null;
   wallets: {
     balance: number;
     total_earned: number;
@@ -104,6 +106,17 @@ export default function AdminUsers() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
   const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
+  
+  // Advanced filters
+  const [minEarnings, setMinEarnings] = useState<string>("");
+  const [earningsTimeframe, setEarningsTimeframe] = useState<string>("all");
+  const [hasDiscord, setHasDiscord] = useState<boolean | null>(null);
+  const [hasPhone, setHasPhone] = useState<boolean | null>(null);
+  const [hasSocialAccount, setHasSocialAccount] = useState<boolean | null>(null);
+  const [signupTimeframe, setSignupTimeframe] = useState<string>("all");
+  const [hasApprovedDemographics, setHasApprovedDemographics] = useState<boolean | null>(null);
+  const [minBalance, setMinBalance] = useState<string>("");
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(50);
   const [payDialogOpen, setPayDialogOpen] = useState(false);
@@ -162,7 +175,7 @@ export default function AdminUsers() {
   useEffect(() => {
     filterUsers();
     setCurrentPage(1); // Reset to first page when filters change
-  }, [debouncedSearchQuery, selectedCampaign, users, sortField, sortOrder]);
+  }, [debouncedSearchQuery, selectedCampaign, users, sortField, sortOrder, minEarnings, earningsTimeframe, hasDiscord, hasPhone, hasSocialAccount, signupTimeframe, hasApprovedDemographics, minBalance]);
   const fetchData = async () => {
     setLoading(true);
 
@@ -326,6 +339,82 @@ export default function AdminUsers() {
         const creatorIds = submissions.map(s => s.creator_id);
         filtered = filtered.filter(user => creatorIds.includes(user.id));
       }
+    }
+
+    // Discord filter
+    if (hasDiscord === true) {
+      filtered = filtered.filter(user => user.discord_id);
+    } else if (hasDiscord === false) {
+      filtered = filtered.filter(user => !user.discord_id);
+    }
+
+    // Phone number filter
+    if (hasPhone === true) {
+      filtered = filtered.filter(user => user.phone_number);
+    } else if (hasPhone === false) {
+      filtered = filtered.filter(user => !user.phone_number);
+    }
+
+    // Social account filter
+    if (hasSocialAccount === true) {
+      filtered = filtered.filter(user => user.social_accounts && user.social_accounts.length > 0);
+    } else if (hasSocialAccount === false) {
+      filtered = filtered.filter(user => !user.social_accounts || user.social_accounts.length === 0);
+    }
+
+    // Approved demographics filter
+    if (hasApprovedDemographics === true) {
+      filtered = filtered.filter(user => 
+        user.social_accounts?.some(account => 
+          account.demographic_submissions?.some(sub => sub.status === 'approved')
+        )
+      );
+    } else if (hasApprovedDemographics === false) {
+      filtered = filtered.filter(user => 
+        !user.social_accounts?.some(account => 
+          account.demographic_submissions?.some(sub => sub.status === 'approved')
+        )
+      );
+    }
+
+    // Minimum earnings filter
+    if (minEarnings && parseFloat(minEarnings) > 0) {
+      const minEarningsValue = parseFloat(minEarnings);
+      filtered = filtered.filter(user => (user.wallets?.total_earned || 0) >= minEarningsValue);
+    }
+
+    // Minimum balance filter
+    if (minBalance && parseFloat(minBalance) > 0) {
+      const minBalanceValue = parseFloat(minBalance);
+      filtered = filtered.filter(user => (user.wallets?.balance || 0) >= minBalanceValue);
+    }
+
+    // Signup timeframe filter
+    if (signupTimeframe !== "all" && signupTimeframe) {
+      const now = new Date();
+      let cutoffDate: Date;
+      
+      switch (signupTimeframe) {
+        case "24h":
+          cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          break;
+        case "7d":
+          cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case "30d":
+          cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case "90d":
+          cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          cutoffDate = new Date(0);
+      }
+      
+      filtered = filtered.filter(user => {
+        if (!user.created_at) return false;
+        return new Date(user.created_at) >= cutoffDate;
+      });
     }
 
     // Sort users
@@ -1044,112 +1133,279 @@ export default function AdminUsers() {
         <TabsContent value="users" className="space-y-4">
           
           {/* Filters Row */}
-          <div className="flex gap-3 items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                type="text" 
-                placeholder="Search users or accounts..." 
-                value={searchQuery} 
-                onChange={e => setSearchQuery(e.target.value)} 
-                className="pl-10 bg-card/50 border-0 h-9 text-sm font-inter tracking-[-0.5px] placeholder:text-muted-foreground/50" 
-              />
-            </div>
-            
-            <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" className="h-9 px-3 bg-card/50 text-sm font-inter tracking-[-0.5px] gap-2">
-                  {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
-                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 p-0 bg-popover z-50" align="end">
-                <Command>
-                  <CommandInput placeholder="Search campaigns..." className="font-inter tracking-[-0.5px]" />
-                  <CommandList>
-                    <CommandEmpty className="font-inter tracking-[-0.5px]">No campaign found.</CommandEmpty>
-                    <CommandGroup>
-                      <CommandItem value="all" onSelect={() => {
-                          setSelectedCampaign("all");
-                          setCampaignPopoverOpen(false);
-                        }} className="font-inter tracking-[-0.5px]">
-                        <Check className={cn("mr-2 h-4 w-4", selectedCampaign === "all" ? "opacity-100" : "opacity-0")} />
-                        All Campaigns
-                      </CommandItem>
-                      {campaigns.map(campaign => <CommandItem key={campaign.id} value={campaign.title} onSelect={() => {
-                          setSelectedCampaign(campaign.id);
-                          setCampaignPopoverOpen(false);
-                        }} className="font-inter tracking-[-0.5px]">
+          <div className="space-y-3">
+            {/* Main filter row */}
+            <div className="flex gap-3 items-center flex-wrap">
+              {/* Campaign filter */}
+              <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" className="h-9 px-3 bg-card/50 text-sm font-inter tracking-[-0.5px] gap-2">
+                    {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
+                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-0 bg-popover z-50" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search campaigns..." className="font-inter tracking-[-0.5px]" />
+                    <CommandList>
+                      <CommandEmpty className="font-inter tracking-[-0.5px]">No campaign found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem value="all" onSelect={() => {
+                            setSelectedCampaign("all");
+                            setCampaignPopoverOpen(false);
+                          }} className="font-inter tracking-[-0.5px]">
+                          <Check className={cn("mr-2 h-4 w-4", selectedCampaign === "all" ? "opacity-100" : "opacity-0")} />
+                          All Campaigns
+                        </CommandItem>
+                        {campaigns.map(campaign => <CommandItem key={campaign.id} value={campaign.title} onSelect={() => {
+                            setSelectedCampaign(campaign.id);
+                            setCampaignPopoverOpen(false);
+                          }} className="font-inter tracking-[-0.5px]">
                           <Check className={cn("mr-2 h-4 w-4", selectedCampaign === campaign.id ? "opacity-100" : "opacity-0")} />
                           {campaign.title}
                         </CommandItem>)}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 bg-card/50">
-                  <ArrowUpDown className="h-4 w-4" />
+              {/* Signup timeframe */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" className={cn(
+                    "h-9 px-3 text-sm font-inter tracking-[-0.5px] gap-2",
+                    signupTimeframe !== "all" ? "bg-primary/10 text-primary" : "bg-card/50"
+                  )}>
+                    {signupTimeframe === "all" ? "All Time" : 
+                     signupTimeframe === "24h" ? "Last 24h" :
+                     signupTimeframe === "7d" ? "Last 7 days" :
+                     signupTimeframe === "30d" ? "Last 30 days" :
+                     signupTimeframe === "90d" ? "Last 90 days" : "All Time"}
+                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-40 p-1 bg-popover" align="start">
+                  <div className="space-y-0.5">
+                    {[
+                      { value: "all", label: "All Time" },
+                      { value: "24h", label: "Last 24 hours" },
+                      { value: "7d", label: "Last 7 days" },
+                      { value: "30d", label: "Last 30 days" },
+                      { value: "90d", label: "Last 90 days" },
+                    ].map(option => (
+                      <Button
+                        key={option.value}
+                        variant={signupTimeframe === option.value ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
+                        onClick={() => setSignupTimeframe(option.value)}
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Toggle filters */}
+              <div className="flex gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px]",
+                    hasDiscord === true ? "bg-[#5865F2]/20 text-[#5865F2]" : 
+                    hasDiscord === false ? "bg-red-500/10 text-red-400" : "bg-card/50"
+                  )}
+                  onClick={() => setHasDiscord(hasDiscord === true ? false : hasDiscord === false ? null : true)}
+                >
+                  Discord {hasDiscord === true ? "✓" : hasDiscord === false ? "✗" : ""}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-2 bg-popover" align="end">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground mb-2 px-2 font-inter tracking-[-0.5px]">Sort by</p>
-                  <Button
-                    variant={sortField === "balance" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
-                    onClick={() => {
-                      if (sortField === "balance") {
-                        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                      } else {
-                        setSortField("balance");
-                        setSortOrder("desc");
-                      }
-                    }}
-                  >
-                    Balance
-                    {sortField === "balance" && (
-                      sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
-                    )}
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px]",
+                    hasPhone === true ? "bg-green-500/20 text-green-400" : 
+                    hasPhone === false ? "bg-red-500/10 text-red-400" : "bg-card/50"
+                  )}
+                  onClick={() => setHasPhone(hasPhone === true ? false : hasPhone === false ? null : true)}
+                >
+                  Phone {hasPhone === true ? "✓" : hasPhone === false ? "✗" : ""}
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px]",
+                    hasSocialAccount === true ? "bg-blue-500/20 text-blue-400" : 
+                    hasSocialAccount === false ? "bg-red-500/10 text-red-400" : "bg-card/50"
+                  )}
+                  onClick={() => setHasSocialAccount(hasSocialAccount === true ? false : hasSocialAccount === false ? null : true)}
+                >
+                  Social {hasSocialAccount === true ? "✓" : hasSocialAccount === false ? "✗" : ""}
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px]",
+                    hasApprovedDemographics === true ? "bg-emerald-500/20 text-emerald-400" : 
+                    hasApprovedDemographics === false ? "bg-red-500/10 text-red-400" : "bg-card/50"
+                  )}
+                  onClick={() => setHasApprovedDemographics(hasApprovedDemographics === true ? false : hasApprovedDemographics === false ? null : true)}
+                >
+                  Demographics {hasApprovedDemographics === true ? "✓" : hasApprovedDemographics === false ? "✗" : ""}
+                </Button>
+              </div>
+
+              {/* Expand/Collapse more filters */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 px-3 text-xs font-inter tracking-[-0.5px] bg-card/50 ml-auto gap-1.5"
+                onClick={() => setFiltersExpanded(!filtersExpanded)}
+              >
+                {filtersExpanded ? "Less filters" : "More filters"}
+                {filtersExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </Button>
+
+              {/* Sort button */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className={cn(
+                    "h-9 w-9",
+                    sortField ? "bg-primary/10" : "bg-card/50"
+                  )}>
+                    <ArrowUpDown className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant={sortField === "totalEarned" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
-                    onClick={() => {
-                      if (sortField === "totalEarned") {
-                        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                      } else {
-                        setSortField("totalEarned");
-                        setSortOrder("desc");
-                      }
-                    }}
-                  >
-                    Total Earned
-                    {sortField === "totalEarned" && (
-                      sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
-                    )}
-                  </Button>
-                  {sortField && (
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2 bg-popover" align="end">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground mb-2 px-2 font-inter tracking-[-0.5px]">Sort by</p>
                     <Button
-                      variant="ghost"
+                      variant={sortField === "balance" ? "secondary" : "ghost"}
                       size="sm"
-                      className="w-full justify-start text-xs text-muted-foreground font-inter tracking-[-0.5px]"
+                      className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
                       onClick={() => {
-                        setSortField(null);
-                        setSortOrder("desc");
+                        if (sortField === "balance") {
+                          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                        } else {
+                          setSortField("balance");
+                          setSortOrder("desc");
+                        }
                       }}
                     >
-                      Clear sort
+                      Balance
+                      {sortField === "balance" && (
+                        sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
+                      )}
                     </Button>
-                  )}
+                    <Button
+                      variant={sortField === "totalEarned" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
+                      onClick={() => {
+                        if (sortField === "totalEarned") {
+                          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                        } else {
+                          setSortField("totalEarned");
+                          setSortOrder("desc");
+                        }
+                      }}
+                    >
+                      Total Earned
+                      {sortField === "totalEarned" && (
+                        sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
+                      )}
+                    </Button>
+                    {sortField && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-xs text-muted-foreground font-inter tracking-[-0.5px]"
+                        onClick={() => {
+                          setSortField(null);
+                          setSortOrder("desc");
+                        }}
+                      >
+                        Clear sort
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Expanded filters */}
+            {filtersExpanded && (
+              <div className="flex gap-3 items-center flex-wrap p-4 bg-card/30 rounded-lg">
+                {/* Min earnings */}
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px] whitespace-nowrap">
+                    Min Earned $
+                  </Label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={minEarnings}
+                    onChange={e => setMinEarnings(e.target.value)}
+                    className="w-20 h-8 bg-card/50 border-0 text-sm font-inter tracking-[-0.5px]"
+                  />
                 </div>
-              </PopoverContent>
-            </Popover>
+
+                {/* Min balance */}
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px] whitespace-nowrap">
+                    Min Balance $
+                  </Label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={minBalance}
+                    onChange={e => setMinBalance(e.target.value)}
+                    className="w-20 h-8 bg-card/50 border-0 text-sm font-inter tracking-[-0.5px]"
+                  />
+                </div>
+
+                {/* Clear all filters */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px] ml-auto"
+                  onClick={() => {
+                    setSelectedCampaign("all");
+                    setMinEarnings("");
+                    setMinBalance("");
+                    setHasDiscord(null);
+                    setHasPhone(null);
+                    setHasSocialAccount(null);
+                    setHasApprovedDemographics(null);
+                    setSignupTimeframe("all");
+                    setSortField(null);
+                  }}
+                >
+                  Clear all filters
+                </Button>
+              </div>
+            )}
+
+            {/* Active filter count & results */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+              <span>
+                {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} 
+                {filteredUsers.length !== users.length && ` (filtered from ${users.length})`}
+              </span>
+              {(selectedCampaign !== "all" || minEarnings || minBalance || hasDiscord !== null || hasPhone !== null || hasSocialAccount !== null || hasApprovedDemographics !== null || signupTimeframe !== "all") && (
+                <span className="text-primary">
+                  Filters active
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Users List */}
