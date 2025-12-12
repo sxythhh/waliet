@@ -135,6 +135,35 @@ export type Database = {
           },
         ]
       }
+      bounty_bookmarks: {
+        Row: {
+          bounty_campaign_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bounty_campaign_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bounty_campaign_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_bookmarks_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bounty_campaigns: {
         Row: {
           accepted_creators_count: number

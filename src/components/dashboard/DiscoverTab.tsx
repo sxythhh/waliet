@@ -83,6 +83,7 @@ export function DiscoverTab() {
   const [bountySheetOpen, setBountySheetOpen] = useState(false);
   const [joinPrivateDialogOpen, setJoinPrivateDialogOpen] = useState(false);
   const [bookmarkedCampaignIds, setBookmarkedCampaignIds] = useState<string[]>([]);
+  const [bookmarkedBountyIds, setBookmarkedBountyIds] = useState<string[]>([]);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -150,13 +151,24 @@ export function DiscoverTab() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
-    const { data, error } = await supabase
+    // Fetch campaign bookmarks
+    const { data: campaignData, error: campaignError } = await supabase
       .from("campaign_bookmarks")
       .select("campaign_id")
       .eq("user_id", user.id);
     
-    if (!error && data) {
-      setBookmarkedCampaignIds(data.map(b => b.campaign_id));
+    if (!campaignError && campaignData) {
+      setBookmarkedCampaignIds(campaignData.map(b => b.campaign_id));
+    }
+    
+    // Fetch bounty bookmarks
+    const { data: bountyData, error: bountyError } = await supabase
+      .from("bounty_bookmarks")
+      .select("bounty_campaign_id")
+      .eq("user_id", user.id);
+    
+    if (!bountyError && bountyData) {
+      setBookmarkedBountyIds(bountyData.map(b => b.bounty_campaign_id));
     }
   };
 
@@ -190,6 +202,40 @@ export function DiscoverTab() {
       if (!error) {
         setBookmarkedCampaignIds(prev => [...prev, campaignId]);
         toast.success("Campaign bookmarked");
+      }
+    }
+  };
+
+  const toggleBountyBookmark = async (bountyId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to bookmark boosts");
+      return;
+    }
+    
+    const isBookmarked = bookmarkedBountyIds.includes(bountyId);
+    
+    if (isBookmarked) {
+      const { error } = await supabase
+        .from("bounty_bookmarks")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("bounty_campaign_id", bountyId);
+      
+      if (!error) {
+        setBookmarkedBountyIds(prev => prev.filter(id => id !== bountyId));
+        toast.success("Bookmark removed");
+      }
+    } else {
+      const { error } = await supabase
+        .from("bounty_bookmarks")
+        .insert({ user_id: user.id, bounty_campaign_id: bountyId });
+      
+      if (!error) {
+        setBookmarkedBountyIds(prev => [...prev, bountyId]);
+        toast.success("Boost bookmarked");
       }
     }
   };
@@ -512,7 +558,9 @@ export function DiscoverTab() {
                     isEnded: c.status === 'ended',
                     createdAt: c.start_date || c.created_at
                   })),
-                  ...bounties.map(b => ({
+                  ...bounties
+                    .filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id))
+                    .map(b => ({
                     type: 'bounty' as const,
                     data: b,
                     isEnded: b.status === 'ended',
@@ -625,6 +673,7 @@ export function DiscoverTab() {
                     const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
                     const isFull = spotsRemaining <= 0;
                     const isEnded = bounty.status === "ended";
+                    const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
                     
                     return <Card 
                       key={`bounty-${bounty.id}`}
@@ -637,6 +686,14 @@ export function DiscoverTab() {
                       }}
                     >
                       {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
+                      
+                      {/* Bookmark Button */}
+                      <button
+                        onClick={(e) => toggleBountyBookmark(bounty.id, e)}
+                        className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
+                      >
+                        <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+                      </button>
                       
                       <CardContent className="p-4 flex-1 flex flex-col gap-3">
                         {/* Brand + Type Badge Row */}

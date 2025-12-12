@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ExternalLink, DollarSign, Video, Users, Calendar, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ExternalLink, AlertCircle, CheckCircle2, Upload, X, Play } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -48,6 +48,9 @@ export function ApplyToBountySheet({
 }: ApplyToBountySheetProps) {
   const [submitting, setSubmitting] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
+  const [uploadedVideoFile, setUploadedVideoFile] = useState<File | null>(null);
+  const [uploadedVideoPreview, setUploadedVideoPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [applicationText, setApplicationText] = useState("");
   const [hasConnectedAccounts, setHasConnectedAccounts] = useState(false);
   const [isCheckingAccounts, setIsCheckingAccounts] = useState(true);
@@ -56,6 +59,7 @@ export function ApplyToBountySheet({
   const [userId, setUserId] = useState<string>("");
   const [showAddSocialDialog, setShowAddSocialDialog] = useState(false);
   const [showDiscordDialog, setShowDiscordDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check for connected accounts when sheet opens
   useEffect(() => {
@@ -104,20 +108,46 @@ export function ApplyToBountySheet({
   const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
   const isFull = spotsRemaining <= 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!videoUrl.trim()) {
-      toast.error("Please provide a video URL");
+  const handleVideoUpload = async (file: File) => {
+    if (!file.type.startsWith('video/')) {
+      toast.error("Please upload a video file");
+      return;
+    }
+    
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error("Video must be less than 100MB");
       return;
     }
 
-    // Basic URL validation
-    try {
-      new URL(videoUrl);
-    } catch {
-      toast.error("Please provide a valid URL");
+    setUploadedVideoFile(file);
+    setUploadedVideoPreview(URL.createObjectURL(file));
+    setVideoUrl(""); // Clear URL input when file is uploaded
+  };
+
+  const removeUploadedVideo = () => {
+    if (uploadedVideoPreview) {
+      URL.revokeObjectURL(uploadedVideoPreview);
+    }
+    setUploadedVideoFile(null);
+    setUploadedVideoPreview(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!videoUrl.trim() && !uploadedVideoFile) {
+      toast.error("Please provide a video URL or upload a video");
       return;
+    }
+
+    // Basic URL validation if URL is provided
+    if (videoUrl.trim()) {
+      try {
+        new URL(videoUrl);
+      } catch {
+        toast.error("Please provide a valid URL");
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -142,12 +172,34 @@ export function ApplyToBountySheet({
         return;
       }
 
+      let finalVideoUrl = videoUrl.trim();
+
+      // Upload video if file is selected
+      if (uploadedVideoFile) {
+        setIsUploading(true);
+        const fileExt = uploadedVideoFile.name.split('.').pop();
+        const fileName = `${session.user.id}/${bounty.id}/${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('campaign-videos')
+          .upload(fileName, uploadedVideoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('campaign-videos')
+          .getPublicUrl(fileName);
+
+        finalVideoUrl = publicUrl;
+        setIsUploading(false);
+      }
+
       const { error } = await supabase
         .from('bounty_applications')
         .insert({
           bounty_campaign_id: bounty.id,
           user_id: session.user.id,
-          video_url: videoUrl.trim(),
+          video_url: finalVideoUrl,
           application_text: applicationText.trim() || null
         });
 
@@ -160,9 +212,11 @@ export function ApplyToBountySheet({
       // Reset form
       setVideoUrl("");
       setApplicationText("");
+      removeUploadedVideo();
     } catch (error: any) {
       console.error("Error submitting application:", error);
       toast.error(error.message || "Failed to submit application");
+      setIsUploading(false);
     } finally {
       setSubmitting(false);
     }
@@ -179,7 +233,7 @@ export function ApplyToBountySheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent 
           side="right" 
-          className="w-full sm:max-w-xl bg-[#0a0a0a] border-l border-white/10 p-0 overflow-y-auto"
+          className="w-full sm:max-w-xl bg-[#0a0a0a] border-0 p-0 overflow-y-auto"
         >
           {/* Account Connection Required Screen */}
           {!isCheckingAccounts && !hasConnectedAccounts ? (
@@ -365,33 +419,100 @@ export function ApplyToBountySheet({
             </div>
           </div>
 
-          {/* Content Requirements */}
-          <div className="rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-white mb-2">Content Style Requirements</h3>
-            <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">
-              {bounty.content_style_requirements}
-            </p>
+          {/* Content Requirements - Redesigned */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-1 font-['Inter'] tracking-[-0.5px]">
+                What We're Looking For
+              </h3>
+              <p className="text-xs text-white/40">Content guidelines and requirements</p>
+            </div>
+            
+            <div className="space-y-3">
+              {bounty.content_style_requirements.split('\n').filter(line => line.trim()).map((requirement, index) => (
+                <div key={index} className="flex gap-3 items-start">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                  <p className="text-sm text-white/80 leading-relaxed">
+                    {requirement.trim()}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Application Form */}
           <form onSubmit={handleSubmit} className="space-y-5 pt-2">
-            <div>
-              <Label htmlFor="video_url" className="text-white flex items-center gap-2 mb-2">
-                <ExternalLink className="h-4 w-4" />
-                Application Video URL *
+            {/* Video Upload Section */}
+            <div className="space-y-3">
+              <Label className="text-white font-medium">
+                Example Video *
               </Label>
-              <Input
-                id="video_url"
-                type="url"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://youtube.com/watch?v=..."
-                className="bg-white/5 border-transparent text-white placeholder:text-white/30"
-                required
-              />
-              <p className="text-xs text-white/50 mt-2">
-                Provide a link to a video showcasing your content creation skills
+              <p className="text-xs text-white/50">
+                Show us your content style with a video link or upload
               </p>
+              
+              {/* Upload or URL Toggle Area */}
+              {!uploadedVideoFile ? (
+                <div className="space-y-3">
+                  {/* Upload Button */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => e.target.files?.[0] && handleVideoUpload(e.target.files[0])}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+                  >
+                    <Upload className="h-8 w-8 text-white/40 group-hover:text-white/60" />
+                    <span className="text-sm text-white/60 group-hover:text-white/80">
+                      Click to upload video
+                    </span>
+                    <span className="text-xs text-white/30">MP4, MOV up to 100MB</span>
+                  </button>
+                  
+                  {/* Or divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-white/10" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-[#0a0a0a] px-2 text-white/30">or paste URL</span>
+                    </div>
+                  </div>
+                  
+                  {/* URL Input */}
+                  <div className="relative">
+                    <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                    <Input
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="https://youtube.com/watch?v=..."
+                      className="pl-10 bg-white/5 border-transparent text-white placeholder:text-white/30"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Video Preview */
+                <div className="relative rounded-lg overflow-hidden bg-black/20">
+                  <video
+                    src={uploadedVideoPreview || ''}
+                    className="w-full max-h-48 object-contain"
+                    controls
+                  />
+                  <button
+                    type="button"
+                    onClick={removeUploadedVideo}
+                    className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
@@ -403,7 +524,7 @@ export function ApplyToBountySheet({
                 value={applicationText}
                 onChange={(e) => setApplicationText(e.target.value)}
                 placeholder="Tell the brand why you'd be perfect for this boost..."
-                className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[120px] resize-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[100px] resize-none"
               />
             </div>
 
@@ -413,16 +534,16 @@ export function ApplyToBountySheet({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 className="flex-1 bg-transparent border-transparent text-white hover:bg-white/5"
-                disabled={submitting}
+                disabled={submitting || isUploading}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={submitting || isFull}
+                disabled={submitting || isFull || isUploading || (!videoUrl.trim() && !uploadedVideoFile)}
                 className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-50"
               >
-                {submitting ? "Submitting..." : isFull ? "No Spots Available" : "Submit Application"}
+                {isUploading ? "Uploading..." : submitting ? "Submitting..." : isFull ? "No Spots Available" : "Submit Application"}
               </Button>
             </div>
           </form>
