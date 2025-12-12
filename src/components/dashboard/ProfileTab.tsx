@@ -737,7 +737,7 @@ export function ProfileTab() {
       {/* Connected Accounts */}
       <Card className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
-          <div className="flex items-center justify-between gap-4 p-4 sm:p-6 py-[8px] px-0">
+          <div className="flex items-center justify-between gap-4 p-4 sm:p-6 px-0 py-0">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
             <Button onClick={() => setShowAddAccountDialog(true)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
@@ -756,7 +756,7 @@ export function ProfileTab() {
             const demographicSubmissions = account.demographic_submissions || [];
             const latestDemographicSubmission = demographicSubmissions[0];
             const demographicStatus = latestDemographicSubmission?.status;
-              return <div key={account.id} className="group relative p-3 sm:p-4 rounded-xl bg-neutral-100 dark:bg-muted/10 hover:bg-neutral-200 dark:hover:bg-muted/20 transition-all duration-300">
+            return <div key={account.id} className="group relative p-3 sm:p-4 rounded-xl bg-neutral-100 dark:bg-muted/10 hover:bg-neutral-200 dark:hover:bg-muted/20 transition-all duration-300">
                     {/* Main Layout */}
                     <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                       {/* Content - Clickable to open popover */}
@@ -766,25 +766,17 @@ export function ProfileTab() {
                             {/* Account Header with Avatar */}
                             <div className="flex items-center gap-3">
                               {/* Avatar */}
-                              {account.avatar_url ? (
-                                <img 
-                                  src={account.avatar_url} 
-                                  alt={account.username}
-                                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border/50"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-base">
+                              {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border/50" /> : <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-base">
                                   {account.username.charAt(0).toUpperCase()}
-                                </div>
-                              )}
+                                </div>}
                               
                               <div className="flex-1 min-w-0">
                                 {/* Username Row */}
                                 <div className="flex items-center gap-2">
                                   <span className="font-semibold text-base text-foreground truncate" style={{
-                                    fontFamily: 'Inter',
-                                    letterSpacing: '-0.5px'
-                                  }}>
+                              fontFamily: 'Inter',
+                              letterSpacing: '-0.5px'
+                            }}>
                                     {account.username}
                                   </span>
                                   <div className="w-4 h-4 flex-shrink-0 opacity-60">
@@ -794,22 +786,16 @@ export function ProfileTab() {
                                 
                                 {/* Stats Row */}
                                 <div className="flex items-center gap-3 mt-0.5">
-                                  {account.follower_count !== null && account.follower_count > 0 && (
-                                    <span className="text-xs text-muted-foreground" style={{
-                                      fontFamily: 'Inter',
-                                      letterSpacing: '-0.3px'
-                                    }}>
-                                      {account.follower_count >= 1000000 
-                                        ? `${(account.follower_count / 1000000).toFixed(1)}M`
-                                        : account.follower_count >= 1000 
-                                          ? `${(account.follower_count / 1000).toFixed(1)}K`
-                                          : account.follower_count} followers
-                                    </span>
-                                  )}
+                                  {account.follower_count !== null && account.follower_count > 0 && <span className="text-xs text-muted-foreground" style={{
+                              fontFamily: 'Inter',
+                              letterSpacing: '-0.3px'
+                            }}>
+                                      {account.follower_count >= 1000000 ? `${(account.follower_count / 1000000).toFixed(1)}M` : account.follower_count >= 1000 ? `${(account.follower_count / 1000).toFixed(1)}K` : account.follower_count} followers
+                                    </span>}
                                   <span className="text-xs text-muted-foreground" style={{
-                                    fontFamily: 'Inter',
-                                    letterSpacing: '-0.3px'
-                                  }}>
+                              fontFamily: 'Inter',
+                              letterSpacing: '-0.3px'
+                            }}>
                                     {connectedCampaigns.length} campaign{connectedCampaigns.length !== 1 ? 's' : ''}
                                   </span>
                                   <ChevronDown className="w-3 h-3 text-muted-foreground" />
@@ -818,14 +804,12 @@ export function ProfileTab() {
                             </div>
                             
                             {/* Bio Preview */}
-                            {account.bio && (
-                              <p className="text-xs text-muted-foreground mt-2 line-clamp-2 ml-[52px]" style={{
-                                fontFamily: 'Inter',
-                                letterSpacing: '-0.3px'
-                              }}>
+                            {account.bio && <p className="text-xs text-muted-foreground mt-2 line-clamp-2 ml-[52px]" style={{
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.3px'
+                      }}>
                                 {account.bio}
-                              </p>
-                            )}
+                              </p>}
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-72 p-4 bg-[#0a0a0a] border-0 rounded-xl" align="start" side="bottom" sideOffset={8}>
