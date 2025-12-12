@@ -696,7 +696,7 @@ export function DiscoverTab() {
                         <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
                       </button>
                       
-                      <CardContent className="p-4 flex-1 flex flex-col gap-2">
+                      <CardContent className="p-4 flex-1 flex flex-col gap-1.5">
                         {/* Brand Info */}
                         <div className="flex items-center gap-2">
                           {bounty.brands?.logo_url ? (
@@ -764,7 +764,7 @@ export function DiscoverTab() {
                             <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed font-['Inter'] tracking-[-0.5px]">
                               {bounty.description}
                             </p>
-                            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-card group-hover:from-[#0f0f0f] dark:group-hover:from-[#0f0f0f] to-transparent pointer-events-none transition-colors" />
                           </div>
                         )}
                         
