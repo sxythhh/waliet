@@ -1015,278 +1015,290 @@ export default function AdminUsers() {
   };
   if (loading) {
     return <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading users...</p>
+        <p className="text-muted-foreground font-inter tracking-[-0.5px]">Loading users...</p>
       </div>;
   }
-  return <div className="p-8 space-y-6 px-[20px] py-px">
-      <Tabs defaultValue="users" className="space-y-6 py-[7px]">
-        <TabsList className="bg-card border-0">
-          <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+  return <div className="p-6 space-y-4">
+      <Tabs defaultValue="users" className="space-y-4">
+        <TabsList className="bg-muted/30 border-0 p-1 h-auto">
+          <TabsTrigger value="users" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card data-[state=active]:text-foreground px-4 py-2">
             Users ({stats.totalUsers})
           </TabsTrigger>
-          <TabsTrigger value="demographics" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsTrigger value="demographics" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card data-[state=active]:text-foreground px-4 py-2">
             Demographics ({pendingSubmissions.length} pending)
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="users" className="space-y-6">
+        <TabsContent value="users" className="space-y-4">
           
-      {/* Stats */}
-      
-
-      {/* Filters */}
-      <Card className="bg-card border-0 mt-6">
-        <CardContent className="pt-6 px-[10px] bg-[#080808] py-0">
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              
-              <div className="relative mt-2">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="search" type="text" placeholder="Search by Virality username or account username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-[#1a1a1a] border-0 h-10" />
-              </div>
+          {/* Filters Row */}
+          <div className="flex gap-3 items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                type="text" 
+                placeholder="Search users or accounts..." 
+                value={searchQuery} 
+                onChange={e => setSearchQuery(e.target.value)} 
+                className="pl-10 bg-card/50 border-0 h-9 text-sm font-inter tracking-[-0.5px] placeholder:text-muted-foreground/50" 
+              />
             </div>
             
-            <div className="w-64">
-              
-              <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={campaignPopoverOpen} className="w-full justify-between mt-2 border-0 bg-[#1a1a1a]">
-                    {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-0 bg-popover z-50" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search campaigns..." />
-                    <CommandList>
-                      <CommandEmpty>No campaign found.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem value="all" onSelect={() => {
-                            setSelectedCampaign("all");
-                            setCampaignPopoverOpen(false);
-                          }}>
-                          <Check className={cn("mr-2 h-4 w-4", selectedCampaign === "all" ? "opacity-100" : "opacity-0")} />
-                          All Campaigns
-                        </CommandItem>
-                        {campaigns.map(campaign => <CommandItem key={campaign.id} value={campaign.title} onSelect={() => {
-                            setSelectedCampaign(campaign.id);
-                            setCampaignPopoverOpen(false);
-                          }}>
-                            <Check className={cn("mr-2 h-4 w-4", selectedCampaign === campaign.id ? "opacity-100" : "opacity-0")} />
-                            {campaign.title}
-                          </CommandItem>)}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+            <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="h-9 px-3 bg-card/50 text-sm font-inter tracking-[-0.5px] gap-2">
+                  {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
+                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-0 bg-popover z-50" align="end">
+                <Command>
+                  <CommandInput placeholder="Search campaigns..." className="font-inter tracking-[-0.5px]" />
+                  <CommandList>
+                    <CommandEmpty className="font-inter tracking-[-0.5px]">No campaign found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem value="all" onSelect={() => {
+                          setSelectedCampaign("all");
+                          setCampaignPopoverOpen(false);
+                        }} className="font-inter tracking-[-0.5px]">
+                        <Check className={cn("mr-2 h-4 w-4", selectedCampaign === "all" ? "opacity-100" : "opacity-0")} />
+                        All Campaigns
+                      </CommandItem>
+                      {campaigns.map(campaign => <CommandItem key={campaign.id} value={campaign.title} onSelect={() => {
+                          setSelectedCampaign(campaign.id);
+                          setCampaignPopoverOpen(false);
+                        }} className="font-inter tracking-[-0.5px]">
+                          <Check className={cn("mr-2 h-4 w-4", selectedCampaign === campaign.id ? "opacity-100" : "opacity-0")} />
+                          {campaign.title}
+                        </CommandItem>)}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
 
-            <div className="flex gap-1 mt-2">
-              <Popover>
-                <PopoverTrigger asChild>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 bg-card/50">
+                  <ArrowUpDown className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2 bg-popover" align="end">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-2 px-2 font-inter tracking-[-0.5px]">Sort by</p>
                   <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10"
+                    variant={sortField === "balance" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
+                    onClick={() => {
+                      if (sortField === "balance") {
+                        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                      } else {
+                        setSortField("balance");
+                        setSortOrder("desc");
+                      }
+                    }}
                   >
-                    <ArrowUpDown className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-2 bg-popover" align="end">
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold mb-2 px-2">Sort by</p>
-                    <Button
-                      variant={sortField === "balance" ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs"
-                      onClick={() => {
-                        if (sortField === "balance") {
-                          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                        } else {
-                          setSortField("balance");
-                          setSortOrder("desc");
-                        }
-                      }}
-                    >
-                      Balance
-                      {sortField === "balance" && (
-                        sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
-                      )}
-                    </Button>
-                    <Button
-                      variant={sortField === "totalEarned" ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs"
-                      onClick={() => {
-                        if (sortField === "totalEarned") {
-                          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                        } else {
-                          setSortField("totalEarned");
-                          setSortOrder("desc");
-                        }
-                      }}
-                    >
-                      Total Earned
-                      {sortField === "totalEarned" && (
-                        sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
-                      )}
-                    </Button>
-                    {sortField && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-xs text-muted-foreground"
-                        onClick={() => {
-                          setSortField(null);
-                          setSortOrder("desc");
-                        }}
-                      >
-                        Clear sort
-                      </Button>
+                    Balance
+                    {sortField === "balance" && (
+                      sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
                     )}
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-            </div>
+                  </Button>
+                  <Button
+                    variant={sortField === "totalEarned" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
+                    onClick={() => {
+                      if (sortField === "totalEarned") {
+                        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                      } else {
+                        setSortField("totalEarned");
+                        setSortOrder("desc");
+                      }
+                    }}
+                  >
+                    Total Earned
+                    {sortField === "totalEarned" && (
+                      sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
+                    )}
+                  </Button>
+                  {sortField && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-xs text-muted-foreground font-inter tracking-[-0.5px]"
+                      onClick={() => {
+                        setSortField(null);
+                        setSortOrder("desc");
+                      }}
+                    >
+                      Clear sort
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Users Display */}
-      {filteredUsers.length === 0 ? <Card className="bg-card border-0">
-          <CardContent className="text-center py-12 text-muted-foreground">
-            No users found
-          </CardContent>
-        </Card> : <Card className="bg-card border-0">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-border hover:bg-transparent">
-                  <TableHead>User</TableHead>
-                  <TableHead>Connected Accounts</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="text-right">Total Earned</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentUsers.map(user => {
-                  const balance = user.wallets?.balance || 0;
-                  const totalEarned = user.wallets?.total_earned || 0;
-                  return <TableRow key={user.id} className="border-b border-border hover:bg-[#1D1D1D] cursor-pointer" onClick={() => openUserDetailsDialog(user)}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-8 w-8 rounded-full object-cover" /> : <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <UsersIcon className="h-4 w-4 text-primary" />
-                          </div>}
-                        <div>
-                          <p className="font-semibold">{user.username}</p>
-                          {user.full_name && <p className="text-xs text-muted-foreground">{user.full_name}</p>}
+          {/* Users List */}
+          {filteredUsers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <UsersIcon className="h-10 w-10 mb-3 opacity-50" />
+              <p className="font-inter tracking-[-0.5px]">No users found</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {/* Header */}
+              <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
+                <div className="col-span-3">User</div>
+                <div className="col-span-4">Accounts</div>
+                <div className="col-span-1 text-right">Balance</div>
+                <div className="col-span-1 text-right">Earned</div>
+                <div className="col-span-3 text-right">Actions</div>
+              </div>
+
+              {/* User Rows */}
+              {currentUsers.map(user => {
+                const balance = user.wallets?.balance || 0;
+                const totalEarned = user.wallets?.total_earned || 0;
+                return (
+                  <div 
+                    key={user.id} 
+                    onClick={() => openUserDetailsDialog(user)}
+                    className="grid grid-cols-12 gap-4 px-4 py-3 bg-card/50 rounded-lg hover:bg-card/80 cursor-pointer transition-colors items-center"
+                  >
+                    <div className="col-span-3 flex items-center gap-3 min-w-0">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.username} className="h-8 w-8 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <span className="text-xs font-medium font-inter tracking-[-0.5px]">
+                            {(user.full_name || user.username || '?')[0].toUpperCase()}
+                          </span>
                         </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{user.username}</p>
+                        {user.full_name && <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate">{user.full_name}</p>}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {user.social_accounts && user.social_accounts.length > 0 ? <div className="flex flex-wrap gap-1.5">
-                          {user.social_accounts.map(account => {
+                    </div>
+
+                    <div className="col-span-4">
+                      {user.social_accounts && user.social_accounts.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {user.social_accounts.slice(0, 3).map(account => {
                             const demographicStatus = account.demographic_submissions?.[0]?.status;
-                            return <div key={account.id} title={`${account.username} - ${account.follower_count.toLocaleString()} followers`} className="flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-[#282828]/50">
-                              {getPlatformIcon(account.platform)}
-                              <span className="font-medium">{account.username}</span>
-                              {demographicStatus === 'approved' && <BadgeCheck className="h-3 w-3 text-success fill-success/20" />}
-                              {demographicStatus === 'pending' && <Clock className="h-3 w-3 text-warning fill-warning/20" />}
-                              {demographicStatus === 'rejected' && <XCircle className="h-3 w-3 text-destructive fill-destructive/20" />}
-                              {!demographicStatus && <AlertCircle className="h-3 w-3 text-destructive fill-destructive/20" />}
-                            </div>;
+                            return (
+                              <div 
+                                key={account.id} 
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-muted/30 font-inter tracking-[-0.5px]"
+                              >
+                                {getPlatformIcon(account.platform)}
+                                <span className="max-w-[80px] truncate">{account.username}</span>
+                                {demographicStatus === 'approved' && <BadgeCheck className="h-3 w-3 text-emerald-500 shrink-0" />}
+                                {demographicStatus === 'pending' && <Clock className="h-3 w-3 text-amber-500 shrink-0" />}
+                                {demographicStatus === 'rejected' && <XCircle className="h-3 w-3 text-destructive shrink-0" />}
+                                {!demographicStatus && <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0" />}
+                              </div>
+                            );
                           })}
-                        </div> : <span className="text-muted-foreground text-sm">No accounts</span>}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      ${balance.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold text-success">
-                      ${totalEarned.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button size="sm" onClick={e => {
+                          {user.social_accounts.length > 3 && (
+                            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">+{user.social_accounts.length - 3}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/50 font-inter tracking-[-0.5px]">No accounts</span>
+                      )}
+                    </div>
+
+                    <div className="col-span-1 text-right">
+                      <span className="text-sm font-medium font-inter tracking-[-0.5px]">${balance.toFixed(2)}</span>
+                    </div>
+
+                    <div className="col-span-1 text-right">
+                      <span className="text-sm font-medium font-inter tracking-[-0.5px] text-emerald-500">${totalEarned.toFixed(2)}</span>
+                    </div>
+
+                    <div className="col-span-3 flex gap-2 justify-end">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={e => {
                           e.stopPropagation();
                           openAddToCampaignDialog(user);
-                        }} variant="outline" className="gap-1">
-                          Add to Campaign
-                        </Button>
-                        <Button size="sm" onClick={e => {
+                        }} 
+                        className="h-7 px-2.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground"
+                      >
+                        Add
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={e => {
                           e.stopPropagation();
                           openPayDialog(user);
-                        }} className="gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          Pay
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>;
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>}
+                        }} 
+                        className="h-7 px-2.5 text-xs font-inter tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        Pay
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-      {/* Pagination */}
-      {filteredUsers.length > usersPerPage && (
-        <Card className="bg-card border-0">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                Showing {indexOfFirstUser + 1}-{Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length} users
-              </div>
-              <div className="flex gap-2">
+          {/* Pagination */}
+          {filteredUsers.length > usersPerPage && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                {indexOfFirstUser + 1}-{Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length}
+              </p>
+              <div className="flex gap-1">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
+                  className="h-7 px-2 text-xs font-inter tracking-[-0.5px]"
                 >
-                  Previous
+                  Prev
                 </Button>
-                <div className="flex gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                        className="min-w-[40px]"
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                </div>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => handlePageChange(pageNum)}
+                      className="h-7 w-7 p-0 text-xs font-inter tracking-[-0.5px]"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
+                  className="h-7 px-2 text-xs font-inter tracking-[-0.5px]"
                 >
                   Next
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
       {/* Payment Dialog */}
       <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
