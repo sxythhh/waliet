@@ -143,7 +143,7 @@ export default function AuthDialog({
   };
   const handleDiscordSignIn = () => {
     setLoading(true);
-    const DISCORD_CLIENT_ID = '1358047837250478110';
+    const DISCORD_CLIENT_ID = '1358316231341375518';
     const redirectUri = `${window.location.origin}/discord/callback`;
     const state = btoa(JSON.stringify({ action: 'auth' }));
     
