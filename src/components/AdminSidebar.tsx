@@ -45,7 +45,7 @@ function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void;
   return (
     <div className="flex flex-col h-full bg-[#0a0a0a]">
       <div className="p-4 pb-4">
-        <h2 className="text-base font-semibold font-inter tracking-[-0.5px] text-foreground">Admin</h2>
+        <h2 className="text-base font-semibold font-inter tracking-[-0.5px] text-foreground">Dashboard</h2>
       </div>
 
       {/* Search Bar */}
@@ -56,9 +56,6 @@ function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void;
         >
           <MaterialIcon name="search" className="text-xl text-muted-foreground" />
           <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px] flex-1">Search...</span>
-          <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px] text-muted-foreground">
-            ⌘K
-          </kbd>
         </button>
       </div>
       
@@ -77,13 +74,6 @@ function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void;
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <MaterialIcon 
-                name={item.icon} 
-                className={cn(
-                  "text-xl",
-                  active ? "text-[#2060df]" : ""
-                )} 
-              />
               <span>{item.title}</span>
             </NavLink>
           );
