@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, LayoutDashboard, Building2, Users, CreditCard, Receipt, LogOut, Search } from "lucide-react";
+import { Menu, BarChart3, Store, UserCircle, CreditCard, Receipt, LogOut, Search } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminSearchCommand } from "@/components/admin/AdminSearchCommand";
 
 const menuItems = [
-  { title: "Overview", icon: LayoutDashboard, path: "/admin" },
-  { title: "Brands", icon: Building2, path: "/admin/brands" },
-  { title: "Users", icon: Users, path: "/admin/users" },
+  { title: "Overview", icon: BarChart3, path: "/admin" },
+  { title: "Brands", icon: Store, path: "/admin/brands" },
+  { title: "Users", icon: UserCircle, path: "/admin/users" },
   { title: "Payouts", icon: CreditCard, path: "/admin/payouts" },
   { title: "Transactions", icon: Receipt, path: "/admin/transactions" },
 ];
@@ -122,7 +122,7 @@ export function AdminSidebar() {
 
   return (
     <>
-      <aside className="hidden md:flex h-screen w-56 flex-col bg-[#0a0a0a] border-r border-[#141414] sticky top-0">
+      <aside className="hidden md:flex h-screen w-60 flex-col bg-[#0a0a0a] border-r border-[#141414] sticky top-0">
         <SidebarContent onSearchOpen={() => setSearchOpen(true)} />
       </aside>
       <AdminSearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
