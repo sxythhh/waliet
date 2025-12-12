@@ -361,32 +361,72 @@ export function AnalyticsTab() {
     setEarningsVsWithdrawalsData(chartData);
   };
 
-  const PIE_COLORS = [CHART_COLORS.orange, CHART_COLORS.green, CHART_COLORS.red, CHART_COLORS.purple];
+  const PIE_COLORS = [CHART_COLORS.green, CHART_COLORS.orange, CHART_COLORS.red, CHART_COLORS.purple];
 
-  const tooltipStyle = {
-    contentStyle: {
-      backgroundColor: "#0C0C0C",
-      border: "none",
-      borderRadius: "12px",
-      padding: "12px 16px",
-      fontFamily: "Inter, sans-serif",
-      fontWeight: 500,
-      letterSpacing: "-0.5px"
-    },
-    labelStyle: {
-      color: "#666666",
-      fontWeight: 500,
-      marginBottom: "4px",
-      fontFamily: "Inter, sans-serif",
-      letterSpacing: "-0.5px",
-      fontSize: "12px"
-    },
-    itemStyle: {
-      color: "#ffffff",
-      fontFamily: "Inter, sans-serif",
-      letterSpacing: "-0.5px",
-      fontWeight: 500
-    }
+  const CustomTooltip = ({ active, payload, label, type }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
+    return (
+      <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
+        <p className="text-[11px] text-white/50 font-inter tracking-[-0.5px] mb-2 uppercase">{label}</p>
+        <div className="space-y-1.5">
+          {payload.map((entry: any, index: number) => {
+            let displayName = entry.name;
+            let displayValue = entry.value;
+            
+            if (type === 'withdrawal') {
+              if (entry.dataKey === 'total') displayName = 'Total Amount';
+              if (entry.dataKey === 'count') displayName = 'Requests';
+              if (entry.dataKey === 'completed') displayName = 'Completed';
+              displayValue = entry.dataKey === 'count' ? entry.value : `$${entry.value.toFixed(2)}`;
+            } else if (type === 'earnings') {
+              displayName = entry.dataKey === 'earnings' ? 'Earnings' : 'Withdrawals';
+              displayValue = `$${entry.value.toFixed(2)}`;
+            } else if (type === 'users') {
+              displayName = 'New Users';
+              displayValue = entry.value;
+            } else if (type === 'campaigns') {
+              displayName = 'Campaigns';
+              displayValue = entry.value;
+            }
+
+            return (
+              <div key={index} className="flex items-center justify-between gap-6">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-2 h-2 rounded-full" 
+                    style={{ backgroundColor: entry.color || entry.fill }}
+                  />
+                  <span className="text-xs text-white/70 font-inter tracking-[-0.5px]">{displayName}</span>
+                </div>
+                <span className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">{displayValue}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const CustomPieTooltip = ({ active, payload }: any) => {
+    if (!active || !payload || !payload.length) return null;
+    const data = payload[0].payload;
+
+    return (
+      <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
+        <p className="text-[11px] text-white/50 font-inter tracking-[-0.5px] mb-2 uppercase">{data.name}</p>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-6">
+            <span className="text-xs text-white/70 font-inter tracking-[-0.5px]">Requests</span>
+            <span className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">{data.value}</span>
+          </div>
+          <div className="flex items-center justify-between gap-6">
+            <span className="text-xs text-white/70 font-inter tracking-[-0.5px]">Amount</span>
+            <span className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">${data.amount?.toFixed(2) || '0.00'}</span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -574,16 +614,10 @@ export function AnalyticsTab() {
                   axisLine={false}
                   style={{ opacity: 0.6 }}
                 />
-                <Tooltip
-                  {...tooltipStyle}
-                  formatter={(value: number, name: string) => {
-                    if (name === 'count') return [value, 'Requests'];
-                    return [`$${value.toFixed(2)}`, name === 'total' ? 'Total' : 'Completed'];
-                  }}
-                />
+                <Tooltip content={<CustomTooltip type="withdrawal" />} />
                 <Area 
                   yAxisId="left"
-                  type="monotone" 
+                  type="linear" 
                   dataKey="total" 
                   stroke={CHART_COLORS.green}
                   strokeWidth={2} 
@@ -641,19 +675,16 @@ export function AnalyticsTab() {
                     style={{ opacity: 0.6 }}
                     tickFormatter={(value) => `$${value}`}
                   />
-                  <Tooltip
-                    {...tooltipStyle}
-                    formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name.charAt(0).toUpperCase() + name.slice(1)]}
-                  />
+                  <Tooltip content={<CustomTooltip type="earnings" />} />
                   <Area 
-                    type="monotone" 
+                    type="linear" 
                     dataKey="earnings" 
                     stroke={CHART_COLORS.blue}
                     strokeWidth={2} 
                     fill="url(#earningsGradient)" 
                   />
                   <Area 
-                    type="monotone" 
+                    type="linear" 
                     dataKey="withdrawals" 
                     stroke={CHART_COLORS.orange}
                     strokeWidth={2} 
@@ -682,18 +713,13 @@ export function AnalyticsTab() {
                     outerRadius={90}
                     paddingAngle={4}
                     dataKey="value"
+                    stroke="none"
                   >
                     {payoutStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="none" />
                     ))}
                   </Pie>
-                  <Tooltip
-                    {...tooltipStyle}
-                    formatter={(value: number, name: string, props: any) => [
-                      `${value} requests ($${props.payload.amount?.toFixed(2) || 0})`,
-                      props.payload.name
-                    ]}
-                  />
+                  <Tooltip content={<CustomPieTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex flex-col gap-2 ml-4">
@@ -743,12 +769,9 @@ export function AnalyticsTab() {
                     axisLine={false}
                     style={{ opacity: 0.6 }}
                   />
-                  <Tooltip
-                    {...tooltipStyle}
-                    formatter={(value: number) => [value, 'Users']}
-                  />
+                  <Tooltip content={<CustomTooltip type="users" />} />
                   <Area 
-                    type="monotone" 
+                    type="linear" 
                     dataKey="users" 
                     stroke={CHART_COLORS.purple} 
                     strokeWidth={2} 
@@ -791,10 +814,7 @@ export function AnalyticsTab() {
                     axisLine={false}
                     style={{ opacity: 0.6 }}
                   />
-                  <Tooltip
-                    {...tooltipStyle}
-                    formatter={(value: number) => [value, 'Campaigns']}
-                  />
+                  <Tooltip content={<CustomTooltip type="campaigns" />} />
                   <Bar 
                     dataKey="count" 
                     fill={CHART_COLORS.cyan} 
