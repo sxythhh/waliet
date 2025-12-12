@@ -235,12 +235,8 @@ export function AppSidebar() {
             <PopoverContent className="w-64 p-0 bg-[#0a0a0a] border-0 rounded-xl shadow-2xl" align="end" sideOffset={8}>
               <div className="p-3 space-y-1">
                 {/* Workspace Section */}
-                {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && (
-                  <div className="pb-1">
-                    <button
-                      onClick={() => handleWorkspaceChange("creator")}
-                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}
-                    >
+                {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="pb-1">
+                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}>
                       <Avatar className="w-4 h-4">
                         <AvatarImage src={avatarUrl || undefined} alt={displayName} />
                         <AvatarFallback className="bg-[#1f1f1f] text-[8px] text-neutral-400">
@@ -250,51 +246,24 @@ export function AppSidebar() {
                       <span className="text-sm">Creator</span>
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
-                      {isAdmin && allBrands.slice(0, 5).map(brand => (
-                        <button
-                          key={brand.id}
-                          onClick={() => handleWorkspaceChange(brand.slug)}
-                          className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}
-                        >
-                          {brand.logo_url ? (
-                            <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" />
-                          ) : (
-                            <Building2 className="w-4 h-4" />
-                          )}
+                      {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}>
+                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
                           <span className="text-sm truncate">{brand.name}</span>
-                        </button>
-                      ))}
-                      {!isAdmin && brandMemberships.map(membership => (
-                        <button
-                          key={membership.brand_id}
-                          onClick={() => handleWorkspaceChange(membership.brands.slug)}
-                          className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}
-                        >
-                          {membership.brands.logo_url ? (
-                            <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" />
-                          ) : (
-                            <Building2 className="w-4 h-4" />
-                          )}
+                        </button>)}
+                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}>
+                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
                           <span className="text-sm truncate">{membership.brands.name}</span>
-                        </button>
-                      ))}
+                        </button>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
                 
                 {/* Quick Links */}
                 <div className="space-y-0.5">
-                  <button
-                    onClick={() => navigate("/support")}
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
-                  >
+                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
                     <img src={supportIcon} alt="Support" className="w-4 h-4" />
                     <span className="text-sm">Support</span>
                   </button>
-                  <button
-                    onClick={() => window.open("https://discord.gg/virality", "_blank")}
-                    className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
-                  >
+                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
                     <div className="flex items-center gap-3">
                       <img src={discordIcon} alt="Discord" className="w-4 h-4 rounded" />
                       <span className="text-sm">Discord</span>
@@ -305,17 +274,11 @@ export function AppSidebar() {
 
                 {/* Theme & Logout */}
                 <div className="pt-1 flex items-center gap-2">
-                  <button
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-white transition-colors"
-                  >
+                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-white transition-colors">
                     {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                     <span className="text-sm">{theme === 'dark' ? 'Light' : 'Dark'}</span>
                   </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-red-400 transition-colors"
-                  >
+                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-red-400 transition-colors">
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Log out</span>
                   </button>
@@ -525,7 +488,7 @@ export function AppSidebar() {
               {/* Menu Items */}
               <div className="space-y-0.5 mb-3">
                 <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
-                  <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
+                  <img alt="Discord" className="w-5 h-5 rounded" src="/lovable-uploads/0b07b88a-cde1-4778-a64e-2adbb5eb1251.webp" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord</span>
                 </button>
                 <button onClick={() => window.open("mailto:support@virality.gg", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
