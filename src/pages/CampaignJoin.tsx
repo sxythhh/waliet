@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, ArrowUp, Plus, Check, ExternalLink } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";

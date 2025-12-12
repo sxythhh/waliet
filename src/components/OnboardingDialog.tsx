@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Check } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import xLogo from "@/assets/x-logo.png";
 import paypalLogo from "@/assets/paypal-logo-grey.svg";
 import usdcLogo from "@/assets/usdc-logo.png";

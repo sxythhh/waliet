@@ -16,7 +16,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 interface Transaction {
   id: string;
   user_id: string;

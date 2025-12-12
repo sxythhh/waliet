@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),

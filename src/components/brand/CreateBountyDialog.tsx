@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 
 interface CreateBountyDialogProps {
   open: boolean;
