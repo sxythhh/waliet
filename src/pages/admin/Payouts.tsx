@@ -749,227 +749,203 @@ export default function AdminPayouts() {
                   <p className="text-lg font-medium text-muted-foreground">No {activeTab !== 'all' ? activeTab : ''} requests found</p>
                   <p className="text-sm text-muted-foreground mt-1">Payout requests will appear here</p>
                 </CardContent>
-              </Card> : <div className="grid grid-cols-1 gap-4">
-                {filteredRequests.map(request => <Card key={request.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-5">
-                      <div className="space-y-4">
-                        {/* Header: User and Amount */}
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold mb-1.5 cursor-pointer hover:text-primary transition-colors truncate" onClick={e => {
-                        e.stopPropagation();
-                        if (request.profiles) {
-                          openUserDetailsDialog(request.profiles);
-                        }
-                      }}>
+              </Card> : <div className="grid grid-cols-1 gap-3">
+                {filteredRequests.map(request => {
+                  const amount = Number(request.amount);
+                  const isPayPal = request.payout_method === 'paypal';
+                  let netAmount;
+                  
+                  if (isPayPal) {
+                    const fee = amount * 0.06;
+                    netAmount = amount - fee;
+                  } else {
+                    const percentageFee = amount * 0.0075;
+                    const afterPercentage = amount - percentageFee;
+                    netAmount = afterPercentage - 1;
+                  }
+
+                  const getPaymentInfo = () => {
+                    if (request.payout_method === 'crypto') {
+                      return request.payout_details?.address || request.payout_details?.wallet_address || 'N/A';
+                    } else if (request.payout_method === 'upi') {
+                      return request.payout_details?.upi_id || 'N/A';
+                    } else if (request.payout_method === 'wise') {
+                      return request.payout_details?.account_holder_name || request.payout_details?.email || 'N/A';
+                    }
+                    return request.payout_details?.email || request.payout_details?.account_number || 'N/A';
+                  };
+
+                  const copyPaymentDetails = (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const text = String(getPaymentInfo()).trim();
+                    if (text && text !== 'N/A') {
+                      navigator.clipboard.writeText(text);
+                      toast({ title: "Copied!", description: "Payment details copied to clipboard" });
+                    }
+                  };
+
+                  return (
+                    <div 
+                      key={request.id} 
+                      className="bg-card/50 rounded-xl p-4 hover:bg-card/80 transition-colors"
+                    >
+                      {/* Top Row: User, Status, Amount */}
+                      <div className="flex items-center justify-between gap-4 mb-4">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div 
+                            className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                            onClick={() => request.profiles && openUserDetailsDialog(request.profiles)}
+                          >
+                            <span className="text-sm font-medium font-inter tracking-[-0.5px]">
+                              {(request.profiles?.full_name || request.profiles?.username || '?')[0].toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <h3 
+                              className="text-sm font-semibold font-inter tracking-[-0.5px] truncate cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => request.profiles && openUserDetailsDialog(request.profiles)}
+                            >
                               {request.profiles?.full_name || request.profiles?.username}
                             </h3>
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="h-3.5 w-3.5" />
-                                {formatDistanceToNow(new Date(request.requested_at), {
-                            addSuffix: true
-                          })}
-                              </span>
-                              {getStatusBadge(request.status)}
-                            </div>
-                          </div>
-                          
-                          <div className="text-right shrink-0">
-                            <p className="text-xs text-muted-foreground mb-1">Amount</p>
-                            <p className="text-2xl font-bold text-success">
-                              ${Number(request.amount).toFixed(2)}
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                              {formatDistanceToNow(new Date(request.requested_at), { addSuffix: true })}
                             </p>
-                            {(() => {
-                              const amount = Number(request.amount);
-                              const isPayPal = request.payout_method === 'paypal';
-                              let netAmount;
-                              
-                              if (isPayPal) {
-                                const fee = amount * 0.06;
-                                netAmount = amount - fee;
-                              } else {
-                                const percentageFee = amount * 0.0075;
-                                const afterPercentage = amount - percentageFee;
-                                netAmount = afterPercentage - 1;
-                              }
-                              
-                              return (
-                                <div className="mt-2 pt-2 border-t border-border/50">
-                                  <p className="text-xs text-muted-foreground mb-0.5">They'll Receive</p>
-                                  <p className="text-base font-bold text-primary">
-                                    ${netAmount.toFixed(2)}
-                                  </p>
-                                </div>
-                              );
-                            })()}
                           </div>
                         </div>
 
-                        {/* Payment Details Grid */}
-                        <div className="grid gap-4 pt-3">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-xs font-medium text-muted-foreground mb-1.5">Payment Method</p>
-                              <p className="text-sm font-semibold capitalize">
-                                {request.payout_method === 'crypto' && request.payout_details?.network 
-                                  ? `${request.payout_details.network} (${request.payout_details?.currency?.toUpperCase() || 'Crypto'})`
-                                  : request.payout_method}
-                              </p>
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium text-muted-foreground mb-1.5">
-                                {request.payout_method === 'crypto' ? 'Wallet Address' : request.payout_method === 'upi' ? 'UPI ID' : 'Account'}
-                              </p>
-                              <div 
-                                className="flex items-center gap-2 cursor-pointer hover:bg-muted/20 rounded px-2 py-1 -ml-2 transition-colors group"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  
-                                  let textToCopy = '';
-                                  if (request.payout_method === 'crypto') {
-                                    textToCopy = String(request.payout_details?.address || request.payout_details?.wallet_address || '').trim();
-                                  } else if (request.payout_method === 'upi') {
-                                    textToCopy = String(request.payout_details?.upi_id || '').trim();
-                                  } else if (request.payout_method === 'wise') {
-                                    textToCopy = String(request.payout_details?.account_holder_name || request.payout_details?.email || '').trim();
-                                  } else {
-                                    textToCopy = String(request.payout_details?.email || request.payout_details?.account_number || '').trim();
-                                  }
-                                  
-                                  if (textToCopy) {
-                                    navigator.clipboard.writeText(textToCopy);
-                                    toast({
-                                      title: "Copied!",
-                                      description: "Payment details copied to clipboard"
-                                    });
-                                  }
-                                }}
-                              >
-                                <p className="text-sm font-mono truncate flex-1">
-                                  {request.payout_method === 'crypto' 
-                                    ? (request.payout_details?.address || request.payout_details?.wallet_address || 'N/A')
-                                    : request.payout_method === 'upi'
-                                    ? (request.payout_details?.upi_id || 'N/A')
-                                    : request.payout_method === 'wise'
-                                    ? (request.payout_details?.account_holder_name || request.payout_details?.email || 'N/A')
-                                    : (request.payout_details?.email || request.payout_details?.account_number || 'N/A')}
-                                </p>
-                                <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
-                              </div>
-                            </div>
+                        <div className="flex items-center gap-4 shrink-0">
+                          {getStatusBadge(request.status)}
+                          <div className="text-right">
+                            <p className="text-lg font-bold font-inter tracking-[-0.5px]">${amount.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">→ ${netAmount.toFixed(2)}</p>
                           </div>
-
-                          {request.profiles?.wallets && (
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-xs font-medium text-muted-foreground mb-1.5">Balance After</p>
-                                <p className="text-sm font-semibold">
-                                  ${(Number(request.profiles.wallets.balance) + (request.status === 'rejected' ? Number(request.amount) : 0)).toFixed(2)}
-                                </p>
-                              </div>
-                              
-                              {request.processed_at && (
-                                <div>
-                                  <p className="text-xs font-medium text-muted-foreground mb-1.5">Processed</p>
-                                  <p className="text-sm font-semibold">
-                                    {format(new Date(request.processed_at), 'MMM dd, yyyy')}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Additional Info Sections */}
-                        {(request.transaction_id || request.rejection_reason || request.notes) && (
-                          <div className="space-y-3 pt-3">
-                            {request.transaction_id && (
-                              <div className="p-3 bg-muted/40 rounded-lg">
-                                <p className="text-xs font-medium text-muted-foreground mb-1.5">Transaction ID</p>
-                                <p className="font-mono text-sm font-semibold">{request.transaction_id}</p>
-                              </div>
-                            )}
-
-                            {request.rejection_reason && (
-                              <div className="p-3 bg-destructive/5 rounded-lg border border-destructive/20">
-                                <p className="text-xs font-medium text-destructive mb-1.5">Rejection Reason</p>
-                                <p className="text-destructive text-sm">{request.rejection_reason}</p>
-                              </div>
-                            )}
-
-                            {request.notes && (
-                              <div className="p-3 bg-muted/40 rounded-lg">
-                                <p className="text-xs font-medium text-muted-foreground mb-1.5">Admin Notes</p>
-                                <p className="text-sm">{request.notes}</p>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 pt-4">
-                          {request.status === 'pending' && (
-                            <>
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleCompleteDirectly(request)} 
-                                className="gap-2 bg-green-600 hover:bg-green-700 text-white h-9"
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                                Mark as Completed
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="destructive" 
-                                onClick={() => openActionDialog(request, 'reject')} 
-                                className="gap-2 h-9"
-                              >
-                                <XCircle className="h-4 w-4" />
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                          
-                          {request.status === 'in_transit' && (
-                            <>
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleCompleteDirectly(request)} 
-                                className="gap-2 h-9"
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                                Mark as Complete
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => openActionDialog(request, 'revert')} 
-                                className="gap-2 h-9"
-                              >
-                                <RotateCcw className="h-4 w-4" />
-                                Revert to Pending
-                              </Button>
-                            </>
-                          )}
-
-                          {request.status === 'rejected' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => openActionDialog(request, 'revert')} 
-                              className="gap-2 h-9"
-                            >
-                              <RotateCcw className="h-4 w-4" />
-                              Revert to Pending
-                            </Button>
-                          )}
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>)}
+
+                      {/* Payment Details Row */}
+                      <div className="flex items-center gap-6 py-3 border-t border-border/30">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Method</span>
+                          <span className="text-sm font-medium font-inter tracking-[-0.5px] capitalize">
+                            {request.payout_method === 'crypto' && request.payout_details?.network 
+                              ? `${request.payout_details.network} (${request.payout_details?.currency?.toUpperCase() || 'Crypto'})`
+                              : request.payout_method}
+                          </span>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div 
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted/30 rounded-md px-2 py-1 -ml-2 transition-colors group"
+                            onClick={copyPaymentDetails}
+                          >
+                            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px] shrink-0">
+                              {request.payout_method === 'crypto' ? 'Address' : request.payout_method === 'upi' ? 'UPI' : 'Account'}
+                            </span>
+                            <span className="text-sm font-mono truncate">{getPaymentInfo()}</span>
+                            <Copy className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+
+                        {request.profiles?.wallets && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Balance</span>
+                            <span className="text-sm font-medium font-inter tracking-[-0.5px]">
+                              ${(Number(request.profiles.wallets.balance) + (request.status === 'rejected' ? Number(request.amount) : 0)).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Additional Info */}
+                      {(request.transaction_id || request.rejection_reason || request.notes) && (
+                        <div className="flex flex-wrap gap-2 py-3 border-t border-border/30">
+                          {request.transaction_id && (
+                            <div className="px-2.5 py-1.5 bg-muted/40 rounded-md">
+                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">TX: </span>
+                              <span className="text-xs font-mono">{request.transaction_id}</span>
+                            </div>
+                          )}
+                          {request.rejection_reason && (
+                            <div className="px-2.5 py-1.5 bg-destructive/10 rounded-md text-destructive">
+                              <span className="text-xs font-inter tracking-[-0.5px]">{request.rejection_reason}</span>
+                            </div>
+                          )}
+                          {request.notes && (
+                            <div className="px-2.5 py-1.5 bg-muted/40 rounded-md">
+                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{request.notes}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-3 border-t border-border/30">
+                        {request.status === 'pending' && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleCompleteDirectly(request)} 
+                              className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-700"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Complete
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => openActionDialog(request, 'reject')} 
+                              className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        
+                        {request.status === 'in_transit' && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleCompleteDirectly(request)} 
+                              className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px]"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Complete
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => openActionDialog(request, 'revert')} 
+                              className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                              Revert
+                            </Button>
+                          </>
+                        )}
+
+                        {request.status === 'rejected' && (
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => openActionDialog(request, 'revert')} 
+                            className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Revert
+                          </Button>
+                        )}
+
+                        {request.status === 'completed' && request.processed_at && (
+                          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                            Processed {format(new Date(request.processed_at), 'MMM dd, yyyy')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>}
           </TabsContent>
         </Tabs>
