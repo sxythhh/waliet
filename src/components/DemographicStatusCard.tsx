@@ -158,7 +158,7 @@ export function DemographicStatusCard({
 
   return (
     <>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {/* Current Status */}
         <div className="flex items-center justify-between gap-2">
           <Badge variant="secondary" className={`text-[10px] font-medium px-1.5 py-0 border-0 ${statusConfig.color}`} style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
@@ -167,30 +167,39 @@ export function DemographicStatusCard({
           </Badge>
           {status === 'approved' && latestSubmission?.score && (
             <span className="text-sm font-bold tracking-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-              {latestSubmission.score}%
+              Tier 1 {latestSubmission.score}%
             </span>
           )}
         </div>
 
-        {/* Latest Submission Info */}
+        {/* Submission Date Info */}
         {latestSubmission && (
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground" style={{ letterSpacing: '-0.5px' }}>
-            <span>{format(new Date(latestSubmission.submitted_at), "MMM d")}</span>
-            {latestSubmission.screenshot_url && (
-              <button 
-                onClick={() => window.open(latestSubmission.screenshot_url!, '_blank')}
-                className="text-primary hover:underline"
-              >
-                View
-              </button>
-            )}
-            {latestSubmission.status !== 'approved' && (
-              <button 
-                onClick={() => setDeletingSubmission(latestSubmission)}
-                className="text-destructive hover:underline"
-              >
-                Delete
-              </button>
+          <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground/60">Last:</span>
+              <span>{format(new Date(latestSubmission.submitted_at), "MMM d, yyyy")}</span>
+              {latestSubmission.screenshot_url && (
+                <button 
+                  onClick={() => window.open(latestSubmission.screenshot_url!, '_blank')}
+                  className="text-primary hover:underline ml-1"
+                >
+                  View
+                </button>
+              )}
+              {latestSubmission.status !== 'approved' && (
+                <button 
+                  onClick={() => setDeletingSubmission(latestSubmission)}
+                  className="text-destructive hover:underline ml-1"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+            {status === 'approved' && latestSubmission.reviewed_at && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground/60">Next:</span>
+                <span>{format(addDays(new Date(latestSubmission.reviewed_at), 30), "MMM d, yyyy")}</span>
+              </div>
             )}
           </div>
         )}
