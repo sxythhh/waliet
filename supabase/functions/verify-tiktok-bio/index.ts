@@ -51,15 +51,13 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   console.log(`Fetching Instagram profile for: ${username}`);
   
   const response = await fetch(
-    'https://instagram-scraper-stable-api.p.rapidapi.com/get_ig_user_info.php',
+    `https://instagram-scraper-api2.p.rapidapi.com/v1/info?username_or_id_or_url=${encodeURIComponent(username)}`,
     {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'x-rapidapi-host': 'instagram-scraper-stable-api.p.rapidapi.com',
+        'x-rapidapi-host': 'instagram-scraper-api2.p.rapidapi.com',
         'x-rapidapi-key': rapidApiKey,
       },
-      body: `username=${encodeURIComponent(username)}`,
     }
   );
 
@@ -71,21 +69,22 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   const data = await response.json();
   console.log('Instagram API response received');
 
-  if (!data.username) {
+  if (!data.data?.username) {
     throw new Error('User not found on Instagram');
   }
 
-  const bio = data.biography || '';
+  const userData = data.data;
+  const bio = userData.biography || '';
   const verified = bio.includes(verificationCode);
 
   return {
     verified,
     bio,
     user: {
-      nickname: data.full_name || data.username,
-      avatar: data.profile_pic_url || data.hd_profile_pic_url_info?.url,
-      followerCount: data.follower_count || 0,
-      isVerified: data.is_verified || false,
+      nickname: userData.full_name || userData.username,
+      avatar: userData.profile_pic_url_hd || userData.profile_pic_url,
+      followerCount: userData.follower_count || 0,
+      isVerified: userData.is_verified || false,
     },
   };
 }
