@@ -497,7 +497,7 @@ export function AppSidebar() {
                   </>}
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3 bg-[#0a0a0a] border-0 rounded-xl" side="top" align="start" sideOffset={8}>
+            <PopoverContent className="w-64 p-3 bg-[#0a0a0a] border border-[#0f0f0f] rounded-xl" side="top" align="start" sideOffset={8}>
               {/* User Info + Theme Toggle */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
@@ -512,11 +512,11 @@ export function AppSidebar() {
                     <p className="text-xs text-neutral-500 truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-0.5 p-1 px-[6px] py-[6px] rounded-lg bg-[#1f1f1f]/[0.51]">
-                  <button onClick={() => setTheme('light')} className={`p-1.5 rounded transition-colors ${theme === 'light' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
+                <div className="flex items-center gap-0.5 p-1 px-[6px] py-[6px] rounded-md bg-[#1f1f1f]/[0.51]">
+                  <button onClick={() => setTheme('light')} className={`p-1.5 rounded-md transition-colors ${theme === 'light' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
                     <Sun className="w-4 h-4" />
                   </button>
-                  <button onClick={() => setTheme('dark')} className={`p-1.5 rounded transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
+                  <button onClick={() => setTheme('dark')} className={`p-1.5 rounded-md transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
                     <Moon className="w-4 h-4" />
                   </button>
                 </div>
@@ -524,18 +524,18 @@ export function AppSidebar() {
 
               {/* Menu Items */}
               <div className="space-y-0.5 mb-3">
-                <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#1f1f1f] transition-colors">
+                <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
                   <img src={discordIcon} alt="Discord" className="w-5 h-5 rounded" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord</span>
                 </button>
-                <button onClick={() => window.open("mailto:support@virality.gg", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-white hover:bg-[#1f1f1f] transition-colors">
+                <button onClick={() => window.open("mailto:support@virality.gg", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
                   <img src={supportIcon} alt="Support" className="w-5 h-5" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Support</span>
                 </button>
               </div>
 
               {/* Sign Out Button */}
-              <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors">
+              <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-md transition-colors">
                 
                 <span className="text-sm font-medium font-inter tracking-[-0.5px]">Sign Out</span>
               </button>
