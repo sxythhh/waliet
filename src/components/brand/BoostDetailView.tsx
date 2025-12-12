@@ -14,9 +14,9 @@ import { toast } from "sonner";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
-import instagramLogoBlack from "@/assets/instagram-logo-black-new.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
-import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import xLogoLight from "@/assets/x-logo-light.png";
 import xLogoDark from "@/assets/x-logo.png";
 
