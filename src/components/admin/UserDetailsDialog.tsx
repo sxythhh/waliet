@@ -1,6 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users as UsersIcon, ChevronUp, ChevronDown, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2, Diamond } from "lucide-react";
+import { Users as UsersIcon, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2, Diamond, ExternalLink, CreditCard, TrendingUp, TrendingDown, DollarSign, Link2 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+
 interface UserProfile {
   id: string;
   username: string;
@@ -24,6 +26,7 @@ interface UserProfile {
     total_withdrawn: number;
   } | null;
 }
+
 interface SocialAccount {
   id: string;
   platform: string;
@@ -46,6 +49,7 @@ interface SocialAccount {
     submitted_at: string;
   }>;
 }
+
 interface Transaction {
   id: string;
   type: string;
@@ -66,10 +70,12 @@ interface Transaction {
     [key: string]: any;
   };
 }
+
 interface PaymentMethod {
   method: string;
   details: any;
 }
+
 interface UserDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -89,6 +95,7 @@ interface UserDetailsDialogProps {
   onEditScore?: (account: SocialAccount) => void;
   onBalanceUpdated?: () => void;
 }
+
 const getPlatformIcon = (platform: string): string | null => {
   switch (platform.toLowerCase()) {
     case 'tiktok':
@@ -105,15 +112,16 @@ const getPlatformIcon = (platform: string): string | null => {
 const getPlatformIconElement = (platform: string) => {
   switch (platform.toLowerCase()) {
     case 'tiktok':
-      return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
+      return <img src={tiktokLogo} alt="TikTok" className="h-4 w-4" />;
     case 'instagram':
-      return <img src={instagramLogo} alt="Instagram" className="h-5 w-5" />;
+      return <img src={instagramLogo} alt="Instagram" className="h-4 w-4" />;
     case 'youtube':
-      return <img src={youtubeLogo} alt="YouTube" className="h-5 w-5" />;
+      return <img src={youtubeLogo} alt="YouTube" className="h-4 w-4" />;
     default:
       return null;
   }
 };
+
 export function UserDetailsDialog({
   open,
   onOpenChange,
@@ -124,12 +132,6 @@ export function UserDetailsDialog({
   loadingSocialAccounts,
   loadingTransactions,
   loadingPaymentMethods,
-  socialAccountsOpen,
-  onSocialAccountsOpenChange,
-  transactionsOpen,
-  onTransactionsOpenChange,
-  paymentMethodsOpen,
-  onPaymentMethodsOpenChange,
   onEditScore,
   onBalanceUpdated
 }: UserDetailsDialogProps) {
@@ -169,7 +171,6 @@ export function UserDetailsDialog({
         description: "Social account has been unlinked from the campaign",
       });
 
-      // Refresh the social accounts
       onBalanceUpdated?.();
     } catch (error) {
       console.error("Error unlinking account:", error);
@@ -191,15 +192,10 @@ export function UserDetailsDialog({
         .delete({ count: 'exact' })
         .eq("id", socialAccountId);
 
-      if (error) {
-        console.error("Delete error details:", error);
-        throw error;
-      }
-
-      console.log("Delete result - rows affected:", count);
+      if (error) throw error;
 
       if (count === 0) {
-        throw new Error("No account was deleted. It may have already been removed.");
+        throw new Error("No account was deleted.");
       }
 
       toast({
@@ -207,13 +203,12 @@ export function UserDetailsDialog({
         description: "Social account has been permanently deleted",
       });
 
-      // Refresh the data by calling the parent's refresh function
       onBalanceUpdated?.();
     } catch (error: any) {
       console.error("Error deleting account:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete account. Please try again.",
+        description: error.message || "Failed to delete account.",
         variant: "destructive",
       });
     } finally {
@@ -236,7 +231,6 @@ export function UserDetailsDialog({
 
     setIsSubmitting(true);
     try {
-      // Get current wallet balance
       const { data: wallet, error: walletError } = await supabase
         .from("wallets")
         .select("balance")
@@ -258,7 +252,6 @@ export function UserDetailsDialog({
         return;
       }
 
-      // Update wallet balance
       const { error: updateError } = await supabase
         .from("wallets")
         .update({ balance: newBalance })
@@ -266,7 +259,6 @@ export function UserDetailsDialog({
 
       if (updateError) throw updateError;
 
-      // Create transaction record
       const { error: transactionError } = await supabase
         .from("wallet_transactions")
         .insert({
@@ -322,7 +314,7 @@ export function UserDetailsDialog({
       console.error("Error updating trust score:", error);
       toast({
         title: "Error",
-        description: "Failed to update trust score. Please try again.",
+        description: "Failed to update trust score.",
         variant: "destructive",
       });
     } finally {
@@ -331,55 +323,403 @@ export function UserDetailsDialog({
   };
   
   if (!user) return null;
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl bg-[#0b0b0b]">
-        {/* User Header */}
-        <div className="flex items-start gap-4 pb-3 border-b py-0 my-0">
-          {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-16 w-16 rounded-full object-cover" /> : <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <UsersIcon className="h-8 w-8 text-primary" />
-            </div>}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-semibold mb-1">
-              {user.username}
-            </h2>
-            {user.full_name && <p className="text-sm text-muted-foreground mb-3">
-                {user.full_name}
-              </p>}
-            
-            {/* Wallet Stats */}
-            <div className="space-y-2 mt-2">
-              <div className="grid grid-cols-4 gap-2">
-                <div className="bg-card/50 px-3 py-2 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Balance</p>
-                  <p className="text-lg font-semibold text-success">
-                    ${(user.wallets?.balance || 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="bg-card/50 px-3 py-2 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Total Earned</p>
-                  <p className="text-lg font-semibold">
-                    ${(user.wallets?.total_earned || 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="bg-card/50 px-3 py-2 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Withdrawn</p>
-                  <p className="text-lg font-semibold">
-                    ${(user.wallets?.total_withdrawn || 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="bg-card/50 px-3 py-2 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
-                  <p className="text-lg font-semibold">
-                    {user.trust_score ?? 0}/100
-                  </p>
-                </div>
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl p-0 gap-0 bg-[#0a0a0a] border-[#1a1a1a] overflow-hidden">
+        {/* Header Section */}
+        <div className="p-6 pb-4 bg-gradient-to-b from-[#141414] to-transparent">
+          <div className="flex items-center gap-4">
+            {user.avatar_url ? (
+              <img 
+                src={user.avatar_url} 
+                alt={user.username} 
+                className="h-14 w-14 rounded-full object-cover ring-2 ring-[#2a2a2a]" 
+              />
+            ) : (
+              <div className="h-14 w-14 rounded-full bg-[#1a1a1a] flex items-center justify-center ring-2 ring-[#2a2a2a]">
+                <UsersIcon className="h-6 w-6 text-muted-foreground" />
               </div>
-              
-              {/* Trust Score Input */}
-              <div className="bg-card/50 px-3 py-3 rounded-lg space-y-2">
-                <div className="flex items-center gap-2">
-                  <Diamond className="w-4 h-4 fill-emerald-500 text-emerald-500" />
-                  <Label className="text-xs text-muted-foreground">Set Trust Score</Label>
+            )}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-semibold text-foreground truncate" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                {user.username}
+              </h2>
+              {user.full_name && (
+                <p className="text-sm text-muted-foreground truncate">{user.full_name}</p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant="outline" 
+                className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-2 py-1"
+              >
+                <Diamond className="w-3 h-3 mr-1 fill-emerald-400" />
+                {user.trust_score ?? 0}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-3 gap-3 mt-5">
+            <div className="bg-[#111] rounded-lg p-3 border border-[#1a1a1a]">
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Balance</span>
+              </div>
+              <p className="text-lg font-semibold text-green-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                ${(user.wallets?.balance || 0).toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-[#111] rounded-lg p-3 border border-[#1a1a1a]">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Earned</span>
+              </div>
+              <p className="text-lg font-semibold text-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                ${(user.wallets?.total_earned || 0).toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-[#111] rounded-lg p-3 border border-[#1a1a1a]">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingDown className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Withdrawn</span>
+              </div>
+              <p className="text-lg font-semibold text-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                ${(user.wallets?.total_withdrawn || 0).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs Section */}
+        <Tabs defaultValue="accounts" className="flex-1">
+          <div className="px-6 border-b border-[#1a1a1a]">
+            <TabsList className="bg-transparent h-10 p-0 w-full justify-start gap-6">
+              <TabsTrigger 
+                value="accounts" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground"
+              >
+                Accounts ({socialAccounts.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="payments" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground"
+              >
+                Payments ({paymentMethods?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="transactions" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground"
+              >
+                Transactions ({transactions.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="settings" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground"
+              >
+                Settings
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Accounts Tab */}
+          <TabsContent value="accounts" className="mt-0 p-6 pt-4">
+            <ScrollArea className="h-[280px]">
+              {loadingSocialAccounts ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Loading...
+                </div>
+              ) : socialAccounts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                  <Link2 className="w-8 h-8 mb-2 opacity-50" />
+                  <p className="text-sm">No connected accounts</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {socialAccounts.map(account => {
+                    const latestDemographic = account.demographic_submissions?.[0];
+                    const demographicStatus = latestDemographic?.status;
+                    const linkedCampaign = account.social_account_campaigns?.[0]?.campaigns;
+                    
+                    return (
+                      <div 
+                        key={account.id} 
+                        className="p-3 rounded-lg bg-[#111] border border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#1a1a1a] flex items-center justify-center shrink-0">
+                            {getPlatformIconElement(account.platform)}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <a 
+                                href={account.account_link} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="font-medium text-sm hover:underline truncate"
+                              >
+                                @{account.username}
+                              </a>
+                              {demographicStatus === 'approved' && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />}
+                              {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />}
+                              {demographicStatus === 'pending' && <AlertCircle className="h-3.5 w-3.5 text-orange-500 shrink-0" />}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {linkedCampaign ? (
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {linkedCampaign.title}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground/50 italic">Not linked</span>
+                              )}
+                              {latestDemographic?.status === 'approved' && (
+                                <Badge 
+                                  variant="secondary" 
+                                  className="text-[10px] px-1.5 py-0 h-4 bg-[#1a1a1a] hover:bg-[#222] cursor-pointer"
+                                  onClick={() => onEditScore?.(account)}
+                                >
+                                  T1: {latestDemographic.tier1_percentage}%
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {linkedCampaign && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+                                onClick={() => {
+                                  const campaignId = account.social_account_campaigns?.[0]?.campaigns?.id;
+                                  if (campaignId) handleUnlinkAccount(account.id, campaignId);
+                                }}
+                                disabled={unlinkingAccountId === account.id}
+                              >
+                                Unlink
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                              onClick={() => {
+                                if (confirm(`Delete @${account.username}?`)) {
+                                  handleDeleteAccount(account.id);
+                                }
+                              }}
+                              disabled={deletingAccountId === account.id}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+
+          {/* Payments Tab */}
+          <TabsContent value="payments" className="mt-0 p-6 pt-4">
+            <ScrollArea className="h-[280px]">
+              {loadingPaymentMethods ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Loading...
+                </div>
+              ) : !paymentMethods || paymentMethods.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                  <CreditCard className="w-8 h-8 mb-2 opacity-50" />
+                  <p className="text-sm">No payment methods</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {paymentMethods.map((method, index) => (
+                    <div key={index} className="p-4 rounded-lg bg-[#111] border border-[#1a1a1a]">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center">
+                          {method.method === 'crypto' && <Wallet className="h-5 w-5 text-purple-400" />}
+                          {method.method === 'paypal' && <Globe className="h-5 w-5 text-blue-400" />}
+                          {method.method === 'wise' && <Mail className="h-5 w-5 text-green-400" />}
+                        </div>
+                        <div>
+                          <p className="font-medium capitalize text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                            {method.method}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Active payment method</p>
+                        </div>
+                      </div>
+                      
+                      {/* Crypto Details */}
+                      {method.method === 'crypto' && method.details && (
+                        <div className="space-y-2">
+                          {method.details.address && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-3 border border-[#1a1a1a]">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Wallet Address</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => copyToClipboard(method.details.address, "Address")}
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <p className="text-xs font-mono text-foreground break-all">{method.details.address}</p>
+                            </div>
+                          )}
+                          <div className="grid grid-cols-2 gap-2">
+                            {method.details.network && (
+                              <div className="bg-[#0a0a0a] rounded-lg p-2.5 border border-[#1a1a1a]">
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Network</span>
+                                <p className="text-sm font-medium capitalize mt-0.5">{method.details.network}</p>
+                              </div>
+                            )}
+                            {(method.details.token || method.details.currency) && (
+                              <div className="bg-[#0a0a0a] rounded-lg p-2.5 border border-[#1a1a1a]">
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Token</span>
+                                <p className="text-sm font-medium uppercase mt-0.5">{method.details.token || method.details.currency}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* PayPal Details */}
+                      {method.method === 'paypal' && method.details?.email && (
+                        <div className="bg-[#0a0a0a] rounded-lg p-3 border border-[#1a1a1a]">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Email</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => copyToClipboard(method.details.email, "Email")}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <p className="text-sm text-foreground">{method.details.email}</p>
+                        </div>
+                      )}
+                      
+                      {/* Wise Details */}
+                      {method.method === 'wise' && method.details?.email && (
+                        <div className="bg-[#0a0a0a] rounded-lg p-3 border border-[#1a1a1a]">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Email</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => copyToClipboard(method.details.email, "Email")}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <p className="text-sm text-foreground">{method.details.email}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+
+          {/* Transactions Tab */}
+          <TabsContent value="transactions" className="mt-0 p-6 pt-4">
+            <ScrollArea className="h-[280px]">
+              {loadingTransactions ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Loading...
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                  <Clock className="w-8 h-8 mb-2 opacity-50" />
+                  <p className="text-sm">No transactions</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {transactions.map(transaction => {
+                    const metadata = transaction.metadata as any;
+                    const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
+                    
+                    return (
+                      <div key={transaction.id} className="p-3 rounded-lg bg-[#111] border border-[#1a1a1a]">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                              transaction.amount < 0 ? 'bg-red-500/10' : 'bg-green-500/10'
+                            }`}>
+                              {transaction.amount < 0 ? (
+                                <TrendingDown className="w-4 h-4 text-red-400" />
+                              ) : (
+                                <TrendingUp className="w-4 h-4 text-green-400" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium capitalize truncate" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                                {transaction.type.replace('_', ' ')}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant="outline"
+                              className={`text-[10px] px-1.5 py-0 h-5 border-0 ${
+                                transaction.status === 'completed' ? 'bg-green-500/10 text-green-400' :
+                                transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-400' :
+                                transaction.status === 'rejected' ? 'bg-red-500/10 text-red-400' :
+                                'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              {transaction.status}
+                            </Badge>
+                            <p className={`text-sm font-semibold tabular-nums ${
+                              transaction.amount < 0 ? 'text-red-400' : 'text-green-400'
+                            }`} style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                              {transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Extra details for withdrawals */}
+                        {isWithdrawal && metadata?.network && (
+                          <div className="mt-2 pt-2 border-t border-[#1a1a1a] flex items-center gap-4 text-xs text-muted-foreground">
+                            {metadata.payout_method && (
+                              <span className="capitalize">{metadata.payout_method}</span>
+                            )}
+                            {metadata.network && (
+                              <span className="capitalize">{metadata.network}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="mt-0 p-6 pt-4">
+            <div className="space-y-4">
+              {/* Trust Score */}
+              <div className="p-4 rounded-lg bg-[#111] border border-[#1a1a1a]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Diamond className="w-4 h-4 text-emerald-400 fill-emerald-400" />
+                  <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Trust Score</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Input
@@ -388,379 +728,48 @@ export function UserDetailsDialog({
                     max={100}
                     value={trustScore}
                     onChange={(e) => setTrustScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-                    className="flex-1"
+                    className="flex-1 bg-[#0a0a0a] border-[#1a1a1a]"
                     disabled={isUpdatingTrustScore}
                   />
                   <Button
                     size="sm"
                     onClick={() => handleTrustScoreUpdate(trustScore)}
                     disabled={isUpdatingTrustScore || trustScore === (user.trust_score ?? 0)}
-                    className="h-8 px-3"
+                    className="h-9 px-4"
                   >
-                    {isUpdatingTrustScore ? "Updating..." : "Update"}
+                    {isUpdatingTrustScore ? "Saving..." : "Save"}
                   </Button>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={() => setAdjustDialogOpen(true)}
-              >
-                <Minus className="h-4 w-4 mr-2" />
-                Subtract from Balance
-              </Button>
+
+              {/* Balance Adjustment */}
+              <div className="p-4 rounded-lg bg-[#111] border border-[#1a1a1a]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Minus className="w-4 h-4 text-red-400" />
+                  <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Balance Adjustment</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full border-[#1a1a1a] hover:bg-[#1a1a1a]"
+                  onClick={() => setAdjustDialogOpen(true)}
+                >
+                  Subtract from Balance
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Social Accounts Section - Collapsible */}
-        <Collapsible open={socialAccountsOpen} onOpenChange={onSocialAccountsOpenChange} className="pt-3 border-t py-0">
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Connected Accounts ({socialAccounts.length})
-              </h3>
-              {socialAccountsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-            </div>
-          </CollapsibleTrigger>
-          
-          <CollapsibleContent>
-            {loadingSocialAccounts ? <div className="text-center py-8 text-muted-foreground">
-                Loading social accounts...
-              </div> : socialAccounts.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
-                No social accounts connected
-              </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                {socialAccounts.map(account => {
-              const latestDemographic = account.demographic_submissions?.[0];
-              const demographicStatus = latestDemographic?.status;
-              const linkedCampaign = account.social_account_campaigns?.[0]?.campaigns;
-              return <div key={account.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors group">
-                      <div className="flex items-center justify-between gap-4">
-                        {/* Account Info */}
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-
-                          <div className="shrink-0">
-                            {getPlatformIconElement(account.platform)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium block truncate group-hover:underline" onClick={e => e.stopPropagation()}>
-                                @{account.username}
-                              </a>
-                              
-                              {/* Demographic Status Icon */}
-                              {demographicStatus === 'approved' && <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />}
-                              {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-red-500 shrink-0" />}
-                              {demographicStatus === 'pending' && <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />}
-                            </div>
-                            
-                            {/* Tier 1% and Last Submitted Date */}
-                            {latestDemographic && <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                {latestDemographic.status === 'approved' && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 cursor-pointer hover:bg-secondary/80 transition-colors" onClick={e => {
-                          e.stopPropagation();
-                          onEditScore?.(account);
-                        }}>
-                                    Tier 1: {latestDemographic.tier1_percentage}%
-                                  </Badge>}
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {format(new Date(latestDemographic.submitted_at), 'MMM dd, yyyy')}
-                                </span>
-                              </div>}
-                          </div>
-                        </div>
-                        
-                        {/* Campaign Link and Unlink Button */}
-                        <div className="shrink-0 flex items-center gap-2">
-                          {linkedCampaign ? <>
-                              <div className="flex items-center gap-2">
-                                {(linkedCampaign.brands?.logo_url || linkedCampaign.brand_logo_url) && <img src={linkedCampaign.brands?.logo_url || linkedCampaign.brand_logo_url} alt={linkedCampaign.brand_name} className="h-6 w-6 rounded object-cover" />}
-                                <span className="font-medium text-sm">
-                                  {linkedCampaign.title}
-                                </span>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                className="h-7 px-2 text-xs"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const campaignId = account.social_account_campaigns?.[0]?.campaigns?.id;
-                                  if (campaignId) handleUnlinkAccount(account.id, campaignId);
-                                }}
-                                disabled={unlinkingAccountId === account.id}
-                              >
-                                {unlinkingAccountId === account.id ? "Unlinking..." : "Unlink"}
-                              </Button>
-                            </> : <span className="text-xs text-muted-foreground italic">
-                              Not linked
-                            </span>}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm(`Are you sure you want to permanently delete @${account.username}?`)) {
-                                handleDeleteAccount(account.id);
-                              }
-                            }}
-                            disabled={deletingAccountId === account.id}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>;
-            })}
-              </div>}
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Payment Methods Section - Collapsible */}
-        <Collapsible open={paymentMethodsOpen} onOpenChange={onPaymentMethodsOpenChange} className="pt-3 border-t py-0">
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Payment Methods ({paymentMethods?.length || 0})
-              </h3>
-              {paymentMethodsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-            </div>
-          </CollapsibleTrigger>
-          
-          <CollapsibleContent>
-            {loadingPaymentMethods ? <div className="text-center py-8 text-muted-foreground">
-                Loading payment methods...
-              </div> : !paymentMethods || paymentMethods.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
-                No payment methods configured
-              </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                {paymentMethods.map((method, index) => <div key={index} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {method.method === 'crypto' && <Wallet className="h-4 w-4 text-primary" />}
-                            {method.method === 'paypal' && <Globe className="h-4 w-4 text-primary" />}
-                            {method.method === 'wise' && <Mail className="h-4 w-4 text-primary" />}
-                            <span className="font-semibold capitalize text-sm">{method.method}</span>
-                          </div>
-                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">Active</Badge>
-                        </div>
-                        
-                        {/* Display method details based on type */}
-                        {method.method === 'crypto' && <div className="space-y-2">
-                            {method.details?.address && <div className="space-y-1">
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Wallet Address</p>
-                                <div className="flex items-center gap-2">
-                                  <p className="text-xs font-mono break-all flex-1">
-                                    {method.details.address}
-                                  </p>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0 shrink-0"
-                                    onClick={() => copyToClipboard(method.details.address, "Wallet address")}
-                                  >
-                                    <Copy className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>}
-                            
-                            {method.details?.network && <div className="grid grid-cols-2 gap-2">
-                                <div className="bg-muted/20 p-2 rounded">
-                                  <p className="text-[10px] text-muted-foreground mb-0.5">Network</p>
-                                  <p className="text-xs font-medium capitalize">{method.details.network}</p>
-                                </div>
-                                {method.details?.token && <div className="bg-muted/20 p-2 rounded">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Token</p>
-                                    <p className="text-xs font-medium uppercase">{method.details.token}</p>
-                                  </div>}
-                              </div>}
-                          </div>}
-                        
-                        {method.method === 'paypal' && method.details?.email && <div className="space-y-2">
-                            <div className="space-y-1">
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email Address</p>
-                              <div className="flex items-center gap-2">
-                                <p className="text-xs flex items-center gap-2 flex-1">
-                                  <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
-                                  {method.details.email}
-                                </p>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0 shrink-0"
-                                  onClick={() => copyToClipboard(method.details.email, "Email")}
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>}
-                        
-                        {method.method === 'wise' && <div className="space-y-2">
-                            {method.details?.email && <div className="space-y-1">
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email Address</p>
-                                <div className="flex items-center gap-2 bg-muted/30 p-2.5 rounded border border-border/50">
-                                  <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
-                                  <p className="text-xs break-all flex-1">
-                                    {method.details.email}
-                                  </p>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0 shrink-0"
-                                    onClick={() => copyToClipboard(method.details.email, "Email")}
-                                  >
-                                    <Copy className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>}
-                            
-                            {(method.details?.account_number || method.details?.routing_number) && <div className="grid grid-cols-2 gap-2">
-                                {method.details?.account_number && <div className="bg-muted/20 p-2 rounded">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Account</p>
-                                    <p className="text-xs font-medium font-mono">••••{method.details.account_number.slice(-4)}</p>
-                                  </div>}
-                                {method.details?.routing_number && <div className="bg-muted/20 p-2 rounded">
-                                    <p className="text-[10px] text-muted-foreground mb-0.5">Routing</p>
-                                    <p className="text-xs font-medium font-mono">••••{method.details.routing_number.slice(-4)}</p>
-                                  </div>}
-                              </div>}
-                          </div>}
-                      </div>
-                    </div>)}
-              </div>}
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Recent Transactions Section - Collapsible */}
-        <Collapsible open={transactionsOpen} onOpenChange={onTransactionsOpenChange} className="pt-3 border-t">
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center justify-between hover:bg-card/30 p-3 rounded-lg transition-colors">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Recent Transactions ({transactions.length})
-              </h3>
-              {transactionsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-            </div>
-          </CollapsibleTrigger>
-          
-          <CollapsibleContent>
-            {loadingTransactions ? <div className="text-center py-8 text-muted-foreground">
-                Loading transactions...
-              </div> : transactions.length === 0 ? <div className="text-center py-8 text-muted-foreground bg-card/30 rounded-lg mt-2">
-                No transactions yet
-              </div> : <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 mt-2">
-                {transactions.map(transaction => {
-              const metadata = transaction.metadata as any;
-              const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
-              const isBalanceCorrection = transaction.type === 'balance_correction';
-              const isEarning = transaction.type === 'earning';
-              
-              console.log('Displaying transaction:', transaction.id, 'isEarning:', isEarning, 'metadata:', metadata);
-              
-              return <div key={transaction.id} className="p-4 rounded-lg bg-card/50 hover:bg-[#1D1D1D] transition-colors">
-                      <div className="space-y-3">
-                        {/* Header: Type, Status, Amount */}
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium capitalize text-sm">{transaction.type.replace('_', ' ')}</span>
-                              <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${transaction.status === 'completed' ? 'bg-green-500/10 text-green-500' : transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-500' : transaction.status === 'in_transit' ? 'bg-blue-500/10 text-blue-500' : transaction.status === 'rejected' ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground'}`}>
-                                {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3 inline mr-1" />
-                              {formatDistanceToNow(new Date(transaction.created_at), {
-                          addSuffix: true
-                        })}
-                            </p>
-                          </div>
-                          
-                          <div className="text-right shrink-0">
-                            <p className={`text-lg font-semibold ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`} style={{
-                        fontFamily: 'Chakra Petch, sans-serif'
-                      }}>
-                              {transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Campaign & Account Info (for earnings) */}
-                        {isEarning && metadata && (metadata.campaign_name || metadata.account_username) && <div className="p-2 bg-muted/20 rounded-md">
-                            <div className="space-y-2">
-                              {metadata.campaign_name && <div className="flex items-center gap-2">
-                                  <p className="text-[10px] text-muted-foreground">Campaign:</p>
-                                  <p className="text-xs font-medium">{metadata.campaign_name}</p>
-                                </div>}
-                              {metadata.account_username && metadata.platform && <div className="flex items-center gap-2">
-                                  <p className="text-[10px] text-muted-foreground">Account:</p>
-                                  <div className="flex items-center gap-1">
-                                    {getPlatformIcon(metadata.platform) && <img src={getPlatformIcon(metadata.platform)} alt={metadata.platform} className="h-3 w-3" />}
-                                    <p className="text-xs font-medium">@{metadata.account_username}</p>
-                                  </div>
-                                </div>}
-                            </div>
-                          </div>}
-
-                        {/* Payment Method & Network (for withdrawals) */}
-                        {isWithdrawal && metadata && <div className="space-y-2">
-                            <div className="grid grid-cols-2 gap-3 p-2 bg-muted/20 rounded-md">
-                              {metadata.payout_method && <div>
-                                  <p className="text-[10px] text-muted-foreground mb-0.5">Payment Method</p>
-                                  <p className="text-xs font-medium capitalize">{metadata.payout_method}</p>
-                                </div>}
-                              {metadata.network && <div>
-                                  <p className="text-[10px] text-muted-foreground mb-0.5">Network</p>
-                                  <p className="text-xs font-medium capitalize">{metadata.network}</p>
-                                </div>}
-                            </div>
-                            
-                            {/* Method Details */}
-                            {(metadata.payoutDetails?.address || metadata.payoutDetails?.email || metadata.payoutDetails?.account_number) && <div className="p-2 bg-muted/20 rounded-md">
-                                <p className="text-[10px] text-muted-foreground mb-0.5">Method Details</p>
-                                <p className="text-xs font-medium font-mono break-all">
-                                  {metadata.payoutDetails?.address || metadata.payoutDetails?.email || metadata.payoutDetails?.account_number && `•••• ${metadata.payoutDetails.account_number.slice(-4)}`}
-                                </p>
-                              </div>}
-                          </div>}
-
-                        {/* Balance Change */}
-                        {metadata?.balance_before !== undefined && metadata?.balance_after !== undefined && <div className="p-2 bg-muted/20 rounded-md">
-                            <div className="flex items-center justify-between text-xs">
-                              <div>
-                                <p className="text-[10px] text-muted-foreground">Balance Before</p>
-                                <p className="font-medium">${Number(metadata.balance_before).toFixed(2)}</p>
-                              </div>
-                              <div className="text-muted-foreground">→</div>
-                              <div className="text-right">
-                                <p className="text-[10px] text-muted-foreground">Balance After</p>
-                                <p className="font-medium">${Number(metadata.balance_after).toFixed(2)}</p>
-                              </div>
-                            </div>
-                          </div>}
-
-                        {/* Description */}
-                        {!isEarning && transaction.description && <p className="text-xs text-muted-foreground truncate pt-1 border-t">
-                            {transaction.description}
-                          </p>}
-                      </div>
-                    </div>;
-            })}
-              </div>}
-          </CollapsibleContent>
-        </Collapsible>
+          </TabsContent>
+        </Tabs>
 
         {/* Balance Adjustment Dialog */}
         <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
-          <DialogContent className="bg-[#0b0b0b]">
+          <DialogContent className="bg-[#0a0a0a] border-[#1a1a1a]">
             <DialogHeader>
-              <DialogTitle>Subtract from Balance</DialogTitle>
+              <DialogTitle style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Subtract from Balance</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount to Subtract</Label>
+                <Label htmlFor="amount">Amount</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -768,6 +777,7 @@ export function UserDetailsDialog({
                   placeholder="0.00"
                   value={adjustAmount}
                   onChange={(e) => setAdjustAmount(e.target.value)}
+                  className="bg-[#111] border-[#1a1a1a]"
                 />
               </div>
               <div className="space-y-2">
@@ -777,20 +787,21 @@ export function UserDetailsDialog({
                   placeholder="Balance Correction"
                   value={adjustDescription}
                   onChange={(e) => setAdjustDescription(e.target.value)}
+                  className="bg-[#111] border-[#1a1a1a]"
                 />
               </div>
               {adjustAmount && !isNaN(parseFloat(adjustAmount)) && (
-                <div className="p-3 bg-card/50 rounded-lg space-y-1">
+                <div className="p-3 bg-[#111] rounded-lg border border-[#1a1a1a] space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Current Balance:</span>
-                    <span className="font-medium">${(user.wallets?.balance || 0).toFixed(2)}</span>
+                    <span className="text-muted-foreground">Current</span>
+                    <span>${(user.wallets?.balance || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtract:</span>
-                    <span className="font-medium text-destructive">-${parseFloat(adjustAmount).toFixed(2)}</span>
+                    <span className="text-muted-foreground">Subtract</span>
+                    <span className="text-red-400">-${parseFloat(adjustAmount).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm pt-2 border-t">
-                    <span className="text-muted-foreground">New Balance:</span>
+                  <div className="flex justify-between text-sm pt-2 border-t border-[#1a1a1a]">
+                    <span className="text-muted-foreground">New Balance</span>
                     <span className="font-semibold">
                       ${((user.wallets?.balance || 0) - parseFloat(adjustAmount)).toFixed(2)}
                     </span>
@@ -799,15 +810,16 @@ export function UserDetailsDialog({
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setAdjustDialogOpen(false)} disabled={isSubmitting}>
+              <Button variant="outline" onClick={() => setAdjustDialogOpen(false)} disabled={isSubmitting} className="border-[#1a1a1a]">
                 Cancel
               </Button>
               <Button onClick={handleBalanceAdjustment} disabled={isSubmitting}>
-                {isSubmitting ? "Processing..." : "Subtract Amount"}
+                {isSubmitting ? "Processing..." : "Subtract"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
