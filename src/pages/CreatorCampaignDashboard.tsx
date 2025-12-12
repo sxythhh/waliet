@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import xLogo from "@/assets/x-logo.png";
 
 interface Campaign {

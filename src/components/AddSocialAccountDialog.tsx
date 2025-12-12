@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import xLogo from "@/assets/x-logo.png";
 import xLogoLight from "@/assets/x-logo-light.png";
 import connectAccountIcon from "@/assets/connect-account-icon.svg";

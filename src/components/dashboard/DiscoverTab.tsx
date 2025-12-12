@@ -15,7 +15,7 @@ import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Skeleton } from "@/components/ui/skeleton";
 interface Campaign {

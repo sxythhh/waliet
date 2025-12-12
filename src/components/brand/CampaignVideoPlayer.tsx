@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import { Diamond } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 
 const getTrustScoreDiamonds = (score: number) => {
   if (score < 20) {

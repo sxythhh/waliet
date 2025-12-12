@@ -27,7 +27,7 @@ import polygonLogo from "@/assets/polygon-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import paypalLogo from "@/assets/paypal-logo.svg";
 import walletActiveIcon from "@/assets/wallet-active.svg";
 import checkCircleFilledIcon from "@/assets/check-circle-filled.svg";

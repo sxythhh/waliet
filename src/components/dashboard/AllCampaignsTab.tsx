@@ -18,10 +18,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
-import instagramLogoBlack from "@/assets/instagram-logo-white.png";
-import youtubeLogoBlack from "@/assets/youtube-logo-new.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 
 interface Campaign {
   id: string;
