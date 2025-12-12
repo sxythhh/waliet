@@ -193,7 +193,7 @@ export function AddSocialAccountDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-[#1a1a1a] border-border/50">
+      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-[#0a0a0a] border-0 [&>button]:hidden">
         {/* Close Button */}
         <button
           onClick={() => onOpenChange(false)}
