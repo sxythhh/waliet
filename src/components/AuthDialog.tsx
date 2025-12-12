@@ -71,6 +71,7 @@ export default function AuthDialog({
     });
     if (signInError) {
       if (signInError.message.includes("Invalid login credentials")) {
+        // Try to sign up - if user exists, it means wrong password
         const {
           data: signUpData,
           error: signUpError
@@ -83,11 +84,20 @@ export default function AuthDialog({
         });
         setLoading(false);
         if (signUpError) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: signUpError.message
-          });
+          // Check if the error indicates the user already exists
+          if (signUpError.message.includes("already") || signUpError.message.includes("exists")) {
+            toast({
+              variant: "destructive",
+              title: "Incorrect password",
+              description: "The password you entered is incorrect. Please try again."
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: signUpError.message
+            });
+          }
         } else if (signUpData.user) {
           await trackReferral(signUpData.user.id);
           toast({
@@ -249,13 +259,13 @@ export default function AuthDialog({
                   <form onSubmit={handleEmailAuth} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                      <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
+                      <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted border-0 focus-visible:ring-1 focus-visible:ring-primary" />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                       <div className="relative">
-                        <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pr-10" />
+                        <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-muted border-0 focus-visible:ring-1 focus-visible:ring-primary pr-10" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
