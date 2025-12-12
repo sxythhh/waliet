@@ -5,8 +5,8 @@ import newLogo from "@/assets/new-logo.png";
 import viralityIcon from "@/assets/virality-icon.png";
 import discordIcon from "@/assets/discord-icon.png";
 import supportIcon from "@/assets/support-icon.svg";
-import webStoriesInactive from "@/assets/web-stories-inactive.svg";
-import webStoriesActive from "@/assets/web-stories-active.svg";
+import homeInactive from "@/assets/home-inactive.svg";
+import homeActive from "@/assets/home-active.svg";
 import walletInactive from "@/assets/wallet-inactive.svg";
 import walletActive from "@/assets/wallet-active.svg";
 import discoverInactive from "@/assets/discover-inactive.svg";
@@ -46,7 +46,7 @@ interface BrandMembership {
   };
 }
 const creatorMenuItems = [{
-  title: "Campaigns",
+  title: "Home",
   tab: "campaigns",
   icon: null as any
 }, {
@@ -67,7 +67,7 @@ const creatorMenuItems = [{
   icon: CircleUser
 }];
 const brandMenuItems = [{
-  title: "Campaigns",
+  title: "Home",
   tab: "campaigns",
   icon: null as any
 }, {
@@ -332,8 +332,8 @@ export function AppSidebar() {
         const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
         return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
               {item.tab === "campaigns" ? <div className="relative h-6 w-6">
-                  <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={webStoriesActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={homeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={homeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.tab === "wallet" ? <div className="relative h-6 w-6">
                   <img src={walletInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={walletActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
@@ -445,8 +445,8 @@ export function AppSidebar() {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
             return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`} title={isCollapsed ? item.title : undefined}>
                   {item.tab === "campaigns" ? <div className="relative h-[21px] w-[21px]">
-                      <img src={webStoriesInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={webStoriesActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                      <img src={homeInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={homeActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "wallet" ? <div className="relative h-[21px] w-[21px]">
                       <img src={walletInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={walletActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
