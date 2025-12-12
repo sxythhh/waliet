@@ -87,7 +87,12 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     '';
 
   const bio = typeof bioRaw === 'string' ? bioRaw : String(bioRaw ?? '');
-  const verified = bio.toLowerCase().includes(verificationCode.toLowerCase());
+  console.log('Instagram bio candidate:', bio);
+
+  // Normalize to alphanumeric uppercase to avoid hidden characters or formatting issues
+  const normalizedBio = bio.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const normalizedCode = verificationCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const verified = normalizedBio.includes(normalizedCode);
 
   return {
     verified,
