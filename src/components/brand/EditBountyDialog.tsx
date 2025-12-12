@@ -6,13 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, DollarSign, Video, Users, FileText } from "lucide-react";
+import { CalendarIcon, Upload, DollarSign, Video, Users, FileText, Lock } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EditBountyDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ interface BountyData {
   banner_url: string | null;
   status: string;
   blueprint_embed_url: string | null;
+  is_private: boolean;
 }
 
 export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: EditBountyDialogProps) {
@@ -50,7 +52,8 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
     end_date: null,
     banner_url: null,
     status: "active",
-    blueprint_embed_url: null
+    blueprint_embed_url: null,
+    is_private: false
   });
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -125,7 +128,8 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
           end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
           banner_url,
           status: formData.status,
-          blueprint_embed_url: formData.blueprint_embed_url || null
+          blueprint_embed_url: formData.blueprint_embed_url || null,
+          is_private: formData.is_private
         })
         .eq('id', bountyId);
 
@@ -351,6 +355,21 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
             </div>
 
             <Separator />
+
+            {/* Private Toggle */}
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/10">
+              <div className="flex items-center gap-3">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Private Boost</p>
+                  <p className="text-xs text-muted-foreground">Only accessible via direct link</p>
+                </div>
+              </div>
+              <Checkbox
+                checked={formData.is_private}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_private: checked === true })}
+              />
+            </div>
 
             {/* Status */}
             <div className="space-y-2">

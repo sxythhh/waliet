@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, DollarSign, Video, Users, ArrowRight, ArrowLeft, Check, X } from "lucide-react";
+import { CalendarIcon, Upload, DollarSign, Video, Users, ArrowRight, ArrowLeft, Check, X, Copy, Lock } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -60,7 +60,8 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
     additional_requirements: "",
     posting_frequency: "",
     review_process: "",
-    blueprint_embed_url: ""
+    blueprint_embed_url: "",
+    is_private: false
   });
 
   const togglePlatform = (platformId: string) => {
@@ -158,7 +159,7 @@ ${formData.max_followers ? ` | MAX FOLLOWERS: ${formData.max_followers}` : ''}
 ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule}` : ''}
       `.trim();
 
-      const { error } = await supabase
+      const { error, data: createdBounty } = await supabase
         .from('bounty_campaigns')
         .insert({
           brand_id: brandId,
@@ -172,8 +173,11 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
           end_date: formData.end_date ? format(formData.end_date, 'yyyy-MM-dd') : null,
           banner_url,
           status: formData.status,
-          blueprint_embed_url: formData.blueprint_embed_url || null
-        });
+          blueprint_embed_url: formData.blueprint_embed_url || null,
+          is_private: formData.is_private
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -198,7 +202,8 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
         additional_requirements: "",
         posting_frequency: "",
         review_process: "",
-        blueprint_embed_url: ""
+        blueprint_embed_url: "",
+        is_private: false
       });
       setBannerFile(null);
       setBannerPreview(null);
@@ -214,29 +219,29 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden bg-[#050505] border-[#1a1a1a] p-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden bg-[#050505] border-0 p-0 [&>button]:hidden">
         {/* Progress Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-[#1a1a1a]">
+        <div className="px-6 pt-6 pb-4">
           <h2 className="text-xl font-bold text-white tracking-[-0.5px] mb-4">Create Boost Campaign</h2>
           
-          {/* Step Indicators */}
-          <div className="flex items-center gap-2">
+          {/* Step Indicators - Minimal */}
+          <div className="flex items-center gap-3">
             {STEPS.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div className="flex items-center gap-2">
+              <div key={step.id} className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
                   <div
                     className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
+                      "w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium transition-colors",
                       currentStep >= step.id
                         ? "bg-primary text-white"
-                        : "bg-[#1a1a1a] text-muted-foreground"
+                        : "bg-muted/30 text-muted-foreground"
                     )}
                   >
-                    {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
+                    {currentStep > step.id ? <Check className="w-3 h-3" /> : step.id}
                   </div>
                   <span
                     className={cn(
-                      "text-sm font-medium tracking-[-0.5px] hidden sm:block",
+                      "text-xs font-medium tracking-[-0.5px]",
                       currentStep >= step.id ? "text-white" : "text-muted-foreground"
                     )}
                   >
@@ -246,8 +251,8 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                 {index < STEPS.length - 1 && (
                   <div
                     className={cn(
-                      "w-8 sm:w-12 h-[2px] mx-2",
-                      currentStep > step.id ? "bg-primary" : "bg-[#1a1a1a]"
+                      "w-6 h-[1px]",
+                      currentStep > step.id ? "bg-primary" : "bg-muted/30"
                     )}
                   />
                 )}
@@ -279,7 +284,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                         value={formData.monthly_retainer}
                         onChange={(e) => setFormData({ ...formData, monthly_retainer: e.target.value })}
                         placeholder="500.00"
-                        className="pl-9 h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50"
+                        className="pl-9 h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
                       />
                     </div>
                   </div>
@@ -290,10 +295,10 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                       value={formData.payment_schedule}
                       onValueChange={(value: any) => setFormData({ ...formData, payment_schedule: value })}
                     >
-                      <SelectTrigger className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white">
+                      <SelectTrigger className="h-11 bg-[#0a0a0a] border-0 text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0a0a0a] border-[#1a1a1a]">
+                      <SelectContent className="bg-[#0a0a0a] border-0">
                         <SelectItem value="weekly">Weekly</SelectItem>
                         <SelectItem value="biweekly">Bi-weekly</SelectItem>
                         <SelectItem value="monthly">Monthly</SelectItem>
@@ -311,7 +316,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                       value={formData.min_followers}
                       onChange={(e) => setFormData({ ...formData, min_followers: e.target.value })}
                       placeholder="10,000"
-                      className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50"
+                      className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
                     />
                   </div>
 
@@ -323,7 +328,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                       value={formData.max_followers}
                       onChange={(e) => setFormData({ ...formData, max_followers: e.target.value })}
                       placeholder="100,000"
-                      className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50"
+                      className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
                     />
                     <p className="text-xs text-muted-foreground">Leave empty for no limit</p>
                   </div>
@@ -350,7 +355,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                         value={formData.videos_per_month}
                         onChange={(e) => setFormData({ ...formData, videos_per_month: e.target.value })}
                         placeholder="4"
-                        className="pl-9 h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50"
+                        className="pl-9 h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
                       />
                     </div>
                   </div>
@@ -365,7 +370,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                         value={formData.max_accepted_creators}
                         onChange={(e) => setFormData({ ...formData, max_accepted_creators: e.target.value })}
                         placeholder="5"
-                        className="pl-9 h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50"
+                        className="pl-9 h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">Number of creators to hire</p>
@@ -384,10 +389,10 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                           type="button"
                           onClick={() => togglePlatform(platform.id)}
                           className={cn(
-                            "flex items-center gap-3 p-4 rounded-xl border text-left transition-all",
+                            "flex items-center gap-3 p-4 rounded-xl text-left transition-all",
                             isSelected
-                              ? "border-primary bg-primary/10"
-                              : "border-[#1a1a1a] hover:border-[#2a2a2a] bg-[#0a0a0a]"
+                              ? "bg-primary/10 ring-1 ring-primary"
+                              : "bg-[#0a0a0a] hover:bg-[#0f0f0f]"
                           )}
                         >
                           <div
@@ -412,7 +417,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                     value={formData.content_style_requirements}
                     onChange={(e) => setFormData({ ...formData, content_style_requirements: e.target.value })}
                     placeholder="Describe content style, format, themes, tone, and any specific creative requirements..."
-                    className="min-h-[100px] bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50 resize-none"
+                    className="min-h-[100px] bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50 resize-none"
                   />
                 </div>
 
@@ -422,7 +427,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                     value={formData.posting_frequency}
                     onChange={(e) => setFormData({ ...formData, posting_frequency: e.target.value })}
                     placeholder="e.g., 1 video per week, Monday-Wednesday preferred"
-                    className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50"
+                    className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
                   />
                 </div>
               </div>
@@ -442,7 +447,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="e.g., Monthly Content Creator Position"
-                    className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50"
+                    className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
                   />
                 </div>
 
@@ -452,7 +457,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe what this boost entails..."
-                    className="min-h-[80px] bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50 resize-none"
+                    className="min-h-[80px] bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50 resize-none"
                   />
                 </div>
 
@@ -465,7 +470,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full h-11 justify-start text-left font-normal bg-[#0a0a0a] border-[#1a1a1a] hover:bg-[#0f0f0f]",
+                            "w-full h-11 justify-start text-left font-normal bg-[#0a0a0a] border-0 hover:bg-[#0f0f0f]",
                             !formData.start_date && "text-muted-foreground"
                           )}
                         >
@@ -473,7 +478,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                           {formData.start_date ? format(formData.start_date, "MMM d, yyyy") : "Select date"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-[#1a1a1a]">
+                      <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-0">
                         <Calendar
                           mode="single"
                           selected={formData.start_date}
@@ -491,7 +496,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full h-11 justify-start text-left font-normal bg-[#0a0a0a] border-[#1a1a1a] hover:bg-[#0f0f0f]",
+                            "w-full h-11 justify-start text-left font-normal bg-[#0a0a0a] border-0 hover:bg-[#0f0f0f]",
                             !formData.end_date && "text-muted-foreground"
                           )}
                         >
@@ -499,7 +504,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                           {formData.end_date ? format(formData.end_date, "MMM d, yyyy") : "Select date"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-[#1a1a1a]">
+                      <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-0">
                         <Calendar
                           mode="single"
                           selected={formData.end_date}
@@ -529,7 +534,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                   ) : (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex flex-col items-center justify-center h-32 rounded-xl border-2 border-dashed border-[#1a1a1a] hover:border-[#2a2a2a] bg-[#0a0a0a] cursor-pointer transition-colors"
+                      className="flex flex-col items-center justify-center h-32 rounded-xl border-2 border-dashed border-muted/30 hover:border-muted/50 bg-[#0a0a0a] cursor-pointer transition-colors"
                     >
                       <Upload className="w-6 h-6 text-muted-foreground mb-2" />
                       <span className="text-sm text-muted-foreground">Click to upload banner</span>
@@ -550,11 +555,26 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                     value={formData.blueprint_embed_url}
                     onChange={(e) => setFormData({ ...formData, blueprint_embed_url: e.target.value })}
                     placeholder="https://virality.cc/resources/your-guidelines"
-                    className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white placeholder:text-muted-foreground/50"
+                    className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
                   />
                   <p className="text-xs text-muted-foreground">
                     Will be embedded as an iframe on the public boost page
                   </p>
+                </div>
+
+                {/* Private Toggle */}
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/10">
+                  <div className="flex items-center gap-3">
+                    <Lock className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium text-white">Private Boost</p>
+                      <p className="text-xs text-muted-foreground">Only accessible via direct link</p>
+                    </div>
+                  </div>
+                  <Checkbox
+                    checked={formData.is_private}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_private: checked === true })}
+                  />
                 </div>
 
                 {/* Status */}
@@ -564,10 +584,10 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                     value={formData.status}
                     onValueChange={(value: "draft" | "active") => setFormData({ ...formData, status: value })}
                   >
-                    <SelectTrigger className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-white">
+                    <SelectTrigger className="h-11 bg-[#0a0a0a] border-0 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#0a0a0a] border-[#1a1a1a]">
+                    <SelectContent className="bg-[#0a0a0a] border-0">
                       <SelectItem value="active">Active (visible to creators)</SelectItem>
                       <SelectItem value="draft">Draft (not visible)</SelectItem>
                     </SelectContent>
@@ -578,7 +598,7 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-[#1a1a1a] bg-[#050505]">
+          <div className="px-6 py-4 bg-[#050505]">
             <div className="flex items-center justify-between">
               <Button
                 type="button"
