@@ -124,6 +124,26 @@ export default function Auth() {
       });
     }
   };
+
+  const handleDiscordSignIn = async () => {
+    setLoading(true);
+    const {
+      error
+    } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`
+      }
+    });
+    if (error) {
+      setLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    }
+  };
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -219,7 +239,7 @@ export default function Auth() {
   }
   return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       
-      <Card className="w-full max-w-md border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
+      <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
         <CardHeader className="text-center space-y-4 pb-2 pt-8">
           <div className="flex items-center justify-center gap-2">
             <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
@@ -246,6 +266,13 @@ export default function Auth() {
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                     Continue with Google
+                  </Button>
+
+                  <Button variant="outline" className="w-full h-12 bg-[#5865F2] hover:bg-[#5865F2]/90 text-white hover:text-white border-0 font-semibold font-geist gap-3" style={{
+                letterSpacing: '-0.5px'
+              }} onClick={handleDiscordSignIn} disabled={loading}>
+                    <img src={discordIcon} alt="Discord" className="h-5 w-5" />
+                    Continue with Discord
                   </Button>
                   
                   <Button variant="outline" className="w-full h-12 bg-muted/50 hover:bg-muted border-0 font-semibold font-geist gap-3" style={{
