@@ -260,9 +260,12 @@ export default function BrandDashboard() {
       {showToggle ? <>
           {/* Home Embed View - Full Width */}
           {effectiveView === "home" && <div className="w-full h-screen">
-              <div dangerouslySetInnerHTML={{
-          __html: brand.home_url
-        }} className="w-full h-full" />
+              <iframe 
+                src={brand.home_url || ''} 
+                className="w-full h-full border-0"
+                title={`${brand.name} Home`}
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              />
             </div>}
 
           {/* Campaigns View - With Padding */}
@@ -349,9 +352,12 @@ export default function BrandDashboard() {
         </> :
     // Single view - no toggle needed
     effectiveView === "home" ? <div className="w-full h-screen">
-            <div dangerouslySetInnerHTML={{
-        __html: brand.home_url || ""
-      }} className="w-full h-full" />
+            <iframe 
+              src={brand.home_url || ''} 
+              className="w-full h-full border-0"
+              title={`${brand.name} Home`}
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            />
           </div> : <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
             {campaigns.length > 0 ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                 {campaigns.map(campaign => {
