@@ -237,30 +237,29 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
 
   if (loading) {
     return (
-      <div className="absolute inset-0 bg-background z-40">
-        <div className="max-w-6xl mx-auto p-8">
-          <Skeleton className="h-8 w-48 mb-6" />
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
-          </div>
-          <Skeleton className="h-64 w-full rounded-xl" />
+      <div className="max-w-6xl mx-auto p-8">
+        <Skeleton className="h-8 w-48 mb-6" />
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <Skeleton className="h-24 rounded-xl" />
+          <Skeleton className="h-24 rounded-xl" />
+          <Skeleton className="h-24 rounded-xl" />
         </div>
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     );
   }
 
   if (!boost) {
     return (
-      <div className="absolute inset-0 bg-background z-40 flex items-center justify-center">
+      <div className="flex items-center justify-center py-24">
         <p className="text-muted-foreground">Boost not found</p>
       </div>
     );
   }
 
   return (
-    <div className="absolute inset-0 bg-background z-40 flex flex-col overflow-hidden">
+    <div className="flex flex-col h-full">
+
       {/* Header */}
       <div className="border-b border-border bg-background flex-shrink-0">
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
