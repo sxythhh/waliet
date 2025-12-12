@@ -227,7 +227,9 @@ export function AddSocialAccountDialog({
             username: username,
             account_link: getAccountLink(selectedPlatform, username),
             follower_count: data.user?.followerCount || null,
-            is_verified: true
+            is_verified: true,
+            bio: data.bio || null,
+            avatar_url: data.user?.avatar || null
           });
 
         if (insertError) throw insertError;
