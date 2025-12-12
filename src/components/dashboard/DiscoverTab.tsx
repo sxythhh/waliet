@@ -20,6 +20,7 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { SearchOverlay } from "./SearchOverlay";
 
 interface Campaign {
   id: string;
@@ -86,6 +87,9 @@ export function DiscoverTab() {
   const [bookmarkedCampaignIds, setBookmarkedCampaignIds] = useState<string[]>([]);
   const [bookmarkedBountyIds, setBookmarkedBountyIds] = useState<string[]>([]);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
+  const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<'all' | 'campaigns' | 'boosts'>('all');
+  const [nicheFilter, setNicheFilter] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -409,11 +413,16 @@ export function DiscoverTab() {
         <div className="space-y-3 font-['Inter'] tracking-[-0.5px]">
           {/* Search and Filters Row */}
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            {/* Search Input */}
-            <div className="relative w-full sm:w-72">
+            {/* Search Input - Click to open overlay */}
+            <button 
+              onClick={() => setSearchOverlayOpen(true)}
+              className="relative w-full sm:w-72 text-left"
+            >
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-              <Input placeholder="Search campaigns..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-muted-foreground/20" />
-            </div>
+              <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
+                {searchQuery || 'Search campaigns...'}
+              </div>
+            </button>
 
             {/* Platform Pills */}
             <div className="flex items-center gap-1.5">
@@ -551,22 +560,26 @@ export function DiscoverTab() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
               {/* Combine campaigns and bounties into a single sorted array */}
               {(() => {
-                // Create unified list with type markers
-                const allItems: Array<{type: 'campaign', data: Campaign, isEnded: boolean, createdAt: string} | {type: 'bounty', data: BountyCampaign, isEnded: boolean, createdAt: string}> = [
-                  ...sortedCampaigns.map(c => ({
-                    type: 'campaign' as const,
-                    data: c,
-                    isEnded: c.status === 'ended',
-                    createdAt: c.start_date || c.created_at
-                  })),
-                  ...bounties
-                    .filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id))
-                    .map(b => ({
+                // Create unified list with type markers, applying type filter
+                const campaignItems = typeFilter === 'boosts' ? [] : sortedCampaigns.map(c => ({
+                  type: 'campaign' as const,
+                  data: c,
+                  isEnded: c.status === 'ended',
+                  createdAt: c.start_date || c.created_at
+                }));
+                
+                const bountyItems = typeFilter === 'campaigns' ? [] : bounties
+                  .filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id))
+                  .map(b => ({
                     type: 'bounty' as const,
                     data: b,
                     isEnded: b.status === 'ended',
                     createdAt: b.created_at
-                  }))
+                  }));
+                
+                const allItems: Array<{type: 'campaign', data: Campaign, isEnded: boolean, createdAt: string} | {type: 'bounty', data: BountyCampaign, isEnded: boolean, createdAt: string}> = [
+                  ...campaignItems,
+                  ...bountyItems
                 ];
                 
                 // Sort: active items first (by date), then ended items
@@ -789,5 +802,16 @@ export function DiscoverTab() {
     }} />
       
       <JoinPrivateCampaignDialog open={joinPrivateDialogOpen} onOpenChange={setJoinPrivateDialogOpen} />
+      
+      <SearchOverlay
+        isOpen={searchOverlayOpen}
+        onClose={() => setSearchOverlayOpen(false)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onTypeFilter={setTypeFilter}
+        onNicheFilter={setNicheFilter}
+        activeTypeFilter={typeFilter}
+        activeNicheFilter={nicheFilter}
+      />
     </div>;
 }
