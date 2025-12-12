@@ -294,7 +294,7 @@ export function DiscoverTab() {
   const totalBounties = bounties.filter(b => b.status !== "ended").length;
   return <div className="h-full flex flex-col">
         {/* Sticky Header and Filters */}
-        <div className="sticky top-0 z-20 bg-background px-6 pt-8 pb-4 space-y-6">
+        <div className="md:sticky md:top-0 z-20 bg-background px-6 pt-8 pb-4 space-y-6">
           {/* Header Section */}
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">Discover Opportunities</h1>
