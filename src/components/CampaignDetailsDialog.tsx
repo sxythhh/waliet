@@ -2,10 +2,15 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2 } from "lucide-react";
 import { useState } from "react";
-import tiktokIcon from "@/assets/tiktok-logo-black-new.png";
-import instagramIcon from "@/assets/instagram-logo-black.png";
-import youtubeIcon from "@/assets/youtube-logo-black-new.png";
+import { useTheme } from "@/components/ThemeProvider";
+import tiktokIcon from "@/assets/tiktok-logo-white.png";
+import tiktokIconBlack from "@/assets/tiktok-logo-black-new.png";
+import instagramIcon from "@/assets/instagram-logo-white.png";
+import instagramIconBlack from "@/assets/instagram-logo-black.png";
+import youtubeIcon from "@/assets/youtube-logo-white.png";
+import youtubeIconBlack from "@/assets/youtube-logo-black-new.png";
 import xIcon from "@/assets/x-logo.png";
+import xIconLight from "@/assets/x-logo-light.png";
 interface ConnectedAccount {
   id: string;
   platform: string;
@@ -43,12 +48,6 @@ interface CampaignDetailsDialogProps {
   onConnectAccount?: () => void;
   onManageAccount?: (account: ConnectedAccount) => void;
 }
-const platformIcons: Record<string, string> = {
-  tiktok: tiktokIcon,
-  instagram: instagramIcon,
-  youtube: youtubeIcon,
-  x: xIcon
-};
 const calculateTimeAgo = (createdAt: string) => {
   const now = new Date();
   const created = new Date(createdAt);
@@ -119,6 +118,24 @@ export function CampaignDetailsDialog({
   onManageAccount
 }: CampaignDetailsDialogProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const { resolvedTheme } = useTheme();
+  
+  const getPlatformIcon = (platform: string) => {
+    const isLightMode = resolvedTheme === "light";
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return isLightMode ? tiktokIconBlack : tiktokIcon;
+      case "instagram":
+        return isLightMode ? instagramIconBlack : instagramIcon;
+      case "youtube":
+        return isLightMode ? youtubeIconBlack : youtubeIcon;
+      case "x":
+        return isLightMode ? xIconLight : xIcon;
+      default:
+        return null;
+    }
+  };
+  
   if (!campaign) return null;
   const daysUntilEnd = calculateDaysUntilEnd(campaign.end_date);
   const timeAgo = calculateTimeAgo(campaign.created_at);
@@ -233,7 +250,10 @@ export function CampaignDetailsDialog({
             fontFamily: 'Inter'
           }}>Platforms</p>
             <div className="flex justify-center gap-1 mt-1.5">
-              {campaign.allowed_platforms?.map(platform => <img key={platform} src={platformIcons[platform.toLowerCase()]} alt={platform} className="w-6 h-6" />)}
+              {campaign.allowed_platforms?.map(platform => {
+                const iconSrc = getPlatformIcon(platform);
+                return iconSrc ? <img key={platform} src={iconSrc} alt={platform} className="w-4 h-4" /> : null;
+              })}
             </div>
           </div>
 
@@ -277,7 +297,7 @@ export function CampaignDetailsDialog({
             {hasConnectedAccounts ? <div className="flex flex-wrap gap-2">
                 {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full transition-all duration-200 cursor-pointer bg-popover">
                     <div className="w-7 h-7 rounded-full bg-background flex items-center justify-center shadow-sm">
-                      <img src={platformIcons[account.platform.toLowerCase()]} alt={account.platform} className="w-4 h-4" />
+                      {getPlatformIcon(account.platform) && <img src={getPlatformIcon(account.platform)!} alt={account.platform} className="w-4 h-4" />}
                     </div>
                     <span className="font-medium text-sm" style={{
               fontFamily: 'Inter',
