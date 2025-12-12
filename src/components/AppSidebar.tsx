@@ -265,7 +265,7 @@ export function AppSidebar() {
                   </button>
                   <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
                     <div className="flex items-center gap-3">
-                      <img src={discordIcon} alt="Discord" className="w-4 h-4 rounded" />
+                      <img alt="Discord" className="w-4 h-4 rounded" src="/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp" />
                       <span className="text-sm">Discord</span>
                     </div>
                     <ArrowUpRight className="w-3.5 h-3.5" />
