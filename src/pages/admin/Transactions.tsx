@@ -236,12 +236,17 @@ export default function Transactions() {
         description: "Failed to fetch payment methods"
       });
       setUserPaymentMethods([]);
-    } else if (data && data.payout_method) {
-      // Transform wallet data to match PaymentMethod interface
-      setUserPaymentMethods([{
-        method: data.payout_method,
-        details: data.payout_details
-      }]);
+    } else if (data && data.payout_details) {
+      // payout_details is an array of {method, details} objects
+      const details = data.payout_details as any[];
+      if (Array.isArray(details) && details.length > 0) {
+        setUserPaymentMethods(details.map((item: any) => ({
+          method: item.method || data.payout_method,
+          details: item.details || item
+        })));
+      } else {
+        setUserPaymentMethods([]);
+      }
     } else {
       setUserPaymentMethods([]);
     }
