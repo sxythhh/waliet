@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Video, Users, Trash2, Copy, Check } from "lucide-react";
+import { DollarSign, Video, Users, Trash2, Copy, Check, Lock } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -22,6 +22,7 @@ interface BountyCampaign {
   banner_url: string | null;
   status: string;
   created_at: string;
+  is_private?: boolean;
 }
 
 interface BountyCampaignsViewProps {
@@ -98,6 +99,12 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete }: 
                   >
                     {bounty.status}
                   </Badge>
+                  {bounty.is_private && (
+                    <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20 ml-1">
+                      <Lock className="h-3 w-3 mr-1" />
+                      Private
+                    </Badge>
+                  )}
                 </div>
                 {onDelete && (
                   <Button

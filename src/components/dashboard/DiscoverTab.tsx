@@ -294,7 +294,7 @@ export function DiscoverTab() {
       setCampaigns(campaignsWithBrandLogo);
     }
 
-    // Fetch bounties
+    // Fetch bounties (only non-private ones)
     const {
       data: bountiesData,
       error: bountiesError
@@ -304,7 +304,7 @@ export function DiscoverTab() {
           name,
           logo_url
         )
-      `).in("status", ["active", "ended"]).order("created_at", {
+      `).in("status", ["active", "ended"]).eq("is_private", false).order("created_at", {
       ascending: false
     });
     if (!bountiesError && bountiesData) {

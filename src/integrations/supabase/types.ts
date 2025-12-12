@@ -176,6 +176,7 @@ export type Database = {
           discord_guild_id: string | null
           end_date: string | null
           id: string
+          is_private: boolean
           max_accepted_creators: number
           monthly_retainer: number
           start_date: string | null
@@ -195,6 +196,7 @@ export type Database = {
           discord_guild_id?: string | null
           end_date?: string | null
           id?: string
+          is_private?: boolean
           max_accepted_creators: number
           monthly_retainer: number
           start_date?: string | null
@@ -214,6 +216,7 @@ export type Database = {
           discord_guild_id?: string | null
           end_date?: string | null
           id?: string
+          is_private?: boolean
           max_accepted_creators?: number
           monthly_retainer?: number
           start_date?: string | null
