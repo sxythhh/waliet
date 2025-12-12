@@ -233,7 +233,7 @@ export function AppSidebar() {
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-0 bg-[#0a0a0a] border-0 rounded-xl shadow-2xl" align="end" sideOffset={8}>
-              <div className="p-3 space-y-1">
+              <div className="p-3 space-y-1 font-inter tracking-[-0.5px]">
                 {/* Workspace Section */}
                 {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="pb-1">
                     <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}>
