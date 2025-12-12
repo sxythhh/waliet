@@ -564,59 +564,63 @@ export function AnalyticsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Time period selector - dropdown */}
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 text-sm font-medium font-inter tracking-[-0.5px] text-white hover:text-white/80 transition-colors">
-              {timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to 
-                ? `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`
-                : TIME_OPTIONS.find(o => o.value === timePeriod)?.label || 'Select'}
-              <ChevronDown className="h-4 w-4 text-white/50" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="bg-[#0c0c0c] border-white/10 min-w-[140px]">
-            {TIME_OPTIONS.map((option) => (
-              <DropdownMenuItem
-                key={option.value}
-                onClick={() => setTimePeriod(option.value as TimePeriod)}
-                className="flex items-center justify-between text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 cursor-pointer"
-              >
-                {option.label}
-                {timePeriod === option.value && <Check className="h-3.5 w-3.5 text-white" />}
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuItem
-              onClick={() => setIsDatePickerOpen(true)}
-              className="flex items-center gap-2 text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 cursor-pointer"
-            >
-              <Calendar className="h-3.5 w-3.5" />
-              Custom Range
-              {timePeriod === 'CUSTOM' && <Check className="h-3.5 w-3.5 text-white ml-auto" />}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      {/* Header with title and time period selector */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">Virality Data</h1>
         
-        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-          <PopoverTrigger asChild>
-            <span />
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-white/10" align="start">
-            <CalendarComponent
-              mode="range"
-              selected={{ from: customDateRange.from, to: customDateRange.to }}
-              onSelect={(range) => {
-                setCustomDateRange({ from: range?.from, to: range?.to });
-                if (range?.from && range?.to) {
-                  setTimePeriod('CUSTOM');
-                  setIsDatePickerOpen(false);
-                }
-              }}
-              numberOfMonths={2}
-              className="rounded-md pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 text-sm font-medium font-inter tracking-[-0.5px] text-white hover:text-white/80 transition-colors">
+                {timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to 
+                  ? `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`
+                  : TIME_OPTIONS.find(o => o.value === timePeriod)?.label || 'Select'}
+                <ChevronDown className="h-4 w-4 text-white/50" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-[#0c0c0c] border-white/10 min-w-[140px]">
+              {TIME_OPTIONS.map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  onClick={() => setTimePeriod(option.value as TimePeriod)}
+                  className="flex items-center justify-between text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 cursor-pointer"
+                >
+                  {option.label}
+                  {timePeriod === option.value && <Check className="h-3.5 w-3.5 text-white" />}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuItem
+                onClick={() => setIsDatePickerOpen(true)}
+                className="flex items-center gap-2 text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 cursor-pointer"
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                Custom Range
+                {timePeriod === 'CUSTOM' && <Check className="h-3.5 w-3.5 text-white ml-auto" />}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+            <PopoverTrigger asChild>
+              <span />
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-white/10" align="end">
+              <CalendarComponent
+                mode="range"
+                selected={{ from: customDateRange.from, to: customDateRange.to }}
+                onSelect={(range) => {
+                  setCustomDateRange({ from: range?.from, to: range?.to });
+                  if (range?.from && range?.to) {
+                    setTimePeriod('CUSTOM');
+                    setIsDatePickerOpen(false);
+                  }
+                }}
+                numberOfMonths={2}
+                className="rounded-md pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Key metrics - redesigned */}
@@ -924,83 +928,47 @@ export function AnalyticsTab() {
           </CardHeader>
           <CardContent>
             <div className="h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={userGrowthData}>
-                  <defs>
-                    <linearGradient id="userGrowthGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={CHART_COLORS.purple} stopOpacity={0.3} />
-                      <stop offset="100%" stopColor={CHART_COLORS.purple} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis 
-                    dataKey="month" 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false}
-                    style={{ opacity: 0.6 }}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false}
-                    style={{ opacity: 0.6 }}
-                  />
-                  <Tooltip content={<CustomTooltip type="users" />} />
-                  <Area 
-                    type="linear" 
-                    dataKey="users" 
-                    stroke={CHART_COLORS.purple} 
-                    strokeWidth={2} 
-                    fill="url(#userGrowthGradient)" 
-                    dot={false}
-                    activeDot={{
-                      r: 6,
-                      fill: CHART_COLORS.purple,
-                      stroke: "#1a1a1a",
-                      strokeWidth: 2
-                    }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Campaign Status */}
-        <Card className="bg-card/50 border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">Campaign Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={campaignData}>
-                  <XAxis 
-                    dataKey="status" 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false}
-                    style={{ opacity: 0.6 }}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false}
-                    style={{ opacity: 0.6 }}
-                  />
-                  <Tooltip content={<CustomTooltip type="campaigns" />} />
-                  <Bar 
-                    dataKey="count" 
-                    fill={CHART_COLORS.cyan} 
-                    radius={[8, 8, 0, 0]} 
-                    name="Campaigns"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {userGrowthData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={userGrowthData}>
+                    <defs>
+                      <linearGradient id="userGrowthGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={CHART_COLORS.purple} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={CHART_COLORS.purple} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                      style={{ opacity: 0.6 }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                      style={{ opacity: 0.6 }}
+                    />
+                    <Tooltip content={<CustomTooltip type="users" />} />
+                    <Area 
+                      type="linear" 
+                      dataKey="users" 
+                      stroke={CHART_COLORS.purple} 
+                      strokeWidth={2} 
+                      fill="url(#userGrowthGradient)" 
+                      dot={false}
+                      isAnimationActive={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
+                  No user data for this period
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
