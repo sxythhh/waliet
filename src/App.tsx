@@ -1,56 +1,55 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-
 import { AdminSidebar } from "@/components/AdminSidebar";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { DiscordOAuthCallback } from "@/components/DiscordOAuthCallback";
-import { XOAuthCallback } from "@/components/XOAuthCallback";
-import Auth from "./pages/Auth";
 import Index from "./pages/Index";
-import BrandAuth from "./pages/BrandAuth";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
+import Discover from "./pages/Discover";
 import CampaignDetail from "./pages/CampaignDetail";
-import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
+import Auth from "./pages/Auth";
+import BrandAuth from "./pages/BrandAuth";
+import Dashboard from "./pages/Dashboard";
 import CampaignJoin from "./pages/CampaignJoin";
-import { Navigate } from "react-router-dom";
-import CampaignPreview from "./pages/CampaignPreview";
+import BrandDashboard from "./pages/BrandDashboard";
 import BrandManagement from "./pages/BrandManagement";
-import BrandAssets from "./pages/BrandAssets";
-import BrandLibrary from "./pages/BrandLibrary";
 import BrandAccount from "./pages/BrandAccount";
+import BrandLibrary from "./pages/BrandLibrary";
+import BrandAssets from "./pages/BrandAssets";
 import BrandInvite from "./pages/BrandInvite";
 import Training from "./pages/Training";
 import CourseDetail from "./pages/CourseDetail";
-import AdminOverview from "./pages/admin/Overview";
-import AdminBrands from "./pages/admin/Brands";
-import AdminUsers from "./pages/admin/Users";
-import AdminPayouts from "./pages/admin/Payouts";
-import AdminCourses from "./pages/admin/Courses";
-import AdminWallets from "./pages/admin/Wallets";
-import AdminTransactions from "./pages/admin/Transactions";
 import PublicProfile from "./pages/PublicProfile";
-import NotFound from "./pages/NotFound";
+import CampaignPreview from "./pages/CampaignPreview";
 import Apply from "./pages/Apply";
-import Discover from "./pages/Discover";
-import Referrals from "./pages/Referrals";
+import AdminOverview from "./pages/admin/Overview";
+import AdminPayouts from "./pages/admin/Payouts";
+import AdminTransactions from "./pages/admin/Transactions";
+import AdminUsers from "./pages/admin/Users";
+import AdminCourses from "./pages/admin/Courses";
+import AdminBrands from "./pages/admin/Brands";
+import AdminWallets from "./pages/admin/Wallets";
+import { DiscordOAuthCallback } from "./components/DiscordOAuthCallback";
+import { XOAuthCallback } from "./components/XOAuthCallback";
 import Leaderboard from "./pages/Leaderboard";
-import BoostCampaignDetail from "./pages/BoostCampaignDetail";
-import PublicBoost from "./pages/PublicBounty";
-import BoostManagement from "./pages/BoostManagement";
-import CreatorTerms from "./pages/CreatorTerms";
+import Referrals from "./pages/Referrals";
+import ResetPassword from "./pages/ResetPassword";
+import Support from "./pages/Support";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
-import Support from "./pages/Support";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import CreatorTerms from "./pages/CreatorTerms";
+import BoostCampaignDetail from "./pages/BoostCampaignDetail";
+import PublicBounty from "./pages/PublicBounty";
+import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
+
 const queryClient = new QueryClient();
 
 // Redirect /join/:slug to discover page with campaign slug param
@@ -130,7 +129,7 @@ const App = () => (
             <Route path="/support" element={<Support />} />
             <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
             <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
-            <Route path="/boost/:id" element={<PublicBoost />} />
+            <Route path="/boost/:id" element={<PublicBounty />} />
             <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
             <Route path="/join/:slug" element={<JoinRedirect />} />
             <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
@@ -138,8 +137,6 @@ const App = () => (
             <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
             <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
             <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
-            <Route path="/boost/:id" element={<BrandLayout><BoostCampaignDetail /></BrandLayout>} />
-            <Route path="/boost/:id/manage" element={<BoostManagement />} />
             <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
             <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
