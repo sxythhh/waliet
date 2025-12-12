@@ -23,7 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import tiktokLogo from "@/assets/tiktok-logo.png";
-import instagramLogo from "@/assets/instagram-logo-new.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 const getTrustScoreDiamonds = (score: number) => {
   if (score < 20) {

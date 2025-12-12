@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
-import instagramLogo from "@/assets/instagram-logo-new.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
 import xLogo from "@/assets/x-logo.png";
 interface Creator {

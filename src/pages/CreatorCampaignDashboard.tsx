@@ -12,7 +12,7 @@ import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo.png";
-import instagramLogo from "@/assets/instagram-logo.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo.png";
 import xLogo from "@/assets/x-logo.png";
 
