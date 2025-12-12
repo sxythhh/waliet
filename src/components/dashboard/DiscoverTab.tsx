@@ -639,13 +639,62 @@ export function DiscoverTab() {
                       {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                       
                       <CardContent className="p-4 flex-1 flex flex-col gap-3">
-                        {/* Title with Status Badge */}
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-base font-semibold line-clamp-2 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px] flex-1">
-                            {bounty.title}
-                          </h3>
+                        {/* Brand + Type Badge Row */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            {bounty.brands?.logo_url ? (
+                              <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+                                <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
+                                <span className="text-[10px] font-semibold text-muted-foreground">
+                                  {bounty.brands?.name?.charAt(0) || 'B'}
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-xs text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
+                              {bounty.brands?.name || 'Unknown Brand'}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-['Inter'] tracking-[-0.5px]">
+                            Boost
+                          </span>
+                        </div>
+                        
+                        {/* Title */}
+                        <h3 className="text-base font-semibold line-clamp-2 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
+                          {bounty.title}
+                        </h3>
+                        
+                        {/* Description Preview */}
+                        {bounty.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                            {bounty.description}
+                          </p>
+                        )}
+                        
+                        {/* Metadata Row */}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                          <span className="font-semibold text-foreground">${bounty.monthly_retainer.toLocaleString()}/mo</span>
+                          <span>{bounty.videos_per_month} videos/mo</span>
+                          <span className={isFull ? 'text-red-400' : ''}>
+                            {spotsRemaining > 0 ? `${spotsRemaining} spots left` : 'Full'}
+                          </span>
+                        </div>
+                        
+                        {/* Spacer */}
+                        <div className="flex-1" />
+                        
+                        {/* Status Footer */}
+                        <div className="flex items-center justify-between pt-2">
+                          {bounty.start_date && (
+                            <span className="text-[10px] text-muted-foreground">
+                              Starts {new Date(bounty.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                          )}
                           {isEnded ? (
-                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0 ml-auto" style={{
                               backgroundColor: '#b60b0b',
                               borderTop: '1px solid #ed3030',
                               borderRadius: '20px'
@@ -653,7 +702,7 @@ export function DiscoverTab() {
                               Ended
                             </span>
                           ) : (
-                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0 ml-auto" style={{
                               backgroundColor: '#1f6d36',
                               borderTop: '1px solid #3c8544',
                               borderRadius: '20px'
@@ -661,51 +710,6 @@ export function DiscoverTab() {
                               Active
                             </span>
                           )}
-                        </div>
-                        
-                        {/* Clean Metadata Grid */}
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Retainer</p>
-                            <p className="text-sm font-semibold text-foreground font-['Inter'] tracking-[-0.5px]">
-                              ${bounty.monthly_retainer.toLocaleString()}/mo
-                            </p>
-                          </div>
-                          
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Videos</p>
-                            <p className="text-sm font-semibold text-foreground font-['Inter'] tracking-[-0.5px]">
-                              {bounty.videos_per_month}/month
-                            </p>
-                          </div>
-                          
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Positions</p>
-                            <p className={`text-sm font-semibold font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-500' : 'text-foreground'}`}>
-                              {spotsRemaining > 0 ? `${spotsRemaining} left` : 'Full'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Spacer */}
-                        <div className="flex-1" />
-                        
-                        {/* Brand Footer */}
-                        <div className="flex items-center gap-2.5 pt-2">
-                          {bounty.brands?.logo_url ? (
-                            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                              <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
-                            </div>
-                          ) : (
-                            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                              <span className="text-[10px] font-semibold text-muted-foreground">
-                                {bounty.brands?.name?.charAt(0) || 'B'}
-                              </span>
-                            </div>
-                          )}
-                          <span className="text-xs text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
-                            {bounty.brands?.name || 'Unknown Brand'}
-                          </span>
                         </div>
                       </CardContent>
                     </Card>;

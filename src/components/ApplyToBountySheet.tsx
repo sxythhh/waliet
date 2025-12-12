@@ -339,55 +339,33 @@ export function ApplyToBountySheet({
             )}
           </SheetHeader>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Monthly Retainer Card */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/[0.07]">
-              <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">
-                Monthly Retainer
-              </p>
-              <p className="text-3xl font-bold text-white tabular-nums">
+          {/* Stats Row - Clean horizontal layout */}
+          <div className="flex items-center gap-6 py-4 border-y border-white/10">
+            <div className="flex-1">
+              <p className="text-2xl font-bold text-white font-['Inter'] tracking-[-0.5px]">
                 ${bounty.monthly_retainer.toLocaleString()}
               </p>
+              <p className="text-xs text-white/50 font-medium">per month</p>
             </div>
-
-            {/* Videos Per Month Card */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/[0.07]">
-              <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">
-                Videos/Month
-              </p>
-              <p className="text-3xl font-bold text-white tabular-nums">
+            
+            <div className="w-px h-10 bg-white/10" />
+            
+            <div className="flex-1">
+              <p className="text-2xl font-bold text-white font-['Inter'] tracking-[-0.5px]">
                 {bounty.videos_per_month}
               </p>
+              <p className="text-xs text-white/50 font-medium">videos/month</p>
             </div>
-
-            {/* Available Positions Card */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 col-span-2 transition-colors hover:bg-white/[0.07]">
-              <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">
-                Available Positions
+            
+            <div className="w-px h-10 bg-white/10" />
+            
+            <div className="flex-1">
+              <p className={`text-2xl font-bold font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-white/40' : 'text-white'}`}>
+                {spotsRemaining > 0 ? spotsRemaining : 0}
               </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-baseline gap-3">
-                  <p className={`text-3xl font-bold tabular-nums ${
-                    isFull ? 'text-white/60' : 'text-white'
-                  }`}>
-                    {bounty.accepted_creators_count}
-                  </p>
-                  <span className="text-2xl font-medium text-white/30">/</span>
-                  <p className="text-3xl font-bold text-white tabular-nums">
-                    {bounty.max_accepted_creators}
-                  </p>
-                </div>
-                {!isFull ? (
-                  <span className="text-sm text-white/60">
-                    {spotsRemaining} spot{spotsRemaining !== 1 ? 's' : ''} remaining
-                  </span>
-                ) : (
-                  <span className="text-sm text-white/40">
-                    Fully Booked
-                  </span>
-                )}
-              </div>
+              <p className="text-xs text-white/50 font-medium">
+                {isFull ? 'fully booked' : 'spots left'}
+              </p>
             </div>
           </div>
 
