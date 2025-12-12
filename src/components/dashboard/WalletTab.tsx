@@ -1508,7 +1508,13 @@ export function WalletTab() {
         <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0">
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Hero Header with Amount */}
-              <div className="px-6 pt-8 pb-6 text-center border-b border-[#242424]/0">
+              <div className="px-6 pt-8 pb-6 text-center border-b border-[#242424]/0 relative">
+                <button 
+                  onClick={() => setTransactionSheetOpen(false)}
+                  className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
                 <div className={`text-4xl font-bold tracking-tight mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
                   {selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? '+' : selectedTransaction.amount < 0 ? '-' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
                 </div>
