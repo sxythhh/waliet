@@ -245,14 +245,21 @@ export function AddSocialAccountDialog({
         toast({
           variant: "destructive",
           title: "Code Not Found",
-          description: "The verification code was not found in your bio. Please add it and try again.",
+          description:
+            selectedPlatform === "instagram"
+              ? "The verification code was not found in your Instagram bio. Instagram may cache your profile—wait 1–2 minutes after updating your bio, then try again."
+              : "The verification code was not found in your bio. Please add it and try again.",
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Verification Failed",
-        description: error.message || "Could not verify your account. Please make sure the code is in your bio.",
+        description:
+          selectedPlatform === "instagram"
+            ? "Could not verify your account. Make sure the code is in your Instagram bio and wait 1–2 minutes after updating before trying again."
+            : error.message ||
+              "Could not verify your account. Please make sure the code is in your bio.",
       });
     } finally {
       setIsChecking(false);
@@ -398,6 +405,12 @@ export function AddSocialAccountDialog({
                   {verificationCode}
                 </span>
               </div>
+              {selectedPlatform === "instagram" && (
+                <p className="mt-2 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                  Instagram can take a couple of minutes to update your bio. After adding the code, wait
+                  1–2 minutes before tapping Check Verification.
+                </p>
+              )}
             </div>
 
             {/* Timer with Progress Bar */}
