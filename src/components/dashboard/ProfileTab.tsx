@@ -727,7 +727,7 @@ export function ProfileTab() {
         </Card>
       </div>;
   }
-  return <div className="space-y-3 sm:space-y-6 max-w-4xl mx-auto pb-8 px-4 sm:px-0">
+  return <div className="space-y-3 sm:space-y-6 max-w-4xl mx-auto pb-8">
       {/* Profile Header */}
       <Card className="bg-card border-0">
         
