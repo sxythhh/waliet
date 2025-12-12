@@ -499,7 +499,7 @@ export function AppSidebar() {
             </PopoverTrigger>
             <PopoverContent className="w-64 p-3 bg-[#0a0a0a] border border-[#0f0f0f] rounded-xl" side="top" align="start" sideOffset={8}>
               {/* User Info + Theme Toggle */}
-              <div className="flex items-center justify-between mb-3 px-2.5 py-2">
+              <div className="flex items-center justify-between mb-1.5 px-2.5 py-2">
                 <div className="flex items-center gap-2.5">
                   <Avatar className="w-5 h-5">
                     <AvatarImage src={avatarUrl || undefined} alt={displayName} />
@@ -509,14 +509,15 @@ export function AppSidebar() {
                   </Avatar>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">{displayName}</p>
+                    <p className="text-xs text-neutral-500 truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[#1f1f1f]/[0.51]">
                   <button onClick={() => setTheme('light')} className={`p-1 rounded-md transition-colors ${theme === 'light' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
-                    <Sun className="w-3.5 h-3.5" />
+                    <Sun className="w-4 h-4" />
                   </button>
                   <button onClick={() => setTheme('dark')} className={`p-1 rounded-md transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
-                    <Moon className="w-3.5 h-3.5" />
+                    <Moon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
