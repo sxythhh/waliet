@@ -45,6 +45,9 @@ import Referrals from "./pages/Referrals";
 import Leaderboard from "./pages/Leaderboard";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBoost from "./pages/PublicBounty";
+import CreatorTerms from "./pages/CreatorTerms";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 const queryClient = new QueryClient();
@@ -120,6 +123,9 @@ const App = () => (
             <Route path="/brand-auth" element={<BrandAuth />} />
             <Route path="/apply" element={<Apply />} />
             <Route path="/discover" element={<Discover />} />
+            <Route path="/creator-terms" element={<CreatorTerms />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
             <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
             <Route path="/boost/:id" element={<PublicBoost />} />
