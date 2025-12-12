@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, CheckCircle, Calendar } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar } from "lucide-react";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
+import checkCircleWhiteIcon from "@/assets/check-circle-white.svg";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -591,7 +592,7 @@ export function DiscoverTab() {
                     const isEnded = campaign.status === "ended";
                     const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
                     
-                    return <Card key={`campaign-${campaign.id}`} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
+                    return <Card key={`campaign-${campaign.id}`} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
                       {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                       
                       <button
@@ -661,8 +662,8 @@ export function DiscoverTab() {
                             <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
                               <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{ width: `${budgetPercentage}%` }} />
                             </div>
-                            <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                              <span className="font-semibold">{budgetPercentage.toFixed(0)}% used</span>
+                            <div className="flex justify-between text-[10px] text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
+                              <span className="font-semibold font-['Inter'] tracking-[-0.5px]">{budgetPercentage.toFixed(0)}% used</span>
                             </div>
                           </>}
                         </div>
@@ -677,7 +678,7 @@ export function DiscoverTab() {
                     
                     return <Card 
                       key={`bounty-${bounty.id}`}
-                      className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} 
+                      className={`group bg-card border border-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} 
                       onClick={() => {
                         if (!isEnded) {
                           setSelectedBounty(bounty);
@@ -715,7 +716,7 @@ export function DiscoverTab() {
                               borderTop: '1px solid #3c8544',
                               borderRadius: '20px'
                             }}>
-                              <CheckCircle className="h-3 w-3" />
+                              <img src={checkCircleWhiteIcon} alt="" className="h-2.5 w-2.5" />
                               Active
                             </span>
                           )}
@@ -763,17 +764,17 @@ export function DiscoverTab() {
                         )}
                         
                         {/* Metadata Row */}
-                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1">
+                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground mt-1 font-['Inter'] tracking-[-0.5px]">
+                          <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
                             <Video className="h-3 w-3" />
                             {bounty.videos_per_month} videos/mo
                           </span>
-                          <span className={`flex items-center gap-1 ${isFull ? 'text-red-400' : ''}`}>
+                          <span className={`flex items-center gap-1 font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-400' : ''}`}>
                             <Users className="h-3 w-3" />
                             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : 'Full'}
                           </span>
                           {bounty.start_date && (
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
                               <Calendar className="h-3 w-3" />
                               {new Date(bounty.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
