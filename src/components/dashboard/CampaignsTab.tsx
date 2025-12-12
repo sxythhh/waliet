@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell, GraduationCap, Play, Search } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -138,12 +138,10 @@ export function CampaignsTab({
     toast
   } = useToast();
   const {
-    theme
+    resolvedTheme
   } = useTheme();
   const getPlatformIcon = (platform: string) => {
-    // Check if system preference is light when theme is "system"
-    const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const isLightMode = theme === "light" || theme === "system" && systemIsLight;
+    const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
       case 'tiktok':
         return isLightMode ? tiktokLogoBlack : tiktokLogo;

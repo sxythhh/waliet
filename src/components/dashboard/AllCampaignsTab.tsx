@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Search, SlidersHorizontal } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +50,7 @@ export function AllCampaignsTab() {
   const [joinedCampaignIds, setJoinedCampaignIds] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     fetchCampaigns();
@@ -154,8 +154,7 @@ export function AllCampaignsTab() {
   };
 
   const getPlatformIcon = (platform: string) => {
-    const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const isLightMode = theme === "light" || (theme === "system" && systemIsLight);
+    const isLightMode = resolvedTheme === "light";
     
     switch (platform.toLowerCase()) {
       case 'tiktok':

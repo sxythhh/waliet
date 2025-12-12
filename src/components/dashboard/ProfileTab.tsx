@@ -25,7 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PhoneInput } from "@/components/PhoneInput";
 import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -104,7 +104,7 @@ interface Campaign {
 export function ProfileTab() {
   const navigate = useNavigate();
   const {
-    theme
+    resolvedTheme
   } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
@@ -367,8 +367,7 @@ export function ProfileTab() {
   };
   const getPlatformIcon = (platform: string) => {
     const iconClass = "w-full h-full object-contain";
-    const systemIsLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const isLightMode = theme === "light" || theme === "system" && systemIsLight;
+    const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
       case "tiktok":
         return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={iconClass} />;
