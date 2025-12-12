@@ -206,7 +206,7 @@ export default function AuthDialog({
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex items-center justify-center gap-2">
                 <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
-                <span className="font-clash font-bold tracking-tight text-lg">VIRALITY</span>
+                <span className="font-clash font-bold tracking-tight text-lg text-white">VIRALITY</span>
               </div>
             </div>
 
@@ -238,7 +238,7 @@ export default function AuthDialog({
                         Continue with Discord
                       </Button>
 
-                      <Button variant="outline" className="w-full h-12 bg-muted/50 hover:bg-muted border-0 font-semibold font-geist gap-3" style={{
+                      <Button variant="outline" className="w-full h-12 bg-white/10 hover:bg-white/20 border-0 font-semibold font-geist gap-3 text-white" style={{
                     letterSpacing: '-0.5px'
                   }} onClick={() => setShowEmailForm(true)} disabled={loading}>
                         <Mail className="h-5 w-5" />
@@ -258,12 +258,12 @@ export default function AuthDialog({
               <div className="space-y-4">
                   <form onSubmit={handleEmailAuth} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                      <Label htmlFor="email" className="text-sm font-medium text-white">Email</Label>
                       <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-black/80 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                      <Label htmlFor="password" className="text-sm font-medium text-white">Password</Label>
                       <div className="relative">
                         <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-black/80 border-0 focus-visible:ring-1 focus-visible:ring-primary pr-10" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
