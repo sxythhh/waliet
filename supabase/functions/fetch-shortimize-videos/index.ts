@@ -138,11 +138,12 @@ serve(async (req) => {
       }
     }
 
-    // Determine collection filter - skip if noCollectionFilter is true or if filtering by hashtag
-    const useCollectionFilter = !noCollectionFilter && campaignHashtags.length === 0;
-    const collection = useCollectionFilter ? (collectionName || brand.collection_name) : null;
+    // Always filter by hashtags if campaign has them configured
+    const shouldFilterByHashtags = campaignHashtags.length > 0;
+    // Use collection filter only when NOT filtering by hashtags and noCollectionFilter is false
+    const collection = (!shouldFilterByHashtags && !noCollectionFilter) ? (collectionName || brand.collection_name) : null;
     
-    console.log('[fetch-shortimize-videos] Using collection:', collection, 'Hashtag filtering:', campaignHashtags.length > 0);
+    console.log('[fetch-shortimize-videos] Using collection:', collection, 'Hashtag filtering:', shouldFilterByHashtags, 'Hashtags:', campaignHashtags);
 
     // Build query parameters
     const params = new URLSearchParams();
@@ -167,14 +168,14 @@ serve(async (req) => {
     const apiUrl = `https://api.shortimize.com/videos?${params.toString()}`;
     console.log('[fetch-shortimize-videos] Calling Shortimize API:', apiUrl);
 
-    // If filtering by hashtags without collection, fetch sequentially to avoid rate limits
-    if (campaignHashtags.length > 0 && !collection) {
+    // If filtering by hashtags, fetch all pages to find matching videos
+    if (shouldFilterByHashtags) {
       const allMatchingVideos: any[] = [];
-      const maxPages = 15; // Limit pages to scan
+      const maxPages = 50; // Increased limit to scan more videos
       let currentPage = 1;
-      let consecutiveEmptyPages = 0;
+      let totalPagesAvailable = 1;
       
-      while (currentPage <= maxPages && consecutiveEmptyPages < 3) {
+      while (currentPage <= Math.min(maxPages, totalPagesAvailable)) {
         const pageParams = new URLSearchParams();
         pageParams.append('page', currentPage.toString());
         pageParams.append('limit', '100');
@@ -202,13 +203,12 @@ serve(async (req) => {
           const matchingVideos = videos.filter((v: any) => videoMatchesHashtags(v, campaignHashtags, currentPage === 1));
           allMatchingVideos.push(...matchingVideos);
           
-          console.log(`[fetch-shortimize-videos] Page ${currentPage}: ${videos.length} videos, ${matchingVideos.length} matching, total: ${allMatchingVideos.length}`);
-          
-          if (matchingVideos.length === 0) {
-            consecutiveEmptyPages++;
-          } else {
-            consecutiveEmptyPages = 0;
+          // Update total pages available from first response
+          if (result.pagination?.total_pages) {
+            totalPagesAvailable = result.pagination.total_pages;
           }
+          
+          console.log(`[fetch-shortimize-videos] Page ${currentPage}/${totalPagesAvailable}: ${videos.length} videos, ${matchingVideos.length} matching, total: ${allMatchingVideos.length}`);
           
           // Check if we've reached the end
           if (!result.pagination || currentPage >= result.pagination.total_pages || videos.length === 0) {
