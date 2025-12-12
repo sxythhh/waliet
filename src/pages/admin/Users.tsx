@@ -2507,7 +2507,9 @@ export default function AdminUsers() {
                       {getPlatformIcon(account.platform)}
                       <span>{account.username}</span>
                       <span className="ml-auto text-xs text-muted-foreground">
-                        {account.follower_count.toLocaleString()} followers
+                        {typeof account.follower_count === "number" && account.follower_count > 0
+                          ? `${account.follower_count.toLocaleString()} followers`
+                          : "No follower data"}
                       </span>
                     </Button>
                   ))}
