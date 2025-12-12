@@ -500,213 +500,218 @@ export function DiscoverTab() {
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
           </div> : <div className="space-y-4">
-            {/* Combined Grid - Campaigns and Bounties together */}
+            {/* Combined Grid - Campaigns and Bounties interleaved */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
-              {/* Render Campaigns */}
-              {sortedCampaigns.map(campaign => {
-                const budgetUsed = campaign.budget_used || 0;
-                const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-                const handleCampaignClick = () => {
-                  if (campaign.status !== "ended") {
-                    setSelectedCampaign(campaign);
-                    setSheetOpen(true);
-                  }
-                };
-                const isEnded = campaign.status === "ended";
-                const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
-                return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
-                  {/* Gradient overlay for ended campaigns */}
-                  {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
-                  
-                  {/* Bookmark Button */}
-                  <button
-                    onClick={(e) => toggleBookmark(campaign.id, e)}
-                    className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
-                  >
-                    <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
-                  </button>
-                  
-                  {/* Banner Image */}
-                  {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                      <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                    </div>}
-
-                  {/* Content Section */}
-                  <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
-                    {/* Brand Logo + Title */}
-                    <div className="flex items-center gap-2.5">
-                      {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
-                          <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
-                        </div>}
-                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
-                          {campaign.title}
-                        </h3>
-                        {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                      backgroundColor: '#b60b0b',
-                      borderTop: '1px solid #ed3030',
-                      borderRadius: '20px'
-                    }}>
-                            <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
-                            Ended
-                          </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                      backgroundColor: '#1f6d36',
-                      borderTop: '1px solid #3c8544',
-                      borderRadius: '20px'
-                    }}>
-                            <img src={checkCircleIcon} alt="" className="h-2.5 w-2.5" />
-                            Active
-                          </span>}
-                      </div>
-                    </div>
-
-                    {/* Budget Section */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
-                      {campaign.is_infinite_budget ? <>
-                          <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                              <span className="text-base font-bold">
-                                ∞ Unlimited Budget
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Animated Infinite Progress Bar */}
-                          <div className="relative h-1.5 rounded-full overflow-hidden" style={{
-                      background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
-                      backgroundSize: '20px 20px',
-                      animation: 'slide 1s linear infinite'
-                    }} />
-
-                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                            <span>No budget limit</span>
-                          </div>
-                        </> : <>
-                          <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-base font-bold tabular-nums" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-                                ${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-xs text-muted-foreground font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-                                / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Progress Bar */}
-                          <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
-                            <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                        width: `${budgetPercentage}%`
-                      }} />
-                          </div>
-
-                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                            <span className="font-semibold">{budgetPercentage.toFixed(0)}% used</span>
-                          </div>
-                        </>}
-                    </div>
-                  </CardContent>
-                </Card>;
-              })}
-
-              {/* Render Bounties inline with campaigns */}
-              {bounties.map(bounty => {
-                const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-                const isFull = spotsRemaining <= 0;
-                const isEnded = bounty.status === "ended";
+              {/* Combine campaigns and bounties into a single sorted array */}
+              {(() => {
+                // Create unified list with type markers
+                const allItems: Array<{type: 'campaign', data: Campaign, isEnded: boolean, createdAt: string} | {type: 'bounty', data: BountyCampaign, isEnded: boolean, createdAt: string}> = [
+                  ...sortedCampaigns.map(c => ({
+                    type: 'campaign' as const,
+                    data: c,
+                    isEnded: c.status === 'ended',
+                    createdAt: c.start_date || c.created_at
+                  })),
+                  ...bounties.map(b => ({
+                    type: 'bounty' as const,
+                    data: b,
+                    isEnded: b.status === 'ended',
+                    createdAt: b.created_at
+                  }))
+                ];
                 
-                return <Card 
-                  key={bounty.id} 
-                  className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} 
-                  onClick={() => {
-                    if (!isEnded) {
-                      setSelectedBounty(bounty);
-                      setBountySheetOpen(true);
-                    }
-                  }}
-                >
-                  {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
-                  
-                  <CardContent className="p-4 flex-1 flex flex-col gap-3">
-                    {/* Title */}
-                    <h3 className="text-base font-semibold line-clamp-2 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
-                      {bounty.title}
-                    </h3>
+                // Sort: active items first (by date), then ended items
+                const sortedItems = allItems.sort((a, b) => {
+                  // Ended items go last
+                  if (a.isEnded && !b.isEnded) return 1;
+                  if (!a.isEnded && b.isEnded) return -1;
+                  // Within same status, sort by date (newest first)
+                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                });
+                
+                return sortedItems.map(item => {
+                  if (item.type === 'campaign') {
+                    const campaign = item.data;
+                    const budgetUsed = campaign.budget_used || 0;
+                    const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+                    const handleCampaignClick = () => {
+                      if (campaign.status !== "ended") {
+                        setSelectedCampaign(campaign);
+                        setSheetOpen(true);
+                      }
+                    };
+                    const isEnded = campaign.status === "ended";
+                    const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
                     
-                    {/* Metadata Grid - 2 columns */}
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                      {/* Retainer */}
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-semibold text-foreground font-['Inter'] tracking-[-0.5px]">
-                            ${bounty.monthly_retainer.toLocaleString()}/mo
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">Retainer</p>
-                        </div>
-                      </div>
+                    return <Card key={`campaign-${campaign.id}`} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
+                      {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                       
-                      {/* Job Type */}
-                      <div className="flex items-center gap-2">
-                        <Video className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-semibold text-foreground font-['Inter'] tracking-[-0.5px]">
-                            {bounty.videos_per_month} videos
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">Per Month</p>
-                        </div>
-                      </div>
+                      <button
+                        onClick={(e) => toggleBookmark(campaign.id, e)}
+                        className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
+                      >
+                        <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+                      </button>
                       
-                      {/* Positions */}
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-purple-500 flex-shrink-0" />
-                        <div>
-                          <p className={`text-sm font-semibold font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-500' : 'text-foreground'}`}>
-                            {spotsRemaining > 0 ? `${spotsRemaining} spots` : 'Full'}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">Positions Left</p>
+                      {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                        <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                      </div>}
+
+                      <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
+                        <div className="flex items-center gap-2.5">
+                          {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
+                            <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+                          </div>}
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
+                              {campaign.title}
+                            </h3>
+                            {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                              backgroundColor: '#b60b0b',
+                              borderTop: '1px solid #ed3030',
+                              borderRadius: '20px'
+                            }}>
+                              <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
+                              Ended
+                            </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                              backgroundColor: '#1f6d36',
+                              borderTop: '1px solid #3c8544',
+                              borderRadius: '20px'
+                            }}>
+                              <img src={checkCircleIcon} alt="" className="h-2.5 w-2.5" />
+                              Active
+                            </span>}
+                          </div>
                         </div>
-                      </div>
-                      
-                      {/* Status */}
-                      <div className="flex items-center gap-2">
-                        {isEnded ? (
-                          <PauseCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                        ) : (
-                          <img src={checkCircleIcon} alt="" className="h-4 w-4 flex-shrink-0" />
-                        )}
-                        <div>
-                          <p className={`text-sm font-semibold font-['Inter'] tracking-[-0.5px] ${isEnded ? 'text-red-500' : 'text-emerald-500'}`}>
-                            {isEnded ? 'Ended' : 'Active'}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">Status</p>
+
+                        <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
+                          {campaign.is_infinite_budget ? <>
+                            <div className="flex items-baseline justify-between">
+                              <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
+                                <span className="text-base font-bold">∞ Unlimited Budget</span>
+                              </div>
+                            </div>
+                            <div className="relative h-1.5 rounded-full overflow-hidden" style={{
+                              background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
+                              backgroundSize: '20px 20px',
+                              animation: 'slide 1s linear infinite'
+                            }} />
+                            <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                              <span>No budget limit</span>
+                            </div>
+                          </> : <>
+                            <div className="flex items-baseline justify-between">
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-base font-bold tabular-nums" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                                  ${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                </span>
+                                <span className="text-xs text-muted-foreground font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                                  / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
+                              <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{ width: `${budgetPercentage}%` }} />
+                            </div>
+                            <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                              <span className="font-semibold">{budgetPercentage.toFixed(0)}% used</span>
+                            </div>
+                          </>}
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>;
+                  } else {
+                    const bounty = item.data;
+                    const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+                    const isFull = spotsRemaining <= 0;
+                    const isEnded = bounty.status === "ended";
                     
-                    {/* Spacer */}
-                    <div className="flex-1" />
-                    
-                    {/* Brand Footer */}
-                    <div className="flex items-center gap-2.5 pt-2 border-t border-border/50">
-                      {bounty.brands?.logo_url ? (
-                        <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border">
-                          <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
+                    return <Card 
+                      key={`bounty-${bounty.id}`}
+                      className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} 
+                      onClick={() => {
+                        if (!isEnded) {
+                          setSelectedBounty(bounty);
+                          setBountySheetOpen(true);
+                        }
+                      }}
+                    >
+                      {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
+                      
+                      <CardContent className="p-4 flex-1 flex flex-col gap-3">
+                        {/* Title with Status Badge */}
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-base font-semibold line-clamp-2 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px] flex-1">
+                            {bounty.title}
+                          </h3>
+                          {isEnded ? (
+                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                              backgroundColor: '#b60b0b',
+                              borderTop: '1px solid #ed3030',
+                              borderRadius: '20px'
+                            }}>
+                              Ended
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                              backgroundColor: '#1f6d36',
+                              borderTop: '1px solid #3c8544',
+                              borderRadius: '20px'
+                            }}>
+                              Active
+                            </span>
+                          )}
                         </div>
-                      ) : (
-                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border">
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            {bounty.brands?.name?.charAt(0) || 'B'}
+                        
+                        {/* Clean Metadata Grid */}
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Retainer</p>
+                            <p className="text-sm font-semibold text-foreground font-['Inter'] tracking-[-0.5px]">
+                              ${bounty.monthly_retainer.toLocaleString()}/mo
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Videos</p>
+                            <p className="text-sm font-semibold text-foreground font-['Inter'] tracking-[-0.5px]">
+                              {bounty.videos_per_month}/month
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Positions</p>
+                            <p className={`text-sm font-semibold font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-500' : 'text-foreground'}`}>
+                              {spotsRemaining > 0 ? `${spotsRemaining} left` : 'Full'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Spacer */}
+                        <div className="flex-1" />
+                        
+                        {/* Brand Footer */}
+                        <div className="flex items-center gap-2.5 pt-2">
+                          {bounty.brands?.logo_url ? (
+                            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                              <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                              <span className="text-[10px] font-semibold text-muted-foreground">
+                                {bounty.brands?.name?.charAt(0) || 'B'}
+                              </span>
+                            </div>
+                          )}
+                          <span className="text-xs text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
+                            {bounty.brands?.name || 'Unknown Brand'}
                           </span>
                         </div>
-                      )}
-                      <span className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">
-                        {bounty.brands?.name || 'Unknown Brand'}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>;
-              })}
+                      </CardContent>
+                    </Card>;
+                  }
+                });
+              })()}
             </div>
           </div>}
         </div>
