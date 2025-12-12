@@ -249,12 +249,7 @@ export default function AuthDialog({
                     
                   </div>
                 </> : (/* Email Form */
-            <div className="space-y-4">
-                  <button onClick={() => setShowEmailForm(false)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                  </button>
-
+              <div className="space-y-4">
                   <form onSubmit={handleEmailAuth} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium">Email</Label>
@@ -269,9 +264,11 @@ export default function AuthDialog({
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                      <button type="button" onClick={() => setShowResetDialog(true)} className="text-sm text-primary hover:underline">
-                        Forgot password?
-                      </button>
+                      <div className="text-right">
+                        <button type="button" onClick={() => setShowResetDialog(true)} className="text-sm text-primary hover:underline">
+                          Forgot password?
+                        </button>
+                      </div>
                     </div>
 
                     <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-geist" style={{
@@ -288,15 +285,15 @@ export default function AuthDialog({
             }}>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   By logging in, you agree to our{" "}
-                  <a href="https://virality.gg/creator-terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <a href="/creator-terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                     Creator Terms & Conditions
                   </a>
                   ,{" "}
-                  <a href="https://virality.gg/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                     Terms of Service
                   </a>
                   , and{" "}
-                  <a href="https://virality.gg/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                     Privacy Policy
                   </a>
                   .
