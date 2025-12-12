@@ -90,6 +90,66 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   };
 }
 
+async function verifyYouTube(channelId: string, verificationCode: string, rapidApiKey: string) {
+  console.log(`Fetching YouTube channel for: ${channelId}`);
+  
+  // Extract channel ID from URL if provided
+  let cleanChannelId = channelId;
+  if (channelId.includes('youtube.com')) {
+    // Handle URLs like youtube.com/channel/UCxxx or youtube.com/@handle
+    const channelMatch = channelId.match(/channel\/([^\/\?]+)/);
+    const handleMatch = channelId.match(/@([^\/\?]+)/);
+    if (channelMatch) {
+      cleanChannelId = channelMatch[1];
+    } else if (handleMatch) {
+      cleanChannelId = `@${handleMatch[1]}`;
+    }
+  }
+  
+  const response = await fetch(
+    `https://youtube138.p.rapidapi.com/v2/channel-details?channel_id=${encodeURIComponent(cleanChannelId)}&hl=en`,
+    {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-host': 'youtube138.p.rapidapi.com',
+        'x-rapidapi-key': rapidApiKey,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    console.error(`YouTube API error: ${response.status}`);
+    throw new Error(`YouTube API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log('YouTube API response received');
+
+  if (data.status !== 'success' || !data.author) {
+    throw new Error('YouTube channel not found');
+  }
+
+  const bio = data.description || '';
+  const verified = bio.includes(verificationCode);
+
+  // Get the largest thumbnail
+  const avatar = data.authorThumbnails?.length > 0 
+    ? data.authorThumbnails[data.authorThumbnails.length - 1]?.url 
+    : null;
+
+  return {
+    verified,
+    bio,
+    user: {
+      nickname: data.author,
+      avatar,
+      followerCount: data.subCount || 0,
+      isVerified: false,
+      channelId: data.authorId,
+    },
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -118,6 +178,8 @@ serve(async (req) => {
     
     if (platform === 'instagram') {
       result = await verifyInstagram(username, verificationCode, rapidApiKey);
+    } else if (platform === 'youtube') {
+      result = await verifyYouTube(username, verificationCode, rapidApiKey);
     } else {
       result = await verifyTikTok(username, verificationCode, rapidApiKey);
     }
