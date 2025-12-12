@@ -1,16 +1,16 @@
 project_id = "upiypxzjaagithghxayv"
 
 [functions.approve-campaign-application]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-campaign-users]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-campaign-transactions]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-campaign-applications]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-campaign-payment]
 verify_jwt = true

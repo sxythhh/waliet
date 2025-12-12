@@ -9,16 +9,75 @@ interface ApproveApplicationRequest {
   submissionId: string;
 }
 
+// Helper function to check if user is admin or brand admin
+async function isAuthorized(supabase: any, userId: string, campaignId: string): Promise<boolean> {
+  // Check if user is admin
+  const { data: adminRole } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('role', 'admin')
+    .maybeSingle();
+
+  if (adminRole) return true;
+
+  // Check if user is brand member for this campaign
+  const { data: campaign } = await supabase
+    .from('campaigns')
+    .select('brand_id')
+    .eq('id', campaignId)
+    .single();
+
+  if (!campaign?.brand_id) return false;
+
+  const { data: brandMember } = await supabase
+    .from('brand_members')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('brand_id', campaign.brand_id)
+    .maybeSingle();
+
+  return !!brandMember;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create client with user's token to verify identity
+    const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabaseUserClient.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication failed:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`User ${user.id} attempting to approve application`);
+
+    // Use service role client for database operations
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const { submissionId }: ApproveApplicationRequest = await req.json();
 
@@ -56,6 +115,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check authorization
+    const authorized = await isAuthorized(supabaseClient, user.id, submission.campaign_id);
+    if (!authorized) {
+      console.error(`User ${user.id} not authorized to approve applications for campaign ${submission.campaign_id}`);
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - you do not have permission to approve applications for this campaign' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (submission.status === 'approved') {
       return new Response(
         JSON.stringify({ 
@@ -84,7 +153,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Submission approved successfully');
+    console.log('Submission approved successfully by user:', user.id);
 
     // Track user in Shortimize
     console.log('Calling track-campaign-user function...');
