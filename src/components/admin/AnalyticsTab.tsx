@@ -35,6 +35,9 @@ interface AnalyticsData {
   pendingPayouts: number;
   completedPayouts: number;
   avgWithdrawalAmount: number;
+  activeMembers: number;
+  registrationToJoinRate: number;
+  registrationToPayoutRate: number;
 }
 
 type TimePeriod = 'TODAY' | '3D' | '1W' | '1M' | '3M' | 'ALL' | 'CUSTOM';
@@ -78,12 +81,16 @@ export function AnalyticsTab() {
     pendingPayouts: 0,
     completedPayouts: 0,
     avgWithdrawalAmount: 0,
+    activeMembers: 0,
+    registrationToJoinRate: 0,
+    registrationToPayoutRate: 0,
   });
   const [userGrowthData, setUserGrowthData] = useState<any[]>([]);
   const [campaignData, setCampaignData] = useState<any[]>([]);
   const [withdrawalData, setWithdrawalData] = useState<any[]>([]);
   const [payoutStatusData, setPayoutStatusData] = useState<any[]>([]);
   const [earningsVsWithdrawalsData, setEarningsVsWithdrawalsData] = useState<any[]>([]);
+  const [creatorFunnelData, setCreatorFunnelData] = useState<any[]>([]);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1W');
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -134,6 +141,7 @@ export function AnalyticsTab() {
     fetchWithdrawalData();
     fetchPayoutStatusData();
     fetchEarningsVsWithdrawalsData();
+    fetchCreatorFunnelData();
   }, [timePeriod, customDateRange]);
 
   const fetchAnalytics = async () => {
@@ -265,6 +273,33 @@ export function AnalyticsTab() {
       ? payoutData.reduce((sum, p) => sum + Number(p.amount), 0) / payoutData.length
       : 0;
 
+    // Fetch active members (users with completed payouts in last 30 days)
+    const thirtyDaysAgo = subDays(new Date(), 30);
+    const { data: activePayouts } = await supabase
+      .from("payout_requests")
+      .select("user_id")
+      .eq("status", "completed")
+      .gte("processed_at", thirtyDaysAgo.toISOString());
+    const activeMembers = new Set(activePayouts?.map(p => p.user_id) || []).size;
+
+    // Calculate registration-to-join conversion rate
+    const { count: usersWhoJoined } = await supabase
+      .from("campaign_submissions")
+      .select("creator_id", { count: "exact", head: true });
+    const registrationToJoinRate = totalUsers && totalUsers > 0 
+      ? ((usersWhoJoined || 0) / totalUsers) * 100 
+      : 0;
+
+    // Calculate registration-to-payout conversion rate
+    const { data: usersWithPayouts } = await supabase
+      .from("payout_requests")
+      .select("user_id")
+      .eq("status", "completed");
+    const uniqueUsersWithPayouts = new Set(usersWithPayouts?.map(p => p.user_id) || []).size;
+    const registrationToPayoutRate = totalUsers && totalUsers > 0 
+      ? (uniqueUsersWithPayouts / totalUsers) * 100 
+      : 0;
+
     setAnalytics({
       totalUsers: totalUsers || 0,
       newUsersCurrentPeriod: newUsersCurrentPeriod || 0,
@@ -285,7 +320,52 @@ export function AnalyticsTab() {
       pendingPayouts: pendingPayouts || 0,
       completedPayouts: completedPayouts || 0,
       avgWithdrawalAmount,
+      activeMembers,
+      registrationToJoinRate,
+      registrationToPayoutRate,
     });
+  };
+
+  const fetchCreatorFunnelData = async () => {
+    // Fetch payout counts per user
+    const { data: payoutCounts } = await supabase
+      .from("payout_requests")
+      .select("user_id")
+      .eq("status", "completed");
+
+    if (!payoutCounts) {
+      setCreatorFunnelData([]);
+      return;
+    }
+
+    // Count payouts per user
+    const userPayoutCounts: { [key: string]: number } = {};
+    payoutCounts.forEach((p) => {
+      userPayoutCounts[p.user_id] = (userPayoutCounts[p.user_id] || 0) + 1;
+    });
+
+    // Categorize into funnel buckets
+    let onePayout = 0;
+    let twoToFive = 0;
+    let sixToTen = 0;
+    let elevenToTwenty = 0;
+    let twentyPlus = 0;
+
+    Object.values(userPayoutCounts).forEach((count) => {
+      if (count === 1) onePayout++;
+      else if (count >= 2 && count <= 5) twoToFive++;
+      else if (count >= 6 && count <= 10) sixToTen++;
+      else if (count >= 11 && count <= 20) elevenToTwenty++;
+      else twentyPlus++;
+    });
+
+    setCreatorFunnelData([
+      { name: '1 payout', value: onePayout, fill: CHART_COLORS.blue },
+      { name: '2-5 payouts', value: twoToFive, fill: CHART_COLORS.cyan },
+      { name: '6-10 payouts', value: sixToTen, fill: CHART_COLORS.green },
+      { name: '11-20 payouts', value: elevenToTwenty, fill: CHART_COLORS.orange },
+      { name: '20+ payouts', value: twentyPlus, fill: CHART_COLORS.purple },
+    ]);
   };
 
   const fetchUserGrowthData = async () => {
@@ -703,57 +783,90 @@ export function AnalyticsTab() {
       </div>
 
       {/* Secondary metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <Card className="bg-white/[0.02] border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Activity className="h-4 w-4 text-cyan-400" />
-            </div>
-            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.totalCampaigns}</div>
-            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Campaigns ({analytics.activeCampaigns} active)</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white/[0.02] rounded-xl p-4">
+          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-green-400">{analytics.activeMembers}</div>
+          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Active Members (30d)</p>
+        </div>
 
-        <Card className="bg-white/[0.02] border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <FileText className="h-4 w-4 text-yellow-400" />
-            </div>
-            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingApplications}</div>
-            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Apps</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white/[0.02] rounded-xl p-4">
+          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.totalCampaigns}</div>
+          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Campaigns ({analytics.activeCampaigns} active)</p>
+        </div>
 
-        <Card className="bg-white/[0.02] border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <ClipboardCheck className="h-4 w-4 text-pink-400" />
-            </div>
-            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingDemographicReviews}</div>
-            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Demographics</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white/[0.02] rounded-xl p-4">
+          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-cyan-400">{analytics.registrationToJoinRate.toFixed(1)}%</div>
+          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Reg → Campaign Join</p>
+        </div>
 
-        <Card className="bg-white/[0.02] border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className="h-4 w-4 text-orange-400" />
-            </div>
-            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-orange-400">{analytics.pendingPayouts}</div>
-            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Payouts</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/[0.02] border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className="h-4 w-4 text-green-400" />
-            </div>
-            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-green-400">{analytics.completedPayouts}</div>
-            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Completed</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white/[0.02] rounded-xl p-4">
+          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-purple-400">{analytics.registrationToPayoutRate.toFixed(1)}%</div>
+          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Reg → First Payout</p>
+        </div>
       </div>
+
+      {/* Tertiary metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white/[0.02] rounded-xl p-4">
+          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingApplications}</div>
+          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Apps</p>
+        </div>
+
+        <div className="bg-white/[0.02] rounded-xl p-4">
+          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingDemographicReviews}</div>
+          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Demographics Review</p>
+        </div>
+
+        <div className="bg-white/[0.02] rounded-xl p-4">
+          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-orange-400">{analytics.pendingPayouts}</div>
+          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Payouts</p>
+        </div>
+
+        <div className="bg-white/[0.02] rounded-xl p-4">
+          <div className="text-lg font-bold font-inter tracking-[-0.5px] text-green-400">{analytics.completedPayouts}</div>
+          <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Completed Payouts</p>
+        </div>
+      </div>
+
+      {/* Creator Funnel Chart */}
+      <Card className="bg-card/50 border-0">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">Creator Economy Funnel</CardTitle>
+          <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Distribution of creators by number of payouts received</p>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[200px]">
+            {creatorFunnelData.length > 0 && creatorFunnelData.some(d => d.value > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={creatorFunnelData} layout="vertical">
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6 }} />
+                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6 }} width={90} />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload || !payload.length) return null;
+                      return (
+                        <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
+                          <p className="text-xs text-white font-inter font-semibold">{payload[0].payload.name}</p>
+                          <p className="text-sm text-white/70 font-inter">{payload[0].value} creators</p>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                    {creatorFunnelData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
+                No payout data available
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Withdrawals Over Time - Full Width */}
       <Card className="bg-card/50 border-0">
