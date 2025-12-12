@@ -232,57 +232,123 @@ export function AppSidebar() {
                 </Avatar>
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-72 p-0 bg-card" align="end">
-              <div className="p-4 space-y-3">
-                <div>
-                  <h3 className="text-xl font-bold mb-1">{displayName}</h3>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <PopoverContent className="w-64 p-0 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl shadow-2xl" align="end" sideOffset={8}>
+              <div className="p-3 space-y-1">
+                {/* User Info */}
+                <div className="flex items-center gap-3 px-2 py-2 mb-2">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                    <AvatarFallback className="bg-[#1f1f1f] text-neutral-400">
+                      {getInitial()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{displayName}</p>
+                    <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button className="flex-1" variant="secondary" onClick={() => handleTabClick("profile")}>
-                    Settings
-                  </Button>
-                  <ThemeToggle />
-                </div>
-                
-                {/* Workspace switcher in mobile menu */}
-                {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="border-t border-border pt-3">
-                    <p className="text-xs text-muted-foreground mb-2">Switch Workspace</p>
-                    <div className="space-y-1 max-h-[200px] overflow-y-auto">
-                      <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${isCreatorMode ? 'bg-accent' : 'hover:bg-accent/50'}`}>
-                        <User className="w-4 h-4" />
-                        <span className="text-sm">Creator Dashboard</span>
-                      </button>
-                      {isAdmin && allBrands.map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${workspace === brand.slug ? 'bg-accent' : 'hover:bg-accent/50'}`}>
-                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
+
+                {/* Workspace Section */}
+                {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && (
+                  <div className="border-t border-[#1f1f1f] pt-2 pb-1">
+                    <p className="text-[10px] uppercase tracking-wider text-neutral-500 px-2 mb-1">Workspace</p>
+                    <button
+                      onClick={() => handleWorkspaceChange("creator")}
+                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">Creator</span>
+                    </button>
+                    <div className="max-h-[120px] overflow-y-auto">
+                      {isAdmin && allBrands.slice(0, 5).map(brand => (
+                        <button
+                          key={brand.id}
+                          onClick={() => handleWorkspaceChange(brand.slug)}
+                          className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}
+                        >
+                          {brand.logo_url ? (
+                            <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" />
+                          ) : (
+                            <Building2 className="w-4 h-4" />
+                          )}
                           <span className="text-sm truncate">{brand.name}</span>
-                        </button>)}
-                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors ${workspace === membership.brands.slug ? 'bg-accent' : 'hover:bg-accent/50'}`}>
-                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
+                        </button>
+                      ))}
+                      {!isAdmin && brandMemberships.map(membership => (
+                        <button
+                          key={membership.brand_id}
+                          onClick={() => handleWorkspaceChange(membership.brands.slug)}
+                          className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}
+                        >
+                          {membership.brands.logo_url ? (
+                            <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" />
+                          ) : (
+                            <Building2 className="w-4 h-4" />
+                          )}
                           <span className="text-sm truncate">{membership.brands.name}</span>
-                        </button>)}
+                        </button>
+                      ))}
                     </div>
-                  </div>}
+                  </div>
+                )}
                 
-                <div className="space-y-1">
-                  <button className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity" onClick={() => navigate("/leaderboard")}>
+                {/* Quick Links */}
+                <div className="border-t border-[#1f1f1f] pt-2 space-y-0.5">
+                  <button
+                    onClick={() => handleTabClick("profile")}
+                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="text-sm">Settings</span>
+                  </button>
+                  <button
+                    onClick={() => navigate("/leaderboard")}
+                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
+                  >
                     <Medal className="w-4 h-4" />
-                    <span className="font-medium text-sm">Leaderboard</span>
+                    <span className="text-sm">Leaderboard</span>
                   </button>
-                  <button className="w-full flex items-center gap-3 px-0 py-2 text-left hover:opacity-70 transition-opacity" onClick={() => navigate("/referrals")}>
+                  <button
+                    onClick={() => navigate("/referrals")}
+                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
+                  >
                     <Gift className="w-4 h-4" />
-                    <span className="font-medium text-sm">Referrals</span>
+                    <span className="text-sm">Referrals</span>
                   </button>
-                  <button className="w-full flex items-center justify-between px-0 py-2 text-left hover:opacity-70 transition-opacity" onClick={() => window.open("https://discord.gg/virality", "_blank")}>
+                  <button
+                    onClick={() => navigate("/support")}
+                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    <span className="text-sm">Support</span>
+                  </button>
+                  <button
+                    onClick={() => window.open("https://discord.gg/virality", "_blank")}
+                    className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
+                  >
                     <div className="flex items-center gap-3">
                       <img src={discordIcon} alt="Discord" className="w-4 h-4 rounded" />
-                      <span className="font-medium text-sm">Discord</span>
+                      <span className="text-sm">Discord</span>
                     </div>
-                    <ArrowUpRight className="w-4 h-4" />
+                    <ArrowUpRight className="w-3.5 h-3.5" />
                   </button>
-                  <button className="w-full flex items-center gap-2 px-0 py-2 text-left hover:opacity-70 transition-opacity" onClick={handleSignOut}>
+                </div>
+
+                {/* Theme & Logout */}
+                <div className="border-t border-[#1f1f1f] pt-2 flex items-center gap-2">
+                  <button
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-white transition-colors"
+                  >
+                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    <span className="text-sm">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-red-400 transition-colors"
+                  >
                     <LogOut className="w-4 h-4" />
-                    <span className="font-medium text-sm">Log out</span>
+                    <span className="text-sm">Log out</span>
                   </button>
                 </div>
               </div>
