@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar } from "lucide-react";
+import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, BarChart, ComposedChart, PieChart, Pie, Cell } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -189,18 +195,20 @@ export function AnalyticsTab() {
       .lte("created_at", prevEnd.toISOString());
     const earningsPreviousPeriod = prevEarningsData?.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
 
-    // Fetch withdrawals in current period
+    // Fetch withdrawals in current period - only completed
     const { data: currentWithdrawalsData } = await supabase
       .from("payout_requests")
       .select("amount")
+      .eq("status", "completed")
       .gte("created_at", start.toISOString())
       .lte("created_at", end.toISOString());
     const withdrawalsCurrentPeriod = currentWithdrawalsData?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
-    // Fetch withdrawals in previous period
+    // Fetch withdrawals in previous period - only completed
     const { data: prevWithdrawalsData } = await supabase
       .from("payout_requests")
       .select("amount")
+      .eq("status", "completed")
       .gte("created_at", prevStart.toISOString())
       .lte("created_at", prevEnd.toISOString());
     const withdrawalsPreviousPeriod = prevWithdrawalsData?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
@@ -556,40 +564,42 @@ export function AnalyticsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Time period selector - at top */}
+      {/* Time period selector - dropdown */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg">
-          {TIME_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setTimePeriod(option.value as TimePeriod)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all",
-                timePeriod === option.value
-                  ? "bg-white/10 text-white"
-                  : "text-white/50 hover:text-white/70"
-              )}
-            >
-              {option.label}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 text-sm font-medium font-inter tracking-[-0.5px] text-white hover:text-white/80 transition-colors">
+              {timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to 
+                ? `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`
+                : TIME_OPTIONS.find(o => o.value === timePeriod)?.label || 'Select'}
+              <ChevronDown className="h-4 w-4 text-white/50" />
             </button>
-          ))}
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="bg-[#0c0c0c] border-white/10 min-w-[140px]">
+            {TIME_OPTIONS.map((option) => (
+              <DropdownMenuItem
+                key={option.value}
+                onClick={() => setTimePeriod(option.value as TimePeriod)}
+                className="flex items-center justify-between text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 cursor-pointer"
+              >
+                {option.label}
+                {timePeriod === option.value && <Check className="h-3.5 w-3.5 text-white" />}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuItem
+              onClick={() => setIsDatePickerOpen(true)}
+              className="flex items-center gap-2 text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 cursor-pointer"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              Custom Range
+              {timePeriod === 'CUSTOM' && <Check className="h-3.5 w-3.5 text-white ml-auto" />}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         
         <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
           <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "gap-2 text-xs font-inter tracking-[-0.5px]",
-                timePeriod === 'CUSTOM' ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"
-              )}
-            >
-              <Calendar className="h-3.5 w-3.5" />
-              {timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to 
-                ? `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`
-                : 'Custom'}
-            </Button>
+            <span />
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-white/10" align="start">
             <CalendarComponent
@@ -603,7 +613,7 @@ export function AnalyticsTab() {
                 }
               }}
               numberOfMonths={2}
-              className="rounded-md"
+              className="rounded-md pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
@@ -611,85 +621,81 @@ export function AnalyticsTab() {
 
       {/* Key metrics - redesigned */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-0 overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-400" />
-              </div>
-              <div className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold font-inter",
-                userChange.isPositive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-              )}>
-                {userChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                {userChange.change.toFixed(0)}%
-              </div>
+        <div className="bg-white/[0.03] rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">New Users</p>
+            <div className={cn(
+              "flex items-center gap-1 text-[10px] font-semibold font-inter",
+              userChange.isPositive ? "text-green-400" : "text-red-400"
+            )}>
+              {userChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+              {userChange.change.toFixed(0)}%
             </div>
-            <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white mb-1">{analytics.totalUsers.toLocaleString()}</div>
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Total Users</p>
-            <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">+{analytics.newUsersCurrentPeriod} {getPeriodLabel()}</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
+            {timePeriod === 'ALL' ? analytics.totalUsers.toLocaleString() : analytics.newUsersCurrentPeriod.toLocaleString()}
+          </div>
+          <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
+            vs {analytics.newUsersPreviousPeriod} previous
+          </p>
+        </div>
 
-        <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-0 overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-green-400" />
-              </div>
-              <div className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold font-inter",
-                earningsChange.isPositive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-              )}>
-                {earningsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                {earningsChange.change.toFixed(0)}%
-              </div>
+        <div className="bg-white/[0.03] rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Earnings</p>
+            <div className={cn(
+              "flex items-center gap-1 text-[10px] font-semibold font-inter",
+              earningsChange.isPositive ? "text-green-400" : "text-red-400"
+            )}>
+              {earningsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+              {earningsChange.change.toFixed(0)}%
             </div>
-            <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white mb-1">${analytics.totalEarnings.toLocaleString()}</div>
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Total Earnings</p>
-            <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">+${analytics.earningsCurrentPeriod.toFixed(0)} {getPeriodLabel()}</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
+            ${timePeriod === 'ALL' ? analytics.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : analytics.earningsCurrentPeriod.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
+            vs ${analytics.earningsPreviousPeriod.toFixed(2)} previous
+          </p>
+        </div>
 
-        <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-0 overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-orange-400" />
-              </div>
-              <div className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold font-inter",
-                withdrawalsChange.isPositive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-              )}>
-                {withdrawalsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                {withdrawalsChange.change.toFixed(0)}%
-              </div>
+        <div className="bg-white/[0.03] rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Paid Out</p>
+            <div className={cn(
+              "flex items-center gap-1 text-[10px] font-semibold font-inter",
+              withdrawalsChange.isPositive ? "text-green-400" : "text-red-400"
+            )}>
+              {withdrawalsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+              {withdrawalsChange.change.toFixed(0)}%
             </div>
-            <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white mb-1">${analytics.totalWithdrawals.toLocaleString()}</div>
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Total Paid Out</p>
-            <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">+${analytics.withdrawalsCurrentPeriod.toFixed(0)} {getPeriodLabel()}</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
+            ${timePeriod === 'ALL' ? analytics.totalWithdrawals.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : analytics.withdrawalsCurrentPeriod.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
+            vs ${analytics.withdrawalsPreviousPeriod.toFixed(2)} previous
+          </p>
+        </div>
 
-        <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-0 overflow-hidden">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                <UserCheck className="h-5 w-5 text-purple-400" />
-              </div>
-              <div className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold font-inter",
-                accountsChange.isPositive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-              )}>
-                {accountsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                {accountsChange.change.toFixed(0)}%
-              </div>
+        <div className="bg-white/[0.03] rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Accounts</p>
+            <div className={cn(
+              "flex items-center gap-1 text-[10px] font-semibold font-inter",
+              accountsChange.isPositive ? "text-green-400" : "text-red-400"
+            )}>
+              {accountsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+              {accountsChange.change.toFixed(0)}%
             </div>
-            <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white mb-1">{analytics.totalAccounts.toLocaleString()}</div>
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Social Accounts</p>
-            <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">+{analytics.accountsCurrentPeriod} {getPeriodLabel()}</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white">
+            {timePeriod === 'ALL' ? analytics.totalAccounts.toLocaleString() : analytics.accountsCurrentPeriod.toLocaleString()}
+          </div>
+          <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">
+            vs {analytics.accountsPreviousPeriod} previous
+          </p>
+        </div>
       </div>
 
       {/* Secondary metrics */}
