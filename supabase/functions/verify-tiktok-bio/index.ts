@@ -50,42 +50,46 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
 async function verifyInstagram(username: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching Instagram profile for: ${username}`);
   
+  // Try the Instagram Scraper API (more reliable)
   const response = await fetch(
-    'https://instagram-scraper-stable-api.p.rapidapi.com/get_ig_user_info.php',
+    `https://instagram-scraper-api2.p.rapidapi.com/v1/info?username_or_id_or_url=${encodeURIComponent(username)}`,
     {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'x-rapidapi-host': 'instagram-scraper-stable-api.p.rapidapi.com',
+        'x-rapidapi-host': 'instagram-scraper-api2.p.rapidapi.com',
         'x-rapidapi-key': rapidApiKey,
       },
-      body: `username=${encodeURIComponent(username)}`,
     }
   );
 
   if (!response.ok) {
     console.error(`Instagram API error: ${response.status}`);
+    const errorText = await response.text();
+    console.error(`Instagram API response: ${errorText}`);
     throw new Error(`Instagram API error: ${response.status}`);
   }
 
   const data = await response.json();
-  console.log('Instagram API response received');
+  console.log('Instagram API response received:', JSON.stringify(data).substring(0, 500));
 
-  if (!data.username) {
+  // Handle the response structure from this API
+  const userData = data.data || data;
+  
+  if (!userData || (!userData.username && !userData.id)) {
     throw new Error('User not found on Instagram');
   }
 
-  const bio = data.biography || '';
+  const bio = userData.biography || userData.bio || '';
   const verified = bio.includes(verificationCode);
 
   return {
     verified,
     bio,
     user: {
-      nickname: data.full_name || data.username,
-      avatar: data.profile_pic_url || data.hd_profile_pic_url_info?.url,
-      followerCount: data.follower_count || 0,
-      isVerified: data.is_verified || false,
+      nickname: userData.full_name || userData.username,
+      avatar: userData.profile_pic_url || userData.profile_pic_url_hd || userData.hd_profile_pic_url_info?.url,
+      followerCount: userData.follower_count || userData.followers_count || 0,
+      isVerified: userData.is_verified || false,
     },
   };
 }
