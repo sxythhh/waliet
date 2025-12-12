@@ -292,7 +292,7 @@ export function DiscoverTab() {
   const platforms = ["TikTok", "Instagram", "YouTube"];
   const totalActiveCampaigns = activeCampaigns.length;
   const totalBounties = bounties.filter(b => b.status !== "ended").length;
-  return <div className="h-full flex flex-col">
+  return <div className="md:h-full md:flex md:flex-col">
         {/* Sticky Header and Filters */}
         <div className="md:sticky md:top-0 z-20 bg-background px-6 pt-8 pb-4 space-y-6">
           {/* Header Section */}
@@ -390,7 +390,7 @@ export function DiscoverTab() {
         </div>
 
         {/* Scrollable Campaigns Section */}
-        <div className="flex-1 overflow-auto px-6 pb-6">
+        <div className="md:flex-1 md:overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
         {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {[...Array(6)].map((_, i) => (
