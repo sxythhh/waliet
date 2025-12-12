@@ -736,7 +736,7 @@ export function ProfileTab() {
       {/* Connected Accounts */}
       <Card className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
-          <div className="flex items-center justify-between gap-4 p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-4 p-4 sm:p-6 py-[8px] px-0">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
             <Button onClick={() => setShowAddAccountDialog(true)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
