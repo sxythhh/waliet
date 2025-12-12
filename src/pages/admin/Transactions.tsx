@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -434,9 +435,26 @@ export default function Transactions() {
 
       {/* Mobile card view */}
       <div className="md:hidden space-y-2">
-        {loading ? <Card className="p-6 text-center text-muted-foreground border border-border">
-            Loading transactions...
-          </Card> : filteredTransactions.length === 0 ? <Card className="p-6 text-center text-muted-foreground border border-border">
+        {loading ? (
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i} className="p-3 border border-border">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex-1">
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                  <Skeleton className="h-5 w-16" />
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
+                <Skeleton className="h-3 w-40" />
+              </Card>
+            ))}
+          </div>
+        ) : filteredTransactions.length === 0 ? <Card className="p-6 text-center text-muted-foreground border border-border">
             No transactions found
           </Card> : filteredTransactions.map(tx => <Card key={tx.id} className="p-3 border border-border">
             <div className="flex items-start justify-between gap-3 mb-2">
@@ -487,11 +505,20 @@ export default function Transactions() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 font-inter tracking-[-0.5px]">
-                  Loading transactions...
-                </TableCell>
-              </TableRow> : filteredTransactions.length === 0 ? <TableRow>
+            {loading ? (
+              <>
+                {[...Array(10)].map((_, i) => (
+                  <TableRow key={i} className="border-b border-[#141414]">
+                    <TableCell className="py-3"><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="py-3"><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell className="py-3"><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell className="py-3"><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell className="py-3"><Skeleton className="h-4 w-40" /></TableCell>
+                    <TableCell className="py-3 text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                  </TableRow>
+                ))}
+              </>
+            ) : filteredTransactions.length === 0 ? <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground font-inter tracking-[-0.5px]">
                   No transactions found
                 </TableCell>
