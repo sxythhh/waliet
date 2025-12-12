@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Link as LinkIcon, Plus, Trash2, Zap, X } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { ArrowLeft, Link as LinkIcon, Plus, Trash2, Zap, X, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,10 +8,19 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { debounce } from "@/lib/utils";
 import { RichTextEditor } from "@/components/RichTextEditor";
-import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
-import instagramLogo from "@/assets/instagram-logo-black.png";
-import youtubeLogo from "@/assets/youtube-logo-black-new.png";
-import xLogo from "@/assets/x-logo.png";
+import { useTheme } from "@/components/ThemeProvider";
+
+// Light mode logos (dark logos for light backgrounds)
+import tiktokLogoLight from "@/assets/tiktok-logo-black-new.png";
+import instagramLogoLight from "@/assets/instagram-logo-black.png";
+import youtubeLogoLight from "@/assets/youtube-logo-black-new.png";
+import xLogoLight from "@/assets/x-logo.png";
+
+// Dark mode logos (white logos for dark backgrounds)
+import tiktokLogoDark from "@/assets/tiktok-logo-white.png";
+import instagramLogoDark from "@/assets/instagram-logo-white.png";
+import youtubeLogoDark from "@/assets/youtube-logo-white.png";
+import xLogoDark from "@/assets/x-logo-light.png";
 
 interface Asset {
   link: string;
@@ -59,20 +68,26 @@ interface BlueprintEditorProps {
   brandId: string;
 }
 
-const PLATFORMS = [
-  { id: "tiktok", label: "TikTok", logo: tiktokLogo },
-  { id: "instagram", label: "Instagram", logo: instagramLogo },
-  { id: "youtube", label: "YouTube", logo: youtubeLogo },
-  { id: "x", label: "X", logo: xLogo },
+const getPlatforms = (isDark: boolean) => [
+  { id: "tiktok", label: "TikTok", logo: isDark ? tiktokLogoDark : tiktokLogoLight },
+  { id: "instagram", label: "Instagram", logo: isDark ? instagramLogoDark : instagramLogoLight },
+  { id: "youtube", label: "YouTube", logo: isDark ? youtubeLogoDark : youtubeLogoLight },
+  { id: "x", label: "X", logo: isDark ? xLogoDark : xLogoLight },
 ];
 
 export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) {
   const [, setSearchParams] = useSearchParams();
+  const { resolvedTheme } = useTheme();
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newHashtag, setNewHashtag] = useState("");
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const isDark = resolvedTheme === "dark";
+  const PLATFORMS = getPlatforms(isDark);
 
   useEffect(() => {
     fetchBlueprintAndBrand();
@@ -301,6 +316,61 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
   const removeExampleVideo = (index: number) => {
     const newVideos = blueprint?.example_videos.filter((_, i) => i !== index) || [];
     updateBlueprint({ example_videos: newVideos });
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("video/")) {
+      toast.error("Please select a video file");
+      return;
+    }
+
+    // Validate file size (max 100MB)
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error("Video must be under 100MB");
+      return;
+    }
+
+    setUploadingVideo(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${blueprintId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("blueprint-videos")
+        .upload(fileName, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) {
+        // If bucket doesn't exist, show appropriate error
+        if (uploadError.message.includes("Bucket not found")) {
+          toast.error("Video storage not configured. Please contact support.");
+        } else {
+          toast.error("Failed to upload video");
+        }
+        console.error("Upload error:", uploadError);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("blueprint-videos")
+        .getPublicUrl(fileName);
+
+      // Add the video to example_videos
+      const newVideos = [...(blueprint?.example_videos || []), { url: urlData.publicUrl, description: "" }];
+      updateBlueprint({ example_videos: newVideos });
+      toast.success("Video uploaded successfully");
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload video");
+    } finally {
+      setUploadingVideo(false);
+      if (videoInputRef.current) {
+        videoInputRef.current.value = "";
+      }
+    }
   };
 
   if (loading) {
@@ -642,44 +712,93 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           <section className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Example Videos</label>
-              <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                <Plus className="h-3 w-3 mr-1" />
-                Add
-              </Button>
+              <div className="flex items-center gap-1">
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  className="hidden"
+                />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => videoInputRef.current?.click()}
+                  disabled={uploadingVideo}
+                  className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                >
+                  {uploadingVideo ? (
+                    <>
+                      <div className="h-3 w-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-3 w-3 mr-1" />
+                      Upload
+                    </>
+                  )}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add URL
+                </Button>
+              </div>
             </div>
             <div className="rounded-md bg-muted/20 p-3">
               {blueprint.example_videos.length === 0 ? (
-                <iframe 
-                  src="https://joinvirality.com/pricing-2" 
-                  className="w-full h-[300px] border-0 rounded-md" 
-                  title="Pricing"
-                />
+                <div className="py-8 text-center">
+                  <Video className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                  <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">
+                    No example videos added yet
+                  </p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">
+                    Upload videos or add video URLs as examples for creators
+                  </p>
+                </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {blueprint.example_videos.map((video, index) => (
-                    <div key={index} className="flex items-center gap-2 group">
-                      <div className="flex-1 grid grid-cols-2 gap-2">
-                        <Input
-                          value={video.url}
-                          onChange={(e) => updateExampleVideo(index, "url", e.target.value)}
-                          placeholder="Video URL..."
-                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                        />
-                        <Input
-                          value={video.description}
-                          onChange={(e) => updateExampleVideo(index, "description", e.target.value)}
-                          placeholder="Why this is a good example..."
-                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                        />
+                    <div key={index} className="space-y-2 group">
+                      <div className="flex items-start gap-2">
+                        {/* Video preview if URL is valid */}
+                        {video.url && (
+                          <div className="w-24 h-14 rounded overflow-hidden bg-background/50 flex-shrink-0">
+                            <video 
+                              src={video.url} 
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                              onError={(e) => {
+                                // Hide video element if URL is not a valid video
+                                (e.target as HTMLVideoElement).style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 space-y-1.5">
+                          <Input
+                            value={video.url}
+                            onChange={(e) => updateExampleVideo(index, "url", e.target.value)}
+                            placeholder="Video URL..."
+                            className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                          />
+                          <Input
+                            value={video.description}
+                            onChange={(e) => updateExampleVideo(index, "description", e.target.value)}
+                            placeholder="Why this is a good example..."
+                            className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeExampleVideo(index)}
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeExampleVideo(index)}
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
                     </div>
                   ))}
                 </div>
