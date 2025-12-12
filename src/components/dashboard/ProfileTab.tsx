@@ -744,7 +744,7 @@ export function ProfileTab() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
             {socialAccounts.length === 0 ? <div className="text-center py-12">
               <img src={emptyAccountsImage} alt="No accounts" className="w-24 h-24 mx-auto mb-4 opacity-80 object-cover" />
               <p className="text-base font-medium text-foreground">No connected accounts yet</p>
@@ -764,7 +764,7 @@ export function ProfileTab() {
                           <div className="flex-1 min-w-0 cursor-pointer">
                             {/* Username Row with Platform Icon */}
                             <div className="inline-flex items-center gap-2">
-                              <div className="w-5 h-5 flex-shrink-0">
+                              <div className="w-5 h-5 flex-shrink-0 hidden sm:block">
                                 {getPlatformIcon(account.platform)}
                               </div>
                               <span className="font-semibold text-base text-foreground" style={{
@@ -773,9 +773,15 @@ export function ProfileTab() {
                         }}>
                                 {account.username}
                               </span>
+                              <span className="text-xs text-muted-foreground capitalize sm:hidden" style={{
+                          fontFamily: 'Inter',
+                          letterSpacing: '-0.3px'
+                        }}>
+                                · {account.platform}
+                              </span>
                             </div>
                             {/* Campaign count below username */}
-                            <div className="flex items-center gap-1.5 mt-1.5 ml-7 w-fit px-2 py-1 rounded-md bg-muted/50">
+                            <div className="flex items-center gap-1.5 mt-1.5 sm:ml-7 w-fit px-2 py-1 rounded-md bg-muted/50">
                               <span className="text-[11px] text-foreground" style={{
                           fontFamily: 'Inter',
                           letterSpacing: '-0.3px'
