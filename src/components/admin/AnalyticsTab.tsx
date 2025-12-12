@@ -392,17 +392,33 @@ export function AnalyticsTab() {
     if (!data) return;
 
     // Determine grouping based on time period
-    const groupBy = timePeriod === '3D' || timePeriod === '1W' ? 'day' : 'month';
+    const groupBy = timePeriod === 'TODAY' ? 'hour' : timePeriod === '3D' || timePeriod === '1W' ? 'day' : 'month';
     
-    // Group by day or month
+    // Group by hour, day, or month
     const groupedData: { [key: string]: number } = {};
+    
+    if (groupBy === 'hour') {
+      // Initialize all hours from start of day to current hour
+      const now = new Date();
+      const currentHour = now.getHours();
+      for (let h = 0; h <= currentHour; h++) {
+        const hourLabel = format(new Date().setHours(h, 0, 0, 0), 'ha');
+        groupedData[hourLabel] = 0;
+      }
+    }
+    
     data.forEach((profile) => {
-      const key = groupBy === 'day' 
-        ? format(new Date(profile.created_at), 'MMM dd')
-        : new Date(profile.created_at).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-          });
+      let key: string;
+      if (groupBy === 'hour') {
+        key = format(new Date(profile.created_at), 'ha');
+      } else if (groupBy === 'day') {
+        key = format(new Date(profile.created_at), 'MMM dd');
+      } else {
+        key = new Date(profile.created_at).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+        });
+      }
       groupedData[key] = (groupedData[key] || 0) + 1;
     });
 
@@ -448,15 +464,28 @@ export function AnalyticsTab() {
     if (!data) return;
 
     // Determine grouping based on time period
-    const groupBy = timePeriod === '3D' || timePeriod === '1W' ? 'day' : timePeriod === '1M' ? 'week' : 'month';
+    const groupBy = timePeriod === 'TODAY' ? 'hour' : timePeriod === '3D' || timePeriod === '1W' ? 'day' : timePeriod === '1M' ? 'week' : 'month';
     
     // Group data
     const groupedData: { [key: string]: { total: number; count: number; completed: number } } = {};
+    
+    if (groupBy === 'hour') {
+      // Initialize all hours from start of day to current hour
+      const now = new Date();
+      const currentHour = now.getHours();
+      for (let h = 0; h <= currentHour; h++) {
+        const hourLabel = format(new Date().setHours(h, 0, 0, 0), 'ha');
+        groupedData[hourLabel] = { total: 0, count: 0, completed: 0 };
+      }
+    }
+    
     data.forEach((payout) => {
       let key: string;
       const date = new Date(payout.created_at);
       
-      if (groupBy === 'day') {
+      if (groupBy === 'hour') {
+        key = format(date, 'ha');
+      } else if (groupBy === 'day') {
         key = format(date, 'MMM dd');
       } else if (groupBy === 'week') {
         key = `Week ${format(startOfWeek(date), 'MMM dd')}`;
@@ -530,11 +559,22 @@ export function AnalyticsTab() {
       .lte("created_at", end.toISOString())
       .order("created_at", { ascending: true });
 
-    const groupBy = timePeriod === '3D' || timePeriod === '1W' ? 'day' : timePeriod === '1M' ? 'week' : 'month';
+    const groupBy = timePeriod === 'TODAY' ? 'hour' : timePeriod === '3D' || timePeriod === '1W' ? 'day' : timePeriod === '1M' ? 'week' : 'month';
     
     const groupedData: { [key: string]: { earnings: number; withdrawals: number } } = {};
     
+    if (groupBy === 'hour') {
+      // Initialize all hours from start of day to current hour
+      const now = new Date();
+      const currentHour = now.getHours();
+      for (let h = 0; h <= currentHour; h++) {
+        const hourLabel = format(new Date().setHours(h, 0, 0, 0), 'ha');
+        groupedData[hourLabel] = { earnings: 0, withdrawals: 0 };
+      }
+    }
+    
     const getKey = (date: Date) => {
+      if (groupBy === 'hour') return format(date, 'ha');
       if (groupBy === 'day') return format(date, 'MMM dd');
       if (groupBy === 'week') return `W${format(startOfWeek(date), 'dd')}`;
       return format(date, 'MMM');
@@ -900,7 +940,7 @@ export function AnalyticsTab() {
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false}
-                  style={{ opacity: 0.6 }}
+                  style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                 />
                 <YAxis 
                   yAxisId="left"
@@ -908,7 +948,7 @@ export function AnalyticsTab() {
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false}
-                  style={{ opacity: 0.6 }}
+                  style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                   tickFormatter={(value) => `$${value}`}
                 />
                 <YAxis 
@@ -918,7 +958,7 @@ export function AnalyticsTab() {
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false}
-                  style={{ opacity: 0.6 }}
+                  style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                 />
                 <Tooltip content={<CustomTooltip type="withdrawal" />} />
                 <Area 
@@ -968,14 +1008,14 @@ export function AnalyticsTab() {
                       fontSize={12} 
                       tickLine={false} 
                       axisLine={false}
-                      style={{ opacity: 0.6 }}
+                      style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                     />
                     <YAxis 
                       stroke="hsl(var(--muted-foreground))" 
                       fontSize={12} 
                       tickLine={false} 
                       axisLine={false}
-                      style={{ opacity: 0.6 }}
+                      style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                     />
                     <Tooltip content={<CustomTooltip type="users" />} />
                     <Area 
@@ -1009,8 +1049,8 @@ export function AnalyticsTab() {
               {creatorFunnelData.length > 0 && creatorFunnelData.some(d => d.value > 0) ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={creatorFunnelData} layout="vertical">
-                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6 }} />
-                    <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6 }} width={90} />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }} />
+                    <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }} width={90} />
                     <Tooltip 
                       cursor={false}
                       content={({ active, payload }) => {
@@ -1064,14 +1104,14 @@ export function AnalyticsTab() {
                     fontSize={12} 
                     tickLine={false} 
                     axisLine={false}
-                    style={{ opacity: 0.6 }}
+                    style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))" 
                     fontSize={12} 
                     tickLine={false} 
                     axisLine={false}
-                    style={{ opacity: 0.6 }}
+                    style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }}
                     tickFormatter={(value) => `$${value}`}
                   />
                   <Tooltip content={<CustomTooltip type="earnings" />} />
