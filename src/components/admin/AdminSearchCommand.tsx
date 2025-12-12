@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CommandDialog,
@@ -13,6 +14,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
+import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoWhite from "@/assets/instagram-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
+import xLogoLight from "@/assets/x-logo-light.png";
+import xLogoDark from "@/assets/x-logo.png";
+
 interface SearchResult {
   id: string;
   type: 'user' | 'brand' | 'campaign' | 'account';
@@ -20,6 +30,7 @@ interface SearchResult {
   subtitle?: string;
   image?: string | null;
   path: string;
+  platform?: string;
 }
 
 function MaterialIcon({ name, className }: { name: string; className?: string }) {
@@ -37,9 +48,27 @@ interface AdminSearchCommandProps {
 
 export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandProps) {
   const navigate = useNavigate();
+  const { resolvedTheme } = useTheme();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const getPlatformLogo = (platform: string) => {
+    const isDark = resolvedTheme === 'dark';
+    switch (platform?.toLowerCase()) {
+      case 'tiktok':
+        return isDark ? tiktokLogoWhite : tiktokLogoBlack;
+      case 'instagram':
+        return isDark ? instagramLogoWhite : instagramLogoBlack;
+      case 'youtube':
+        return isDark ? youtubeLogoWhite : youtubeLogoBlack;
+      case 'x':
+      case 'twitter':
+        return isDark ? xLogoLight : xLogoDark;
+      default:
+        return null;
+    }
+  };
 
   const search = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -120,6 +149,7 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
           subtitle: account.platform,
           image: account.avatar_url,
           path: `/admin/users?search=${account.username}`,
+          platform: account.platform,
         })));
       }
 
@@ -179,47 +209,55 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
     accounts: results.filter(r => r.type === 'account'),
   };
 
-  const ResultItem = ({ result }: { result: SearchResult }) => (
-    <CommandItem
-      key={result.id}
-      value={result.title}
-      onSelect={() => handleSelect(result)}
-      className="flex items-center gap-3 px-3 py-3 cursor-pointer rounded-lg mx-2 mb-1 data-[selected=true]:bg-muted/50 border border-transparent data-[selected=true]:border-border/50 transition-all"
-    >
-      <div className="relative">
-        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background shadow-sm">
-          <AvatarImage src={result.image || ''} className="object-cover" />
-          <AvatarFallback className="text-xs bg-muted font-inter">
-            {result.title.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className={cn(
-          "absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background",
-          result.type === 'user' && "bg-blue-500",
-          result.type === 'brand' && "bg-purple-500",
-          result.type === 'campaign' && "bg-emerald-500",
-          result.type === 'account' && "bg-orange-500"
-        )}>
-          <MaterialIcon name={getIcon(result.type)} className="text-[10px] text-white" />
-        </div>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{result.title}</p>
-          <span className={cn(
-            "text-[10px] font-medium font-inter tracking-[-0.5px] px-1.5 py-0.5 rounded border shrink-0",
-            getTypeColor(result.type)
+  const ResultItem = ({ result }: { result: SearchResult }) => {
+    const platformLogo = result.type === 'account' && result.platform ? getPlatformLogo(result.platform) : null;
+    
+    return (
+      <CommandItem
+        key={result.id}
+        value={result.title}
+        onSelect={() => handleSelect(result)}
+        className="flex items-center gap-3 px-3 py-3 cursor-pointer rounded-lg mx-2 mb-1 data-[selected=true]:bg-muted/50 border border-transparent data-[selected=true]:border-border/50 transition-all"
+      >
+        <div className="relative">
+          <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background shadow-sm">
+            <AvatarImage src={result.image || ''} className="object-cover" />
+            <AvatarFallback className="text-xs bg-muted font-inter">
+              {result.title.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className={cn(
+            "absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background",
+            result.type === 'user' && "bg-blue-500",
+            result.type === 'brand' && "bg-purple-500",
+            result.type === 'campaign' && "bg-emerald-500",
+            result.type === 'account' && "bg-orange-500"
           )}>
-            {getTypeLabel(result.type)}
-          </span>
+            {result.type === 'account' && platformLogo ? (
+              <img src={platformLogo} alt={result.platform} className="w-3 h-3 object-contain" />
+            ) : (
+              <MaterialIcon name={getIcon(result.type)} className="text-[10px] text-white" />
+            )}
+          </div>
         </div>
-        {result.subtitle && (
-          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate mt-0.5">{result.subtitle}</p>
-        )}
-      </div>
-      <MaterialIcon name="arrow_forward" className="text-base text-muted-foreground/50" />
-    </CommandItem>
-  );
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{result.title}</p>
+            <span className={cn(
+              "text-[10px] font-medium font-inter tracking-[-0.5px] px-1.5 py-0.5 rounded border shrink-0",
+              getTypeColor(result.type)
+            )}>
+              {getTypeLabel(result.type)}
+            </span>
+          </div>
+          {result.subtitle && (
+            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate mt-0.5 capitalize">{result.subtitle}</p>
+          )}
+        </div>
+        <MaterialIcon name="arrow_forward" className="text-base text-muted-foreground/50" />
+      </CommandItem>
+    );
+  };
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
