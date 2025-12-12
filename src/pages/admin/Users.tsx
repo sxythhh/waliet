@@ -84,6 +84,10 @@ interface DemographicSubmission {
     platform: string;
     username: string;
     user_id: string;
+    avatar_url?: string | null;
+    follower_count?: number | null;
+    bio?: string | null;
+    account_link?: string | null;
   };
 }
 export default function AdminUsers() {
@@ -797,7 +801,11 @@ export default function AdminUsers() {
           id,
           platform,
           username,
-          user_id
+          user_id,
+          avatar_url,
+          follower_count,
+          bio,
+          account_link
         )
       `).order("submitted_at", {
       ascending: false
@@ -1459,177 +1467,414 @@ export default function AdminUsers() {
         <TabsContent value="demographics" className="space-y-6">
           {/* Demographics Tabs */}
           <Tabs defaultValue="pending" className="space-y-4">
-            <TabsList className="bg-card border-0">
-              <TabsTrigger value="pending" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsList className="bg-muted/30 border-0 p-1 h-auto">
+              <TabsTrigger value="pending" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500 px-4 py-2 gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
                 Pending ({pendingSubmissions.length})
               </TabsTrigger>
-              <TabsTrigger value="approved" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="approved" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-500 px-4 py-2 gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
                 Approved ({approvedSubmissions.length})
               </TabsTrigger>
-              <TabsTrigger value="rejected" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="rejected" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive px-4 py-2 gap-1.5">
+                <XCircle className="w-3.5 h-3.5" />
                 Rejected ({rejectedSubmissions.length})
               </TabsTrigger>
             </TabsList>
 
             {/* Pending Submissions */}
             <TabsContent value="pending" className="space-y-4">
-              {pendingSubmissions.length === 0 ? <Card className="bg-card border-0">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    No pending submissions
-                  </CardContent>
-                </Card> : <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {pendingSubmissions.map(submission => <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-primary/50 transition-all cursor-pointer group" onClick={() => openReviewDialog(submission)}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {getPlatformIcon(submission.social_accounts.platform)}
-                            <div>
-                              <h3 className="font-semibold text-sm">@{submission.social_accounts.username}</h3>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })} • {new Date(submission.submitted_at).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                              </p>
+              {pendingSubmissions.length === 0 ? <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
+                  No pending submissions
+                </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {pendingSubmissions.map(submission => {
+                    const account = submission.social_accounts;
+                    const followerCount = account.follower_count || 0;
+                    const hasAvatar = !!account.avatar_url;
+                    
+                    return (
+                      <div 
+                        key={submission.id} 
+                        className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all cursor-pointer"
+                        onClick={() => openReviewDialog(submission)}
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Avatar */}
+                          <div className="relative flex-shrink-0">
+                            {hasAvatar ? (
+                              <img 
+                                src={account.avatar_url!} 
+                                alt={account.username}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                                <span className="text-lg font-semibold text-muted-foreground">
+                                  {account.username.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
+                              {getPlatformIcon(account.platform)}
                             </div>
                           </div>
-                          <Button size="sm" className="h-8 text-xs" onClick={e => {
-                      e.stopPropagation();
-                      openReviewDialog(submission);
-                    }}>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate">
+                              @{account.username}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                                {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No follower data'}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
+                              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+
+                          {/* Review Button */}
+                          <Button 
+                            size="sm" 
+                            className="h-8 text-xs font-inter tracking-[-0.5px] opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={e => {
+                              e.stopPropagation();
+                              openReviewDialog(submission);
+                            }}
+                          >
                             Review
                           </Button>
                         </div>
-                      </CardContent>
-                    </Card>)}
+
+                        {/* Bio preview */}
+                        {account.bio && (
+                          <p className="text-xs text-muted-foreground mt-3 line-clamp-2 font-inter tracking-[-0.5px]">
+                            {account.bio}
+                          </p>
+                        )}
+
+                        {/* Tier 1 percentage badge */}
+                        <div className="mt-3 flex items-center gap-2">
+                          <Badge variant="secondary" className="text-[10px] font-inter tracking-[-0.5px]">
+                            Tier 1: {submission.tier1_percentage}%
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.5px] text-amber-500 border-amber-500/30">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Pending
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>}
             </TabsContent>
 
             {/* Approved Submissions */}
             <TabsContent value="approved" className="space-y-4">
-              {approvedSubmissions.length === 0 ? <Card className="bg-card border-0">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    No approved submissions
-                  </CardContent>
-                </Card> : <>
+              {approvedSubmissions.length === 0 ? (
+                <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
+                  No approved submissions
+                </div>
+              ) : (
+                <>
                   <div className="flex justify-end">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => setApprovedSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                      className="gap-2"
+                      className="gap-2 text-xs font-inter tracking-[-0.5px]"
                     >
                       {approvedSortOrder === 'asc' ? (
                         <>
-                          <ArrowUp className="h-4 w-4" />
+                          <ArrowUp className="h-3.5 w-3.5" />
                           Soonest First
                         </>
                       ) : (
                         <>
-                          <ArrowDown className="h-4 w-4" />
+                          <ArrowDown className="h-3.5 w-3.5" />
                           Latest First
                         </>
                       )}
                     </Button>
                   </div>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {approvedSubmissions.map(submission => {
-                const submittedDate = new Date(submission.submitted_at);
-                const nextSubmissionDate = new Date(submittedDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                return <Card key={submission.id} className="bg-card border-0 overflow-hidden hover:border-success/50 transition-all">
-                      <CardContent className="p-4">
-                        <a href={`https://${submission.social_accounts.platform}.com/${submission.social_accounts.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 mb-3 hover:bg-muted/20 p-2 -m-2 rounded-lg transition-colors group">
-                          {getPlatformIcon(submission.social_accounts.platform)}
-                          <div>
-                            <h3 className="font-semibold text-sm group-hover:underline">@{submission.social_accounts.username}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {approvedSubmissions.map(submission => {
+                      const account = submission.social_accounts;
+                      const hasAvatar = !!account.avatar_url;
+                      const followerCount = account.follower_count || 0;
+                      const reviewedDate = submission.reviewed_at ? new Date(submission.reviewed_at) : new Date(submission.submitted_at);
+                      const nextSubmissionDate = new Date(reviewedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+                      const daysUntilNext = Math.ceil((nextSubmissionDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                      const isOverdue = daysUntilNext < 0;
+                      const isDueSoon = daysUntilNext <= 7 && daysUntilNext >= 0;
+                      
+                      return (
+                        <div 
+                          key={submission.id} 
+                          className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all"
+                        >
+                          {/* Header with avatar and account info */}
+                          <a 
+                            href={account.account_link || `https://${account.platform}.com/@${account.username}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="flex items-start gap-3 hover:opacity-80 transition-opacity"
+                          >
+                            {/* Avatar */}
+                            <div className="relative flex-shrink-0">
+                              {hasAvatar ? (
+                                <img 
+                                  src={account.avatar_url!} 
+                                  alt={account.username}
+                                  className="w-12 h-12 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                                  <span className="text-lg font-semibold text-muted-foreground">
+                                    {account.username.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
+                                {getPlatformIcon(account.platform)}
+                              </div>
+                            </div>
+
+                            {/* Account Info */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate group-hover:underline">
+                                @{account.username}
+                              </h3>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                                  {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No data'}
+                                </span>
+                              </div>
+                            </div>
+                          </a>
+
+                          {/* Score Display */}
+                          <div 
+                            className="mt-4 bg-emerald-500/10 rounded-lg p-3 cursor-pointer hover:bg-emerald-500/15 transition-colors"
+                            onClick={() => openEditScoreDialog(submission)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-0.5">Demographics Score</p>
+                                <p className="text-2xl font-bold font-inter tracking-[-0.5px] text-emerald-500">{submission.score}</p>
+                              </div>
+                              <Badge className="bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30 text-[10px] font-inter tracking-[-0.5px]">
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                Approved
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Stats Row */}
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-inter tracking-[-0.5px]">
+                            <div className="bg-muted/30 rounded-lg p-2">
+                              <p className="text-muted-foreground text-[10px]">Reviewed</p>
+                              <p className="font-medium">
+                                {reviewedDate.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </p>
+                            </div>
+                            <div className={`rounded-lg p-2 ${isOverdue ? 'bg-destructive/10' : isDueSoon ? 'bg-amber-500/10' : 'bg-muted/30'}`}>
+                              <p className="text-muted-foreground text-[10px]">Next Update</p>
+                              <p className={`font-medium ${isOverdue ? 'text-destructive' : isDueSoon ? 'text-amber-500' : ''}`}>
+                                {isOverdue ? 'Overdue' : daysUntilNext === 0 ? 'Today' : `${daysUntilNext}d`}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Bio Preview */}
+                          {account.bio && (
+                            <p className="text-[11px] text-muted-foreground mt-3 line-clamp-2 font-inter tracking-[-0.5px]">
+                              {account.bio}
+                            </p>
+                          )}
+
+                          {/* Admin Notes */}
+                          {submission.admin_notes && (
+                            <p className="text-[11px] text-muted-foreground/70 mt-2 line-clamp-1 italic font-inter tracking-[-0.5px]">
+                              Note: {submission.admin_notes}
+                            </p>
+                          )}
+                          
+                          {/* Actions */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full mt-3 text-xs font-inter tracking-[-0.5px] text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={async () => {
+                              if (!confirm(`Require new demographic submission for @${submission.social_accounts.username}? This will:\n\n• Reset their demographics score to 0\n• Archive current submission as 'rejected'\n• Require them to submit new demographics\n\nContinue?`)) return;
+                              
+                              try {
+                                const { error: updateError } = await supabase
+                                  .from('demographic_submissions')
+                                  .update({ 
+                                    status: 'rejected',
+                                    admin_notes: 'Submission reset - new demographics required',
+                                    reviewed_at: new Date().toISOString(),
+                                    reviewed_by: (await supabase.auth.getUser()).data.user?.id
+                                  })
+                                  .eq('id', submission.id);
+
+                                if (updateError) throw updateError;
+
+                                const { error: profileError } = await supabase
+                                  .from('profiles')
+                                  .update({ demographics_score: 0 })
+                                  .eq('id', submission.social_accounts.user_id);
+
+                                if (profileError) throw profileError;
+
+                                toast({
+                                  title: "Success",
+                                  description: "Demographics reset successfully"
+                                });
+                                fetchSubmissions();
+                              } catch (error: any) {
+                                console.error('Error resetting demographics:', error);
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to reset demographics",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                          >
+                            Require New Submission
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </TabsContent>
+
+            {/* Rejected Submissions */}
+            <TabsContent value="rejected" className="space-y-4">
+              {rejectedSubmissions.length === 0 ? (
+                <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
+                  No rejected submissions
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {rejectedSubmissions.map(submission => {
+                    const account = submission.social_accounts;
+                    const hasAvatar = !!account.avatar_url;
+                    const followerCount = account.follower_count || 0;
+                    
+                    return (
+                      <div 
+                        key={submission.id} 
+                        className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all opacity-75 hover:opacity-100"
+                      >
+                        {/* Header with avatar and account info */}
+                        <a 
+                          href={account.account_link || `https://${account.platform}.com/@${account.username}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex items-start gap-3 hover:opacity-80 transition-opacity"
+                        >
+                          {/* Avatar */}
+                          <div className="relative flex-shrink-0">
+                            {hasAvatar ? (
+                              <img 
+                                src={account.avatar_url!} 
+                                alt={account.username}
+                                className="w-12 h-12 rounded-full object-cover grayscale"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                                <span className="text-lg font-semibold text-muted-foreground">
+                                  {account.username.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
+                              {getPlatformIcon(account.platform)}
+                            </div>
+                          </div>
+
+                          {/* Account Info */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate group-hover:underline">
+                              @{account.username}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                                {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No data'}
+                              </span>
+                            </div>
                           </div>
                         </a>
 
-                        <div className="bg-[#0d0d0d] rounded-lg p-3 mb-3 cursor-pointer hover:bg-[#1a1a1a] transition-colors" onClick={() => openEditScoreDialog(submission)}>
-                          <p className="text-[10px] text-muted-foreground mb-0.5">Demographics Score</p>
-                          <p className="text-2xl font-bold font-chakra text-success">{submission.score}</p>
+                        {/* Rejected Status */}
+                        <div className="mt-4 bg-destructive/10 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-0.5">Status</p>
+                              <p className="text-sm font-medium font-inter tracking-[-0.5px] text-destructive">Rejected</p>
+                            </div>
+                            <Badge className="bg-destructive/20 text-destructive hover:bg-destructive/30 text-[10px] font-inter tracking-[-0.5px]">
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Rejected
+                            </Badge>
+                          </div>
                         </div>
 
-                        <div className="space-y-1.5 text-xs">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Submitted</span>
-                            <span className="font-medium">
-                              {submittedDate.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                            </span>
+                        {/* Stats Row */}
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-inter tracking-[-0.5px]">
+                          <div className="bg-muted/30 rounded-lg p-2">
+                            <p className="text-muted-foreground text-[10px]">Submitted</p>
+                            <p className="font-medium">
+                              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </p>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Next Update</span>
-                            <span className="font-medium">
-                              {nextSubmissionDate.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                            </span>
+                          <div className="bg-muted/30 rounded-lg p-2">
+                            <p className="text-muted-foreground text-[10px]">Tier 1</p>
+                            <p className="font-medium">{submission.tier1_percentage}%</p>
                           </div>
-                         </div>
+                        </div>
 
-                        {submission.admin_notes && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{submission.admin_notes}</p>}
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full mt-3 text-xs border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={async () => {
-                            if (!confirm(`Require new demographic submission for @${submission.social_accounts.username}? This will:\n\n• Reset their demographics score to 0\n• Archive current submission as 'rejected'\n• Require them to submit new demographics\n\nContinue?`)) return;
-                            
-                            try {
-                              // Archive current submission
-                              const { error: updateError } = await supabase
-                                .from('demographic_submissions')
-                                .update({ 
-                                  status: 'rejected',
-                                  admin_notes: 'Submission reset - new demographics required',
-                                  reviewed_at: new Date().toISOString(),
-                                  reviewed_by: (await supabase.auth.getUser()).data.user?.id
-                                })
-                                .eq('id', submission.id);
+                        {/* Admin Notes */}
+                        {submission.admin_notes && (
+                          <p className="text-[11px] text-muted-foreground/70 mt-3 line-clamp-2 italic font-inter tracking-[-0.5px]">
+                            Reason: {submission.admin_notes}
+                          </p>
+                        )}
 
-                              if (updateError) throw updateError;
-
-                              // Reset demographics score on profile
-                              const { error: profileError } = await supabase
-                                .from('profiles')
-                                .update({ demographics_score: 0 })
-                                .eq('id', submission.social_accounts.user_id);
-
-                              if (profileError) throw profileError;
-
-                              toast({
-                                title: "Success",
-                                description: "Demographics reset successfully"
-                              });
-                              fetchSubmissions();
-                            } catch (error: any) {
-                              console.error('Error resetting demographics:', error);
-                              toast({
-                                title: "Error",
-                                description: "Failed to reset demographics",
-                                variant: "destructive"
-                              });
-                            }
-                          }}
-                        >
-                          Require New Submission
-                        </Button>
-                      </CardContent>
-                    </Card>;
-              })}
+                        {/* View Submission Button */}
+                        {submission.screenshot_url && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full mt-3 text-xs font-inter tracking-[-0.5px]"
+                            onClick={() => openReviewDialog(submission)}
+                          >
+                            View Submission
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </>}
+              )}
             </TabsContent>
           </Tabs>
 
@@ -1637,19 +1882,53 @@ export default function AdminUsers() {
           <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
             <DialogContent className="max-w-md bg-card border-0">
               <DialogHeader className="pb-2">
-                <DialogTitle className="text-lg">Review Demographic Submission</DialogTitle>
+                <DialogTitle className="text-lg font-inter tracking-[-0.5px]">Review Demographic Submission</DialogTitle>
               </DialogHeader>
 
-              {selectedSubmission && <div className="space-y-4">
-                  <a href={`https://${selectedSubmission.social_accounts.platform}.com/${selectedSubmission.social_accounts.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors group">
-                    {getPlatformIcon(selectedSubmission.social_accounts.platform)}
-                    <div>
-                      <p className="font-semibold group-hover:underline">@{selectedSubmission.social_accounts.username}</p>
+              {selectedSubmission && (
+                <div className="space-y-4">
+                  {/* Account Info in Dialog */}
+                  <a 
+                    href={selectedSubmission.social_accounts.account_link || `https://${selectedSubmission.social_accounts.platform}.com/@${selectedSubmission.social_accounts.username}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors group"
+                  >
+                    {/* Avatar in dialog */}
+                    <div className="relative flex-shrink-0">
+                      {selectedSubmission.social_accounts.avatar_url ? (
+                        <img 
+                          src={selectedSubmission.social_accounts.avatar_url} 
+                          alt={selectedSubmission.social_accounts.username}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-base font-semibold text-muted-foreground">
+                            {selectedSubmission.social_accounts.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background flex items-center justify-center">
+                        {getPlatformIcon(selectedSubmission.social_accounts.platform)}
+                      </div>
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold group-hover:underline font-inter tracking-[-0.5px]">@{selectedSubmission.social_accounts.username}</p>
+                      {selectedSubmission.social_accounts.follower_count && (
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                          {selectedSubmission.social_accounts.follower_count.toLocaleString()} followers
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] font-inter tracking-[-0.5px]">
+                      Tier 1: {selectedSubmission.tier1_percentage}%
+                    </Badge>
                   </a>
 
-                  {selectedSubmission.screenshot_url && <div>
-                      <Label className="text-xs mb-2 block">Demographics Video</Label>
+                  {selectedSubmission.screenshot_url && (
+                    <div>
+                      <Label className="text-xs mb-2 block font-inter tracking-[-0.5px]">Demographics Video</Label>
                       <div className="rounded-lg overflow-hidden border bg-black flex items-center justify-center">
                         <video 
                           src={selectedSubmission.screenshot_url} 
@@ -1660,24 +1939,26 @@ export default function AdminUsers() {
                           Your browser does not support the video tag.
                         </video>
                       </div>
-                    </div>}
+                    </div>
+                  )}
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="score" className="text-xs">Score (0-100)</Label>
-                    <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm" />
+                    <Label htmlFor="score" className="text-xs font-inter tracking-[-0.5px]">Score (0-100)</Label>
+                    <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm font-inter tracking-[-0.5px]" />
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t">
-                    <Button variant="destructive" size="sm" onClick={() => handleReview("rejected")} disabled={updating} className="flex-1">
+                    <Button variant="destructive" size="sm" onClick={() => handleReview("rejected")} disabled={updating} className="flex-1 font-inter tracking-[-0.5px]">
                       <XCircle className="h-4 w-4 mr-2" />
                       Reject
                     </Button>
-                    <Button onClick={() => handleReview("approved")} disabled={updating} size="sm" className="flex-1">
+                    <Button onClick={() => handleReview("approved")} disabled={updating} size="sm" className="flex-1 font-inter tracking-[-0.5px]">
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       {updating ? "Accepting..." : "Accept"}
                     </Button>
                   </div>
-                </div>}
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </TabsContent>
