@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/components/ThemeProvider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Copy, Check, ArrowRight, ArrowLeft, X, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -15,200 +17,88 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import xLogo from "@/assets/x-logo.png";
 import xLogoLight from "@/assets/x-logo-light.png";
-import connectAccountIcon from "@/assets/connect-account-icon.svg";
-import { z } from "zod";
 
-// Helper function to extract username from URL based on platform
-const extractUsernameFromUrl = (url: string, platform: Platform): string | null => {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname.toLowerCase();
-
-    // Validate domain matches platform
-    if (platform === "tiktok" && !hostname.includes("tiktok.com")) {
-      return null;
-    }
-    if (platform === "instagram" && !hostname.includes("instagram.com")) {
-      return null;
-    }
-    if (platform === "youtube" && !hostname.includes("youtube.com")) {
-      return null;
-    }
-    if (platform === "twitter" && !(hostname.includes("twitter.com") || hostname.includes("x.com"))) {
-      return null;
-    }
-
-    // Extract username based on platform
-    if (platform === "tiktok" || platform === "youtube") {
-      // Format: https://www.tiktok.com/@username or https://www.youtube.com/@username
-      // Handle with/without trailing slash and query params
-      const match = urlObj.pathname.match(/@([^/?#]+)/);
-      return match ? match[1].toLowerCase() : null;
-    }
-    if (platform === "instagram" || platform === "twitter") {
-      // Format: https://www.instagram.com/username/ or https://twitter.com/username
-      const pathParts = urlObj.pathname.split('/').filter(p => p);
-      return pathParts.length > 0 ? pathParts[0].toLowerCase() : null;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-};
-const socialAccountSchema = z.object({
-  platform: z.enum(["tiktok", "instagram", "youtube", "twitter"], {
-    required_error: "Please select a platform"
-  }),
-  username: z.string().trim().min(1, "Username is required").max(100, "Username must be less than 100 characters").refine(val => !val.includes("@"), {
-    message: "Username should not include @ symbol"
-  }),
-  accountLink: z.string().trim().url("Please enter a valid URL").max(500, "URL must be less than 500 characters")
-}).refine(data => {
-  const extractedUsername = extractUsernameFromUrl(data.accountLink, data.platform);
-  if (!extractedUsername) {
-    return false;
-  }
-  return extractedUsername === data.username.toLowerCase();
-}, {
-  message: "Username doesn't match the profile link. Please ensure they match.",
-  path: ["accountLink"]
-});
 interface AddSocialAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
+
 type Platform = "tiktok" | "instagram" | "youtube" | "twitter";
+type Step = "input" | "verification";
+
+const VERIFICATION_TIME_SECONDS = 600; // 10 minutes
+
+// Generate a random verification code
+const generateVerificationCode = (): string => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
 export function AddSocialAccountDialog({
   open,
   onOpenChange,
   onSuccess
 }: AddSocialAccountDialogProps) {
+  const [step, setStep] = useState<Step>("input");
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("tiktok");
   const [username, setUsername] = useState("");
-  const [accountLink, setAccountLink] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const {
-    resolvedTheme
-  } = useTheme();
-  const handleXOAuth = async () => {
-    const REDIRECT_URI = `${window.location.origin}/x/callback`;
-    const {
-      data: {
-        session
-      }
-    } = await supabase.auth.getSession();
-    if (!session?.user) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "You must be logged in to connect your X account"
-      });
-      return;
-    }
-    const STATE = btoa(JSON.stringify({
-      userId: session.user.id,
-      returnTo: 'social_accounts'
-    }));
-    const codeChallenge = 'challenge';
-    const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?` + `client_id=YXNfUndDN1BXZFZCOVhJMjFQaWQ6MTpjaQ&` + `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` + `response_type=code&` + `scope=tweet.read%20users.read&` + `state=${STATE}&` + `code_challenge=${codeChallenge}&` + `code_challenge_method=plain`;
-    const popup = window.open(twitterAuthUrl, 'X OAuth', 'width=500,height=700');
-    const handleMessage = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data.type === 'x-oauth-success') {
-        popup?.close();
-        toast({
-          title: "Success!",
-          description: "X account connected successfully."
-        });
-        setUsername("");
-        setAccountLink("");
-        setSelectedPlatform("tiktok");
-        onOpenChange(false);
-        onSuccess();
-        window.removeEventListener('message', handleMessage);
-      } else if (event.data.type === 'x-oauth-error') {
-        popup?.close();
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: event.data.error || "Failed to connect X account."
-        });
-        window.removeEventListener('message', handleMessage);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-  };
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const [verificationCode, setVerificationCode] = useState("");
+  const [timeRemaining, setTimeRemaining] = useState(VERIFICATION_TIME_SECONDS);
+  const [isChecking, setIsChecking] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+  const { resolvedTheme } = useTheme();
 
-    // Validate form data
-    const validation = socialAccountSchema.safeParse({
-      platform: selectedPlatform,
-      username,
-      accountLink
-    });
-    if (!validation.success) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: validation.error.errors[0].message
-      });
-      return;
-    }
-    setUploading(true);
-    try {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "You must be logged in to add a social account"
-        });
-        return;
-      }
-
-      // Insert social account
-      const {
-        error: insertError
-      } = await supabase.from('social_accounts').insert({
-        user_id: session.user.id,
-        platform: selectedPlatform,
-        username: validation.data.username,
-        account_link: validation.data.accountLink,
-        is_verified: true
-      });
-      if (insertError) {
-        throw insertError;
-      }
-      toast({
-        title: "Success",
-        description: "Social account connected successfully"
-      });
-
-      // Reset form
+  // Reset state when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      setStep("input");
       setUsername("");
-      setAccountLink("");
-      setSelectedPlatform("tiktok");
-      onOpenChange(false);
-      onSuccess();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to add social account"
-      });
-    } finally {
-      setUploading(false);
+      setVerificationCode("");
+      setTimeRemaining(VERIFICATION_TIME_SECONDS);
+      setIsChecking(false);
+      setCopied(false);
     }
+  }, [open]);
+
+  // Generate verification code when moving to verification step
+  useEffect(() => {
+    if (step === "verification" && !verificationCode) {
+      setVerificationCode(generateVerificationCode());
+      setTimeRemaining(VERIFICATION_TIME_SECONDS);
+    }
+  }, [step, verificationCode]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (step !== "verification" || timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [step, timeRemaining]);
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
+  const progressPercent = (timeRemaining / VERIFICATION_TIME_SECONDS) * 100;
+
   const getPlatformLabel = (platform: Platform) => {
     switch (platform) {
       case "tiktok":
@@ -221,110 +111,270 @@ export function AddSocialAccountDialog({
         return "X (Twitter)";
     }
   };
-  const getPlatformIcon = (platform: Platform) => {
-    const iconClass = "h-5 w-5";
+
+  const getPlatformIcon = (platform: Platform, size: string = "h-5 w-5") => {
     const isLightMode = resolvedTheme === "light";
     switch (platform) {
       case "tiktok":
-        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={iconClass} />;
+        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={size} />;
       case "instagram":
-        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className={iconClass} />;
+        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className={size} />;
       case "youtube":
-        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className={iconClass} />;
+        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className={size} />;
       case "twitter":
-        return <img src={isLightMode ? xLogoLight : xLogo} alt="X" className={iconClass} />;
+        return <img src={isLightMode ? xLogoLight : xLogo} alt="X" className={size} />;
     }
   };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
-        <div className="flex flex-col">
-          {/* Embed Section */}
-          <div className="w-full h-[220px] border-b border-border">
-            <iframe src="https://joinvirality.com/accounts" className="w-full h-full" title="Connect Accounts" />
-          </div>
-          
-          <div className="p-6 pt-0 px-[10px]">
-            
 
-            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              {/* Platform Selection - Dropdown */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium font-inter tracking-[-0.5px]">Select Platform</Label>
-                <Select value={selectedPlatform} onValueChange={value => setSelectedPlatform(value as Platform)}>
-                  <SelectTrigger className="w-full bg-background border border-border font-inter tracking-[-0.5px]">
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(verificationCode);
+      setCopied(true);
+      toast({
+        title: "Copied!",
+        description: "Verification code copied to clipboard",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy code",
+      });
+    }
+  };
+
+  const handleContinueToVerification = () => {
+    if (!username.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter your username",
+      });
+      return;
+    }
+    setVerificationCode(""); // Reset to generate new code
+    setStep("verification");
+  };
+
+  const handleCheckVerification = useCallback(async () => {
+    if (isChecking) return;
+    
+    setIsChecking(true);
+    
+    try {
+      // TODO: This will call the API to scrape and verify
+      // For now, this is just a placeholder that will be implemented with the API
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "Checking...",
+        description: "Verification API will be connected in next step",
+      });
+      
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Verification Failed",
+        description: error.message || "Could not verify your account. Please make sure the code is in your bio.",
+      });
+    } finally {
+      setIsChecking(false);
+    }
+  }, [isChecking, toast]);
+
+  const handleBack = () => {
+    setStep("input");
+    setVerificationCode("");
+    setTimeRemaining(VERIFICATION_TIME_SECONDS);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-[#1a1a1a] border-border/50">
+        {/* Close Button */}
+        <button
+          onClick={() => onOpenChange(false)}
+          className="absolute right-4 top-4 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors z-10"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {step === "input" ? (
+          /* Step 1: Platform & Username Input */
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold font-inter tracking-[-0.5px]">
+                Connect Social Account
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
+                Verify ownership by adding a code to your bio
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              {/* Platform Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium font-inter tracking-[-0.5px]">
+                  Platform
+                </Label>
+                <Select value={selectedPlatform} onValueChange={(value) => setSelectedPlatform(value as Platform)}>
+                  <SelectTrigger className="w-full h-12 bg-[#0a0a0a] border-border/50 font-inter tracking-[-0.5px]">
                     <SelectValue>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         {getPlatformIcon(selectedPlatform)}
                         <span>{getPlatformLabel(selectedPlatform)}</span>
                       </div>
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-background border border-border">
-                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
-                        <div className="flex items-center gap-2">
+                  <SelectContent className="bg-[#1a1a1a] border-border/50">
+                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map((platform) => (
+                      <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
+                        <div className="flex items-center gap-3">
                           {getPlatformIcon(platform)}
                           <span>{getPlatformLabel(platform)}</span>
                         </div>
-                      </SelectItem>)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Show OAuth button for Twitter, manual input for others */}
-              {selectedPlatform === "twitter" ? <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-muted/20 border">
-                    <p className="text-sm text-muted-foreground mb-4 font-inter tracking-[-0.5px]">
-                      Connect your X account to automatically link your profile
-                    </p>
-                    <Button type="button" onClick={handleXOAuth} className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px]" disabled={uploading}>
-                      {uploading ? <span className="flex items-center gap-2">
-                          <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Connecting...
-                        </span> : <span className="flex items-center gap-2">
-                          {getPlatformIcon("twitter")}
-                          Connect with X
-                        </span>}
-                    </Button>
-                  </div>
-                </div> : <>
-                  {/* Username Input */}
-                  <div className="space-y-2">
-                    <Label htmlFor="username" className="text-sm font-medium font-inter tracking-[-0.5px] flex items-center gap-2">
-                      Username
-                    </Label>
-                    <div className="relative">
-                      <Input id="username" placeholder="mrbeast" value={username} onChange={e => {
-                    const cleanedValue = e.target.value.replace(/@/g, "");
-                    setUsername(cleanedValue);
-                  }} required className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pl-4 font-inter tracking-[-0.5px]" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Don't include the @ symbol</p>
-                  </div>
+              {/* Username Input */}
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-sm font-medium font-inter tracking-[-0.5px]">
+                  Username
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+                  <Input
+                    id="username"
+                    placeholder="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/@/g, "").trim())}
+                    className="h-12 bg-[#0a0a0a] border-border/50 pl-8 font-inter tracking-[-0.5px]"
+                  />
+                </div>
+              </div>
 
-                  {/* Account Link Input */}
-                  <div className="space-y-2">
-                    <Label htmlFor="accountLink" className="text-sm font-medium font-inter tracking-[-0.5px]">
-                      Profile Link
-                    </Label>
-                    <div className="relative">
-                      <Input id="accountLink" type="url" placeholder={`https://${selectedPlatform}.com/@${username || "username"}`} value={accountLink} onChange={e => setAccountLink(e.target.value)} required className="bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary font-inter tracking-[-0.5px]" />
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 transition-colors font-inter tracking-[-0.5px] border-t-2 border-t-[#4a86ff]" disabled={uploading}>
-                    {uploading ? <span className="flex items-center gap-2">
-                        <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Connecting...
-                      </span> : <span className="flex items-center gap-2">
-                        <img src={connectAccountIcon} alt="" className="h-5 w-5" />
-                        Connect Account
-                      </span>}
-                  </Button>
-                </>}
-            </form>
+              {/* Continue Button */}
+              <Button
+                onClick={handleContinueToVerification}
+                className="w-full h-12 bg-primary hover:bg-primary/90 font-inter tracking-[-0.5px] border-t border-t-[#4a86ff]/50 mt-4"
+              >
+                <span className="flex items-center gap-2">
+                  Continue
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : (
+          /* Step 2: Verification */
+          <div className="p-6">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-12 w-12 rounded-lg bg-[#0a0a0a] flex items-center justify-center">
+                {getPlatformIcon(selectedPlatform, "h-7 w-7")}
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
+                  Verify @{username}
+                </h2>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                  {getPlatformLabel(selectedPlatform)} Account
+                </p>
+              </div>
+            </div>
+
+            {/* Status Badge */}
+            <div className="flex justify-center mb-6">
+              <span className="px-4 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/30 font-inter tracking-[-0.5px]">
+                Waiting for Verification
+              </span>
+            </div>
+
+            {/* Verification Code Section */}
+            <div className="space-y-2 mb-6">
+              <Label className="text-sm font-medium font-inter tracking-[-0.5px]">
+                Verification Code
+              </Label>
+              <div className="flex gap-2">
+                <div className="flex-1 h-14 bg-[#0a0a0a] rounded-lg flex items-center justify-center border border-border/30">
+                  <span className="text-xl font-bold font-mono tracking-[0.2em]">
+                    {verificationCode}
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyCode}
+                  className="h-14 w-14 bg-[#0a0a0a] border-border/30 hover:bg-[#2a2a2a]"
+                >
+                  {copied ? (
+                    <Check className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <Copy className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground text-center font-inter tracking-[-0.5px]">
+                Add this code to your {getPlatformLabel(selectedPlatform)} bio
+              </p>
+            </div>
+
+            {/* Time Remaining */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                  Time Remaining
+                </span>
+                <span className="text-lg font-semibold font-mono">
+                  {formatTime(timeRemaining)}
+                </span>
+              </div>
+              <Progress 
+                value={progressPercent} 
+                className="h-1.5 bg-[#0a0a0a]"
+              />
+            </div>
+
+            {/* Check Verification Button */}
+            <Button
+              onClick={handleCheckVerification}
+              disabled={isChecking || timeRemaining === 0}
+              className="w-full h-12 bg-[#2a2a2a] hover:bg-[#3a3a3a] border border-border/30 font-inter tracking-[-0.5px] mb-4"
+            >
+              {isChecking ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  Check Verification Status
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              )}
+            </Button>
+
+            <p className="text-xs text-muted-foreground text-center font-inter tracking-[-0.5px]">
+              We'll automatically check every 10 seconds, or click the button above to check now.
+            </p>
+
+            {/* Back Button */}
+            <button
+              onClick={handleBack}
+              className="w-full mt-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          </div>
+        )}
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
