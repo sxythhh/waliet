@@ -1068,7 +1068,7 @@ export default function AdminUsers() {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  if (loading) {
+  if (false && loading) {
     return <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground font-inter tracking-[-0.5px]">Loading users...</p>
       </div>;
