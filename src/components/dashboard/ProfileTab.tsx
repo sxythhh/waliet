@@ -777,7 +777,7 @@ export function ProfileTab() {
                           fontFamily: 'Inter',
                           letterSpacing: '-0.3px'
                         }}>
-                                · {account.platform}
+                                {account.platform}
                               </span>
                             </div>
                             {/* Campaign count below username */}
