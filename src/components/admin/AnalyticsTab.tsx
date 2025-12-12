@@ -1,20 +1,29 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck, ChevronDown, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, BarChart, CartesianGrid, Line, LineChart, ComposedChart, Legend, PieChart, Pie, Cell } from "recharts";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Users, TrendingUp, DollarSign, Activity, UserCheck, FileText, ClipboardCheck, ChevronDown, ArrowUpRight, ArrowDownRight, Calendar } from "lucide-react";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, BarChart, ComposedChart, PieChart, Pie, Cell } from "recharts";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { format, subDays, subMonths, startOfWeek, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format, subDays, subMonths, startOfWeek, startOfDay, endOfDay } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AnalyticsData {
   totalUsers: number;
-  newUsersThisMonth: number;
+  newUsersCurrentPeriod: number;
+  newUsersPreviousPeriod: number;
   totalCampaigns: number;
   activeCampaigns: number;
   totalEarnings: number;
+  earningsCurrentPeriod: number;
+  earningsPreviousPeriod: number;
   totalWithdrawals: number;
+  withdrawalsCurrentPeriod: number;
+  withdrawalsPreviousPeriod: number;
   totalAccounts: number;
+  accountsCurrentPeriod: number;
+  accountsPreviousPeriod: number;
   pendingApplications: number;
   pendingDemographicReviews: number;
   pendingPayouts: number;
@@ -22,7 +31,7 @@ interface AnalyticsData {
   avgWithdrawalAmount: number;
 }
 
-type TimePeriod = '3D' | '1W' | '1M' | '3M' | 'ALL';
+type TimePeriod = 'TODAY' | '3D' | '1W' | '1M' | '3M' | 'ALL' | 'CUSTOM';
 
 const CHART_COLORS = {
   blue: '#3b82f6',
@@ -33,15 +42,31 @@ const CHART_COLORS = {
   cyan: '#06b6d4',
 };
 
+const TIME_OPTIONS = [
+  { value: 'TODAY', label: 'Today' },
+  { value: '3D', label: '3 Days' },
+  { value: '1W', label: '1 Week' },
+  { value: '1M', label: '1 Month' },
+  { value: '3M', label: '3 Months' },
+  { value: 'ALL', label: 'All Time' },
+];
+
 export function AnalyticsTab() {
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalUsers: 0,
-    newUsersThisMonth: 0,
+    newUsersCurrentPeriod: 0,
+    newUsersPreviousPeriod: 0,
     totalCampaigns: 0,
     activeCampaigns: 0,
     totalEarnings: 0,
+    earningsCurrentPeriod: 0,
+    earningsPreviousPeriod: 0,
     totalWithdrawals: 0,
+    withdrawalsCurrentPeriod: 0,
+    withdrawalsPreviousPeriod: 0,
     totalAccounts: 0,
+    accountsCurrentPeriod: 0,
+    accountsPreviousPeriod: 0,
     pendingApplications: 0,
     pendingDemographicReviews: 0,
     pendingPayouts: 0,
@@ -53,22 +78,25 @@ export function AnalyticsTab() {
   const [withdrawalData, setWithdrawalData] = useState<any[]>([]);
   const [payoutStatusData, setPayoutStatusData] = useState<any[]>([]);
   const [earningsVsWithdrawalsData, setEarningsVsWithdrawalsData] = useState<any[]>([]);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1M');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1W');
+  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const getTimePeriodLabel = () => {
-    switch (timePeriod) {
-      case '3D': return 'Last 3 Days';
-      case '1W': return 'Last Week';
-      case '1M': return 'Last Month';
-      case '3M': return 'Last 3 Months';
-      case 'ALL': return 'All Time';
-      default: return 'Last Month';
+    if (timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to) {
+      return `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`;
     }
+    return TIME_OPTIONS.find(o => o.value === timePeriod)?.label || '1 Week';
   };
 
   const getDateRange = () => {
     const now = new Date();
+    if (timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to) {
+      return { start: startOfDay(customDateRange.from), end: endOfDay(customDateRange.to) };
+    }
     switch (timePeriod) {
+      case 'TODAY':
+        return { start: startOfDay(now), end: now };
       case '3D':
         return { start: subDays(now, 3), end: now };
       case '1W':
@@ -80,8 +108,17 @@ export function AnalyticsTab() {
       case 'ALL':
         return { start: new Date('2024-01-01'), end: now };
       default:
-        return { start: subMonths(now, 1), end: now };
+        return { start: subDays(now, 7), end: now };
     }
+  };
+
+  const getPreviousDateRange = () => {
+    const { start, end } = getDateRange();
+    const duration = end.getTime() - start.getTime();
+    return {
+      start: new Date(start.getTime() - duration),
+      end: new Date(end.getTime() - duration),
+    };
   };
 
   useEffect(() => {
@@ -91,21 +128,30 @@ export function AnalyticsTab() {
     fetchWithdrawalData();
     fetchPayoutStatusData();
     fetchEarningsVsWithdrawalsData();
-  }, [timePeriod]);
+  }, [timePeriod, customDateRange]);
 
   const fetchAnalytics = async () => {
+    const { start, end } = getDateRange();
+    const { start: prevStart, end: prevEnd } = getPreviousDateRange();
+
     // Fetch total users
     const { count: totalUsers } = await supabase
       .from("profiles")
       .select("*", { count: "exact", head: true });
 
-    // Fetch new users this month
-    const startOfMonthDate = new Date();
-    startOfMonthDate.setDate(1);
-    const { count: newUsersThisMonth } = await supabase
+    // Fetch users in current period
+    const { count: newUsersCurrentPeriod } = await supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
-      .gte("created_at", startOfMonthDate.toISOString());
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString());
+
+    // Fetch users in previous period
+    const { count: newUsersPreviousPeriod } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", prevStart.toISOString())
+      .lte("created_at", prevEnd.toISOString());
 
     // Fetch campaigns
     const { count: totalCampaigns } = await supabase
@@ -125,10 +171,58 @@ export function AnalyticsTab() {
     const totalEarnings = walletData?.reduce((sum, w) => sum + (Number(w.total_earned) || 0), 0) || 0;
     const totalWithdrawals = walletData?.reduce((sum, w) => sum + (Number(w.total_withdrawn) || 0), 0) || 0;
 
+    // Fetch earnings in current period
+    const { data: currentEarningsData } = await supabase
+      .from("wallet_transactions")
+      .select("amount")
+      .eq("type", "earning")
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString());
+    const earningsCurrentPeriod = currentEarningsData?.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
+
+    // Fetch earnings in previous period
+    const { data: prevEarningsData } = await supabase
+      .from("wallet_transactions")
+      .select("amount")
+      .eq("type", "earning")
+      .gte("created_at", prevStart.toISOString())
+      .lte("created_at", prevEnd.toISOString());
+    const earningsPreviousPeriod = prevEarningsData?.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
+
+    // Fetch withdrawals in current period
+    const { data: currentWithdrawalsData } = await supabase
+      .from("payout_requests")
+      .select("amount")
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString());
+    const withdrawalsCurrentPeriod = currentWithdrawalsData?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+
+    // Fetch withdrawals in previous period
+    const { data: prevWithdrawalsData } = await supabase
+      .from("payout_requests")
+      .select("amount")
+      .gte("created_at", prevStart.toISOString())
+      .lte("created_at", prevEnd.toISOString());
+    const withdrawalsPreviousPeriod = prevWithdrawalsData?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+
     // Fetch total accounts
     const { count: totalAccounts } = await supabase
       .from("social_accounts")
       .select("*", { count: "exact", head: true });
+
+    // Fetch accounts in current period
+    const { count: accountsCurrentPeriod } = await supabase
+      .from("social_accounts")
+      .select("*", { count: "exact", head: true })
+      .gte("connected_at", start.toISOString())
+      .lte("connected_at", end.toISOString());
+
+    // Fetch accounts in previous period
+    const { count: accountsPreviousPeriod } = await supabase
+      .from("social_accounts")
+      .select("*", { count: "exact", head: true })
+      .gte("connected_at", prevStart.toISOString())
+      .lte("connected_at", prevEnd.toISOString());
 
     // Fetch pending applications
     const { count: pendingApplications } = await supabase
@@ -165,12 +259,19 @@ export function AnalyticsTab() {
 
     setAnalytics({
       totalUsers: totalUsers || 0,
-      newUsersThisMonth: newUsersThisMonth || 0,
+      newUsersCurrentPeriod: newUsersCurrentPeriod || 0,
+      newUsersPreviousPeriod: newUsersPreviousPeriod || 0,
       totalCampaigns: totalCampaigns || 0,
       activeCampaigns: activeCampaigns || 0,
       totalEarnings,
+      earningsCurrentPeriod,
+      earningsPreviousPeriod,
       totalWithdrawals,
+      withdrawalsCurrentPeriod,
+      withdrawalsPreviousPeriod,
       totalAccounts: totalAccounts || 0,
+      accountsCurrentPeriod: accountsCurrentPeriod || 0,
+      accountsPreviousPeriod: accountsPreviousPeriod || 0,
       pendingApplications: pendingApplications || 0,
       pendingDemographicReviews: pendingDemographicReviews || 0,
       pendingPayouts: pendingPayouts || 0,
@@ -429,148 +530,219 @@ export function AnalyticsTab() {
     );
   };
 
+  const getChangeIndicator = (current: number, previous: number) => {
+    if (previous === 0) return { isPositive: current > 0, change: current > 0 ? 100 : 0 };
+    const change = ((current - previous) / previous) * 100;
+    return { isPositive: change >= 0, change: Math.abs(change) };
+  };
+
+  const getPeriodLabel = () => {
+    switch (timePeriod) {
+      case 'TODAY': return 'vs yesterday';
+      case '3D': return 'vs prev 3 days';
+      case '1W': return 'vs prev week';
+      case '1M': return 'vs prev month';
+      case '3M': return 'vs prev 3 months';
+      case 'ALL': return 'all time';
+      case 'CUSTOM': return 'vs prev period';
+      default: return '';
+    }
+  };
+
+  const userChange = getChangeIndicator(analytics.newUsersCurrentPeriod, analytics.newUsersPreviousPeriod);
+  const earningsChange = getChangeIndicator(analytics.earningsCurrentPeriod, analytics.earningsPreviousPeriod);
+  const withdrawalsChange = getChangeIndicator(analytics.withdrawalsCurrentPeriod, analytics.withdrawalsPreviousPeriod);
+  const accountsChange = getChangeIndicator(analytics.accountsCurrentPeriod, analytics.accountsPreviousPeriod);
+
   return (
     <div className="space-y-6">
-      {/* Key metrics - single row on mobile, 4 cols on desktop */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Users</CardTitle>
-              <Users className="h-3.5 w-3.5 text-muted-foreground" />
+      {/* Time period selector - at top */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg">
+          {TIME_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setTimePeriod(option.value as TimePeriod)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all",
+                timePeriod === option.value
+                  ? "bg-white/10 text-white"
+                  : "text-white/50 hover:text-white/70"
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        
+        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "gap-2 text-xs font-inter tracking-[-0.5px]",
+                timePeriod === 'CUSTOM' ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"
+              )}
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              {timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to 
+                ? `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}`
+                : 'Custom'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-white/10" align="start">
+            <CalendarComponent
+              mode="range"
+              selected={{ from: customDateRange.from, to: customDateRange.to }}
+              onSelect={(range) => {
+                setCustomDateRange({ from: range?.from, to: range?.to });
+                if (range?.from && range?.to) {
+                  setTimePeriod('CUSTOM');
+                  setIsDatePickerOpen(false);
+                }
+              }}
+              numberOfMonths={2}
+              className="rounded-md"
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Key metrics - redesigned */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-0 overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold font-inter",
+                userChange.isPositive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+              )}>
+                {userChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                {userChange.change.toFixed(0)}%
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px]">{analytics.totalUsers}</div>
-            <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] flex items-center gap-1">
-              <ArrowUpRight className="h-3 w-3 text-green-500" />
-              +{analytics.newUsersThisMonth} this month
-            </p>
+            <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white mb-1">{analytics.totalUsers.toLocaleString()}</div>
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Total Users</p>
+            <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">+{analytics.newUsersCurrentPeriod} {getPeriodLabel()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Campaigns</CardTitle>
-              <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-0 overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-green-400" />
+              </div>
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold font-inter",
+                earningsChange.isPositive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+              )}>
+                {earningsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                {earningsChange.change.toFixed(0)}%
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px]">{analytics.totalCampaigns}</div>
-            <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">{analytics.activeCampaigns} active</p>
+            <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white mb-1">${analytics.totalEarnings.toLocaleString()}</div>
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Total Earnings</p>
+            <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">+${analytics.earningsCurrentPeriod.toFixed(0)} {getPeriodLabel()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Total Earnings</CardTitle>
-              <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-0 overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-orange-400" />
+              </div>
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold font-inter",
+                withdrawalsChange.isPositive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+              )}>
+                {withdrawalsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                {withdrawalsChange.change.toFixed(0)}%
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px]">${analytics.totalEarnings.toFixed(0)}</div>
-            <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">Platform-wide</p>
+            <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white mb-1">${analytics.totalWithdrawals.toLocaleString()}</div>
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Total Paid Out</p>
+            <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">+${analytics.withdrawalsCurrentPeriod.toFixed(0)} {getPeriodLabel()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Total Paid Out</CardTitle>
-              <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-0 overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <UserCheck className="h-5 w-5 text-purple-400" />
+              </div>
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold font-inter",
+                accountsChange.isPositive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+              )}>
+                {accountsChange.isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                {accountsChange.change.toFixed(0)}%
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px]">${analytics.totalWithdrawals.toFixed(0)}</div>
-            <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
-              Avg: ${analytics.avgWithdrawalAmount.toFixed(0)}/withdrawal
-            </p>
+            <div className="text-2xl font-bold font-inter tracking-[-0.5px] text-white mb-1">{analytics.totalAccounts.toLocaleString()}</div>
+            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Social Accounts</p>
+            <p className="text-[10px] text-white/30 font-inter tracking-[-0.5px] mt-1">+{analytics.accountsCurrentPeriod} {getPeriodLabel()}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Secondary metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Accounts</CardTitle>
-              <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="bg-white/[0.02] border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Activity className="h-4 w-4 text-cyan-400" />
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px]">{analytics.totalAccounts}</div>
+            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.totalCampaigns}</div>
+            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Campaigns ({analytics.activeCampaigns} active)</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Pending Apps</CardTitle>
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="bg-white/[0.02] border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <FileText className="h-4 w-4 text-yellow-400" />
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px]">{analytics.pendingApplications}</div>
+            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingApplications}</div>
+            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Apps</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Demographics</CardTitle>
-              <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground" />
+        <Card className="bg-white/[0.02] border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <ClipboardCheck className="h-4 w-4 text-pink-400" />
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px]">{analytics.pendingDemographicReviews}</div>
+            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-white">{analytics.pendingDemographicReviews}</div>
+            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Demographics</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Pending Payouts</CardTitle>
-              <DollarSign className="h-3.5 w-3.5 text-orange-500" />
+        <Card className="bg-white/[0.02] border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <DollarSign className="h-4 w-4 text-orange-400" />
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px] text-orange-500">{analytics.pendingPayouts}</div>
+            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-orange-400">{analytics.pendingPayouts}</div>
+            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Pending Payouts</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-0">
-          <CardHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Completed</CardTitle>
-              <DollarSign className="h-3.5 w-3.5 text-green-500" />
+        <Card className="bg-white/[0.02] border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <DollarSign className="h-4 w-4 text-green-400" />
             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold font-inter tracking-[-0.5px] text-green-500">{analytics.completedPayouts}</div>
+            <div className="text-lg font-bold font-inter tracking-[-0.5px] text-green-400">{analytics.completedPayouts}</div>
+            <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">Completed</p>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Time period selector */}
-      <div className="flex justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2 bg-card/50 border-0 font-inter tracking-[-0.5px]">
-              {getTimePeriodLabel()}
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#0a0a0a] border-white/10 z-50">
-            <DropdownMenuItem onClick={() => setTimePeriod('3D')} className="font-inter tracking-[-0.5px]">Last 3 Days</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTimePeriod('1W')} className="font-inter tracking-[-0.5px]">Last Week</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTimePeriod('1M')} className="font-inter tracking-[-0.5px]">Last Month</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTimePeriod('3M')} className="font-inter tracking-[-0.5px]">Last 3 Months</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTimePeriod('ALL')} className="font-inter tracking-[-0.5px]">All Time</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* Withdrawals Over Time - Full Width */}

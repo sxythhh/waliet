@@ -44,12 +44,8 @@ function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void;
 
   return (
     <div className="flex flex-col h-full bg-[#0a0a0a]">
-      <div className="p-4 pb-4">
-        <h2 className="text-base font-semibold font-inter tracking-[-0.5px] text-foreground">Dashboard</h2>
-      </div>
-
       {/* Search Bar */}
-      <div className="px-3 pb-4">
+      <div className="px-3 py-4">
         <button
           onClick={onSearchOpen}
           className="w-full flex items-center gap-2.5 px-3 py-2 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors text-left"
@@ -68,10 +64,10 @@ function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void;
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 text-sm font-inter tracking-[-0.5px] transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 text-sm font-inter tracking-[-0.5px] transition-colors rounded-md",
                 active
-                  ? "text-[#2060df] font-medium"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-white/10 text-white font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               )}
             >
               <span>{item.title}</span>
