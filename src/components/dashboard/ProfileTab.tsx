@@ -766,7 +766,7 @@ export function ProfileTab() {
                             {/* Account Header with Avatar */}
                             <div className="flex items-center gap-3">
                               {/* Avatar */}
-                              {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border/50" /> : <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-base">
+                              {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border/50 opacity-100" /> : <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-base">
                                   {account.username.charAt(0).toUpperCase()}
                                 </div>}
                               

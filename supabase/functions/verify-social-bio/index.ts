@@ -5,6 +5,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to remove verification code from bio
+function filterVerificationCode(bio: string, verificationCode: string): string {
+  if (!bio || !verificationCode) return bio;
+  // Remove the verification code (case-insensitive) and clean up extra whitespace
+  const filtered = bio.replace(new RegExp(verificationCode, 'gi'), '').trim();
+  // Clean up multiple spaces and trim
+  return filtered.replace(/\s+/g, ' ').trim();
+}
+
 async function verifyTikTok(username: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching TikTok profile for: ${username}`);
   
@@ -35,9 +44,11 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
   const bio = user.signature || '';
   const verified = bio.includes(verificationCode);
 
+  const cleanBio = filterVerificationCode(bio, verificationCode);
+
   return {
     verified,
-    bio,
+    bio: cleanBio,
     user: {
       nickname: user.nickname,
       avatar: user.avatarMedium,
@@ -85,9 +96,11 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   const normalizedCode = verificationCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
   const verified = normalizedBio.includes(normalizedCode);
 
+  const cleanBio = filterVerificationCode(bio, verificationCode);
+
   return {
     verified,
-    bio,
+    bio: cleanBio,
     user: {
       nickname: profile.name || profile.screenName,
       avatar: profile.image || null,
@@ -153,9 +166,11 @@ async function verifyYouTube(channelId: string, verificationCode: string, rapidA
   // Get avatar/thumbnail
   const avatar = channelData.thumbnail?.[0]?.url || channelData.avatar?.[0]?.url || null;
 
+  const cleanBio = filterVerificationCode(bio, verificationCode);
+
   return {
     verified,
-    bio,
+    bio: cleanBio,
     user: {
       nickname: channelData.title || channelData.name,
       avatar,
