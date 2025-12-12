@@ -779,7 +779,7 @@ export function ProfileTab() {
                             }}>
                                     {account.username}
                                   </span>
-                                  <div className="w-4 h-4 flex-shrink-0 opacity-60">
+                                  <div className="w-4 h-4 flex-shrink-0">
                                     {getPlatformIcon(account.platform)}
                                   </div>
                                 </div>
