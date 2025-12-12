@@ -521,7 +521,7 @@ export function DiscoverTab() {
                   {/* Bookmark Button */}
                   <button
                     onClick={(e) => toggleBookmark(campaign.id, e)}
-                    className={`absolute top-2 right-2 z-20 p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
+                    className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
                   >
                     <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
                   </button>
