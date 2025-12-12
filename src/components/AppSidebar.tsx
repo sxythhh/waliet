@@ -232,31 +232,21 @@ export function AppSidebar() {
                 </Avatar>
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-0 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl shadow-2xl" align="end" sideOffset={8}>
+            <PopoverContent className="w-64 p-0 bg-[#0a0a0a] border-0 rounded-xl shadow-2xl" align="end" sideOffset={8}>
               <div className="p-3 space-y-1">
-                {/* User Info */}
-                <div className="flex items-center gap-3 px-2 py-2 mb-2">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                    <AvatarFallback className="bg-[#1f1f1f] text-neutral-400">
-                      {getInitial()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{displayName}</p>
-                    <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
-                  </div>
-                </div>
-
                 {/* Workspace Section */}
                 {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && (
-                  <div className="border-t border-[#1f1f1f] pt-2 pb-1">
-                    <p className="text-[10px] uppercase tracking-wider text-neutral-500 px-2 mb-1">Workspace</p>
+                  <div className="pb-1">
                     <button
                       onClick={() => handleWorkspaceChange("creator")}
                       className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}
                     >
-                      <User className="w-4 h-4" />
+                      <Avatar className="w-4 h-4">
+                        <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                        <AvatarFallback className="bg-[#1f1f1f] text-[8px] text-neutral-400">
+                          {getInitial()}
+                        </AvatarFallback>
+                      </Avatar>
                       <span className="text-sm">Creator</span>
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
@@ -293,33 +283,12 @@ export function AppSidebar() {
                 )}
                 
                 {/* Quick Links */}
-                <div className="border-t border-[#1f1f1f] pt-2 space-y-0.5">
-                  <button
-                    onClick={() => handleTabClick("profile")}
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span className="text-sm">Settings</span>
-                  </button>
-                  <button
-                    onClick={() => navigate("/leaderboard")}
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
-                  >
-                    <Medal className="w-4 h-4" />
-                    <span className="text-sm">Leaderboard</span>
-                  </button>
-                  <button
-                    onClick={() => navigate("/referrals")}
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
-                  >
-                    <Gift className="w-4 h-4" />
-                    <span className="text-sm">Referrals</span>
-                  </button>
+                <div className="space-y-0.5">
                   <button
                     onClick={() => navigate("/support")}
                     className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors"
                   >
-                    <HelpCircle className="w-4 h-4" />
+                    <img src={supportIcon} alt="Support" className="w-4 h-4" />
                     <span className="text-sm">Support</span>
                   </button>
                   <button
@@ -335,7 +304,7 @@ export function AppSidebar() {
                 </div>
 
                 {/* Theme & Logout */}
-                <div className="border-t border-[#1f1f1f] pt-2 flex items-center gap-2">
+                <div className="pt-1 flex items-center gap-2">
                   <button
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                     className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-white transition-colors"
