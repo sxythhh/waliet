@@ -100,8 +100,8 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
 async function verifyYouTube(channelId: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching YouTube channel for: ${channelId}`);
   
-  // Extract channel ID from URL if provided
-  let cleanChannelId = channelId;
+  // Extract channel ID or handle from URL if provided
+  let cleanChannelId = channelId.trim();
   if (channelId.includes('youtube.com')) {
     // Handle URLs like youtube.com/channel/UCxxx or youtube.com/@handle
     const channelMatch = channelId.match(/channel\/([^\/\?]+)/);
@@ -113,8 +113,15 @@ async function verifyYouTube(channelId: string, verificationCode: string, rapidA
     }
   }
   
+  // Ensure handles have @ prefix
+  if (!cleanChannelId.startsWith('UC') && !cleanChannelId.startsWith('@')) {
+    cleanChannelId = `@${cleanChannelId}`;
+  }
+  
+  console.log(`Using channel identifier: ${cleanChannelId}`);
+  
   const response = await fetch(
-    `https://youtube138.p.rapidapi.com/v2/channel-details?channel_id=${encodeURIComponent(cleanChannelId)}&hl=en`,
+    `https://youtube138.p.rapidapi.com/channel/details/?id=${encodeURIComponent(cleanChannelId)}&hl=en&gl=US`,
     {
       method: 'GET',
       headers: {
@@ -125,34 +132,36 @@ async function verifyYouTube(channelId: string, verificationCode: string, rapidA
   );
 
   if (!response.ok) {
-    console.error(`YouTube API error: ${response.status}`);
+    const errorText = await response.text();
+    console.error(`YouTube API error: ${response.status}, body: ${errorText}`);
     throw new Error(`YouTube API error: ${response.status}`);
   }
 
   const data = await response.json();
-  console.log('YouTube API response received');
+  console.log('YouTube API response received:', JSON.stringify(data).substring(0, 500));
 
-  if (data.status !== 'success' || !data.author) {
+  // Handle different response formats
+  const channelData = data.meta || data;
+  
+  if (!channelData || (!channelData.title && !channelData.channelId)) {
     throw new Error('YouTube channel not found');
   }
 
-  const bio = data.description || '';
-  const verified = bio.includes(verificationCode);
+  const bio = channelData.description || '';
+  const verified = bio.toUpperCase().includes(verificationCode.toUpperCase());
 
-  // Get the largest thumbnail
-  const avatar = data.authorThumbnails?.length > 0 
-    ? data.authorThumbnails[data.authorThumbnails.length - 1]?.url 
-    : null;
+  // Get avatar/thumbnail
+  const avatar = channelData.thumbnail?.[0]?.url || channelData.avatar?.[0]?.url || null;
 
   return {
     verified,
     bio,
     user: {
-      nickname: data.author,
+      nickname: channelData.title || channelData.name,
       avatar,
-      followerCount: data.subCount || 0,
-      isVerified: false,
-      channelId: data.authorId,
+      followerCount: parseInt(channelData.subscriberCount) || 0,
+      isVerified: channelData.isVerified || false,
+      channelId: channelData.channelId || channelData.externalId,
     },
   };
 }
