@@ -90,6 +90,7 @@ export function DiscoverTab() {
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<'all' | 'campaigns' | 'boosts'>('all');
   const [nicheFilter, setNicheFilter] = useState<string | null>(null);
+  const [browseFilter, setBrowseFilter] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -565,29 +566,67 @@ export function DiscoverTab() {
                   type: 'campaign' as const,
                   data: c,
                   isEnded: c.status === 'ended',
-                  createdAt: c.start_date || c.created_at
+                  createdAt: c.start_date || c.created_at,
+                  views: c.budget_used || 0, // popularity proxy
+                  payRate: c.rpm_rate
                 }));
                 
                 const bountyItems = typeFilter === 'campaigns' ? [] : bounties
                   .filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id))
+                  .filter(b => {
+                    // Apply search filter to bounties too
+                    if (!searchQuery) return true;
+                    const query = searchQuery.toLowerCase();
+                    return b.title.toLowerCase().includes(query) || 
+                           b.description?.toLowerCase().includes(query) ||
+                           b.brands?.name?.toLowerCase().includes(query);
+                  })
                   .map(b => ({
                     type: 'bounty' as const,
                     data: b,
                     isEnded: b.status === 'ended',
-                    createdAt: b.created_at
+                    createdAt: b.created_at,
+                    views: b.accepted_creators_count || 0, // popularity proxy
+                    payRate: b.monthly_retainer
                   }));
                 
-                const allItems: Array<{type: 'campaign', data: Campaign, isEnded: boolean, createdAt: string} | {type: 'bounty', data: BountyCampaign, isEnded: boolean, createdAt: string}> = [
+                const allItems: Array<{type: 'campaign', data: Campaign, isEnded: boolean, createdAt: string, views: number, payRate: number} | {type: 'bounty', data: BountyCampaign, isEnded: boolean, createdAt: string, views: number, payRate: number}> = [
                   ...campaignItems,
                   ...bountyItems
                 ];
                 
-                // Sort: active items first (by date), then ended items
+                // Sort based on browse filter
                 const sortedItems = allItems.sort((a, b) => {
-                  // Ended items go last
+                  // Ended items always go last
                   if (a.isEnded && !b.isEnded) return 1;
                   if (!a.isEnded && b.isEnded) return -1;
-                  // Within same status, sort by date (newest first)
+                  
+                  // Apply browse filter sorting
+                  if (browseFilter === 'new') {
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                  }
+                  if (browseFilter === 'trending' || browseFilter === 'popular') {
+                    return b.views - a.views;
+                  }
+                  if (browseFilter === 'high-paying') {
+                    return b.payRate - a.payRate;
+                  }
+                  if (browseFilter === 'ending-soon') {
+                    // For ending soon, we want active campaigns with end dates coming up first
+                    const getEndDate = (item: typeof a) => {
+                      if (item.type === 'bounty') return item.data.end_date;
+                      return null; // Campaigns don't have end_date in our type
+                    };
+                    const aEnd = getEndDate(a);
+                    const bEnd = getEndDate(b);
+                    if (aEnd && bEnd) {
+                      return new Date(aEnd).getTime() - new Date(bEnd).getTime();
+                    }
+                    if (aEnd) return -1;
+                    if (bEnd) return 1;
+                  }
+                  
+                  // Default: newest first
                   return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                 });
                 
@@ -810,8 +849,10 @@ export function DiscoverTab() {
         onSearchChange={setSearchQuery}
         onTypeFilter={setTypeFilter}
         onNicheFilter={setNicheFilter}
+        onBrowseFilter={setBrowseFilter}
         activeTypeFilter={typeFilter}
         activeNicheFilter={nicheFilter}
+        activeBrowseFilter={browseFilter}
       />
     </div>;
 }
