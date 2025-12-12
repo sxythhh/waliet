@@ -183,6 +183,7 @@ export function CampaignAnalyticsTable({
   const [transactionsStartDate, setTransactionsStartDate] = useState<Date | undefined>(undefined);
   const [transactionsEndDate, setTransactionsEndDate] = useState<Date | undefined>(undefined);
   const [selectedTransactionUser, setSelectedTransactionUser] = useState<Transaction | null>(null);
+  const [showBudgetAdjustmentsOnly, setShowBudgetAdjustmentsOnly] = useState(false);
   const itemsPerPage = 20;
   const transactionsPerPage = 20;
 
@@ -1117,6 +1118,12 @@ export function CampaignAnalyticsTable({
 
   // Transaction pagination with filter and sort
   const filteredTransactions = transactions.filter(txn => {
+    // Filter for manual budget adjustments
+    if (showBudgetAdjustmentsOnly) {
+      if (txn.type !== 'balance_correction' || (txn.metadata as any)?.adjustment_type !== 'manual_budget_update') {
+        return false;
+      }
+    }
     if (transactionsStartDate) {
       const txnDate = new Date(txn.created_at);
       if (txnDate < transactionsStartDate) return false;
@@ -1576,9 +1583,23 @@ export function CampaignAnalyticsTable({
                 {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
               </p>
               <div className="flex flex-wrap items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowBudgetAdjustmentsOnly(!showBudgetAdjustmentsOnly)}
+                  className={cn(
+                    "h-8 gap-2 text-xs rounded-lg tracking-[-0.3px]",
+                    showBudgetAdjustmentsOnly 
+                      ? "bg-primary/10 text-primary hover:bg-primary/20" 
+                      : "bg-muted/50 hover:bg-muted text-foreground"
+                  )}
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Budget Adjustments
+                </Button>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm" className={cn("h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg tracking-[-0.5px]", transactionsStartDate ? "text-foreground" : "text-muted-foreground")}>
+                    <Button variant="ghost" size="sm" className={cn("h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg tracking-[-0.3px] text-foreground")}>
                       <CalendarIcon className="h-3.5 w-3.5" />
                       {transactionsStartDate ? format(transactionsStartDate, "MMM d, yyyy") : "Start date"}
                     </Button>
@@ -1590,7 +1611,7 @@ export function CampaignAnalyticsTable({
                 <span className="text-muted-foreground text-xs">to</span>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm" className={cn("h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg tracking-[-0.5px]", transactionsEndDate ? "text-foreground" : "text-muted-foreground")}>
+                    <Button variant="ghost" size="sm" className={cn("h-8 gap-2 text-xs bg-muted/50 hover:bg-muted border-0 rounded-lg tracking-[-0.3px] text-foreground")}>
                       <CalendarIcon className="h-3.5 w-3.5" />
                       {transactionsEndDate ? format(transactionsEndDate, "MMM d, yyyy") : "End date"}
                     </Button>
@@ -1599,9 +1620,10 @@ export function CampaignAnalyticsTable({
                     <Calendar mode="single" selected={transactionsEndDate} onSelect={setTransactionsEndDate} initialFocus className="p-3 pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
-                {(transactionsStartDate || transactionsEndDate) && <Button variant="ghost" size="sm" onClick={() => {
+                {(transactionsStartDate || transactionsEndDate || showBudgetAdjustmentsOnly) && <Button variant="ghost" size="sm" onClick={() => {
               setTransactionsStartDate(undefined);
               setTransactionsEndDate(undefined);
+              setShowBudgetAdjustmentsOnly(false);
             }} className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50">
                     <X className="h-4 w-4" />
                   </Button>}
