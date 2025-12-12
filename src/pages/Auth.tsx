@@ -124,20 +124,19 @@ export default function Auth() {
       });
     }
   };
-
   const handleDiscordSignIn = () => {
     setLoading(true);
     const DISCORD_CLIENT_ID = '1358047837250478110';
     const redirectUri = `${window.location.origin}/discord/callback`;
-    const state = btoa(JSON.stringify({ action: 'auth' }));
-    
+    const state = btoa(JSON.stringify({
+      action: 'auth'
+    }));
     const discordAuthUrl = new URL('https://discord.com/api/oauth2/authorize');
     discordAuthUrl.searchParams.set('client_id', DISCORD_CLIENT_ID);
     discordAuthUrl.searchParams.set('redirect_uri', redirectUri);
     discordAuthUrl.searchParams.set('response_type', 'code');
     discordAuthUrl.searchParams.set('scope', 'identify email');
     discordAuthUrl.searchParams.set('state', state);
-    
     window.location.href = discordAuthUrl.toString();
   };
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -267,7 +266,7 @@ export default function Auth() {
                   <Button variant="outline" className="w-full h-12 bg-[#5865F2] hover:bg-[#5865F2]/90 text-white hover:text-white border-0 font-semibold font-geist gap-3" style={{
                 letterSpacing: '-0.5px'
               }} onClick={handleDiscordSignIn} disabled={loading}>
-                    <img src={discordIcon} alt="Discord" className="h-5 w-5" />
+                    <img alt="Discord" className="h-5 w-5" src="/lovable-uploads/22519b01-406d-4fcc-a7c7-14444c183410.webp" />
                     Continue with Discord
                   </Button>
                   
