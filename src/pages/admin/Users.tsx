@@ -303,7 +303,17 @@ export default function AdminUsers() {
     }
 
     // Order by created_at desc
-    query = query.order("created_at", { ascending: false }).limit(1000);
+    // Remove limit when filtering by balance or earnings to ensure all users are checked
+    const hasPostQueryFilters = (minBalance && parseFloat(minBalance) > 0) || 
+                                 (minEarnings && parseFloat(minEarnings) > 0) ||
+                                 hasSocialAccount !== null ||
+                                 hasApprovedDemographics !== null ||
+                                 selectedCampaign !== "all";
+    
+    query = query.order("created_at", { ascending: false });
+    if (!hasPostQueryFilters) {
+      query = query.limit(1000);
+    }
 
     const { data: usersData, error, count } = await query;
 
