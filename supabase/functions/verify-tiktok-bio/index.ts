@@ -50,15 +50,16 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
 async function verifyInstagram(username: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching Instagram profile for: ${username}`);
   
-  // Try the Instagram Scraper API (more reliable)
   const response = await fetch(
-    `https://instagram-scraper-api2.p.rapidapi.com/v1/info?username_or_id_or_url=${encodeURIComponent(username)}`,
+    'https://instagram120.p.rapidapi.com/api/instagram/profile',
     {
-      method: 'GET',
+      method: 'POST',
       headers: {
-        'x-rapidapi-host': 'instagram-scraper-api2.p.rapidapi.com',
+        'Content-Type': 'application/json',
+        'x-rapidapi-host': 'instagram120.p.rapidapi.com',
         'x-rapidapi-key': rapidApiKey,
       },
+      body: JSON.stringify({ username }),
     }
   );
 
@@ -70,26 +71,23 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   }
 
   const data = await response.json();
-  console.log('Instagram API response received:', JSON.stringify(data).substring(0, 500));
+  console.log('Instagram API response received');
 
-  // Handle the response structure from this API
-  const userData = data.data || data;
-  
-  if (!userData || (!userData.username && !userData.id)) {
-    throw new Error('User not found on Instagram');
+  if (!data || data.error) {
+    throw new Error(data?.error || 'User not found on Instagram');
   }
 
-  const bio = userData.biography || userData.bio || '';
+  const bio = data.biography || data.bio || '';
   const verified = bio.includes(verificationCode);
 
   return {
     verified,
     bio,
     user: {
-      nickname: userData.full_name || userData.username,
-      avatar: userData.profile_pic_url || userData.profile_pic_url_hd || userData.hd_profile_pic_url_info?.url,
-      followerCount: userData.follower_count || userData.followers_count || 0,
-      isVerified: userData.is_verified || false,
+      nickname: data.full_name || data.username,
+      avatar: data.profile_pic_url || data.profile_pic_url_hd,
+      followerCount: data.follower_count || data.edge_followed_by?.count || 0,
+      isVerified: data.is_verified || false,
     },
   };
 }
