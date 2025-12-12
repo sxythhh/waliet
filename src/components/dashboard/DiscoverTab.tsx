@@ -499,22 +499,22 @@ export function DiscoverTab() {
           </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
-          </div> : <div className="space-y-8">
-            {sortedCampaigns.length > 0 && <div className="space-y-3">
-                <h2 className="text-lg font-semibold text-foreground">Campaigns</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
-            {sortedCampaigns.map(campaign => {
-            const budgetUsed = campaign.budget_used || 0;
-            const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-            const handleCampaignClick = () => {
-              if (campaign.status !== "ended") {
-                setSelectedCampaign(campaign);
-                setSheetOpen(true);
-              }
-            };
-            const isEnded = campaign.status === "ended";
-            const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
-            return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
+          </div> : <div className="space-y-4">
+            {/* Combined Grid - Campaigns and Bounties together */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
+              {/* Render Campaigns */}
+              {sortedCampaigns.map(campaign => {
+                const budgetUsed = campaign.budget_used || 0;
+                const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+                const handleCampaignClick = () => {
+                  if (campaign.status !== "ended") {
+                    setSelectedCampaign(campaign);
+                    setSheetOpen(true);
+                  }
+                };
+                const isEnded = campaign.status === "ended";
+                const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
+                return <Card key={campaign.id} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
                   {/* Gradient overlay for ended campaigns */}
                   {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                   
@@ -607,70 +607,107 @@ export function DiscoverTab() {
                     </div>
                   </CardContent>
                 </Card>;
-          })}
-                </div>
-              </div>}
+              })}
 
-            {bounties.length > 0 && <div className="space-y-3">
-                <h2 className="text-lg font-semibold text-foreground">Bounties</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  {bounties.map(bounty => {
-            const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-            const isFull = spotsRemaining <= 0;
-            const isEnded = bounty.status === "ended";
-            return <Card key={bounty.id} className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative ${isEnded ? "opacity-60" : "cursor-pointer"}`} onClick={() => {
-              if (!isEnded) {
-                setSelectedBounty(bounty);
-                setBountySheetOpen(true);
-              }
-            }}>
-                        {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
-                        
-                        {bounty.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                            <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                            {isEnded && <div className="absolute top-2 right-2 z-20">
-                                <span className="text-red-500 text-xs font-medium px-2 py-1 bg-muted rounded">
-                                  Ended
-                                </span>
-                              </div>}
-                          </div>}
-                        
-                        <CardContent className="p-4 flex-1 flex flex-col gap-3">
-                          <div className="flex items-start gap-2.5">
-                            {bounty.brands?.logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
-                                <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
-                              </div>}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5">
-                                {bounty.title}
-                              </h3>
-                              <p className="text-xs text-muted-foreground font-semibold">{bounty.brands?.name}</p>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Monthly Retainer</span>
-                              <span className="font-semibold">${bounty.monthly_retainer.toLocaleString()}</span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Videos/Month</span>
-                              <span className="font-semibold">{bounty.videos_per_month}</span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Positions</span>
-                              <span className={`font-semibold ${isFull ? 'text-red-500' : 'text-green-500'}`}>
-                                {bounty.accepted_creators_count} / {bounty.max_accepted_creators}
-                              </span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>;
-          })}
-                </div>
-              </div>}
+              {/* Render Bounties inline with campaigns */}
+              {bounties.map(bounty => {
+                const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+                const isFull = spotsRemaining <= 0;
+                const isEnded = bounty.status === "ended";
+                
+                return <Card 
+                  key={bounty.id} 
+                  className={`group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} 
+                  onClick={() => {
+                    if (!isEnded) {
+                      setSelectedBounty(bounty);
+                      setBountySheetOpen(true);
+                    }
+                  }}
+                >
+                  {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
+                  
+                  <CardContent className="p-4 flex-1 flex flex-col gap-3">
+                    {/* Title */}
+                    <h3 className="text-base font-semibold line-clamp-2 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
+                      {bounty.title}
+                    </h3>
+                    
+                    {/* Metadata Grid - 2 columns */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                      {/* Retainer */}
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-foreground font-['Inter'] tracking-[-0.5px]">
+                            ${bounty.monthly_retainer.toLocaleString()}/mo
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">Retainer</p>
+                        </div>
+                      </div>
+                      
+                      {/* Job Type */}
+                      <div className="flex items-center gap-2">
+                        <Video className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-foreground font-['Inter'] tracking-[-0.5px]">
+                            {bounty.videos_per_month} videos
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">Per Month</p>
+                        </div>
+                      </div>
+                      
+                      {/* Positions */}
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                        <div>
+                          <p className={`text-sm font-semibold font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-500' : 'text-foreground'}`}>
+                            {spotsRemaining > 0 ? `${spotsRemaining} spots` : 'Full'}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">Positions Left</p>
+                        </div>
+                      </div>
+                      
+                      {/* Status */}
+                      <div className="flex items-center gap-2">
+                        {isEnded ? (
+                          <PauseCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                        ) : (
+                          <img src={checkCircleIcon} alt="" className="h-4 w-4 flex-shrink-0" />
+                        )}
+                        <div>
+                          <p className={`text-sm font-semibold font-['Inter'] tracking-[-0.5px] ${isEnded ? 'text-red-500' : 'text-emerald-500'}`}>
+                            {isEnded ? 'Ended' : 'Active'}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">Status</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Spacer */}
+                    <div className="flex-1" />
+                    
+                    {/* Brand Footer */}
+                    <div className="flex items-center gap-2.5 pt-2 border-t border-border/50">
+                      {bounty.brands?.logo_url ? (
+                        <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border">
+                          <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border">
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            {bounty.brands?.name?.charAt(0) || 'B'}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">
+                        {bounty.brands?.name || 'Unknown Brand'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>;
+              })}
+            </div>
           </div>}
         </div>
 
