@@ -101,6 +101,7 @@ export default function AdminUsers() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [totalUserCount, setTotalUserCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -173,9 +174,11 @@ export default function AdminUsers() {
   }, [searchQuery]);
   
   useEffect(() => {
-    filterUsers();
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [debouncedSearchQuery, selectedCampaign, users, sortField, sortOrder, minEarnings, earningsTimeframe, hasDiscord, hasPhone, hasSocialAccount, signupTimeframe, hasApprovedDemographics, minBalance]);
+    if (initialLoadComplete) {
+      filterUsers();
+      setCurrentPage(1); // Reset to first page when filters change
+    }
+  }, [debouncedSearchQuery, selectedCampaign, sortField, sortOrder, minEarnings, earningsTimeframe, hasDiscord, hasPhone, hasSocialAccount, signupTimeframe, hasApprovedDemographics, minBalance, initialLoadComplete]);
   const fetchData = async () => {
     setLoading(true);
 
@@ -188,7 +191,7 @@ export default function AdminUsers() {
       setTotalUserCount(totalCount);
     }
 
-    // Fetch users with wallets and social accounts (with higher limit)
+    // Fetch users with wallets and social accounts
     const {
       data: usersData,
       error: usersError
@@ -210,7 +213,7 @@ export default function AdminUsers() {
         )
       `).order("created_at", {
       ascending: false
-    }).limit(5000);
+    }).limit(1000);
     if (usersError) {
       toast({
         variant: "destructive",
@@ -231,162 +234,48 @@ export default function AdminUsers() {
       setCampaigns(campaignsData || []);
     }
     setLoading(false);
+    setInitialLoadComplete(true);
   };
   const filterUsers = async () => {
     setLoading(true);
-    let filtered = users;
 
-    console.log('🔍 Search Debug:', {
-      debouncedSearchQuery,
-      selectedCampaign,
-      totalUsers: users.length,
-      totalUserCount
-    });
+    // Build database query with all filters
+    let query = supabase.from("profiles").select(`
+      *,
+      wallets (
+        balance,
+        total_earned,
+        total_withdrawn
+      ),
+      social_accounts (
+        id,
+        platform,
+        username,
+        follower_count,
+        demographic_submissions (
+          status
+        )
+      )
+    `, { count: 'exact' });
 
-    // If there's a search query, query the database directly
+    // Search filter - searches across all users in database
     if (debouncedSearchQuery) {
-      const query = debouncedSearchQuery.toLowerCase();
-      
-      // Search in profiles and social accounts
-      const { data: searchResults, error } = await supabase
-        .from("profiles")
-        .select(`
-          *,
-          wallets (
-            balance,
-            total_earned,
-            total_withdrawn
-          ),
-          social_accounts (
-            id,
-            platform,
-            username,
-            follower_count,
-            demographic_submissions (
-              status
-            )
-          )
-        `)
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
-        .order("created_at", { ascending: false })
-        .limit(1000);
-
-      if (error) {
-        console.error('Search error:', error);
-        toast({
-          variant: "destructive",
-          title: "Search Error",
-          description: "Failed to search users"
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Also search in social accounts
-      const { data: socialAccountResults } = await supabase
-        .from("social_accounts")
-        .select(`
-          user_id,
-          username,
-          profiles!inner (
-            *,
-            wallets (
-              balance,
-              total_earned,
-              total_withdrawn
-            ),
-            social_accounts (
-              id,
-              platform,
-              username,
-              follower_count,
-              demographic_submissions (
-                status
-              )
-            )
-          )
-        `)
-        .ilike('username', `%${query}%`)
-        .limit(1000);
-
-      // Combine results and deduplicate
-      const combinedResults = [...(searchResults || [])];
-      if (socialAccountResults) {
-        socialAccountResults.forEach(result => {
-          const profile = (result as any).profiles;
-          if (profile && !combinedResults.find(r => r.id === profile.id)) {
-            combinedResults.push(profile);
-          }
-        });
-      }
-
-      filtered = combinedResults as any;
-      
-      console.log('🔍 Database Search Results:', {
-        query,
-        profileMatches: searchResults?.length || 0,
-        socialAccountMatches: socialAccountResults?.length || 0,
-        totalResults: filtered.length
-      });
-    }
-
-    // Campaign filter
-    if (selectedCampaign !== "all") {
-      const {
-        data: submissions
-      } = await supabase.from("campaign_submissions").select("creator_id").eq("campaign_id", selectedCampaign);
-      if (submissions) {
-        const creatorIds = submissions.map(s => s.creator_id);
-        filtered = filtered.filter(user => creatorIds.includes(user.id));
-      }
+      const searchTerm = debouncedSearchQuery.toLowerCase();
+      query = query.or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
     }
 
     // Discord filter
     if (hasDiscord === true) {
-      filtered = filtered.filter(user => user.discord_id);
+      query = query.not('discord_id', 'is', null);
     } else if (hasDiscord === false) {
-      filtered = filtered.filter(user => !user.discord_id);
+      query = query.is('discord_id', null);
     }
 
-    // Phone number filter
+    // Phone filter
     if (hasPhone === true) {
-      filtered = filtered.filter(user => user.phone_number);
+      query = query.not('phone_number', 'is', null);
     } else if (hasPhone === false) {
-      filtered = filtered.filter(user => !user.phone_number);
-    }
-
-    // Social account filter
-    if (hasSocialAccount === true) {
-      filtered = filtered.filter(user => user.social_accounts && user.social_accounts.length > 0);
-    } else if (hasSocialAccount === false) {
-      filtered = filtered.filter(user => !user.social_accounts || user.social_accounts.length === 0);
-    }
-
-    // Approved demographics filter
-    if (hasApprovedDemographics === true) {
-      filtered = filtered.filter(user => 
-        user.social_accounts?.some(account => 
-          account.demographic_submissions?.some(sub => sub.status === 'approved')
-        )
-      );
-    } else if (hasApprovedDemographics === false) {
-      filtered = filtered.filter(user => 
-        !user.social_accounts?.some(account => 
-          account.demographic_submissions?.some(sub => sub.status === 'approved')
-        )
-      );
-    }
-
-    // Minimum earnings filter
-    if (minEarnings && parseFloat(minEarnings) > 0) {
-      const minEarningsValue = parseFloat(minEarnings);
-      filtered = filtered.filter(user => (user.wallets?.total_earned || 0) >= minEarningsValue);
-    }
-
-    // Minimum balance filter
-    if (minBalance && parseFloat(minBalance) > 0) {
-      const minBalanceValue = parseFloat(minBalance);
-      filtered = filtered.filter(user => (user.wallets?.balance || 0) >= minBalanceValue);
+      query = query.is('phone_number', null);
     }
 
     // Signup timeframe filter
@@ -410,11 +299,71 @@ export default function AdminUsers() {
         default:
           cutoffDate = new Date(0);
       }
-      
-      filtered = filtered.filter(user => {
-        if (!user.created_at) return false;
-        return new Date(user.created_at) >= cutoffDate;
+      query = query.gte('created_at', cutoffDate.toISOString());
+    }
+
+    // Order by created_at desc
+    query = query.order("created_at", { ascending: false }).limit(1000);
+
+    const { data: usersData, error, count } = await query;
+
+    if (error) {
+      console.error('Filter error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to filter users"
       });
+      setLoading(false);
+      return;
+    }
+
+    let filtered = usersData as User[] || [];
+
+    // Campaign filter (requires separate query)
+    if (selectedCampaign !== "all") {
+      const { data: submissions } = await supabase
+        .from("campaign_submissions")
+        .select("creator_id")
+        .eq("campaign_id", selectedCampaign);
+      if (submissions) {
+        const creatorIds = submissions.map(s => s.creator_id);
+        filtered = filtered.filter(user => creatorIds.includes(user.id));
+      }
+    }
+
+    // Social account filter (post-query filter since it's a relation)
+    if (hasSocialAccount === true) {
+      filtered = filtered.filter(user => user.social_accounts && user.social_accounts.length > 0);
+    } else if (hasSocialAccount === false) {
+      filtered = filtered.filter(user => !user.social_accounts || user.social_accounts.length === 0);
+    }
+
+    // Approved demographics filter (post-query filter)
+    if (hasApprovedDemographics === true) {
+      filtered = filtered.filter(user => 
+        user.social_accounts?.some(account => 
+          account.demographic_submissions?.some(sub => sub.status === 'approved')
+        )
+      );
+    } else if (hasApprovedDemographics === false) {
+      filtered = filtered.filter(user => 
+        !user.social_accounts?.some(account => 
+          account.demographic_submissions?.some(sub => sub.status === 'approved')
+        )
+      );
+    }
+
+    // Minimum earnings filter (post-query filter since wallets is a relation)
+    if (minEarnings && parseFloat(minEarnings) > 0) {
+      const minEarningsValue = parseFloat(minEarnings);
+      filtered = filtered.filter(user => (user.wallets?.total_earned || 0) >= minEarningsValue);
+    }
+
+    // Minimum balance filter (post-query filter)
+    if (minBalance && parseFloat(minBalance) > 0) {
+      const minBalanceValue = parseFloat(minBalance);
+      filtered = filtered.filter(user => (user.wallets?.balance || 0) >= minBalanceValue);
     }
 
     // Sort users
@@ -437,6 +386,11 @@ export default function AdminUsers() {
           return bValue - aValue;
         }
       });
+    }
+
+    // Update the total count if we got it from the query
+    if (count !== null) {
+      setTotalUserCount(count);
     }
 
     setFilteredUsers(filtered);
@@ -1397,11 +1351,10 @@ export default function AdminUsers() {
             {/* Active filter count & results */}
             <div className="flex items-center justify-between text-xs text-muted-foreground font-inter tracking-[-0.5px]">
               <span>
-                {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} 
-                {filteredUsers.length !== users.length && ` (filtered from ${users.length} loaded)`}
-                {totalUserCount > users.length && <span className="text-amber-500 ml-1">• {totalUserCount} total in database</span>}
+                {loading ? "Loading..." : `${filteredUsers.length} user${filteredUsers.length !== 1 ? 's' : ''}`}
+                {!loading && totalUserCount > 0 && <span className="text-muted-foreground/60 ml-1">of {totalUserCount} total</span>}
               </span>
-              {(selectedCampaign !== "all" || minEarnings || minBalance || hasDiscord !== null || hasPhone !== null || hasSocialAccount !== null || hasApprovedDemographics !== null || signupTimeframe !== "all") && (
+              {(selectedCampaign !== "all" || minEarnings || minBalance || hasDiscord !== null || hasPhone !== null || hasSocialAccount !== null || hasApprovedDemographics !== null || signupTimeframe !== "all" || debouncedSearchQuery) && (
                 <span className="text-primary">
                   Filters active
                 </span>
@@ -1445,11 +1398,6 @@ export default function AdminUsers() {
                   </div>
                 </div>
               ))}
-            </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <UsersIcon className="h-10 w-10 mb-3 opacity-50" />
-              <p className="font-inter tracking-[-0.5px]">No users found</p>
             </div>
           ) : (
             <div className="space-y-1">
