@@ -71,10 +71,14 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   }
 
   const data = await response.json();
-  console.log('Instagram API response received:', JSON.stringify(data).slice(0, 500));
-
+  
   // instagram120 wraps profile data under `result` key
   const profile = (data as any).result || (data as any).profile || (data as any).data || data;
+  
+  // Log all available keys in the profile to debug
+  console.log('Instagram profile keys:', Object.keys(profile || {}));
+  console.log('Instagram biography field:', (profile as any)?.biography);
+  console.log('Instagram full_name field:', (profile as any)?.full_name);
 
   if (!profile || (!profile.username && !profile.id)) {
     throw new Error('User not found on Instagram');
@@ -87,7 +91,7 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     '';
 
   const bio = typeof bioRaw === 'string' ? bioRaw : String(bioRaw ?? '');
-  console.log('Instagram bio candidate:', bio);
+  console.log('Instagram bio to check:', bio, '| Code:', verificationCode);
 
   // Normalize to alphanumeric uppercase to avoid hidden characters or formatting issues
   const normalizedBio = bio.toUpperCase().replace(/[^A-Z0-9]/g, '');
