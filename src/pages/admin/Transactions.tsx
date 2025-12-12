@@ -29,6 +29,7 @@ interface Transaction {
   created_at: string;
   username?: string;
   email?: string;
+  avatar_url?: string;
   campaign_name?: string;
   campaign_logo_url?: string;
 }
@@ -111,7 +112,7 @@ export default function Transactions() {
       if (uniqueUserIds.length > 0) {
         const {
           data: profilesData
-        } = await supabase.from("profiles").select("id, username, email").in("id", uniqueUserIds);
+        } = await supabase.from("profiles").select("id, username, email, avatar_url").in("id", uniqueUserIds);
         profilesMap = profilesData?.reduce((acc, profile) => ({
           ...acc,
           [profile.id]: profile
@@ -149,6 +150,7 @@ export default function Transactions() {
           created_at: tx.created_at,
           username: profilesMap[tx.user_id]?.username,
           email: profilesMap[tx.user_id]?.email,
+          avatar_url: profilesMap[tx.user_id]?.avatar_url,
           campaign_name: campaignId ? campaignsMap[campaignId]?.title : undefined,
           campaign_logo_url: campaignId ? campaignsMap[campaignId]?.brand_logo_url : undefined
         };
@@ -508,8 +510,13 @@ export default function Transactions() {
             {loading ? (
               <>
                 {[...Array(10)].map((_, i) => (
-                  <TableRow key={i} className="border-b border-[#141414]">
-                    <TableCell className="py-3"><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableRow key={i} className="border-b border-[#141414] hover:bg-transparent">
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Skeleton className="h-7 w-7 rounded-full" />
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                    </TableCell>
                     <TableCell className="py-3"><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell className="py-3"><Skeleton className="h-4 w-16" /></TableCell>
                     <TableCell className="py-3"><Skeleton className="h-5 w-20" /></TableCell>
@@ -518,67 +525,110 @@ export default function Transactions() {
                   </TableRow>
                 ))}
               </>
-            ) : filteredTransactions.length === 0 ? <TableRow>
+            ) : filteredTransactions.length === 0 ? <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground font-inter tracking-[-0.5px]">
                   No transactions found
                 </TableCell>
-              </TableRow> : filteredTransactions.map(tx => <TableRow key={tx.id} className="hover:bg-muted/30 border-b border-[#141414]">
-                  <TableCell className="py-3">
-                    <span className="font-medium text-sm cursor-pointer hover:text-primary transition-colors font-inter tracking-[-0.5px]" onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}>
-                      {tx.username || "Unknown"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-3 text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                    {format(new Date(tx.created_at), "MMM d, yyyy · HH:mm")}
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <span className={cn("font-semibold text-sm font-inter tracking-[-0.5px]", tx.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
-                      {tx.amount >= 0 ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <Badge variant="outline" className="text-xs capitalize font-inter tracking-[-0.5px]">
-                      {tx.type === 'balance_correction' && tx.metadata?.adjustment_type === 'manual_budget_update'
-                        ? 'Campaign Budget'
-                        : tx.type.replace("_", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <div className="flex flex-col gap-1">
-                      {tx.campaign_name && <div className="flex items-center gap-2">
-                          {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt={`${tx.campaign_name} logo`} className="h-4 w-4 rounded object-cover" />}
-                          <span className="text-sm font-inter tracking-[-0.5px]">{tx.campaign_name}</span>
-                        </div>}
-                      {tx.metadata?.campaign_budget_before !== undefined && tx.metadata?.campaign_budget_after !== undefined ? (
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                          Budget: ${Number(tx.metadata.campaign_budget_before).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} → ${Number(tx.metadata.campaign_budget_after).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </TableRow> : filteredTransactions.map(tx => {
+                const getPlatformIcon = (platform: string) => {
+                  switch (platform?.toLowerCase()) {
+                    case 'tiktok':
+                      return <img src={tiktokLogo} alt="TikTok" className="h-3.5 w-3.5" />;
+                    case 'instagram':
+                      return <img src={instagramLogo} alt="Instagram" className="h-3.5 w-3.5" />;
+                    case 'youtube':
+                      return <img src={youtubeLogo} alt="YouTube" className="h-3.5 w-3.5" />;
+                    default:
+                      return null;
+                  }
+                };
+                
+                return (
+                  <TableRow key={tx.id} className="border-b border-[#141414] hover:bg-transparent">
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-2.5">
+                        {tx.avatar_url ? (
+                          <img src={tx.avatar_url} alt={tx.username} className="h-7 w-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center">
+                            <span className="text-[10px] font-medium font-inter">
+                              {(tx.username || '?')[0].toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <span className="font-medium text-sm cursor-pointer hover:text-primary transition-colors font-inter tracking-[-0.5px]" onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}>
+                          {tx.username || "Unknown"}
                         </span>
-                      ) : null}
-                      {tx.type === "withdrawal" && tx.metadata?.payout_method ? (
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                          Withdrawal to {tx.metadata.payout_method === 'crypto' ? 'Crypto' : tx.metadata.payout_method === 'paypal' ? 'PayPal' : tx.metadata.payout_method}
-                          {tx.metadata.payout_details?.wallet_address && ` · ${tx.metadata.payout_details.wallet_address.slice(0, 6)}...${tx.metadata.payout_details.wallet_address.slice(-4)}`}
-                          {tx.metadata.payout_details?.paypal_email && ` · ${tx.metadata.payout_details.paypal_email}`}
-                        </span>
-                      ) : tx.type === "balance_correction" && !tx.metadata?.adjustment_type ? (
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                          Balance Correction{tx.description && ` · ${tx.description}`}
-                        </span>
-                      ) : tx.type === "earning" && tx.metadata?.account_username ? (
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">@{tx.metadata.account_username}</span>
-                      ) : tx.type === "transfer_sent" && tx.metadata?.recipient_username ? (
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">To: @{tx.metadata.recipient_username}</span>
-                      ) : tx.type === "transfer_received" && tx.metadata?.sender_username ? (
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">From: @{tx.metadata.sender_username}</span>
-                      ) : !tx.campaign_name && !tx.metadata?.campaign_budget_before && tx.description ? (
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{tx.description}</span>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-right">
-                    {getStatusBadge(tx.status)}
-                  </TableCell>
-                </TableRow>)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                      {format(new Date(tx.created_at), "MMM d, yyyy · HH:mm")}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <span className={cn("font-semibold text-sm font-inter tracking-[-0.5px]", tx.amount >= 0 ? "text-emerald-500" : "text-red-500")}>
+                        {tx.amount >= 0 ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <Badge variant="outline" className="text-xs capitalize font-inter tracking-[-0.5px] border-[#1a1a1a] bg-[#0a0a0a]">
+                        {tx.type === 'balance_correction' && tx.metadata?.adjustment_type === 'manual_budget_update'
+                          ? 'Campaign Budget'
+                          : tx.type.replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="flex flex-col gap-1">
+                        {/* Account info with platform icon */}
+                        {tx.type === "earning" && tx.metadata?.account_username && (
+                          <div className="flex items-center gap-1.5">
+                            {getPlatformIcon(tx.metadata?.platform)}
+                            <span className="text-sm font-inter tracking-[-0.5px]">@{tx.metadata.account_username}</span>
+                          </div>
+                        )}
+                        {/* Campaign info */}
+                        {tx.campaign_name && (
+                          <div className="flex items-center gap-2">
+                            {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt={`${tx.campaign_name} logo`} className="h-4 w-4 rounded object-cover" />}
+                            <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{tx.campaign_name}</span>
+                          </div>
+                        )}
+                        {/* Budget adjustment details */}
+                        {tx.metadata?.campaign_budget_before !== undefined && tx.metadata?.campaign_budget_after !== undefined && (
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                            ${Number(tx.metadata.campaign_budget_before).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} → ${Number(tx.metadata.campaign_budget_after).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                        {/* Withdrawal details */}
+                        {tx.type === "withdrawal" && tx.metadata?.payout_method && (
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                            {tx.metadata.payout_method === 'crypto' ? 'Crypto' : tx.metadata.payout_method === 'paypal' ? 'PayPal' : tx.metadata.payout_method}
+                            {tx.metadata.payout_details?.wallet_address && ` · ${tx.metadata.payout_details.wallet_address.slice(0, 6)}...${tx.metadata.payout_details.wallet_address.slice(-4)}`}
+                            {tx.metadata.payout_details?.paypal_email && ` · ${tx.metadata.payout_details.paypal_email}`}
+                          </span>
+                        )}
+                        {/* Balance correction */}
+                        {tx.type === "balance_correction" && !tx.metadata?.adjustment_type && tx.description && (
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{tx.description}</span>
+                        )}
+                        {/* Transfer details */}
+                        {tx.type === "transfer_sent" && tx.metadata?.recipient_username && (
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">To @{tx.metadata.recipient_username}</span>
+                        )}
+                        {tx.type === "transfer_received" && tx.metadata?.sender_username && (
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">From @{tx.metadata.sender_username}</span>
+                        )}
+                        {/* Fallback description */}
+                        {!tx.campaign_name && !tx.metadata?.campaign_budget_before && !tx.metadata?.account_username && !tx.metadata?.payout_method && !tx.metadata?.recipient_username && !tx.metadata?.sender_username && tx.description && tx.type !== "balance_correction" && (
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{tx.description}</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-right">
+                      {getStatusBadge(tx.status)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </div>
