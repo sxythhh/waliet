@@ -250,10 +250,10 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
             result.type === 'user' && "bg-blue-500",
             result.type === 'brand' && "bg-purple-500",
             result.type === 'campaign' && "bg-emerald-500",
-            result.type === 'account' && "bg-orange-500"
+            result.type === 'account' && "bg-neutral-600"
           )}>
             {result.type === 'account' && platformLogo ? (
-              <img src={platformLogo} alt={result.platform} className="w-3 h-3 object-contain" />
+              <img src={platformLogo} alt={result.platform} className="w-full h-full object-contain p-0.5" />
             ) : (
               <MaterialIcon name={getIcon(result.type)} className="text-[10px] text-white" />
             )}
