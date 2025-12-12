@@ -64,9 +64,9 @@ function SidebarContent({ onNavigate, onSearchOpen }: { onNavigate?: () => void;
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 px-3 py-1.5 text-sm font-inter tracking-[-0.5px] transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 text-sm font-inter tracking-[-0.5px] transition-colors rounded-md",
                 active
-                  ? "bg-white/15 text-white font-medium"
+                  ? "bg-white/10 text-white font-medium"
                   : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               )}
             >
