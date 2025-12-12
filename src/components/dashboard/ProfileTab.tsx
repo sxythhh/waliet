@@ -727,7 +727,7 @@ export function ProfileTab() {
         </Card>
       </div>;
   }
-  return <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto pb-8">
+  return <div className="space-y-3 sm:space-y-6 max-w-4xl mx-auto pb-8 px-4 sm:px-0">
       {/* Profile Header */}
       <Card className="bg-card border-0">
         
@@ -736,11 +736,8 @@ export function ProfileTab() {
       {/* Connected Accounts */}
       <Card className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
-            <div>
-              <CardTitle className="text-lg">Connected Accounts</CardTitle>
-              
-            </div>
+          <div className="flex items-center justify-between gap-4 p-4 sm:p-6">
+            <CardTitle className="text-lg">Connected Accounts</CardTitle>
             <Button onClick={() => setShowAddAccountDialog(true)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
               Add Account
@@ -758,9 +755,9 @@ export function ProfileTab() {
             const demographicSubmissions = account.demographic_submissions || [];
             const latestDemographicSubmission = demographicSubmissions[0];
             const demographicStatus = latestDemographicSubmission?.status;
-            return <div key={account.id} className="group relative p-4 rounded-xl bg-neutral-100 dark:bg-muted/10 hover:bg-neutral-200 dark:hover:bg-muted/20 transition-all duration-300">
+            return <div key={account.id} className="group relative p-3 sm:p-4 rounded-xl bg-neutral-100 dark:bg-muted/10 hover:bg-neutral-200 dark:hover:bg-muted/20 transition-all duration-300">
                     {/* Main Layout */}
-                    <div className="flex items-start gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                       {/* Content - Clickable to open popover */}
                       <Popover>
                         <PopoverTrigger asChild>
@@ -856,7 +853,7 @@ export function ProfileTab() {
                       </Popover>
                       
                       {/* Demographics Section - Right Side */}
-                      <div className="flex-shrink-0 w-40">
+                      <div className="flex-shrink-0 w-full sm:w-40">
                         {!demographicStatus || demographicStatus === 'rejected' ?
                   // Required/Rejected State - Compact Alert
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 cursor-pointer hover:bg-destructive/15 transition-colors" onClick={() => {
