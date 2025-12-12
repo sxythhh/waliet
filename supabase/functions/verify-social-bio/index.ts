@@ -50,16 +50,15 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
 async function verifyInstagram(username: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching Instagram profile for: ${username}`);
   
+  const profileUrl = `https://www.instagram.com/${encodeURIComponent(username)}/`;
   const response = await fetch(
-    'https://instagram120.p.rapidapi.com/api/instagram/profile',
+    `https://instagram-statistics-api.p.rapidapi.com/community?url=${encodeURIComponent(profileUrl)}`,
     {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'x-rapidapi-host': 'instagram120.p.rapidapi.com',
+        'x-rapidapi-host': 'instagram-statistics-api.p.rapidapi.com',
         'x-rapidapi-key': rapidApiKey,
       },
-      body: JSON.stringify({ username }),
     }
   );
 
@@ -71,26 +70,14 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   }
 
   const data = await response.json();
-  
-  // instagram120 wraps profile data under `result` key
-  const profile = (data as any).result || (data as any).profile || (data as any).data || data;
-  
-  // Log all available keys in the profile to debug
-  console.log('Instagram profile keys:', Object.keys(profile || {}));
-  console.log('Instagram biography field:', (profile as any)?.biography);
-  console.log('Instagram full_name field:', (profile as any)?.full_name);
+  console.log('Instagram API response received');
 
-  if (!profile || (!profile.username && !profile.id)) {
+  if (data.meta?.code !== 200 || !data.data) {
     throw new Error('User not found on Instagram');
   }
 
-  const bioRaw =
-    (profile as any).biography ||
-    (profile as any).bio ||
-    (profile as any).biography_with_entities?.raw_text ||
-    '';
-
-  const bio = typeof bioRaw === 'string' ? bioRaw : String(bioRaw ?? '');
+  const profile = data.data;
+  const bio = profile.description || '';
   console.log('Instagram bio to check:', bio, '| Code:', verificationCode);
 
   // Normalize to alphanumeric uppercase to avoid hidden characters or formatting issues
@@ -102,19 +89,10 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     verified,
     bio,
     user: {
-      nickname: (profile as any).full_name || (profile as any).name || (profile as any).username,
-      avatar:
-        (profile as any).profile_pic_url ||
-        (profile as any).profile_pic_url_hd ||
-        (profile as any).avatar_hd ||
-        (profile as any).avatar,
-      followerCount:
-        (profile as any).follower_count ||
-        (profile as any).followers_count ||
-        (profile as any).followers ||
-        (profile as any).edge_followed_by?.count ||
-        0,
-      isVerified: (profile as any).is_verified || false,
+      nickname: profile.name || profile.screenName,
+      avatar: profile.image || null,
+      followerCount: profile.usersCount || 0,
+      isVerified: profile.verified || false,
     },
   };
 }
