@@ -358,7 +358,7 @@ export function UserDetailsDialog({
 
         {/* Tabs Section */}
         <Tabs defaultValue="accounts" className="flex-1">
-          <div className="px-6 border-b border-[#1a1a1a]">
+          <div className="border-b border-[#1a1a1a] px-0">
             <TabsList className="bg-transparent h-10 p-0 w-full justify-start gap-6">
               <TabsTrigger value="accounts" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground text-muted-foreground data-[state=active]:text-foreground">
                 Accounts ({socialAccounts.length})
