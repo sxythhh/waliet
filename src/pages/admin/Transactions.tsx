@@ -236,8 +236,14 @@ export default function Transactions() {
         description: "Failed to fetch payment methods"
       });
       setUserPaymentMethods([]);
+    } else if (data && data.payout_method) {
+      // Transform wallet data to match PaymentMethod interface
+      setUserPaymentMethods([{
+        method: data.payout_method,
+        details: data.payout_details
+      }]);
     } else {
-      setUserPaymentMethods(data ? [data] : []);
+      setUserPaymentMethods([]);
     }
     setLoadingPaymentMethods(false);
   };
