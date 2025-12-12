@@ -202,7 +202,7 @@ export function AddSocialAccountDialog({
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('verify-tiktok-bio', {
+      const { data, error } = await supabase.functions.invoke('verify-social-bio', {
         body: { username, verificationCode, platform: selectedPlatform }
       });
 
