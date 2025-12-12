@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, ArrowUp, Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -61,6 +62,7 @@ export function JoinCampaignSheet({
     [key: string]: string;
   }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const navigate = useNavigate();
@@ -118,6 +120,7 @@ export function JoinCampaignSheet({
   const loadSocialAccounts = async () => {
     if (!campaign) return;
 
+    setLoadingAccounts(true);
     // Reset answers when loading accounts for a new campaign
     setAnswers({});
     const {
@@ -126,6 +129,7 @@ export function JoinCampaignSheet({
       }
     } = await supabase.auth.getUser();
     if (!user) {
+      setLoadingAccounts(false);
       return;
     }
 
@@ -143,6 +147,7 @@ export function JoinCampaignSheet({
     // Filter out accounts with active submissions for this campaign
     const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
     setSocialAccounts(availableAccounts);
+    setLoadingAccounts(false);
   };
   const toggleAccountSelection = (accountId: string) => {
     setSelectedAccounts(prev => prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]);
@@ -477,7 +482,13 @@ export function JoinCampaignSheet({
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
             }}>Select Social Accounts *</Label>
-                {socialAccounts.length === 0 ? <div className="py-8 text-center space-y-3">
+                {loadingAccounts ? <div className="space-y-1.5">
+                    {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                        <Skeleton className="w-5 h-5 rounded" />
+                        <Skeleton className="w-5 h-5 rounded" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>)}
+                  </div> : socialAccounts.length === 0 ? <div className="py-8 text-center space-y-3">
                     <p className="text-sm text-muted-foreground" style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.5px'
