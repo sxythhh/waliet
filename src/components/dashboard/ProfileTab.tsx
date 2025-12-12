@@ -368,7 +368,7 @@ export function ProfileTab() {
     return joinedCampaigns.find(c => c.id === campaignId);
   };
   const getPlatformIcon = (platform: string) => {
-    const iconClass = "w-full h-full object-contain";
+    const iconClass = "w-full h-full object-contain opacity-100";
     const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
       case "tiktok":
