@@ -1014,7 +1014,7 @@ export function ProfileTab() {
           <CardTitle className="text-xl font-semibold" style={{
           fontFamily: 'Inter',
           letterSpacing: '-0.5px'
-        }}>Personal info</CardTitle>
+        }}>User Settings</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <form onSubmit={handleSaveProfile} className="space-y-4">
