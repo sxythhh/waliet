@@ -8,7 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
 import viralityLogo from "@/assets/virality-logo.webp";
 import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift, Star, Building2, Smartphone } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift, Star, Building2, Smartphone, SlidersHorizontal, Briefcase } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -116,6 +117,7 @@ export function WalletTab() {
   const itemsPerPage = 10;
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
+  const [filterOpen, setFilterOpen] = useState(false);
   const {
     toast
   } = useToast();
@@ -1381,50 +1383,91 @@ export function WalletTab() {
         </Card>
       </div>
 
-      <Card className="bg-card border-0">
-        <CardHeader className="px-[24px] pt-4 pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 gap-3">
-          <CardTitle className="text-lg font-semibold py-[10px]">Transactions</CardTitle>
-          {transactions.length > 0 && <div className="hidden sm:flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-[180px] bg-muted/50 border-0">
-                  <SelectValue placeholder="Transaction Type" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="earning">Earnings</SelectItem>
-                  <SelectItem value="team_earning">Team Earnings</SelectItem>
-                  <SelectItem value="affiliate_earning">Affiliate Earnings</SelectItem>
-                  <SelectItem value="withdrawal">Withdrawals</SelectItem>
-                  <SelectItem value="transfer_sent">Transfers Sent</SelectItem>
-                  <SelectItem value="transfer_received">Transfers Received</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px] bg-muted/50 border-0">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_transit">In Transit</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-              {availableCampaigns.length > 0 && <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px] bg-muted/50 border-0">
-                    <SelectValue placeholder="Campaign" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    <SelectItem value="all">All Campaigns</SelectItem>
-                    {availableCampaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>
-                        {campaign.title}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>}
-            </div>}
+      <Card className="bg-card border border-border rounded-xl overflow-hidden">
+        <CardHeader className="px-6 pt-5 pb-4 flex flex-row items-center justify-between">
+          <Collapsible open={filterOpen} onOpenChange={setFilterOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="gap-2 rounded-full border-border bg-background hover:bg-muted px-4 py-2 h-auto">
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="font-medium">Filter</span>
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="absolute left-6 mt-2 z-50">
+              <div className="bg-popover border border-border rounded-xl shadow-xl p-4 min-w-[280px] space-y-3">
+                <div className="relative">
+                  <Input 
+                    placeholder="Filter..." 
+                    className="bg-background border-border h-10 pr-10"
+                  />
+                  <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
+                </div>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => {
+                      setTypeFilter(typeFilter === 'all' ? 'earning' : 'all');
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                  >
+                    <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
+                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                    </div>
+                    <span className="font-medium">Type</span>
+                    {typeFilter !== 'all' && (
+                      <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setStatusFilter(statusFilter === 'all' ? 'completed' : 'all');
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                  >
+                    <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
+                    <span className="font-medium">Status</span>
+                    {statusFilter !== 'all' && (
+                      <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>
+                    )}
+                  </button>
+                  {availableCampaigns.length > 0 && (
+                    <button 
+                      onClick={() => {
+                        setCampaignFilter(campaignFilter === 'all' ? availableCampaigns[0]?.id || 'all' : 'all');
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                    >
+                      <Briefcase className="h-4 w-4" />
+                      <span className="font-medium">Campaign</span>
+                      {campaignFilter !== 'all' && (
+                        <span className="ml-auto text-xs text-muted-foreground truncate max-w-[100px]">
+                          {availableCampaigns.find(c => c.id === campaignFilter)?.title}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                </div>
+                {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setTypeFilter('all');
+                      setStatusFilter('all');
+                      setCampaignFilter('all');
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </CardHeader>
-        <CardContent className="p-4">
+        <CardContent className="px-6 pb-6 pt-0">
           {transactions.length === 0 ? <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <>
