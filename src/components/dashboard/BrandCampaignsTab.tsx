@@ -14,7 +14,6 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { Pencil, Plus, BarChart3 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
 interface Campaign {
   id: string;
@@ -69,7 +68,6 @@ export function BrandCampaignsTab({
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
-  
   useEffect(() => {
     fetchBrandData();
   }, [brandId]);
@@ -165,8 +163,7 @@ export function BrandCampaignsTab({
     setSearchParams(newParams);
   };
   if (loading) {
-    return (
-      <div className="space-y-8 px-4 sm:px-6 md:px-8 py-6 animate-in fade-in duration-500">
+    return <div className="space-y-8 px-4 sm:px-6 md:px-8 py-6 animate-in fade-in duration-500">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between">
           <div className="space-y-2">
@@ -178,28 +175,23 @@ export function BrandCampaignsTab({
 
         {/* Stats Cards Skeleton */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="p-4 rounded-xl bg-muted/30 space-y-3">
+          {[1, 2, 3, 4].map(i => <div key={i} className="p-4 rounded-xl bg-muted/30 space-y-3">
               <Skeleton className="h-3 w-16 rounded" />
               <Skeleton className="h-6 w-20 rounded" />
-            </div>
-          ))}
+            </div>)}
         </div>
 
         {/* Section Header Skeleton */}
         <div className="flex items-center justify-between">
           <Skeleton className="h-5 w-24 rounded-md" />
           <div className="flex gap-2">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-7 w-16 rounded-full" />
-            ))}
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-7 w-16 rounded-full" />)}
           </div>
         </div>
 
         {/* Campaign Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl overflow-hidden bg-card">
+          {[1, 2, 3].map(i => <div key={i} className="rounded-xl overflow-hidden bg-card">
               {/* Banner */}
               <Skeleton className="h-32 w-full rounded-none" />
               {/* Content */}
@@ -217,16 +209,14 @@ export function BrandCampaignsTab({
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
 
         {/* Boosts Section Skeleton */}
         <div className="space-y-4">
           <Skeleton className="h-5 w-20 rounded-md" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-4 rounded-xl bg-muted/20 space-y-3">
+            {[1, 2].map(i => <div key={i} className="p-4 rounded-xl bg-muted/20 space-y-3">
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-10 w-10 rounded-lg" />
                   <div className="space-y-1.5 flex-1">
@@ -235,12 +225,10 @@ export function BrandCampaignsTab({
                   </div>
                 </div>
                 <Skeleton className="h-8 w-full rounded-lg" />
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
   const totalUsed = campaigns.reduce((sum, c) => sum + Number(c.budget_used || 0), 0);
@@ -277,18 +265,14 @@ export function BrandCampaignsTab({
           <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
 
           {/* Subscription Required CTA and Embed - Only show if not subscribed */}
-          {subscriptionStatus && subscriptionStatus !== "active" && (
-            <>
+          {subscriptionStatus && subscriptionStatus !== "active" && <>
               <Card className="bg-card border border-border">
-                <CardContent className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-4">
+                <CardContent className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-4 bg-[#0d0d0d]">
                   <h2 className="text-xl font-semibold tracking-tight">Subscription Required</h2>
                   <p className="text-muted-foreground max-w-md">
                     You need an active subscription to view applicants. Please upgrade your plan or purchase a job post to access this feature.
                   </p>
-                  <Button 
-                    onClick={() => setSubscriptionGateOpen(true)}
-                    className="bg-primary hover:bg-primary/90"
-                  >
+                  <Button onClick={() => setSubscriptionGateOpen(true)} className="bg-primary hover:bg-primary/90">
                     View Pricing Plans
                   </Button>
                 </CardContent>
@@ -296,35 +280,20 @@ export function BrandCampaignsTab({
               <div className="w-full h-[250px] rounded-xl overflow-hidden">
                 <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
               </div>
-            </>
-          )}
+            </>}
 
           {/* Campaigns Grid */}
           {campaigns.length > 0 && <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Campaigns</h2>
                 <div className="flex items-center gap-1">
-                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map((filter) => (
-                    <Button
-                      key={filter}
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setStatusFilter(filter)}
-                      className={`px-3 py-1.5 h-auto text-xs font-medium capitalize rounded-full transition-colors ${
-                        statusFilter === filter
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      }`}
-                    >
+                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <Button key={filter} variant="ghost" size="sm" onClick={() => setStatusFilter(filter)} className={`px-3 py-1.5 h-auto text-xs font-medium capitalize rounded-full transition-colors ${statusFilter === filter ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
                       {filter}
-                    </Button>
-                  ))}
+                    </Button>)}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {campaigns
-                  .filter(campaign => statusFilter === "all" || campaign.status === statusFilter)
-                  .map(campaign => {
+                {campaigns.filter(campaign => statusFilter === "all" || campaign.status === statusFilter).map(campaign => {
             const usedBudget = Number(campaign.budget_used || 0);
             const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
             return <Card key={campaign.id} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => handleCampaignClick(campaign)}>
