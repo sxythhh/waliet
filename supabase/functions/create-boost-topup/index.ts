@@ -91,8 +91,8 @@ Deno.serve(async (req) => {
 
     console.log(`Creating checkout configuration for boost ${boostId} with amount $${amount}`);
 
-    // Create checkout configuration with dynamic one-time plan using Whop API
-    const checkoutResponse = await fetch("https://api.whop.com/checkout_configurations", {
+    // Create checkout configuration with dynamic one-time plan using Whop REST API (v1)
+    const checkoutResponse = await fetch("https://api.whop.com/api/v1/checkout_configurations", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${whopApiKey}`,
