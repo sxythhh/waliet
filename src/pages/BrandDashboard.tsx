@@ -280,7 +280,7 @@ export default function BrandDashboard() {
                 />
               ) : (
                 <div className="space-y-6">
-                  {campaigns.length > 0 ? <div className="space-y-3">
+                  {campaigns.length > 0 && !selectedBoostId ? <div className="space-y-3">
                         <h2 className="text-lg font-semibold text-foreground">Campaigns</h2>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                           {campaigns.map(campaign => {
@@ -336,7 +336,7 @@ export default function BrandDashboard() {
                         </div>
                       </div> : null}
 
-                  {bounties.length > 0 ? <div className="space-y-3">
+                  {bounties.length > 0 && !selectedBoostId ? <div className="space-y-3">
                         <h2 className="text-lg font-semibold text-foreground">Bounties</h2>
                         <BountyCampaignsView 
                           bounties={bounties}
@@ -344,6 +344,14 @@ export default function BrandDashboard() {
                           onBoostSelect={setSelectedBoostId}
                         />
                       </div> : null}
+                  
+                  {selectedBoostId && (
+                    <BountyCampaignsView 
+                      bounties={bounties}
+                      onDelete={handleDeleteBountyClick}
+                      onBoostSelect={setSelectedBoostId}
+                    />
+                  )}
 
                   {campaigns.length === 0 && bounties.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
