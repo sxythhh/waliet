@@ -70,7 +70,8 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
         'x-rapidapi-host': 'instagram-scraper-stable-api.p.rapidapi.com',
         'x-rapidapi-key': rapidApiKey,
       },
-      body: `username=${encodeURIComponent(username)}`,
+      // API expects `username_or_url` form field
+      body: `username_or_url=${encodeURIComponent(username)}`,
     }
   );
 
@@ -83,6 +84,12 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
 
   const rawData = await response.json();
   console.log('Instagram API raw response:', JSON.stringify(rawData).substring(0, 500));
+
+  // If the API explicitly returns an error, surface it
+  if (rawData && typeof rawData === 'object' && 'error' in rawData) {
+    console.error('Instagram API returned error:', rawData.error);
+    throw new Error(typeof rawData.error === 'string' ? rawData.error : 'Instagram API error');
+  }
 
   // Handle different possible response shapes
   const profile = Array.isArray(rawData)
