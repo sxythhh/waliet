@@ -49,6 +49,7 @@ import CreatorTerms from "./pages/CreatorTerms";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBounty from "./pages/PublicBounty";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
+import New from "./pages/New";
 
 
 const queryClient = new QueryClient();
@@ -127,6 +128,7 @@ const App = () => (
             <Route path="/creator-terms" element={<CreatorTerms />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/new" element={<New />} />
             <Route path="/support" element={<Support />} />
             <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
             <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
