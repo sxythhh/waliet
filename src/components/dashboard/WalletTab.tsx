@@ -1497,7 +1497,7 @@ export function WalletTab() {
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-[#0a0a0a] border-[#141414] font-['Inter'] tracking-[-0.5px]">
+            <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-white dark:bg-[#0a0a0a] border-[#dce1eb] dark:border-[#141414] font-['Inter'] tracking-[-0.5px]">
               <div className="relative">
                 {/* Main Menu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
