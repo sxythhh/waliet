@@ -90,6 +90,7 @@ export function DiscoverTab() {
   const [selectedBounty, setSelectedBounty] = useState<BountyCampaign | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bountySheetOpen, setBountySheetOpen] = useState(false);
+  const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [joinPrivateDialogOpen, setJoinPrivateDialogOpen] = useState(false);
   const [bookmarkedCampaignIds, setBookmarkedCampaignIds] = useState<string[]>([]);
   const [bookmarkedBountyIds, setBookmarkedBountyIds] = useState<string[]>([]);
@@ -909,11 +910,40 @@ export function DiscoverTab() {
                         )}
                         
                         {/* Retainer Amount */}
-                        <div className="flex items-baseline gap-1 mt-auto pt-2">
+                        <div className="flex items-baseline gap-1 pt-2">
                           <span className="text-lg font-bold text-foreground font-['Inter'] tracking-[-0.5px]">
                             ${bounty.monthly_retainer.toLocaleString()}
                           </span>
                           <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">/month</span>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 mt-auto pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 font-['Inter'] tracking-[-0.5px] font-medium"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedBounty(bounty);
+                              setBountySheetOpen(true);
+                            }}
+                          >
+                            View details
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-[#2060de] hover:bg-[#2060de]/90 text-white font-['Inter'] tracking-[-0.5px] font-medium"
+                            style={{ borderTop: '1px solid #4b85f7' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedBounty(bounty);
+                              setApplyDialogOpen(true);
+                            }}
+                            disabled={isEnded || isFull}
+                          >
+                            Apply
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>;
@@ -927,9 +957,15 @@ export function DiscoverTab() {
       <JoinCampaignSheet campaign={selectedCampaign} open={sheetOpen} onOpenChange={setSheetOpen} />
       
       <ApplyToBountySheet open={bountySheetOpen} onOpenChange={setBountySheetOpen} bounty={selectedBounty} onSuccess={() => {
-      setBountySheetOpen(false);
-      fetchCampaigns();
-    }} />
+        setBountySheetOpen(false);
+        fetchCampaigns();
+      }} />
+      
+      {/* Separate Apply Dialog triggered from card button */}
+      <ApplyToBountySheet open={applyDialogOpen} onOpenChange={setApplyDialogOpen} bounty={selectedBounty} onSuccess={() => {
+        setApplyDialogOpen(false);
+        fetchCampaigns();
+      }} />
       
       <JoinPrivateCampaignDialog open={joinPrivateDialogOpen} onOpenChange={setJoinPrivateDialogOpen} />
       
