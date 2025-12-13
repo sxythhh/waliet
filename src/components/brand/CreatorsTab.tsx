@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Inbox, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Inbox, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -669,12 +669,22 @@ export function CreatorsTab({
                   {activeConversation.creator?.username.slice(0, 2).toUpperCase() || "??"}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-medium text-sm flex-1">
+              <span className="font-inter tracking-[-0.5px] font-medium text-sm flex-1">
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
-              <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex hover:bg-muted/50" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
-                {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 font-inter tracking-[-0.5px] text-sm bg-[#2060de] hover:bg-[#1a50c0] text-white"
+                >
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Pay
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex hover:bg-muted/50" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
+                  {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
 
             {/* Messages */}
