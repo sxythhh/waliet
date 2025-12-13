@@ -128,6 +128,8 @@ export function ProfileTab() {
   const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<SocialAccount | null>(null);
   const [linkingCampaign, setLinkingCampaign] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const profileInfoRef = useRef<HTMLDivElement>(null);
+  const connectedAccountsRef = useRef<HTMLDivElement>(null);
   const {
     toast
   } = useToast();
@@ -735,21 +737,25 @@ export function ProfileTab() {
       id: 'profile_info',
       label: 'Add basic profile info',
       completed: !!(profile?.full_name && profile?.username),
+      onClick: () => profileInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
     },
     {
       id: 'bio',
       label: 'Update your profile description',
       completed: !!(profile?.bio && profile.bio.length > 10),
+      onClick: () => profileInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
     },
     {
       id: 'location',
       label: 'Add your location',
       completed: !!(profile?.country),
+      onClick: () => profileInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
     },
     {
       id: 'phone',
       label: 'Add phone number',
       completed: !!(profile?.phone_number),
+      onClick: () => profileInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
     },
     {
       id: 'social_account',
@@ -761,16 +767,31 @@ export function ProfileTab() {
       id: 'demographics',
       label: 'Submit demographics',
       completed: socialAccounts.some(a => a.demographic_submissions?.some(d => d.status === 'approved')),
+      onClick: () => {
+        if (socialAccounts.length > 0) {
+          const account = socialAccounts[0];
+          setSelectedAccountForDemographics({
+            id: account.id,
+            platform: account.platform,
+            username: account.username
+          });
+          setShowDemographicsDialog(true);
+        } else {
+          setShowAddAccountDialog(true);
+        }
+      },
     },
     {
       id: 'join_campaign',
       label: 'Join your first campaign',
       completed: joinedCampaigns.length > 0,
+      onClick: () => navigate('/dashboard?tab=discover'),
     },
     {
       id: 'earn_first',
       label: 'Earn your first payout',
       completed: (profile?.total_earnings || 0) > 0,
+      onClick: () => navigate('/dashboard?tab=discover'),
     },
   ];
 
@@ -784,7 +805,7 @@ export function ProfileTab() {
       </Card>
 
       {/* Connected Accounts */}
-      <Card className="bg-card border-0">
+      <Card ref={connectedAccountsRef} className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
           <div className="flex items-center justify-between gap-4 p-4 sm:p-6 px-0 py-0">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
@@ -986,7 +1007,7 @@ export function ProfileTab() {
       </Collapsible>
 
       {/* Personal Info */}
-      <Card className="bg-card border-0">
+      <Card ref={profileInfoRef} className="bg-card border-0">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-semibold" style={{
           fontFamily: 'Inter',
