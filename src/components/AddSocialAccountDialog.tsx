@@ -254,10 +254,9 @@ export function AddSocialAccountDialog({
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden bg-card border border-border/50 [&>button]:hidden">
-        {step === "input" ? (
-          <div className="flex flex-col">
+        {step === "input" ? <div className="flex flex-col">
             {/* Header */}
-            <div className="px-5 pt-5 pb-3">
+            <div className="pt-5 pb-3 py-0 px-0">
               <div className="flex items-center gap-3 mb-1">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   {getPlatformIcon(selectedPlatform, "h-5 w-5")}
@@ -290,14 +289,12 @@ export function AddSocialAccountDialog({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-border/50">
-                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
-                      <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
+                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
                         <div className="flex items-center gap-2.5">
                           {getPlatformIcon(platform, "h-4 w-4")}
                           <span className="text-sm">{getPlatformLabel(platform)}</span>
                         </div>
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -309,37 +306,22 @@ export function AddSocialAccountDialog({
                 </Label>
                 <div className="relative">
                   {showAtSymbol && <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>}
-                  <Input 
-                    id="username" 
-                    placeholder={getPlaceholderText(selectedPlatform)} 
-                    value={username} 
-                    onChange={e => setUsername(showAtSymbol ? e.target.value.replace(/@/g, "").trim() : e.target.value.trim())} 
-                    className={`h-11 bg-muted/50 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${showAtSymbol ? 'pl-7' : 'pl-3.5'}`} 
-                  />
+                  <Input id="username" placeholder={getPlaceholderText(selectedPlatform)} value={username} onChange={e => setUsername(showAtSymbol ? e.target.value.replace(/@/g, "").trim() : e.target.value.trim())} className={`h-11 bg-muted/50 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${showAtSymbol ? 'pl-7' : 'pl-3.5'}`} />
                 </div>
               </div>
             </div>
 
             {/* Footer */}
             <div className="px-5 py-4 mt-2 border-t border-border/50 flex gap-2">
-              <Button 
-                variant="ghost" 
-                onClick={() => onOpenChange(false)} 
-                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground"
-              >
+              <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground">
                 Cancel
               </Button>
-              <Button 
-                onClick={handleContinueToVerification} 
-                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm"
-              >
+              <Button onClick={handleContinueToVerification} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
                 Continue
                 <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col">
+          </div> : <div className="flex flex-col">
             {/* Header */}
             <div className="px-5 pt-5 pb-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -368,36 +350,24 @@ export function AddSocialAccountDialog({
                   <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                     Add this code to your bio
                   </span>
-                  <button 
-                    onClick={handleCopyCode} 
-                    className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]"
-                  >
-                    {copied ? (
-                      <>
+                  <button onClick={handleCopyCode} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]">
+                    {copied ? <>
                         <Check className="h-3.5 w-3.5" />
                         Copied
-                      </>
-                    ) : (
-                      <>
+                      </> : <>
                         <Copy className="h-3.5 w-3.5" />
                         Copy
-                      </>
-                    )}
+                      </>}
                   </button>
                 </div>
-                <div 
-                  onClick={handleCopyCode}
-                  className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors border border-border/50"
-                >
+                <div onClick={handleCopyCode} className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors border border-border/50">
                   <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">
                     {verificationCode}
                   </span>
                 </div>
-                {selectedPlatform === "instagram" && (
-                  <p className="mt-3 text-[11px] text-muted-foreground/70 font-inter tracking-[-0.5px] text-center">
+                {selectedPlatform === "instagram" && <p className="mt-3 text-[11px] text-muted-foreground/70 font-inter tracking-[-0.5px] text-center">
                     Instagram may take 1–2 minutes to update your bio
-                  </p>
-                )}
+                  </p>}
               </div>
             </div>
 
@@ -408,31 +378,18 @@ export function AddSocialAccountDialog({
 
             {/* Footer */}
             <div className="px-5 py-4 border-t border-border/50 flex gap-2">
-              <Button 
-                variant="ghost" 
-                onClick={handleBack} 
-                className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground"
-              >
+              <Button variant="ghost" onClick={handleBack} className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground">
                 <ArrowLeft className="h-4 w-4 mr-1.5" />
                 Back
               </Button>
-              <Button 
-                onClick={handleCheckVerification} 
-                disabled={isChecking || timeRemaining === 0} 
-                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm"
-              >
-                {isChecking ? (
-                  <>
+              <Button onClick={handleCheckVerification} disabled={isChecking || timeRemaining === 0} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
+                {isChecking ? <>
                     <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                     Verifying...
-                  </>
-                ) : (
-                  "Verify Account"
-                )}
+                  </> : "Verify Account"}
               </Button>
             </div>
-          </div>
-        )}
+          </div>}
       </DialogContent>
     </Dialog>;
 }
