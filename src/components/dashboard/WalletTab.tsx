@@ -607,7 +607,6 @@ export function WalletTab() {
         } else {
           transactionType = 'withdrawal';
         }
-
         allTransactions.push({
           id: txn.id,
           type: transactionType,
@@ -1771,39 +1770,25 @@ export function WalletTab() {
                 }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
                         {/* Program */}
                         <TableCell className="py-4">
-                          {transaction.boost?.title ? (
-                            <div className="flex items-center gap-2">
-                              {transaction.boost?.brand_logo_url ? (
-                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                          {transaction.boost?.title ? <div className="flex items-center gap-2">
+                              {transaction.boost?.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                                   <img src={transaction.boost.brand_logo_url} alt={transaction.boost.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
                                     {transaction.boost.title.charAt(0).toUpperCase()}
                                   </span>
-                                </div>
-                              )}
+                                </div>}
                               <span className="text-sm font-medium">{transaction.boost.title}</span>
-                            </div>
-                          ) : transaction.campaign?.title ? (
-                            <div className="flex items-center gap-2">
-                              {transaction.campaign?.brand_logo_url ? (
-                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                            </div> : transaction.campaign?.title ? <div className="flex items-center gap-2">
+                              {transaction.campaign?.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                                   <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
                                     {transaction.campaign.title.charAt(0).toUpperCase()}
                                   </span>
-                                </div>
-                              )}
+                                </div>}
                               <span className="text-sm font-medium">{transaction.campaign.title}</span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">-</span>
-                          )}
+                            </div> : <span className="text-sm text-muted-foreground">-</span>}
                         </TableCell>
                         
                         {/* Type */}
@@ -2141,16 +2126,12 @@ export function WalletTab() {
                 <div className={`text-4xl font-bold tracking-[-0.5px] mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
                   {selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? '+' : selectedTransaction.amount < 0 ? '-' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
                 </div>
-                <div className="text-sm text-muted-foreground mb-3">
-                  {format(selectedTransaction.date, 'MMM dd, yyyy • h:mm a')}
-                </div>
-                {selectedTransaction.status && selectedTransaction.status !== 'completed' && (
-                  <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
+                
+                {selectedTransaction.status && selectedTransaction.status !== 'completed' && <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
                     {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
                     {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
                     {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
-                  </Badge>
-                )}
+                  </Badge>}
               </div>
 
               {/* Invoice Details Content */}
@@ -2162,17 +2143,9 @@ export function WalletTab() {
                   <div className="flex items-start justify-between">
                     <span className="text-sm text-muted-foreground">Program</span>
                     <div className="flex items-center gap-2">
-                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? (
-                        <img 
-                          src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} 
-                          alt="" 
-                          className="w-5 h-5 rounded-full object-cover" 
-                        />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
+                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? <img src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} alt="" className="w-5 h-5 rounded-full object-cover" /> : <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
                           <DollarSign className="h-3 w-3 text-muted-foreground" />
-                        </div>
-                      )}
+                        </div>}
                       <span className="text-sm font-medium tracking-[-0.5px] truncate max-w-[180px]">
                         {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N/A'}
                       </span>
@@ -2183,37 +2156,25 @@ export function WalletTab() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Period</span>
                     <span className="text-sm font-medium tracking-[-0.5px]">
-                      {selectedTransaction.metadata?.period_start && selectedTransaction.metadata?.period_end 
-                        ? `${format(new Date(selectedTransaction.metadata.period_start), 'MMM d')}-${format(new Date(selectedTransaction.metadata.period_end), 'MMM d, yyyy')}`
-                        : format(selectedTransaction.date, 'MMM d, yyyy')}
+                      {selectedTransaction.metadata?.period_start && selectedTransaction.metadata?.period_end ? `${format(new Date(selectedTransaction.metadata.period_start), 'MMM d')}-${format(new Date(selectedTransaction.metadata.period_end), 'MMM d, yyyy')}` : format(selectedTransaction.date, 'MMM d, yyyy')}
                     </span>
                   </div>
 
                   {/* Status */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Status</span>
-                    {selectedTransaction.status === 'completed' ? (
-                      <Badge className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white border-none text-xs px-2 py-0.5">
+                    {selectedTransaction.status === 'completed' ? <Badge className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white border-none text-xs px-2 py-0.5">
                         <img src={checkCircleFilledIcon} alt="" className="h-3 w-3 mr-1" />
                         Completed
-                      </Badge>
-                    ) : selectedTransaction.status === 'pending' ? (
-                      <Badge variant="outline" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5 bg-orange-500/10 text-orange-500 border-orange-500/20">
+                      </Badge> : selectedTransaction.status === 'pending' ? <Badge variant="outline" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5 bg-orange-500/10 text-orange-500 border-orange-500/20">
                         <Clock className="h-3 w-3 mr-1" />
                         Pending
-                      </Badge>
-                    ) : selectedTransaction.status === 'in_transit' ? (
-                      <Badge variant="outline" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 border-blue-500/20">
+                      </Badge> : selectedTransaction.status === 'in_transit' ? <Badge variant="outline" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 border-blue-500/20">
                         <Hourglass className="h-3 w-3 mr-1" />
                         In Transit
-                      </Badge>
-                    ) : selectedTransaction.status === 'rejected' ? (
-                      <Badge variant="destructive" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5">
+                      </Badge> : selectedTransaction.status === 'rejected' ? <Badge variant="destructive" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5">
                         Rejected
-                      </Badge>
-                    ) : (
-                      <span className="text-sm font-medium tracking-[-0.5px]">-</span>
-                    )}
+                      </Badge> : <span className="text-sm font-medium tracking-[-0.5px]">-</span>}
                   </div>
 
                   {/* Initiated */}
@@ -2228,9 +2189,7 @@ export function WalletTab() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground border-b border-dashed border-muted-foreground/50">Paid</span>
                     <span className="text-sm font-medium tracking-[-0.5px]">
-                      {selectedTransaction.status === 'completed' 
-                        ? format(selectedTransaction.date, 'MMM d, yyyy')
-                        : '-'}
+                      {selectedTransaction.status === 'completed' ? format(selectedTransaction.date, 'MMM d, yyyy') : '-'}
                     </span>
                   </div>
 
@@ -2246,15 +2205,7 @@ export function WalletTab() {
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-sm text-muted-foreground shrink-0">Description</span>
                     <span className="text-sm font-medium tracking-[-0.5px] text-right truncate">
-                      {selectedTransaction.source ||
-                        (selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' 
-                          ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` 
-                          : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' 
-                          : selectedTransaction.type === 'referral' ? 'Referral bonus' 
-                          : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` 
-                          : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` 
-                          : selectedTransaction.type === 'balance_correction' ? 'Balance correction' 
-                          : 'Transaction')}
+                      {selectedTransaction.source || (selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' : selectedTransaction.type === 'referral' ? 'Referral bonus' : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` : selectedTransaction.type === 'balance_correction' ? 'Balance correction' : 'Transaction')}
                     </span>
                   </div>
 
@@ -2266,11 +2217,13 @@ export function WalletTab() {
                         {selectedTransaction.id.slice(0, 6)}...{selectedTransaction.id.slice(-4)}
                       </span>
                       <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground" onClick={() => {
-                        navigator.clipboard.writeText(selectedTransaction.id);
-                        setCopiedId(true);
-                        setTimeout(() => setCopiedId(false), 2000);
-                        toast({ description: "Transaction ID copied" });
-                      }}>
+                    navigator.clipboard.writeText(selectedTransaction.id);
+                    setCopiedId(true);
+                    setTimeout(() => setCopiedId(false), 2000);
+                    toast({
+                      description: "Transaction ID copied"
+                    });
+                  }}>
                         {copiedId ? <Check className="h-2.5 w-2.5 text-green-500" /> : <Copy className="h-2.5 w-2.5" />}
                       </Button>
                     </div>
@@ -2278,8 +2231,7 @@ export function WalletTab() {
                 </div>
 
                 {/* Rejection Reason */}
-                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && (
-                  <div className="mt-5 p-3 bg-destructive/10 rounded-xl">
+                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && <div className="mt-5 p-3 bg-destructive/10 rounded-xl">
                     <div className="flex items-start gap-2">
                       <X className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
                       <div>
@@ -2287,8 +2239,7 @@ export function WalletTab() {
                         <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Payout Method Details */}
                 {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (() => {
