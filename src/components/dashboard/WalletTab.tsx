@@ -110,6 +110,7 @@ export function WalletTab() {
     id: string;
     title: string;
     brand_name: string;
+    brand_logo_url: string | null;
   }>>([]);
   const [earningsChartPeriod, setEarningsChartPeriod] = useState<'1D' | '1W' | '1M' | 'ALL'>('1W');
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
@@ -498,7 +499,8 @@ export function WalletTab() {
     const uniqueCampaigns = Array.from(campaignsMap.values()).map(c => ({
       id: c.id,
       title: c.title,
-      brand_name: c.brand_name
+      brand_name: c.brand_name,
+      brand_logo_url: c.brand_logo_url || null
     }));
     setAvailableCampaigns(uniqueCampaigns);
     const allTransactions: Transaction[] = [];
@@ -1398,14 +1400,14 @@ export function WalletTab() {
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[280px] p-4 overflow-hidden">
+            <DropdownMenuContent align="start" className="w-[280px] p-4 overflow-hidden bg-popover/80 backdrop-blur-xl border-border font-['Inter'] tracking-[-0.5px]">
               <div className="relative">
                 {/* Main Menu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
                   <div className="relative mb-3">
                     <Input 
                       placeholder="Filter..." 
-                      className="bg-background border-border h-10 pr-10"
+                      className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border"
                     />
                     <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
                   </div>
@@ -1588,7 +1590,22 @@ export function WalletTab() {
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}
                       >
-                        <span className="text-sm truncate">{campaign.title}</span>
+                        {campaign.brand_logo_url ? (
+                          <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                            <img 
+                              src={campaign.brand_logo_url} 
+                              alt={campaign.brand_name || 'Brand'} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                            <span className="text-[10px] text-foreground font-medium">
+                              {campaign.title.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-sm truncate flex-1">{campaign.title}</span>
                         {campaignFilter === campaign.id && <Check className="h-4 w-4 ml-auto flex-shrink-0" />}
                       </button>
                     ))}
