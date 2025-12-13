@@ -673,11 +673,7 @@ export function CreatorsTab({
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-3 font-inter tracking-[-0.5px] text-sm bg-[#2060de] hover:bg-[#1a50c0] text-white"
-                >
+                <Button variant="ghost" size="sm" className="h-8 px-3 font-inter tracking-[-0.5px] text-sm bg-[#2060de] hover:bg-[#1a50c0] text-white">
                   <DollarSign className="h-4 w-4 mr-1" />
                   Pay
                 </Button>
@@ -824,7 +820,7 @@ export function CreatorsTab({
             </DialogHeader>
           </div>
           
-          {selectedCreator && <div className="px-6 pb-6 space-y-5">
+          {selectedCreator && <div className="pb-6 space-y-5 px-0">
               {/* Profile Header */}
               <div className="flex items-center gap-4">
                 <Avatar className="h-14 w-14">
