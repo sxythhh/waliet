@@ -263,23 +263,27 @@ export function ApplyToBoostDialog({
               Checking account requirements...
             </div>
           ) : !hasConnectedAccounts ? (
-            <div className="space-y-4 py-4">
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  You need to connect at least one social account or Discord before applying.
-                </AlertDescription>
-              </Alert>
+            <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-6">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <AlertCircle className="h-6 w-6 text-muted-foreground" />
+              </div>
               
               <div className="space-y-2">
-                <Button 
-                  onClick={() => setShowAddSocialDialog(true)} 
-                  className="w-full"
-                  variant="outline"
-                >
-                  Connect Social Account
-                </Button>
+                <h3 className="font-['Inter'] tracking-[-0.5px] text-base font-medium text-foreground">
+                  Connect an account to apply
+                </h3>
+                <p className="font-['Inter'] tracking-[-0.5px] text-sm text-muted-foreground max-w-[280px]">
+                  Link a social account or Discord to submit your application
+                </p>
               </div>
+              
+              <Button 
+                onClick={() => setShowAddSocialDialog(true)} 
+                className="font-['Inter'] tracking-[-0.5px] bg-[#2060de] hover:bg-[#2060de]/90 text-white"
+                style={{ borderTop: '1px solid #4b85f7' }}
+              >
+                Connect Account
+              </Button>
             </div>
           ) : (
             <div className="space-y-4 py-4">
