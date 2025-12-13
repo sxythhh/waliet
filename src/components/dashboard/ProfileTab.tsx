@@ -25,6 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PhoneInput } from "@/components/PhoneInput";
 import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
+import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -1322,6 +1323,25 @@ export function ProfileTab() {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Create Brand Workspace */}
+      <Card className="bg-card border-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold" style={{
+          fontFamily: 'Inter',
+          letterSpacing: '-0.5px'
+        }}>Brand Workspace</CardTitle>
+          <CardDescription style={{
+          fontFamily: 'Inter',
+          letterSpacing: '-0.3px'
+        }}>
+            Create a brand workspace to manage campaigns and collaborate with your team
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <CreateBrandDialog />
         </CardContent>
       </Card>
 
