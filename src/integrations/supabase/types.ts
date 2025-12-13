@@ -85,6 +85,65 @@ export type Database = {
           },
         ]
       }
+      boost_video_submissions: {
+        Row: {
+          bounty_campaign_id: string
+          created_at: string
+          id: string
+          payout_amount: number | null
+          platform: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submission_notes: string | null
+          submitted_at: string
+          updated_at: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          bounty_campaign_id: string
+          created_at?: string
+          id?: string
+          payout_amount?: number | null
+          platform: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_notes?: string | null
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          bounty_campaign_id?: string
+          created_at?: string
+          id?: string
+          payout_amount?: number | null
+          platform?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_notes?: string | null
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boost_video_submissions_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bounty_applications: {
         Row: {
           application_text: string | null
