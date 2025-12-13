@@ -5,13 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Video, DollarSign, Check, X, ExternalLink, Clock, ChevronRight, User } from "lucide-react";
+import { Video, Check, X, ExternalLink, ChevronRight, User } from "lucide-react";
+import { LiquidProgressPot } from "./LiquidProgressPot";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
@@ -269,20 +268,15 @@ export function BoostVideosTab({
                         <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isSelected ? 'rotate-90' : ''}`} />
                       </div>
                       
-                      {/* Visual Pot */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">
-                            {creator.approvedThisMonth}/{videosPerMonth} videos
-                          </span>
-                          <span className="font-medium text-green-500">
-                            ${creator.earnedThisMonth.toFixed(0)}
-                          </span>
-                        </div>
-                        <Progress value={progressPercent} className="h-2" />
-                        {creator.pendingThisMonth > 0 && <p className="text-xs text-yellow-500">
-                            {creator.pendingThisMonth} pending review
-                          </p>}
+                      {/* Visual Liquid Pot */}
+                      <div className="mt-2">
+                        <LiquidProgressPot
+                          current={creator.approvedThisMonth}
+                          max={videosPerMonth}
+                          earnedAmount={creator.earnedThisMonth}
+                          maxAmount={monthlyRetainer}
+                          pendingCount={creator.pendingThisMonth}
+                        />
                       </div>
                     </button>;
             })}
