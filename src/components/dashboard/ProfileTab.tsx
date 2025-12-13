@@ -25,6 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PhoneInput } from "@/components/PhoneInput";
 import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
+import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -728,7 +729,55 @@ export function ProfileTab() {
         </Card>
       </div>;
   }
+  // Generate onboarding tasks based on profile completion
+  const onboardingTasks = [
+    {
+      id: 'profile_info',
+      label: 'Add basic profile info',
+      completed: !!(profile?.full_name && profile?.username),
+    },
+    {
+      id: 'bio',
+      label: 'Update your profile description',
+      completed: !!(profile?.bio && profile.bio.length > 10),
+    },
+    {
+      id: 'location',
+      label: 'Add your location',
+      completed: !!(profile?.country),
+    },
+    {
+      id: 'phone',
+      label: 'Add phone number',
+      completed: !!(profile?.phone_number),
+    },
+    {
+      id: 'social_account',
+      label: 'Connect a social account',
+      completed: socialAccounts.length > 0,
+      onClick: () => setShowAddAccountDialog(true),
+    },
+    {
+      id: 'demographics',
+      label: 'Submit demographics',
+      completed: socialAccounts.some(a => a.demographic_submissions?.some(d => d.status === 'approved')),
+    },
+    {
+      id: 'join_campaign',
+      label: 'Join your first campaign',
+      completed: joinedCampaigns.length > 0,
+    },
+    {
+      id: 'earn_first',
+      label: 'Earn your first payout',
+      completed: (profile?.total_earnings || 0) > 0,
+    },
+  ];
+
   return <div className="space-y-3 sm:space-y-6 max-w-4xl mx-auto pb-8">
+      {/* Onboarding Checklist */}
+      <ProfileOnboardingChecklist tasks={onboardingTasks} />
+
       {/* Profile Header */}
       <Card className="bg-card border-0">
         
@@ -766,7 +815,7 @@ export function ProfileTab() {
                             {/* Account Header with Avatar */}
                             <div className="flex items-center gap-3">
                               {/* Avatar */}
-                              {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border/50 opacity-100" /> : <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-base">
+                              {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border/50 opacity-100" referrerPolicy="no-referrer" crossOrigin="anonymous" /> : <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-base">
                                   {account.username.charAt(0).toUpperCase()}
                                 </div>}
                               
