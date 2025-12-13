@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play, ChevronUp, ChevronDown } from "lucide-react";
 import mailIcon from "@/assets/mail-icon.svg";
 import { EditBountyDialog } from "./EditBountyDialog";
+import { BoostVideosTab } from "./BoostVideosTab";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -269,16 +270,19 @@ export function BoostDetailView({
           </nav>
         </div>
 
-        {/* Content Area - Videos & Management tabs */}
-        {(activeTab === "videos" || activeTab === "management") && <div className="flex-1 overflow-auto p-4">
-          {activeTab === "videos" && <div className="flex items-center justify-center py-24 text-muted-foreground">
-              <div className="text-center">
-                <Video className="h-12 w-12 mx-auto mb-4 opacity-40" />
-                <p>Videos tracking coming soon</p>
-              </div>
-            </div>}
+        {/* Content Area - Videos Tab */}
+        {activeTab === "videos" && (
+          <BoostVideosTab 
+            boostId={boostId} 
+            monthlyRetainer={boost.monthly_retainer} 
+            videosPerMonth={boost.videos_per_month}
+          />
+        )}
 
-          {activeTab === "management" && <div className="space-y-8">
+        {/* Content Area - Management tab */}
+        {activeTab === "management" && (
+          <div className="flex-1 overflow-auto p-4">
+            <div className="space-y-8">
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-muted/30 rounded-2xl p-6">
@@ -308,17 +312,22 @@ export function BoostDetailView({
 
               {/* Description & Requirements */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {boost.description && <div className="bg-muted/20 rounded-2xl p-6">
+                {boost.description && (
+                  <div className="bg-muted/20 rounded-2xl p-6">
                     <h3 className="text-sm font-medium text-muted-foreground mb-3">Description</h3>
                     <p className="text-sm leading-relaxed">{boost.description}</p>
-                  </div>}
-                {boost.content_style_requirements && <div className="bg-muted/20 rounded-2xl p-6">
+                  </div>
+                )}
+                {boost.content_style_requirements && (
+                  <div className="bg-muted/20 rounded-2xl p-6">
                     <h3 className="text-sm font-medium text-muted-foreground mb-3">Content Requirements</h3>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{boost.content_style_requirements}</p>
-                  </div>}
+                  </div>
+                )}
               </div>
-            </div>}
-          </div>}
+            </div>
+          </div>
+        )}
         {/* Applications Tab - Two Column Layout */}
         {activeTab === "applications" && <div className="flex-1 flex overflow-hidden">
             {applications.length === 0 ? <div className="flex-1 flex items-center justify-center text-muted-foreground">
