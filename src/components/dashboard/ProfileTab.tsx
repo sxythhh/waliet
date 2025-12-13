@@ -1038,10 +1038,15 @@ export function ProfileTab() {
 
             {/* Discord Account */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
+              <p className="text-sm text-foreground mb-0.5" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.3px'
             }}>Discord</p>
+              <p className="text-xs mb-2" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px',
+              color: '#696969'
+            }}>Connect your Discord account to join our community and receive updates directly</p>
               {profile.discord_username ? <div className="flex items-center justify-between h-10 px-3 bg-muted/30 rounded-md">
                   <div className="flex items-center gap-2">
                     <img src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"} alt="Discord" className="w-5 h-5 rounded-full" />
