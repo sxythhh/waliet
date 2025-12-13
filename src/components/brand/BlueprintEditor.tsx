@@ -386,37 +386,32 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header - Fixed */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-background">
+      <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-background border-b border-[#141414]">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={goBack} className="gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50">
-            <ArrowLeft className="h-4 w-4" />
+          <button onClick={goBack} className="flex items-center gap-2 font-inter tracking-[-0.5px] text-white hover:opacity-80 transition-opacity">
+            <ArrowLeft className="h-4 w-4 text-white" />
             Return
-          </Button>
+          </button>
           <div className="h-4 w-px bg-border/50" />
           {brand?.logo_url && (
             <img src={brand.logo_url} alt={brand.name} className="h-6 w-6 rounded object-cover" />
           )}
-          <span className="text-muted-foreground text-sm">{brand?.name}</span>
+          <span className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">{brand?.name}</span>
           <span className="text-muted-foreground/50">/</span>
           <Input
             value={blueprint.title}
             onChange={(e) => updateBlueprint({ title: e.target.value })}
-            className="h-8 w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium"
+            className="h-8 w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px]"
             placeholder="Untitled"
           />
-          {saving && <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>}
+          {saving && <span className="text-xs text-muted-foreground animate-pulse font-inter tracking-[-0.5px]">Saving...</span>}
         </div>
-        <Button
+        <button
           onClick={activateBlueprint}
-          variant="ghost"
-          className={blueprint.status === "active" 
-            ? "bg-muted/50 text-foreground hover:bg-muted" 
-            : "bg-muted/50 text-foreground hover:bg-muted"
-          }
+          className="px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-inter tracking-[-0.5px] text-sm hover:opacity-90 transition-opacity"
         >
-          <Zap className="h-4 w-4 mr-2" />
           {blueprint.status === "active" ? "Active" : "Activate Blueprint"}
-        </Button>
+        </button>
       </div>
 
       {/* Content */}
