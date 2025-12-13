@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
@@ -629,55 +630,83 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
         </div>
 
         {/* Message Filters */}
-        <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-2 flex-wrap font-inter tracking-[-0.5px]">
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-colors ${
-              messageFilter === 'all' 
-                ? 'bg-foreground text-background' 
-                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-            }`}
-            onClick={() => setMessageFilter('all')}
-          >
-            All
-          </button>
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${
-              messageFilter === 'unread' 
-                ? 'bg-foreground text-background' 
-                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-            }`}
-            onClick={() => setMessageFilter('unread')}
-          >
-            <div className={`h-1.5 w-1.5 rounded-full ${messageFilter === 'unread' ? 'bg-background' : 'bg-green-500'}`} />
-            Unread
-          </button>
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${
-              messageFilter === 'bookmarked' 
-                ? 'bg-foreground text-background' 
-                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-            }`}
-            onClick={() => setMessageFilter('bookmarked')}
-          >
-            <Bookmark className="h-3 w-3" />
-            Saved
-          </button>
-          
-          {campaigns.length > 0 && (
-            <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-              <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs rounded-full border-0 bg-muted/50 hover:bg-muted font-inter tracking-[-0.5px]">
-                <SelectValue placeholder="All Campaigns" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover">
-                <SelectItem value="all" className="text-xs">All Campaigns</SelectItem>
-                {campaigns.map(campaign => (
-                  <SelectItem key={campaign.id} value={campaign.id} className="text-xs">
-                    {campaign.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+        <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-2 font-inter tracking-[-0.5px]">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${
+                  messageFilter !== 'all' || campaignFilter !== 'all'
+                    ? 'bg-foreground text-background' 
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <Filter className="h-3 w-3" />
+                Filters
+                {(messageFilter !== 'all' || campaignFilter !== 'all') && (
+                  <span className="ml-0.5 h-4 w-4 rounded-full bg-background text-foreground text-[10px] flex items-center justify-center">
+                    {(messageFilter !== 'all' ? 1 : 0) + (campaignFilter !== 'all' ? 1 : 0)}
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-48 p-2 bg-popover">
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide px-2 py-1">Status</p>
+                <button
+                  className={`w-full h-8 px-2 text-xs rounded-md transition-colors flex items-center gap-2 ${
+                    messageFilter === 'all' 
+                      ? 'bg-muted text-foreground' 
+                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  }`}
+                  onClick={() => setMessageFilter('all')}
+                >
+                  All Messages
+                </button>
+                <button
+                  className={`w-full h-8 px-2 text-xs rounded-md transition-colors flex items-center gap-2 ${
+                    messageFilter === 'unread' 
+                      ? 'bg-muted text-foreground' 
+                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  }`}
+                  onClick={() => setMessageFilter('unread')}
+                >
+                  <div className={`h-1.5 w-1.5 rounded-full ${messageFilter === 'unread' ? 'bg-foreground' : 'bg-green-500'}`} />
+                  Unread
+                </button>
+                <button
+                  className={`w-full h-8 px-2 text-xs rounded-md transition-colors flex items-center gap-2 ${
+                    messageFilter === 'bookmarked' 
+                      ? 'bg-muted text-foreground' 
+                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  }`}
+                  onClick={() => setMessageFilter('bookmarked')}
+                >
+                  <Bookmark className={`h-3 w-3 ${messageFilter === 'bookmarked' ? 'fill-current' : ''}`} />
+                  Saved
+                </button>
+                
+                {campaigns.length > 0 && (
+                  <>
+                    <div className="my-2 border-t border-border" />
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide px-2 py-1">Campaign</p>
+                    <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+                      <SelectTrigger className="h-8 w-full text-xs font-inter tracking-[-0.5px]">
+                        <SelectValue placeholder="All Campaigns" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        <SelectItem value="all" className="text-xs">All Campaigns</SelectItem>
+                        {campaigns.map(campaign => (
+                          <SelectItem key={campaign.id} value={campaign.id} className="text-xs">
+                            {campaign.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <ScrollArea className="flex-1">
