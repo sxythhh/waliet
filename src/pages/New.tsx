@@ -52,13 +52,11 @@ export default function New() {
       </nav>
 
       {/* Embedded Content */}
-      <div className="flex-1 pt-14">
-        <iframe
-          src="https://join.virality.gg/new"
-          className="w-full h-full border-0"
-          title="New"
-        />
-      </div>
+      <iframe
+        src="https://join.virality.gg/new"
+        className="flex-1 w-full border-0 mt-14"
+        title="New"
+      />
 
       {/* Auth Dialog */}
       <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
