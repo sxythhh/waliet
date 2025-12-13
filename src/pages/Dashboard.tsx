@@ -16,6 +16,8 @@ import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
+import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
+
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -146,5 +148,8 @@ export default function Dashboard() {
       <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
       
       {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
+
+      {/* Creator Chat Widget - only show in creator mode */}
+      {isCreatorMode && <CreatorChatWidget />}
     </div>;
 }
