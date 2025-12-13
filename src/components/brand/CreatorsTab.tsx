@@ -494,8 +494,8 @@ export function CreatorsTab({
     URL.revokeObjectURL(url);
   };
   if (loading) {
-    return <div className="h-full flex">
-        <div className="w-80 border-r border-[#e0e0e0] dark:border-[#1a1a1a] p-4 space-y-4 hidden lg:block">
+    return <div className="h-full flex font-inter tracking-[-0.5px]">
+        <div className="w-80 border-r border-border/30 p-4 space-y-4 hidden lg:block">
           <Skeleton className="h-6 w-24" />
           {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 p-3">
               <Skeleton className="h-10 w-10 rounded-full" />
@@ -506,7 +506,7 @@ export function CreatorsTab({
             </div>)}
         </div>
         <div className="flex-1 hidden lg:block" />
-        <div className="w-full lg:w-96 border-l border-[#e0e0e0] dark:border-[#1a1a1a] p-4 space-y-4">
+        <div className="w-full lg:w-96 border-l border-border/30 p-4 space-y-4">
           <Skeleton className="h-6 w-24" />
           {[1, 2, 3, 4].map(i => <div key={i} className="flex items-center gap-3 p-3">
               <Skeleton className="h-10 w-10 rounded-full" />
@@ -520,45 +520,44 @@ export function CreatorsTab({
   }
 
   // Mobile Navigation Tabs
-  const MobileNav = () => <div className="lg:hidden flex border-b border-[#e0e0e0] dark:border-[#1a1a1a]">
-      <button onClick={() => setMobileView('messages')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${mobileView === 'messages' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
+  const MobileNav = () => <div className="lg:hidden flex border-b border-border/30 bg-background/50 backdrop-blur-sm">
+      <button onClick={() => setMobileView('messages')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors font-inter tracking-[-0.5px] ${mobileView === 'messages' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}`}>
         Messages
       </button>
-      <button onClick={() => setMobileView('creators')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${mobileView === 'creators' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
+      <button onClick={() => setMobileView('creators')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors font-inter tracking-[-0.5px] ${mobileView === 'creators' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}`}>
         Creators ({creators.length})
       </button>
     </div>;
-  return <div className="h-full flex flex-col lg:flex-row bg-background">
+  return <div className="h-full flex flex-col lg:flex-row bg-background font-inter tracking-[-0.5px]">
       <MobileNav />
       
       {/* Left Column - Conversations List */}
-      <div className={`w-full lg:w-80 border-r border-[#e0e0e0] dark:border-[#1a1a1a] flex flex-col ${mobileView === 'messages' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
-        <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between shrink-0">
+      <div className={`w-full lg:w-80 border-r border-border/30 flex flex-col ${mobileView === 'messages' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
+        <div className="h-14 px-4 border-b border-border/30 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <h2 className="font-semibold">Messages</h2>
-            <HelpCircle className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-semibold text-sm">Messages</h2>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50">
             <PenSquare className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Message Filters */}
-        <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-2 flex-wrap font-inter tracking-[-0.5px]">
-          <button className={`h-7 px-3 text-xs rounded-full transition-colors ${messageFilter === 'all' ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`} onClick={() => setMessageFilter('all')}>
+        <div className="p-3 border-b border-border/30 flex items-center gap-2 flex-wrap">
+          <button className={`h-7 px-3 text-xs rounded-md transition-all ${messageFilter === 'all' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('all')}>
             All
           </button>
-          <button className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${messageFilter === 'unread' ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`} onClick={() => setMessageFilter('unread')}>
-            <div className={`h-1.5 w-1.5 rounded-full ${messageFilter === 'unread' ? 'bg-background' : 'bg-green-500'}`} />
+          <button className={`h-7 px-3 text-xs rounded-md transition-all flex items-center gap-1.5 ${messageFilter === 'unread' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('unread')}>
+            <div className={`h-1.5 w-1.5 rounded-full ${messageFilter === 'unread' ? 'bg-background' : 'bg-emerald-500'}`} />
             Unread
           </button>
-          <button className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${messageFilter === 'bookmarked' ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`} onClick={() => setMessageFilter('bookmarked')}>
+          <button className={`h-7 px-3 text-xs rounded-md transition-all flex items-center gap-1.5 ${messageFilter === 'bookmarked' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('bookmarked')}>
             <Bookmark className="h-3 w-3" />
             Saved
           </button>
           
           {campaigns.length > 0 && <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-              <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs rounded-full border-0 bg-muted/50 hover:bg-muted font-inter tracking-[-0.5px]">
+              <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs rounded-md border-0 bg-transparent hover:bg-muted/50 text-muted-foreground">
                 <SelectValue placeholder="All Campaigns" />
               </SelectTrigger>
               <SelectContent className="bg-popover">
@@ -572,36 +571,33 @@ export function CreatorsTab({
 
         <ScrollArea className="flex-1">
           {conversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
-              <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mb-6">
-                <Inbox className="h-10 w-10 text-muted-foreground/50" />
+              <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
+                <Inbox className="h-8 w-8 text-muted-foreground/60" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Your Inbox is Empty</h3>
-              <p className="text-sm text-muted-foreground mb-6 max-w-[240px]">
-                Start conversations by posting a job and messaging creators. Your conversations will appear here.
+              <h3 className="font-semibold text-base mb-2">Your Inbox is Empty</h3>
+              <p className="text-sm text-muted-foreground mb-6 max-w-[220px] leading-relaxed">
+                Start conversations by messaging creators from the right panel.
               </p>
-              <Button className="gap-2 bg-[#2060de] hover:bg-[#2060de]/90 border-t border-[#4b85f7]" onClick={() => setMobileView('creators')}>
-                <Plus className="h-4 w-4" />
-                Create a Campaign
+              <Button className="gap-2 bg-foreground text-background hover:bg-foreground/90 h-9 px-4 text-xs" onClick={() => setMobileView('creators')}>
+                <Plus className="h-3.5 w-3.5" />
+                Browse Creators
               </Button>
-              <button className="text-xs text-muted-foreground mt-4 hover:text-foreground transition-colors">
-                Need help getting started?
-              </button>
             </div> : filteredConversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
-              <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-                {messageFilter === 'unread' ? <Mail className="h-8 w-8 text-muted-foreground/50" /> : <Bookmark className="h-8 w-8 text-muted-foreground/50" />}
+              <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                {messageFilter === 'unread' ? <Mail className="h-7 w-7 text-muted-foreground/60" /> : <Bookmark className="h-7 w-7 text-muted-foreground/60" />}
               </div>
-              <h3 className="font-medium mb-2">
+              <h3 className="font-medium text-sm mb-1">
                 {messageFilter === 'unread' ? 'No unread messages' : 'No saved conversations'}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {messageFilter === 'unread' ? "You're all caught up!" : "Bookmark conversations to find them here."}
               </p>
-            </div> : <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
+            </div> : <div>
               {filteredConversations.map(conv => {
             const creator = getConversationCreator(conv);
             const unreadCount = unreadCounts.get(conv.id) || 0;
             const isBookmarked = bookmarkedConversations.has(conv.id);
-            return <div key={conv.id} className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${activeConversation?.id === conv.id ? "bg-muted/50" : ""}`} onClick={() => {
+            return <div key={conv.id} className={`p-4 cursor-pointer transition-all hover:bg-muted/30 ${activeConversation?.id === conv.id ? "bg-muted/40" : ""}`} onClick={() => {
               setActiveConversation({
                 ...conv,
                 creator
@@ -610,13 +606,13 @@ export function CreatorsTab({
             }}>
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <Avatar className="h-10 w-10">
+                        <Avatar className="h-10 w-10 ring-1 ring-border/30">
                           <AvatarImage src={creator?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                          <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                             {creator?.username.slice(0, 2).toUpperCase() || "??"}
                           </AvatarFallback>
                         </Avatar>
-                        {unreadCount > 0 && <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center justify-center">
+                        {unreadCount > 0 && <div className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-emerald-500 text-white text-[9px] font-medium flex items-center justify-center">
                             {unreadCount > 9 ? '9+' : unreadCount}
                           </div>}
                       </div>
@@ -624,7 +620,7 @@ export function CreatorsTab({
                         <p className={`text-sm truncate ${unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
                           {creator?.full_name || creator?.username || "Unknown"}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="text-[11px] text-muted-foreground truncate">
                           {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), {
                       addSuffix: true
                     }) : "No messages"}
@@ -632,23 +628,23 @@ export function CreatorsTab({
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground shrink-0">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50">
                             <MoreHorizontal className="h-3.5 w-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuContent align="end" className="w-36">
                           <DropdownMenuItem onClick={e => {
                       e.stopPropagation();
                       toggleBookmark(conv.id);
-                    }} className="font-inter tracking-[-0.5px]">
-                            <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
+                    }} className="text-xs">
+                            <Bookmark className={`h-3.5 w-3.5 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
                             {isBookmarked ? 'Unbookmark' : 'Bookmark'}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={e => {
                       e.stopPropagation();
                       setDeleteConfirmId(conv.id);
-                    }} className="text-destructive focus:text-destructive font-inter tracking-[-0.5px]">
-                            <Trash2 className="h-4 w-4 mr-2" />
+                    }} className="text-xs text-destructive focus:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -661,34 +657,34 @@ export function CreatorsTab({
       </div>
 
       {/* Middle Column - Active Conversation */}
-      <div className={`flex-1 flex flex-col min-w-0 border-r border-[#e0e0e0] dark:border-[#1a1a1a] ${mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 border-r border-border/30 ${mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'}`}>
         {activeConversation ? <>
             {/* Conversation Header */}
-            <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-3 shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" onClick={() => setMobileView('messages')}>
+            <div className="h-14 px-4 border-b border-border/30 flex items-center gap-3 shrink-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden hover:bg-muted/50" onClick={() => setMobileView('messages')}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <Avatar className="h-9 w-9">
+              <Avatar className="h-9 w-9 ring-1 ring-border/30">
                 <AvatarImage src={activeConversation.creator?.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                   {activeConversation.creator?.username.slice(0, 2).toUpperCase() || "??"}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-medium flex-1">
+              <span className="font-medium text-sm flex-1">
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
-              <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex hover:bg-muted/50" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
                 {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
               </Button>
             </div>
 
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {messages.map(msg => <div key={msg.id} className={`flex ${msg.sender_type === "brand" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${msg.sender_type === "brand" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                      <p className="text-sm">{msg.content}</p>
-                      <p className={`text-[10px] mt-1 ${msg.sender_type === "brand" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                    <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${msg.sender_type === "brand" ? "bg-foreground text-background" : "bg-muted/60"}`}>
+                      <p className="text-sm leading-relaxed">{msg.content}</p>
+                      <p className={`text-[10px] mt-1.5 ${msg.sender_type === "brand" ? "text-background/60" : "text-muted-foreground"}`}>
                         {format(new Date(msg.created_at), "h:mm a")}
                       </p>
                     </div>
@@ -698,46 +694,44 @@ export function CreatorsTab({
             </ScrollArea>
 
             {/* Redesigned Message Input */}
-            <div className="p-4 md:p-6 border-t border-[#e0e0e0] dark:border-[#1a1a1a] bg-background">
-              <div className="rounded-2xl border border-[#e0e0e0] dark:border-[#1a1a1a] overflow-hidden">
+            <div className="p-4 border-t border-border/30">
+              <div className="rounded-xl border border-border/50 overflow-hidden bg-muted/20">
                 <Textarea placeholder="Type a message..." value={messageInput} onChange={e => setMessageInput(e.target.value)} onKeyDown={e => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
               }
-            }} rows={3} className="border-0 bg-transparent resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none shadow-none" />
-                <div className="flex items-center justify-between px-4 pb-4">
+            }} rows={2} className="border-0 bg-transparent resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none shadow-none text-sm" />
+                <div className="flex items-center justify-between px-3 pb-3">
                   <div className="flex items-center gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
-                      <Smile className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50">
+                      <Smile className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
-                      <Bold className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50">
+                      <Bold className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
-                      <Italic className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
-                      <Link className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50">
+                      <Italic className="h-4 w-4" />
                     </Button>
                   </div>
-                  <Button size="sm" className="h-9 px-5 gap-2 rounded-lg bg-[#0a0a0a] dark:bg-white text-white dark:text-[#0a0a0a] hover:bg-[#0a0a0a]/90 dark:hover:bg-white/90" onClick={sendMessage} disabled={!messageInput.trim() || sendingMessage}>
+                  <Button size="sm" className="h-8 px-4 rounded-lg bg-foreground text-background hover:bg-foreground/90 text-xs" onClick={sendMessage} disabled={!messageInput.trim() || sendingMessage}>
                     Send
-                    <span className="text-xs opacity-60 hidden sm:inline">⌘ ↵</span>
                   </Button>
                 </div>
               </div>
             </div>
           </> : <div className="flex-1 flex flex-col">
             {/* Empty state header with toggle */}
-            <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-end shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
+            <div className="h-14 px-4 border-b border-border/30 flex items-center justify-end shrink-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex hover:bg-muted/50" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
                 {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
               </Button>
             </div>
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-7 w-7 text-muted-foreground/60" />
+                </div>
                 <p className="text-sm">Select a conversation to view messages</p>
               </div>
             </div>
@@ -746,56 +740,58 @@ export function CreatorsTab({
 
       {/* Right Column - Creators List */}
       <div className={`flex flex-col transition-all duration-300 ${creatorsCollapsed ? 'w-0 overflow-hidden lg:w-0' : 'w-full lg:w-96'} ${mobileView === 'creators' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
-        <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between shrink-0">
+        <div className="h-14 px-4 border-b border-border/30 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <h2 className="font-semibold">Creators</h2>
-            <span className="text-xs text-muted-foreground">({creators.length})</span>
+            <h2 className="font-semibold text-sm">Creators</h2>
+            <span className="text-[11px] text-muted-foreground">({creators.length})</span>
           </div>
-          {creators.length > 0 && <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-xs" onClick={exportToCSV}>
+          {creators.length > 0 && <Button variant="ghost" size="sm" className="h-8 px-3 gap-1.5 text-xs hover:bg-muted/50" onClick={exportToCSV}>
               <Download className="h-3.5 w-3.5" />
               Export
             </Button>}
         </div>
 
         {/* Search */}
-        <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a]">
+        <div className="p-3 border-b border-border/30">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9" />
+            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-0 text-sm" />
           </div>
         </div>
 
         <ScrollArea className="flex-1">
           {creators.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
-              <Users className="h-10 w-10 text-muted-foreground mb-4" />
-              <h3 className="font-medium mb-2">No creators yet</h3>
-              <p className="text-sm text-muted-foreground">
+              <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                <Users className="h-7 w-7 text-muted-foreground/60" />
+              </div>
+              <h3 className="font-medium text-sm mb-1">No creators yet</h3>
+              <p className="text-xs text-muted-foreground">
                 Creators will appear here once they join your campaigns.
               </p>
             </div> : <div>
-              {filteredCreators.map(creator => <div key={creator.id} className="p-4 hover:bg-muted/30 transition-all cursor-pointer group" onClick={() => setSelectedCreator(creator)}>
+              {filteredCreators.map(creator => <div key={creator.id} className="p-4 hover:bg-muted/20 transition-all cursor-pointer group" onClick={() => setSelectedCreator(creator)}>
                   {/* Header Row */}
-                  <div className="flex items-start gap-3 mb-4">
-                    <Avatar className="h-12 w-12 ring-2 ring-border/50 shadow-sm">
+                  <div className="flex items-start gap-3 mb-3">
+                    <Avatar className="h-10 w-10 ring-1 ring-border/30">
                       <AvatarImage src={creator.avatar_url || undefined} />
-                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary text-sm font-medium">
+                      <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                         {creator.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm truncate font-inter tracking-[-0.5px]">
+                        <p className="font-medium text-sm truncate">
                           {creator.full_name || creator.username}
                         </p>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">
                           {creator.campaigns.length} campaign{creator.campaigns.length !== 1 ? 's' : ''}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.5px]">
+                      <p className="text-[11px] text-muted-foreground truncate">
                         @{creator.username}
                       </p>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted" onClick={e => {
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/50" onClick={e => {
                 e.stopPropagation();
                 startConversation(creator);
               }}>
@@ -803,12 +799,12 @@ export function CreatorsTab({
                     </Button>
                   </div>
 
-                  {/* Social Accounts - Enhanced Display */}
-                  <div className="space-y-2 mb-3">
-                    {creator.social_accounts.slice(0, 2).map((account, idx) => (
+                  {/* Social Accounts - Simplified Display */}
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                    {creator.social_accounts.slice(0, 3).map((account, idx) => (
                       <div 
                         key={idx} 
-                        className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors text-xs"
                         onClick={e => {
                           e.stopPropagation();
                           if (account.account_link) {
@@ -816,52 +812,25 @@ export function CreatorsTab({
                           }
                         }}
                       >
-                        <div className="relative">
-                          {account.avatar_url ? (
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={account.avatar_url} />
-                              <AvatarFallback className="text-[10px]">
-                                {account.username.slice(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          ) : (
-                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                              <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-4 w-4 object-contain" />
-                            </div>
-                          )}
-                          <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background flex items-center justify-center ring-1 ring-border/50">
-                            <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-2.5 w-2.5 object-contain" />
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate font-inter tracking-[-0.5px]">@{account.username}</p>
-                          {account.follower_count != null && account.follower_count > 0 && (
-                            <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
-                              {account.follower_count >= 1000000 
-                                ? `${(account.follower_count / 1000000).toFixed(1)}M` 
-                                : account.follower_count >= 1000 
-                                  ? `${(account.follower_count / 1000).toFixed(1)}K` 
-                                  : account.follower_count} followers
-                            </p>
-                          )}
-                        </div>
+                        <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain" />
+                        <span className="text-[11px] truncate max-w-[70px]">@{account.username}</span>
                       </div>
                     ))}
-                    {creator.social_accounts.length > 2 && (
-                      <p className="text-[10px] text-muted-foreground pl-2 font-inter tracking-[-0.5px]">
-                        +{creator.social_accounts.length - 2} more account{creator.social_accounts.length - 2 !== 1 ? 's' : ''}
-                      </p>
+                    {creator.social_accounts.length > 3 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        +{creator.social_accounts.length - 3}
+                      </span>
                     )}
                   </div>
 
                   {/* Stats Row */}
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3 text-muted-foreground font-inter tracking-[-0.5px]">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <span>{creator.date_joined ? format(new Date(creator.date_joined), "MMM d, yyyy") : "-"}</span>
-                      <span className="text-muted-foreground/50">•</span>
+                      <span className="text-muted-foreground/40">•</span>
                       <span>{creator.total_views.toLocaleString()} views</span>
                     </div>
-                    <span className="text-emerald-500 font-semibold font-inter tracking-[-0.5px]">${creator.total_earnings.toFixed(2)}</span>
+                    <span className="text-emerald-500 font-medium">${creator.total_earnings.toFixed(2)}</span>
                   </div>
                 </div>)}
             </div>}
