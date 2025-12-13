@@ -13,10 +13,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
-import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
-import instagramLogo from "@/assets/instagram-logo-black.png";
-import youtubeLogo from "@/assets/youtube-logo-black-new.png";
-import xLogo from "@/assets/x-logo.png";
+import { useTheme } from "next-themes";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
+import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import instagramLogoWhite from "@/assets/instagram-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+import xLogoBlack from "@/assets/x-logo.png";
+import xLogoWhite from "@/assets/x-logo-light.png";
+
 interface Creator {
   id: string;
   username: string;
@@ -31,6 +37,8 @@ interface Creator {
     platform: string;
     username: string;
     account_link: string | null;
+    avatar_url?: string | null;
+    follower_count?: number | null;
   }[];
   total_views: number;
   total_earnings: number;
@@ -59,12 +67,13 @@ interface Message {
 interface CreatorsTabProps {
   brandId: string;
 }
-const PLATFORM_LOGOS: Record<string, string> = {
-  tiktok: tiktokLogo,
-  instagram: instagramLogo,
-  youtube: youtubeLogo,
-  x: xLogo
-};
+
+const getPlatformLogos = (isDark: boolean): Record<string, string> => ({
+  tiktok: isDark ? tiktokLogoWhite : tiktokLogoBlack,
+  instagram: isDark ? instagramLogoWhite : instagramLogoBlack,
+  youtube: isDark ? youtubeLogoWhite : youtubeLogoBlack,
+  x: isDark ? xLogoWhite : xLogoBlack
+});
 type MobileView = 'messages' | 'conversation' | 'creators';
 type MessageFilter = 'all' | 'unread' | 'bookmarked';
 interface Campaign {
@@ -74,6 +83,10 @@ interface Campaign {
 export function CreatorsTab({
   brandId
 }: CreatorsTabProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const PLATFORM_LOGOS = getPlatformLogos(isDark);
+  
   const [creators, setCreators] = useState<Creator[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -341,7 +354,9 @@ export function CreatorsTab({
         social_accounts!inner (
           platform,
           username,
-          account_link
+          account_link,
+          avatar_url,
+          follower_count
         )
       `).in("campaign_id", campaignIds).eq("status", "active");
     if (!connections || connections.length === 0) {
@@ -408,7 +423,9 @@ export function CreatorsTab({
         creator.social_accounts.push({
           platform: socialAccount.platform,
           username: socialAccount.username,
-          account_link: socialAccount.account_link
+          account_link: socialAccount.account_link,
+          avatar_url: socialAccount.avatar_url,
+          follower_count: socialAccount.follower_count
         });
       }
     }
@@ -755,24 +772,30 @@ export function CreatorsTab({
               <p className="text-sm text-muted-foreground">
                 Creators will appear here once they join your campaigns.
               </p>
-            </div> : <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
-              {filteredCreators.map(creator => <div key={creator.id} className="p-4 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedCreator(creator)}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <Avatar className="h-10 w-10 ring-2 ring-background">
+            </div> : <div className="divide-y divide-border/50">
+              {filteredCreators.map(creator => <div key={creator.id} className="p-4 hover:bg-muted/30 transition-all cursor-pointer group" onClick={() => setSelectedCreator(creator)}>
+                  {/* Header Row */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <Avatar className="h-12 w-12 ring-2 ring-border/50 shadow-sm">
                       <AvatarImage src={creator.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary text-sm font-medium">
                         {creator.username.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {creator.full_name || creator.username}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm truncate font-inter tracking-[-0.5px]">
+                          {creator.full_name || creator.username}
+                        </p>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                          {creator.campaigns.length} campaign{creator.campaigns.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.5px]">
                         @{creator.username}
                       </p>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={e => {
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted" onClick={e => {
                 e.stopPropagation();
                 startConversation(creator);
               }}>
@@ -780,26 +803,66 @@ export function CreatorsTab({
                     </Button>
                   </div>
 
-                  {/* Social Accounts */}
-                  <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                    {creator.social_accounts.slice(0, 2).map((account, idx) => <Button key={idx} variant="ghost" size="sm" className="h-6 px-2 gap-1.5 text-foreground rounded-full bg-muted/50 hover:bg-muted" onClick={e => {
-                e.stopPropagation();
-                if (account.account_link) {
-                  window.open(account.account_link, "_blank");
-                }
-              }}>
-                        <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain" />
-                        <span className="text-xs max-w-[60px] truncate">@{account.username}</span>
-                      </Button>)}
-                    {creator.social_accounts.length > 2 && <span className="text-xs text-muted-foreground">
-                        +{creator.social_accounts.length - 2}
-                      </span>}
+                  {/* Social Accounts - Enhanced Display */}
+                  <div className="space-y-2 mb-3">
+                    {creator.social_accounts.slice(0, 2).map((account, idx) => (
+                      <div 
+                        key={idx} 
+                        className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (account.account_link) {
+                            window.open(account.account_link, "_blank");
+                          }
+                        }}
+                      >
+                        <div className="relative">
+                          {account.avatar_url ? (
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={account.avatar_url} />
+                              <AvatarFallback className="text-[10px]">
+                                {account.username.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                              <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-4 w-4 object-contain" />
+                            </div>
+                          )}
+                          <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background flex items-center justify-center ring-1 ring-border/50">
+                            <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-2.5 w-2.5 object-contain" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate font-inter tracking-[-0.5px]">@{account.username}</p>
+                          {account.follower_count != null && (
+                            <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
+                              {account.follower_count >= 1000000 
+                                ? `${(account.follower_count / 1000000).toFixed(1)}M` 
+                                : account.follower_count >= 1000 
+                                  ? `${(account.follower_count / 1000).toFixed(1)}K` 
+                                  : account.follower_count} followers
+                            </p>
+                          )}
+                        </div>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    ))}
+                    {creator.social_accounts.length > 2 && (
+                      <p className="text-[10px] text-muted-foreground pl-2 font-inter tracking-[-0.5px]">
+                        +{creator.social_accounts.length - 2} more account{creator.social_accounts.length - 2 !== 1 ? 's' : ''}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>Joined {creator.date_joined ? format(new Date(creator.date_joined), "MMM d, yyyy") : "-"}</span>
-                    <span className="text-green-500 font-medium">${creator.total_earnings.toFixed(2)}</span>
+                  {/* Stats Row */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3 text-muted-foreground font-inter tracking-[-0.5px]">
+                      <span>{creator.date_joined ? format(new Date(creator.date_joined), "MMM d, yyyy") : "-"}</span>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{creator.total_views.toLocaleString()} views</span>
+                    </div>
+                    <span className="text-emerald-500 font-semibold font-inter tracking-[-0.5px]">${creator.total_earnings.toFixed(2)}</span>
                   </div>
                 </div>)}
             </div>}
