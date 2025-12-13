@@ -404,7 +404,6 @@ export function BlueprintEditor({
         return prev + Math.random() * 15;
       });
     }, 200);
-
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${blueprintId}/${Date.now()}.${fileExt}`;
@@ -414,9 +413,7 @@ export function BlueprintEditor({
         cacheControl: "3600",
         upsert: false
       });
-
       clearInterval(progressInterval);
-
       if (uploadError) {
         setUploadProgress(0);
         if (uploadError.message.includes("Bucket not found")) {
@@ -427,7 +424,6 @@ export function BlueprintEditor({
         console.error("Upload error:", uploadError);
         return;
       }
-
       setUploadProgress(100);
       const {
         data: urlData
@@ -457,7 +453,6 @@ export function BlueprintEditor({
       }
     }
   };
-
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
@@ -473,7 +468,7 @@ export function BlueprintEditor({
       <div className="h-full p-[5px]">
         <div className="h-full flex flex-col bg-background border border-[#141414] rounded-[20px] overflow-hidden">
           {/* Header - Fixed */}
-          <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-background border-b border-[#141414]">
+          <div className="sticky top-0 z-10 flex items-center justify-between py-4 bg-background border-b border-[#141414] px-[14px]">
             <div className="flex items-center gap-3">
               <button onClick={goBack} className="flex items-center gap-2 font-inter tracking-[-0.5px] text-white hover:opacity-80 transition-opacity">
                 <ArrowLeft className="h-4 w-4 text-white" />
@@ -504,23 +499,23 @@ export function BlueprintEditor({
                 Want to save time? Start with a pre-built template
               </p>
             </div>
-            <TemplateSelector onSelectTemplate={(template) => {
-              updateBlueprint({
-                content: template.content || blueprint.content,
-                platforms: template.platforms || blueprint.platforms,
-                hooks: template.hooks || blueprint.hooks,
-                talking_points: template.talking_points || blueprint.talking_points,
-                dos_and_donts: template.dos_and_donts || blueprint.dos_and_donts,
-                call_to_action: template.call_to_action || blueprint.call_to_action,
-                hashtags: template.hashtags || blueprint.hashtags,
-                brand_voice: template.brand_voice || blueprint.brand_voice,
-                target_personas: template.target_personas || blueprint.target_personas,
-                assets: template.assets || blueprint.assets,
-                example_videos: template.example_videos || blueprint.example_videos,
-                content_guidelines: template.content_guidelines || blueprint.content_guidelines
-              });
-              toast.success("Template applied!");
-            }} />
+            <TemplateSelector onSelectTemplate={template => {
+                updateBlueprint({
+                  content: template.content || blueprint.content,
+                  platforms: template.platforms || blueprint.platforms,
+                  hooks: template.hooks || blueprint.hooks,
+                  talking_points: template.talking_points || blueprint.talking_points,
+                  dos_and_donts: template.dos_and_donts || blueprint.dos_and_donts,
+                  call_to_action: template.call_to_action || blueprint.call_to_action,
+                  hashtags: template.hashtags || blueprint.hashtags,
+                  brand_voice: template.brand_voice || blueprint.brand_voice,
+                  target_personas: template.target_personas || blueprint.target_personas,
+                  assets: template.assets || blueprint.assets,
+                  example_videos: template.example_videos || blueprint.example_videos,
+                  content_guidelines: template.content_guidelines || blueprint.content_guidelines
+                });
+                toast.success("Template applied!");
+              }} />
           </section>
 
           {/* Main Content - Rich Text Editor */}
@@ -710,12 +705,8 @@ export function BlueprintEditor({
 
             {/* Upload Zone */}
             <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
-            <div 
-              onClick={() => !uploadingVideo && videoInputRef.current?.click()}
-              className={`relative rounded-xl bg-muted/10 p-6 cursor-pointer transition-all hover:bg-muted/20 ${uploadingVideo ? 'pointer-events-none' : ''}`}
-            >
-              {!uploadingVideo ? (
-                <div className="flex flex-col items-center gap-2">
+            <div onClick={() => !uploadingVideo && videoInputRef.current?.click()} className={`relative rounded-xl bg-muted/10 p-6 cursor-pointer transition-all hover:bg-muted/20 ${uploadingVideo ? 'pointer-events-none' : ''}`}>
+              {!uploadingVideo ? <div className="flex flex-col items-center gap-2">
                   <div className="h-10 w-10 rounded-full bg-muted/30 flex items-center justify-center">
                     <Upload className="h-5 w-5 text-muted-foreground" />
                   </div>
@@ -727,9 +718,7 @@ export function BlueprintEditor({
                       or <span className="text-primary hover:underline">click to browse</span> (max 100MB)
                     </p>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
+                </div> : <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -746,69 +735,38 @@ export function BlueprintEditor({
                     </span>
                   </div>
                   <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
+                    <div className="h-full bg-primary rounded-full transition-all duration-300 ease-out" style={{
+                      width: `${uploadProgress}%`
+                    }} />
                   </div>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Video List */}
-            {blueprint.example_videos.length > 0 && (
-              <div className="space-y-2">
-                {blueprint.example_videos.map((video, index) => (
-                  <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
+            {blueprint.example_videos.length > 0 && <div className="space-y-2">
+                {blueprint.example_videos.map((video, index) => <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
                     <div className="flex items-start gap-3">
                       {/* Video preview */}
-                      {video.url && (
-                        <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
-                          <video 
-                            src={video.url} 
-                            className="w-full h-full object-cover" 
-                            muted 
-                            preload="metadata" 
-                            onError={e => {
-                              (e.target as HTMLVideoElement).style.display = 'none';
-                            }} 
-                          />
-                        </div>
-                      )}
+                      {video.url && <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
+                          <video src={video.url} className="w-full h-full object-cover" muted preload="metadata" onError={e => {
+                        (e.target as HTMLVideoElement).style.display = 'none';
+                      }} />
+                        </div>}
                       <div className="flex-1 space-y-2 min-w-0">
-                        <Input 
-                          value={video.url} 
-                          onChange={e => updateExampleVideo(index, "url", e.target.value)} 
-                          placeholder="Video URL..." 
-                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" 
-                        />
-                        <Input 
-                          value={video.description} 
-                          onChange={e => updateExampleVideo(index, "description", e.target.value)} 
-                          placeholder="Why this is a good example..." 
-                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" 
-                        />
+                        <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL..." className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
+                        <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => removeExampleVideo(index)} 
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
 
             {/* Empty state when no videos */}
-            {blueprint.example_videos.length === 0 && !uploadingVideo && (
-              <p className="text-center text-xs text-muted-foreground/60 py-2">
+            {blueprint.example_videos.length === 0 && !uploadingVideo && <p className="text-center text-xs text-muted-foreground/60 py-2">
                 Upload videos or add URLs as examples for creators
-              </p>
-            )}
+              </p>}
           </section>
 
           {/* Target Personas */}
