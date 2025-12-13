@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Settings, Globe, Folder, ExternalLink, Plus } from "lucide-react";
+import { Settings, Globe, Folder, ExternalLink, Plus, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -12,6 +12,7 @@ import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Brand {
   id: string;
@@ -24,6 +25,8 @@ interface Brand {
   home_url: string | null;
   account_url: string | null;
   show_account_tab: boolean;
+  subscription_plan: string | null;
+  subscription_status: string | null;
 }
 export function UserSettingsTab() {
   const navigate = useNavigate();
@@ -37,8 +40,11 @@ export function UserSettingsTab() {
   } = useAdminCheck();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [profile, setProfile] = useState({
     billing_address: "",
     legal_business_name: ""
@@ -60,8 +66,33 @@ export function UserSettingsTab() {
       } = await supabase.from("brands").select("*").eq("id", currentBrand.id).single();
       if (error) throw error;
       setBrand(data);
+      setSelectedPlan(data?.subscription_plan || "");
+      setSelectedStatus(data?.subscription_status || "inactive");
     } catch (error) {
       console.error("Error fetching brand:", error);
+    }
+  };
+
+  const handleUpdatePlan = async () => {
+    if (!brand?.id) return;
+    try {
+      setSavingPlan(true);
+      const { error } = await supabase
+        .from("brands")
+        .update({
+          subscription_plan: selectedPlan || null,
+          subscription_status: selectedStatus
+        })
+        .eq("id", brand.id);
+      
+      if (error) throw error;
+      toast.success("Subscription plan updated");
+      fetchBrand();
+    } catch (error) {
+      console.error("Error updating plan:", error);
+      toast.error("Failed to update subscription plan");
+    } finally {
+      setSavingPlan(false);
     }
   };
   const fetchProfile = async () => {
@@ -187,6 +218,57 @@ export function UserSettingsTab() {
                   </a>}
               </div>}
           </div>
+
+          {/* Admin: Subscription Plan Management */}
+          {isAdmin && (
+            <div className="space-y-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <h3 className="text-sm font-medium tracking-[-0.5px]">Admin: Subscription Plan</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Plan</Label>
+                  <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                    <SelectTrigger className="bg-background border-border h-10">
+                      <SelectValue placeholder="Select plan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="starter">Starter</SelectItem>
+                      <SelectItem value="pro">Pro</SelectItem>
+                      <SelectItem value="enterprise">Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Status</Label>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="bg-background border-border h-10">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="past_due">Past Due</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <Button 
+                onClick={handleUpdatePlan} 
+                disabled={savingPlan}
+                size="sm"
+                className="w-full"
+              >
+                {savingPlan ? "Updating..." : "Update Plan"}
+              </Button>
+            </div>
+          )}
 
           {/* Team Members Section */}
           <div className="pt-4">
