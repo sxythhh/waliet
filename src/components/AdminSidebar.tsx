@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, BarChart3, Store, UserCircle, CreditCard, Receipt, LogOut, Search } from "lucide-react";
+import { Menu, BarChart3, Store, UserCircle, CreditCard, Receipt, LogOut, Search, FileText } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ const menuItems = [
   { title: "Overview", icon: BarChart3, path: "/admin" },
   { title: "Brands", icon: Store, path: "/admin/brands" },
   { title: "Users", icon: UserCircle, path: "/admin/users" },
+  { title: "Templates", icon: FileText, path: "/admin/templates" },
   { title: "Payouts", icon: CreditCard, path: "/admin/payouts" },
   { title: "Transactions", icon: Receipt, path: "/admin/transactions" },
 ];
