@@ -17,7 +17,6 @@ import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
-import CreatorBoostDashboard from "@/pages/CreatorBoostDashboard";
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -35,7 +34,6 @@ export default function Dashboard() {
   const workspace = searchParams.get("workspace") || "creator";
   const selectedCampaignId = searchParams.get("campaign");
   const selectedBlueprintId = searchParams.get("blueprint");
-  const selectedBoostId = searchParams.get("boost");
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
   useEffect(() => {
@@ -113,11 +111,6 @@ export default function Dashboard() {
         default:
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
       }
-    }
-
-    // Creator mode with selected boost - show boost dashboard
-    if (selectedBoostId) {
-      return <CreatorBoostDashboard boostId={selectedBoostId} />;
     }
 
     // Creator mode tabs
