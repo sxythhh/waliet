@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play, ChevronUp, ChevronDown, Plus } from "lucide-react";
 import mailIcon from "@/assets/mail-icon.svg";
 import { EditBountyDialog } from "./EditBountyDialog";
 import { BoostVideosTab } from "./BoostVideosTab";
+import { TopUpBalanceDialog } from "./TopUpBalanceDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -34,6 +35,8 @@ interface BoostData {
   is_private: boolean;
   brand_id: string;
   discord_guild_id: string | null;
+  budget: number | null;
+  budget_used: number | null;
 }
 interface Application {
   id: string;
@@ -84,6 +87,7 @@ export function BoostDetailView({
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<DetailTab>("management");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [topUpDialogOpen, setTopUpDialogOpen] = useState(false);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const getPlatformLogo = (platform: string) => {
@@ -252,10 +256,21 @@ export function BoostDetailView({
                 </Badge>}
             </button>
           </div>
-          <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted" onClick={() => setEditDialogOpen(true)}>
-            <Pencil className="h-3.5 w-3.5" />
-            Edit Boost
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2 font-inter tracking-[-0.5px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500" 
+              onClick={() => setTopUpDialogOpen(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Top Up
+            </Button>
+            <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted" onClick={() => setEditDialogOpen(true)}>
+              <Pencil className="h-3.5 w-3.5" />
+              Edit Boost
+            </Button>
+          </div>
         </div>
 
         {/* Tab Navigation - Horizontal bottom style */}
@@ -292,6 +307,42 @@ export function BoostDetailView({
                   </p>
                 </div>
               )}
+
+              {/* Budget Card */}
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold tracking-[-0.5px]">Balance</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="gap-1.5 h-7 text-xs font-inter tracking-[-0.5px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500" 
+                    onClick={() => setTopUpDialogOpen(true)}
+                  >
+                    <Plus className="h-3 w-3" />
+                    Add Funds
+                  </Button>
+                </div>
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Total Budget</p>
+                    <p className="text-lg font-semibold tracking-[-0.5px] text-emerald-500">
+                      ${(boost.budget || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Used</p>
+                    <p className="text-lg font-semibold tracking-[-0.5px]">
+                      ${(boost.budget_used || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Remaining</p>
+                    <p className="text-lg font-semibold tracking-[-0.5px]">
+                      ${((boost.budget || 0) - (boost.budget_used || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* Stats Grid Card */}
               <div className="rounded-xl border border-muted-foreground/10 p-5">
@@ -566,8 +617,16 @@ export function BoostDetailView({
       </div>
 
       <EditBountyDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} bountyId={boostId} onSuccess={() => {
-      setEditDialogOpen(false);
-      fetchBoostData();
-    }} />
+        setEditDialogOpen(false);
+        fetchBoostData();
+      }} />
+
+      <TopUpBalanceDialog
+        open={topUpDialogOpen}
+        onOpenChange={setTopUpDialogOpen}
+        boostId={boostId}
+        boostTitle={boost?.title || ""}
+        currentBalance={(boost?.budget || 0) - (boost?.budget_used || 0)}
+      />
     </>;
 }

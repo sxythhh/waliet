@@ -71,3 +71,6 @@ verify_jwt = true
 
 [functions.whop-webhook]
 verify_jwt = false
+
+[functions.create-boost-topup]
+verify_jwt = true
