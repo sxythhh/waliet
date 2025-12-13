@@ -50,6 +50,14 @@ interface EarningsDataPoint {
   date: string;
   amount: number;
 }
+interface TeamEarningsDataPoint {
+  date: string;
+  amount: number;
+}
+interface AffiliateEarningsDataPoint {
+  date: string;
+  amount: number;
+}
 interface WithdrawalDataPoint {
   date: string;
   earnings: number;
@@ -77,6 +85,8 @@ export function WalletTab() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
   const [earningsData, setEarningsData] = useState<EarningsDataPoint[]>([]);
+  const [teamEarningsData, setTeamEarningsData] = useState<TeamEarningsDataPoint[]>([]);
+  const [affiliateEarningsData, setAffiliateEarningsData] = useState<AffiliateEarningsDataPoint[]>([]);
   const [withdrawalData, setWithdrawalData] = useState<WithdrawalDataPoint[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('3D');
@@ -130,6 +140,8 @@ export function WalletTab() {
   useEffect(() => {
     if (wallet) {
       fetchEarningsData();
+      fetchTeamEarningsData();
+      fetchAffiliateEarningsData();
       fetchWithdrawalData();
       fetchTransactions();
     }
@@ -258,6 +270,136 @@ export function WalletTab() {
       dataPoints[dataPoints.length - 1].amount = Number(wallet.total_earned.toFixed(2));
     }
     setEarningsData(dataPoints);
+  };
+
+  const fetchTeamEarningsData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const now = new Date();
+    let start: Date;
+    let days: number;
+
+    switch (earningsChartPeriod) {
+      case '1D':
+        start = subDays(now, 1);
+        days = 1;
+        break;
+      case '1W':
+        start = subDays(now, 7);
+        days = 7;
+        break;
+      case '1M':
+        start = subMonths(now, 1);
+        days = 30;
+        break;
+      case 'ALL':
+      default:
+        start = subMonths(now, 6);
+        days = 180;
+        break;
+    }
+
+    const { data: teamTransactions } = await supabase
+      .from("wallet_transactions")
+      .select("amount, created_at, type")
+      .eq("user_id", session.user.id)
+      .eq("type", "team_earning")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true });
+
+    const dataPoints: TeamEarningsDataPoint[] = [];
+    let cumulativeEarnings = 0;
+
+    const pointCount = Math.min(days, 30);
+    const interval = Math.max(1, Math.floor(days / pointCount));
+
+    for (let i = 0; i <= pointCount; i++) {
+      const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
+      if (currentDate > now) break;
+      const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
+
+      if (teamTransactions) {
+        teamTransactions.forEach(txn => {
+          const txnDate = new Date(txn.created_at);
+          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000)) {
+            cumulativeEarnings += Number(txn.amount) || 0;
+          }
+        });
+      }
+
+      dataPoints.push({
+        date: dateStr,
+        amount: Number(cumulativeEarnings.toFixed(2))
+      });
+    }
+
+    setTeamEarningsData(dataPoints);
+  };
+
+  const fetchAffiliateEarningsData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const now = new Date();
+    let start: Date;
+    let days: number;
+
+    switch (earningsChartPeriod) {
+      case '1D':
+        start = subDays(now, 1);
+        days = 1;
+        break;
+      case '1W':
+        start = subDays(now, 7);
+        days = 7;
+        break;
+      case '1M':
+        start = subMonths(now, 1);
+        days = 30;
+        break;
+      case 'ALL':
+      default:
+        start = subMonths(now, 6);
+        days = 180;
+        break;
+    }
+
+    const { data: affiliateTransactions } = await supabase
+      .from("wallet_transactions")
+      .select("amount, created_at, type")
+      .eq("user_id", session.user.id)
+      .eq("type", "affiliate_earning")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true });
+
+    const dataPoints: AffiliateEarningsDataPoint[] = [];
+    let cumulativeEarnings = 0;
+
+    const pointCount = Math.min(days, 30);
+    const interval = Math.max(1, Math.floor(days / pointCount));
+
+    for (let i = 0; i <= pointCount; i++) {
+      const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
+      if (currentDate > now) break;
+      const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
+
+      if (affiliateTransactions) {
+        affiliateTransactions.forEach(txn => {
+          const txnDate = new Date(txn.created_at);
+          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000)) {
+            cumulativeEarnings += Number(txn.amount) || 0;
+          }
+        });
+      }
+
+      dataPoints.push({
+        date: dateStr,
+        amount: Number(cumulativeEarnings.toFixed(2))
+      });
+    }
+
+    setAffiliateEarningsData(dataPoints);
   };
   const fetchWithdrawalData = async () => {
     const {
@@ -1116,9 +1258,9 @@ export function WalletTab() {
                 }) => {
                   if (active && payload && payload.length) {
                     const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                    return <div className="bg-popover border border-border rounded-lg shadow-lg p-3 font-geist tracking-tighter-custom">
-                            <p className="text-xs text-muted-foreground mb-1">{payload[0].payload.date}</p>
-                            <p className="text-sm font-semibold">${value.toFixed(2)}</p>
+                    return <div className="bg-foreground text-background rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                            <p className="text-[10px] text-background/60 mb-0.5">{payload[0].payload.date}</p>
+                            <p className="text-sm font-bold">${value.toFixed(2)}</p>
                           </div>;
                   }
                   return null;
@@ -1164,7 +1306,85 @@ export function WalletTab() {
         </Card>
       </div>
 
-      {/* Transactions - Full Width */}
+      {/* Team & Affiliate Earnings Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Team Earnings Card */}
+        <Card className="bg-card border-0">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{ letterSpacing: '-0.5px' }}>Team Earnings</p>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-2xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>
+                {isBalanceVisible ? `$${teamEarningsData.length > 0 ? teamEarningsData[teamEarningsData.length - 1]?.amount?.toFixed(2) || "0.00" : "0.00"}` : "••••••"}
+              </p>
+            </div>
+            
+            <div className="h-20 -mx-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={teamEarningsData}>
+                  <defs>
+                    <linearGradient id="teamEarningsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <RechartsTooltip content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
+                      return <div className="bg-foreground text-background rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                        <p className="text-[10px] text-background/60 mb-0.5">{payload[0].payload.date}</p>
+                        <p className="text-sm font-bold">${value.toFixed(2)}</p>
+                      </div>;
+                    }
+                    return null;
+                  }} cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '3 3' }} />
+                  <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={2} fill="url(#teamEarningsGradient)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Affiliate Earnings Card */}
+        <Card className="bg-card border-0">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{ letterSpacing: '-0.5px' }}>Affiliate Earnings</p>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-2xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>
+                {isBalanceVisible ? `$${affiliateEarningsData.length > 0 ? affiliateEarningsData[affiliateEarningsData.length - 1]?.amount?.toFixed(2) || "0.00" : "0.00"}` : "••••••"}
+              </p>
+            </div>
+            
+            <div className="h-20 -mx-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={affiliateEarningsData}>
+                  <defs>
+                    <linearGradient id="affiliateEarningsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <RechartsTooltip content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
+                      return <div className="bg-foreground text-background rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                        <p className="text-[10px] text-background/60 mb-0.5">{payload[0].payload.date}</p>
+                        <p className="text-sm font-bold">${value.toFixed(2)}</p>
+                      </div>;
+                    }
+                    return null;
+                  }} cursor={{ stroke: '#8b5cf6', strokeWidth: 1, strokeDasharray: '3 3' }} />
+                  <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2} fill="url(#affiliateEarningsGradient)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="bg-card border-0">
         <CardHeader className="px-[24px] pt-4 pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 gap-3">
           <CardTitle className="text-lg font-semibold py-[10px]">Transactions</CardTitle>
@@ -1176,6 +1396,8 @@ export function WalletTab() {
                 <SelectContent className="bg-popover z-50">
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="earning">Earnings</SelectItem>
+                  <SelectItem value="team_earning">Team Earnings</SelectItem>
+                  <SelectItem value="affiliate_earning">Affiliate Earnings</SelectItem>
                   <SelectItem value="withdrawal">Withdrawals</SelectItem>
                   <SelectItem value="transfer_sent">Transfers Sent</SelectItem>
                   <SelectItem value="transfer_received">Transfers Received</SelectItem>
