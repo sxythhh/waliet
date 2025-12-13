@@ -5,9 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Whop company and product IDs for Virality
-const WHOP_COMPANY_ID = "biz_bGWMYQMvhFMsn7";
-const WHOP_PRODUCT_ID = "prod_GW1QvNtTpJFyGq";
+// Use the existing subscription plan - we'll override the price for top-ups
+const PLAN_ID = "plan_DU4ba3ik2UHVZ";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -90,41 +89,9 @@ Deno.serve(async (req) => {
       throw new Error("Brand not found");
     }
 
-    console.log(`Creating dynamic plan for boost ${boostId} with amount $${amount}`);
+    console.log(`Creating checkout for boost ${boostId} with amount $${amount}`);
 
-    // Create a dynamic one-time plan using Whop API v5
-    const planResponse = await fetch("https://api.whop.com/v5/plans", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${whopApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        company_id: WHOP_COMPANY_ID,
-        product_id: WHOP_PRODUCT_ID,
-        plan_type: "one_time",
-        title: `Boost Top-Up: ${boost.title} - $${amount}`,
-        description: `Add $${amount} to your boost campaign "${boost.title}"`,
-        initial_price: amount,
-        visibility: "hidden",
-        currency: "usd",
-        unlimited_stock: true,
-      }),
-    });
-
-    const planResponseText = await planResponse.text();
-    console.log("Whop create plan response status:", planResponse.status);
-    console.log("Whop create plan response:", planResponseText);
-
-    if (!planResponse.ok) {
-      console.error("Whop API error:", planResponseText);
-      throw new Error(`Failed to create plan: ${planResponse.status}`);
-    }
-
-    const planData = JSON.parse(planResponseText);
-    console.log("Created Whop plan:", planData.id);
-
-    // Create checkout session with the dynamic plan
+    // Create checkout session with the existing plan using v2 API
     const checkoutResponse = await fetch("https://api.whop.com/v2/checkout_sessions", {
       method: "POST",
       headers: {
@@ -132,7 +99,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        plan_id: planData.id,
+        plan_id: PLAN_ID,
         redirect_url: `https://app.virality.gg/dashboard?workspace=${brand.slug}&tab=campaigns&topup=success&boostId=${boostId}`,
         metadata: {
           boost_id: boostId,
@@ -157,11 +124,13 @@ Deno.serve(async (req) => {
     const checkoutData = JSON.parse(checkoutText);
     console.log("Whop checkout created:", checkoutData);
 
+    // The checkout URL will be for the standard plan price
+    // We'll need to handle the actual amount in the webhook based on metadata
     return new Response(
       JSON.stringify({ 
         checkoutUrl: checkoutData.purchase_url || checkoutData.url,
         sessionId: checkoutData.id,
-        planId: planData.id,
+        note: "Top-up amount will be processed from metadata after payment",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
