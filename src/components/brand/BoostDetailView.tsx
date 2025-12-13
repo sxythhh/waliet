@@ -392,31 +392,37 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
                       {applications.map((app) => {
                         const profile = profiles[app.user_id];
                         const isSelected = selectedAppId === app.id;
+                        const appliedDate = new Date(app.applied_at);
                         
                         return (
                           <button
                             key={app.id}
                             onClick={() => setSelectedAppId(app.id)}
-                            className={`w-full rounded-xl p-3 text-left transition-all ${
+                            className={`w-full rounded-lg p-3 text-left transition-all font-inter tracking-[-0.5px] ${
                               isSelected 
-                                ? "bg-primary/10 border border-primary/30" 
-                                : "bg-muted/20 hover:bg-muted/40 border border-transparent"
+                                ? "bg-primary/10 border border-primary/20" 
+                                : "bg-card/30 hover:bg-card/50 border border-border/30"
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10">
+                              <Avatar className="h-9 w-9 border border-border/40">
                                 <AvatarImage src={profile?.avatar_url || undefined} />
-                                <AvatarFallback className="text-sm">
+                                <AvatarFallback className="text-xs bg-muted/40">
                                   {profile?.username?.[0]?.toUpperCase() || '?'}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm truncate">
-                                  {profile?.full_name || profile?.username || 'Unknown'}
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-sm truncate">
+                                    {profile?.full_name || profile?.username || 'Unknown'}
+                                  </p>
+                                  {getStatusBadge(app.status)}
+                                </div>
+                                <p className="text-xs text-muted-foreground/70 truncate">@{profile?.username}</p>
+                                <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                                  {appliedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {appliedDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                                 </p>
-                                <p className="text-xs text-muted-foreground truncate">@{profile?.username}</p>
                               </div>
-                              {getStatusBadge(app.status)}
                             </div>
                           </button>
                         );
