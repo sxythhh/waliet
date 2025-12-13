@@ -99,6 +99,7 @@ interface CampaignCreationWizardProps {
   onOpenChange: (open: boolean) => void;
   campaign?: Campaign;
   onDelete?: () => void;
+  initialBlueprintId?: string;
 }
 const STEPS = [{
   id: 1,
@@ -135,7 +136,8 @@ export function CampaignCreationWizard({
   open,
   onOpenChange,
   campaign,
-  onDelete
+  onDelete,
+  initialBlueprintId
 }: CampaignCreationWizardProps) {
   const isEditMode = !!campaign;
   const [currentStep, setCurrentStep] = useState(isEditMode ? 3 : 1);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Link as LinkIcon, Plus, Trash2, Zap, X, Upload, Video } from "lucide-react";
+import { ArrowLeft, Link as LinkIcon, Plus, Trash2, X, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { debounce } from "@/lib/utils";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { useTheme } from "@/components/ThemeProvider";
+import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 
 // Light mode logos (dark logos for light backgrounds)
 import tiktokLogoLight from "@/assets/tiktok-logo-black-new.png";
@@ -84,6 +85,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
   const [saving, setSaving] = useState(false);
   const [newHashtag, setNewHashtag] = useState("");
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [showCampaignWizard, setShowCampaignWizard] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   const isDark = resolvedTheme === "dark";
@@ -158,20 +160,8 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
     });
   };
 
-  const activateBlueprint = async () => {
-    const newStatus = blueprint?.status === "active" ? "draft" : "active";
-    const { error } = await supabase
-      .from("blueprints")
-      .update({ status: newStatus })
-      .eq("id", blueprintId);
-
-    if (error) {
-      toast.error("Failed to update status");
-      return;
-    }
-
-    setBlueprint((prev) => (prev ? { ...prev, status: newStatus } : null));
-    toast.success(newStatus === "active" ? "Blueprint activated" : "Blueprint deactivated");
+  const activateBlueprint = () => {
+    setShowCampaignWizard(true);
   };
 
   // Asset functions
@@ -384,35 +374,37 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
   if (!blueprint) return null;
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header - Fixed */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-background border-b border-[#141414]">
-        <div className="flex items-center gap-3">
-          <button onClick={goBack} className="flex items-center gap-2 font-inter tracking-[-0.5px] text-white hover:opacity-80 transition-opacity">
-            <ArrowLeft className="h-4 w-4 text-white" />
-            Return
-          </button>
-          <div className="h-4 w-px bg-border/50" />
-          {brand?.logo_url && (
-            <img src={brand.logo_url} alt={brand.name} className="h-6 w-6 rounded object-cover" />
-          )}
-          <span className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">{brand?.name}</span>
-          <span className="text-muted-foreground/50">/</span>
-          <Input
-            value={blueprint.title}
-            onChange={(e) => updateBlueprint({ title: e.target.value })}
-            className="h-8 w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px]"
-            placeholder="Untitled"
-          />
-          {saving && <span className="text-xs text-muted-foreground animate-pulse font-inter tracking-[-0.5px]">Saving...</span>}
-        </div>
-        <button
-          onClick={activateBlueprint}
-          className="px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-inter tracking-[-0.5px] text-sm hover:opacity-90 transition-opacity"
-        >
-          {blueprint.status === "active" ? "Active" : "Activate Blueprint"}
-        </button>
-      </div>
+    <>
+      <div className="h-full p-[5px]">
+        <div className="h-full flex flex-col bg-background border border-[#141414] rounded-[20px] overflow-hidden">
+          {/* Header - Fixed */}
+          <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-background border-b border-[#141414]">
+            <div className="flex items-center gap-3">
+              <button onClick={goBack} className="flex items-center gap-2 font-inter tracking-[-0.5px] text-white hover:opacity-80 transition-opacity">
+                <ArrowLeft className="h-4 w-4 text-white" />
+                Return
+              </button>
+              <div className="h-4 w-px bg-border/50" />
+              {brand?.logo_url && (
+                <img src={brand.logo_url} alt={brand.name} className="h-6 w-6 rounded object-cover" />
+              )}
+              <span className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">{brand?.name}</span>
+              <span className="text-muted-foreground/50">/</span>
+              <Input
+                value={blueprint.title}
+                onChange={(e) => updateBlueprint({ title: e.target.value })}
+                className="h-8 w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px]"
+                placeholder="Untitled"
+              />
+              {saving && <span className="text-xs text-muted-foreground animate-pulse font-inter tracking-[-0.5px]">Saving...</span>}
+            </div>
+            <button
+              onClick={activateBlueprint}
+              className="px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-inter tracking-[-0.5px] text-sm hover:opacity-90 transition-opacity"
+            >
+              Create Campaign
+            </button>
+          </div>
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
@@ -863,6 +855,16 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
 
         </div>
       </div>
-    </div>
+        </div>
+      </div>
+
+      <CampaignCreationWizard
+        brandId={brandId}
+        brandName={brand?.name || ""}
+        brandLogoUrl={brand?.logo_url || undefined}
+        open={showCampaignWizard}
+        onOpenChange={setShowCampaignWizard}
+      />
+    </>
   );
 }
