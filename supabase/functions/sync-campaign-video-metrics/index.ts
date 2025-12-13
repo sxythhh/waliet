@@ -12,20 +12,30 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // Fetch with retry logic for rate limiting
 async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5): Promise<Response> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const response = await fetch(url, options);
-    
-    if (response.status === 429) {
-      // Rate limited - wait and retry with exponential backoff
-      const waitTime = Math.pow(2, attempt) * 3000; // 3s, 6s, 12s, 24s, 48s
-      console.log(`Rate limited, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
-      await delay(waitTime);
-      continue;
+    try {
+      const response = await fetch(url, options);
+      
+      if (response.status === 429 || response.status >= 500) {
+        // Rate limited or server error - wait and retry with exponential backoff
+        const waitTime = Math.pow(2, attempt) * 3000; // 3s, 6s, 12s, 24s, 48s
+        console.log(`Got ${response.status}, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+        await delay(waitTime);
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      if (attempt < maxRetries - 1) {
+        const waitTime = Math.pow(2, attempt) * 3000;
+        console.log(`Fetch error, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}:`, error);
+        await delay(waitTime);
+        continue;
+      }
+      throw error;
     }
-    
-    return response;
   }
   
-  throw new Error('Max retries exceeded due to rate limiting');
+  throw new Error('Max retries exceeded');
 }
 
 // Check if video caption contains any of the hashtags
