@@ -238,7 +238,7 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
   if (loading) {
     return (
       <div className="h-full flex flex-col">
-        <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414] m-[10px]">
+        <div className="flex flex-col h-full border-l border-border overflow-hidden">
           <div className="flex-1 p-6">
             <Skeleton className="h-8 w-48 mb-4" />
             <Skeleton className="h-64 w-full" />
@@ -251,7 +251,7 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
   if (!boost) {
     return (
       <div className="h-full flex flex-col">
-        <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414] m-[10px] items-center justify-center">
+        <div className="flex flex-col h-full border-l border-border overflow-hidden items-center justify-center">
           <p className="text-muted-foreground">Boost not found</p>
         </div>
       </div>
@@ -259,8 +259,8 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414] m-[10px]">
+    <div className="h-full flex flex-col fixed inset-0 z-10 bg-background">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* Header with back button and boost title - Fixed */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background">
           <div className="flex items-center gap-0">
