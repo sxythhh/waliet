@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link, Inbox, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Inbox, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
+import { MessageInput } from "@/components/brand/MessageInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
@@ -693,32 +693,14 @@ export function CreatorsTab({
               </div>
             </ScrollArea>
 
-            {/* Redesigned Message Input */}
+            {/* Message Input */}
             <div className="p-4 border-t border-border">
-              <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
-                <Textarea placeholder="Type a message..." value={messageInput} onChange={e => setMessageInput(e.target.value)} onKeyDown={e => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }} rows={2} className="border-0 bg-transparent resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none shadow-none text-sm" />
-                <div className="flex items-center justify-between px-3 pb-3">
-                  <div className="flex items-center gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50">
-                      <Smile className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50">
-                      <Bold className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50">
-                      <Italic className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Button size="sm" className="h-8 px-4 rounded-lg bg-foreground text-background hover:bg-foreground/90 text-xs" onClick={sendMessage} disabled={!messageInput.trim() || sendingMessage}>
-                    Send
-                  </Button>
-                </div>
-              </div>
+              <MessageInput
+                value={messageInput}
+                onChange={setMessageInput}
+                onSend={sendMessage}
+                disabled={sendingMessage}
+              />
             </div>
           </> : <div className="flex-1 flex flex-col">
             {/* Empty state header with toggle */}
