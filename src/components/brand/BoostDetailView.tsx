@@ -511,22 +511,31 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
                           {/* Contact Info */}
                           <div className="space-y-2">
                             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Info</h3>
-                            <div className="space-y-1 text-sm">
-                              {selectedProfile.email && (
-                                <p><span className="text-muted-foreground">Email:</span> {selectedProfile.email}</p>
+                            <div className={`space-y-1 text-sm relative ${selectedApp.status !== 'accepted' ? 'select-none' : ''}`}>
+                              {selectedApp.status !== 'accepted' && (
+                                <div className="absolute inset-0 flex items-center justify-center z-10">
+                                  <span className="text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
+                                    Visible after approval
+                                  </span>
+                                </div>
                               )}
-                              {selectedProfile.phone_number && (
-                                <p><span className="text-muted-foreground">Phone:</span> {selectedProfile.phone_number}</p>
-                              )}
-                              {selectedProfile.discord_username && (
-                                <p><span className="text-muted-foreground">Discord:</span> {selectedProfile.discord_username}</p>
-                              )}
-                              {selectedProfile.twitter_username && (
-                                <p><span className="text-muted-foreground">X:</span> @{selectedProfile.twitter_username}</p>
-                              )}
-                              {!selectedProfile.email && !selectedProfile.phone_number && !selectedProfile.discord_username && !selectedProfile.twitter_username && (
-                                <p className="text-muted-foreground">No contact info available</p>
-                              )}
+                              <div className={selectedApp.status !== 'accepted' ? 'blur-sm' : ''}>
+                                {selectedProfile.email && (
+                                  <p><span className="text-muted-foreground">Email:</span> {selectedProfile.email}</p>
+                                )}
+                                {selectedProfile.phone_number && (
+                                  <p><span className="text-muted-foreground">Phone:</span> {selectedProfile.phone_number}</p>
+                                )}
+                                {selectedProfile.discord_username && (
+                                  <p><span className="text-muted-foreground">Discord:</span> {selectedProfile.discord_username}</p>
+                                )}
+                                {selectedProfile.twitter_username && (
+                                  <p><span className="text-muted-foreground">X:</span> @{selectedProfile.twitter_username}</p>
+                                )}
+                                {!selectedProfile.email && !selectedProfile.phone_number && !selectedProfile.discord_username && !selectedProfile.twitter_username && (
+                                  <p className="text-muted-foreground">No contact info available</p>
+                                )}
+                              </div>
                             </div>
                           </div>
 
