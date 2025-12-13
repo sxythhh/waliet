@@ -229,6 +229,8 @@ export type Database = {
           banner_url: string | null
           blueprint_embed_url: string | null
           brand_id: string
+          budget: number | null
+          budget_used: number | null
           content_style_requirements: string
           created_at: string
           description: string | null
@@ -249,6 +251,8 @@ export type Database = {
           banner_url?: string | null
           blueprint_embed_url?: string | null
           brand_id: string
+          budget?: number | null
+          budget_used?: number | null
           content_style_requirements: string
           created_at?: string
           description?: string | null
@@ -269,6 +273,8 @@ export type Database = {
           banner_url?: string | null
           blueprint_embed_url?: string | null
           brand_id?: string
+          budget?: number | null
+          budget_used?: number | null
           content_style_requirements?: string
           created_at?: string
           description?: string | null

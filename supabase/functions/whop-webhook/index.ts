@@ -25,7 +25,50 @@ Deno.serve(async (req) => {
       const membership = data;
       const metadata = membership.metadata || {};
       const brandId = metadata.brand_id;
+      const boostId = metadata.boost_id;
+      const topupAmount = metadata.topup_amount;
+      const type = metadata.type;
 
+      // Handle boost top-up payments
+      if (type === "boost_topup" && boostId && topupAmount) {
+        console.log(`Processing boost top-up: ${boostId} for $${topupAmount}`);
+        
+        // Get current boost budget
+        const { data: boost, error: boostError } = await supabase
+          .from("bounty_campaigns")
+          .select("budget")
+          .eq("id", boostId)
+          .single();
+
+        if (boostError) {
+          console.error("Error fetching boost:", boostError);
+          throw boostError;
+        }
+
+        const currentBudget = boost?.budget || 0;
+        const newBudget = currentBudget + Number(topupAmount);
+
+        // Update boost budget
+        const { error: updateError } = await supabase
+          .from("bounty_campaigns")
+          .update({
+            budget: newBudget,
+          })
+          .eq("id", boostId);
+
+        if (updateError) {
+          console.error("Error updating boost budget:", updateError);
+          throw updateError;
+        }
+
+        console.log(`Boost ${boostId} budget updated: $${currentBudget} -> $${newBudget}`);
+        
+        return new Response(JSON.stringify({ success: true, type: "boost_topup" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Handle brand subscription
       if (!brandId) {
         console.error("No brand_id in membership metadata:", metadata);
         return new Response(JSON.stringify({ error: "Missing brand_id" }), {
