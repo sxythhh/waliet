@@ -259,10 +259,11 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex flex-col h-full overflow-hidden">
-        {/* Header with back button and boost title - Fixed */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background">
+    <>
+      <div className="h-full p-[5px]">
+        <div className="h-full flex flex-col border border-[#141414] rounded-[20px] overflow-hidden bg-background">
+          {/* Header with back button and boost title - Fixed */}
+          <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background">
           <div className="flex items-center gap-0">
             <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8 hover:bg-transparent">
               <ArrowLeft className="h-4 w-4" />
@@ -581,6 +582,7 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
             )}
           </div>
         )}
+        </div>
       </div>
 
       <EditBountyDialog
@@ -592,6 +594,6 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
           fetchBoostData();
         }}
       />
-    </div>
+    </>
   );
 }
