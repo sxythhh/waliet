@@ -253,12 +253,16 @@ export function TeamManagementSection({
 
         {/* Team referral link */}
         <div className="flex gap-2 items-stretch">
-          <Input value={teamReferralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
+          <Input value={teamReferralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10 flex-1" style={{
           letterSpacing: '-0.5px'
         }} />
           <Button onClick={copyTeamLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-muted hover:bg-muted/80 text-muted-foreground">
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             {copied ? "Copied" : "Copy"}
+          </Button>
+          <Button onClick={() => setShowInviteDialog(true)} className="shrink-0 h-10 bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4b85f7]">
+            <UserPlus className="w-4 h-4 mr-2" />
+            Invite
           </Button>
         </div>
 
@@ -279,11 +283,6 @@ export function TeamManagementSection({
         </div>
       </div>
 
-      {/* Invite Button */}
-      <Button onClick={() => setShowInviteDialog(true)} className="w-full bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4b85f7]">
-        <UserPlus className="w-4 h-4 mr-2" />
-        Invite Teammates
-      </Button>
 
       {/* Pending Invitations */}
       {invitations.length > 0 && <div className="space-y-3">
