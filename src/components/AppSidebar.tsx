@@ -1,4 +1,5 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Zap } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon, PanelLeftClose, PanelLeft } from "lucide-react";
+import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
@@ -110,7 +111,14 @@ export function AppSidebar() {
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
+
+  // Get current brand ID for subscription dialog
+  const currentBrandId = !isCreatorMode && workspace
+    ? (allBrands.find(b => b.slug === workspace)?.id || 
+       brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || '')
+    : '';
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -436,31 +444,25 @@ export function AppSidebar() {
 
         </nav>
 
-        {/* Upgrade CTA */}
-        <div className={`${isCollapsed ? 'px-1' : 'px-3'} mb-2`}>
-          <div className={`rounded-lg bg-[#1a1a1a] p-3 ${isCollapsed ? 'flex justify-center' : ''}`}>
-            {!isCollapsed && (
-              <>
-                <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">
-                  Unlock more features
-                </p>
-                <p className="font-['Geist'] text-[12px] tracking-[-0.5px] text-[#6f6f6f] mb-3">
-                  Get access to advanced analytics, unlimited campaigns, and priority support.
-                </p>
-              </>
-            )}
-            <button 
-              className={`${isCollapsed ? 'w-8 h-8 p-0' : 'w-full py-2 px-3'} bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center`}
-              onClick={() => window.open('https://whop.com/virality/', '_blank')}
-            >
-              {isCollapsed ? (
-                <Zap className="h-4 w-4" />
-              ) : (
-                'Upgrade Plan'
-              )}
-            </button>
+        {/* Upgrade CTA - Only show in brand workspace and when not collapsed */}
+        {!isCreatorMode && !isCollapsed && (
+          <div className="px-3 mb-2">
+            <div className="rounded-lg bg-[#1a1a1a] p-3">
+              <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">
+                Unlock more features
+              </p>
+              <p className="font-['Geist'] text-[12px] tracking-[-0.5px] text-[#6f6f6f] mb-3">
+                Get access to advanced analytics, unlimited campaigns, and priority support.
+              </p>
+              <button 
+                className="w-full py-2 px-3 bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center"
+                onClick={() => setSubscriptionGateOpen(true)}
+              >
+                Upgrade Plan
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* User Profile Section */}
         <div className={`p-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
@@ -531,5 +533,10 @@ export function AppSidebar() {
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger onSuccess={() => {
       fetchBrandMemberships();
     }} />
+      <SubscriptionGateDialog 
+        brandId={currentBrandId} 
+        open={subscriptionGateOpen} 
+        onOpenChange={setSubscriptionGateOpen} 
+      />
     </>;
 }
