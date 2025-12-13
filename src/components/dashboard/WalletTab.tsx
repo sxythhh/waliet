@@ -118,6 +118,7 @@ export function WalletTab() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [filterSubmenu, setFilterSubmenu] = useState<'main' | 'type' | 'status' | 'program'>('main');
   const {
     toast
   } = useToast();
@@ -1386,7 +1387,10 @@ export function WalletTab() {
       <Card className="bg-card border border-border rounded-xl overflow-hidden">
         {/* Filter Button */}
         <div className="px-6 pt-5 pb-4">
-          <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+          <DropdownMenu open={filterOpen} onOpenChange={(open) => {
+            setFilterOpen(open);
+            if (!open) setFilterSubmenu('main');
+          }}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2 rounded-full border-border bg-background hover:bg-muted px-4 py-2 h-auto">
                 <SlidersHorizontal className="h-4 w-4" />
@@ -1394,79 +1398,203 @@ export function WalletTab() {
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[280px] p-4 space-y-3">
+            <DropdownMenuContent align="start" className="w-[280px] p-4 overflow-hidden">
               <div className="relative">
-                <Input 
-                  placeholder="Filter..." 
-                  className="bg-background border-border h-10 pr-10"
-                />
-                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
-              </div>
-              <div className="space-y-1">
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setTypeFilter(typeFilter === 'all' ? 'earning' : 'all');
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                >
-                  <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                    <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                    <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                    <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                    <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                {/* Main Menu */}
+                <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
+                  <div className="relative mb-3">
+                    <Input 
+                      placeholder="Filter..." 
+                      className="bg-background border-border h-10 pr-10"
+                    />
+                    <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
                   </div>
-                  <span className="font-medium">Type</span>
-                  {typeFilter !== 'all' && (
-                    <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>
+                  <div className="space-y-1">
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterSubmenu('type');
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                    >
+                      <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
+                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                      </div>
+                      <span className="font-medium">Type</span>
+                      {typeFilter !== 'all' && (
+                        <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>
+                      )}
+                      <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterSubmenu('status');
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                    >
+                      <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
+                      <span className="font-medium">Status</span>
+                      {statusFilter !== 'all' && (
+                        <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>
+                      )}
+                      <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                    </button>
+                    {availableCampaigns.length > 0 && (
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterSubmenu('program');
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                      >
+                        <Briefcase className="h-4 w-4" />
+                        <span className="font-medium">Program</span>
+                        {campaignFilter !== 'all' && (
+                          <span className="ml-auto text-xs text-muted-foreground truncate max-w-[80px]">
+                            {availableCampaigns.find(c => c.id === campaignFilter)?.title}
+                          </span>
+                        )}
+                        <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
+                  {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full text-muted-foreground hover:text-foreground mt-3"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setTypeFilter('all');
+                        setStatusFilter('all');
+                        setCampaignFilter('all');
+                      }}
+                    >
+                      Clear filters
+                    </Button>
                   )}
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setStatusFilter(statusFilter === 'all' ? 'completed' : 'all');
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                >
-                  <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
-                  <span className="font-medium">Status</span>
-                  {statusFilter !== 'all' && (
-                    <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>
-                  )}
-                </button>
-                {availableCampaigns.length > 0 && (
+                </div>
+
+                {/* Type Submenu */}
+                <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'type' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
                   <button 
                     onClick={(e) => {
                       e.preventDefault();
-                      setCampaignFilter(campaignFilter === 'all' ? availableCampaigns[0]?.id || 'all' : 'all');
+                      setFilterSubmenu('main');
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
                   >
-                    <Briefcase className="h-4 w-4" />
-                    <span className="font-medium">Program</span>
-                    {campaignFilter !== 'all' && (
-                      <span className="ml-auto text-xs text-muted-foreground truncate max-w-[100px]">
-                        {availableCampaigns.find(c => c.id === campaignFilter)?.title}
-                      </span>
-                    )}
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Type</span>
                   </button>
-                )}
+                  <div className="space-y-1">
+                    {[
+                      { value: 'all', label: 'All Types' },
+                      { value: 'earning', label: 'Campaign Payout' },
+                      { value: 'withdrawal', label: 'Withdrawal' },
+                      { value: 'team_earning', label: 'Team Earnings' },
+                      { value: 'affiliate_earning', label: 'Affiliate Earnings' },
+                      { value: 'referral', label: 'Referral Bonus' },
+                      { value: 'transfer_sent', label: 'Transfer Sent' },
+                      { value: 'transfer_received', label: 'Transfer Received' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setTypeFilter(option.value);
+                          setFilterSubmenu('main');
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                      >
+                        <span className="text-sm">{option.label}</span>
+                        {typeFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status Submenu */}
+                <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'status' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setFilterSubmenu('main');
+                    }}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Status</span>
+                  </button>
+                  <div className="space-y-1">
+                    {[
+                      { value: 'all', label: 'All Statuses' },
+                      { value: 'completed', label: 'Completed' },
+                      { value: 'pending', label: 'Pending' },
+                      { value: 'in_transit', label: 'In Transit' },
+                      { value: 'rejected', label: 'Rejected' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setStatusFilter(option.value);
+                          setFilterSubmenu('main');
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                      >
+                        <span className="text-sm">{option.label}</span>
+                        {statusFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Program Submenu */}
+                <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'program' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setFilterSubmenu('main');
+                    }}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Program</span>
+                  </button>
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCampaignFilter('all');
+                        setFilterSubmenu('main');
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                    >
+                      <span className="text-sm">All Programs</span>
+                      {campaignFilter === 'all' && <Check className="h-4 w-4 ml-auto" />}
+                    </button>
+                    {availableCampaigns.map((campaign) => (
+                      <button
+                        key={campaign.id}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCampaignFilter(campaign.id);
+                          setFilterSubmenu('main');
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                      >
+                        <span className="text-sm truncate">{campaign.title}</span>
+                        {campaignFilter === campaign.id && <Check className="h-4 w-4 ml-auto flex-shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-              {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full text-muted-foreground hover:text-foreground"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setTypeFilter('all');
-                    setStatusFilter('all');
-                    setCampaignFilter('all');
-                  }}
-                >
-                  Clear filters
-                </Button>
-              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -1483,7 +1611,6 @@ export function WalletTab() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent">
-                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Period</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-sm h-12">Program</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-sm h-12">Type</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-sm h-12">Status</TableHead>
@@ -1510,19 +1637,14 @@ export function WalletTab() {
                           setSelectedTransaction(transaction);
                           setTransactionSheetOpen(true);
                         }}
-                        className="cursor-pointer hover:bg-muted/30 transition-colors border-[#dce1eb] dark:border-[#141414]"
+                        className="cursor-pointer hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]"
                       >
-                        {/* Period */}
-                        <TableCell className="py-4 text-sm">
-                          {format(transaction.date, 'MMM d, yyyy')}
-                        </TableCell>
-                        
                         {/* Program */}
                         <TableCell className="py-4">
                           {transaction.campaign?.title ? (
                             <div className="flex items-center gap-2">
                               {transaction.campaign?.brand_logo_url ? (
-                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-foreground">
+                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                                   <img 
                                     src={transaction.campaign.brand_logo_url} 
                                     alt={transaction.campaign.brand_name || 'Brand'} 
@@ -1530,8 +1652,8 @@ export function WalletTab() {
                                   />
                                 </div>
                               ) : (
-                                <div className="w-6 h-6 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
-                                  <span className="text-xs text-background font-medium">
+                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs text-foreground font-medium">
                                     {transaction.campaign.title.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
