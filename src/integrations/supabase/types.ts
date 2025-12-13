@@ -1569,6 +1569,7 @@ export type Database = {
           commission_rate: number
           created_at: string
           id: string
+          logo_url: string | null
           name: string
           owner_id: string
           referral_code: string
@@ -1579,6 +1580,7 @@ export type Database = {
           commission_rate?: number
           created_at?: string
           id?: string
+          logo_url?: string | null
           name: string
           owner_id: string
           referral_code: string
@@ -1589,6 +1591,7 @@ export type Database = {
           commission_rate?: number
           created_at?: string
           id?: string
+          logo_url?: string | null
           name?: string
           owner_id?: string
           referral_code?: string
