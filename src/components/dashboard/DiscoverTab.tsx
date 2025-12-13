@@ -406,14 +406,8 @@ export function DiscoverTab() {
   const totalActiveCampaigns = activeCampaigns.length;
   const totalBounties = bounties.filter(b => b.status !== "ended").length;
   return <div className="md:h-full md:flex md:flex-col">
-        {/* Sticky Header and Filters */}
-        <div className="md:sticky md:top-0 z-20 bg-background px-6 pt-8 pb-4 space-y-6">
-          {/* Header Section */}
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">Discover Opportunities</h1>
-            <p className="text-muted-foreground">Find campaigns and bounties that match your content style</p>
-          </div>
-
+        {/* Header and Filters */}
+        <div className="z-20 bg-background px-6 pt-4 pb-4 space-y-6">
           {/* Featured Programs Carousel */}
           {campaigns.filter(c => c.is_featured && c.status === 'active').length > 0 && (
             <div className="space-y-4">
@@ -451,12 +445,12 @@ export function DiscoverTab() {
                           {/* Content */}
                           <div className="relative h-full p-6 flex flex-col justify-between">
                             {/* Brand Logo */}
-                            <div className="w-14 h-14 rounded-full bg-background/10 backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden">
+                            <div className="w-14 h-14 rounded-[10px] bg-background/10 backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden">
                               {(campaign.brands?.logo_url || campaign.brand_logo_url) ? (
                                 <img 
                                   src={campaign.brands?.logo_url || campaign.brand_logo_url} 
                                   alt={campaign.brand_name}
-                                  className="w-10 h-10 rounded-full object-cover"
+                                  className="w-10 h-10 rounded-[10px] object-cover"
                                 />
                               ) : (
                                 <span className="text-white text-xl font-bold">
@@ -477,20 +471,14 @@ export function DiscoverTab() {
                               </div>
                               
                               {/* Stats Row */}
-                              <div className="flex items-center gap-8">
+                              <div className="flex items-center gap-8 font-['Inter'] tracking-[-0.5px]">
                                 <div className="space-y-1">
                                   <p className="text-white/50 text-xs uppercase tracking-wider">Rewards</p>
-                                  <div className="flex items-center gap-2 text-white">
-                                    <DollarSign className="h-4 w-4" />
-                                    <span className="font-medium">${campaign.rpm_rate} per 1K views</span>
-                                  </div>
+                                  <p className="text-white font-medium">${campaign.rpm_rate} per 1K views</p>
                                 </div>
                                 <div className="space-y-1">
                                   <p className="text-white/50 text-xs uppercase tracking-wider">Category</p>
-                                  <div className="flex items-center gap-2 text-white">
-                                    <Sparkles className="h-4 w-4" />
-                                    <span className="font-medium">Creator</span>
-                                  </div>
+                                  <p className="text-white font-medium">Creator</p>
                                 </div>
                               </div>
                             </div>
