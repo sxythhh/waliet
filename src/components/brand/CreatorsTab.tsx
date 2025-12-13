@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
@@ -71,6 +72,11 @@ const PLATFORM_LOGOS: Record<string, string> = {
 type MobileView = 'messages' | 'conversation' | 'creators';
 type MessageFilter = 'all' | 'unread' | 'bookmarked';
 
+interface Campaign {
+  id: string;
+  title: string;
+}
+
 export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -87,6 +93,8 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [bookmarkedConversations, setBookmarkedConversations] = useState<Set<string>>(new Set());
   const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(new Map());
   const [creatorsCollapsed, setCreatorsCollapsed] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaignFilter, setCampaignFilter] = useState<string>('all');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -239,12 +247,23 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
   };
 
   const filteredConversations = conversations.filter(conv => {
+    // Filter by message type
     if (messageFilter === 'unread') {
-      return unreadCounts.get(conv.id) && unreadCounts.get(conv.id)! > 0;
+      const hasUnread = unreadCounts.get(conv.id) && unreadCounts.get(conv.id)! > 0;
+      if (!hasUnread) return false;
     }
     if (messageFilter === 'bookmarked') {
-      return bookmarkedConversations.has(conv.id);
+      if (!bookmarkedConversations.has(conv.id)) return false;
     }
+    
+    // Filter by campaign
+    if (campaignFilter !== 'all') {
+      const creator = creators.find(c => c.id === conv.creator_id);
+      if (!creator) return false;
+      const isInCampaign = creator.campaigns.some(c => c.id === campaignFilter);
+      if (!isInCampaign) return false;
+    }
+    
     return true;
   });
 
@@ -328,19 +347,22 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
     
     setLoading(true);
 
-    const { data: campaigns } = await supabase
+    const { data: campaignsData } = await supabase
       .from("campaigns")
       .select("id, title")
       .eq("brand_id", brandId);
     
-    if (!campaigns || campaigns.length === 0) {
+    // Store campaigns for filter dropdown
+    setCampaigns(campaignsData || []);
+    
+    if (!campaignsData || campaignsData.length === 0) {
       setCreators([]);
       setLoading(false);
       return;
     }
 
-    const campaignIds = campaigns.map(c => c.id);
-    const campaignMap = new Map(campaigns.map(c => [c.id, c.title]));
+    const campaignIds = campaignsData.map(c => c.id);
+    const campaignMap = new Map(campaignsData.map(c => [c.id, c.title]));
 
     const { data: connections } = await supabase
       .from("social_account_campaigns")
@@ -607,33 +629,55 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
         </div>
 
         {/* Message Filters */}
-        <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-2">
-          <Button
-            variant={messageFilter === 'all' ? 'secondary' : 'ghost'}
-            size="sm"
-            className="h-7 px-3 text-xs rounded-full"
+        <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-2 flex-wrap font-inter tracking-[-0.5px]">
+          <button
+            className={`h-7 px-3 text-xs rounded-full transition-colors ${
+              messageFilter === 'all' 
+                ? 'bg-foreground text-background' 
+                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+            }`}
             onClick={() => setMessageFilter('all')}
           >
             All
-          </Button>
-          <Button
-            variant={messageFilter === 'unread' ? 'secondary' : 'ghost'}
-            size="sm"
-            className="h-7 px-3 text-xs rounded-full gap-1.5"
+          </button>
+          <button
+            className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${
+              messageFilter === 'unread' 
+                ? 'bg-foreground text-background' 
+                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+            }`}
             onClick={() => setMessageFilter('unread')}
           >
-            <div className="h-2 w-2 rounded-full bg-primary" />
+            <div className={`h-1.5 w-1.5 rounded-full ${messageFilter === 'unread' ? 'bg-background' : 'bg-green-500'}`} />
             Unread
-          </Button>
-          <Button
-            variant={messageFilter === 'bookmarked' ? 'secondary' : 'ghost'}
-            size="sm"
-            className="h-7 px-3 text-xs rounded-full gap-1.5"
+          </button>
+          <button
+            className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${
+              messageFilter === 'bookmarked' 
+                ? 'bg-foreground text-background' 
+                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+            }`}
             onClick={() => setMessageFilter('bookmarked')}
           >
             <Bookmark className="h-3 w-3" />
             Saved
-          </Button>
+          </button>
+          
+          {campaigns.length > 0 && (
+            <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+              <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs rounded-full border-0 bg-muted/50 hover:bg-muted font-inter tracking-[-0.5px]">
+                <SelectValue placeholder="All Campaigns" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover">
+                <SelectItem value="all" className="text-xs">All Campaigns</SelectItem>
+                {campaigns.map(campaign => (
+                  <SelectItem key={campaign.id} value={campaign.id} className="text-xs">
+                    {campaign.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <ScrollArea className="flex-1">
