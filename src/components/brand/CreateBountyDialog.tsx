@@ -2,17 +2,18 @@ import { useState, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, DollarSign, Video, Users, ArrowRight, ArrowLeft, Check, X, Copy, Lock } from "lucide-react";
+import { CalendarIcon, Upload, DollarSign, Video, Users, ArrowRight, Check, X, Lock, Target, FileText } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -21,13 +22,14 @@ interface CreateBountyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   brandId: string;
+  brandName?: string;
+  brandLogoUrl?: string;
   onSuccess: () => void;
 }
 
 const STEPS = [
   { id: 1, label: "Compensation" },
-  { id: 2, label: "Content" },
-  { id: 3, label: "Details" }
+  { id: 2, label: "Details" }
 ];
 
 const platforms = [
@@ -36,7 +38,7 @@ const platforms = [
   { id: "youtube", name: "YouTube", logo: youtubeLogo }
 ];
 
-export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: CreateBountyDialogProps) {
+export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, brandLogoUrl, onSuccess }: CreateBountyDialogProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [creating, setCreating] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -54,12 +56,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
     start_date: undefined as Date | undefined,
     end_date: undefined as Date | undefined,
     status: "active" as "draft" | "active",
-    min_followers: "",
-    max_followers: "",
     payment_schedule: "monthly" as "weekly" | "biweekly" | "monthly",
-    additional_requirements: "",
-    posting_frequency: "",
-    review_process: "",
     blueprint_embed_url: "",
     is_private: false
   });
@@ -92,19 +89,17 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1) {
-      if (!formData.monthly_retainer || !formData.payment_schedule) {
-        toast.error("Please fill in compensation details");
+      if (!formData.monthly_retainer || !formData.videos_per_month || !formData.max_accepted_creators) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+      if (selectedPlatforms.length === 0) {
+        toast.error("Please select at least one platform");
         return;
       }
       setCurrentStep(2);
-    } else if (currentStep === 2) {
-      if (!formData.videos_per_month || !formData.max_accepted_creators || selectedPlatforms.length === 0) {
-        toast.error("Please fill in content requirements");
-        return;
-      }
-      setCurrentStep(3);
     }
   };
 
@@ -112,17 +107,10 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     if (!formData.title || !formData.monthly_retainer || !formData.videos_per_month || 
         !formData.content_style_requirements || !formData.max_accepted_creators) {
       toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (selectedPlatforms.length === 0) {
-      toast.error("Please select at least one platform");
       return;
     }
 
@@ -145,21 +133,9 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, onSuccess }: C
         banner_url = publicUrl;
       }
 
-      const fullRequirements = `
-PLATFORMS: ${selectedPlatforms.join(", ")}
+      const fullRequirements = `PLATFORMS: ${selectedPlatforms.join(", ")}\n\nCONTENT STYLE:\n${formData.content_style_requirements}`;
 
-CONTENT STYLE:
-${formData.content_style_requirements}
-
-${formData.posting_frequency ? `POSTING FREQUENCY:\n${formData.posting_frequency}\n\n` : ''}
-${formData.additional_requirements ? `ADDITIONAL REQUIREMENTS:\n${formData.additional_requirements}\n\n` : ''}
-${formData.review_process ? `REVIEW PROCESS:\n${formData.review_process}\n\n` : ''}
-${formData.min_followers ? `MIN FOLLOWERS: ${formData.min_followers}` : ''}
-${formData.max_followers ? ` | MAX FOLLOWERS: ${formData.max_followers}` : ''}
-${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule}` : ''}
-      `.trim();
-
-      const { error, data: createdBounty } = await supabase
+      const { error } = await supabase
         .from('bounty_campaigns')
         .insert({
           brand_id: brandId,
@@ -175,310 +151,250 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
           status: formData.status,
           blueprint_embed_url: formData.blueprint_embed_url || null,
           is_private: formData.is_private
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      toast.success("Boost campaign created successfully!");
+      toast.success("Boost created successfully!");
       onSuccess();
       onOpenChange(false);
-      
-      // Reset form
-      setFormData({
-        title: "",
-        description: "",
-        monthly_retainer: "",
-        videos_per_month: "",
-        content_style_requirements: "",
-        max_accepted_creators: "",
-        start_date: undefined,
-        end_date: undefined,
-        status: "active",
-        min_followers: "",
-        max_followers: "",
-        payment_schedule: "monthly",
-        additional_requirements: "",
-        posting_frequency: "",
-        review_process: "",
-        blueprint_embed_url: "",
-        is_private: false
-      });
-      setBannerFile(null);
-      setBannerPreview(null);
-      setSelectedPlatforms(["tiktok"]);
-      setCurrentStep(1);
+      resetForm();
     } catch (error: any) {
       console.error("Error creating boost:", error);
-      toast.error(error.message || "Failed to create boost campaign");
+      toast.error(error.message || "Failed to create boost");
     } finally {
       setCreating(false);
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      monthly_retainer: "",
+      videos_per_month: "",
+      content_style_requirements: "",
+      max_accepted_creators: "",
+      start_date: undefined,
+      end_date: undefined,
+      status: "active",
+      payment_schedule: "monthly",
+      blueprint_embed_url: "",
+      is_private: false
+    });
+    setBannerFile(null);
+    setBannerPreview(null);
+    setSelectedPlatforms(["tiktok"]);
+    setCurrentStep(1);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden bg-[#050505] border-0 p-0 [&>button]:hidden">
-        {/* Progress Header */}
-        <div className="px-6 pt-6 pb-4">
-          <h2 className="text-xl font-bold text-white tracking-[-0.5px] mb-4">Create Boost Campaign</h2>
-          
-          {/* Step Indicators - Minimal */}
+      <DialogContent className="max-w-[900px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
+            {brandLogoUrl ? (
+              <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-lg object-cover" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-semibold text-primary">{brandName?.charAt(0) || "V"}</span>
+              </div>
+            )}
+            <div>
+              <h2 className="text-base font-semibold text-foreground tracking-[-0.5px]">New Boost</h2>
+              <p className="text-xs text-muted-foreground">{brandName}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
             {STEPS.map((step, index) => (
-              <div key={step.id} className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className={cn(
-                      "w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium transition-colors",
-                      currentStep >= step.id
-                        ? "bg-primary text-white"
-                        : "bg-muted/30 text-muted-foreground"
-                    )}
-                  >
-                    {currentStep > step.id ? <Check className="w-3 h-3" /> : step.id}
-                  </div>
-                  <span
-                    className={cn(
-                      "text-xs font-medium tracking-[-0.5px]",
-                      currentStep >= step.id ? "text-white" : "text-muted-foreground"
-                    )}
-                  >
-                    {step.label}
+              <div key={step.id} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => step.id <= currentStep && setCurrentStep(step.id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    currentStep === step.id
+                      ? "bg-primary text-primary-foreground"
+                      : currentStep > step.id
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                    currentStep > step.id ? "bg-primary text-primary-foreground" : "bg-current/20"
+                  }`}>
+                    {currentStep > step.id ? <Check className="w-2.5 h-2.5" /> : step.id}
                   </span>
-                </div>
+                  <span className="hidden sm:inline">{step.label}</span>
+                </button>
                 {index < STEPS.length - 1 && (
-                  <div
-                    className={cn(
-                      "w-6 h-[1px]",
-                      currentStep > step.id ? "bg-primary" : "bg-muted/30"
-                    )}
-                  />
+                  <div className={`w-8 h-px ${currentStep > step.id ? "bg-primary" : "bg-border"}`} />
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Form Content */}
-        <form onSubmit={handleSubmit} className="flex flex-col h-[calc(90vh-180px)]">
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            {/* Step 1: Compensation */}
-            {currentStep === 1 && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white tracking-[-0.5px] mb-1">Compensation Details</h3>
-                  <p className="text-sm text-muted-foreground">Set up the payment structure for your creators</p>
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Step 1: Compensation & Targeting */}
+          {currentStep === 1 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column - Compensation */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                    <DollarSign className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground">Compensation</h3>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-white tracking-[-0.5px]">Monthly Retainer *</Label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.monthly_retainer}
-                        onChange={(e) => setFormData({ ...formData, monthly_retainer: e.target.value })}
-                        placeholder="500.00"
-                        className="pl-9 h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
-                      />
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Monthly Retainer</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.monthly_retainer}
+                      onChange={(e) => setFormData({ ...formData, monthly_retainer: e.target.value })}
+                      placeholder="500"
+                      className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Videos/Month</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={formData.videos_per_month}
+                      onChange={(e) => setFormData({ ...formData, videos_per_month: e.target.value })}
+                      placeholder="4"
+                      className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Max Creators</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={formData.max_accepted_creators}
+                      onChange={(e) => setFormData({ ...formData, max_accepted_creators: e.target.value })}
+                      placeholder="5"
+                      className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Payment Schedule</Label>
+                  <Select
+                    value={formData.payment_schedule}
+                    onValueChange={(value: any) => setFormData({ ...formData, payment_schedule: value })}
+                  >
+                    <SelectTrigger className="h-10 bg-muted/30 border-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Payout per video calculation */}
+                {formData.monthly_retainer && formData.videos_per_month && (
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Per video payout</span>
+                      <span className="text-sm font-semibold text-primary">
+                        ${(parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2)}
+                      </span>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-white tracking-[-0.5px]">Payment Schedule *</Label>
-                    <Select
-                      value={formData.payment_schedule}
-                      onValueChange={(value: any) => setFormData({ ...formData, payment_schedule: value })}
-                    >
-                      <SelectTrigger className="h-11 bg-[#0a0a0a] border-0 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#0a0a0a] border-0">
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-white tracking-[-0.5px]">Minimum Followers</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={formData.min_followers}
-                      onChange={(e) => setFormData({ ...formData, min_followers: e.target.value })}
-                      placeholder="10,000"
-                      className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-white tracking-[-0.5px]">Maximum Followers</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={formData.max_followers}
-                      onChange={(e) => setFormData({ ...formData, max_followers: e.target.value })}
-                      placeholder="100,000"
-                      className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
-                    />
-                    <p className="text-xs text-muted-foreground">Leave empty for no limit</p>
-                  </div>
-                </div>
+                )}
               </div>
-            )}
 
-            {/* Step 2: Content Requirements */}
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white tracking-[-0.5px] mb-1">Content Requirements</h3>
-                  <p className="text-sm text-muted-foreground">Define what content you expect from creators</p>
+              {/* Right Column - Platforms & Access */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                    <Target className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground">Targeting</h3>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-white tracking-[-0.5px]">Videos Per Month *</Label>
-                    <div className="relative">
-                      <Video className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="number"
-                        min="1"
-                        value={formData.videos_per_month}
-                        onChange={(e) => setFormData({ ...formData, videos_per_month: e.target.value })}
-                        placeholder="4"
-                        className="pl-9 h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-white tracking-[-0.5px]">Maximum Creators *</Label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="number"
-                        min="1"
-                        value={formData.max_accepted_creators}
-                        onChange={(e) => setFormData({ ...formData, max_accepted_creators: e.target.value })}
-                        placeholder="5"
-                        className="pl-9 h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">Number of creators to hire</p>
-                  </div>
-                </div>
-
-                {/* Platforms */}
-                <div className="space-y-3">
-                  <Label className="text-white tracking-[-0.5px]">Target Platforms *</Label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {platforms.map((platform) => {
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Platforms</Label>
+                  <div className="flex gap-2">
+                    {platforms.map(platform => {
                       const isSelected = selectedPlatforms.includes(platform.id);
                       return (
                         <button
                           key={platform.id}
                           type="button"
                           onClick={() => togglePlatform(platform.id)}
-                          className={cn(
-                            "flex items-center gap-3 p-4 rounded-xl text-left transition-all",
+                          className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
                             isSelected
-                              ? "bg-primary/10 ring-1 ring-primary"
-                              : "bg-[#0a0a0a] hover:bg-[#0f0f0f]"
-                          )}
+                              ? "bg-primary/10 ring-1 ring-primary/30"
+                              : "bg-muted/30 hover:bg-muted/50"
+                          }`}
                         >
-                          <div
-                            className={cn(
-                              "w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors",
-                              isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
-                            )}
-                          >
-                            {isSelected && <Check className="w-3 h-3 text-white" />}
-                          </div>
                           <img src={platform.logo} alt={platform.name} className="w-5 h-5 object-contain" />
-                          <span className="text-sm font-medium text-white tracking-[-0.5px]">{platform.name}</span>
+                          <span className="text-xs font-medium text-foreground">{platform.name}</span>
+                          {isSelected && (
+                            <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-white" />
+                            </div>
+                          )}
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-white tracking-[-0.5px]">Content Style & Format *</Label>
-                  <Textarea
-                    value={formData.content_style_requirements}
-                    onChange={(e) => setFormData({ ...formData, content_style_requirements: e.target.value })}
-                    placeholder="Describe content style, format, themes, tone, and any specific creative requirements..."
-                    className="min-h-[100px] bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50 resize-none"
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                    <Label className="text-xs text-foreground cursor-pointer">Private</Label>
+                    <Switch
+                      checked={formData.is_private}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_private: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                    <Label className="text-xs text-foreground cursor-pointer">Active</Label>
+                    <Switch
+                      checked={formData.status === 'active'}
+                      onCheckedChange={(checked) => setFormData({ ...formData, status: checked ? 'active' : 'draft' })}
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-white tracking-[-0.5px]">Posting Frequency</Label>
-                  <Input
-                    value={formData.posting_frequency}
-                    onChange={(e) => setFormData({ ...formData, posting_frequency: e.target.value })}
-                    placeholder="e.g., 1 video per week, Monday-Wednesday preferred"
-                    className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Campaign Details */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white tracking-[-0.5px] mb-1">Campaign Details</h3>
-                  <p className="text-sm text-muted-foreground">Add the final details for your boost campaign</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white tracking-[-0.5px]">Campaign Title *</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="e.g., Monthly Content Creator Position"
-                    className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white tracking-[-0.5px]">Description</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe what this boost entails..."
-                    className="min-h-[80px] bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50 resize-none"
-                  />
-                </div>
-
-                {/* Date Range */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-white tracking-[-0.5px]">Start Date</Label>
+                {/* Date Range - Compact */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Start Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           className={cn(
-                            "w-full h-11 justify-start text-left font-normal bg-[#0a0a0a] border-0 hover:bg-[#0f0f0f]",
+                            "w-full h-10 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50",
                             !formData.start_date && "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.start_date ? format(formData.start_date, "MMM d, yyyy") : "Select date"}
+                          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                          <span className="text-xs">
+                            {formData.start_date ? format(formData.start_date, "MMM d") : "Optional"}
+                          </span>
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-0">
+                      <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"
                           selected={formData.start_date}
@@ -488,23 +404,24 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                       </PopoverContent>
                     </Popover>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-white tracking-[-0.5px]">End Date</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">End Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           className={cn(
-                            "w-full h-11 justify-start text-left font-normal bg-[#0a0a0a] border-0 hover:bg-[#0f0f0f]",
+                            "w-full h-10 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50",
                             !formData.end_date && "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.end_date ? format(formData.end_date, "MMM d, yyyy") : "Select date"}
+                          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                          <span className="text-xs">
+                            {formData.end_date ? format(formData.end_date, "MMM d") : "Optional"}
+                          </span>
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#0a0a0a] border-0">
+                      <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"
                           selected={formData.end_date}
@@ -516,123 +433,151 @@ ${formData.payment_schedule ? `\n\nPAYMENT SCHEDULE: ${formData.payment_schedule
                     </Popover>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
 
-                {/* Banner Upload */}
-                <div className="space-y-2">
-                  <Label className="text-white tracking-[-0.5px]">Campaign Banner</Label>
-                  {bannerPreview ? (
-                    <div className="relative rounded-xl overflow-hidden">
-                      <img src={bannerPreview} alt="Banner preview" className="w-full h-32 object-cover" />
-                      <button
+          {/* Step 2: Details */}
+          {currentStep === 2 && (
+            <div className="space-y-5">
+              {/* Banner Upload - Compact */}
+              <div className="space-y-2">
+                {bannerPreview ? (
+                  <div className="relative h-32 rounded-xl overflow-hidden group">
+                    <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
                         type="button"
+                        variant="secondary"
+                        size="sm"
                         onClick={removeBanner}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 transition-colors"
+                        className="gap-2"
                       >
-                        <X className="w-4 h-4 text-white" />
-                      </button>
+                        <X className="h-3.5 w-3.5" />
+                        Remove
+                      </Button>
                     </div>
-                  ) : (
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex flex-col items-center justify-center h-32 rounded-xl border-2 border-dashed border-muted/30 hover:border-muted/50 bg-[#0a0a0a] cursor-pointer transition-colors"
-                    >
-                      <Upload className="w-6 h-6 text-muted-foreground mb-2" />
-                      <span className="text-sm text-muted-foreground">Click to upload banner</span>
+                  </div>
+                ) : (
+                  <div
+                    className="h-32 rounded-xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/20 hover:bg-muted/40 transition-all cursor-pointer flex items-center justify-center"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="text-center">
+                      <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">Upload banner image</p>
                     </div>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
+                  </div>
+                )}
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              </div>
+
+              {/* Title & Description */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Boost Title</Label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="e.g., Monthly Content Creator"
+                    className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white tracking-[-0.5px]">Blueprint Embed URL</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Blueprint URL</Label>
                   <Input
                     value={formData.blueprint_embed_url}
                     onChange={(e) => setFormData({ ...formData, blueprint_embed_url: e.target.value })}
-                    placeholder="https://virality.cc/resources/your-guidelines"
-                    className="h-11 bg-[#0a0a0a] border-0 text-white placeholder:text-muted-foreground/50"
+                    placeholder="https://..."
+                    className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Will be embedded as an iframe on the public boost page
-                  </p>
-                </div>
-
-                {/* Private Toggle */}
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/10">
-                  <div className="flex items-center gap-3">
-                    <Lock className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium text-white">Private Boost</p>
-                      <p className="text-xs text-muted-foreground">Only accessible via direct link</p>
-                    </div>
-                  </div>
-                  <Checkbox
-                    checked={formData.is_private}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_private: checked === true })}
-                  />
-                </div>
-
-                {/* Status */}
-                <div className="space-y-2">
-                  <Label className="text-white tracking-[-0.5px]">Campaign Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value: "draft" | "active") => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger className="h-11 bg-[#0a0a0a] border-0 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#0a0a0a] border-0">
-                      <SelectItem value="active">Active (visible to creators)</SelectItem>
-                      <SelectItem value="draft">Draft (not visible)</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Footer Actions */}
-          <div className="px-6 py-4 bg-[#050505]">
-            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Description</Label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Describe what this boost entails..."
+                  className="min-h-[80px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Content Style & Requirements</Label>
+                <Textarea
+                  value={formData.content_style_requirements}
+                  onChange={(e) => setFormData({ ...formData, content_style_requirements: e.target.value })}
+                  placeholder="Describe content style, format, themes, and any specific creative requirements..."
+                  className="min-h-[100px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30"
+                />
+              </div>
+
+              {/* Summary Card */}
+              <div className="rounded-lg bg-muted/20 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">Summary</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-2 rounded-md bg-background">
+                    <p className="text-xs text-muted-foreground">Retainer</p>
+                    <p className="text-sm font-semibold">${formData.monthly_retainer || '0'}/mo</p>
+                  </div>
+                  <div className="p-2 rounded-md bg-background">
+                    <p className="text-xs text-muted-foreground">Videos</p>
+                    <p className="text-sm font-semibold">{formData.videos_per_month || '0'}/mo</p>
+                  </div>
+                  <div className="p-2 rounded-md bg-background">
+                    <p className="text-xs text-muted-foreground">Creators</p>
+                    <p className="text-sm font-semibold">{formData.max_accepted_creators || '0'} max</p>
+                  </div>
+                  <div className="p-2 rounded-md bg-background">
+                    <p className="text-xs text-muted-foreground">Platforms</p>
+                    <p className="text-sm font-semibold">{selectedPlatforms.length} selected</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="border-t border-border px-6 py-4 flex items-center justify-between bg-background">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={currentStep === 1 ? () => onOpenChange(false) : handleBack}
+          >
+            {currentStep === 1 ? "Cancel" : "Back"}
+          </Button>
+
+          <div className="flex items-center gap-2">
+            {currentStep < 2 ? (
               <Button
                 type="button"
-                variant="ghost"
-                onClick={currentStep === 1 ? () => onOpenChange(false) : handleBack}
-                className="text-muted-foreground hover:text-white"
+                size="sm"
+                onClick={handleNext}
+                className="min-w-[100px] gap-2"
               >
-                {currentStep === 1 ? (
-                  "Cancel"
-                ) : (
-                  <>
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
-                  </>
-                )}
+                Continue
+                <ArrowRight className="h-3.5 w-3.5" />
               </Button>
-
-              {currentStep < 3 ? (
-                <Button
-                  type="button"
-                  onClick={handleNext}
-                  className="gap-2"
-                >
-                  Continue
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              ) : (
-                <Button type="submit" disabled={creating} className="gap-2">
-                  {creating ? "Creating..." : "Create Boost Campaign"}
-                </Button>
-              )}
-            </div>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSubmit}
+                disabled={creating}
+                className="min-w-[100px]"
+              >
+                {creating ? "Creating..." : "Create Boost"}
+              </Button>
+            )}
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
