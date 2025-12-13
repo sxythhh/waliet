@@ -9,6 +9,7 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BoostDetailView } from "@/components/brand/BoostDetailView";
+import { SubscriptionGate } from "@/components/brand/SubscriptionGate";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { Pencil, Plus, BarChart3 } from "lucide-react";
@@ -63,6 +64,7 @@ export function BrandCampaignsTab({
   const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
   const [brandLogoUrl, setBrandLogoUrl] = useState<string | undefined>(undefined);
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   useEffect(() => {
     fetchBrandData();
   }, [brandId]);
@@ -70,13 +72,14 @@ export function BrandCampaignsTab({
     if (!brandId) return;
     setLoading(true);
     try {
-      // Fetch brand info for logo
+      // Fetch brand info for logo and subscription status
       const {
         data: brandData
-      } = await supabase.from("brands").select("logo_url").eq("id", brandId).single();
+      } = await supabase.from("brands").select("logo_url, subscription_status").eq("id", brandId).single();
       if (brandData?.logo_url) {
         setBrandLogoUrl(brandData.logo_url);
       }
+      setSubscriptionStatus(brandData?.subscription_status || null);
 
       // Fetch campaigns
       const {
@@ -186,22 +189,26 @@ export function BrandCampaignsTab({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
             </div>
-            <CreateCampaignTypeDialog
-              brandId={brandId}
-              onSelectClipping={() => setCreateCampaignOpen(true)}
-              onSelectManaged={() => setCreateBountyOpen(true)}
-              onSelectBoost={() => setCreateBountyOpen(true)}
-            />
+            <SubscriptionGate brandId={brandId} subscriptionStatus={subscriptionStatus}>
+              <CreateCampaignTypeDialog
+                brandId={brandId}
+                onSelectClipping={() => setCreateCampaignOpen(true)}
+                onSelectManaged={() => setCreateBountyOpen(true)}
+                onSelectBoost={() => setCreateBountyOpen(true)}
+              />
+            </SubscriptionGate>
           </div>
 
-          {/* Embed Section */}
-          <div className="w-full h-[250px] rounded-xl overflow-hidden">
-            <iframe
-              src="https://joinvirality.com/pickplan-4"
-              className="w-full h-full border-0"
-              title="Pick Plan"
-            />
-          </div>
+          {/* Embed Section - Only show if not subscribed */}
+          {subscriptionStatus !== "active" && (
+            <div className="w-full h-[250px] rounded-xl overflow-hidden">
+              <iframe
+                src="https://joinvirality.com/pickplan-4"
+                className="w-full h-full border-0"
+                title="Pick Plan"
+              />
+            </div>
+          )}
 
           {/* Campaigns Grid */}
           {campaigns.length > 0 && (
