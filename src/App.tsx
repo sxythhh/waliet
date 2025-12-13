@@ -37,6 +37,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminCourses from "./pages/admin/Courses";
 import AdminBrands from "./pages/admin/Brands";
 import AdminWallets from "./pages/admin/Wallets";
+import AdminTemplates from "./pages/admin/Templates";
 import { DiscordOAuthCallback } from "./components/DiscordOAuthCallback";
 import { XOAuthCallback } from "./components/XOAuthCallback";
 import Leaderboard from "./pages/Leaderboard";
@@ -144,6 +145,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
             <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+            <Route path="/admin/templates" element={<AdminLayout><AdminTemplates /></AdminLayout>} />
             <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
             <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
             <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />

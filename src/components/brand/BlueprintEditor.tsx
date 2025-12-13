@@ -10,6 +10,7 @@ import { debounce } from "@/lib/utils";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { useTheme } from "@/components/ThemeProvider";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
+import { TemplateSelector } from "@/components/brand/TemplateSelector";
 
 // Light mode logos (dark logos for light backgrounds)
 import tiktokLogoLight from "@/assets/tiktok-logo-black-new.png";
@@ -496,6 +497,32 @@ export function BlueprintEditor({
       <div className="flex-1 overflow-auto">
         <div className="max-w-4xl mx-auto p-6 space-y-6">
           
+          {/* Template Selector */}
+          <section className="flex items-center gap-3 p-4 rounded-xl border border-dashed border-border/50 bg-card/20">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                Want to save time? Start with a pre-built template
+              </p>
+            </div>
+            <TemplateSelector onSelectTemplate={(template) => {
+              updateBlueprint({
+                content: template.content || blueprint.content,
+                platforms: template.platforms || blueprint.platforms,
+                hooks: template.hooks || blueprint.hooks,
+                talking_points: template.talking_points || blueprint.talking_points,
+                dos_and_donts: template.dos_and_donts || blueprint.dos_and_donts,
+                call_to_action: template.call_to_action || blueprint.call_to_action,
+                hashtags: template.hashtags || blueprint.hashtags,
+                brand_voice: template.brand_voice || blueprint.brand_voice,
+                target_personas: template.target_personas || blueprint.target_personas,
+                assets: template.assets || blueprint.assets,
+                example_videos: template.example_videos || blueprint.example_videos,
+                content_guidelines: template.content_guidelines || blueprint.content_guidelines
+              });
+              toast.success("Template applied!");
+            }} />
+          </section>
+
           {/* Main Content - Rich Text Editor */}
           <section className="space-y-2">
             <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Brief Content</label>

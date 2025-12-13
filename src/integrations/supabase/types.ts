@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      blueprint_templates: {
+        Row: {
+          assets: Json | null
+          brand_voice: string | null
+          call_to_action: string | null
+          category: string | null
+          content: string | null
+          content_guidelines: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          dos_and_donts: Json | null
+          example_videos: Json | null
+          hashtags: string[] | null
+          hooks: Json | null
+          id: string
+          is_active: boolean
+          platforms: string[] | null
+          talking_points: Json | null
+          target_personas: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assets?: Json | null
+          brand_voice?: string | null
+          call_to_action?: string | null
+          category?: string | null
+          content?: string | null
+          content_guidelines?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          dos_and_donts?: Json | null
+          example_videos?: Json | null
+          hashtags?: string[] | null
+          hooks?: Json | null
+          id?: string
+          is_active?: boolean
+          platforms?: string[] | null
+          talking_points?: Json | null
+          target_personas?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assets?: Json | null
+          brand_voice?: string | null
+          call_to_action?: string | null
+          category?: string | null
+          content?: string | null
+          content_guidelines?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          dos_and_donts?: Json | null
+          example_videos?: Json | null
+          hashtags?: string[] | null
+          hooks?: Json | null
+          id?: string
+          is_active?: boolean
+          platforms?: string[] | null
+          talking_points?: Json | null
+          target_personas?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blueprints: {
         Row: {
           assets: Json | null
