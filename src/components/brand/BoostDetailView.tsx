@@ -259,7 +259,7 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
   }
 
   return (
-    <div className="h-full flex flex-col fixed inset-0 z-10 bg-background">
+    <div className="h-full flex flex-col">
       <div className="flex flex-col h-full overflow-hidden">
         {/* Header with back button and boost title - Fixed */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background">
