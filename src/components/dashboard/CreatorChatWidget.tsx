@@ -179,7 +179,7 @@ export function CreatorChatWidget() {
   };
   return <>
       {/* Floating Button */}
-      <button onClick={() => setIsOpen(true)} className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#2060de] hover:bg-[#1a50c0] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group">
+      <button onClick={() => setIsOpen(true)} className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 rounded-full bg-[#2060de] hover:bg-[#1a50c0] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group">
         <img src={mailIcon} alt="Messages" className="w-6 h-6" />
         {totalUnread > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
             {totalUnread > 9 ? "9+" : totalUnread}
@@ -187,7 +187,7 @@ export function CreatorChatWidget() {
       </button>
 
       {/* Chat Panel */}
-      {isOpen && <div className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
+      {isOpen && <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-[calc(100vw-2rem)] max-w-[380px] h-[480px] md:h-[520px] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50">
             {activeConversation ? <div className="flex items-center gap-3">
