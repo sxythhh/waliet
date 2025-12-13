@@ -281,50 +281,90 @@ export function BoostDetailView({
 
         {/* Content Area - Management tab */}
         {activeTab === "management" && (
-          <div className="flex-1 overflow-auto p-4">
-            <div className="space-y-8">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-muted/30 rounded-2xl p-6">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                    <DollarSign className="h-5 w-5" />
-                    <span className="text-sm font-medium">Monthly Retainer</span>
-                  </div>
-                  <p className="text-3xl font-semibold">${boost.monthly_retainer.toLocaleString()}</p>
-                </div>
-                <div className="bg-muted/30 rounded-2xl p-6">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                    <Video className="h-5 w-5" />
-                    <span className="text-sm font-medium">Videos per Month</span>
-                  </div>
-                  <p className="text-3xl font-semibold">{boost.videos_per_month}</p>
-                </div>
-                <div className="bg-muted/30 rounded-2xl p-6">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                    <Users className="h-5 w-5" />
-                    <span className="text-sm font-medium">Positions Filled</span>
-                  </div>
-                  <p className="text-3xl font-semibold">
-                    {boost.accepted_creators_count} <span className="text-lg text-muted-foreground">/ {boost.max_accepted_creators}</span>
+          <div className="flex-1 overflow-auto p-6">
+            <div className="space-y-6">
+              {/* About Section */}
+              {boost.description && (
+                <div>
+                  <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">About</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]">
+                    {boost.description}
                   </p>
+                </div>
+              )}
+
+              {/* Stats Grid Card */}
+              <div className="rounded-xl border border-muted-foreground/10 p-5">
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Monthly Retainer</p>
+                    <p className="text-sm font-medium tracking-[-0.5px]">${boost.monthly_retainer.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Videos per Month</p>
+                    <p className="text-sm font-medium tracking-[-0.5px]">{boost.videos_per_month}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Max Creators</p>
+                    <p className="text-sm font-medium tracking-[-0.5px]">{boost.max_accepted_creators}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Accepted</p>
+                    <p className="text-sm font-medium tracking-[-0.5px]">{boost.accepted_creators_count}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Positions Open</p>
+                    <p className="text-sm font-medium tracking-[-0.5px]">{boost.max_accepted_creators - boost.accepted_creators_count}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Status</p>
+                    <p className="text-sm font-medium tracking-[-0.5px] capitalize">{boost.status}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Description & Requirements */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {boost.description && (
-                  <div className="bg-muted/20 rounded-2xl p-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Description</h3>
-                    <p className="text-sm leading-relaxed">{boost.description}</p>
+              {/* Applicants Details Card */}
+              <div className="rounded-xl border border-muted-foreground/10 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold tracking-[-0.5px]">Applicants details</h3>
+                </div>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-[-1px]">{applications.length}</span>
+                  <span className="text-sm text-muted-foreground tracking-[-0.3px]">Total applicants</span>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="text-xs text-muted-foreground tracking-[-0.3px]">Pending</span>
+                    <span className="text-xs font-medium ml-auto">{applications.filter(a => a.status === 'pending').length}</span>
                   </div>
-                )}
-                {boost.content_style_requirements && (
-                  <div className="bg-muted/20 rounded-2xl p-6">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Content Requirements</h3>
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{boost.content_style_requirements}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-xs text-muted-foreground tracking-[-0.3px]">Accepted</span>
+                    <span className="text-xs font-medium ml-auto">{applications.filter(a => a.status === 'accepted').length}</span>
                   </div>
-                )}
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                    <span className="text-xs text-muted-foreground tracking-[-0.3px]">Rejected</span>
+                    <span className="text-xs font-medium ml-auto">{applications.filter(a => a.status === 'rejected').length}</span>
+                  </div>
+                </div>
               </div>
+
+              {/* Content Requirements */}
+              {boost.content_style_requirements && (
+                <div>
+                  <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">Content Requirements</h2>
+                  <ul className="space-y-2">
+                    {boost.content_style_requirements.split('\n').filter(line => line.trim()).map((line, idx) => (
+                      <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground tracking-[-0.3px]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 mt-1.5 flex-shrink-0" />
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         )}
