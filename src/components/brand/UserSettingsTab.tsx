@@ -158,9 +158,7 @@ export function UserSettingsTab() {
     setShowCreateBrandDialog(false);
   };
 
-  const DottedSeparator = () => (
-    <div className="border-t border-dotted border-muted-foreground/30 my-6" />
-  );
+  const Spacer = () => <div className="h-6" />;
 
   if (loading) {
     return (
@@ -192,26 +190,21 @@ export function UserSettingsTab() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full h-11 p-1 bg-muted/50 rounded-lg">
-          <TabsTrigger 
-            value="general" 
-            className="flex-1 h-9 text-sm font-medium tracking-[-0.5px] data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-          >
-            General
-          </TabsTrigger>
-          <TabsTrigger 
-            value="team" 
-            className="flex-1 h-9 text-sm font-medium tracking-[-0.5px] data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-          >
-            Team
-          </TabsTrigger>
-          <TabsTrigger 
-            value="billing" 
-            className="flex-1 h-9 text-sm font-medium tracking-[-0.5px] data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-          >
-            Billing
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex items-center gap-1">
+          {["general", "team", "billing"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium tracking-[-0.5px] rounded-full transition-all ${
+                activeTab === tab
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
 
         {/* General Tab */}
         <TabsContent value="general" className="mt-6 space-y-0">
@@ -219,18 +212,18 @@ export function UserSettingsTab() {
             <>
               {/* Avatar Section */}
               <div className="space-y-3">
-                <Label className="text-sm font-medium tracking-[-0.5px]">
-                  Avatar <span className="text-primary">*</span>
+                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                  Avatar
                 </Label>
-                <div className="flex items-start gap-6">
+                <div className="flex items-center gap-4">
                   {brand.logo_url ? (
                     <img 
                       src={brand.logo_url} 
                       alt={brand.name} 
-                      className="w-20 h-20 rounded-2xl object-cover shadow-sm" 
+                      className="w-16 h-16 rounded-xl object-cover" 
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-semibold shadow-sm">
+                    <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
                       {brand.name?.[0]?.toUpperCase() || "B"}
                     </div>
                   )}
@@ -238,74 +231,66 @@ export function UserSettingsTab() {
                     brand={brand} 
                     onSuccess={fetchBrand} 
                     trigger={
-                      <Button variant="outline" size="sm" className="h-9 px-4 tracking-[-0.5px]">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload
-                      </Button>
+                      <button className="px-4 py-2 text-sm font-medium tracking-[-0.5px] rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-colors">
+                        Change avatar
+                      </button>
                     } 
                   />
                 </div>
                 <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-                  Upload images up to 800x800 px. Your avatar shows up in your public profile.
+                  Recommended: 800×800px
                 </p>
               </div>
 
-              <DottedSeparator />
+              <Spacer />
 
               {/* Brand Name */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium tracking-[-0.5px]">
-                  Brand name <span className="text-primary">*</span>
+                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                  Brand name
                 </Label>
-                <div className="relative">
-                  <Input 
-                    value={brand.name} 
-                    readOnly
-                    className="h-11 bg-muted/30 border-muted-foreground/20 tracking-[-0.5px]" 
-                  />
-                </div>
+                <Input 
+                  value={brand.name} 
+                  readOnly
+                  className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
+                />
               </div>
 
-              <DottedSeparator />
+              <Spacer />
 
               {/* Public URL */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium tracking-[-0.5px]">
-                  Public URL <span className="text-primary">*</span>
+                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                  Public URL
                 </Label>
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-1">
-                    <Input 
-                      value={brand.slug} 
-                      readOnly
-                      className="h-11 bg-muted/30 border-muted-foreground/20 pr-10 tracking-[-0.5px]" 
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Check className="h-5 w-5 text-emerald-500" />
-                    </div>
-                  </div>
-                  <span className="text-sm text-muted-foreground tracking-[-0.5px] whitespace-nowrap">
+                <div className="flex items-center">
+                  <Input 
+                    value={brand.slug} 
+                    readOnly
+                    className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" 
+                  />
+                  <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
                     .virality.gg
                   </span>
                 </div>
               </div>
 
-              <DottedSeparator />
+              <Spacer />
 
               {/* Website URL */}
               {brand.home_url && (
                 <>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium tracking-[-0.5px]">
+                    <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
                       Website
                     </Label>
                     <Input 
                       value={brand.home_url} 
                       readOnly
-                      className="h-11 bg-muted/30 border-muted-foreground/20 tracking-[-0.5px]" 
+                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
                     />
                   </div>
-                  <DottedSeparator />
+                  <Spacer />
                 </>
               )}
 
@@ -374,7 +359,7 @@ export function UserSettingsTab() {
         <TabsContent value="billing" className="mt-6 space-y-0">
           {/* Legal Business Name */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium tracking-[-0.5px]">
+            <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
               Legal Business Name
             </Label>
             <Input 
@@ -383,16 +368,16 @@ export function UserSettingsTab() {
                 ...profile,
                 legal_business_name: e.target.value
               })}
-              className="h-11 bg-muted/30 border-muted-foreground/20 tracking-[-0.5px]" 
+              className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
               placeholder="Company Name LLC" 
             />
           </div>
 
-          <DottedSeparator />
+          <Spacer />
 
           {/* Billing Address */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium tracking-[-0.5px]">
+            <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
               Billing Address
             </Label>
             <Input 
@@ -401,12 +386,12 @@ export function UserSettingsTab() {
                 ...profile,
                 billing_address: e.target.value
               })}
-              className="h-11 bg-muted/30 border-muted-foreground/20 tracking-[-0.5px]" 
+              className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
               placeholder="123 Main St, City, State, ZIP" 
             />
           </div>
 
-          <DottedSeparator />
+          <Spacer />
 
           {/* Save Button */}
           <Button 
