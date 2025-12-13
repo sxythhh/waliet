@@ -62,16 +62,15 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   console.log(`Fetching Instagram profile for: ${username}`);
   
   const response = await fetch(
-    'https://instagram-scraper-stable-api.p.rapidapi.com/ig_get_fb_profile_v3.php',
+    'https://instagram120.p.rapidapi.com/api/instagram/profile',
     {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'x-rapidapi-host': 'instagram-scraper-stable-api.p.rapidapi.com',
+        'Content-Type': 'application/json',
+        'x-rapidapi-host': 'instagram120.p.rapidapi.com',
         'x-rapidapi-key': rapidApiKey,
       },
-      // API expects `username_or_url` form field
-      body: `username_or_url=${encodeURIComponent(username)}`,
+      body: JSON.stringify({ username: username }),
     }
   );
 
@@ -85,27 +84,21 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   const rawData = await response.json();
   console.log('Instagram API raw response:', JSON.stringify(rawData).substring(0, 500));
 
-  // If the API explicitly returns an error, surface it
+  // Check for error response
   if (rawData && typeof rawData === 'object' && 'error' in rawData) {
     console.error('Instagram API returned error:', rawData.error);
     throw new Error(typeof rawData.error === 'string' ? rawData.error : 'Instagram API error');
   }
 
-  // Handle different possible response shapes
-  const profile = Array.isArray(rawData)
-    ? rawData[0]
-    : (rawData.data && typeof rawData.data === 'object'
-        ? rawData.data
-        : rawData);
+  // Extract profile from result
+  const profile = rawData?.result;
 
   if (!profile) {
     console.warn('Instagram profile data missing or malformed');
+    throw new Error('User not found on Instagram');
   }
 
-  const bio =
-    profile?.biography ||
-    profile?.biography_with_entities?.raw_text ||
-    '';
+  const bio = profile?.biography || '';
 
   console.log('Instagram bio to check:', bio, '| Code:', verificationCode);
 
@@ -116,16 +109,16 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
 
   const cleanBio = filterVerificationCode(bio, verificationCode);
 
+  // Use profile_pic_url_hd for best quality, fallback to regular
+  const avatarUrl = profile?.profile_pic_url_hd || profile?.profile_pic_url || null;
+
   return {
     verified,
     bio: cleanBio,
     user: {
       nickname: profile?.full_name || profile?.username || username,
-      avatar:
-        profile?.profile_pic_url ||
-        profile?.hd_profile_pic_url_info?.url ||
-        null,
-      followerCount: profile?.follower_count || 0,
+      avatar: avatarUrl,
+      followerCount: profile?.edge_followed_by?.count || 0,
       isVerified: profile?.is_verified || false,
     },
   };
