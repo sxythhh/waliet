@@ -1171,7 +1171,7 @@ export function WalletTab() {
             </div>
           </div>
           <div className="rounded-xl bg-muted/30 overflow-hidden">
-            <div className="p-4 border-b border-border/50">
+            <div className="p-4">
               <div className="grid grid-cols-6 gap-4">
                 {[...Array(6)].map((_, i) => (
                   <Skeleton key={i} className="h-4 w-full" />
@@ -1179,7 +1179,7 @@ export function WalletTab() {
               </div>
             </div>
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="p-4 border-b border-border/30 last:border-0">
+              <div key={i} className="p-4">
                 <div className="grid grid-cols-6 gap-4 items-center">
                   <div className="flex items-center gap-2">
                     <Skeleton className="w-8 h-8 rounded-full" />
@@ -1751,7 +1751,7 @@ export function WalletTab() {
                           setSelectedTransaction(transaction);
                           setTransactionSheetOpen(true);
                         }}
-                        className="cursor-pointer hover:bg-[#f5f5f5] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]"
+                        className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]"
                       >
                         {/* Program */}
                         <TableCell className="py-4">
