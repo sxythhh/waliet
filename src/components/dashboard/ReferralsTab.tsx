@@ -6,6 +6,8 @@ import { Users, Copy, Check, Gift, Pencil, CheckCircle2, Circle } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TeamManagementSection } from "./TeamManagementSection";
 interface Milestone {
   id: string;
   milestone_type: string;
@@ -185,12 +187,24 @@ export function ReferralsTab() {
   const getMilestoneStatus = (referral: ReferralWithMilestones, milestone: Milestone) => {
     return referral.milestone_rewards?.some(r => r.milestone_id === milestone.id) || false;
   };
-  return <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-8 w-full">
+  return <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-6 w-full">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
-        
       </div>
+
+      {/* Tabs for Referrals vs Teams */}
+      <Tabs defaultValue="referrals" className="w-full">
+        <TabsList className="w-full justify-start bg-muted/30 p-1 h-auto">
+          <TabsTrigger value="referrals" className="data-[state=active]:bg-background rounded-lg px-4 py-2">
+            Referrals
+          </TabsTrigger>
+          <TabsTrigger value="teams" className="data-[state=active]:bg-background rounded-lg px-4 py-2">
+            Teams
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="referrals" className="mt-6 space-y-8">
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3">
@@ -318,5 +332,11 @@ export function ReferralsTab() {
         })}
           </div>}
       </div>
+        </TabsContent>
+
+        <TabsContent value="teams" className="mt-6">
+          <TeamManagementSection profileName={profile?.full_name || profile?.username || "Your"} />
+        </TabsContent>
+      </Tabs>
     </div>;
 }
