@@ -92,8 +92,8 @@ Deno.serve(async (req) => {
 
     console.log(`Creating dynamic plan for boost ${boostId} with amount $${amount}`);
 
-    // Create a dynamic one-time plan using Whop API
-    const planResponse = await fetch("https://api.whop.com/api/v5/plans", {
+    // Create a dynamic one-time plan using Whop API v5
+    const planResponse = await fetch("https://api.whop.com/v5/plans", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${whopApiKey}`,
@@ -102,15 +102,13 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         company_id: WHOP_COMPANY_ID,
         product_id: WHOP_PRODUCT_ID,
+        plan_type: "one_time",
         title: `Boost Top-Up: ${boost.title} - $${amount}`,
         description: `Add $${amount} to your boost campaign "${boost.title}"`,
         initial_price: amount,
-        renewal_price: 0,
-        billing_period: null, // One-time payment (no recurring)
-        visibility: "hidden", // Don't show in storefront
+        visibility: "hidden",
         currency: "usd",
-        stock: 1, // Single use
-        unlimited_stock: false,
+        unlimited_stock: true,
       }),
     });
 
