@@ -2174,8 +2174,8 @@ export function WalletTab() {
                           <DollarSign className="h-3 w-3 text-muted-foreground" />
                         </div>
                       )}
-                      <span className="text-sm font-medium tracking-[-0.5px]">
-                        {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || selectedTransaction.source || 'N/A'}
+                      <span className="text-sm font-medium tracking-[-0.5px] truncate max-w-[180px]">
+                        {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N/A'}
                       </span>
                     </div>
                   </div>
@@ -2247,14 +2247,15 @@ export function WalletTab() {
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-sm text-muted-foreground shrink-0">Description</span>
                     <span className="text-sm font-medium tracking-[-0.5px] text-right truncate">
-                      {selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' 
-                        ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` 
-                        : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' 
-                        : selectedTransaction.type === 'referral' ? 'Referral bonus' 
-                        : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` 
-                        : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` 
-                        : selectedTransaction.type === 'balance_correction' ? 'Balance correction' 
-                        : 'Transaction'}
+                      {selectedTransaction.source ||
+                        (selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' 
+                          ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` 
+                          : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' 
+                          : selectedTransaction.type === 'referral' ? 'Referral bonus' 
+                          : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` 
+                          : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` 
+                          : selectedTransaction.type === 'balance_correction' ? 'Balance correction' 
+                          : 'Transaction')}
                     </span>
                   </div>
 
