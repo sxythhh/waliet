@@ -946,7 +946,7 @@ export function CampaignsTab({
     {/* Link Account Options Dialog */}
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogContent className="sm:max-w-sm border-0 p-0 overflow-hidden bg-background">
-        <div className="p-6 pb-4">
+        <div className="p-6 pb-4 py-0 px-0">
           <DialogHeader className="space-y-1.5">
             <DialogTitle className="text-base font-semibold" style={{
               fontFamily: 'Inter',
