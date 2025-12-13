@@ -14,6 +14,8 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { Pencil, Plus, BarChart3 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
+type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
 interface Campaign {
   id: string;
   title: string;
@@ -66,6 +68,8 @@ export function BrandCampaignsTab({
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
+  
   useEffect(() => {
     fetchBrandData();
   }, [brandId]);
@@ -232,9 +236,30 @@ export function BrandCampaignsTab({
 
           {/* Campaigns Grid */}
           {campaigns.length > 0 && <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Campaigns</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Campaigns</h2>
+                <div className="flex items-center gap-1">
+                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map((filter) => (
+                    <Button
+                      key={filter}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setStatusFilter(filter)}
+                      className={`px-3 py-1.5 h-auto text-xs font-medium capitalize rounded-full transition-colors ${
+                        statusFilter === filter
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {filter}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {campaigns.map(campaign => {
+                {campaigns
+                  .filter(campaign => statusFilter === "all" || campaign.status === statusFilter)
+                  .map(campaign => {
             const usedBudget = Number(campaign.budget_used || 0);
             const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
             return <Card key={campaign.id} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => handleCampaignClick(campaign)}>
