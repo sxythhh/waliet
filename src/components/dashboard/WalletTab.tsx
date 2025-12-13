@@ -1490,7 +1490,7 @@ export function WalletTab() {
 
       <Card className="bg-card border border-border rounded-xl overflow-hidden">
         {/* Filter Button */}
-        <div className="px-6 pt-5 pb-4">
+        <div className="pt-5 pb-4 px-0">
           <DropdownMenu open={filterOpen} onOpenChange={open => {
           setFilterOpen(open);
           if (!open) setFilterSubmenu('main');
