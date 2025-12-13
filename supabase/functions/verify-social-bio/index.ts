@@ -62,7 +62,7 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   console.log(`Fetching Instagram profile for: ${username}`);
   
   const response = await fetch(
-    'https://instagram120.p.rapidapi.com/api/instagram/profile',
+    'https://instagram120.p.rapidapi.com/api/instagram/userInfo',
     {
       method: 'POST',
       headers: {
@@ -82,7 +82,7 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   }
 
   const rawData = await response.json();
-  console.log('Instagram API raw response:', JSON.stringify(rawData).substring(0, 500));
+  console.log('Instagram API raw response:', JSON.stringify(rawData).substring(0, 800));
 
   // Check for error response
   if (rawData && typeof rawData === 'object' && 'error' in rawData) {
@@ -90,15 +90,19 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     throw new Error(typeof rawData.error === 'string' ? rawData.error : 'Instagram API error');
   }
 
-  // Extract profile from result
-  const profile = rawData?.result;
-
-  if (!profile) {
+  // Extract user from result array
+  const resultArray = rawData?.result;
+  if (!Array.isArray(resultArray) || resultArray.length === 0) {
     console.warn('Instagram profile data missing or malformed');
     throw new Error('User not found on Instagram');
   }
 
-  const bio = profile?.biography || '';
+  const user = resultArray[0]?.user;
+  if (!user) {
+    throw new Error('User not found on Instagram');
+  }
+
+  const bio = user?.biography || '';
 
   console.log('Instagram bio to check:', bio, '| Code:', verificationCode);
 
@@ -109,17 +113,17 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
 
   const cleanBio = filterVerificationCode(bio, verificationCode);
 
-  // Use profile_pic_url_hd for best quality, fallback to regular
-  const avatarUrl = profile?.profile_pic_url_hd || profile?.profile_pic_url || null;
+  // Use HD profile pic if available, fallback to regular
+  const avatarUrl = user?.hd_profile_pic_url_info?.url || user?.profile_pic_url || null;
 
   return {
     verified,
     bio: cleanBio,
     user: {
-      nickname: profile?.full_name || profile?.username || username,
+      nickname: user?.full_name || user?.username || username,
       avatar: avatarUrl,
-      followerCount: profile?.edge_followed_by?.count || 0,
-      isVerified: profile?.is_verified || false,
+      followerCount: user?.follower_count || 0,
+      isVerified: user?.is_verified || false,
     },
   };
 }
