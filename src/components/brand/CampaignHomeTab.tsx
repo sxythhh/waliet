@@ -158,7 +158,9 @@ export function CampaignHomeTab({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [brand, setBrand] = useState<{
     collection_name: string | null;
+    shortimize_api_key: string | null;
   } | null>(null);
+  const [campaignHashtags, setCampaignHashtags] = useState<string[]>([]);
 
   // Reset videos when timeframe changes to prevent stale data
   useEffect(() => {
@@ -182,10 +184,21 @@ export function CampaignHomeTab({
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const {
-        data: brandData
-      } = await supabase.from('brands').select('collection_name').eq('id', brandId).single();
+      // Fetch brand data with API key info
+      const { data: brandData } = await supabase
+        .from('brands')
+        .select('collection_name, shortimize_api_key')
+        .eq('id', brandId)
+        .single();
       setBrand(brandData);
+
+      // Fetch campaign hashtags
+      const { data: campaignData } = await supabase
+        .from('campaigns')
+        .select('hashtags')
+        .eq('id', campaignId)
+        .single();
+      setCampaignHashtags(campaignData?.hashtags || []);
 
       // Get date range based on timeframe
       const dateRange = getDateRange(timeframe);
@@ -615,11 +628,21 @@ export function CampaignHomeTab({
             }} />)}
               </AreaChart>
             </ResponsiveContainer> : <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm tracking-[-0.5px] gap-3">
-              <p>No metrics data yet</p>
-              <Button type="button" variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="border-black/0">
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Fetch Latest
-              </Button>
+              {campaignHashtags.length === 0 ? (
+                <>
+                  <p className="font-medium text-foreground">Hashtags Required</p>
+                  <p className="text-center max-w-sm">Add hashtags to your campaign to start tracking video metrics. Videos will be matched by hashtag in captions.</p>
+                </>
+              ) : (
+                <>
+                  <p>No metrics data recorded yet</p>
+                  <p className="text-xs text-center max-w-sm">Metrics are synced automatically every 4 hours. Click below to sync now.</p>
+                  <Button type="button" variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="border-black/0">
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Sync Now
+                  </Button>
+                </>
+              )}
             </div>}
         </div>
       </Card>
@@ -667,8 +690,15 @@ export function CampaignHomeTab({
                 </Card>
               </a>)}
           </div> : <Card className="p-8 bg-card/30 border-table-border">
-            <div className="text-center text-muted-foreground tracking-[-0.5px]">
-              No videos found matching campaign hashtags. Add hashtags to your campaign to filter videos.
+            <div className="text-center text-muted-foreground tracking-[-0.5px] space-y-2">
+              {campaignHashtags.length === 0 ? (
+                <>
+                  <p className="font-medium text-foreground">No Hashtags Configured</p>
+                  <p>Add hashtags to your campaign settings to filter and track videos.</p>
+                </>
+              ) : (
+                <p>No videos found matching hashtags: {campaignHashtags.join(', ')}</p>
+              )}
             </div>
           </Card>}
       </div>

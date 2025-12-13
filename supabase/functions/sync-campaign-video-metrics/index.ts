@@ -16,8 +16,7 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5)
       const response = await fetch(url, options);
       
       if (response.status === 429 || response.status >= 500) {
-        // Rate limited or server error - wait and retry with exponential backoff
-        const waitTime = Math.pow(2, attempt) * 3000; // 3s, 6s, 12s, 24s, 48s
+        const waitTime = Math.pow(2, attempt) * 3000;
         console.log(`Got ${response.status}, waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
         await delay(waitTime);
         continue;
@@ -42,11 +41,21 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5)
 function videoMatchesHashtags(video: any, hashtags: string[]): boolean {
   if (!hashtags || hashtags.length === 0) return true;
   
-  const caption = (video.title || video.caption || '').toLowerCase();
+  // Check multiple possible caption fields
+  const caption = (
+    video.title || 
+    video.caption || 
+    video.description || 
+    video.text || 
+    ''
+  ).toLowerCase();
   
   return hashtags.some(hashtag => {
-    const hashtagLower = hashtag.toLowerCase().replace(/^#/, '');
-    return caption.includes(`#${hashtagLower}`) || caption.includes(hashtagLower);
+    const hashtagLower = hashtag.toLowerCase().replace(/^#/, '').trim();
+    // Match with or without # prefix, and handle spaces
+    return caption.includes(`#${hashtagLower}`) || 
+           caption.includes(hashtagLower) ||
+           caption.includes(hashtagLower.replace(/\s+/g, ''));
   });
 }
 
@@ -61,36 +70,39 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Global Shortimize API key as fallback
+    const globalApiKey = Deno.env.get('SHORTIMIZE_API_KEY');
+
     // Check if a specific campaignId was provided
     let specificCampaignId: string | null = null;
     
     const clonedReq = req.clone();
     try {
       const body = await clonedReq.json();
-      console.log('Received body object:', JSON.stringify(body));
       specificCampaignId = body?.campaignId || null;
-      console.log('Parsed campaignId:', specificCampaignId);
     } catch (e) {
-      console.log('No body or parse error - will sync all campaigns');
+      // No body - will sync all campaigns
     }
 
-    console.log('Starting campaign video metrics sync...', specificCampaignId ? `for campaign ${specificCampaignId}` : 'for all campaigns');
+    console.log('[sync-metrics] Starting sync...', specificCampaignId ? `for campaign ${specificCampaignId}` : 'for all campaigns');
 
-    // Build query for campaigns - include hashtags field
+    // Build query for campaigns with their brand's API key
     let query = supabaseClient
       .from('campaigns')
       .select(`
         id,
+        title,
         brand_id,
         hashtags,
         brands!campaigns_brand_id_fkey (
           id,
-          shortimize_api_key
+          name,
+          shortimize_api_key,
+          collection_name
         )
       `)
       .eq('status', 'active');
 
-    // Filter to specific campaign if provided
     if (specificCampaignId) {
       query = query.eq('id', specificCampaignId);
     }
@@ -98,68 +110,72 @@ serve(async (req) => {
     const { data: campaigns, error: campaignsError } = await query;
 
     if (campaignsError) {
-      console.error('Error fetching campaigns:', campaignsError);
+      console.error('[sync-metrics] Error fetching campaigns:', campaignsError);
       throw campaignsError;
     }
 
-    console.log(`Found ${campaigns?.length || 0} campaigns to sync`);
+    console.log(`[sync-metrics] Found ${campaigns?.length || 0} active campaigns`);
 
     let syncedCount = 0;
+    let skippedCount = 0;
     let errorCount = 0;
-    let errorMessage = '';
+    let errorMessages: string[] = [];
 
     for (const campaign of campaigns || []) {
       const brandsData = campaign.brands as unknown;
-      const brand = Array.isArray(brandsData) ? brandsData[0] : brandsData as { id: string; shortimize_api_key: string | null } | null;
+      const brand = Array.isArray(brandsData) ? brandsData[0] : brandsData as { 
+        id: string; 
+        name: string;
+        shortimize_api_key: string | null;
+        collection_name: string | null;
+      } | null;
       
-      if (!brand?.shortimize_api_key) {
-        console.log(`Campaign ${campaign.id} - brand has no Shortimize API key, skipping`);
-        errorMessage = 'Brand has no Shortimize API key configured';
-        errorCount++;
+      // Use brand's API key or fall back to global key
+      const apiKey = brand?.shortimize_api_key || globalApiKey;
+      
+      if (!apiKey) {
+        console.log(`[sync-metrics] Campaign "${campaign.title}" (${campaign.id}) - no API key available, skipping`);
+        skippedCount++;
         continue;
       }
 
       const campaignHashtags = campaign.hashtags || [];
       
-      // Skip if no hashtags configured - need hashtags to filter
+      // If no hashtags configured, skip - we need hashtags to filter videos
       if (campaignHashtags.length === 0) {
-        console.log(`Campaign ${campaign.id} - no hashtags configured, skipping metrics sync`);
-        errorMessage = 'No hashtags configured for campaign';
-        errorCount++;
+        console.log(`[sync-metrics] Campaign "${campaign.title}" (${campaign.id}) - no hashtags configured, skipping`);
+        skippedCount++;
         continue;
       }
 
       try {
-        console.log(`Syncing metrics for campaign ${campaign.id}, hashtags: ${campaignHashtags.join(', ')}`);
+        console.log(`[sync-metrics] Syncing campaign "${campaign.title}" with hashtags: [${campaignHashtags.join(', ')}]`);
 
-        // Fetch ALL videos from Shortimize (no collection filter) and filter by hashtag
+        // Fetch all videos and filter by hashtag
         const allMatchingVideos: any[] = [];
         let page = 1;
         let hasMore = true;
-        let totalPages = 0;
-        const maxPages = 100; // Increased limit to fetch all videos
+        const maxPages = 100;
 
         while (hasMore && page <= maxPages) {
           const url = new URL('https://api.shortimize.com/videos');
           url.searchParams.set('limit', '100');
           url.searchParams.set('page', page.toString());
-          // NO collection filter - fetch all videos
-
-          console.log(`[sync-campaign-video-metrics] Fetching page ${page}...`);
+          url.searchParams.set('order_by', 'uploaded_at');
+          url.searchParams.set('order_direction', 'desc');
 
           const response = await fetchWithRetry(url.toString(), {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${brand.shortimize_api_key}`,
+              'Authorization': `Bearer ${apiKey}`,
               'Content-Type': 'application/json',
             },
           });
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error(`Shortimize API error for campaign ${campaign.id}:`, errorText);
-            errorMessage = `Shortimize API error: ${response.status}`;
-            throw new Error(errorMessage);
+            console.error(`[sync-metrics] Shortimize API error for "${campaign.title}":`, response.status, errorText);
+            throw new Error(`Shortimize API error: ${response.status}`);
           }
 
           const data = await response.json();
@@ -169,28 +185,21 @@ serve(async (req) => {
           const matchingVideos = videos.filter((video: any) => videoMatchesHashtags(video, campaignHashtags));
           allMatchingVideos.push(...matchingVideos);
           
-          console.log(`[sync-campaign-video-metrics] Page ${page}: ${videos.length} videos, ${matchingVideos.length} matching hashtags`);
+          if (page === 1) {
+            console.log(`[sync-metrics] Page 1: ${videos.length} total videos, ${matchingVideos.length} matching`);
+          }
 
-          // Check if there are more pages
+          // Check pagination
           const pagination = data.pagination;
-          if (pagination) {
-            totalPages = pagination.total_pages || 0;
-            if (page === 1) {
-              console.log(`[sync-campaign-video-metrics] Total pages available: ${totalPages}`);
-            }
-            if (page < pagination.total_pages) {
-              page++;
-              // Longer delay between pages to avoid rate limiting
-              await delay(1000);
-            } else {
-              hasMore = false;
-            }
+          if (pagination && page < pagination.total_pages) {
+            page++;
+            await delay(500); // Rate limit protection
           } else {
             hasMore = false;
           }
         }
 
-        console.log(`[sync-campaign-video-metrics] Total matching videos for campaign ${campaign.id}: ${allMatchingVideos.length}`);
+        console.log(`[sync-metrics] Campaign "${campaign.title}": Found ${allMatchingVideos.length} matching videos across ${page} pages`);
 
         // Calculate totals from matching videos
         let totalViews = 0;
@@ -200,19 +209,19 @@ serve(async (req) => {
         let totalBookmarks = 0;
 
         for (const video of allMatchingVideos) {
-          totalViews += video.latest_views || 0;
-          totalLikes += video.latest_likes || 0;
-          totalComments += video.latest_comments || 0;
-          totalShares += video.latest_shares || 0;
-          totalBookmarks += video.latest_bookmarks || 0;
+          totalViews += video.latest_views || video.views || 0;
+          totalLikes += video.latest_likes || video.likes || 0;
+          totalComments += video.latest_comments || video.comments || 0;
+          totalShares += video.latest_shares || video.shares || 0;
+          totalBookmarks += video.latest_bookmarks || video.bookmarks || 0;
         }
 
-        // Insert metrics record
+        // Insert metrics snapshot
         const { error: insertError } = await supabaseClient
           .from('campaign_video_metrics')
           .insert({
             campaign_id: campaign.id,
-            brand_id: brand.id,
+            brand_id: brand?.id || campaign.brand_id,
             total_views: totalViews,
             total_likes: totalLikes,
             total_comments: totalComments,
@@ -223,36 +232,41 @@ serve(async (req) => {
           });
 
         if (insertError) {
-          console.error(`Error inserting metrics for campaign ${campaign.id}:`, insertError);
-          errorMessage = insertError.message;
+          console.error(`[sync-metrics] Insert error for "${campaign.title}":`, insertError);
+          errorMessages.push(`${campaign.title}: ${insertError.message}`);
           errorCount++;
         } else {
-          console.log(`Successfully recorded metrics for campaign ${campaign.id}: ${totalViews} views, ${totalLikes} likes, ${totalComments} comments, ${allMatchingVideos.length} videos`);
+          console.log(`[sync-metrics] ✓ Recorded metrics for "${campaign.title}": ${totalViews.toLocaleString()} views, ${allMatchingVideos.length} videos`);
           syncedCount++;
         }
 
       } catch (error) {
-        console.error(`Error processing campaign ${campaign.id}:`, error);
-        errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`[sync-metrics] Error processing "${campaign.title}":`, error);
+        errorMessages.push(`${campaign.title}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         errorCount++;
       }
+
+      // Small delay between campaigns to avoid rate limiting
+      await delay(1000);
     }
 
-    console.log(`Metrics sync complete. Synced: ${syncedCount}, Errors: ${errorCount}`);
+    const summary = {
+      success: errorCount === 0,
+      synced: syncedCount,
+      skipped: skippedCount,
+      errors: errorCount,
+      errorMessage: errorMessages.length > 0 ? errorMessages.join('; ') : null,
+      timestamp: new Date().toISOString(),
+    };
 
-    return new Response(
-      JSON.stringify({
-        success: errorCount === 0,
-        synced: syncedCount,
-        errors: errorCount,
-        errorMessage: errorCount > 0 ? errorMessage : null,
-        timestamp: new Date().toISOString(),
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.log(`[sync-metrics] Complete:`, summary);
+
+    return new Response(JSON.stringify(summary), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
-    console.error('Error in sync-campaign-video-metrics:', error);
+    console.error('[sync-metrics] Fatal error:', error);
     return new Response(
       JSON.stringify({ 
         success: false,
