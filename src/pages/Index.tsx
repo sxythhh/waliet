@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,19 +35,36 @@ export default function Index() {
               <span className="text-lg font-clash font-semibold text-white">VIRALITY</span>
             </div>
 
-            <div className="flex items-center gap-3">
-              {isAuthenticated ? <Link to="/dashboard">
-                  <Button size="sm" className="font-medium bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4f89ff] text-white">
-                    Dashboard
+            <div className="flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  <Link to="/dashboard">
+                    <Button size="sm" className="font-inter tracking-[-0.3px] font-medium bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4f89ff] text-white">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-white/10 gap-1.5"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
                   </Button>
-                </Link> : <>
+                </>
+              ) : (
+                <>
                   <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:bg-muted hover:text-foreground px-[10px] rounded-3xl" onClick={() => setShowAuthDialog(true)}>
                     Sign In
                   </Button>
                   <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 rounded-full bg-gradient-to-b from-primary via-primary to-primary/70 border-t border-primary-foreground/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150" onClick={() => setShowAuthDialog(true)}>
                     Create Account
                   </Button>
-                </>}
+                </>
+              )}
             </div>
           </div>
         </div>
