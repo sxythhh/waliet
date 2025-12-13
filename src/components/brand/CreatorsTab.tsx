@@ -795,7 +795,7 @@ export function CreatorsTab({
                   <div className="flex items-center justify-between text-[11px]">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <span>{creator.date_joined ? format(new Date(creator.date_joined), "MMM d, yyyy") : "-"}</span>
-                      <span className="text-muted-foreground/40">•</span>
+                      
                       
                     </div>
                     <span className="text-emerald-500 font-medium">${creator.total_earnings.toFixed(2)}</span>
