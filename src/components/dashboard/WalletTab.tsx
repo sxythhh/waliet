@@ -1394,13 +1394,13 @@ export function WalletTab() {
             if (!open) setFilterSubmenu('main');
           }}>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 rounded-full border-border bg-background hover:bg-muted px-4 py-2 h-auto">
+              <Button variant="outline" className="gap-2 rounded-full border-border bg-background hover:bg-background px-4 py-2 h-auto">
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="font-medium">Filter</span>
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[280px] p-4 overflow-hidden bg-popover/80 backdrop-blur-xl border-border font-['Inter'] tracking-[-0.5px]">
+            <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-[#0a0a0a] dark:bg-[#0a0a0a] border-border font-['Inter'] tracking-[-0.5px]">
               <div className="relative">
                 {/* Main Menu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
