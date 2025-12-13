@@ -106,21 +106,15 @@ export function SearchOverlay({
             placeholder="Search campaigns & boosts..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="flex-1 border-0 bg-transparent text-lg placeholder:text-muted-foreground/50 focus-visible:ring-0 font-['Inter'] tracking-[-0.5px]"
+            className="flex-1 border-0 bg-transparent text-lg placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0 font-['Inter'] tracking-[-0.5px]"
           />
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-muted/50 transition-colors"
-          >
-            <X className="h-5 w-5 text-muted-foreground" />
-          </button>
         </div>
 
         {/* Content */}
         <div className="p-4 space-y-6 max-h-[60vh] overflow-y-auto">
           {/* Type Filter */}
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-['Inter']">
+            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
               Type
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -146,7 +140,7 @@ export function SearchOverlay({
 
           {/* Browse Filters */}
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-['Inter']">
+            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
               Browse
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -172,7 +166,7 @@ export function SearchOverlay({
 
           {/* Niches/Topics */}
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-['Inter']">
+            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
               Topics
             </h3>
             <div className="grid grid-cols-2 gap-2">
