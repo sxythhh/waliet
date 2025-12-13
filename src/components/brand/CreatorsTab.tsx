@@ -495,7 +495,7 @@ export function CreatorsTab({
   };
   if (loading) {
     return <div className="h-full flex font-inter tracking-[-0.5px]">
-        <div className="w-80 border-r border-border/30 p-4 space-y-4 hidden lg:block">
+        <div className="w-80 border-r border-border p-4 space-y-4 hidden lg:block">
           <Skeleton className="h-6 w-24" />
           {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 p-3">
               <Skeleton className="h-10 w-10 rounded-full" />
@@ -506,7 +506,7 @@ export function CreatorsTab({
             </div>)}
         </div>
         <div className="flex-1 hidden lg:block" />
-        <div className="w-full lg:w-96 border-l border-border/30 p-4 space-y-4">
+        <div className="w-full lg:w-96 border-l border-border p-4 space-y-4">
           <Skeleton className="h-6 w-24" />
           {[1, 2, 3, 4].map(i => <div key={i} className="flex items-center gap-3 p-3">
               <Skeleton className="h-10 w-10 rounded-full" />
@@ -520,7 +520,7 @@ export function CreatorsTab({
   }
 
   // Mobile Navigation Tabs
-  const MobileNav = () => <div className="lg:hidden flex border-b border-border/30 bg-background/50 backdrop-blur-sm">
+  const MobileNav = () => <div className="lg:hidden flex border-b border-border bg-background/50 backdrop-blur-sm">
       <button onClick={() => setMobileView('messages')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors font-inter tracking-[-0.5px] ${mobileView === 'messages' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}`}>
         Messages
       </button>
@@ -532,10 +532,10 @@ export function CreatorsTab({
       <MobileNav />
       
       {/* Left Column - Conversations List */}
-      <div className={`w-full lg:w-80 border-r border-border/30 flex flex-col ${mobileView === 'messages' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
-        <div className="h-14 px-4 border-b border-border/30 flex items-center justify-between shrink-0">
+      <div className={`w-full lg:w-80 border-r border-border flex flex-col ${mobileView === 'messages' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
+        <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <h2 className="font-semibold text-sm">Messages</h2>
+            <h2 className="font-medium text-sm">Messages</h2>
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50">
             <PenSquare className="h-4 w-4" />
@@ -543,7 +543,7 @@ export function CreatorsTab({
         </div>
 
         {/* Message Filters */}
-        <div className="p-3 border-b border-border/30 flex items-center gap-2 flex-wrap">
+        <div className="p-3 border-b border-border flex items-center gap-2 flex-wrap">
           <button className={`h-7 px-3 text-xs rounded-md transition-all ${messageFilter === 'all' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('all')}>
             All
           </button>
@@ -606,7 +606,7 @@ export function CreatorsTab({
             }}>
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <Avatar className="h-10 w-10 ring-1 ring-border/30">
+                        <Avatar className="h-10 w-10 ring-1 ring-border">
                           <AvatarImage src={creator?.avatar_url || undefined} />
                           <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                             {creator?.username.slice(0, 2).toUpperCase() || "??"}
@@ -657,14 +657,14 @@ export function CreatorsTab({
       </div>
 
       {/* Middle Column - Active Conversation */}
-      <div className={`flex-1 flex flex-col min-w-0 border-r border-border/30 ${mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 border-r border-border ${mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'}`}>
         {activeConversation ? <>
             {/* Conversation Header */}
-            <div className="h-14 px-4 border-b border-border/30 flex items-center gap-3 shrink-0">
+            <div className="h-14 px-4 border-b border-border flex items-center gap-3 shrink-0">
               <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden hover:bg-muted/50" onClick={() => setMobileView('messages')}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <Avatar className="h-9 w-9 ring-1 ring-border/30">
+              <Avatar className="h-9 w-9 ring-1 ring-border">
                 <AvatarImage src={activeConversation.creator?.avatar_url || undefined} />
                 <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                   {activeConversation.creator?.username.slice(0, 2).toUpperCase() || "??"}
@@ -694,8 +694,8 @@ export function CreatorsTab({
             </ScrollArea>
 
             {/* Redesigned Message Input */}
-            <div className="p-4 border-t border-border/30">
-              <div className="rounded-xl border border-border/50 overflow-hidden bg-muted/20">
+            <div className="p-4 border-t border-border">
+              <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
                 <Textarea placeholder="Type a message..." value={messageInput} onChange={e => setMessageInput(e.target.value)} onKeyDown={e => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -722,7 +722,7 @@ export function CreatorsTab({
             </div>
           </> : <div className="flex-1 flex flex-col">
             {/* Empty state header with toggle */}
-            <div className="h-14 px-4 border-b border-border/30 flex items-center justify-end shrink-0">
+            <div className="h-14 px-4 border-b border-border flex items-center justify-end shrink-0">
               <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex hover:bg-muted/50" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
                 {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
               </Button>
@@ -739,10 +739,10 @@ export function CreatorsTab({
       </div>
 
       {/* Right Column - Creators List */}
-      <div className={`flex flex-col transition-all duration-300 ${creatorsCollapsed ? 'w-0 overflow-hidden lg:w-0' : 'w-full lg:w-96'} ${mobileView === 'creators' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
-        <div className="h-14 px-4 border-b border-border/30 flex items-center justify-between shrink-0">
+      <div className={`flex flex-col transition-all duration-300 font-inter tracking-[-0.5px] border-l border-border ${creatorsCollapsed ? 'w-0 overflow-hidden lg:w-0' : 'w-full lg:w-96'} ${mobileView === 'creators' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
+        <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <h2 className="font-semibold text-sm">Creators</h2>
+            <h2 className="font-medium text-sm">Creators</h2>
             <span className="text-[11px] text-muted-foreground">({creators.length})</span>
           </div>
           {creators.length > 0 && <Button variant="ghost" size="sm" className="h-8 px-3 gap-1.5 text-xs hover:bg-muted/50" onClick={exportToCSV}>
@@ -752,10 +752,10 @@ export function CreatorsTab({
         </div>
 
         {/* Search */}
-        <div className="p-3 border-b border-border/30">
+        <div className="p-3 border-b border-border">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-0 text-sm" />
+            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-border text-sm" />
           </div>
         </div>
 
@@ -772,7 +772,7 @@ export function CreatorsTab({
               {filteredCreators.map(creator => <div key={creator.id} className="p-4 hover:bg-muted/20 transition-all cursor-pointer group" onClick={() => setSelectedCreator(creator)}>
                   {/* Header Row */}
                   <div className="flex items-start gap-3 mb-3">
-                    <Avatar className="h-10 w-10 ring-1 ring-border/30">
+                    <Avatar className="h-10 w-10 ring-1 ring-border">
                       <AvatarImage src={creator.avatar_url || undefined} />
                       <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                         {creator.username.slice(0, 2).toUpperCase()}
@@ -839,72 +839,102 @@ export function CreatorsTab({
 
       {/* Creator Details Dialog */}
       <Dialog open={!!selectedCreator} onOpenChange={() => setSelectedCreator(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Creator Details</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md font-inter tracking-[-0.5px] p-0 gap-0 overflow-hidden">
+          <div className="p-6 pb-4">
+            <DialogHeader className="p-0">
+              <DialogTitle className="font-inter tracking-[-0.5px] text-base">Creator Details</DialogTitle>
+            </DialogHeader>
+          </div>
           
-          {selectedCreator && <div className="space-y-6">
+          {selectedCreator && <div className="px-6 pb-6 space-y-5">
               {/* Profile Header */}
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16 ring-2 ring-background">
+                <Avatar className="h-14 w-14">
                   <AvatarImage src={selectedCreator.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                  <AvatarFallback className="bg-muted text-muted-foreground text-base font-medium">
                     {selectedCreator.username.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <h3 className="font-semibold text-lg">{selectedCreator.full_name || selectedCreator.username}</h3>
-                  <p className="text-sm text-muted-foreground">@{selectedCreator.username}</p>
-                  {selectedCreator.email && <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                      <Mail className="h-3.5 w-3.5" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-sm">{selectedCreator.full_name || selectedCreator.username}</h3>
+                  <p className="text-xs text-muted-foreground">@{selectedCreator.username}</p>
+                  {selectedCreator.email && <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <Mail className="h-3 w-3" />
                       {selectedCreator.email}
                     </p>}
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-muted/50 p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Total Views</p>
-                  <p className="font-semibold text-lg">{selectedCreator.total_views.toLocaleString()}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Total Views</p>
+                  <p className="font-medium text-sm">{selectedCreator.total_views.toLocaleString()}</p>
                 </div>
-                <div className="rounded-lg bg-muted/50 p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Total Earnings</p>
-                  <p className="font-semibold text-lg text-green-500">${selectedCreator.total_earnings.toFixed(2)}</p>
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Total Earnings</p>
+                  <p className="font-medium text-sm text-emerald-500">${selectedCreator.total_earnings.toFixed(2)}</p>
                 </div>
               </div>
 
               {/* Social Accounts */}
               <div>
-                <h4 className="text-sm font-medium mb-3">Connected Accounts</h4>
-                <div className="space-y-2">
-                  {selectedCreator.social_accounts.map((account, idx) => <Button key={idx} variant="ghost" className="w-full justify-between h-auto py-2 px-3" onClick={() => account.account_link && window.open(account.account_link, "_blank")}>
-                      <div className="flex items-center gap-2">
-                        <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-5 w-5 object-contain" />
-                        <span>@{account.username}</span>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Connected Accounts</h4>
+                <div className="space-y-1.5">
+                  {selectedCreator.social_accounts.map((account, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer"
+                      onClick={() => account.account_link && window.open(account.account_link, "_blank")}
+                    >
+                      {account.avatar_url ? (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={account.avatar_url} />
+                          <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
+                            {account.username.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
+                          <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-4 w-4 object-contain" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain" />
+                          <span className="text-xs font-medium truncate">@{account.username}</span>
+                        </div>
+                        {account.follower_count && account.follower_count > 0 && (
+                          <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>
+                        )}
                       </div>
-                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                    </Button>)}
+                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/50" />
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* Campaigns */}
               <div>
-                <h4 className="text-sm font-medium mb-3">Joined Campaigns</h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedCreator.campaigns.map(campaign => <span key={campaign.id} className="px-3 py-1 rounded-full bg-muted text-xs font-medium">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Joined Campaigns</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedCreator.campaigns.map(campaign => (
+                    <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
                       {campaign.title}
-                    </span>)}
+                    </span>
+                  ))}
                 </div>
               </div>
 
               {/* Message Button */}
-              <Button className="w-full" onClick={() => {
-            startConversation(selectedCreator);
-            setSelectedCreator(null);
-          }}>
-                <MessageSquare className="h-4 w-4 mr-2" />
+              <Button 
+                className="w-full h-9 text-xs font-medium bg-foreground text-background hover:bg-foreground/90" 
+                onClick={() => {
+                  startConversation(selectedCreator);
+                  setSelectedCreator(null);
+                }}
+              >
+                <MessageSquare className="h-3.5 w-3.5 mr-2" />
                 Send Message
               </Button>
             </div>}
