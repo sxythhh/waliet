@@ -63,6 +63,12 @@ export function ProfileOnboardingChecklist({ tasks, onTaskClick }: ProfileOnboar
     </button>
   );
 
+  const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const radius = 18;
+  const strokeWidth = 3;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
+
   return (
     <Card className="bg-card border border-border overflow-hidden">
       <CardContent className="p-0">
@@ -71,12 +77,48 @@ export function ProfileOnboardingChecklist({ tasks, onTaskClick }: ProfileOnboar
           className="flex items-center justify-between p-4 cursor-pointer"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <Badge 
-            variant="secondary" 
-            className="bg-muted text-foreground border-0 font-medium"
-          >
-            {completedCount} of {totalCount} tasks completed
-          </Badge>
+          <div className="flex items-center gap-3">
+            {/* Circular Progress Bar */}
+            <div className="relative w-10 h-10">
+              <svg className="w-10 h-10 -rotate-90" viewBox="0 0 44 44">
+                {/* Background circle */}
+                <circle
+                  cx="22"
+                  cy="22"
+                  r={radius}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={strokeWidth}
+                  className="text-muted"
+                />
+                {/* Progress circle */}
+                <circle
+                  cx="22"
+                  cy="22"
+                  r={radius}
+                  fill="none"
+                  stroke="#2060df"
+                  strokeWidth={strokeWidth}
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  className="transition-all duration-500 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-semibold text-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                  {completedCount}/{totalCount}
+                </span>
+              </div>
+            </div>
+            <Badge 
+              variant="secondary" 
+              className="bg-muted text-foreground border-0 font-medium"
+              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+            >
+              {completedCount} of {totalCount} tasks completed
+            </Badge>
+          </div>
           <button className="text-muted-foreground hover:text-foreground transition-colors">
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
