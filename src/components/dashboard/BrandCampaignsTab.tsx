@@ -9,7 +9,7 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BoostDetailView } from "@/components/brand/BoostDetailView";
-import { SubscriptionGate } from "@/components/brand/SubscriptionGate";
+import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { Pencil, Plus, BarChart3 } from "lucide-react";
@@ -65,6 +65,7 @@ export function BrandCampaignsTab({
   const [brandLogoUrl, setBrandLogoUrl] = useState<string | undefined>(undefined);
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   useEffect(() => {
     fetchBrandData();
   }, [brandId]);
@@ -189,15 +190,38 @@ export function BrandCampaignsTab({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
             </div>
-            <SubscriptionGate brandId={brandId} subscriptionStatus={subscriptionStatus}>
-              <CreateCampaignTypeDialog
-                brandId={brandId}
-                onSelectClipping={() => setCreateCampaignOpen(true)}
-                onSelectManaged={() => setCreateBountyOpen(true)}
-                onSelectBoost={() => setCreateBountyOpen(true)}
-              />
-            </SubscriptionGate>
+            <CreateCampaignTypeDialog
+              brandId={brandId}
+              onSelectClipping={() => {
+                if (subscriptionStatus === "active") {
+                  setCreateCampaignOpen(true);
+                } else {
+                  setSubscriptionGateOpen(true);
+                }
+              }}
+              onSelectManaged={() => {
+                if (subscriptionStatus === "active") {
+                  setCreateBountyOpen(true);
+                } else {
+                  setSubscriptionGateOpen(true);
+                }
+              }}
+              onSelectBoost={() => {
+                if (subscriptionStatus === "active") {
+                  setCreateBountyOpen(true);
+                } else {
+                  setSubscriptionGateOpen(true);
+                }
+              }}
+            />
           </div>
+
+          {/* Subscription Gate Dialog */}
+          <SubscriptionGateDialog 
+            brandId={brandId} 
+            open={subscriptionGateOpen} 
+            onOpenChange={setSubscriptionGateOpen} 
+          />
 
           {/* Embed Section - Only show if not subscribed */}
           {subscriptionStatus !== "active" && (

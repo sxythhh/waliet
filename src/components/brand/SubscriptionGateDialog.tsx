@@ -1,29 +1,24 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Crown, Check, ExternalLink, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface SubscriptionGateProps {
+interface SubscriptionGateDialogProps {
   brandId: string;
-  subscriptionStatus?: string | null;
-  children: React.ReactNode;
-  onSubscriptionRequired?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const PLAN_PRICE = 99;
 
-export function SubscriptionGate({ 
+export function SubscriptionGateDialog({ 
   brandId, 
-  subscriptionStatus, 
-  children,
-  onSubscriptionRequired 
-}: SubscriptionGateProps) {
-  const [open, setOpen] = useState(false);
+  open,
+  onOpenChange
+}: SubscriptionGateDialogProps) {
   const [loading, setLoading] = useState(false);
-
-  const isSubscribed = subscriptionStatus === "active";
 
   const handleSubscribe = async () => {
     setLoading(true);
@@ -42,7 +37,7 @@ export function SubscriptionGate({
 
       if (data?.checkoutUrl) {
         window.open(data.checkoutUrl, "_blank");
-        setOpen(false);
+        onOpenChange(false);
       } else {
         throw new Error("No checkout URL returned");
       }
@@ -58,21 +53,8 @@ export function SubscriptionGate({
     window.open("https://app.iclosed.io/e/Virality/discovery", "_blank");
   };
 
-  // If subscribed, render children directly
-  if (isSubscribed) {
-    return <>{children}</>;
-  }
-
-  // If not subscribed, wrap in dialog trigger
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild onClick={(e) => {
-        e.preventDefault();
-        setOpen(true);
-        onSubscriptionRequired?.();
-      }}>
-        {children}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] bg-[#f5f5f5] dark:bg-[#050505] border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
