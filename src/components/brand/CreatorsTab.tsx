@@ -688,7 +688,7 @@ export function CreatorsTab({
                 e.preventDefault();
                 sendMessage();
               }
-            }} rows={3} className="" />
+            }} rows={3} className="border-0 bg-transparent resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none shadow-none" />
                 <div className="flex items-center justify-between px-4 pb-4">
                   <div className="flex items-center gap-0.5">
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
