@@ -539,7 +539,7 @@ export function CampaignHomeTab({
           <div className="flex items-center gap-2">
             {isAdmin && (
               <span className="text-xs text-muted-foreground tracking-[-0.5px] hidden sm:inline">
-                Next refresh: {format(new Date(Math.ceil(Date.now() / (4 * 60 * 60 * 1000)) * (4 * 60 * 60 * 1000)), 'h:mm a')}
+                Syncs every 4h (12am, 4am, 8am, 12pm, 4pm, 8pm)
               </span>
             )}
             {isAdmin && <ManualMetricsDialog campaignId={campaignId} brandId={brandId} onSuccess={handleRefresh} />}
