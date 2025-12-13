@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play } from "lucide-react";
+import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play, ChevronUp, ChevronDown, MessageCircle } from "lucide-react";
 import { EditBountyDialog } from "./EditBountyDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
@@ -432,149 +432,197 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
                 </div>
 
                 {/* Right Column - Application Details (Wider) */}
-                <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-hidden flex flex-col relative">
                   {selectedApp && selectedProfile ? (
-                    <ScrollArea className="flex-1">
-                      <div className="p-6 space-y-5 font-inter tracking-[-0.5px]">
-                        {/* Profile Header */}
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-16 w-16">
-                            <AvatarImage src={selectedProfile.avatar_url || undefined} />
-                            <AvatarFallback className="text-xl bg-muted/30">
-                              {selectedProfile.username?.[0]?.toUpperCase() || '?'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <h2 className="text-lg font-semibold">
-                              {selectedProfile.full_name || selectedProfile.username}
-                            </h2>
-                            <p className="text-sm text-muted-foreground">@{selectedProfile.username}</p>
-                            <div className="mt-2 flex items-center gap-2">
-                              {getStatusBadge(selectedApp.status)}
-                              <span className="text-xs text-muted-foreground">
-                                Applied {new Date(selectedApp.applied_at).toLocaleDateString()}
-                              </span>
+                    <>
+                      {/* Navigation Arrows */}
+                      <div className="absolute top-3 right-3 flex flex-col gap-1 z-10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 bg-muted/30 hover:bg-muted/50"
+                          onClick={() => {
+                            const currentIndex = applications.findIndex(a => a.id === selectedAppId);
+                            if (currentIndex > 0) {
+                              setSelectedAppId(applications[currentIndex - 1].id);
+                            }
+                          }}
+                          disabled={applications.findIndex(a => a.id === selectedAppId) === 0}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 bg-muted/30 hover:bg-muted/50"
+                          onClick={() => {
+                            const currentIndex = applications.findIndex(a => a.id === selectedAppId);
+                            if (currentIndex < applications.length - 1) {
+                              setSelectedAppId(applications[currentIndex + 1].id);
+                            }
+                          }}
+                          disabled={applications.findIndex(a => a.id === selectedAppId) === applications.length - 1}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <ScrollArea className="flex-1 pb-20">
+                        <div className="p-6 space-y-5 font-inter tracking-[-0.5px]">
+                          {/* Profile Header */}
+                          <div className="flex items-start gap-4">
+                            <Avatar className="h-16 w-16">
+                              <AvatarImage src={selectedProfile.avatar_url || undefined} />
+                              <AvatarFallback className="text-xl bg-muted/30">
+                                {selectedProfile.username?.[0]?.toUpperCase() || '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h2 className="text-lg font-semibold">
+                                {selectedProfile.full_name || selectedProfile.username}
+                              </h2>
+                              <p className="text-sm text-muted-foreground">@{selectedProfile.username}</p>
+                              <div className="mt-2 flex items-center gap-2">
+                                {getStatusBadge(selectedApp.status)}
+                                <span className="text-xs text-muted-foreground">
+                                  Applied {new Date(selectedApp.applied_at).toLocaleDateString()}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Action Buttons */}
-                        {selectedApp.status === 'pending' && (
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              className="flex-1 text-red-500 hover:text-red-500 hover:bg-red-500/10"
-                              onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
-                            >
-                              Decline
-                            </Button>
-                            <Button
-                              className="flex-1 bg-green-600 hover:bg-green-700"
-                              onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')}
-                            >
-                              Approve
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Stats Row */}
-                        <div className="flex items-center gap-6">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Trust Score</p>
-                            <p className="text-xl font-semibold">{selectedProfile.trust_score ?? '—'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Demographics</p>
-                            <p className="text-xl font-semibold">{selectedProfile.demographics_score ?? '—'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Views Score</p>
-                            <p className="text-xl font-semibold">{selectedProfile.views_score ?? '—'}</p>
-                          </div>
-                        </div>
-
-                        {/* Contact Info */}
-                        <div className="space-y-2">
-                          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Info</h3>
-                          <div className="space-y-1 text-sm">
-                            {selectedProfile.email && (
-                              <p><span className="text-muted-foreground">Email:</span> {selectedProfile.email}</p>
-                            )}
-                            {selectedProfile.phone_number && (
-                              <p><span className="text-muted-foreground">Phone:</span> {selectedProfile.phone_number}</p>
-                            )}
-                            {selectedProfile.discord_username && (
-                              <p><span className="text-muted-foreground">Discord:</span> {selectedProfile.discord_username}</p>
-                            )}
-                            {selectedProfile.twitter_username && (
-                              <p><span className="text-muted-foreground">X:</span> @{selectedProfile.twitter_username}</p>
-                            )}
-                            {!selectedProfile.email && !selectedProfile.phone_number && !selectedProfile.discord_username && !selectedProfile.twitter_username && (
-                              <p className="text-muted-foreground">No contact info available</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Linked Accounts */}
-                        <div className="space-y-2">
-                          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Linked Accounts</h3>
-                          {selectedUserAccounts.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {selectedUserAccounts.map(account => {
-                                const logo = getPlatformLogo(account.platform);
-                                return (
-                                  <a
-                                    key={account.id}
-                                    href={account.account_link || '#'}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 bg-muted/30 hover:bg-muted/50 rounded-full px-3 py-1.5 transition-colors"
-                                  >
-                                    {account.avatar_url ? (
-                                      <img src={account.avatar_url} alt={account.username} className="h-5 w-5 rounded-full" />
-                                    ) : logo ? (
-                                      <img src={logo} alt={account.platform} className="h-4 w-4" />
-                                    ) : null}
-                                    <span className="text-sm">@{account.username}</span>
-                                    {account.follower_count ? (
-                                      <span className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()}</span>
-                                    ) : null}
-                                  </a>
-                                );
-                              })}
+                          {/* Stats Row */}
+                          <div className="flex items-center gap-6">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Trust Score</p>
+                              <p className="text-xl font-semibold">{selectedProfile.trust_score ?? '—'}</p>
                             </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">No linked accounts</p>
-                          )}
-                        </div>
-
-                        {/* Application Submission */}
-                        <div className="space-y-3">
-                          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Application Submission</h3>
-                          
-                          {selectedApp.application_text && (
-                            <div className="space-y-1">
-                              <p className="text-xs text-muted-foreground">Message</p>
-                              <p className="text-sm bg-muted/20 rounded-lg p-3">
-                                {selectedApp.application_text}
-                              </p>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Demographics</p>
+                              <p className="text-xl font-semibold">{selectedProfile.demographics_score ?? '—'}</p>
                             </div>
-                          )}
-                          
-                          {selectedApp.video_url && (
-                            <a
-                              href={selectedApp.video_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                            >
-                              <Play className="h-4 w-4" />
-                              View Submission Video
-                            </a>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Views Score</p>
+                              <p className="text-xl font-semibold">{selectedProfile.views_score ?? '—'}</p>
+                            </div>
+                          </div>
+
+                          {/* Contact Info */}
+                          <div className="space-y-2">
+                            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Info</h3>
+                            <div className="space-y-1 text-sm">
+                              {selectedProfile.email && (
+                                <p><span className="text-muted-foreground">Email:</span> {selectedProfile.email}</p>
+                              )}
+                              {selectedProfile.phone_number && (
+                                <p><span className="text-muted-foreground">Phone:</span> {selectedProfile.phone_number}</p>
+                              )}
+                              {selectedProfile.discord_username && (
+                                <p><span className="text-muted-foreground">Discord:</span> {selectedProfile.discord_username}</p>
+                              )}
+                              {selectedProfile.twitter_username && (
+                                <p><span className="text-muted-foreground">X:</span> @{selectedProfile.twitter_username}</p>
+                              )}
+                              {!selectedProfile.email && !selectedProfile.phone_number && !selectedProfile.discord_username && !selectedProfile.twitter_username && (
+                                <p className="text-muted-foreground">No contact info available</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Linked Accounts */}
+                          <div className="space-y-2">
+                            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Linked Accounts</h3>
+                            {selectedUserAccounts.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {selectedUserAccounts.map(account => {
+                                  const logo = getPlatformLogo(account.platform);
+                                  return (
+                                    <a
+                                      key={account.id}
+                                      href={account.account_link || '#'}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 bg-muted/30 hover:bg-muted/50 rounded-full px-3 py-1.5 transition-colors"
+                                    >
+                                      {account.avatar_url ? (
+                                        <img src={account.avatar_url} alt={account.username} className="h-5 w-5 rounded-full" />
+                                      ) : logo ? (
+                                        <img src={logo} alt={account.platform} className="h-4 w-4" />
+                                      ) : null}
+                                      <span className="text-sm">@{account.username}</span>
+                                      {account.follower_count ? (
+                                        <span className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()}</span>
+                                      ) : null}
+                                    </a>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">No linked accounts</p>
+                            )}
+                          </div>
+
+                          {/* Application Submission */}
+                          <div className="space-y-3">
+                            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Application Submission</h3>
+                            
+                            {selectedApp.application_text && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Message</p>
+                                <p className="text-sm bg-muted/20 rounded-lg p-3">
+                                  {selectedApp.application_text}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {selectedApp.video_url && (
+                              <a
+                                href={selectedApp.video_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                              >
+                                <Play className="h-4 w-4" />
+                                View Submission Video
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </ScrollArea>
+
+                      {/* Fixed Bottom Action Bar */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/30">
+                        <div className="flex items-center gap-2 font-inter tracking-[-0.5px]">
+                          <Button
+                            variant="outline"
+                            className="flex-1 gap-2"
+                            onClick={() => {
+                              toast.info("Messaging feature coming soon");
+                            }}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            Message
+                          </Button>
+                          {selectedApp.status === 'pending' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                className="flex-1 text-red-500 hover:text-red-500 hover:bg-red-500/10"
+                                onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
+                              >
+                                Decline
+                              </Button>
+                              <Button
+                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')}
+                              >
+                                Approve
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>
-                    </ScrollArea>
+                    </>
                   ) : (
                     <div className="flex-1 flex items-center justify-center text-muted-foreground">
                       <div className="text-center">
