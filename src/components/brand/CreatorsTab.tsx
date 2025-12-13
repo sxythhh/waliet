@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link, Inbox, Bookmark, Filter, Plus, Trash2 } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link, Inbox, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -86,6 +86,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [messageFilter, setMessageFilter] = useState<MessageFilter>('all');
   const [bookmarkedConversations, setBookmarkedConversations] = useState<Set<string>>(new Set());
   const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(new Map());
+  const [creatorsCollapsed, setCreatorsCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -595,7 +596,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       <div className={`w-full lg:w-80 border-r border-[#e0e0e0] dark:border-[#1a1a1a] flex flex-col ${
         mobileView === 'messages' ? 'flex' : 'hidden lg:flex'
       } ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
-        <div className="p-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between">
+        <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold">Messages</h2>
             <HelpCircle className="h-4 w-4 text-muted-foreground" />
@@ -755,7 +756,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
         {activeConversation ? (
           <>
             {/* Conversation Header */}
-            <div className="p-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-3">
+            <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-3 shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -770,9 +771,17 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                   {activeConversation.creator?.username.slice(0, 2).toUpperCase() || "??"}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-medium">
+              <span className="font-medium flex-1">
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hidden lg:flex"
+                onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}
+              >
+                {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+              </Button>
             </div>
 
             {/* Messages */}
@@ -848,20 +857,35 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">Select a conversation to view messages</p>
+          <div className="flex-1 flex flex-col">
+            {/* Empty state header with toggle */}
+            <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-end shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hidden lg:flex"
+                onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}
+              >
+                {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+              </Button>
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-sm">Select a conversation to view messages</p>
+              </div>
             </div>
           </div>
         )}
       </div>
 
       {/* Right Column - Creators List */}
-      <div className={`w-full lg:w-96 flex flex-col ${
+      <div className={`flex flex-col transition-all duration-300 ${
+        creatorsCollapsed ? 'w-0 overflow-hidden lg:w-0' : 'w-full lg:w-96'
+      } ${
         mobileView === 'creators' ? 'flex' : 'hidden lg:flex'
       } ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
-        <div className="p-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between">
+        <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold">Creators</h2>
             <span className="text-xs text-muted-foreground">({creators.length})</span>
