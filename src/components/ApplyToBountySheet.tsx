@@ -6,10 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ExternalLink, AlertCircle, CheckCircle2, Upload, X, Play } from "lucide-react";
+import { ExternalLink, AlertCircle, Upload, X } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import discordIcon from "@/assets/discord-icon.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -235,124 +234,8 @@ export function ApplyToBountySheet({
           side="right" 
           className="w-full sm:max-w-xl bg-[#0a0a0a] border-0 p-0 overflow-y-auto"
         >
-          {/* Account Connection Required Screen */}
-          {!isCheckingAccounts && !hasConnectedAccounts ? (
-            <div className="p-6 space-y-6">
-              <SheetHeader>
-                <SheetTitle className="text-2xl">Connect Your Account</SheetTitle>
-                <SheetDescription>
-                  To apply for this boost, you must connect at least one social media account OR Discord.
-                </SheetDescription>
-              </SheetHeader>
-
-              <Alert className="bg-yellow-500/10 border-yellow-500/20">
-                <AlertCircle className="h-4 w-4 text-yellow-500" />
-                <AlertDescription className="text-yellow-500/90">
-                  This helps us verify your identity and track your content performance.
-                </AlertDescription>
-              </Alert>
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-3 text-muted-foreground">Connect Social Media</h3>
-                  <div className="space-y-2">
-                    <Button
-                      onClick={() => setShowAddSocialDialog(true)}
-                      className="w-full justify-start gap-3 h-12"
-                      variant="outline"
-                    >
-                      <div className="flex gap-2">
-                        <img src={tiktokLogo} alt="TikTok" className="w-5 h-5" />
-                        <img src={instagramLogo} alt="Instagram" className="w-5 h-5" />
-                      </div>
-                      <span>Connect TikTok, Instagram, YouTube or X</span>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-white/10" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-[#0a0a0a] px-2 text-muted-foreground">Or</span>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium mb-3 text-muted-foreground">Connect Discord</h3>
-                  <Button
-                    onClick={() => {
-                      const DISCORD_CLIENT_ID = '1358316231341375518';
-                      const REDIRECT_URI = `${window.location.origin}/discord/callback`;
-                      const STATE = btoa(JSON.stringify({ userId }));
-                      
-                      const discordAuthUrl = `https://discord.com/api/oauth2/authorize?` +
-                        `client_id=${DISCORD_CLIENT_ID}&` +
-                        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
-                        `response_type=code&` +
-                        `scope=identify%20email%20guilds.join&` +
-                        `state=${STATE}`;
-
-                      const popup = window.open(
-                        discordAuthUrl,
-                        'Discord OAuth',
-                        'width=500,height=700'
-                      );
-
-                      const handleMessage = async (event: MessageEvent) => {
-                        if (event.origin !== window.location.origin) return;
-                        
-                        if (event.data.type === 'discord-oauth-success') {
-                          popup?.close();
-                          toast.success("Discord account linked successfully!");
-                          checkConnectedAccounts();
-                        } else if (event.data.type === 'discord-oauth-error') {
-                          popup?.close();
-                          toast.error(event.data.error || "Failed to link Discord account.");
-                        }
-                      };
-
-                      window.addEventListener('message', handleMessage);
-                    }}
-                    className="w-full justify-start gap-3 h-12 bg-[#5765F2] hover:bg-[#5765F2]/90 text-white"
-                  >
-                    <img src={discordIcon} alt="Discord" className="w-5 h-5" />
-                    <span>Connect Discord</span>
-                  </Button>
-                </div>
-
-                {/* Show connected accounts status */}
-                {(socialAccounts.length > 0 || discordConnected) && (
-                  <div className="pt-4 border-t border-white/10 space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Connected Accounts</h3>
-                    {socialAccounts.map((account) => (
-                      <div key={account.id} className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        <span className="capitalize">{account.platform}</span>
-                        <span className="text-muted-foreground">@{account.username}</span>
-                      </div>
-                    ))}
-                    {discordConnected && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        <span>Discord Connected</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <Button
-                onClick={checkConnectedAccounts}
-                className="w-full"
-                size="lg"
-              >
-                Continue to Application
-              </Button>
-            </div>
-          ) : (
-            <>
+          {/* Always show boost details */}
+          <>
               {/* Banner Image */}
               {bounty.banner_url && (
           <div className="relative w-full h-48 flex-shrink-0 overflow-hidden bg-muted">
@@ -440,116 +323,210 @@ export function ApplyToBountySheet({
             </div>
           </div>
 
-          {/* Application Form */}
-          <form onSubmit={handleSubmit} className="space-y-5 pt-2">
-            {/* Video Upload Section */}
-            <div className="space-y-3">
-              <Label className="text-white font-medium">
-                Example Video *
-              </Label>
-              <p className="text-xs text-white/50">
-                Show us your content style with a video link or upload
-              </p>
-              
-              {/* Upload or URL Toggle Area */}
-              {!uploadedVideoFile ? (
-                <div className="space-y-3">
-                  {/* Upload Button */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => e.target.files?.[0] && handleVideoUpload(e.target.files[0])}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
-                  >
-                    <Upload className="h-8 w-8 text-white/40 group-hover:text-white/60" />
-                    <span className="text-sm text-white/60 group-hover:text-white/80">
-                      Click to upload video
-                    </span>
-                    <span className="text-xs text-white/30">MP4, MOV up to 100MB</span>
-                  </button>
-                  
-                  {/* Or divider */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-white/10" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-[#0a0a0a] px-2 text-white/30">or paste URL</span>
-                    </div>
-                  </div>
-                  
-                  {/* URL Input */}
-                  <div className="relative">
-                    <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                    <Input
-                      type="url"
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      placeholder="https://youtube.com/watch?v=..."
-                      className="pl-10 bg-white/5 border-transparent text-white placeholder:text-white/30"
-                    />
-                  </div>
+          {/* Application Form - Show connect prompt if no accounts */}
+          {!isCheckingAccounts && !hasConnectedAccounts ? (
+            <div className="space-y-5 pt-2">
+              <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-5 bg-white/[0.02] rounded-xl">
+                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-muted-foreground" />
                 </div>
-              ) : (
-                /* Video Preview */
-                <div className="relative rounded-lg overflow-hidden bg-black/20">
-                  <video
-                    src={uploadedVideoPreview || ''}
-                    className="w-full max-h-48 object-contain"
-                    controls
-                  />
-                  <button
-                    type="button"
-                    onClick={removeUploadedVideo}
-                    className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                
+                <div className="space-y-2">
+                  <h3 className="font-['Inter'] tracking-[-0.5px] text-base font-medium text-white">
+                    Connect an account to apply
+                  </h3>
+                  <p className="font-['Inter'] tracking-[-0.5px] text-sm text-white/50 max-w-[280px]">
+                    Link a social account or Discord to submit your application
+                  </p>
+                </div>
+                
+                <div className="flex flex-col gap-2 w-full max-w-[280px]">
+                  <Button 
+                    onClick={() => setShowAddSocialDialog(true)} 
+                    className="font-['Inter'] tracking-[-0.5px] bg-[#2060de] hover:bg-[#2060de]/90 text-white w-full"
+                    style={{ borderTop: '1px solid #4b85f7' }}
                   >
-                    <X className="h-4 w-4" />
-                  </button>
+                    Connect Social Account
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const DISCORD_CLIENT_ID = '1358316231341375518';
+                      const REDIRECT_URI = `${window.location.origin}/discord/callback`;
+                      const STATE = btoa(JSON.stringify({ userId }));
+                      
+                      const discordAuthUrl = `https://discord.com/api/oauth2/authorize?` +
+                        `client_id=${DISCORD_CLIENT_ID}&` +
+                        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+                        `response_type=code&` +
+                        `scope=identify%20email%20guilds.join&` +
+                        `state=${STATE}`;
+
+                      const popup = window.open(
+                        discordAuthUrl,
+                        'Discord OAuth',
+                        'width=500,height=700'
+                      );
+
+                      const handleMessage = async (event: MessageEvent) => {
+                        if (event.origin !== window.location.origin) return;
+                        
+                        if (event.data.type === 'discord-oauth-success') {
+                          popup?.close();
+                          toast.success("Discord account linked successfully!");
+                          checkConnectedAccounts();
+                        } else if (event.data.type === 'discord-oauth-error') {
+                          popup?.close();
+                          toast.error(event.data.error || "Failed to link Discord account.");
+                        }
+                      };
+
+                      window.addEventListener('message', handleMessage);
+                    }}
+                    variant="ghost"
+                    className="font-['Inter'] tracking-[-0.5px] text-white/60 hover:text-white hover:bg-white/5 w-full gap-2"
+                  >
+                    <img src={discordIcon} alt="Discord" className="w-4 h-4" />
+                    Connect Discord
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+              {/* Connected Accounts Display */}
+              {(socialAccounts.length > 0 || discordConnected) && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-white/40 font-['Inter'] tracking-[-0.5px]">Your connected accounts</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {socialAccounts.map((account) => (
+                      <div 
+                        key={account.id} 
+                        className="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-md text-xs"
+                      >
+                        {account.platform === 'tiktok' && <img src={tiktokLogo} alt="" className="h-3 w-3" />}
+                        {account.platform === 'instagram' && <img src={instagramLogo} alt="" className="h-3 w-3" />}
+                        <span className="text-white/80">@{account.username}</span>
+                      </div>
+                    ))}
+                    {discordConnected && (
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-md text-xs">
+                        <img src={discordIcon} alt="" className="h-3 w-3" />
+                        <span className="text-white/80">Discord</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
-            </div>
 
-            <div>
-              <Label htmlFor="application_text" className="text-white mb-2 block">
-                Why are you a good fit? (Optional)
-              </Label>
-              <Textarea
-                id="application_text"
-                value={applicationText}
-                onChange={(e) => setApplicationText(e.target.value)}
-                placeholder="Tell the brand why you'd be perfect for this boost..."
-                className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[100px] resize-none"
-              />
-            </div>
+              {/* Video Upload Section */}
+              <div className="space-y-3">
+                <Label className="text-white font-medium font-['Inter'] tracking-[-0.5px]">
+                  Example Video *
+                </Label>
+                <p className="text-xs text-white/50 font-['Inter'] tracking-[-0.5px]">
+                  Show us your content style with a video link or upload
+                </p>
+                
+                {/* Upload or URL Toggle Area */}
+                {!uploadedVideoFile ? (
+                  <div className="space-y-3">
+                    {/* Upload Button */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => e.target.files?.[0] && handleVideoUpload(e.target.files[0])}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+                    >
+                      <Upload className="h-8 w-8 text-white/40 group-hover:text-white/60" />
+                      <span className="text-sm text-white/60 group-hover:text-white/80 font-['Inter'] tracking-[-0.5px]">
+                        Click to upload video
+                      </span>
+                      <span className="text-xs text-white/30 font-['Inter'] tracking-[-0.5px]">MP4, MOV up to 100MB</span>
+                    </button>
+                    
+                    {/* Or divider */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-white/10" />
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="bg-[#0a0a0a] px-2 text-white/30 font-['Inter'] tracking-[-0.5px]">or paste URL</span>
+                      </div>
+                    </div>
+                    
+                    {/* URL Input */}
+                    <div className="relative">
+                      <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                      <Input
+                        type="url"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="https://youtube.com/watch?v=..."
+                        className="pl-10 bg-white/5 border-transparent text-white placeholder:text-white/30 font-['Inter'] tracking-[-0.5px]"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* Video Preview */
+                  <div className="relative rounded-lg overflow-hidden bg-black/20">
+                    <video
+                      src={uploadedVideoPreview || ''}
+                      className="w-full max-h-48 object-contain"
+                      controls
+                    />
+                    <button
+                      type="button"
+                      onClick={removeUploadedVideo}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
 
-            <div className="flex gap-3 pt-4 sticky bottom-0 bg-[#0a0a0a] py-4 -mx-6 px-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="flex-1 bg-transparent border-transparent text-white hover:bg-white/5"
-                disabled={submitting || isUploading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={submitting || isFull || isUploading || (!videoUrl.trim() && !uploadedVideoFile)}
-                className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-50"
-              >
-                {isUploading ? "Uploading..." : submitting ? "Submitting..." : isFull ? "No Spots Available" : "Submit Application"}
-              </Button>
-            </div>
-          </form>
+              <div>
+                <Label htmlFor="application_text" className="text-white mb-2 block font-['Inter'] tracking-[-0.5px]">
+                  Why are you a good fit? (Optional)
+                </Label>
+                <Textarea
+                  id="application_text"
+                  value={applicationText}
+                  onChange={(e) => setApplicationText(e.target.value)}
+                  placeholder="Tell the brand why you'd be perfect for this boost..."
+                  className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4 sticky bottom-0 bg-[#0a0a0a] py-4 -mx-6 px-6">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onOpenChange(false)}
+                  className="flex-1 text-white hover:bg-white/5 font-['Inter'] tracking-[-0.5px]"
+                  disabled={submitting || isUploading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submitting || isFull || isUploading || (!videoUrl.trim() && !uploadedVideoFile)}
+                  className="flex-1 bg-[#2060de] hover:bg-[#2060de]/90 text-white disabled:opacity-50 font-['Inter'] tracking-[-0.5px]"
+                  style={{ borderTop: '1px solid #4b85f7' }}
+                >
+                  {isUploading ? "Uploading..." : submitting ? "Submitting..." : isFull ? "No Spots Available" : "Submit Application"}
+                </Button>
+              </div>
+            </form>
+          )}
               </div>
             </>
-          )}
         </SheetContent>
       </Sheet>
     </>
