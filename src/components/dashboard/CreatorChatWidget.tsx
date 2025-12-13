@@ -6,7 +6,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import mailIcon from "@/assets/mail-icon.svg";
-
 interface Conversation {
   id: string;
   brand_id: string;
@@ -19,7 +18,6 @@ interface Conversation {
   unread_count?: number;
   last_message?: string;
 }
-
 interface Message {
   id: string;
   conversation_id: string;
@@ -29,7 +27,6 @@ interface Message {
   is_read: boolean;
   created_at: string;
 }
-
 export function CreatorChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -39,76 +36,68 @@ export function CreatorChatWidget() {
   const [userId, setUserId] = useState<string | null>(null);
   const [totalUnread, setTotalUnread] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
       }
     };
     fetchUser();
   }, []);
-
   useEffect(() => {
     if (userId && isOpen) {
       fetchConversations();
     }
   }, [userId, isOpen]);
-
   useEffect(() => {
     if (activeConversation) {
       fetchMessages(activeConversation.id);
       markMessagesAsRead(activeConversation.id);
     }
   }, [activeConversation]);
-
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth"
+    });
   }, [messages]);
 
   // Real-time subscription for new messages
   useEffect(() => {
     if (!userId) return;
-
-    const channel = supabase
-      .channel('creator-messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          if (activeConversation && newMessage.conversation_id === activeConversation.id) {
-            setMessages(prev => [...prev, newMessage]);
-            markMessagesAsRead(activeConversation.id);
-          }
-          fetchConversations();
-        }
-      )
-      .subscribe();
-
+    const channel = supabase.channel('creator-messages').on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages'
+    }, payload => {
+      const newMessage = payload.new as Message;
+      if (activeConversation && newMessage.conversation_id === activeConversation.id) {
+        setMessages(prev => [...prev, newMessage]);
+        markMessagesAsRead(activeConversation.id);
+      }
+      fetchConversations();
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [userId, activeConversation]);
-
   const fetchConversations = async () => {
     if (!userId) return;
     setLoading(true);
-
-    const { data: convos, error } = await supabase
-      .from("conversations")
-      .select(`
+    const {
+      data: convos,
+      error
+    } = await supabase.from("conversations").select(`
         *,
         brand:brands(name, logo_url)
-      `)
-      .eq("creator_id", userId)
-      .order("last_message_at", { ascending: false, nullsFirst: false });
-
+      `).eq("creator_id", userId).order("last_message_at", {
+      ascending: false,
+      nullsFirst: false
+    });
     if (error) {
       console.error("Error fetching conversations:", error);
       setLoading(false);
@@ -116,90 +105,64 @@ export function CreatorChatWidget() {
     }
 
     // Get unread counts and last messages
-    const conversationsWithDetails = await Promise.all(
-      (convos || []).map(async (conv) => {
-        const { count } = await supabase
-          .from("messages")
-          .select("*", { count: "exact", head: true })
-          .eq("conversation_id", conv.id)
-          .eq("sender_type", "brand")
-          .eq("is_read", false);
-
-        const { data: lastMsg } = await supabase
-          .from("messages")
-          .select("content")
-          .eq("conversation_id", conv.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
-
-        return {
-          ...conv,
-          unread_count: count || 0,
-          last_message: lastMsg?.content || "",
-        };
-      })
-    );
-
+    const conversationsWithDetails = await Promise.all((convos || []).map(async conv => {
+      const {
+        count
+      } = await supabase.from("messages").select("*", {
+        count: "exact",
+        head: true
+      }).eq("conversation_id", conv.id).eq("sender_type", "brand").eq("is_read", false);
+      const {
+        data: lastMsg
+      } = await supabase.from("messages").select("content").eq("conversation_id", conv.id).order("created_at", {
+        ascending: false
+      }).limit(1).single();
+      return {
+        ...conv,
+        unread_count: count || 0,
+        last_message: lastMsg?.content || ""
+      };
+    }));
     setConversations(conversationsWithDetails);
     setTotalUnread(conversationsWithDetails.reduce((sum, c) => sum + (c.unread_count || 0), 0));
     setLoading(false);
   };
-
   const fetchMessages = async (conversationId: string) => {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
-
+    const {
+      data,
+      error
+    } = await supabase.from("messages").select("*").eq("conversation_id", conversationId).order("created_at", {
+      ascending: true
+    });
     if (!error && data) {
       setMessages(data);
     }
   };
-
   const markMessagesAsRead = async (conversationId: string) => {
-    await supabase
-      .from("messages")
-      .update({ is_read: true })
-      .eq("conversation_id", conversationId)
-      .eq("sender_type", "brand")
-      .eq("is_read", false);
-
+    await supabase.from("messages").update({
+      is_read: true
+    }).eq("conversation_id", conversationId).eq("sender_type", "brand").eq("is_read", false);
     fetchConversations();
   };
-
   const handleBack = () => {
     setActiveConversation(null);
     setMessages([]);
   };
-
-  return (
-    <>
+  return <>
       {/* Floating Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#2060de] hover:bg-[#1a50c0] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group"
-      >
+      <button onClick={() => setIsOpen(true)} className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#2060de] hover:bg-[#1a50c0] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group">
         <img src={mailIcon} alt="Messages" className="w-6 h-6" />
-        {totalUnread > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
+        {totalUnread > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
             {totalUnread > 9 ? "9+" : totalUnread}
-          </span>
-        )}
+          </span>}
       </button>
 
       {/* Chat Panel */}
-      {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
+      {isOpen && <div className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50">
-            {activeConversation ? (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleBack}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
+            {activeConversation ? <div className="flex items-center gap-3">
+                <button onClick={handleBack} className="text-muted-foreground hover:text-foreground transition-colors">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
@@ -213,34 +176,26 @@ export function CreatorChatWidget() {
                 <span className="font-medium text-sm font-inter tracking-[-0.5px]">
                   {activeConversation.brand?.name}
                 </span>
-              </div>
-            ) : (
-              <h3 className="font-semibold text-base font-inter tracking-[-0.5px]">Messages</h3>
-            )}
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setActiveConversation(null);
-                setMessages([]);
-              }}
-              className="text-muted-foreground hover:text-foreground transition-colors p-1"
-            >
+              </div> : <h3 className="font-semibold text-base font-inter tracking-[-0.5px]">Messages</h3>}
+            <button onClick={() => {
+          setIsOpen(false);
+          setActiveConversation(null);
+          setMessages([]);
+        }} className="text-muted-foreground hover:text-foreground transition-colors p-1">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Content */}
           <div className="flex-1 overflow-hidden">
-            {!activeConversation ? (
-              // Conversations List
-              <ScrollArea className="h-full">
-                {loading ? (
-                  <div className="flex items-center justify-center h-full py-12">
+            {!activeConversation ?
+        // Conversations List
+        <ScrollArea className="h-full">
+                {loading ? <div className="flex items-center justify-center h-full py-0">
                     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : conversations.length === 0 ? (
-                  // Empty State
-                  <div className="flex flex-col items-center justify-center h-full py-12 px-6 text-center">
+                  </div> : conversations.length === 0 ?
+          // Empty State
+          <div className="flex flex-col items-center justify-center h-full py-12 px-6 text-center">
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                       <MessageCircle className="w-8 h-8 text-muted-foreground" />
                     </div>
@@ -248,15 +203,8 @@ export function CreatorChatWidget() {
                     <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                       When brands message you, they'll appear here.
                     </p>
-                  </div>
-                ) : (
-                  <div className="py-2">
-                    {conversations.map((conv) => (
-                      <button
-                        key={conv.id}
-                        onClick={() => setActiveConversation(conv)}
-                        className="w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
-                      >
+                  </div> : <div className="py-2">
+                    {conversations.map(conv => <button key={conv.id} onClick={() => setActiveConversation(conv)} className="w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left">
                         <Avatar className="w-10 h-10 flex-shrink-0">
                           <AvatarImage src={conv.brand?.logo_url || ""} />
                           <AvatarFallback className="text-sm bg-muted">
@@ -268,68 +216,41 @@ export function CreatorChatWidget() {
                             <span className="font-medium text-sm font-inter tracking-[-0.5px] truncate">
                               {conv.brand?.name}
                             </span>
-                            {conv.last_message_at && (
-                              <span className="text-xs text-muted-foreground flex-shrink-0">
+                            {conv.last_message_at && <span className="text-xs text-muted-foreground flex-shrink-0">
                                 {format(new Date(conv.last_message_at), "MMM d")}
-                              </span>
-                            )}
+                              </span>}
                           </div>
                           <p className="text-sm text-muted-foreground truncate font-inter tracking-[-0.5px]">
                             {conv.last_message || "No messages yet"}
                           </p>
                         </div>
-                        {(conv.unread_count || 0) > 0 && (
-                          <span className="w-5 h-5 bg-[#2060de] rounded-full text-white text-xs font-medium flex items-center justify-center flex-shrink-0">
+                        {(conv.unread_count || 0) > 0 && <span className="w-5 h-5 bg-[#2060de] rounded-full text-white text-xs font-medium flex items-center justify-center flex-shrink-0">
                             {conv.unread_count}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            ) : (
-              // Messages View
-              <ScrollArea className="h-full">
+                          </span>}
+                      </button>)}
+                  </div>}
+              </ScrollArea> :
+        // Messages View
+        <ScrollArea className="h-full">
                 <div className="p-4 space-y-4">
-                  {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                  {messages.length === 0 ? <div className="flex flex-col items-center justify-center py-12 text-center">
                       <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                         No messages in this conversation yet.
                       </p>
-                    </div>
-                  ) : (
-                    messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.sender_type === "creator" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                            message.sender_type === "creator"
-                              ? "bg-[#2060de] text-white"
-                              : "bg-muted"
-                          }`}
-                        >
+                    </div> : messages.map(message => <div key={message.id} className={`flex ${message.sender_type === "creator" ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${message.sender_type === "creator" ? "bg-[#2060de] text-white" : "bg-muted"}`}>
                           <p className="text-sm font-inter tracking-[-0.5px] whitespace-pre-wrap">
                             {message.content}
                           </p>
-                          <p className={`text-[10px] mt-1 ${
-                            message.sender_type === "creator" ? "text-white/70" : "text-muted-foreground"
-                          }`}>
+                          <p className={`text-[10px] mt-1 ${message.sender_type === "creator" ? "text-white/70" : "text-muted-foreground"}`}>
                             {format(new Date(message.created_at), "h:mm a")}
                           </p>
                         </div>
-                      </div>
-                    ))
-                  )}
+                      </div>)}
                   <div ref={messagesEndRef} />
                 </div>
-              </ScrollArea>
-            )}
+              </ScrollArea>}
           </div>
-        </div>
-      )}
-    </>
-  );
+        </div>}
+    </>;
 }
