@@ -237,47 +237,45 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-8">
-        <Skeleton className="h-8 w-48 mb-6" />
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <Skeleton className="h-24 rounded-xl" />
-          <Skeleton className="h-24 rounded-xl" />
-          <Skeleton className="h-24 rounded-xl" />
+      <div className="p-[10px] h-full flex flex-col">
+        <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
+          <div className="flex-1 p-6">
+            <Skeleton className="h-8 w-48 mb-4" />
+            <Skeleton className="h-64 w-full" />
+          </div>
         </div>
-        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     );
   }
 
   if (!boost) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <p className="text-muted-foreground">Boost not found</p>
+      <div className="p-[10px] h-full flex flex-col">
+        <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414] items-center justify-center">
+          <p className="text-muted-foreground">Boost not found</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-
-      {/* Header */}
-      <div className="border-b border-border bg-background flex-shrink-0">
-        <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
+    <div className="p-[10px] h-full flex flex-col">
+      <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
+        {/* Header with back button and boost title - Fixed */}
+        <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background">
+          <div className="flex items-center gap-0">
+            <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8 hover:bg-transparent">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold tracking-[-0.5px]">{boost.title}</h1>
-                {boost.is_private && (
-                  <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
-                    <Lock className="h-3 w-3 mr-1" />
-                    Private
-                  </Badge>
-                )}
-              </div>
-            </div>
+            <button onClick={onBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline flex items-center gap-2">
+              {boost.title}
+              {boost.is_private && (
+                <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
+                  <Lock className="h-3 w-3 mr-1" />
+                  Private
+                </Badge>
+              )}
+            </button>
           </div>
           <Button
             variant="ghost"
@@ -286,18 +284,18 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
             onClick={() => setEditDialogOpen(true)}
           >
             <Pencil className="h-3.5 w-3.5" />
-            Edit
+            Edit Boost
           </Button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="max-w-6xl mx-auto px-8">
+        {/* Tab Navigation - Horizontal bottom style */}
+        <div className="flex-shrink-0 border-b border-border bg-background">
           <nav className="flex gap-0">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
+                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
                   activeTab === tab.id
                     ? "border-primary text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground"
@@ -313,11 +311,10 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
             ))}
           </nav>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto p-8">
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto">
+          <div className="p-4">
           {activeTab === "videos" && (
             <div className="flex items-center justify-center py-24 text-muted-foreground">
               <div className="text-center">
@@ -431,6 +428,7 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
 
