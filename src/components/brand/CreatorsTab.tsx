@@ -627,7 +627,7 @@ export function CreatorsTab({
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-foreground shrink-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-foreground shrink-0 hover:bg-muted/50">
                             <MoreHorizontal className="h-3.5 w-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
