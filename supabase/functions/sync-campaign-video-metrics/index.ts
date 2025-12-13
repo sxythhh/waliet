@@ -126,7 +126,8 @@ serve(async (req) => {
         const allMatchingVideos: any[] = [];
         let page = 1;
         let hasMore = true;
-        const maxPages = 20; // Safety limit to prevent infinite loops
+        let totalPages = 0;
+        const maxPages = 100; // Increased limit to fetch all videos
 
         while (hasMore && page <= maxPages) {
           const url = new URL('https://api.shortimize.com/videos');
@@ -162,10 +163,18 @@ serve(async (req) => {
 
           // Check if there are more pages
           const pagination = data.pagination;
-          if (pagination && page < pagination.total_pages) {
-            page++;
-            // Longer delay between pages to avoid rate limiting
-            await delay(1000);
+          if (pagination) {
+            totalPages = pagination.total_pages || 0;
+            if (page === 1) {
+              console.log(`[sync-campaign-video-metrics] Total pages available: ${totalPages}`);
+            }
+            if (page < pagination.total_pages) {
+              page++;
+              // Longer delay between pages to avoid rate limiting
+              await delay(1000);
+            } else {
+              hasMore = false;
+            }
           } else {
             hasMore = false;
           }
