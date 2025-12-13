@@ -106,7 +106,7 @@ export function SearchOverlay({
             placeholder="Search campaigns & boosts..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="flex-1 border-0 bg-transparent text-lg placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0 font-['Inter'] tracking-[-0.5px]"
+            className="flex-1 border-0 bg-transparent text-lg placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 focus-visible:border-transparent font-['Inter'] tracking-[-0.5px]"
           />
         </div>
 
