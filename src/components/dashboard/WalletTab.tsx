@@ -2154,43 +2154,132 @@ export function WalletTab() {
                     </Badge>)}
               </div>
 
-              {/* Content */}
-              <div className="flex-1 p-6 space-y-5 border-black/0">
-                {/* Campaign/Source Card for earnings */}
-                {selectedTransaction.type === 'earning' && selectedTransaction.campaign && <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-[#080808]/0">
-                      {selectedTransaction.campaign.brand_logo_url ? <img src={selectedTransaction.campaign.brand_logo_url} alt={selectedTransaction.campaign.brand_name} className="w-full h-full object-cover" /> : <DollarSign className="h-5 w-5 text-muted-foreground" />}
+              {/* Invoice Details Content */}
+              <div className="flex-1 px-6 py-5">
+                <h3 className="text-base font-semibold tracking-[-0.5px] mb-5">Invoice details</h3>
+                
+                <div className="space-y-4">
+                  {/* Program */}
+                  <div className="flex items-start justify-between">
+                    <span className="text-sm text-muted-foreground">Program</span>
+                    <div className="flex items-center gap-2">
+                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? (
+                        <img 
+                          src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} 
+                          alt="" 
+                          className="w-5 h-5 rounded-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
+                          <DollarSign className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                      )}
+                      <span className="text-sm font-medium tracking-[-0.5px]">
+                        {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || selectedTransaction.source || 'N/A'}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium tracking-[-0.5px] truncate">{selectedTransaction.campaign.title}</div>
-                      <div className="text-xs text-muted-foreground truncate">{selectedTransaction.campaign.brand_name}</div>
-                    </div>
-                  </div>}
+                  </div>
 
-                {/* Platform & Views Row for earnings */}
-                {selectedTransaction.type === 'earning' && selectedTransaction.metadata && (selectedTransaction.metadata.account_username || selectedTransaction.metadata.views !== undefined) && <div className="grid grid-cols-2 gap-3">
-                    {selectedTransaction.metadata.account_username && <div className="p-3 rounded-xl bg-muted/30">
-                        <div className="flex items-center gap-2 mb-1">
-                          {(() => {
-                    const platform = selectedTransaction.metadata.platform?.toLowerCase();
-                    const platformIcon = platform === 'tiktok' ? tiktokLogo : platform === 'instagram' ? instagramLogo : platform === 'youtube' ? youtubeLogo : null;
-                    return platformIcon ? <img src={platformIcon} alt={platform} className="w-4 h-4" /> : null;
-                  })()}
-                          <span className="text-xs text-muted-foreground">Account</span>
-                        </div>
-                        <div className="text-sm font-medium tracking-[-0.5px] truncate">@{selectedTransaction.metadata.account_username}</div>
-                      </div>}
-                    {selectedTransaction.metadata.views !== undefined && <div className="p-3 rounded-xl bg-muted/30">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Eye className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">Views</span>
-                        </div>
-                        <div className="text-sm font-medium tracking-[-0.5px]">{selectedTransaction.metadata.views.toLocaleString()}</div>
-                      </div>}
-                  </div>}
+                  {/* Period */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Period</span>
+                    <span className="text-sm font-medium tracking-[-0.5px]">
+                      {selectedTransaction.metadata?.period_start && selectedTransaction.metadata?.period_end 
+                        ? `${format(new Date(selectedTransaction.metadata.period_start), 'MMM d')}-${format(new Date(selectedTransaction.metadata.period_end), 'MMM d, yyyy')}`
+                        : format(selectedTransaction.date, 'MMM d, yyyy')}
+                    </span>
+                  </div>
+
+                  {/* Status */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Status</span>
+                    {selectedTransaction.status === 'completed' ? (
+                      <Badge className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white border-none text-xs px-2 py-0.5">
+                        <img src={checkCircleFilledIcon} alt="" className="h-3 w-3 mr-1" />
+                        Completed
+                      </Badge>
+                    ) : selectedTransaction.status === 'pending' ? (
+                      <Badge variant="outline" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5 bg-orange-500/10 text-orange-500 border-orange-500/20">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Pending
+                      </Badge>
+                    ) : selectedTransaction.status === 'in_transit' ? (
+                      <Badge variant="outline" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 border-blue-500/20">
+                        <Hourglass className="h-3 w-3 mr-1" />
+                        In Transit
+                      </Badge>
+                    ) : selectedTransaction.status === 'rejected' ? (
+                      <Badge variant="destructive" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5">
+                        Rejected
+                      </Badge>
+                    ) : (
+                      <span className="text-sm font-medium tracking-[-0.5px]">-</span>
+                    )}
+                  </div>
+
+                  {/* Initiated */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground border-b border-dashed border-muted-foreground/50">Initiated</span>
+                    <span className="text-sm font-medium tracking-[-0.5px]">
+                      {format(selectedTransaction.date, 'MMM d, yyyy')}
+                    </span>
+                  </div>
+
+                  {/* Paid */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground border-b border-dashed border-muted-foreground/50">Paid</span>
+                    <span className="text-sm font-medium tracking-[-0.5px]">
+                      {selectedTransaction.status === 'completed' 
+                        ? format(selectedTransaction.date, 'MMM d, yyyy')
+                        : '-'}
+                    </span>
+                  </div>
+
+                  {/* Amount */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Amount</span>
+                    <span className="text-sm font-semibold tracking-[-0.5px]">
+                      ${Math.abs(selectedTransaction.amount).toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Description */}
+                  <div className="flex items-start justify-between">
+                    <span className="text-sm text-muted-foreground">Description</span>
+                    <span className="text-sm font-medium tracking-[-0.5px] text-right max-w-[200px]">
+                      {selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' 
+                        ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` 
+                        : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' 
+                        : selectedTransaction.type === 'referral' ? 'Referral bonus' 
+                        : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` 
+                        : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` 
+                        : selectedTransaction.type === 'balance_correction' ? 'Balance correction' 
+                        : 'Transaction'}
+                    </span>
+                  </div>
+
+                  {/* Transaction ID - Collapsible */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                    <span className="text-xs text-muted-foreground">Transaction ID</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-mono text-muted-foreground">
+                        {selectedTransaction.id.slice(0, 6)}...{selectedTransaction.id.slice(-4)}
+                      </span>
+                      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => {
+                        navigator.clipboard.writeText(selectedTransaction.id);
+                        setCopiedId(true);
+                        setTimeout(() => setCopiedId(false), 2000);
+                        toast({ description: "Transaction ID copied" });
+                      }}>
+                        {copiedId ? <Check className="h-2.5 w-2.5 text-green-500" /> : <Copy className="h-2.5 w-2.5" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Rejection Reason */}
-                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && <div className="p-3 bg-destructive/10 rounded-xl">
+                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && (
+                  <div className="mt-5 p-3 bg-destructive/10 rounded-xl">
                     <div className="flex items-start gap-2">
                       <X className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
                       <div>
@@ -2198,70 +2287,8 @@ export function WalletTab() {
                         <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
                       </div>
                     </div>
-                  </div>}
-
-                {/* Transfer Details - P2P */}
-                {(selectedTransaction.type === 'transfer_sent' || selectedTransaction.type === 'transfer_received') && selectedTransaction.metadata && <div className="p-3 rounded-xl bg-muted/30 space-y-2">
-                    {selectedTransaction.type === 'transfer_sent' && selectedTransaction.metadata.recipient_username && <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Sent To</span>
-                        <span className="text-sm font-medium tracking-[-0.5px]">@{selectedTransaction.metadata.recipient_username}</span>
-                      </div>}
-                    {selectedTransaction.type === 'transfer_received' && selectedTransaction.metadata.sender_username && <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">From</span>
-                        <span className="text-sm font-medium tracking-[-0.5px]">@{selectedTransaction.metadata.sender_username}</span>
-                      </div>}
-                    {selectedTransaction.metadata.note && <div className="pt-2 border-t border-border/50">
-                        <div className="text-xs text-muted-foreground mb-1">Note</div>
-                        <div className="text-sm">{selectedTransaction.metadata.note}</div>
-                      </div>}
-                  </div>}
-
-                {/* Details List */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between py-2.5">
-                    <span className="text-sm text-muted-foreground">Type</span>
-                    <span className="text-sm font-medium tracking-[-0.5px]">
-                      {selectedTransaction.type === 'earning' ? 'Earnings' : selectedTransaction.type === 'referral' ? 'Referral Bonus' : selectedTransaction.type === 'balance_correction' ? 'Balance Correction' : selectedTransaction.type === 'transfer_sent' ? 'Transfer Sent' : selectedTransaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
-                    </span>
                   </div>
-                  
-                  <div className="flex items-center justify-between py-2.5">
-                    <span className="text-sm text-muted-foreground">Transaction ID</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-mono text-muted-foreground">
-                        {selectedTransaction.id.slice(0, 6)}...{selectedTransaction.id.slice(-4)}
-                      </span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                    navigator.clipboard.writeText(selectedTransaction.id);
-                    setCopiedId(true);
-                    setTimeout(() => setCopiedId(false), 2000);
-                    toast({
-                      description: "Transaction ID copied"
-                    });
-                  }}>
-                        {copiedId ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {selectedTransaction.source && <div className="flex items-center justify-between py-2.5">
-                      <span className="text-sm text-muted-foreground">From</span>
-                      <span className="text-sm font-medium tracking-[-0.5px] text-right max-w-[180px] truncate">{selectedTransaction.source}</span>
-                    </div>}
-
-                  {selectedTransaction.destination && <div className="flex items-center justify-between py-2.5">
-                      <span className="text-sm text-muted-foreground">To</span>
-                      <span className="text-sm font-medium tracking-[-0.5px] text-right max-w-[180px] truncate">
-                        {(() => {
-                    const details = selectedTransaction.metadata?.payoutDetails;
-                    if (details?.address) return `${details.address.slice(0, 6)}...${details.address.slice(-4)}`;
-                    if (details?.email) return details.email;
-                    if (details?.account_number) return `•••• ${details.account_number.slice(-4)}`;
-                    return selectedTransaction.destination;
-                  })()}
-                      </span>
-                    </div>}
-                </div>
+                )}
 
                 {/* Payout Method Details */}
                 {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (() => {
