@@ -435,7 +435,12 @@ export type Database = {
           shortimize_api_key: string | null
           show_account_tab: boolean
           slug: string
+          subscription_expires_at: string | null
+          subscription_plan: string | null
+          subscription_started_at: string | null
+          subscription_status: string | null
           updated_at: string
+          whop_membership_id: string | null
         }
         Insert: {
           account_url?: string | null
@@ -455,7 +460,12 @@ export type Database = {
           shortimize_api_key?: string | null
           show_account_tab?: boolean
           slug: string
+          subscription_expires_at?: string | null
+          subscription_plan?: string | null
+          subscription_started_at?: string | null
+          subscription_status?: string | null
           updated_at?: string
+          whop_membership_id?: string | null
         }
         Update: {
           account_url?: string | null
@@ -475,7 +485,12 @@ export type Database = {
           shortimize_api_key?: string | null
           show_account_tab?: boolean
           slug?: string
+          subscription_expires_at?: string | null
+          subscription_plan?: string | null
+          subscription_started_at?: string | null
+          subscription_status?: string | null
           updated_at?: string
+          whop_membership_id?: string | null
         }
         Relationships: []
       }
