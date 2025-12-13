@@ -1488,6 +1488,115 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_team_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          status: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          status?: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          status?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_team_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "referral_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_team_members: {
+        Row: {
+          created_at: string
+          id: string
+          joined_at: string
+          team_id: string
+          total_contributed: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          joined_at?: string
+          team_id: string
+          total_contributed?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          joined_at?: string
+          team_id?: string
+          total_contributed?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "referral_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_teams: {
+        Row: {
+          commission_rate: number
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          referral_code: string
+          total_earnings: number | null
+          updated_at: string
+        }
+        Insert: {
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          referral_code: string
+          total_earnings?: number | null
+          updated_at?: string
+        }
+        Update: {
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          referral_code?: string
+          total_earnings?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           completed_at: string | null
