@@ -786,7 +786,15 @@ export function UserDetailsDialog({
                               <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Account</span>
                               <div className="flex items-center gap-1.5 mt-0.5">
                                 {metadata.platform && getPlatformIconElement(metadata.platform)}
-                                <p className="text-xs text-foreground truncate font-inter" style={{ letterSpacing: '-0.5px' }}>@{metadata.account_username}</p>
+                                <a 
+                                  href={metadata.account_link || `https://${metadata.platform === 'tiktok' ? 'tiktok.com/@' : metadata.platform === 'instagram' ? 'instagram.com/' : metadata.platform === 'youtube' ? 'youtube.com/@' : 'x.com/'}${metadata.account_username}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-foreground truncate font-inter hover:underline cursor-pointer" 
+                                  style={{ letterSpacing: '-0.5px' }}
+                                >
+                                  @{metadata.account_username}
+                                </a>
                               </div>
                             </div>
                           )}
