@@ -541,559 +541,708 @@ export function CampaignCreationWizard({
   };
   return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[1400px] w-[95vw] max-h-[90vh] bg-white dark:bg-[#0a0a0a] border-border p-0 overflow-hidden flex flex-col">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] flex-1 min-h-0 overflow-hidden">
-            {/* Left Column - Main Content */}
-            <div className="flex flex-col min-h-0 overflow-hidden">
-              {/* Main Form Area */}
-              <div className="flex-1 overflow-y-auto px-8 py-[20px] lg:px-[30px]">
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl mx-auto">
-                    {/* Step 1: Budget & Targeting */}
-                    {currentStep === 1 && <div className="space-y-6">
-                        {/* Budget Section */}
-                        <div className="space-y-4">
-                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>Budget Settings</h3>
-                          
-                          <FormField control={form.control} name="is_infinite_budget" render={({
-                        field
-                      }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-                              <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }}>Unlimited Budget</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }}>
-                                  No cap on campaign spending
-                                </p>
-                              </div>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>} />
-
-                          {!watchedValues.is_infinite_budget && <FormField control={form.control} name="budget" render={({
-                        field
-                      }) => <FormItem>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>Total Budget ($)</FormLabel>
-                                <FormControl>
-                                  <Input type="number" placeholder="10000" className="bg-background border-border tracking-[-0.5px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }} {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>} />}
-
-                          <FormField control={form.control} name="rpm_rate" render={({
-                        field
-                      }) => <FormItem>
-                              <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>CPM Rate ($)</FormLabel>
-                              <p className="text-xs text-muted-foreground mb-2 tracking-[-0.3px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
-                                Cost per 1,000 views paid to creators
-                              </p>
-                              <FormControl>
-                                <Input type="number" placeholder="5" className="bg-background border-border tracking-[-0.5px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>} />
-                        </div>
-
-                        {/* Platform Targeting */}
-                        <div className="space-y-4">
-                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>Platform Targeting</h3>
-                          
-                          <FormField control={form.control} name="allowed_platforms" render={({
-                        field
-                      }) => <FormItem>
-                              <FormControl>
-                                <div className="space-y-2">
-                                  {[{
-                              id: "tiktok",
-                              label: "TikTok",
-                              logo: tiktokLogo
-                            }, {
-                              id: "instagram",
-                              label: "Instagram",
-                              logo: instagramLogo
-                            }, {
-                              id: "youtube",
-                              label: "YouTube",
-                              logo: youtubeLogo
-                            }].map(platform => {
-                              const isSelected = field.value.includes(platform.id);
-                              return <button key={platform.id} type="button" onClick={() => {
-                                const newValue = isSelected ? field.value.filter(p => p !== platform.id) : [...field.value, platform.id];
-                                field.onChange(newValue);
-                              }} className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${isSelected ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
-                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
-                                          {isSelected && <Check className="w-3 h-3 text-white" />}
-                                        </div>
-                                        <img src={platform.logo} alt={platform.label} className="w-6 h-6 object-contain" />
-                                        <span className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{
-                                  fontFamily: 'Inter, sans-serif'
-                                }}>
-                                          {platform.label}
-                                        </span>
-                                      </button>;
-                            })}
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>} />
-                        </div>
-
-                        {/* Privacy Settings */}
-                        <div className="space-y-4">
-                          <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>Access Settings</h3>
-                          
-                          <FormField control={form.control} name="is_private" render={({
-                        field
-                      }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-                              <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }}>Private Campaign</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }}>
-                                  Only accessible via invite code
-                                </p>
-                              </div>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>} />
-
-                          {watchedValues.is_private && <FormField control={form.control} name="access_code" render={({
-                        field
-                      }) => <FormItem>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>Access Code</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="BRAND2024" className="bg-background border-border uppercase tracking-[-0.5px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }} {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>} />}
-
-                          <FormField control={form.control} name="requires_application" render={({
-                        field
-                      }) => <FormItem className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-                              <div>
-                                <FormLabel className="text-foreground tracking-[-0.5px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }}>Require Application</FormLabel>
-                                <p className="text-xs text-muted-foreground tracking-[-0.3px]" style={{
-                            fontFamily: 'Inter, sans-serif'
-                          }}>
-                                  Creators must apply to join
-                                </p>
-                              </div>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>} />
-
-                          {/* Application Questions - only shown when requires_application is true */}
-                          {watchedValues.requires_application && <div className="space-y-3">
-                              <label className="text-sm font-medium text-foreground tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
-                                Application Questions
-                              </label>
-                              <p className="text-xs text-muted-foreground">
-                                Add up to 5 questions creators must answer when applying
-                              </p>
-                              <div className="flex gap-2">
-                                <Input placeholder="Add a question..." value={newQuestion} onChange={e => setNewQuestion(e.target.value)} className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground/50" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addQuestion())} />
-                                <Button type="button" variant="outline" size="icon" onClick={addQuestion} className="shrink-0" disabled={(form.watch("application_questions")?.length || 0) >= 5}>
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                              </div>
-                              {form.watch("application_questions")?.length > 0 && <div className="space-y-2">
-                                  {form.watch("application_questions")?.map((question, index) => <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border">
-                                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                        <span className="text-xs text-primary font-semibold">{index + 1}</span>
-                                      </div>
-                                      <span className="text-sm flex-1">{question}</span>
-                                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeQuestion(index)}>
-                                        <X className="h-3 w-3" />
-                                      </Button>
-                                    </div>)}
-                                </div>}
-                            </div>}
-                        </div>
-                      </div>}
-
-                    {/* Step 2: Campaign Details */}
-                    {currentStep === 2 && <div className="space-y-6">
-                        <div className="mb-8">
-                          <h1 className="text-xl font-semibold text-foreground tracking-[-0.5px]">
-                            {isEditMode ? "Edit Campaign" : "Campaign Details"}
-                          </h1>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {isEditMode ? "Update your campaign settings." : "Add the final details for your campaign."}
-                          </p>
-                        </div>
-
-                        <div className="space-y-5">
-                          <FormField control={form.control} name="title" render={({
-                        field
-                      }) => <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Campaign Name
-                              </FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter campaign name" className="h-11 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
-                            letterSpacing: '-0.3px'
-                          }} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>} />
-
-                          <FormField control={form.control} name="description" render={({
-                        field
-                      }) => <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Campaign Description
-                              </FormLabel>
-                              <p className="text-xs text-muted-foreground">
-                                Describe your campaign, requirements, and what creators should know
-                              </p>
-                              <FormControl>
-                                <Textarea placeholder="Enter campaign description..." className="min-h-[120px] bg-[#0a0a0a] border-0 text-foreground placeholder:text-muted-foreground/50 focus:ring-0 focus:shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-none focus-visible:bg-[#0a0a0a] transition-none resize-none" style={{
-                            letterSpacing: '-0.3px'
-                          }} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>} />
-
-                          <FormField control={form.control} name="hashtags" render={({
-                        field
-                      }) => <FormItem className="space-y-2">
-                              <FormLabel className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Campaign Hashtags
-                              </FormLabel>
-                              <p className="text-xs text-muted-foreground">
-                                Videos with these hashtags in their caption will be tracked (without #)
-                              </p>
-                              <FormControl>
-                                <div className="space-y-2">
-                                  <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                      <Input placeholder="Add hashtag and press Enter" className="h-11 pl-9 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
-                                  letterSpacing: '-0.3px'
-                                }} onKeyDown={e => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const input = e.currentTarget;
-                                    const value = input.value.trim().replace(/^#/, '');
-                                    if (value && !field.value?.includes(value)) {
-                                      field.onChange([...(field.value || []), value]);
-                                      input.value = '';
-                                    }
-                                  }
-                                }} />
-                                    </div>
-                                  </div>
-                                  {field.value && field.value.length > 0 && <div className="flex flex-wrap gap-2">
-                                      {field.value.map((tag: string, index: number) => <Badge key={index} variant="secondary" className="gap-1 px-2 py-1">
-                                          #{tag}
-                                          <button type="button" onClick={() => {
-                                  field.onChange(field.value.filter((_: string, i: number) => i !== index));
-                                }} className="ml-1 hover:text-destructive">
-                                            <X className="h-3 w-3" />
-                                          </button>
-                                        </Badge>)}
-                                    </div>}
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>} />
-
-                          {isAdmin && <div className="space-y-2">
-                              <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                                Shortimize API Key
-                              </label>
-                              <Input type="password" placeholder="Enter Shortimize API key" value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-0" style={{
-                          letterSpacing: '-0.3px'
-                        }} />
-                              <p className="text-xs text-muted-foreground">
-                                Used for video tracking and analytics
-                              </p>
-                            </div>}
-
-                          {/* Asset Links */}
-                          <div className="space-y-3">
-                            <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                              Asset Links
-                            </label>
-                            <p className="text-xs text-muted-foreground">Add links to Google Drive, Dropbox, or other resources</p>
-                            <div className="flex gap-2">
-                              <Input placeholder="Label (e.g. Google Drive)" value={newAssetLabel} onChange={e => setNewAssetLabel(e.target.value)} className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50" />
-                              <Input placeholder="URL" value={newAssetUrl} onChange={e => setNewAssetUrl(e.target.value)} className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addAssetLink())} />
-                              <Button type="button" variant="outline" size="icon" onClick={addAssetLink} className="shrink-0">
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            {form.watch("asset_links")?.length > 0 && <div className="space-y-2">
-                                {form.watch("asset_links")?.map((link, index) => <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
-                                    <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <span className="font-medium text-sm">{link.label}</span>
-                                    <span className="text-xs text-muted-foreground truncate flex-1">{link.url}</span>
-                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeAssetLink(index)}>
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>)}
-                              </div>}
-                          </div>
-
-                          {/* Requirements */}
-                          <div className="space-y-3">
-                            <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                              Campaign Requirements
-                            </label>
-                            <p className="text-xs text-muted-foreground">List the requirements creators must follow</p>
-                            <div className="flex gap-2">
-                              <Input placeholder="Add a requirement" value={newRequirement} onChange={e => setNewRequirement(e.target.value)} className="flex-1 bg-[#0a0a0a] border-[#1a1a1a] text-foreground placeholder:text-muted-foreground/50" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addRequirement())} />
-                              <Button type="button" variant="outline" size="icon" onClick={addRequirement} className="shrink-0">
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            {form.watch("requirements")?.length > 0 && <div className="space-y-2">
-                                {form.watch("requirements")?.map((req, index) => <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
-                                    <div className="w-5 h-5 rounded-full bg-[#2060df]/10 flex items-center justify-center shrink-0">
-                                      <span className="text-xs text-[#2060df] font-semibold">{index + 1}</span>
-                                    </div>
-                                    <span className="text-sm flex-1">{req}</span>
-                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeRequirement(index)}>
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>)}
-                              </div>}
-                          </div>
-
-                          {/* Banner Upload */}
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                              Campaign Banner
-                            </label>
-                            {bannerPreview ? <div className="relative w-full h-36 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#1a1a1a]">
-                                <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
-                                <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-destructive/90 text-white" onClick={removeBanner}>
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div> : <div className="w-full h-36 rounded-lg flex items-center justify-center cursor-pointer transition-all bg-[#0a0a0a] border border-dashed border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#0f0f0f]" onClick={() => fileInputRef.current?.click()}>
-                                <div className="text-center">
-                                  <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
-                                    <Upload className="h-4 w-4 text-muted-foreground" />
-                                  </div>
-                                  <p className="text-sm text-muted-foreground" style={{
-                              letterSpacing: '-0.3px'
-                            }}>
-                                    Click to upload
-                                  </p>
-                                  <p className="text-xs text-muted-foreground/60 mt-1">
-                                    PNG, JPG up to 10MB
-                                  </p>
-                                </div>
-                              </div>}
-                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                          </div>
-
-                          {/* Pause toggle and Delete button for edit mode */}
-                          {isEditMode && <div className="pt-4 border-t border-border space-y-4">
-                              {/* Manual Budget Adjustment - Admin Only */}
-                              {isAdmin && <div className="space-y-2">
-                                  <Label className="text-sm font-medium">Manual Budget Used Adjustment</Label>
-                                  <p className="text-xs text-muted-foreground">Current: ${(campaign?.budget_used || 0).toFixed(2)}</p>
-                                  <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                      <Input type="number" step="0.01" min="0" value={manualBudgetUsed} onChange={e => setManualBudgetUsed(e.target.value)} placeholder="New budget used" className="pl-7" />
-                                    </div>
-                                    <Button type="button" variant="outline" onClick={handleManualBudgetAdjustment} disabled={isAdjustingBudget || !manualBudgetUsed} className="shrink-0">
-                                      {isAdjustingBudget ? "Saving..." : "Update"}
-                                    </Button>
-                                  </div>
-                                  {manualBudgetUsed && !isNaN(parseFloat(manualBudgetUsed)) && <p className="text-xs text-muted-foreground">
-                                      Change: {parseFloat(manualBudgetUsed) - (campaign?.budget_used || 0) >= 0 ? '+' : ''}
-                                      ${(parseFloat(manualBudgetUsed) - (campaign?.budget_used || 0)).toFixed(2)}
-                                    </p>}
-                                </div>}
-
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                  <Label htmlFor="pause-campaign" className="text-sm font-medium">Pause Campaign</Label>
-                                  <p className="text-xs text-muted-foreground">Paused campaigns won't appear in discover</p>
-                                </div>
-                                <Switch id="pause-campaign" checked={campaign?.status === 'paused'} onCheckedChange={async checked => {
-                            if (!campaign?.id) return;
-                            const newStatus = checked ? 'paused' : 'active';
-                            const {
-                              error
-                            } = await supabase.from('campaigns').update({
-                              status: newStatus
-                            }).eq('id', campaign.id);
-                            if (error) {
-                              toast.error('Failed to update campaign status');
-                            } else {
-                              toast.success(checked ? 'Campaign paused' : 'Campaign activated');
-                              onSuccess?.();
-                            }
-                          }} />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button type="button" variant="outline" onClick={() => {
-                            const link = `${window.location.origin}/join/${campaign?.slug}`;
-                            navigator.clipboard.writeText(link);
-                            toast.success('Invite link copied to clipboard');
-                          }} className="gap-2 border-black/0">
-                                  <Copy className="h-4 w-4" />
-                                  Copy Invite Link
-                                </Button>
-                                <Button type="button" variant="destructive" onClick={() => setDeleteDialogOpen(true)} className="gap-2">
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete Campaign
-                                </Button>
-                              </div>
-                            </div>}
-                        </div>
-                      </div>}
-                  </form>
-                </Form>
+        <DialogContent className="max-w-[900px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              {brandLogoUrl ? (
+                <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-lg object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-primary">{brandName?.charAt(0) || "V"}</span>
+                </div>
+              )}
+              <div>
+                <h2 className="text-base font-semibold text-foreground tracking-[-0.5px]">
+                  {isEditMode ? "Edit Campaign" : "New Campaign"}
+                </h2>
+                <p className="text-xs text-muted-foreground">{brandName}</p>
               </div>
+            </div>
+            {!isEditMode && (
+              <div className="flex items-center gap-2">
+                {STEPS.map((step, index) => (
+                  <div key={step.id} className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => step.id <= currentStep && setCurrentStep(step.id)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        currentStep === step.id
+                          ? "bg-primary text-primary-foreground"
+                          : currentStep > step.id
+                          ? "bg-primary/20 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                        currentStep > step.id ? "bg-primary text-primary-foreground" : "bg-current/20"
+                      }`}>
+                        {currentStep > step.id ? <Check className="w-2.5 h-2.5" /> : step.id}
+                      </span>
+                      <span className="hidden sm:inline">{step.label}</span>
+                    </button>
+                    {index < STEPS.length - 1 && (
+                      <div className={`w-8 h-px ${currentStep > step.id ? "bg-primary" : "bg-border"}`} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-              {/* Bottom Action Bar */}
-              <div className="border-t border-border lg:px-16 bg-neutral-950/0 py-0 px-[20px]">
-                <div className="max-w-2xl mx-auto flex items-center justify-between">
-                  {!isEditMode ? <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                      <Bookmark className="h-4 w-4" />
-                      Save as Draft
-                    </Button> : <div />}
+          {/* Main Content */}
+          <div className="flex-1 overflow-y-auto">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="p-6">
+                {/* Step 1: Budget & Targeting */}
+                {currentStep === 1 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Left Column - Budget */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                          <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-foreground">Budget</h3>
+                      </div>
 
-                  <div className="flex items-center gap-3">
-                    {currentStep > 1 && !isEditMode && <Button type="button" variant="outline" onClick={handleBack} disabled={isSubmitting} style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }} className="tracking-[-0.5px] border-black/0">
-                        Back
-                      </Button>}
-                    
-                    {currentStep < 2 && !isEditMode ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
-                        Continue
-                      </Button> : <Button type="button" onClick={async () => {
-                    // Skip validation for edit mode - call onSubmit directly
+                      <FormField
+                        control={form.control}
+                        name="is_infinite_budget"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-sm text-foreground cursor-pointer">Unlimited Budget</FormLabel>
+                              <p className="text-xs text-muted-foreground">No cap on spending</p>
+                            </div>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      {!watchedValues.is_infinite_budget && (
+                        <FormField
+                          control={form.control}
+                          name="budget"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs text-muted-foreground">Total Budget</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                  <Input type="number" placeholder="10,000" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      <FormField
+                        control={form.control}
+                        name="rpm_rate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-xs text-muted-foreground">CPM Rate</FormLabel>
+                              <span className="text-xs text-muted-foreground">per 1K views</span>
+                            </div>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input type="number" placeholder="5" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Right Column - Platforms & Access */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                          <Target className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-foreground">Targeting</h3>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="allowed_platforms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground">Platforms</FormLabel>
+                            <FormControl>
+                              <div className="flex gap-2">
+                                {[
+                                  { id: "tiktok", label: "TikTok", logo: tiktokLogo },
+                                  { id: "instagram", label: "Instagram", logo: instagramLogo },
+                                  { id: "youtube", label: "YouTube", logo: youtubeLogo }
+                                ].map(platform => {
+                                  const isSelected = field.value.includes(platform.id);
+                                  return (
+                                    <button
+                                      key={platform.id}
+                                      type="button"
+                                      onClick={() => {
+                                        const newValue = isSelected
+                                          ? field.value.filter(p => p !== platform.id)
+                                          : [...field.value, platform.id];
+                                        field.onChange(newValue);
+                                      }}
+                                      className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
+                                        isSelected
+                                          ? "bg-primary/10 ring-1 ring-primary/30"
+                                          : "bg-muted/30 hover:bg-muted/50"
+                                      }`}
+                                    >
+                                      <img src={platform.logo} alt={platform.label} className="w-5 h-5 object-contain" />
+                                      <span className="text-xs font-medium text-foreground">{platform.label}</span>
+                                      {isSelected && (
+                                        <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                          <Check className="w-2.5 h-2.5 text-white" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <FormField
+                          control={form.control}
+                          name="is_private"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                              <FormLabel className="text-xs text-foreground cursor-pointer">Private</FormLabel>
+                              <FormControl>
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="requires_application"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                              <FormLabel className="text-xs text-foreground cursor-pointer">Applications</FormLabel>
+                              <FormControl>
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {watchedValues.is_private && (
+                        <FormField
+                          control={form.control}
+                          name="access_code"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs text-muted-foreground">Access Code</FormLabel>
+                              <FormControl>
+                                <Input placeholder="BRAND2024" className="h-10 bg-muted/30 border-0 uppercase focus:ring-1 focus:ring-primary/30" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Application Questions - Full Width */}
+                    {watchedValues.requires_application && (
+                      <div className="md:col-span-2 pt-2">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                            <Eye className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <h3 className="text-sm font-semibold text-foreground">Application Questions</h3>
+                          <span className="text-xs text-muted-foreground">({(form.watch("application_questions")?.length || 0)}/5)</span>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Add a question creators must answer..."
+                            value={newQuestion}
+                            onChange={e => setNewQuestion(e.target.value)}
+                            className="flex-1 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
+                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addQuestion())}
+                          />
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={addQuestion}
+                            disabled={(form.watch("application_questions")?.length || 0) >= 5}
+                            className="h-10 px-4"
+                          >
+                            Add
+                          </Button>
+                        </div>
+
+                        {(form.watch("application_questions")?.length ?? 0) > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {form.watch("application_questions")?.map((question, index) => (
+                              <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 group">
+                                <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                                  <span className="text-xs font-semibold text-primary">{index + 1}</span>
+                                </span>
+                                <span className="text-sm flex-1 text-foreground">{question}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => removeQuestion(index)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step 2: Campaign Details */}
+                {currentStep === 2 && (
+                  <div className="space-y-5">
+                    {/* Banner Upload - Compact */}
+                    <div className="space-y-2">
+                      {bannerPreview ? (
+                        <div className="relative h-32 rounded-xl overflow-hidden group">
+                          <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={removeBanner}
+                              className="gap-2"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className="h-32 rounded-xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/20 hover:bg-muted/40 transition-all cursor-pointer flex items-center justify-center"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <div className="text-center">
+                            <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground">Upload banner image</p>
+                          </div>
+                        </div>
+                      )}
+                      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                    </div>
+
+                    {/* Title & Description */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground">Campaign Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter campaign name" className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="hashtags"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground">Tracking Hashtags</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                <Input
+                                  placeholder="Add hashtag and press Enter"
+                                  className="h-10 pl-8 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const input = e.currentTarget;
+                                      const value = input.value.trim().replace(/^#/, '');
+                                      if (value && !field.value?.includes(value)) {
+                                        field.onChange([...(field.value || []), value]);
+                                        input.value = '';
+                                      }
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </FormControl>
+                            {field.value && field.value.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {field.value.map((tag: string, index: number) => (
+                                  <Badge key={index} variant="secondary" className="gap-1 text-xs">
+                                    #{tag}
+                                    <button
+                                      type="button"
+                                      onClick={() => field.onChange(field.value.filter((_: string, i: number) => i !== index))}
+                                      className="ml-0.5 hover:text-destructive"
+                                    >
+                                      <X className="h-2.5 w-2.5" />
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Describe your campaign..."
+                              className="min-h-[80px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="guidelines"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Creator Guidelines</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Specific instructions for creators..."
+                              className="min-h-[80px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Collapsible Sections */}
+                    <div className="space-y-3">
+                      {/* Asset Links */}
+                      <div className="rounded-lg bg-muted/20 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">Asset Links</span>
+                            {(form.watch("asset_links")?.length ?? 0) > 0 && (
+                              <Badge variant="secondary" className="text-xs">{form.watch("asset_links")?.length}</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Label"
+                            value={newAssetLabel}
+                            onChange={e => setNewAssetLabel(e.target.value)}
+                            className="flex-1 h-9 bg-muted/30 border-0 text-sm focus:ring-1 focus:ring-primary/30"
+                          />
+                          <Input
+                            placeholder="URL"
+                            value={newAssetUrl}
+                            onChange={e => setNewAssetUrl(e.target.value)}
+                            className="flex-1 h-9 bg-muted/30 border-0 text-sm focus:ring-1 focus:ring-primary/30"
+                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addAssetLink())}
+                          />
+                          <Button type="button" variant="secondary" size="sm" onClick={addAssetLink} className="h-9">
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        {(form.watch("asset_links")?.length ?? 0) > 0 && (
+                          <div className="mt-2 space-y-1.5">
+                            {form.watch("asset_links")?.map((link, index) => (
+                              <div key={index} className="flex items-center gap-2 p-2 rounded-md bg-background group">
+                                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <span className="text-sm font-medium">{link.label}</span>
+                                <span className="text-xs text-muted-foreground truncate flex-1">{link.url}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
+                                  onClick={() => removeAssetLink(index)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Requirements */}
+                      <div className="rounded-lg bg-muted/20 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">Requirements</span>
+                            {(form.watch("requirements")?.length ?? 0) > 0 && (
+                              <Badge variant="secondary" className="text-xs">{form.watch("requirements")?.length}</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Add a requirement..."
+                            value={newRequirement}
+                            onChange={e => setNewRequirement(e.target.value)}
+                            className="flex-1 h-9 bg-muted/30 border-0 text-sm focus:ring-1 focus:ring-primary/30"
+                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
+                          />
+                          <Button type="button" variant="secondary" size="sm" onClick={addRequirement} className="h-9">
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        {(form.watch("requirements")?.length ?? 0) > 0 && (
+                          <div className="mt-2 space-y-1.5">
+                            {form.watch("requirements")?.map((req, index) => (
+                              <div key={index} className="flex items-center gap-2 p-2 rounded-md bg-background group">
+                                <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                  <span className="text-xs font-semibold text-primary">{index + 1}</span>
+                                </span>
+                                <span className="text-sm flex-1">{req}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
+                                  onClick={() => removeRequirement(index)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Admin-only: Shortimize API Key */}
+                      {isAdmin && (
+                        <div className="rounded-lg bg-muted/20 p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">Shortimize Integration</span>
+                            <Badge variant="outline" className="text-xs">Admin</Badge>
+                          </div>
+                          <Input
+                            type="password"
+                            placeholder="Enter Shortimize API key"
+                            value={shortimizeApiKey}
+                            onChange={e => setShortimizeApiKey(e.target.value)}
+                            className="h-9 bg-muted/30 border-0 text-sm focus:ring-1 focus:ring-primary/30"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Edit Mode Options */}
+                    {isEditMode && (
+                      <div className="pt-4 border-t border-border space-y-4">
+                        {/* Manual Budget Adjustment - Admin Only */}
+                        {isAdmin && (
+                          <div className="rounded-lg bg-muted/20 p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-sm font-medium text-foreground">Manual Budget Adjustment</span>
+                              <Badge variant="outline" className="text-xs">Admin</Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-2">Current: ${(campaign?.budget_used || 0).toFixed(2)}</p>
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={manualBudgetUsed}
+                                  onChange={e => setManualBudgetUsed(e.target.value)}
+                                  placeholder="New budget used"
+                                  className="pl-7 h-9 bg-muted/30 border-0"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleManualBudgetAdjustment}
+                                disabled={isAdjustingBudget || !manualBudgetUsed}
+                                className="h-9"
+                              >
+                                {isAdjustingBudget ? "Saving..." : "Update"}
+                              </Button>
+                            </div>
+                            {manualBudgetUsed && !isNaN(parseFloat(manualBudgetUsed)) && (
+                              <p className="text-xs text-muted-foreground mt-1.5">
+                                Change: {parseFloat(manualBudgetUsed) - (campaign?.budget_used || 0) >= 0 ? '+' : ''}
+                                ${(parseFloat(manualBudgetUsed) - (campaign?.budget_used || 0)).toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                          <div>
+                            <span className="text-sm font-medium text-foreground">Pause Campaign</span>
+                            <p className="text-xs text-muted-foreground">Hide from discover</p>
+                          </div>
+                          <Switch
+                            checked={campaign?.status === 'paused'}
+                            onCheckedChange={async checked => {
+                              if (!campaign?.id) return;
+                              const newStatus = checked ? 'paused' : 'active';
+                              const { error } = await supabase
+                                .from('campaigns')
+                                .update({ status: newStatus })
+                                .eq('id', campaign.id);
+                              if (error) {
+                                toast.error('Failed to update campaign status');
+                              } else {
+                                toast.success(checked ? 'Campaign paused' : 'Campaign activated');
+                                onSuccess?.();
+                              }
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const link = `${window.location.origin}/join/${campaign?.slug}`;
+                              navigator.clipboard.writeText(link);
+                              toast.success('Invite link copied');
+                            }}
+                            className="gap-2"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                            Copy Link
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setDeleteDialogOpen(true)}
+                            className="gap-2"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </form>
+            </Form>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="border-t border-border px-6 py-4 flex items-center justify-between bg-background">
+            {!isEditMode ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting}
+                className="gap-2"
+              >
+                <Bookmark className="h-3.5 w-3.5" />
+                Save Draft
+              </Button>
+            ) : (
+              <div />
+            )}
+
+            <div className="flex items-center gap-2">
+              {currentStep > 1 && !isEditMode && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBack}
+                  disabled={isSubmitting}
+                >
+                  Back
+                </Button>
+              )}
+              
+              {currentStep < 2 && !isEditMode ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleNext}
+                  disabled={isSubmitting}
+                  className="min-w-[100px] gap-2"
+                >
+                  Continue
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={async () => {
                     if (isEditMode) {
                       const values = form.getValues();
-                      console.log('Edit mode - submitting with values:', values);
                       await onSubmit(values as CampaignFormValues);
                       return;
                     }
-                    // Validate for new campaigns
                     const isValid = await form.trigger();
                     if (!isValid) {
                       const errors = form.formState.errors;
-                      const errorMessages = Object.entries(errors).map(([key, error]) => `${key}: ${error?.message}`).join(', ');
+                      const errorMessages = Object.entries(errors)
+                        .map(([key, error]) => `${key}: ${error?.message}`)
+                        .join(', ');
                       toast.error(`Please fix form errors: ${errorMessages}`);
-                      console.log('Form errors:', errors);
                       return;
                     }
                     form.handleSubmit(onSubmit)();
-                  }} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
-                        {isSubmitting ? isEditMode ? "Saving..." : "Creating..." : isEditMode ? "Save Changes" : "Finish"}
-                      </Button>}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Preview Sidebar */}
-            <div className="hidden lg:flex flex-col bg-muted/30 dark:bg-[#0f0f0f] border-l border-border">
-              {/* Preview Header */}
-              
-
-              {/* Preview Content */}
-              <div className="flex-1 p-6">
-                {/* Campaign Preview Card */}
-                <div className="rounded-xl overflow-hidden">
-                  {/* Banner Area */}
-                  {bannerPreview ? <div className="h-28">
-                      <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
-                    </div> : <div className="h-28 bg-gradient-to-br from-muted/80 to-muted/40 dark:from-[#1a1a1a] dark:to-[#0d0d0d]" />}
-                </div>
-
-                {/* Campaign Info */}
-                <div className="mt-4 space-y-4">
-                  <div className="flex items-center gap-3">
-                    {/* Brand Logo */}
-                    {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-10 h-10 rounded-lg object-cover bg-background flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        <span className="text-base font-bold text-foreground">{brandName?.charAt(0) || "V"}</span>
-                      </div>}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>
-                          {watchedValues.title || "Untitled"}
-                        </h3>
-                        
-                      </div>
-                    </div>
-                  </div>
-
-                  {watchedValues.hashtags && watchedValues.hashtags.length > 0 && <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                      <Hash className="h-4 w-4" />
-                      {watchedValues.hashtags.map((tag: string, i: number) => <span key={i}>#{tag}{i < watchedValues.hashtags!.length - 1 ? ',' : ''}</span>)}
-                    </div>}
-
-                  {/* Progress Indicator */}
-                  {!isEditMode && <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                          Step {currentStep}: {STEPS[currentStep - 1]?.label}
-                        </span>
-                      </div>
-                      <div className="h-1 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary transition-all duration-300" style={{
-                      width: `${getStepProgress()}%`
-                    }} />
-                      </div>
-                    </div>}
-
-                  {/* Pricing Embed */}
-                  <div className="rounded-xl overflow-hidden bg-muted/50 dark:bg-[#141414]">
-                    <iframe src="https://joinvirality.com/pickplan-3" className="w-full border-0" style={{
-                    height: '350px'
-                  }} scrolling="no" title="Pricing Plans" />
-                  </div>
-                </div>
-              </div>
+                  }}
+                  disabled={isSubmitting}
+                  className="min-w-[100px]"
+                >
+                  {isSubmitting ? "Saving..." : isEditMode ? "Save Changes" : "Create Campaign"}
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
