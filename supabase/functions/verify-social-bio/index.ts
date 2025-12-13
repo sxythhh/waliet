@@ -62,15 +62,13 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   console.log(`Fetching Instagram profile for: ${username}`);
   
   const response = await fetch(
-    'https://instagram120.p.rapidapi.com/api/instagram/profile',
+    `https://instagram-looter2.p.rapidapi.com/profile2?username=${encodeURIComponent(username)}`,
     {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'x-rapidapi-host': 'instagram120.p.rapidapi.com',
+        'x-rapidapi-host': 'instagram-looter2.p.rapidapi.com',
         'x-rapidapi-key': rapidApiKey,
       },
-      body: JSON.stringify({ username: username }),
     }
   );
 
@@ -81,24 +79,16 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     throw new Error(`Instagram API error: ${response.status}`);
   }
 
-  const rawData = await response.json();
-  console.log('Instagram API raw response:', JSON.stringify(rawData).substring(0, 500));
+  const data = await response.json();
+  console.log('Instagram API raw response:', JSON.stringify(data).substring(0, 500));
 
-  // Check for error response
-  if (rawData && typeof rawData === 'object' && 'error' in rawData) {
-    console.error('Instagram API returned error:', rawData.error);
-    throw new Error(typeof rawData.error === 'string' ? rawData.error : 'Instagram API error');
-  }
-
-  // Extract profile from result
-  const profile = rawData?.result;
-
-  if (!profile) {
-    console.warn('Instagram profile data missing or malformed');
+  // Check for error response or missing data
+  if (!data.status || !data.username) {
+    console.error('Instagram API returned error or user not found');
     throw new Error('User not found on Instagram');
   }
 
-  const bio = profile?.biography || '';
+  const bio = data.biography || '';
 
   console.log('Instagram bio to check:', bio, '| Code:', verificationCode);
 
@@ -109,17 +99,17 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
 
   const cleanBio = filterVerificationCode(bio, verificationCode);
 
-  // Use profile_pic_url_hd for best quality, fallback to regular
-  const avatarUrl = profile?.profile_pic_url_hd || profile?.profile_pic_url || null;
+  // Use hd_profile_pic_url_info.url for best quality, fallback to profile_pic_url
+  const avatarUrl = data.hd_profile_pic_url_info?.url || data.profile_pic_url || null;
 
   return {
     verified,
     bio: cleanBio,
     user: {
-      nickname: profile?.full_name || profile?.username || username,
+      nickname: data.full_name || data.username || username,
       avatar: avatarUrl,
-      followerCount: profile?.edge_followed_by?.count || 0,
-      isVerified: profile?.is_verified || false,
+      followerCount: data.follower_count || 0,
+      isVerified: data.is_verified || false,
     },
   };
 }
