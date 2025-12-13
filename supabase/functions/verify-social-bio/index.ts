@@ -81,16 +81,25 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     throw new Error(`Instagram API error: ${response.status}`);
   }
 
-  const data = await response.json();
-  console.log('Instagram API response:', JSON.stringify(data).substring(0, 500));
+  const rawData = await response.json();
+  console.log('Instagram API raw response:', JSON.stringify(rawData).substring(0, 500));
 
-  // Check for error response or missing data
-  if (!data || data.error || (!data.username && !data.pk)) {
-    console.error('Instagram API returned error or no user:', data?.error || 'No user data');
-    throw new Error('User not found on Instagram');
+  // Handle different possible response shapes
+  const profile = Array.isArray(rawData)
+    ? rawData[0]
+    : (rawData.data && typeof rawData.data === 'object'
+        ? rawData.data
+        : rawData);
+
+  if (!profile) {
+    console.warn('Instagram profile data missing or malformed');
   }
 
-  const bio = data.biography || '';
+  const bio =
+    profile?.biography ||
+    profile?.biography_with_entities?.raw_text ||
+    '';
+
   console.log('Instagram bio to check:', bio, '| Code:', verificationCode);
 
   // Normalize to alphanumeric uppercase to avoid hidden characters or formatting issues
@@ -104,10 +113,13 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     verified,
     bio: cleanBio,
     user: {
-      nickname: data.full_name || data.username,
-      avatar: data.profile_pic_url || null,
-      followerCount: data.follower_count || 0,
-      isVerified: data.is_verified || false,
+      nickname: profile?.full_name || profile?.username || username,
+      avatar:
+        profile?.profile_pic_url ||
+        profile?.hd_profile_pic_url_info?.url ||
+        null,
+      followerCount: profile?.follower_count || 0,
+      isVerified: profile?.is_verified || false,
     },
   };
 }
