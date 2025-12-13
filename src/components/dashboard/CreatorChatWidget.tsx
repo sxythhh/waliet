@@ -220,7 +220,7 @@ export function CreatorChatWidget() {
             {!activeConversation ?
         // Conversations List
         <ScrollArea className="h-full">
-                {loading ? <div className="flex items-center justify-center h-full py-0">
+                {loading ? <div className="flex items-center justify-center h-full min-h-[400px]">
                     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   </div> : conversations.length === 0 ?
           // Empty State
@@ -232,7 +232,7 @@ export function CreatorChatWidget() {
                     <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                       When brands message you, they'll appear here.
                     </p>
-                  </div> : <div className="py-2">
+                  </div> : <div>
                     {conversations.map(conv => <button key={conv.id} onClick={() => setActiveConversation(conv)} className="w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left">
                         <Avatar className="w-10 h-10 flex-shrink-0">
                           <AvatarImage src={conv.brand?.logo_url || ""} />
