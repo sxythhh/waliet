@@ -195,11 +195,19 @@ export function ReferralsTab() {
 
       {/* Tabs for Referrals vs Teams */}
       <Tabs defaultValue="referrals" className="w-full">
-        <TabsList className="w-full justify-start bg-muted/30 p-1 h-auto">
-          <TabsTrigger value="referrals" className="data-[state=active]:bg-background rounded-lg px-4 py-2">
+        <TabsList className="w-auto gap-1 bg-transparent p-0 h-auto">
+          <TabsTrigger 
+            value="referrals" 
+            className="data-[state=active]:bg-[#f4f4f4] dark:data-[state=active]:bg-[#1a1a1a] data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground rounded-full px-4 py-2 text-sm font-medium transition-all"
+            style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+          >
             Referrals
           </TabsTrigger>
-          <TabsTrigger value="teams" className="data-[state=active]:bg-background rounded-lg px-4 py-2">
+          <TabsTrigger 
+            value="teams" 
+            className="data-[state=active]:bg-[#f4f4f4] dark:data-[state=active]:bg-[#1a1a1a] data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground rounded-full px-4 py-2 text-sm font-medium transition-all"
+            style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+          >
             Teams
           </TabsTrigger>
         </TabsList>
