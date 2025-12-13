@@ -22,7 +22,6 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import xLogoBlack from "@/assets/x-logo.png";
 import xLogoWhite from "@/assets/x-logo-light.png";
-
 interface Creator {
   id: string;
   username: string;
@@ -67,7 +66,6 @@ interface Message {
 interface CreatorsTabProps {
   brandId: string;
 }
-
 const getPlatformLogos = (isDark: boolean): Record<string, string> => ({
   tiktok: isDark ? tiktokLogoWhite : tiktokLogoBlack,
   instagram: isDark ? instagramLogoWhite : instagramLogoBlack,
@@ -83,10 +81,11 @@ interface Campaign {
 export function CreatorsTab({
   brandId
 }: CreatorsTabProps) {
-  const { resolvedTheme } = useTheme();
+  const {
+    resolvedTheme
+  } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const PLATFORM_LOGOS = useMemo(() => getPlatformLogos(isDark), [isDark]);
-  
   const [creators, setCreators] = useState<Creator[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -695,12 +694,7 @@ export function CreatorsTab({
 
             {/* Message Input */}
             <div className="p-4 border-t border-border">
-              <MessageInput
-                value={messageInput}
-                onChange={setMessageInput}
-                onSend={sendMessage}
-                disabled={sendingMessage}
-              />
+              <MessageInput value={messageInput} onChange={setMessageInput} onSend={sendMessage} disabled={sendingMessage} />
             </div>
           </> : <div className="flex-1 flex flex-col">
             {/* Empty state header with toggle */}
@@ -783,26 +777,18 @@ export function CreatorsTab({
 
                   {/* Social Accounts - Simplified Display */}
                   <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                    {creator.social_accounts.slice(0, 3).map((account, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors text-xs"
-                        onClick={e => {
-                          e.stopPropagation();
-                          if (account.account_link) {
-                            window.open(account.account_link, "_blank");
-                          }
-                        }}
-                      >
+                    {creator.social_accounts.slice(0, 3).map((account, idx) => <div key={idx} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors text-xs" onClick={e => {
+                e.stopPropagation();
+                if (account.account_link) {
+                  window.open(account.account_link, "_blank");
+                }
+              }}>
                         <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain" />
                         <span className="text-[11px] truncate max-w-[70px]">@{account.username}</span>
-                      </div>
-                    ))}
-                    {creator.social_accounts.length > 3 && (
-                      <span className="text-[10px] text-muted-foreground">
+                      </div>)}
+                    {creator.social_accounts.length > 3 && <span className="text-[10px] text-muted-foreground">
                         +{creator.social_accounts.length - 3}
-                      </span>
-                    )}
+                      </span>}
                   </div>
 
                   {/* Stats Row */}
@@ -810,7 +796,7 @@ export function CreatorsTab({
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <span>{creator.date_joined ? format(new Date(creator.date_joined), "MMM d, yyyy") : "-"}</span>
                       <span className="text-muted-foreground/40">•</span>
-                      <span>{creator.total_views.toLocaleString()} views</span>
+                      
                     </div>
                     <span className="text-emerald-500 font-medium">${creator.total_earnings.toFixed(2)}</span>
                   </div>
@@ -863,36 +849,24 @@ export function CreatorsTab({
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Connected Accounts</h4>
                 <div className="space-y-1.5">
-                  {selectedCreator.social_accounts.map((account, idx) => (
-                    <div 
-                      key={idx} 
-                      className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer"
-                      onClick={() => account.account_link && window.open(account.account_link, "_blank")}
-                    >
-                      {account.avatar_url ? (
-                        <Avatar className="h-8 w-8">
+                  {selectedCreator.social_accounts.map((account, idx) => <div key={idx} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => account.account_link && window.open(account.account_link, "_blank")}>
+                      {account.avatar_url ? <Avatar className="h-8 w-8">
                           <AvatarImage src={account.avatar_url} />
                           <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
                             {account.username.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
+                        </Avatar> : <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
                           <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-4 w-4 object-contain" />
-                        </div>
-                      )}
+                        </div>}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain" />
                           <span className="text-xs font-medium truncate">@{account.username}</span>
                         </div>
-                        {account.follower_count && account.follower_count > 0 && (
-                          <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>
-                        )}
+                        {account.follower_count && account.follower_count > 0 && <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>}
                       </div>
                       <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/50" />
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
 
@@ -900,22 +874,17 @@ export function CreatorsTab({
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Joined Campaigns</h4>
                 <div className="flex flex-wrap gap-1.5">
-                  {selectedCreator.campaigns.map(campaign => (
-                    <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
+                  {selectedCreator.campaigns.map(campaign => <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
                       {campaign.title}
-                    </span>
-                  ))}
+                    </span>)}
                 </div>
               </div>
 
               {/* Message Button */}
-              <Button 
-                className="w-full h-9 text-xs font-medium bg-foreground text-background hover:bg-foreground/90" 
-                onClick={() => {
-                  startConversation(selectedCreator);
-                  setSelectedCreator(null);
-                }}
-              >
+              <Button className="w-full h-9 text-xs font-medium bg-foreground text-background hover:bg-foreground/90" onClick={() => {
+            startConversation(selectedCreator);
+            setSelectedCreator(null);
+          }}>
                 <MessageSquare className="h-3.5 w-3.5 mr-2" />
                 Send Message
               </Button>
