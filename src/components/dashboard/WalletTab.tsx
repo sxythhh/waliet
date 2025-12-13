@@ -1258,18 +1258,14 @@ export function WalletTab() {
                 }) => {
                   if (active && payload && payload.length) {
                     const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                    return <div className="bg-foreground text-background rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
-                            <p className="text-[10px] text-background/60 mb-0.5">{payload[0].payload.date}</p>
+                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                            <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
                             <p className="text-sm font-bold">${value.toFixed(2)}</p>
                           </div>;
                   }
                   return null;
-                }} cursor={{
-                  stroke: '#3b82f6',
-                  strokeWidth: 1,
-                  strokeDasharray: '3 3'
-                }} />
-                  <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} fill="url(#earningsGradient)" dot={false} />
+                }} cursor={false} />
+                  <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} fill="url(#earningsGradient)" dot={false} activeDot={{ r: 4, fill: '#3b82f6', stroke: 'none' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -1332,14 +1328,14 @@ export function WalletTab() {
                   <RechartsTooltip content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                      return <div className="bg-foreground text-background rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
-                        <p className="text-[10px] text-background/60 mb-0.5">{payload[0].payload.date}</p>
+                      return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
                         <p className="text-sm font-bold">${value.toFixed(2)}</p>
                       </div>;
                     }
                     return null;
-                  }} cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                  <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={2} fill="url(#teamEarningsGradient)" dot={false} />
+                  }} cursor={false} />
+                  <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={2} fill="url(#teamEarningsGradient)" dot={false} activeDot={{ r: 4, fill: '#10b981', stroke: 'none' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -1370,14 +1366,14 @@ export function WalletTab() {
                   <RechartsTooltip content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                      return <div className="bg-foreground text-background rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
-                        <p className="text-[10px] text-background/60 mb-0.5">{payload[0].payload.date}</p>
+                      return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
                         <p className="text-sm font-bold">${value.toFixed(2)}</p>
                       </div>;
                     }
                     return null;
-                  }} cursor={{ stroke: '#8b5cf6', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                  <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2} fill="url(#affiliateEarningsGradient)" dot={false} />
+                  }} cursor={false} />
+                  <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2} fill="url(#affiliateEarningsGradient)" dot={false} activeDot={{ r: 4, fill: '#8b5cf6', stroke: 'none' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
