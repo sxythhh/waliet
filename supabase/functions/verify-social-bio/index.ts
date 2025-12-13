@@ -61,15 +61,16 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
 async function verifyInstagram(username: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching Instagram profile for: ${username}`);
   
-  const profileUrl = `https://www.instagram.com/${encodeURIComponent(username)}/`;
   const response = await fetch(
-    `https://instagram-statistics-api.p.rapidapi.com/community?url=${encodeURIComponent(profileUrl)}`,
+    'https://instagram-scraper-stable-api.p.rapidapi.com/ig_get_fb_profile_v3.php',
     {
-      method: 'GET',
+      method: 'POST',
       headers: {
-        'x-rapidapi-host': 'instagram-statistics-api.p.rapidapi.com',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'x-rapidapi-host': 'instagram-scraper-stable-api.p.rapidapi.com',
         'x-rapidapi-key': rapidApiKey,
       },
+      body: `username=${encodeURIComponent(username)}`,
     }
   );
 
@@ -83,12 +84,11 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   const data = await response.json();
   console.log('Instagram API response received');
 
-  if (data.meta?.code !== 200 || !data.data) {
+  if (!data || !data.username) {
     throw new Error('User not found on Instagram');
   }
 
-  const profile = data.data;
-  const bio = profile.description || '';
+  const bio = data.biography || '';
   console.log('Instagram bio to check:', bio, '| Code:', verificationCode);
 
   // Normalize to alphanumeric uppercase to avoid hidden characters or formatting issues
@@ -102,10 +102,10 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     verified,
     bio: cleanBio,
     user: {
-      nickname: profile.name || profile.screenName,
-      avatar: profile.image || null,
-      followerCount: profile.usersCount || 0,
-      isVerified: profile.verified || false,
+      nickname: data.full_name || data.username,
+      avatar: data.profile_pic_url || null,
+      followerCount: data.follower_count || 0,
+      isVerified: data.is_verified || false,
     },
   };
 }
