@@ -103,30 +103,10 @@ interface CampaignCreationWizardProps {
 }
 const STEPS = [{
   id: 1,
-  label: "Your Goal"
-}, {
-  id: 2,
   label: "Budget & Targeting"
 }, {
-  id: 3,
+  id: 2,
   label: "Campaign Details"
-}];
-const GOALS = [{
-  id: "attention",
-  title: "Attention",
-  description: "Focus on generating (authentic) views and impressions towards your brand/product, based on the content in your blueprint.",
-  icon: Eye
-}, {
-  id: "leads",
-  title: "Leads",
-  description: "Maximizing view to lead ratio. The focus is less on going viral and more on generating lead intent and customer awareness",
-  icon: Target
-}, {
-  id: "conversions",
-  title: "Conversions",
-  description: "For serious conversion-focused brands, seeking maximum ROI based on campaign spend.",
-  icon: TrendingUp,
-  enterprise: true
 }];
 export function CampaignCreationWizard({
   brandId,
@@ -140,7 +120,7 @@ export function CampaignCreationWizard({
   initialBlueprintId
 }: CampaignCreationWizardProps) {
   const isEditMode = !!campaign;
-  const [currentStep, setCurrentStep] = useState(isEditMode ? 3 : 1);
+  const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(campaign?.banner_url || null);
@@ -305,7 +285,7 @@ export function CampaignCreationWizard({
         application_questions: campaign?.application_questions || []
       });
       setBannerPreview(campaign?.banner_url || null);
-      setCurrentStep(isEditMode ? 3 : 1);
+      setCurrentStep(isEditMode ? 2 : 1);
       setNewAssetLabel("");
       setNewAssetUrl("");
       setNewRequirement("");
@@ -326,7 +306,6 @@ export function CampaignCreationWizard({
     loadShortimizeApiKey();
   }, [open, brandId, isAdmin]);
   const watchedValues = form.watch();
-  const selectedGoal = GOALS.find(g => g.id === watchedValues.goal);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -363,11 +342,8 @@ export function CampaignCreationWizard({
   };
   const handleNext = async () => {
     if (currentStep === 1) {
-      const isValid = await form.trigger("goal");
-      if (isValid) setCurrentStep(2);
-    } else if (currentStep === 2) {
       const isValid = await form.trigger(["budget", "rpm_rate", "allowed_platforms"]);
-      if (isValid) setCurrentStep(3);
+      if (isValid) setCurrentStep(2);
     }
   };
   const handleBack = () => {
@@ -573,54 +549,8 @@ export function CampaignCreationWizard({
               <div className="flex-1 overflow-y-auto px-8 py-[20px] lg:px-[30px]">
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl mx-auto">
-                    {/* Step 1: Goal Selection */}
-                    {currentStep === 1 && <div className="space-y-8">
-                        <div className="text-center mb-10">
-                          <h1 className="text-2xl font-bold text-foreground mb-2">
-                            Select Your Campaign Goal
-                          </h1>
-                          <p className="text-muted-foreground text-sm">
-                            Select the marketing objective that best fits your business goals.
-                          </p>
-                        </div>
-
-                        <FormField control={form.control} name="goal" render={({
-                      field
-                    }) => <FormItem>
-                            <FormControl>
-                              <div className="space-y-3">
-                                {GOALS.map(goal => <button key={goal.id} type="button" onClick={() => field.onChange(goal.id)} className={`w-full flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${field.value === goal.id ? "border-border bg-card" : "border-border hover:border-muted-foreground/30 bg-card"}`}>
-                                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${field.value === goal.id ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
-                                      {field.value === goal.id && <Check className="w-3 h-3 text-white" />}
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-semibold text-base text-foreground tracking-[-0.5px]" style={{
-                                  fontFamily: 'Inter, sans-serif'
-                                }}>
-                                          {goal.title}
-                                        </h3>
-                                        {goal.enterprise && <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs tracking-[-0.5px]" style={{
-                                  fontFamily: 'Inter, sans-serif'
-                                }}>
-                                            Enterprise
-                                          </Badge>}
-                                      </div>
-                                      <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]" style={{
-                                fontFamily: 'Inter, sans-serif'
-                              }}>
-                                        {goal.description}
-                                      </p>
-                                    </div>
-                                  </button>)}
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>} />
-                      </div>}
-
-                    {/* Step 2: Budget & Targeting */}
-                    {currentStep === 2 && <div className="space-y-6">
+                    {/* Step 1: Budget & Targeting */}
+                    {currentStep === 1 && <div className="space-y-6">
                         {/* Budget Section */}
                         <div className="space-y-4">
                           <h3 className="font-semibold text-foreground tracking-[-0.5px]" style={{
@@ -812,8 +742,8 @@ export function CampaignCreationWizard({
                         </div>
                       </div>}
 
-                    {/* Step 3: Campaign Details */}
-                    {currentStep === 3 && <div className="space-y-6">
+                    {/* Step 2: Campaign Details */}
+                    {currentStep === 2 && <div className="space-y-6">
                         <div className="mb-8">
                           <h1 className="text-xl font-semibold text-foreground tracking-[-0.5px]">
                             {isEditMode ? "Edit Campaign" : "Campaign Details"}
@@ -1069,7 +999,7 @@ export function CampaignCreationWizard({
                         Back
                       </Button>}
                     
-                    {currentStep < 3 && !isEditMode ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
+                    {currentStep < 2 && !isEditMode ? <Button type="button" onClick={handleNext} disabled={isSubmitting} className="min-w-[120px] tracking-[-0.5px]" style={{
                     fontFamily: 'Inter, sans-serif'
                   }}>
                         Continue
