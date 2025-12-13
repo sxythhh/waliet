@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
