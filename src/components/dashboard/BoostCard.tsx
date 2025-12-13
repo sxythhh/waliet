@@ -434,77 +434,81 @@ export function BoostCard({ boost }: BoostCardProps) {
 
       {/* My Posts Dialog */}
       <Dialog open={postsDialogOpen} onOpenChange={setPostsDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto bg-background">
-          <DialogHeader>
-            <DialogTitle className="font-inter tracking-[-0.5px] text-xl">My posts ({submissions.length})</DialogTitle>
-            <DialogDescription>
-              Approved posts will continue generating earnings up to 7 days after the campaign closes.
-            </DialogDescription>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-background border-0">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="font-inter tracking-[-0.5px] text-lg font-medium">
+              My Posts
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+              {submissions.length} submission{submissions.length !== 1 ? 's' : ''} • Earnings tracked for 7 days after campaign ends
+            </p>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
+          <div className="space-y-3 pt-2">
             {submissions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground border rounded-xl">
-                <Video className="h-12 w-12 mx-auto mb-4 opacity-40" />
-                <p className="font-semibold">No results found</p>
-                <p className="text-sm">No posts submitted yet. Submit your first video to start earning.</p>
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                  <Video className="h-6 w-6 text-muted-foreground/60" />
+                </div>
+                <p className="font-inter tracking-[-0.5px] font-medium text-foreground">No posts yet</p>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] mt-1">
+                  Submit your first video to start earning
+                </p>
               </div>
             ) : (
-              <Card className="border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Post</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Pay rate</TableHead>
-                      <TableHead className="text-right">You earned</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {submissions.map((submission) => (
-                      <TableRow key={submission.id}>
-                        <TableCell>
-                          <a 
-                            href={submission.video_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-primary hover:underline"
-                          >
-                            <img 
-                              src={platformIcons[submission.platform.toLowerCase()] || platformIcons.tiktok} 
-                              alt={submission.platform} 
-                              className="h-5 w-5" 
-                            />
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="text-sm truncate max-w-[150px]">{submission.video_url}</span>
-                          </a>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(submission.status)}
-                            {getStatusBadge(submission.status)}
-                          </div>
+              <div className="space-y-2">
+                {submissions.map((submission) => (
+                  <div 
+                    key={submission.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="h-9 w-9 rounded-lg bg-background flex items-center justify-center shrink-0">
+                        <img 
+                          src={platformIcons[submission.platform.toLowerCase()] || platformIcons.tiktok} 
+                          alt={submission.platform} 
+                          className="h-5 w-5" 
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <a 
+                          href={submission.video_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-sm font-inter tracking-[-0.5px] text-foreground hover:text-primary transition-colors"
+                        >
+                          <span className="truncate max-w-[200px]">
+                            {new URL(submission.video_url).pathname.split('/').pop() || 'View post'}
+                          </span>
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        </a>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {getStatusBadge(submission.status)}
                           {submission.rejection_reason && (
-                            <p className="text-xs text-red-500 mt-1">{submission.rejection_reason}</p>
+                            <span className="text-xs text-destructive font-inter tracking-[-0.5px]">
+                              {submission.rejection_reason}
+                            </span>
                           )}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          ${payoutPerVideo.toFixed(0)}/video
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {submission.status === "approved" ? (
-                            <span className="text-green-500">+${submission.payout_amount?.toFixed(2)}</span>
-                          ) : submission.status === "pending" ? (
-                            <span className="text-muted-foreground">-</span>
-                          ) : (
-                            <span className="text-red-500">$0</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 pl-4">
+                      <p className="text-sm font-medium font-inter tracking-[-0.5px]">
+                        {submission.status === "approved" ? (
+                          <span className="text-green-500">+${submission.payout_amount?.toFixed(2)}</span>
+                        ) : submission.status === "pending" ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <span className="text-destructive">$0</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                        ${payoutPerVideo.toFixed(0)}/video
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </DialogContent>
